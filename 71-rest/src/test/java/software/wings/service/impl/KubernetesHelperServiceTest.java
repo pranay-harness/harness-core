@@ -17,7 +17,6 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
-
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;

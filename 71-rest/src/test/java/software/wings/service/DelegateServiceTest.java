@@ -98,11 +98,11 @@ import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.LicenseInfo;
@@ -1102,7 +1102,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReportConnectionResults_success() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), QUEUED);
-    DelegatePackage delegatePackage =
+    DelegateTaskPackage delegateTaskPackage =
         delegateService.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -1111,8 +1111,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                               .criteria("aaa")
                               .validated(true)
                               .build()));
-    assertThat(delegatePackage).isNotNull();
-    assertThat(delegatePackage.getDelegateTask().getStatus()).isEqualTo(STARTED);
+    assertThat(delegateTaskPackage).isNotNull();
+    assertThat(delegateTaskPackage.getDelegateTask().getStatus()).isEqualTo(STARTED);
   }
 
   @Test
@@ -1120,7 +1120,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReportConnectionResults_fail() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), QUEUED);
-    DelegatePackage delegatePackage =
+    DelegateTaskPackage delegateTaskPackage =
         delegateService.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -1129,7 +1129,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                               .criteria("aaa")
                               .validated(false)
                               .build()));
-    assertThat(delegatePackage).isNull();
+    assertThat(delegateTaskPackage).isNull();
   }
 
   @Test
@@ -1137,7 +1137,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReportConnectionResults_unavailable() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), STARTED);
-    DelegatePackage delegatePackage =
+    DelegateTaskPackage delegateTaskPackage =
         delegateService.reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
             singletonList(DelegateConnectionResult.builder()
                               .accountId(ACCOUNT_ID)
@@ -1146,7 +1146,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                               .criteria("aaa")
                               .validated(true)
                               .build()));
-    assertThat(delegatePackage).isNull();
+    assertThat(delegateTaskPackage).isNull();
   }
 
   @Test

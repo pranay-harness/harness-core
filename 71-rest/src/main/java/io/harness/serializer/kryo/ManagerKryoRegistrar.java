@@ -154,7 +154,7 @@ import software.wings.beans.ChecksumType;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.DelegatePackage;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.EcrConfig;
@@ -1335,7 +1335,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
     kryo.register(EcsServiceDeployRequest.class, 7148);
     kryo.register(EcsServiceDeployResponse.class, 7149);
-    kryo.register(DelegatePackage.class, 7150);
+    kryo.register(DelegateTaskPackage.class, 7150);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
     kryo.register(ShellScriptProvisionExecutionData.class, 7152);
     kryo.register(TerraformProvisionInheritPlanElement.class, 7153);

@@ -11,11 +11,11 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -86,9 +86,9 @@ public interface DelegateService extends OwnedByAccount {
 
   <T extends ResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
-  DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId);
+  DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
 
-  DelegatePackage reportConnectionResults(
+  DelegateTaskPackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
 
   void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);

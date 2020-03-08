@@ -136,10 +136,10 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -1403,14 +1403,15 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Try to acquire DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
 
-      DelegatePackage delegatePackage = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
-      if (delegatePackage == null || delegatePackage.getDelegateTask() == null) {
+      DelegateTaskPackage delegateTaskPackage =
+          execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
+      if (delegateTaskPackage == null || delegateTaskPackage.getDelegateTask() == null) {
         logger.info(
             "DelegateTask not available - uuid: {}, accountId: {}", delegateTaskId, delegateTaskEvent.getAccountId());
         return;
       }
 
-      DelegateTask delegateTask = delegatePackage.getDelegateTask();
+      DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
       if (isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
@@ -1471,7 +1472,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
 
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
-        applyDelegateSecretFunctor(delegatePackage);
+        applyDelegateSecretFunctor(delegateTaskPackage);
         // Whitelisted. Proceed immediately.
         logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
         executeTask(delegateTask);
@@ -1505,14 +1506,14 @@ public class DelegateServiceImpl implements DelegateService {
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
       try {
-        DelegatePackage delegatePackage = execute(managerClient.reportConnectionResults(
+        DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
             delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
 
-        if (delegatePackage != null && delegatePackage.getDelegateTask() != null
-            && delegateId.equals(delegatePackage.getDelegateTask().getDelegateId())) {
+        if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
+            && delegateId.equals(delegateTaskPackage.getDelegateTask().getDelegateId())) {
           logger.info("Got the go-ahead to proceed for task {}.", taskId);
-          applyDelegateSecretFunctor(delegatePackage);
-          executeTask(delegatePackage.getDelegateTask());
+          applyDelegateSecretFunctor(delegateTaskPackage);
+          executeTask(delegateTaskPackage.getDelegateTask());
         } else {
           logger.info("Did not get the go-ahead to proceed for task {}", taskId);
           if (validated) {
@@ -1925,9 +1926,9 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @VisibleForTesting
-  void applyDelegateSecretFunctor(DelegatePackage delegatePackage) {
-    final Map<String, EncryptionConfig> encryptionConfigs = delegatePackage.getEncryptionConfigs();
-    final Map<String, SecretDetail> secretDetails = delegatePackage.getSecretDetails();
+  void applyDelegateSecretFunctor(DelegateTaskPackage delegateTaskPackage) {
+    final Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
+    final Map<String, SecretDetail> secretDetails = delegateTaskPackage.getSecretDetails();
     if (isEmpty(encryptionConfigs) || isEmpty(secretDetails)) {
       return;
     }
@@ -1944,8 +1945,8 @@ public class DelegateServiceImpl implements DelegateService {
         (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
 
     final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
-        secretUuidToValues, delegatePackage.getDelegateTask().getData().getExpressionFunctorToken());
-    final DelegateTask delegateTask = delegatePackage.getDelegateTask();
+        secretUuidToValues, delegateTaskPackage.getDelegateTask().getData().getExpressionFunctorToken());
+    final DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
     if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
         && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
       logger.info("Applying DelegateExpression Evaluator for delegateTask {}", delegateTask.getUuid());

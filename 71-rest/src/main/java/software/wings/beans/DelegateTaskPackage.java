@@ -14,7 +14,7 @@ import java.util.Map;
 @Value
 @Builder
 @AllArgsConstructor
-public class DelegatePackage {
+public class DelegateTaskPackage {
   private DelegateTask delegateTask;
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();

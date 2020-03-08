@@ -1,7 +1,5 @@
 package software.wings.helpers.ext.helm.request;
 
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
-
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;

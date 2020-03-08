@@ -35,10 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -573,7 +573,7 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   @Deprecated
-  public DelegatePackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
+  public DelegateTaskPackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -592,7 +592,7 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   @Deprecated
-  public DelegatePackage reportConnectionResults(@PathParam("delegateId") String delegateId,
+  public DelegateTaskPackage reportConnectionResults(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
       List<DelegateConnectionResult> results) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
