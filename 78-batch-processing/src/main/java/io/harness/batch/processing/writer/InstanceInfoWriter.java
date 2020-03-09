@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer;
 
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class InstanceInfoWriter implements ItemWriter<InstanceInfo> {
 
   @Override
   public void write(List<? extends InstanceInfo> instanceInfoList) throws Exception {
-    instanceInfoList.forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
+    instanceInfoList.stream()
+        .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
+        .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
   }
 }
