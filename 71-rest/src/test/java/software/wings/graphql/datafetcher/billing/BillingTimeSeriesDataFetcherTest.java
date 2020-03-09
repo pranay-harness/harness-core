@@ -575,7 +575,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
-        .isEqualTo(WORKLOAD_NAME_ACCOUNT1 + ":" + NAMESPACE1);
+        .isEqualTo(NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
@@ -633,7 +633,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
-        .isEqualTo(WORKLOAD_NAME_ACCOUNT1 + BillingStatsDefaultKeys.TOKEN + NAMESPACE1);
+        .isEqualTo(NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("WORKLOADNAME");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }

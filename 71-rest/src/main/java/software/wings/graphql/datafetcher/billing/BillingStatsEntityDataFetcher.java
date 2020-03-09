@@ -226,6 +226,16 @@ public class BillingStatsEntityDataFetcher
         unallocatedCost = unallocatedCostForCluster.get(clusterId);
       }
 
+      // To check if we are grouping by cluster, in that case unallocated cost gets included in idle cost
+      // So removing unallocated cost from idle cost
+      if (queryData.getGroupByFields().contains(BillingDataMetaDataFields.CLUSTERID)) {
+        idleCost = billingDataHelper.getRoundedDoubleValue(idleCost - unallocatedCost);
+        if (idleCost < 0) {
+          idleCost = 0.0;
+          logger.info("Idle cost updated to 0.0 as (idleCost - unallocatedCost) < 0");
+        }
+      }
+
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();
       entityTableDataBuilder.id(entityId)
           .name(name)

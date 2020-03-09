@@ -170,7 +170,7 @@ public class BillingStatsTimeSeriesDataFetcher
 
             String entityId = resultSet.getString(field.getFieldName());
             String idWithInfo =
-                addNamespaceToEntityId ? entityId + BillingStatsDefaultKeys.TOKEN + additionalInfo : entityId;
+                addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
             cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
             memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
             dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
@@ -260,7 +260,7 @@ public class BillingStatsTimeSeriesDataFetcher
               break;
             }
             entityId = resultSet.getString(field.getFieldName());
-            idWithInfo = addNamespaceToEntityId ? entityId + BillingStatsDefaultKeys.TOKEN + additionalInfo : entityId;
+            idWithInfo = addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
             break;
           case TIMESTAMP:
             timeFieldName = field.getFieldName();

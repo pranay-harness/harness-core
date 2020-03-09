@@ -36,7 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -279,14 +278,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
   private List<QLBillingDataPoint> getLabelDataPoints(
       String accountId, List<QLBillingDataPoint> dataPoints, LA groupByLabel, QLCCMAggregateOperation operation) {
-    Set<String> entityIdSet =
-        dataPoints.stream()
-            .map(
-                dataPoint -> new StringTokenizer(dataPoint.getKey().getId(), BillingStatsDefaultKeys.TOKEN).nextToken())
-            .collect(Collectors.toSet());
+    Set<String> entityIdSet = dataPoints.stream()
+                                  .map(dataPoint -> getWorkloadNameFromId(dataPoint.getKey().getId()))
+                                  .collect(Collectors.toSet());
     Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
     Map<String, K8sWorkload> entityIdLabelLinkMap = labelLinks.stream().collect(Collectors.toMap(
-        k8sWorkload -> k8sWorkload.getName() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getNamespace(), identity()));
+        k8sWorkload -> k8sWorkload.getNamespace() + BillingStatsDefaultKeys.TOKEN + k8sWorkload.getName(), identity()));
 
     ArrayMap<String, QLBillingDataPoint> labelNameDataPointMap = new ArrayMap<>();
     ArrayMap<String, Long> numberOfDataPoints = new ArrayMap<>();
@@ -317,6 +314,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     });
 
     return new ArrayList<>(labelNameDataPointMap.values());
+  }
+
+  private String getWorkloadNameFromId(String id) {
+    String[] strArray = id.split(BillingStatsDefaultKeys.TOKEN);
+    // Id has this format namespace:workloadName
+    return strArray[strArray.length - 1];
   }
 
   private boolean updateDataPointsForLabelAggregation(QLBillingDataPoint dataPoint,
