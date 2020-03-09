@@ -51,7 +51,7 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     scheduledService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("perpetual-task-worker").build());
     addListener(new LoggingListener(this), MoreExecutors.directExecutor());
-    backoffScheduler = new BackoffScheduler(Duration.ofMinutes(4), Duration.ofMinutes(14));
+    backoffScheduler = new BackoffScheduler(getClass().getSimpleName(), Duration.ofMinutes(4), Duration.ofMinutes(14));
   }
 
   private void handleTasks() {
