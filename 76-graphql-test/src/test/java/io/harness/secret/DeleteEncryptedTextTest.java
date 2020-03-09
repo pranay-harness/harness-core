@@ -32,7 +32,7 @@ public class DeleteEncryptedTextTest extends GraphQLTest {
             clientMutationId
         }
     }
-    */ deleteRequestHelper.getDeleteSecretInput(secretId));
+    */ deleteRequestHelper.getDeleteSecretInput(secretId, "ENCRYPTED_TEXT"));
     final QLTestObject qlTestObject = qlExecute(query, getAccountId());
     assertThat(qlTestObject.get(QLDeleteSecretPayloadKeys.clientMutationId)).isEqualTo("abc");
   }
@@ -48,7 +48,7 @@ mutation{
         clientMutationId
     }
 }
-*/ deleteRequestHelper.getDeleteSecretInput(secretId));
+*/ deleteRequestHelper.getDeleteSecretInput(secretId, "ENCRYPTED_TEXT"));
     final ExecutionResult result = qlResult(query, getAccountId());
     assertThat(result.getErrors().size()).isEqualTo(1);
     assertThat(result.getErrors().get(0).getMessage())

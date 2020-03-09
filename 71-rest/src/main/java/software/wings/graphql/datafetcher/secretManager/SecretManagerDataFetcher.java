@@ -28,8 +28,8 @@ public class SecretManagerDataFetcher
   protected QLSecretManager fetch(QLSecretManagerQueryParameters qlQuery, String accountId) {
     SecretManagerConfig secretManager = null;
 
-    if (isNotBlank(qlQuery.getId())) {
-      secretManager = getById(qlQuery.getId().trim(), accountId);
+    if (isNotBlank(qlQuery.getSecretManagerId())) {
+      secretManager = getById(qlQuery.getSecretManagerId().trim(), accountId);
     }
 
     if (isNotBlank(qlQuery.getName())) {

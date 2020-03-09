@@ -31,7 +31,7 @@ public class DeleteWinRMCredentialTest extends GraphQLTest {
             clientMutationId
         }
     }
-    */ deleteRequestHelper.getDeleteSecretInput(secretId));
+    */ deleteRequestHelper.getDeleteSecretInput(secretId, "WINRM_CREDENTIAL"));
     final QLTestObject qlTestObject = qlExecute(query, getAccountId());
     assertThat(qlTestObject.get(QLDeleteSecretPayloadKeys.clientMutationId)).isEqualTo("abc");
   }

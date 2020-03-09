@@ -687,6 +687,9 @@ public class SettingsServiceImpl implements SettingsService {
   @Nullable
   public SettingAttribute getByAccount(String accountId, String varId) {
     SettingAttribute settingAttribute = get(varId);
+    if (settingAttribute == null) {
+      return null;
+    }
     return settingAttribute.getAccountId().equals(accountId) ? settingAttribute : null;
   }
 

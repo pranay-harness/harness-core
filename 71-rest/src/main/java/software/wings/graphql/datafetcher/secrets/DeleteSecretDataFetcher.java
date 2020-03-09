@@ -2,18 +2,26 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
+import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_FILE;
+import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_TEXT;
+import static software.wings.graphql.schema.type.secrets.QLSecretType.SSH_CREDENTIAL;
+import static software.wings.graphql.schema.type.secrets.QLSecretType.WINRM_CREDENTIAL;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secrets.input.QLDeleteSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLDeleteSecretPayload;
+import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
@@ -35,6 +43,41 @@ public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecr
     throw new InvalidRequestException(String.format("No secret exists with the id %s", secretId));
   }
 
+  private void deleteTextOrFileSecret(String accountId, String secretId, QLSecretType inputSecretType) {
+    EncryptedData encryptedData = secretManager.getSecretById(accountId, secretId);
+    if (encryptedData != null) {
+      if (encryptedData.getType() == SECRET_TEXT && inputSecretType == ENCRYPTED_TEXT
+          || encryptedData.getType() == CONFIG_FILE && inputSecretType == ENCRYPTED_FILE) {
+        secretManager.deleteSecret(accountId, secretId);
+      } else {
+        throwInvalidSecretException(secretId);
+      }
+    } else {
+      throwInvalidSecretException(secretId);
+    }
+  }
+
+  private void deleteConnectionSecrets(String accountId, String secretId, QLSecretType inputSecretType) {
+    SettingAttribute settingAttribute = settingsService.getByAccount(accountId, secretId);
+    if (settingAttribute == null || settingAttribute.getCategory() != SETTING) {
+      throwInvalidSecretException(secretId);
+    }
+    SettingValue settingValue = null;
+    if (settingAttribute != null) {
+      settingValue = settingAttribute.getValue();
+    }
+    if (settingValue != null) {
+      if ((settingValue.getSettingType() == HOST_CONNECTION_ATTRIBUTES && inputSecretType == SSH_CREDENTIAL)
+          || (settingValue.getSettingType() == WINRM_CONNECTION_ATTRIBUTES && inputSecretType == WINRM_CREDENTIAL)) {
+        settingsService.delete(null, secretId);
+      } else {
+        throwInvalidSecretException(secretId);
+      }
+    } else {
+      throwInvalidSecretException(secretId);
+    }
+  }
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLDeleteSecretPayload mutateAndFetch(QLDeleteSecretInput input, MutationContext mutationContext) {
@@ -43,33 +86,13 @@ public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecr
     if (isBlank(secretId)) {
       throw new InvalidRequestException("The secretId cannot be null in the delete request");
     }
-    EncryptedData encryptedData = secretManager.getSecretById(accountId, secretId);
-    if (encryptedData != null) {
-      // The secret is either encrypted Text or encrypted File, also ensuring that no other encrypted record is deleted
-      if (encryptedData.getType() == SettingValue.SettingVariableTypes.SECRET_TEXT) {
-        secretManager.deleteSecret(accountId, secretId);
-      } else {
-        throwInvalidSecretException(secretId);
-      }
+    QLSecretType inputSecretType = input.getSecretType();
+    if (inputSecretType == ENCRYPTED_TEXT || inputSecretType == ENCRYPTED_FILE) {
+      deleteTextOrFileSecret(accountId, secretId, inputSecretType);
+    } else if (inputSecretType == WINRM_CREDENTIAL || inputSecretType == SSH_CREDENTIAL) {
+      deleteConnectionSecrets(accountId, secretId, inputSecretType);
     } else {
-      // Check whether the secret is winRM/SSH
-      SettingAttribute settingAttribute = settingsService.get(secretId);
-      // Since we did get without accountId, adding a check for accountId here.
-      if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
-          || settingAttribute.getCategory() != SETTING) {
-        throwInvalidSecretException(secretId);
-      }
-      SettingValue settingValue = null;
-      if (settingAttribute != null) {
-        settingValue = settingAttribute.getValue();
-      }
-      if (settingValue != null
-          && (settingValue.getSettingType() == HOST_CONNECTION_ATTRIBUTES
-                 || settingValue.getSettingType() == WINRM_CONNECTION_ATTRIBUTES)) {
-        settingsService.delete(null, secretId);
-      } else {
-        throwInvalidSecretException(secretId);
-      }
+      throw new UnexpectedException("Invalid secretType provided in the request");
     }
     return QLDeleteSecretPayload.builder().clientMutationId(input.getClientMutationId()).build();
   }

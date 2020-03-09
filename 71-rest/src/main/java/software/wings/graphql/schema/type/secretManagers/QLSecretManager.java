@@ -12,6 +12,6 @@ import software.wings.security.annotations.Scope;
 @FieldNameConstants(innerTypeName = "QLSecretManagerKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class QLSecretManager implements QLObject {
-  String secretManagerId;
+  String id;
   String name;
 }

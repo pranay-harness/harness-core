@@ -31,7 +31,7 @@ public class DeleteSSHCredentialTest extends GraphQLTest {
             clientMutationId
         }
     }
-    */ deleteRequestHelper.getDeleteSecretInput(secretId));
+    */ deleteRequestHelper.getDeleteSecretInput(secretId, "SSH_CREDENTIAL"));
     final QLTestObject qlTestObject = qlExecute(query, getAccountId());
     assertThat(qlTestObject.get(QLDeleteSecretPayloadKeys.clientMutationId)).isEqualTo("abc");
   }
