@@ -258,7 +258,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
 
       boolean userUpdate = false;
-      if (StringUtils.isNotEmpty(displayName) && !user.getName().equals(displayName)) {
+      if (StringUtils.isNotEmpty(displayName) && !displayName.equals(user.getName())) {
         userUpdate = true;
         updateOperations.set(UserKeys.name, displayName);
         logger.info("SCIM: Updated user's {} name: {}", userId, displayName);
