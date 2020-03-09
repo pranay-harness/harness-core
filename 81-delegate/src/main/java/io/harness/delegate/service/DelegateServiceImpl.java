@@ -1169,6 +1169,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Watcher process {} needs restart", watcherProcess);
       systemExecutorService.submit(() -> {
         try {
+          logger.info("Send kill -9 to watcherProcess {}", watcherProcess);
           new ProcessExecutor().command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
           sleep(ofSeconds(2));

@@ -38,6 +38,9 @@ public class ChronicleEventTailer extends AbstractScheduledService {
   private final FileDeletionManager fileDeletionManager;
   private final BackoffScheduler scheduler;
 
+  private static final long SAMPLING_MOD = 100;
+  private long samplingCounter;
+
   @Inject
   ChronicleEventTailer(EventPublisherBlockingStub blockingStub, @Named("tailer") RollingChronicleQueue chronicleQueue,
       FileDeletionManager fileDeletionManager) {
@@ -46,7 +49,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     this.readTailer = chronicleQueue.createTailer(READ_TAILER);
     fileDeletionManager.setQueue(chronicleQueue);
     this.fileDeletionManager = fileDeletionManager;
-    this.scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
+    this.scheduler = new BackoffScheduler(getClass().getSimpleName(), MIN_DELAY, MAX_DELAY);
     addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
 
@@ -60,18 +63,25 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     logger.info("Shutting down");
   }
 
+  // For sampled logging at info level to balance between too verbose and too little logs.
+  private void sampled(Runnable runnable) {
+    if (samplingCounter % SAMPLING_MOD == 0) {
+      runnable.run();
+    }
+  }
+
   @Override
   protected void runOneIteration() {
     // service will terminate if exception is not caught.
     try {
-      logger.trace("Checking for messages to publish");
+      sampled(() -> logger.info("Checking for messages to publish"));
       Batch batchToSend = new Batch(MAX_BYTES, MAX_COUNT);
       long prevIndex = getReadIndex();
-      logger.trace("Read index: {}", prevIndex);
+      sampled(() -> logger.info("Read index: {}", prevIndex));
       while (!batchToSend.isFull()) {
         try (DocumentContext dc = readTailer.readingDocument()) {
           if (!dc.isPresent()) {
-            logger.trace("Reached end of queue");
+            sampled(() -> logger.info("Reached end of queue"));
             break;
           }
           try {
@@ -83,13 +93,13 @@ public class ChronicleEventTailer extends AbstractScheduledService {
         }
       }
       if (batchToSend.isFull()) {
-        logger.trace("Batch is full");
+        sampled(() -> logger.info("Batch is full"));
       }
       if (!batchToSend.isEmpty()) {
         PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend.getMessages()).build();
         try {
           blockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).publish(publishRequest);
-          logger.debug("Published {} messages successfully", batchToSend.size());
+          sampled(() -> logger.info("Published {} messages successfully", batchToSend.size()));
           fileDeletionManager.setSentCycle(readTailer.cycle());
           scheduler.recordSuccess();
         } catch (Exception e) {
@@ -98,10 +108,12 @@ public class ChronicleEventTailer extends AbstractScheduledService {
           scheduler.recordFailure();
         }
       } else {
-        logger.trace("Skipping message publish as batch is empty");
+        sampled(() -> logger.info("Skipping message publish as batch is empty"));
       }
     } catch (Exception e) {
       logger.error("Encountered exception", e);
+    } finally {
+      samplingCounter++;
     }
   }
 
@@ -115,6 +127,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     if (index == 0) {
       // For some reason, for a newly created tailer, tailer.index() returns 0 instead of the correct index, and the
       // rewind does not work. This is a workaround for that.
+      logger.info("Index is 0. Rewinding to start");
       readTailer.toStart();
       return readTailer.index();
     }

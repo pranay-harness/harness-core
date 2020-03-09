@@ -731,6 +731,7 @@ public class WatcherServiceImpl implements WatcherService {
         });
         if (newDelegate != null) {
           try {
+            logger.warn("Killing new delegate");
             newDelegate.getProcess().destroy();
             newDelegate.getProcess().waitFor();
           } catch (Exception ex) {
@@ -738,6 +739,7 @@ public class WatcherServiceImpl implements WatcherService {
           }
           try {
             if (newDelegate.getProcess().isAlive()) {
+              logger.warn("Killing new delegate forcibly");
               newDelegate.getProcess().destroyForcibly();
               if (newDelegate.getProcess() != null) {
                 newDelegate.getProcess().waitFor();
@@ -758,8 +760,10 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
         sleep(ofSeconds(5));
+        logger.info("Send kill -3 to delegateProcess {}", delegateProcess);
         new ProcessExecutor().command("kill", "-3", delegateProcess).start();
         sleep(ofSeconds(15));
+        logger.info("Send kill -9 to delegateProcess {}", delegateProcess);
         new ProcessExecutor().command("kill", "-9", delegateProcess).start();
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
@@ -778,6 +782,7 @@ public class WatcherServiceImpl implements WatcherService {
       logger.warn("Shutting down extra watcher {}", watcherProcess);
       executorService.submit(() -> {
         try {
+          logger.info("Send kill -9 to watcherProcess {}", watcherProcess);
           new ProcessExecutor().command("kill", "-9", watcherProcess).start();
         } catch (Exception e) {
           logger.error("Error killing watcher {}", watcherProcess, e);
@@ -1055,6 +1060,7 @@ public class WatcherServiceImpl implements WatcherService {
     messageService.shutdown();
     runningDelegates.forEach(delegateProcess -> {
       try {
+        logger.info("Sending kill -9 to delegateProcess {}", delegateProcess);
         new ProcessExecutor().command("kill", "-9", delegateProcess).execute();
       } catch (Exception e) {
         // Ignore

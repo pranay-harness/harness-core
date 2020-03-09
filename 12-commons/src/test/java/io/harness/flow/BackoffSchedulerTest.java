@@ -12,6 +12,7 @@ import org.junit.experimental.categories.Category;
 import java.time.Duration;
 
 public class BackoffSchedulerTest extends CategoryTest {
+  private static final String SERVICE = "service";
   private static final Duration MIN_DELAY = Duration.ofSeconds(1);
   private static final Duration MAX_DELAY = Duration.ofSeconds(10);
 
@@ -19,7 +20,7 @@ public class BackoffSchedulerTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldChangeDelayForSuccessAndFailure() throws Exception {
-    BackoffScheduler scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
+    BackoffScheduler scheduler = new BackoffScheduler(SERVICE, MIN_DELAY, MAX_DELAY);
     assertThat(scheduler.getCurrentDelayMs()).isEqualTo(1000L);
     scheduler.recordFailure();
     assertThat(scheduler.getCurrentDelayMs()).isEqualTo(2000L);
@@ -35,7 +36,7 @@ public class BackoffSchedulerTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldDelayBeAtMostMaxDelay() throws Exception {
-    BackoffScheduler scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
+    BackoffScheduler scheduler = new BackoffScheduler(SERVICE, MIN_DELAY, MAX_DELAY);
     for (int i = 0; i < 5; i++) {
       scheduler.recordFailure();
     }
@@ -46,7 +47,7 @@ public class BackoffSchedulerTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldDelayBeAtLeastMinDelay() throws Exception {
-    BackoffScheduler scheduler = new BackoffScheduler(MIN_DELAY, MAX_DELAY);
+    BackoffScheduler scheduler = new BackoffScheduler(SERVICE, MIN_DELAY, MAX_DELAY);
     scheduler.recordFailure();
     for (int i = 0; i < 5; i++) {
       scheduler.recordSuccess();
