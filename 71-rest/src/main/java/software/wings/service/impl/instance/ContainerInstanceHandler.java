@@ -26,9 +26,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -671,7 +671,33 @@ public class ContainerInstanceHandler extends InstanceHandler {
                                              .collect(toList()))
                              .build());
 
-    String image = pod.getContainerList().get(0).getImage();
+    boolean instanceBuilderUpdated = false;
+    if (deploymentSummary != null && deploymentSummary.getArtifactStreamId() != null) {
+      for (K8sContainer k8sContainer : pod.getContainerList()) {
+        Artifact artifact = wingsPersistence.createQuery(Artifact.class)
+                                .filter(ArtifactKeys.artifactStreamId, deploymentSummary.getArtifactStreamId())
+                                .filter(ArtifactKeys.appId, infraMapping.getAppId())
+                                .filter("metadata.image", k8sContainer.getImage())
+                                .disableValidation()
+                                .get();
+        if (artifact != null) {
+          builder.lastArtifactId(artifact.getUuid());
+          updateInstanceWithArtifactSourceAndBuildNum(builder, k8sContainer);
+          instanceBuilderUpdated = true;
+          break;
+        }
+      }
+    }
+
+    if (!instanceBuilderUpdated) {
+      updateInstanceWithArtifactSourceAndBuildNum(builder, pod.getContainerList().get(0));
+    }
+
+    return builder.build();
+  }
+
+  private void updateInstanceWithArtifactSourceAndBuildNum(InstanceBuilder builder, K8sContainer container) {
+    String image = container.getImage();
     String artifactSource;
     String tag;
     String[] splitArray = image.split(":");
@@ -686,24 +712,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
       tag = image;
     }
 
-    builder.lastArtifactName(pod.getContainerList().get(0).getImage());
+    builder.lastArtifactName(container.getImage());
     builder.lastArtifactSourceName(artifactSource);
     builder.lastArtifactBuildNum(tag);
-
-    try {
-      if (deploymentSummary != null && deploymentSummary.getArtifactStreamId() != null) {
-        Query<Artifact> artifacts = wingsPersistence.createQuery(Artifact.class)
-                                        .filter(ArtifactKeys.artifactStreamId, deploymentSummary.getArtifactStreamId())
-                                        .filter(ArtifactKeys.appId, infraMapping.getAppId());
-        builder.lastArtifactId(artifacts.filter("metadata.image", image).disableValidation().get().getUuid());
-      } else {
-        logger.error("Instance Sync: Artifact Stream not found in deployment summary.");
-      }
-    } catch (Exception e) {
-      logger.error("Instance Sync: Artifact id not found.", e);
-    }
-
-    return builder.build();
   }
 
   private ContainerInstanceKey generateInstanceKeyForContainer(ContainerInfo containerInfo) {
