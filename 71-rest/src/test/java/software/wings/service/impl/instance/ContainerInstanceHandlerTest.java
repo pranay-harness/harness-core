@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,6 +12,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.instance.InstanceType.KUBERNETES_CONTAINER_INSTANCE;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
@@ -28,11 +31,15 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.KUB
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +51,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.K8sDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -53,6 +61,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
@@ -60,6 +69,7 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builde
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
@@ -68,10 +78,13 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.sm.states.k8s.K8sStateHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,7 +96,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock ServiceResourceService serviceResourceService;
   @Mock private ContainerSync containerSync;
   @Mock private DeploymentService deploymentService;
+  @Mock private K8sStateHelper k8sStateHelper;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
+
+  @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setUp() {
@@ -692,5 +708,125 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertThat(capturedInstances.get(0).getContainerInstanceKey().getContainerId()).isEqualTo(containerId);
     assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(instanceType);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNewDeployment_AddNewInstance_K8sV2() throws Exception {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.EMPTY_LIST);
+    doReturn(pageResponse).when(instanceService).list(any());
+
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+        .thenReturn(asList(K8sPod.builder()
+                               .name("podName")
+                               .namespace("default")
+                               .releaseName("releaseName")
+                               .containerList(asList(
+                                   K8sContainer.builder().image("image1:version1").containerId("containerId1").build()))
+                               .build()));
+
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
+
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("image", "image1:version1");
+    wingsPersistence.save(anArtifact()
+                              .withUuid(ARTIFACT_ID)
+                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                              .withAppId("app_id")
+                              .withMetadata(metadata)
+                              .build());
+
+    containerInstanceHandler.handleNewDeployment(Arrays.asList(DeploymentSummary.builder()
+                                                                   .deploymentInfo(K8sDeploymentInfo.builder()
+                                                                                       .namespace("default")
+                                                                                       .releaseName("releaseName")
+                                                                                       .releaseNumber(1)
+                                                                                       .build())
+                                                                   .accountId(ACCOUNT_ID)
+                                                                   .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                                   .infraMappingId(INFRA_MAPPING_ID)
+                                                                   .workflowExecutionId("workflowExecution_1")
+                                                                   .stateExecutionInstanceId("stateExecutionInstanceId")
+                                                                   .build()),
+        false, onDemandRollbackInfo);
+
+    ArgumentCaptor<Instance> captor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService).saveOrUpdate(captor.capture());
+
+    Instance instance = captor.getValue();
+    assertThat(instance.getLastArtifactId()).isEqualTo(ARTIFACT_ID);
+    assertThat(instance.getLastArtifactName()).isEqualTo("image1:version1");
+    assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
+    assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
+
+    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+        .thenReturn(asList(K8sPod.builder()
+                               .name("podName")
+                               .namespace("default")
+                               .releaseName("releaseName")
+                               .containerList(asList(
+                                   K8sContainer.builder().image("image2:version2").containerId("containerId2").build(),
+                                   K8sContainer.builder().image("image1:version1").containerId("containerId1").build()))
+                               .build()));
+    containerInstanceHandler.handleNewDeployment(Arrays.asList(DeploymentSummary.builder()
+                                                                   .deploymentInfo(K8sDeploymentInfo.builder()
+                                                                                       .namespace("default")
+                                                                                       .releaseName("releaseName")
+                                                                                       .releaseNumber(1)
+                                                                                       .build())
+                                                                   .accountId(ACCOUNT_ID)
+                                                                   .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                                   .infraMappingId(INFRA_MAPPING_ID)
+                                                                   .workflowExecutionId("workflowExecution_1")
+                                                                   .stateExecutionInstanceId("stateExecutionInstanceId")
+                                                                   .build()),
+        false, onDemandRollbackInfo);
+
+    captor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(2)).saveOrUpdate(captor.capture());
+
+    instance = captor.getAllValues().get(1);
+    assertThat(instance.getLastArtifactId()).isEqualTo(ARTIFACT_ID);
+    assertThat(instance.getLastArtifactName()).isEqualTo("image1:version1");
+    assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
+    assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
+
+    wingsPersistence.delete(Artifact.class, ARTIFACT_ID);
+    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+        .thenReturn(asList(K8sPod.builder()
+                               .name("podName")
+                               .namespace("default")
+                               .releaseName("releaseName")
+                               .containerList(asList(
+                                   K8sContainer.builder().image("image3:version3").containerId("containerId3").build(),
+                                   K8sContainer.builder().image("image1:version1").containerId("containerId1").build()))
+                               .build()));
+    containerInstanceHandler.handleNewDeployment(Arrays.asList(DeploymentSummary.builder()
+                                                                   .deploymentInfo(K8sDeploymentInfo.builder()
+                                                                                       .namespace("default")
+                                                                                       .releaseName("releaseName")
+                                                                                       .releaseNumber(1)
+                                                                                       .build())
+                                                                   .accountId(ACCOUNT_ID)
+                                                                   .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                                   .infraMappingId(INFRA_MAPPING_ID)
+                                                                   .workflowExecutionId("workflowExecution_1")
+                                                                   .stateExecutionInstanceId("stateExecutionInstanceId")
+                                                                   .build()),
+        false, onDemandRollbackInfo);
+
+    captor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(3)).saveOrUpdate(captor.capture());
+
+    instance = captor.getAllValues().get(2);
+    assertThat(instance.getLastArtifactName()).isEqualTo("image3:version3");
+    assertThat(instance.getLastArtifactSourceName()).isEqualTo("image3");
+    assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version3");
   }
 }
