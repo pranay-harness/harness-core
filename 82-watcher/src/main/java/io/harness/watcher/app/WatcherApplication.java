@@ -59,43 +59,47 @@ public class WatcherApplication {
   }
 
   public static void main(String... args) throws Exception {
-    processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+    try {
+      processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
 
-    String proxyUser = System.getenv("PROXY_USER");
-    if (isNotBlank(proxyUser)) {
-      System.setProperty("http.proxyUser", proxyUser);
-      System.setProperty("https.proxyUser", proxyUser);
+      String proxyUser = System.getenv("PROXY_USER");
+      if (isNotBlank(proxyUser)) {
+        System.setProperty("http.proxyUser", proxyUser);
+        System.setProperty("https.proxyUser", proxyUser);
+      }
+      String proxyPassword = System.getenv("PROXY_PASSWORD");
+      if (isNotBlank(proxyPassword)) {
+        System.setProperty("http.proxyPassword", proxyPassword);
+        System.setProperty("https.proxyPassword", proxyPassword);
+      }
+
+      File configFile = new File(args[0]);
+      configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), WatcherConfiguration.class);
+
+      // Optionally remove existing handlers attached to j.u.l root logger
+      SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
+
+      // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
+      // the initialization phase of your application
+      SLF4JBridgeHandler.install();
+
+      // Set logging level
+      java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+
+      boolean upgrade = false;
+      String previousWatcherProcess = null;
+      if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
+        upgrade = true;
+        previousWatcherProcess = args[2];
+      }
+
+      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+      WatcherApplication watcherApplication = new WatcherApplication();
+      watcherApplication.run(configuration, upgrade, previousWatcherProcess);
+    } catch (Exception exception) {
+      logger.error("Watcher process initialization failed", exception);
+      throw exception;
     }
-    String proxyPassword = System.getenv("PROXY_PASSWORD");
-    if (isNotBlank(proxyPassword)) {
-      System.setProperty("http.proxyPassword", proxyPassword);
-      System.setProperty("https.proxyPassword", proxyPassword);
-    }
-
-    File configFile = new File(args[0]);
-    configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), WatcherConfiguration.class);
-
-    // Optionally remove existing handlers attached to j.u.l root logger
-    SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
-
-    // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
-    // the initialization phase of your application
-    SLF4JBridgeHandler.install();
-
-    // Set logging level
-    java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-
-    boolean upgrade = false;
-    String previousWatcherProcess = null;
-    if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
-      upgrade = true;
-      previousWatcherProcess = args[2];
-    }
-
-    logger.info("Starting Watcher");
-    logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
-    WatcherApplication watcherApplication = new WatcherApplication();
-    watcherApplication.run(configuration, upgrade, previousWatcherProcess);
   }
 
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
