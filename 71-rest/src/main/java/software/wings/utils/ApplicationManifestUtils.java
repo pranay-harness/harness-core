@@ -128,10 +128,8 @@ public class ApplicationManifestUtils {
       }
     }
 
-    boolean isBindTaskFeatureSet = false;
-    if (featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, app.getAccountId())) {
-      isBindTaskFeatureSet = true;
-    }
+    boolean isBindTaskFeatureSet =
+        featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, app.getAccountId());
 
     return GitFetchFilesTaskParams.builder()
         .accountId(app.getAccountId())

@@ -83,7 +83,14 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList("GIT_FETCH_FILES:" + getRepoUrls());
+    StringBuilder sb = new StringBuilder(128);
+    sb.append("GIT_FETCH_FILES:").append(getRepoUrls());
+    GitFetchFilesTaskParams parameters = (GitFetchFilesTaskParams) getParameters()[0];
+    if (parameters.isBindTaskFeatureSet() && parameters.getContainerServiceParams() != null) {
+      sb.append(" from ").append(containerValidationHelper.getCriteria(parameters.getContainerServiceParams()));
+    }
+
+    return singletonList(sb.toString());
   }
 
   private String getRepoUrls() {
