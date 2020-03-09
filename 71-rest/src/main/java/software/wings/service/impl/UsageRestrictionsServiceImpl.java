@@ -884,10 +884,15 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
     }
 
-    boolean canUpdateEntity =
+    boolean canUpdateOldRestrictions =
         userHasPermissionsToChangeEntity(accountId, oldUsageRestrictions, restrictionsFromUserPermissions);
 
-    if (!canUpdateEntity) {
+    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
+    boolean canAddNewRestrictions =
+        userHasPermissionsToChangeEntity(accountId, newUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
+
+    if (!canUpdateOldRestrictions || !canAddNewRestrictions) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }

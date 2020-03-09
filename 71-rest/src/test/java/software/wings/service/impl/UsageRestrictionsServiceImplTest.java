@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
@@ -874,18 +875,17 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = RAMA)
+  @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
-  public void testCheckIfValidUsageRestrictions() {
+  public void testCheckIfValidUsageRestrictionsWhenUserHasALLPermission() {
     try {
       List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
       AppPermission appPermission =
           AppPermission.builder()
               .permissionType(ENV)
-              .appFilter(
-                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
               .actions(newHashSet(allActions))
-              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
+              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build())
               .build();
       List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
@@ -929,23 +929,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
 
-      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-      envFilters = newHashSet(SELECTED);
-      envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID_1)).build();
-      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
-      usageRestrictions = new UsageRestrictions();
-      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
-
-      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
-      envFilters = newHashSet(SELECTED);
-      envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID_1, ENV_ID_2)).build();
-      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
-      usageRestrictions = new UsageRestrictions();
-      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
-
       // Invalid scenarios
+      // Scenerios where wrong input is given by the user
       appFilter = GenericEntityFilter.builder().build();
       envFilters = newHashSet(PROD, NON_PROD);
       envFilter = EnvFilter.builder().filterTypes(envFilters).build();
@@ -1017,6 +1002,112 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       } catch (WingsException ex) {
         assertThat(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS).isEqualTo(ex.getCode());
       }
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  /*
+   * Testing all the negative test cases such that user having permission to only one env shouldn't be able to
+   * add usage scope with different permissions
+   */
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testCheckIfValidUsageRestrictionsWhenUserHasOneEnvPerm() {
+    try {
+      List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
+      AppPermission appPermission =
+          AppPermission.builder()
+              .permissionType(ENV)
+              .appFilter(
+                  GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build())
+              .actions(newHashSet(allActions))
+              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
+              .build();
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
+
+      List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
+      Set<Action> actions = allActions;
+
+      setPermissions(appIds, envIds, actions, true, userGroups);
+      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
+
+      // Valid Scenarios
+
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      HashSet<String> envFilters = newHashSet(PROD, NON_PROD);
+      EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilters).build();
+      AppEnvRestriction appEnvRestriction =
+          AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      UsageRestrictions usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
+      envFilters = newHashSet(PROD, NON_PROD);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      envFilters = newHashSet(NON_PROD);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      envFilters = newHashSet(PROD);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      envFilters = newHashSet(SELECTED);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID_1)).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
+      envFilters = newHashSet(SELECTED);
+      envFilter = EnvFilter.builder().filterTypes(envFilters).ids(newHashSet(ENV_ID_1, ENV_ID_2)).build();
+      appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      try {
+        usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
+      } catch (WingsException ex) {
+        assertThat(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS).isEqualTo(ex.getCode());
+      }
+
     } finally {
       UserThreadLocal.unset();
     }
