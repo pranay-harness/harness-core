@@ -188,8 +188,10 @@ public class CapabilityHelper {
   }
 
   public static String generateLogStringWithCapabilitiesGenerated(DelegateTask task) {
-    StringBuilder builder =
-        new StringBuilder(128).append("Capabilities Generate for Task: ").append(task.getUuid()).append(" are: ");
+    StringBuilder builder = new StringBuilder(128)
+                                .append("Capabilities Generate for Task: ")
+                                .append(task.getData().getTaskType())
+                                .append(" are: ");
 
     task.getExecutionCapabilities().forEach(capability -> builder.append('\n').append(capability.toString()));
     return builder.toString();
