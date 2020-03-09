@@ -41,6 +41,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
@@ -3753,8 +3754,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       infrastructureDetails.put("CloudProvider", infrastructureMapping.getComputeProviderType());
       infrastructureDetails.put("CloudProviderName", infrastructureMapping.getComputeProviderName());
       if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
-        infrastructureDetails.put(
-            "ClusterName", ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
+        String clusterName = ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName();
+        if (isNotBlank(clusterName)) {
+          infrastructureDetails.put("ClusterName", clusterName);
+        }
         String namespace = ((ContainerInfrastructureMapping) infrastructureMapping).getNamespace();
         if (namespace != null) {
           infrastructureDetails.put("namespace", namespace);

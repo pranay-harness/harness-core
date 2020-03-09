@@ -46,6 +46,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.infra.InfraDefinitionTestConstants.RESOURCE_CONSTRAINT_NAME;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -108,6 +109,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorStrategy;
@@ -118,6 +120,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -2033,6 +2036,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                  .build());
   }
 
+  private InfrastructureMapping createContainerInfraMappingService(
+      ServiceTemplate serviceTemplate, SettingAttribute computeProvider, String serviceId) {
+    String infraMappingId =
+        wingsPersistence.save(DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping()
+                                  .withClusterName("testClusterName")
+                                  .withAccountId(app.getAccountId())
+                                  .withAppId(app.getUuid())
+                                  .withServiceId(serviceId)
+                                  .withNamespace("default")
+                                  .withEnvId(env.getUuid())
+                                  .withServiceTemplateId(serviceTemplate.getUuid())
+                                  .withComputeProviderSettingId(computeProvider.getUuid())
+                                  .withComputeProviderType(computeProvider.getValue().getType())
+                                  .withDeploymentType(DeploymentType.KUBERNETES.name())
+                                  .withInfraMappingType(KUBERNETES.name())
+                                  .build());
+
+    return wingsPersistence.get(InfrastructureMapping.class, infraMappingId);
+  }
+
   private Service addService(String svc1) {
     return wingsPersistence.saveAndGet(Service.class,
         Service.builder()
@@ -2260,6 +2283,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(infraMap.get("Service")).isEqualTo("Service");
     assertThat(infraMap.containsKey("CloudProvider")).isTrue();
     assertThat(infraMap.get("CloudProvider")).isEqualTo("PHYSICAL_DATA_CENTER");
+
+    computeProviderId = wingsPersistence.save(
+        aSettingAttribute().withAppId(app.getUuid()).withValue(KubernetesClusterConfig.builder().build()).build());
+    computeProvider = wingsPersistence.getWithAppId(SettingAttribute.class, app.getUuid(), computeProviderId);
+
+    execution.setInfraMappingIds(singletonList(
+        createContainerInfraMappingService(serviceTemplate, computeProvider, service.getUuid()).getUuid()));
+    infraMap = workflowExecutionService.extractServiceInfrastructureDetails(app.getUuid(), execution);
+    assertThat(infraMap).isNotNull();
+    assertThat(infraMap.get("ClusterName")).isEqualTo("testClusterName");
   }
 
   @Test
