@@ -1,13 +1,16 @@
 package software.wings.service.impl;
 
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -24,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
+import migrations.OnPrimaryManagerMigration;
+import migrations.OnPrimaryManagerMigrationList;
 import migrations.SeedDataMigration;
 import migrations.SeedDataMigrationList;
 import migrations.TimeScaleDBDataMigration;
@@ -35,13 +40,17 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Schema;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -54,6 +63,7 @@ public class MigrationServiceImpl implements MigrationService {
 
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private ConfigurationController configurationController;
 
   @Override
   public void runMigrations() {
@@ -78,6 +88,11 @@ public class MigrationServiceImpl implements MigrationService {
     int maxTimeScaleDBDataMigration =
         backgroundTimeScaleDBDataMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
+    final Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerMigrationMap =
+        OnPrimaryManagerMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    int maxOnPrimaryManagerMDBDataMigration =
+        onPrimaryManagerMigrationMap.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+
     try (
 
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
@@ -98,9 +113,12 @@ public class MigrationServiceImpl implements MigrationService {
                      .seedDataVersion(0)
                      .timescaleDbVersion(0)
                      .timescaleDBDataVersion(0)
+                     .onPrimaryManagerVersion(0)
                      .build();
         wingsPersistence.save(schema);
       }
+
+      scheduleOnPrimaryMigrations(schema, maxOnPrimaryManagerMDBDataMigration, onPrimaryManagerMigrationMap);
 
       int currentBackgroundVersion = schema.getBackgroundVersion();
       if (currentBackgroundVersion < maxBackgroundVersion) {
@@ -313,5 +331,110 @@ public class MigrationServiceImpl implements MigrationService {
     } catch (Exception e) {
       logger.error("[Migration] - initializeGlobalDbEntriesIfNeeded failed.", e);
     }
+  }
+
+  @VisibleForTesting
+  void runMigrationWhenNewManagerIsPrimary(final int maxOnPrimaryManagerMigrationVersion,
+      final Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerDataMigrations) {
+    logger.info("This is primary manager. Queuing OnPrimaryManager Migration Job");
+    executorService.submit(() -> {
+      try (AcquiredLock ignore =
+               persistentLocker.acquireLock(Schema.class, "OnPrimaryManager-" + SCHEMA_ID, ofMinutes(120 + 1))) {
+        timeLimiter.<Boolean>callWithTimeout(() -> {
+          final int currentOnPrimaryMigrationVersion = getCurrentOnPrimaryMigrationVersion();
+          if (currentOnPrimaryMigrationVersion < maxOnPrimaryManagerMigrationVersion) {
+            logger.info("[Migration] - Updating schema primary manager version from {} to {}",
+                currentOnPrimaryMigrationVersion, maxOnPrimaryManagerMigrationVersion);
+
+            for (int i = currentOnPrimaryMigrationVersion + 1; i <= maxOnPrimaryManagerMigrationVersion; i++) {
+              if (!onPrimaryManagerDataMigrations.containsKey(i)) {
+                continue;
+              }
+              Class<? extends OnPrimaryManagerMigration> migration = onPrimaryManagerDataMigrations.get(i);
+              logger.info(
+                  "[Migration] - Migrating to primary manager version {}: {} ...", i, migration.getSimpleName());
+              try {
+                injector.getInstance(migration).migrate();
+              } catch (Exception ex) {
+                logger.error("Error while running migration {}", migration.getSimpleName(), ex);
+                break;
+              }
+
+              final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+              updateOperations.set(Schema.ON_PRIMARY_MANAGER_VERSION, i);
+              wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+            }
+            logger.info("[Migration] - Primary manager migration complete");
+          } else {
+            logger.info("[Migration] - Schema primary manager is up to date");
+          }
+          return true;
+        }, 2, TimeUnit.HOURS, true);
+      } catch (Exception ex) {
+        logger.warn("primary manager work", ex);
+      }
+    });
+  }
+
+  private int getCurrentOnPrimaryMigrationVersion() {
+    final Schema schema = wingsPersistence.createQuery(Schema.class).get();
+    return schema != null ? schema.getOnPrimaryManagerVersion() : 0;
+  }
+
+  @VisibleForTesting
+  boolean isNotUnderMaintenance() {
+    return !getMaintenanceFilename();
+  }
+
+  @VisibleForTesting
+  void scheduleOnPrimaryMigrations(Schema schema, int maxOnPrimaryManagerMigrationVersion,
+      Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerMigrations) {
+    final int currentOnPrimaryManagerVersion = schema.getOnPrimaryManagerVersion();
+    if (currentOnPrimaryManagerVersion < maxOnPrimaryManagerMigrationVersion) {
+      startOnPrimaryMigrationScheduledJob(
+          () -> runMigrationWhenNewManagerIsPrimary(maxOnPrimaryManagerMigrationVersion, onPrimaryManagerMigrations));
+
+    } else if (currentOnPrimaryManagerVersion > maxOnPrimaryManagerMigrationVersion) {
+      // If the current version is bigger than the max version we are downgrading. Restore to the previous version
+      logger.info("[Migration] - Rolling back schema primary manager version from {} to {}",
+          currentOnPrimaryManagerVersion, maxOnPrimaryManagerMigrationVersion);
+      final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+      updateOperations.set(Schema.ON_PRIMARY_MANAGER_VERSION, maxOnPrimaryManagerMigrationVersion);
+      wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+    } else {
+      logger.info("[Migration] - Schema primary manager is up to date");
+    }
+  }
+  private void startOnPrimaryMigrationScheduledJob(Runnable runnable) {
+    final AtomicBoolean shouldRun = new AtomicBoolean(true);
+    final AtomicInteger runCount = new AtomicInteger(0);
+    final int maxRunCount = 10;
+    executorService.submit(() -> {
+      while (shouldRun.get()) {
+        waitForSometime();
+        final int currentRunCount = runCount.incrementAndGet();
+        logger.info(
+            "Started next run of OnPrimaryMigrationScheduledJob with isNotUnderMaintenance =[{}] , isPrimary= [{}], runCount=[{}]",
+            isNotUnderMaintenance(), configurationController.isPrimary(), currentRunCount);
+        if (currentRunCount > maxRunCount) {
+          shouldRun.set(false);
+          logger.info("Exceeded max run count of {}. Skip run ", maxRunCount);
+        } else if (isNotUnderMaintenance() && configurationController.isPrimary()) {
+          try {
+            runnable.run();
+          } catch (Exception e) {
+            logger.error("error while running OnPrimaryMigrationScheduledJob", e);
+          }
+          shouldRun.set(false);
+        }
+        logger.info("Completed run of OnPrimaryMigrationScheduledJob with shouldRun= [{}]", shouldRun.get());
+      }
+      logger.info("Stopping OnPrimaryMigrationScheduledJob");
+    });
+    logger.info("Scheduled OnPrimaryMigrationScheduledJob");
+  }
+
+  private void waitForSometime() {
+    sleep(Duration.ofMinutes(10));
   }
 }

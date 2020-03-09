@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+import migrations.OnPrimaryManagerMigration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -33,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class SyncNewFolderForConfigFiles implements Migration {
+public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
   String DEBUG_LINE = "CONFIG_FILE_SYNC: ";
   @Inject YamlChangeSetHelper yamlChangeSetHelper;
   @Inject ConfigService configService;

@@ -53,6 +53,12 @@ public class ConfigurationController implements Managed, QueueController {
     configChangeListeners.put(listener, configChangeEvents);
   }
 
+  public void deRegister(ConfigChangeListener listener) {
+    if (listener != null) {
+      configChangeListeners.remove(listener);
+    }
+  }
+
   @Override
   public void start() {
     executorService.submit(this ::run);
