@@ -76,7 +76,8 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
     spotInstSwapRoutesTaskHandler.executeTaskInternal(parameters,
         SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
         AwsConfig.builder().build());
-    verify(mockAwsElbHelperServiceDelegate).updateListenersForBGDeployment(any(), anyList(), anyList(), anyString());
+    verify(mockAwsElbHelperServiceDelegate)
+        .updateListenersForBGDeployment(any(), anyList(), anyList(), anyString(), any());
     verify(mockSpotInstHelperServiceDelegate).updateElastiGroupCapacity(anyString(), anyString(), anyString(), any());
   }
 

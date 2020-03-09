@@ -26,6 +26,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsR
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.ModifyRuleRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -39,6 +40,7 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -334,5 +336,62 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(rule.getRuleArn()).isEqualTo("ruleArn");
     assertThat(rule.getRulePriority()).isEqualTo("rulePriority");
     assertThat(rule.getRuleTargetGroupArn()).isEqualTo("targetArn");
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testModifySpecificRule() {
+    AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    String ruleArn = "RULE_ARN";
+    String tgtArn = "TGT_ARN";
+    awsElbHelperServiceDelegate.modifySpecificRule(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", ruleArn, tgtArn, mockCallback);
+    ArgumentCaptor<ModifyRuleRequest> captor = ArgumentCaptor.forClass(ModifyRuleRequest.class);
+    verify(mockV2Client).modifyRule(captor.capture());
+    ModifyRuleRequest request = captor.getValue();
+    assertThat(request).isNotNull();
+    assertThat(request.getRuleArn()).isEqualTo(ruleArn);
+    List<Action> actions = request.getActions();
+    assertThat(actions).isNotNull();
+    assertThat(actions.size()).isEqualTo(1);
+    assertThat(actions.get(0).getTargetGroupArn()).isEqualTo(tgtArn);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testFetchTargetGroupForSpecificRules() {
+    AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    AwsElbListener listener = AwsElbListener.builder()
+                                  .listenerArn("LIST_ARN")
+                                  .loadBalancerArn("LB_ARN")
+                                  .port(8080)
+                                  .protocol("HTTP")
+                                  .rules(singletonList(AwsElbListenerRuleData.builder()
+                                                           .ruleArn("RULE_ARN")
+                                                           .ruleTargetGroupArn("TGT_ARN")
+                                                           .rulePriority("1")
+                                                           .build()))
+                                  .build();
+    doReturn(new DescribeTargetGroupsResult().withTargetGroups(
+                 new TargetGroup().withTargetGroupName("TGT_NAME").withTargetGroupArn("TGT_ARN")))
+        .when(mockV2Client)
+        .describeTargetGroups(any());
+    TargetGroup targetGroup = awsElbHelperServiceDelegate.fetchTargetGroupForSpecificRules(
+        listener, "RULE_ARN", mockCallback, AwsConfig.builder().build(), "us-east-1", emptyList());
+    assertThat(targetGroup).isNotNull();
+    assertThat(targetGroup.getTargetGroupArn()).isEqualTo("TGT_ARN");
+    assertThat(targetGroup.getTargetGroupName()).isEqualTo("TGT_NAME");
   }
 }

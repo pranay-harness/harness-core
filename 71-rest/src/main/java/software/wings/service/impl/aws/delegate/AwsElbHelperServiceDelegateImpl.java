@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static com.amazonaws.services.elasticloadbalancingv2.model.ActionTypeEnum.Forward;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.aws.AwsElbListenerRuleData.AwsElbListenerRuleDataBuilder;
@@ -35,7 +36,6 @@ import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
-import com.amazonaws.services.elasticloadbalancingv2.model.ActionTypeEnum;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateListenerRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateListenerResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupRequest;
@@ -53,6 +53,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthR
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.ModifyListenerRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.ModifyRuleRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundException;
@@ -684,8 +685,7 @@ public class AwsElbHelperServiceDelegateImpl
         .withCertificates(prodListener.getCertificates())
         .withSslPolicy(prodListener.getSslPolicy());
 
-    createListenerRequest.withDefaultActions(
-        new Action().withType(ActionTypeEnum.Forward).withTargetGroupArn(targetGroupArn));
+    createListenerRequest.withDefaultActions(new Action().withType(Forward).withTargetGroupArn(targetGroupArn));
 
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
@@ -722,28 +722,35 @@ public class AwsElbHelperServiceDelegateImpl
 
   @Override
   public void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region) {
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
+      ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
-      tracker.trackELBCall("Describe Listeners");
-      DescribeListenersResult prodListenerResult = client.describeListeners(
-          new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
-      tracker.trackELBCall("Describe Listeners");
-      DescribeListenersResult stageListenerResult = client.describeListeners(
-          new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
-      Listener prodListener = prodListenerResult.getListeners().get(0);
-      Listener stageListener = stageListenerResult.getListeners().get(0);
-      tracker.trackELBCall("Modify Listeners");
-      client.modifyListener(new ModifyListenerRequest()
-                                .withListenerArn(prodListener.getListenerArn())
-                                .withDefaultActions(stageListener.getDefaultActions()));
-      tracker.trackELBCall("Modify Listeners");
-      client.modifyListener(new ModifyListenerRequest()
-                                .withListenerArn(stageListener.getListenerArn())
-                                .withDefaultActions(prodListener.getDefaultActions()));
+      if (lbDetailsForBGDeployment.isUseSpecificRules()) {
+        modifySpecificRule(client, lbDetailsForBGDeployment.getProdRuleArn(),
+            lbDetailsForBGDeployment.getStageTargetGroupArn(), logCallback);
+        modifySpecificRule(client, lbDetailsForBGDeployment.getStageRuleArn(),
+            lbDetailsForBGDeployment.getProdTargetGroupArn(), logCallback);
+      } else {
+        tracker.trackELBCall("Describe Listeners");
+        DescribeListenersResult prodListenerResult = client.describeListeners(
+            new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
+        tracker.trackELBCall("Describe Listeners");
+        DescribeListenersResult stageListenerResult = client.describeListeners(
+            new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
+        Listener prodListener = prodListenerResult.getListeners().get(0);
+        Listener stageListener = stageListenerResult.getListeners().get(0);
+        tracker.trackELBCall("Modify Listeners");
+        client.modifyListener(new ModifyListenerRequest()
+                                  .withListenerArn(prodListener.getListenerArn())
+                                  .withDefaultActions(stageListener.getDefaultActions()));
+        tracker.trackELBCall("Modify Listeners");
+        client.modifyListener(new ModifyListenerRequest()
+                                  .withListenerArn(stageListener.getListenerArn())
+                                  .withDefaultActions(prodListener.getDefaultActions()));
+      }
     });
   }
 
@@ -770,5 +777,70 @@ public class AwsElbHelperServiceDelegateImpl
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, message, USER).addParam("message", message);
     }
     return action.get().getTargetGroupArn();
+  }
+
+  private void modifySpecificRule(
+      AmazonElasticLoadBalancing client, String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback) {
+    logCallback.saveExecutionLog(format("Updating rule: [%s] to forward traffic to: [%s]", ruleArn, targetGroupArn));
+    ModifyRuleRequest request = new ModifyRuleRequest().withRuleArn(ruleArn).withActions(
+        new Action().withType(Forward).withTargetGroupArn(targetGroupArn));
+    tracker.trackELBCall("Modify Rules");
+    client.modifyRule(request);
+  }
+
+  @Override
+  public void modifySpecificRule(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+      modifySpecificRule(client, ruleArn, targetGroupArn, logCallback);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+  }
+
+  @Override
+  public TargetGroup fetchTargetGroupForSpecificRules(AwsElbListener listener, String ruleArn,
+      ExecutionLogCallback logCallback, AwsConfig awsConfig, String region,
+      List<EncryptedDataDetail> encryptionDetails) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      List<AwsElbListenerRuleData> rules = listener.getRules();
+      if (isEmpty(rules)) {
+        String errorMessage = format("Did not find any rules for Listener: [%s]", listener.getListenerArn());
+        logCallback.saveExecutionLog(errorMessage, ERROR);
+        throw new InvalidRequestException(errorMessage);
+      }
+
+      Optional<AwsElbListenerRuleData> specificRule =
+          rules.stream().filter(rule -> ruleArn.equalsIgnoreCase(rule.getRuleArn())).findFirst();
+      if (!specificRule.isPresent()) {
+        String errorMessage =
+            format("No rule with Arn: [%s] found for Listener: [%s]", ruleArn, listener.getListenerArn());
+        logCallback.saveExecutionLog(errorMessage, ERROR);
+        throw new InvalidRequestException(errorMessage);
+      }
+
+      Optional<TargetGroup> targetGroupOptional =
+          getTargetGroup(awsConfig, encryptionDetails, region, specificRule.get().getRuleTargetGroupArn());
+      if (!targetGroupOptional.isPresent()) {
+        String errorMessage =
+            format("Did not find any Target group with Arn: [%s]", specificRule.get().getRuleTargetGroupArn());
+        logCallback.saveExecutionLog(errorMessage, ERROR);
+        throw new InvalidRequestException(errorMessage);
+      }
+      TargetGroup targetGroup = targetGroupOptional.get();
+      logCallback.saveExecutionLog(format("Found that rule: [%s] forwarding traffic to Target group: [%s], Arn: [%s]",
+          ruleArn, targetGroup.getTargetGroupName(), targetGroup.getTargetGroupArn()));
+      return targetGroup;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
   }
 }
