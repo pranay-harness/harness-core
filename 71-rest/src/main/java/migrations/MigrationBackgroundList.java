@@ -43,7 +43,6 @@ import migrations.all.SetAccountIdProvisioners;
 import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
-import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.TemplateLibraryYamlMigration;
 import migrations.all.TerraformIsTemplatizedMigration;
 import migrations.all.TimeSeriesThresholdsMigration;
@@ -153,7 +152,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(87, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(88, TemplateLibraryYamlMigration.class))
         .add(Pair.of(89, HelmStateTimeoutMigration.class))
-        .add(Pair.of(90, SyncNewFolderForConfigFiles.class))
+        .add(Pair.of(90, BaseMigration.class))
         .build();
   }
 }
