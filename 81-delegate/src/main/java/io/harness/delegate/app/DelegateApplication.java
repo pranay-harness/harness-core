@@ -80,42 +80,47 @@ public class DelegateApplication {
   }
 
   public static void main(String... args) throws IOException {
-    processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+    try {
+      processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
 
-    String proxyUser = System.getenv("PROXY_USER");
-    if (isNotBlank(proxyUser)) {
-      System.setProperty("http.proxyUser", proxyUser);
-      System.setProperty("https.proxyUser", proxyUser);
+      String proxyUser = System.getenv("PROXY_USER");
+      if (isNotBlank(proxyUser)) {
+        System.setProperty("http.proxyUser", proxyUser);
+        System.setProperty("https.proxyUser", proxyUser);
+      }
+      String proxyPassword = System.getenv("PROXY_PASSWORD");
+      if (isNotBlank(proxyPassword)) {
+        System.setProperty("http.proxyPassword", proxyPassword);
+        System.setProperty("https.proxyPassword", proxyPassword);
+      }
+
+      File configFile = new File(args[0]);
+      configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), DelegateConfiguration.class);
+
+      String watcherProcess = null;
+      if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
+        watcherProcess = args[2];
+      }
+
+      // Optionally remove existing handlers attached to j.u.l root logger
+      SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
+
+      // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
+      // the initialization phase of your application
+      SLF4JBridgeHandler.install();
+
+      // Set logging level
+      java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+
+      initializeLogging();
+      logger.info("Starting Delegate");
+      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+      DelegateApplication delegateApplication = new DelegateApplication();
+      delegateApplication.run(configuration, watcherProcess);
+    } catch (RuntimeException | IOException exception) {
+      logger.error("Delegate process initialization failed", exception);
+      throw exception;
     }
-    String proxyPassword = System.getenv("PROXY_PASSWORD");
-    if (isNotBlank(proxyPassword)) {
-      System.setProperty("http.proxyPassword", proxyPassword);
-      System.setProperty("https.proxyPassword", proxyPassword);
-    }
-
-    File configFile = new File(args[0]);
-    configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), DelegateConfiguration.class);
-
-    String watcherProcess = null;
-    if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
-      watcherProcess = args[2];
-    }
-
-    // Optionally remove existing handlers attached to j.u.l root logger
-    SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
-
-    // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
-    // the initialization phase of your application
-    SLF4JBridgeHandler.install();
-
-    // Set logging level
-    java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-
-    initializeLogging();
-    logger.info("Starting Delegate");
-    logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
-    DelegateApplication delegateApplication = new DelegateApplication();
-    delegateApplication.run(configuration, watcherProcess);
   }
 
   private void run(DelegateConfiguration configuration, String watcherProcess) {
@@ -156,7 +161,7 @@ public class DelegateApplication {
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
-    final MessageService messageService = injector.getInstance(MessageService.class);
+    MessageService messageService = injector.getInstance(MessageService.class);
 
     // Add JVM shutdown hook so as to have a clean shutdown
     addShutdownHook(injector, messageService);
