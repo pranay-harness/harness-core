@@ -194,6 +194,9 @@ public class SpotInstStateHelper {
                 .loadBalancerArn(context.renderExpression(awsLoadBalancerConfig.getLoadBalancerArn()))
                 .prodListenerPort(context.renderExpression(awsLoadBalancerConfig.getProdListenerPort()))
                 .stageListenerPort(context.renderExpression(awsLoadBalancerConfig.getStageListenerPort()))
+                .useSpecificRules(awsLoadBalancerConfig.isUseSpecificRules())
+                .prodRuleArn(context.renderExpression(awsLoadBalancerConfig.getProdRuleArn()))
+                .stageRuleArn(context.renderExpression(awsLoadBalancerConfig.getStageRuleArn()))
                 .build());
       });
 

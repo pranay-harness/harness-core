@@ -57,5 +57,11 @@ public interface AwsElbHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn, String region);
   String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback);
   void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region);
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
+      ExecutionLogCallback logCallback);
+  void modifySpecificRule(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback);
+  TargetGroup fetchTargetGroupForSpecificRules(AwsElbListener listener, String ruleArn,
+      ExecutionLogCallback logCallback, AwsConfig awsConfig, String region,
+      List<EncryptedDataDetail> encryptionDetails);
 }

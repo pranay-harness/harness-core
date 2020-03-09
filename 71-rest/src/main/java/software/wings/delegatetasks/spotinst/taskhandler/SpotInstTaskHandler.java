@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -132,6 +133,26 @@ public abstract class SpotInstTaskHandler {
               elastiGroupId, workflowExecutionId),
           e);
     }
+  }
+
+  AwsElbListener getListenerOnPort(
+      List<AwsElbListener> listeners, int port, String loadBalancerName, ExecutionLogCallback logCallback) {
+    if (isEmpty(listeners)) {
+      String message = format("Did not find any listeners for load balancer: [%s]", loadBalancerName);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new InvalidRequestException(message);
+    }
+    Optional<AwsElbListener> optionalListener =
+        listeners.stream().filter(listener -> port == listener.getPort()).findFirst();
+    if (!optionalListener.isPresent()) {
+      String message =
+          format("Did not find any listeners on port: [%d] for load balancer: [%s].", port, loadBalancerName);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new InvalidRequestException(message);
+    }
+    return optionalListener.get();
   }
 
   @VisibleForTesting

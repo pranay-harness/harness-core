@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static com.google.api.client.util.Lists.newArrayList;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -44,8 +43,8 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse.SpotInstSetupTaskResponseBuilder;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.exception.WingsException.ReportTarget;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupLoadBalancer;
@@ -57,7 +56,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -306,13 +304,9 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
             format("Querying aws to get the stage target group details for load balancer: [%s]",
                 awsLoadBalancerConfig.getLoadBalancerName()));
 
-        // Target Group associated with StageListener
-        int stageListenerPort = Integer.parseInt(awsLoadBalancerConfig.getStageListenerPort());
-        int prodListenerPort = Integer.parseInt(awsLoadBalancerConfig.getProdListenerPort());
-
-        LoadBalancerDetailsForBGDeployment loadBalancerDetailsForBGDeployment = getListenerResponseDetails(awsConfig,
-            setupTaskParameters.getAwsRegion(), awsLoadBalancerConfig.getLoadBalancerName(), stageListenerPort,
-            prodListenerPort, logCallback, setupTaskParameters.getWorkflowExecutionId());
+        LoadBalancerDetailsForBGDeployment loadBalancerDetailsForBGDeployment =
+            getListenerResponseDetails(awsConfig, setupTaskParameters.getAwsRegion(),
+                awsLoadBalancerConfig.getLoadBalancerName(), logCallback, awsLoadBalancerConfig);
 
         lbDetailsWithArnValues.add(loadBalancerDetailsForBGDeployment);
 
@@ -327,43 +321,30 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     return lbDetailsWithArnValues;
   }
 
-  private AwsElbListener getListenerOnPort(List<AwsElbListener> listeners, int port, String loadBalancerName,
-      String workflowExecutionId, ExecutionLogCallback logCallback) {
-    if (isEmpty(listeners)) {
-      String message = format("Did not find any listeners for load balancer: [%s]. Workflow execution: [%s]",
-          loadBalancerName, workflowExecutionId);
-      logger.error(message);
-      logCallback.saveExecutionLog(message);
-      throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
-    }
-    Optional<AwsElbListener> optionalListener =
-        listeners.stream().filter(listener -> port == listener.getPort()).findFirst();
-    if (!optionalListener.isPresent()) {
-      String message =
-          format("Did not find any listeners on port: [%d] for load balancer: [%s]. Workflow execution: [%s]", port,
-              loadBalancerName, workflowExecutionId);
-      logger.error(message);
-      logCallback.saveExecutionLog(message);
-      throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
-    }
-    return optionalListener.get();
-  }
-
   private LoadBalancerDetailsForBGDeployment getListenerResponseDetails(AwsConfig awsConfig, String region,
-      String loadBalancerName, int stageListenerPort, int prodListenerPort, ExecutionLogCallback logCallback,
-      String workflowExecutionId) throws Exception {
-    List<AwsElbListener> listeners =
-        awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(awsConfig, emptyList(), region, loadBalancerName);
+      String loadBalancerName, ExecutionLogCallback logCallback, LoadBalancerDetailsForBGDeployment originalDetails) {
+    int stageListenerPort = Integer.parseInt(originalDetails.getStageListenerPort());
+    int prodListenerPort = Integer.parseInt(originalDetails.getProdListenerPort());
+    List<AwsElbListener> listeners = awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(
+        awsConfig, emptyList(), region, originalDetails.getLoadBalancerName());
 
-    AwsElbListener prodListener =
-        getListenerOnPort(listeners, prodListenerPort, loadBalancerName, workflowExecutionId, logCallback);
-    TargetGroup prodTargetGroup =
-        fetchTargetGroupForListener(awsConfig, region, logCallback, workflowExecutionId, prodListener);
+    TargetGroup prodTargetGroup;
+    AwsElbListener prodListener = getListenerOnPort(listeners, prodListenerPort, loadBalancerName, logCallback);
+    if (originalDetails.isUseSpecificRules()) {
+      prodTargetGroup = awsElbHelperServiceDelegate.fetchTargetGroupForSpecificRules(
+          prodListener, originalDetails.getProdRuleArn(), logCallback, awsConfig, region, emptyList());
+    } else {
+      prodTargetGroup = fetchTargetGroupForListener(awsConfig, region, logCallback, prodListener);
+    }
 
-    AwsElbListener stageListener =
-        getListenerOnPort(listeners, stageListenerPort, loadBalancerName, workflowExecutionId, logCallback);
-    TargetGroup stageTargetGroup =
-        fetchTargetGroupForListener(awsConfig, region, logCallback, workflowExecutionId, stageListener);
+    TargetGroup stageTargetGroup;
+    AwsElbListener stageListener = getListenerOnPort(listeners, stageListenerPort, loadBalancerName, logCallback);
+    if (originalDetails.isUseSpecificRules()) {
+      stageTargetGroup = awsElbHelperServiceDelegate.fetchTargetGroupForSpecificRules(
+          stageListener, originalDetails.getStageRuleArn(), logCallback, awsConfig, region, emptyList());
+    } else {
+      stageTargetGroup = fetchTargetGroupForListener(awsConfig, region, logCallback, stageListener);
+    }
 
     return LoadBalancerDetailsForBGDeployment.builder()
         .loadBalancerArn(prodListener.getLoadBalancerArn())
@@ -376,24 +357,25 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
         .stageTargetGroupName(stageTargetGroup.getTargetGroupName())
         .prodListenerPort(Integer.toString(prodListenerPort))
         .stageListenerPort(Integer.toString(stageListenerPort))
+        .useSpecificRules(originalDetails.isUseSpecificRules())
+        .prodRuleArn(originalDetails.getProdRuleArn())
+        .stageRuleArn(originalDetails.getStageRuleArn())
         .build();
   }
 
-  private TargetGroup fetchTargetGroupForListener(AwsConfig awsConfig, String region, ExecutionLogCallback logCallback,
-      String workflowExecutionId, AwsElbListener stageListener) {
+  private TargetGroup fetchTargetGroupForListener(
+      AwsConfig awsConfig, String region, ExecutionLogCallback logCallback, AwsElbListener stageListener) {
     Listener listener =
         awsElbHelperServiceDelegate.getElbListener(awsConfig, emptyList(), region, stageListener.getListenerArn());
     String targetGroupArn = awsElbHelperServiceDelegate.getTargetGroupForDefaultAction(listener, logCallback);
     Optional<TargetGroup> targetGroup =
         awsElbHelperServiceDelegate.getTargetGroup(awsConfig, emptyList(), region, targetGroupArn);
     if (!targetGroup.isPresent()) {
-      String message = format("Did not find any target group with arn: [%s]. Workflow execution: [%s]", targetGroupArn,
-          workflowExecutionId);
+      String message = format("Did not find any target group with arn: [%s]. ", targetGroupArn);
       logger.error(message);
       logCallback.saveExecutionLog(message);
-      throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
+      throw new InvalidRequestException(message);
     }
-
     return targetGroup.get();
   }
 }
