@@ -512,7 +512,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     if (null != ecsActiveInstancesCache && null != ecsActiveInstancesCache.getLastProcessedTimestamp()) {
       return ecsActiveInstancesCache.getLastProcessedTimestamp();
     } else {
-      return heartbeatTime;
+      // Sometime we are dropping events so publishing all info, lifecycle events at the start
+      return Instant.ofEpochMilli(1262332800000l);
     }
   }
 

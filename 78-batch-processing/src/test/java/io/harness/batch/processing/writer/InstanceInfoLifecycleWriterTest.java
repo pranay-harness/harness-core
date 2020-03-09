@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.integration.EcsEventGenerator;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -25,6 +27,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InstanceInfoLifecycleWriterTest extends CategoryTest implements EcsEventGenerator {
@@ -46,9 +50,13 @@ public class InstanceInfoLifecycleWriterTest extends CategoryTest implements Ecs
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteInstanceInfo() throws Exception {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+
     InstanceInfo instanceInfo = InstanceInfo.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .instanceType(InstanceType.K8S_POD)
+                                    .metaData(metaData)
                                     .instanceId(TEST_INSTANCE_ID)
                                     .build();
     instanceInfoWriter.write(Arrays.asList(instanceInfo));

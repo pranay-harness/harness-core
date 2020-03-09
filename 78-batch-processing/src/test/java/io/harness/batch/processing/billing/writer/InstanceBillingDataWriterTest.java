@@ -15,6 +15,7 @@ import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
+import io.harness.batch.processing.billing.writer.support.BillingDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
@@ -72,6 +73,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private JobParameters parameters;
   @Mock private BillingCalculationService billingCalculationService;
   @Mock private UtilizationDataServiceImpl utilizationDataService;
+  @Mock private BillingDataGenerationValidator billingDataGenerationValidator;
 
   @Before
   public void setup() {
@@ -151,6 +153,9 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
             new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,
             CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
+    when(billingDataGenerationValidator.shouldGenerateBillingData(
+             ACCOUNT_ID, CLUSTER_ID, Instant.ofEpochMilli(START_TIME_MILLIS)))
+        .thenReturn(true);
     instanceBillingDataWriter.write(Arrays.asList(instanceData));
     ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
         ArgumentCaptor.forClass(InstanceBillingData.class);

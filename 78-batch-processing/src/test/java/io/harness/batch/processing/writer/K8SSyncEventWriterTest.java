@@ -3,9 +3,11 @@ package io.harness.batch.processing.writer;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Any;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -14,6 +16,7 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
@@ -97,6 +100,7 @@ public class K8SSyncEventWriterTest extends CategoryTest {
         .settingId(CLOUD_PROVIDER_ID)
         .instanceType(instanceType)
         .instanceId(instanceId)
+        .metaData(ImmutableMap.of(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name()))
         .instanceName("instanceName")
         .clusterId(TEST_CLUSTER_ID)
         .clusterName("clusterName")
