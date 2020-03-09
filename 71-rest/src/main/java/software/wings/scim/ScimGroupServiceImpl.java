@@ -38,9 +38,9 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   private static final Integer MAX_RESULT_COUNT = 20;
   private static final String REPLACE_OKTA = "replace";
   private static final String REPLACE = "Replace";
-  private static final String ADD = "ADD";
+  private static final String ADD = "Add";
   private static final String ADD_OKTA = "add";
-  private static final String REMOVE = "REMOVE";
+  private static final String REMOVE = "Remove";
   private static final String REMOVE_OKTA = "remove";
 
   @Override

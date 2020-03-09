@@ -32,7 +32,6 @@ public class LoginRateLimitFilterTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    // loginRequestRateLimiter = new LoginRequestRateLimiter(limitConfigurationService);
     loginRateLimitFilter = new LoginRateLimitFilter(loginRequestRateLimiter);
   }
 

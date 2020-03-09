@@ -198,5 +198,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
     public static final String uuid = "uuid";
     public static final String name = "name";
     public static final String accountId = "accountId";
+    public static final String memberIds = "memberIds";
+    public static final String importedByScim = "importedByScim";
   }
 }
