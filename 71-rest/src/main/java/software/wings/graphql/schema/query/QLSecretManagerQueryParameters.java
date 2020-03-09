@@ -4,6 +4,6 @@ import lombok.Value;
 
 @Value
 public class QLSecretManagerQueryParameters {
-  private String id;
+  private String secretManagerId;
   private String name;
 }

@@ -51,15 +51,15 @@ public class SecretManagerTest extends GraphQLTest {
   public void testSecretManagerQuery() {
     String secretManagerQueryPattern = MultilineStringMixin.$.GQL(/*
 {
-    secretManager(id: "%s"){
-    secretManagerId
+    secretManager(secretManagerId: "%s"){
+    id
     name
   }
 }
 */ SecretManagerTest.class);
     String query = String.format(secretManagerQueryPattern, SECRET_MANAGER_UUID);
     final QLTestObject qlSecretManagerObject = qlExecute(query, account.getUuid());
-    assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.secretManagerId)).isEqualTo(secretManagerConfig.getUuid());
+    assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.id)).isEqualTo(secretManagerConfig.getUuid());
     assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.name)).isEqualTo(secretManagerConfig.getName());
   }
 
@@ -70,14 +70,14 @@ public class SecretManagerTest extends GraphQLTest {
     String secretManagerQueryPattern = MultilineStringMixin.$.GQL(/*
 {
     secretManagerByName(name: "%s"){
-    secretManagerId
+    id
     name
   }
 }
 */ SecretManagerTest.class);
     String query = String.format(secretManagerQueryPattern, SECRET_MANAGER_NAME);
     final QLTestObject qlSecretManagerObject = qlExecute(query, account.getUuid());
-    assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.secretManagerId)).isEqualTo(secretManagerConfig.getUuid());
+    assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.id)).isEqualTo(secretManagerConfig.getUuid());
     assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.name)).isEqualTo(secretManagerConfig.getName());
   }
 
@@ -89,7 +89,7 @@ public class SecretManagerTest extends GraphQLTest {
 {
   secretManagers(limit:10){
     nodes{
-      secretManagerId
+      id
       name
     }
   }

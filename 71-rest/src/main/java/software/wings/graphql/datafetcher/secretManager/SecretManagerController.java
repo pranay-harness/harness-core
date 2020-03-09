@@ -8,6 +8,6 @@ import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecre
 public class SecretManagerController {
   public QLSecretManagerBuilder populateSecretManager(
       SecretManagerConfig secretManager, QLSecretManagerBuilder builder) {
-    return builder.secretManagerId(secretManager.getUuid()).name(secretManager.getName());
+    return builder.id(secretManager.getUuid()).name(secretManager.getName());
   }
 }
