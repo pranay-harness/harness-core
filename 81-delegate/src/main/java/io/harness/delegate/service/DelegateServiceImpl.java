@@ -230,6 +230,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
   @Inject @Named("installCheckExecutor") private ScheduledExecutorService profileExecutor;
   @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
+  @Inject @Named("taskPollExecutorService") private ExecutorService taskPollExecutorService;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcementService;
@@ -997,7 +998,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startTaskPolling() {
-    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleAtFixedRate(
+        () -> taskPollExecutorService.submit(this ::pollForTask), 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.startAsync();
     }
@@ -1352,6 +1354,10 @@ public class DelegateServiceImpl implements DelegateService {
     if (timeoutEnforcementService instanceof ThreadPoolExecutor) {
       logger.info("timeoutEnforcementService active thread count: {}",
           ((ThreadPoolExecutor) timeoutEnforcementService).getActiveCount());
+    }
+    if (taskPollExecutorService instanceof ThreadPoolExecutor) {
+      logger.info("taskPollExecutorService active thread count: {}",
+          ((ThreadPoolExecutor) taskPollExecutorService).getActiveCount());
     }
   }
 

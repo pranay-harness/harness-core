@@ -292,8 +292,8 @@ public class DelegateModule extends DependencyModule {
             new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(4,
-            new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread-%d").setPriority(Thread.MAX_PRIORITY).build()));
+        .toInstance(new ScheduledThreadPoolExecutor(
+            1, new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("inputExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(1,
@@ -311,6 +311,10 @@ public class DelegateModule extends DependencyModule {
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
 
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("taskPollExecutorService"))
+        .toInstance(ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("task-poll-exec-%d").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))
         .toInstance(ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
