@@ -743,6 +743,8 @@ public class UserServiceImpl implements UserService {
                  .accounts(Lists.newArrayList(account))
                  .email(userInvite.getEmail().trim().toLowerCase())
                  .name(userInvite.getName().trim())
+                 .givenName(userInvite.getGivenName())
+                 .familyName(userInvite.getFamilyName())
                  .roles(userInvite.getRoles())
                  .appId(GLOBAL_APP_ID)
                  .emailVerified(emailVerified)

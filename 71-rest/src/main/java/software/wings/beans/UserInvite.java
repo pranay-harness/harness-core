@@ -46,6 +46,10 @@ public class UserInvite extends Base {
 
   private String name;
 
+  private String givenName;
+
+  private String familyName;
+
   @Getter @Setter @Transient private char[] password;
   @JsonIgnore private String passwordHash;
 
@@ -158,8 +162,30 @@ public class UserInvite extends Base {
     return email.toLowerCase();
   }
 
+  public String getGivenName() {
+    if (EmptyPredicate.isNotEmpty(givenName)) {
+      return givenName;
+    }
+    return name;
+  }
+
+  public String getFamilyName() {
+    if (EmptyPredicate.isNotEmpty(familyName)) {
+      return familyName;
+    }
+    return name;
+  }
+
   public void setName(String name) {
     this.name = name;
+  }
+
+  public void setGivenName(String givenName) {
+    this.givenName = givenName;
+  }
+
+  public void setFamilyName(String familyName) {
+    this.familyName = familyName;
   }
 
   public UserInviteSource getSource() {
@@ -247,6 +273,8 @@ public class UserInvite extends Base {
     private boolean importedByScim;
     private UserInviteSource source = UserInviteSource.builder().build();
     private UtmInfo utmInfo;
+    private String givenName;
+    private String familyName;
 
     private UserInviteBuilder() {}
 
@@ -256,6 +284,16 @@ public class UserInvite extends Base {
 
     public UserInviteBuilder withAccountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public UserInviteBuilder withGivenName(String givenName) {
+      this.givenName = givenName;
+      return this;
+    }
+
+    public UserInviteBuilder withFamilyName(String familyName) {
+      this.familyName = familyName;
       return this;
     }
 
@@ -376,6 +414,9 @@ public class UserInvite extends Base {
       userInvite.setMarketPlaceToken(marketPlaceToken);
       userInvite.setImportedByScim(importedByScim);
       userInvite.setUtmInfo(utmInfo);
+      userInvite.setFamilyName(familyName);
+      userInvite.setGivenName(givenName);
+
       return userInvite;
     }
   }

@@ -40,7 +40,8 @@ public class ScimUserServiceImpl implements ScimUserService {
   @Inject private WingsPersistence wingsPersistence;
 
   private static final Integer MAX_RESULT_COUNT = 20;
-  private static final String GIVEN_NAME = "GIVEN_NAME";
+  private static final String GIVEN_NAME = "givenName";
+  private static final String FAMILY_NAME = "familyName";
 
   @Override
   public Response createUser(ScimUser userQuery, String accountId) {
@@ -62,13 +63,18 @@ public class ScimUserServiceImpl implements ScimUserService {
     }
 
     String userName = getUserName(userQuery);
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
-                                .withAccountId(accountId)
-                                .withEmail(primaryEmail)
-                                .withName(userName != null ? userName : userQuery.getDisplayName())
-                                .withUserGroups(Lists.newArrayList())
-                                .withImportedByScim(true)
-                                .build();
+    UserInvite userInvite =
+        UserInviteBuilder.anUserInvite()
+            .withAccountId(accountId)
+            .withEmail(primaryEmail)
+            .withName(userName != null ? userName : userQuery.getDisplayName())
+            .withGivenName(userQuery.getName() != null ? userQuery.getName().get(GIVEN_NAME).textValue()
+                                                       : userQuery.getDisplayName())
+            .withFamilyName(userQuery.getName() != null ? userQuery.getName().get(FAMILY_NAME).textValue()
+                                                        : userQuery.getDisplayName())
+            .withUserGroups(Lists.newArrayList())
+            .withImportedByScim(true)
+            .build();
     userService.inviteUser(userInvite);
 
     user = userService.getUserByEmail(primaryEmail, accountId);
@@ -106,18 +112,18 @@ public class ScimUserServiceImpl implements ScimUserService {
       return null;
     }
     userResource.setId(user.getUuid());
-    userResource.setActive(true);
+
+    userResource.setActive(!user.isDisabled());
     userResource.setUserName(user.getEmail());
     userResource.setDisplayName(user.getName());
 
     Map<String, String> nameMap = new HashMap<String, String>() {
       {
-        put(GIVEN_NAME, user.getName());
-        put("familyName", user.getName());
+        put(GIVEN_NAME, user.getGivenName());
+        put(FAMILY_NAME, user.getFamilyName());
       }
     };
 
-    userResource.setActive(true);
     Map<String, String> emailMap = new HashMap<String, String>() {
       { put("value", user.getEmail()); }
     };
@@ -149,6 +155,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     List<ScimUser> scimUsers = new ArrayList<>();
     try {
       scimUsers = searchUserByUserName(accountId, searchQuery, count, startIndex);
+      logger.info("Scim users found from query {}", scimUsers);
       scimUsers.forEach(userResponse::resource);
     } catch (WingsException ex) {
       logger.info("SCIM: Search user by name failed. searchQuery: {}, account: {}", searchQuery, accountId, ex);
@@ -258,10 +265,28 @@ public class ScimUserServiceImpl implements ScimUserService {
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
 
       boolean userUpdate = false;
+
       if (StringUtils.isNotEmpty(displayName) && !displayName.equals(user.getName())) {
         userUpdate = true;
         updateOperations.set(UserKeys.name, displayName);
         logger.info("SCIM: Updated user's {} name: {}", userId, displayName);
+      }
+
+      if (userResource.getName() != null) {
+        if (userResource.getName().get(GIVEN_NAME) != null
+            && !userResource.getName().get(GIVEN_NAME).asText().equals(user.getGivenName())) {
+          userUpdate = true;
+          updateOperations.set(UserKeys.givenName, userResource.getName().get(GIVEN_NAME).asText());
+          logger.info(
+              "SCIM: Updated user's {} given name: {}", userId, userResource.getName().get(GIVEN_NAME).asText());
+        }
+        if (userResource.getName().get(FAMILY_NAME) != null
+            && !userResource.getName().get(FAMILY_NAME).asText().equals(user.getFamilyName())) {
+          userUpdate = true;
+          updateOperations.set(UserKeys.familyName, userResource.getName().get(FAMILY_NAME).asText());
+          logger.info(
+              "SCIM: Updated user's {} family name: {}", userId, userResource.getName().get(FAMILY_NAME).asText());
+        }
       }
 
       boolean userEnabled = !user.isDisabled();
