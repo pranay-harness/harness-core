@@ -546,6 +546,7 @@ public class K8sStateHelper {
                                 .commandName(k8sTaskParameters.getCommandName())
                                 .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
                                 .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
+                                .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
                                 .releaseName(k8sTaskParameters.getReleaseName())
                                 .currentTaskType(TaskType.K8S_COMMAND_TASK)
                                 .build())

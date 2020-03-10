@@ -29,6 +29,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private String releaseName;
   private String namespace;
   private String clusterName;
+  private String cloudProvider;
   private Integer releaseNumber;
   private String commandName;
   private Integer targetInstances;
@@ -55,6 +56,8 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
     // in activity window
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
+    putNotNull(executionDetails, "cloudProvider",
+        ExecutionDataValue.builder().value(cloudProvider).displayName("Cloud Provider").build());
     putNotNull(executionDetails, "cluster",
         ExecutionDataValue.builder().value(clusterName).displayName("Cluster Name").build());
     putNotNull(
