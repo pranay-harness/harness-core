@@ -518,6 +518,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       executorService.submit(() -> infrastructureMappingService.deleteByServiceTemplate(appId, serviceTemplateId));
       executorService.submit(() -> configService.deleteByTemplateId(appId, serviceTemplateId));
       executorService.submit(() -> serviceVariableService.deleteByTemplateId(appId, serviceTemplateId));
+      executorService.submit(() -> environmentService.deleteConfigMapYamlByServiceTemplateId(appId, serviceTemplateId));
     }
   }
 
