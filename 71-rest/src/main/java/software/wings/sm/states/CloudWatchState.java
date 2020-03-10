@@ -14,36 +14,33 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.hazelcast.util.Preconditions;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.HashMap;
@@ -57,13 +54,15 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 12/7/16.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "CloudWatchStateKeys")
 public class CloudWatchState extends AbstractMetricAnalysisState {
   @Inject private transient AwsHelperService awsHelperService;
   @Inject private transient CloudWatchService cloudWatchService;
+  @Inject private transient AwsHelperResourceService awsHelperResourceService;
 
-  @Attributes(required = true, title = "AWS account") private String analysisServerConfigId;
+  private String analysisServerConfigId;
 
-  @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
+  private String region = "us-east-1";
 
   private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 
@@ -82,38 +81,6 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
    */
   public CloudWatchState(String name) {
     super(name, StateType.CLOUD_WATCH);
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isEmpty(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isEmpty(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isEmpty(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @Override
@@ -146,25 +113,22 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
     Map<String, String> lambdaFunctions = new HashMap<>();
     if (shouldDoLambdaVerification && getDeploymentType(context) == DeploymentType.AWS_LAMBDA) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
       if (isNotEmpty(elements.getFunctionArns())) {
-        elements.getFunctionArns().forEach(contextElement -> {
-          lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
-        });
+        elements.getFunctionArns().forEach(
+            contextElement -> lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn()));
       }
     }
 
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
+    String resolvedAnalysisServerConfigId =
+        getResolvedConnectorId(context, CloudWatchStateKeys.analysisServerConfigId, analysisServerConfigId);
+    SettingAttribute settingAttribute = settingsService.get(resolvedAnalysisServerConfigId);
 
-    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-
-    if (settingAttribute == null) {
-      throw new WingsException("No aws config with id: " + analysisServerConfigId + " found");
-    }
+    Preconditions.checkNotNull(
+        settingAttribute, "No Aws setting with id: " + resolvedAnalysisServerConfigId + " found");
 
     final AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
@@ -215,7 +179,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
-            .region(getRegion())
+            .region(getRegion(context))
             .loadBalancerMetrics(loadBalancerMetrics)
             .ec2Metrics(ec2Metrics)
             .lambdaFunctionNames(lambdaMetrics)
@@ -316,6 +280,18 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
       return "us-east-1";
     }
     return region;
+  }
+
+  private String getRegion(ExecutionContext context) {
+    String resolvedRegion = getResolvedFieldValue(context, CloudWatchStateKeys.region, getRegion());
+    List<NameValuePair> regions = awsHelperResourceService.getAwsRegions();
+    for (NameValuePair nameValuePair : regions) {
+      if (nameValuePair.getName().equals(resolvedRegion)) {
+        resolvedRegion = nameValuePair.getValue();
+        break;
+      }
+    }
+    return resolvedRegion;
   }
 
   public void setRegion(String region) {
