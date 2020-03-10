@@ -5,11 +5,12 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
+import com.google.common.base.Preconditions;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -47,10 +48,12 @@ public class LogzAnalysisState extends ElkAnalysisState {
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     String envId = getEnvId(context);
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No logz setting with id: " + analysisServerConfigId + " found");
-    }
+    String resolvedServerConfigId =
+        getResolvedConnectorId(context, ElkAnalysisStateKeys.analysisServerConfigId, analysisServerConfigId);
+    final SettingAttribute settingAttribute = settingsService.get(resolvedServerConfigId);
+
+    Preconditions.checkNotNull(
+        settingAttribute, "No logz config setting with id: " + resolvedServerConfigId + " found");
 
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
     final long logCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
