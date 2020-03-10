@@ -127,17 +127,27 @@ public class WatcherApplication {
     modules.addAll(new WatcherModule().cumulativeDependencies());
 
     String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
-    modules.add(
-        new TailerModule(Config.builder()
-                             .accountId(configuration.getAccountId())
-                             .accountSecret(configuration.getAccountSecret())
-                             .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
-                                                .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
-                             .publishAuthority(Optional.ofNullable(configuration.getPublishAuthority())
-                                                   .orElseGet(() -> extractAuthority(managerHostAndPort, "events")))
-                             .publishTarget(Optional.ofNullable(configuration.getPublishTarget())
-                                                .orElseGet(() -> extractTarget(managerHostAndPort)))
-                             .build()));
+    String publishTarget = null;
+    String publishAuthority = null;
+    if (configuration.getPublishTarget() != null && configuration.getPublishAuthority() != null) {
+      publishTarget = configuration.getPublishTarget();
+      publishAuthority = configuration.getPublishAuthority();
+    } else if (managerHostAndPort != null) {
+      publishTarget = extractTarget(managerHostAndPort);
+      publishAuthority = extractAuthority(managerHostAndPort, "events");
+    }
+    if (publishTarget != null && publishAuthority != null) {
+      modules.add(new TailerModule(Config.builder()
+                                       .accountId(configuration.getAccountId())
+                                       .accountSecret(configuration.getAccountSecret())
+                                       .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
+                                                          .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
+                                       .publishTarget(publishTarget)
+                                       .publishAuthority(publishAuthority)
+                                       .build()));
+    } else {
+      logger.warn("Unable to configure event publisher configs. Event publisher will be disabled");
+    }
 
     Injector injector = Guice.createInjector(modules);
 
