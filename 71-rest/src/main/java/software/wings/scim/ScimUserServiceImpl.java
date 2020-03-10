@@ -120,8 +120,8 @@ public class ScimUserServiceImpl implements ScimUserService {
 
     Map<String, String> nameMap = new HashMap<String, String>() {
       {
-        put(GIVEN_NAME, user.getGivenName());
-        put(FAMILY_NAME, user.getFamilyName());
+        put(GIVEN_NAME, user.getGivenName() != null ? user.getGivenName() : user.getName());
+        put(FAMILY_NAME, user.getFamilyName() != null ? user.getFamilyName() : user.getName());
       }
     };
 
