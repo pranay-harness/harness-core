@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.ecs;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
+
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
@@ -122,6 +125,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                   .parameters(new Object[] {awsEcsRequest})
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
+        .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
         .build();
   }
 }
