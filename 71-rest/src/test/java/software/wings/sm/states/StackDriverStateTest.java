@@ -116,6 +116,7 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
     when(settingsService.get(configId)).thenReturn(null);
     assertThatThrownBy(
         () -> stackDriverState.triggerAnalysisDataCollection(executionContext, analysisContext, executionData, hosts))
-        .isInstanceOf(NullPointerException.class);
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("No Gcp config setting with id: " + configId + " found");
   }
 }
