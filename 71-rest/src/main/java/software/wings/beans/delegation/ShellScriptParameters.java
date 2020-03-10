@@ -14,7 +14,9 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -59,7 +61,7 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
   private final Map<String, String> environment;
   private final String workingDirectory;
   private final ScriptType scriptType;
-  @Expression private final String script;
+  @Expression @NonFinal @Setter String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
   private final HostConnectionAttributes hostConnectionAttributes;
