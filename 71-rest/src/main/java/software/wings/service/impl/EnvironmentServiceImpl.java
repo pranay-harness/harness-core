@@ -955,6 +955,39 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
+  public void deleteConfigMapYamlByServiceTemplateId(String appId, String serviceTemplateId) {
+    Environment savedEnv = wingsPersistence.createQuery(Environment.class)
+                               .filter(EnvironmentKeys.appId, appId)
+                               .field(EnvironmentKeys.configMapYamlByServiceTemplateId + "." + serviceTemplateId)
+                               .exists()
+                               .get();
+    if (savedEnv != null) {
+      Map<String, String> configMapYamlByServiceTemplateId = new HashMap<>();
+      if (isNotEmpty(savedEnv.getConfigMapYamlByServiceTemplateId())) {
+        configMapYamlByServiceTemplateId.putAll(savedEnv.getConfigMapYamlByServiceTemplateId());
+      }
+      if (isNotEmpty(configMapYamlByServiceTemplateId)) {
+        configMapYamlByServiceTemplateId.remove(serviceTemplateId);
+
+        UpdateOperations<Environment> updateOperations;
+        if (isNotEmpty(configMapYamlByServiceTemplateId)) {
+          updateOperations = wingsPersistence.createUpdateOperations(Environment.class)
+                                 .set("configMapYamlByServiceTemplateId", configMapYamlByServiceTemplateId);
+        } else {
+          updateOperations =
+              wingsPersistence.createUpdateOperations(Environment.class).unset("configMapYamlByServiceTemplateId");
+        }
+
+        wingsPersistence.update(savedEnv, updateOperations);
+        String accountId = appService.getAccountIdByAppId(appId);
+        Environment updatedEnv = get(appId, savedEnv.getUuid(), false);
+        yamlPushService.pushYamlChangeSet(
+            accountId, savedEnv, updatedEnv, Type.UPDATE, updatedEnv.isSyncFromGit(), false);
+      }
+    }
+  }
+
+  @Override
   public Environment setHelmValueYaml(
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload) {
     ManifestFile manifestFile = null;

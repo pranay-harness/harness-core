@@ -234,6 +234,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(infrastructureMappingService).deleteByServiceTemplate(APP_ID, TEMPLATE_ID);
     verify(configService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
     verify(serviceVariableService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
+    verify(environmentService).deleteConfigMapYamlByServiceTemplateId(APP_ID, TEMPLATE_ID);
   }
 
   /**
