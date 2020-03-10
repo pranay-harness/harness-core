@@ -29,6 +29,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -74,6 +75,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   @Mock DefaultWinRmExecutor defaultWinRmExecutor;
   @Mock DelegateLogService logService;
   @Mock ShellExecutorConfig shellExecutorConfig;
+  @Mock ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   EncryptedDataDetail encryptedDataDetail1 = EncryptedDataDetail.builder()
                                                  .encryptedData(EncryptedRecordData.builder().build())

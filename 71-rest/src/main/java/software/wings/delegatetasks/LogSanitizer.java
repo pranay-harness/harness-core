@@ -15,6 +15,7 @@ import java.util.Set;
  */
 @Slf4j
 public class LogSanitizer {
+  public static final String GENERIC_ACTIVITY_ID = "******";
   private final String activityId;
   private final Set<String> secrets;
 
@@ -30,18 +31,18 @@ public class LogSanitizer {
    * @return text with secrets replaced by a mask
    */
   public String sanitizeLog(String activityId, String log) {
-    if (StringUtils.equals(activityId, this.activityId)) {
-      if (isEmpty(secrets)) {
-        return log;
-      }
-      ArrayList<String> secretMasks = new ArrayList<>();
-      ArrayList<String> secretValues = new ArrayList<>();
-      for (String secret : secrets) {
-        secretMasks.add(SECRET_MASK);
-        secretValues.add(secret);
-      }
-      return replaceEach(log, secretValues.toArray(new String[] {}), secretMasks.toArray(new String[] {}));
+    if (!StringUtils.equals(activityId, this.activityId) && !GENERIC_ACTIVITY_ID.equals(this.activityId)) {
+      return log;
     }
-    return log;
+    if (isEmpty(secrets)) {
+      return log;
+    }
+    ArrayList<String> secretMasks = new ArrayList<>();
+    ArrayList<String> secretValues = new ArrayList<>();
+    for (String secret : secrets) {
+      secretMasks.add(SECRET_MASK);
+      secretValues.add(secret);
+    }
+    return replaceEach(log, secretValues.toArray(new String[] {}), secretMasks.toArray(new String[] {}));
   }
 }

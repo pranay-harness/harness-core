@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private EncryptionService encryptionService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
@@ -65,7 +67,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
         items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
         items.replaceAll(String::trim);
       }
-
+      parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
       return executor.executeCommandString(parameters.getScript(), items);
     }
 

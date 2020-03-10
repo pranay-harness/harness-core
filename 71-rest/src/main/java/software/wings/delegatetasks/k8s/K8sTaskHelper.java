@@ -59,6 +59,7 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
@@ -162,6 +163,7 @@ public class K8sTaskHelper {
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
+  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
@@ -922,6 +924,7 @@ public class K8sTaskHelper {
   public List<KubernetesResource> readManifests(
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
+    replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
 
     for (ManifestFile manifestFile : manifestFiles) {
       if (isValidManifestFile(manifestFile.getFileName())) {
@@ -944,6 +947,13 @@ public class K8sTaskHelper {
     }
 
     return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
+  }
+
+  private void replaceManifestPlaceholdersWithLocalDelegateSecrets(List<ManifestFile> manifestFiles) {
+    for (ManifestFile manifestFile : manifestFiles) {
+      manifestFile.setFileContent(
+          delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestFile.getFileContent()));
+    }
   }
 
   public void setNamespaceToKubernetesResourcesIfRequired(

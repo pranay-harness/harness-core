@@ -60,6 +60,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static software.wings.delegatetasks.LogSanitizer.GENERIC_ACTIVITY_ID;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -110,6 +111,7 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -248,6 +250,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateDecryptionService delegateDecryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private EncryptionService encryptionService;
+  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
@@ -1612,8 +1615,22 @@ public class DelegateServiceImpl implements DelegateService {
         secrets = secretsFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables());
       }
     }
-    return isNotBlank(activityId) && isNotEmpty(secrets) ? Optional.of(new LogSanitizer(activityId, secrets))
-                                                         : Optional.empty();
+
+    if (delegateLocalConfigService.isLocalConfigPresent()) {
+      appendSecretsToSanitizeFromDelegateConfig(secrets);
+      return Optional.of(new LogSanitizer(GENERIC_ACTIVITY_ID, secrets));
+    } else if (isNotBlank(activityId) && isNotEmpty(secrets)) {
+      return Optional.of(new LogSanitizer(activityId, secrets));
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  private void appendSecretsToSanitizeFromDelegateConfig(Set<String> secrets) {
+    Map<String, String> localSecrets = delegateLocalConfigService.getLocalDelegateSecrets();
+    if (!MapUtils.isEmpty(localSecrets)) {
+      secrets.addAll(localSecrets.values());
+    }
   }
 
   /**
