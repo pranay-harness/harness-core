@@ -16,9 +16,9 @@ import org.mongodb.morphia.query.Query;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "EcsClusterKeys")
 public class EcsCluster implements Cluster {
-  final String cloudProviderId;
-  final String region;
-  final String clusterName;
+  String cloudProviderId;
+  String region;
+  String clusterName;
 
   public static final String cloudProviderField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.cloudProviderId;
   public static final String regionField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.region;
