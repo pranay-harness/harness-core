@@ -25,10 +25,7 @@ import software.wings.beans.TaskType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
@@ -37,8 +34,6 @@ import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
@@ -61,9 +56,9 @@ import java.util.concurrent.TimeUnit;
 public class StackDriverState extends AbstractMetricAnalysisState {
   @Inject private transient StackDriverService stackDriverService;
 
-  @Attributes(required = true, title = "GCP account") private String analysisServerConfigId;
+  private String analysisServerConfigId;
 
-  @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
+  private String region = "us-east-1";
 
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
 
@@ -105,38 +100,6 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isEmpty(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isEmpty(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isEmpty(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
-  }
-
-  @Override
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
@@ -172,7 +135,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
     SettingAttribute settingAttribute = settingsService.get(resolvedConnectorId);
 
-    Preconditions.checkNotNull(settingAttribute);
+    Preconditions.checkNotNull(settingAttribute, "No Gcp config setting with id: " + resolvedConnectorId + " found");
 
     TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
         ? PREDICTIVE
