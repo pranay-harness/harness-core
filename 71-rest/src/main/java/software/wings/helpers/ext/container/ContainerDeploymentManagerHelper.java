@@ -162,12 +162,13 @@ public class ContainerDeploymentManagerHelper {
     GcpKubernetesCluster gcpKubernetesCluster = null;
     String namespace = null;
     String clusterName = null;
+    String cloudProviderName = null;
+
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
       settingAttribute = settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
-      clusterName = settingAttribute.getName();
     } else {
       settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
@@ -187,6 +188,7 @@ public class ContainerDeploymentManagerHelper {
       }
     }
     notNullCheck("SettingAttribute", settingAttribute);
+    cloudProviderName = settingAttribute.getName();
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
@@ -198,6 +200,7 @@ public class ContainerDeploymentManagerHelper {
         .gcpKubernetesCluster(gcpKubernetesCluster)
         .clusterName(clusterName)
         .namespace(namespace)
+        .cloudProviderName(cloudProviderName)
         .build();
   }
 }

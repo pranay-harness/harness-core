@@ -21,6 +21,7 @@ public class K8sClusterConfig implements ExecutionCapabilityDemander {
   private GcpKubernetesCluster gcpKubernetesCluster;
   private String clusterName;
   private String namespace;
+  private String cloudProviderName;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
