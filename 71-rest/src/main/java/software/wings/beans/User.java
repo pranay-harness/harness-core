@@ -48,6 +48,10 @@ public class User extends Base implements Principal {
 
   @NotEmpty private String name;
 
+  private String givenName;
+
+  private String familyName;
+
   @Indexed(options = @IndexOptions(unique = true)) @Email private String email;
 
   @JsonIgnore private String passwordHash;
@@ -177,6 +181,14 @@ public class User extends Base implements Principal {
     return name;
   }
 
+  public String getGivenName() {
+    return givenName;
+  }
+
+  public String getFamilyName() {
+    return familyName;
+  }
+
   /**
    * Sets name.
    *
@@ -184,6 +196,14 @@ public class User extends Base implements Principal {
    */
   public void setName(String name) {
     this.name = name;
+  }
+
+  public void setGivenName(String givenName) {
+    this.givenName = givenName;
+  }
+
+  public void setFamilyName(String familyName) {
+    this.familyName = familyName;
   }
 
   public boolean isImported() {
@@ -633,6 +653,8 @@ public class User extends Base implements Principal {
     private String passwordHash;
     private String companyName;
     private String accountName;
+    private String givenName;
+    private String familyName;
     private List<Role> roles = new ArrayList<>();
     private List<UserGroup> userGroups = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
@@ -678,6 +700,16 @@ public class User extends Base implements Principal {
 
     public Builder name(String name) {
       this.name = name;
+      return this;
+    }
+
+    public Builder givenName(String givenName) {
+      this.givenName = givenName;
+      return this;
+    }
+
+    public Builder familyName(String familyName) {
+      this.familyName = familyName;
       return this;
     }
 
@@ -888,6 +920,9 @@ public class User extends Base implements Principal {
       user.setUserLocked(userLocked);
       user.setImported(imported);
       user.setUtmInfo(utmInfo);
+      user.setGivenName(givenName);
+      user.setFamilyName(familyName);
+
       return user;
     }
   }
