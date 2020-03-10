@@ -134,6 +134,37 @@ public class ScimUserServiceTest extends WingsBaseTest {
     assertThat(response.getStatus()).isEqualTo(201);
   }
 
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC2_testCreateUser() {
+    ScimUser scimUser = new ScimUser();
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("account_name");
+
+    scimUser.setUserName("username@harness.io");
+    scimUser.setDisplayName("display_name");
+    setNameForScimUser(scimUser);
+
+    User user = new User();
+    user.setEmail("username@harness.io");
+    user.setDisabled(true);
+    user.setUuid(generateUuid());
+    user.setName("display_name");
+
+    UserInvite userInvite = new UserInvite();
+    userInvite.setUuid(generateUuid());
+
+    when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
+    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
+    when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
+    Response response = scimUserService.createUser(scimUser, account.getUuid());
+
+    assertThat(response.getStatus()).isEqualTo(404);
+  }
+
   private PatchRequest getOktaActivityReplaceOperation() {
     JsonObject jsonObject = new JsonObject();
     jsonObject.addProperty("active", false);
@@ -147,5 +178,20 @@ public class ScimUserServiceTest extends WingsBaseTest {
       log().error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
     return null;
+  }
+
+  private void setNameForScimUser(ScimUser scimUser) {
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("givenName", "given_name");
+    jsonObject.addProperty("familyName", "family_name");
+
+    JsonNode jsonNode;
+
+    try {
+      jsonNode = mapper.readTree(jsonObject.toString());
+      scimUser.setName(jsonNode);
+    } catch (IOException ioe) {
+      log().error("IO Exception while creating okta replace operation in SCIM", ioe);
+    }
   }
 }

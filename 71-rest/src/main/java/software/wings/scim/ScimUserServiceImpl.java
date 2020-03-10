@@ -62,7 +62,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       }
     }
 
-    String userName = getUserName(userQuery);
+    String userName = getName(userQuery);
     UserInvite userInvite =
         UserInviteBuilder.anUserInvite()
             .withAccountId(accountId)
@@ -75,6 +75,7 @@ public class ScimUserServiceImpl implements ScimUserService {
             .withUserGroups(Lists.newArrayList())
             .withImportedByScim(true)
             .build();
+
     userService.inviteUser(userInvite);
 
     user = userService.getUserByEmail(primaryEmail, accountId);
@@ -93,7 +94,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     return userQuery.getUserName().toLowerCase();
   }
 
-  private String getUserName(ScimUser userQuery) {
+  private String getName(ScimUser userQuery) {
     if (userQuery.getName() != null && userQuery.getName().get(GIVEN_NAME) != null) {
       return userQuery.getName().get(GIVEN_NAME).textValue();
     }
