@@ -171,11 +171,13 @@ public class NexusServiceImpl implements NexusService {
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
-      }
-      if (e.getCause() != null && e.getCause() instanceof TimeoutException) {
-        throw new ArtifactServerException(
-            "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
+      } else if (e.getCause() != null && e.getCause() instanceof TimeoutException) {
+        throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
+                + nexusConfig.getNexusUrl() + " under repo " + repoId,
             e.getCause(), USER);
+      } else {
+        throw new ArtifactServerException(
+            "Failed to fetch images/groups from Nexus xxxxxxxx " + e.getMessage(), e.getCause(), USER);
       }
     }
     return groupIds;
