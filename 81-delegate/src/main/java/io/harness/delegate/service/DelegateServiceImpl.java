@@ -75,13 +75,12 @@ import com.google.inject.name.Named;
 import com.ning.http.client.AsyncHttpClient;
 import com.sun.management.OperatingSystemMXBean;
 import io.harness.beans.DelegateTask;
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.executioncapability.CapabilityType;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -1444,36 +1443,26 @@ public class DelegateServiceImpl implements DelegateService {
           injector.injectMembers(delegateAlternativeValidateTask);
 
           alternativeExecutorService.submit(() -> {
-            logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
-
-            try {
-              List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
-              if (alternativeResults == null) {
-                return;
+            try (TaskLogContext ignore = new TaskLogContext(delegateTask.getUuid(),
+                     delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTask), OVERRIDE_ERROR)) {
+              logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
+              try {
+                List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
+                if (alternativeResults == null) {
+                  return;
+                }
+                List<DelegateConnectionResult> originalResults = future.get();
+                boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
+                boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
+                if (original != alternative) {
+                  logErrorDetails(delegateTask, alternativeResults, original);
+                }
+              } catch (InterruptedException exception) {
+                logger.error("Comparison failed.", exception);
+                Thread.currentThread().interrupt();
+              } catch (RuntimeException | ExecutionException exception) {
+                logger.error("Comparison failed.", exception);
               }
-
-              List<DelegateConnectionResult> originalResults = future.get();
-
-              boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
-              boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
-
-              if (original != alternative) {
-                List<CapabilityType> capabilityTypes = delegateTask.getExecutionCapabilities()
-                                                           .stream()
-                                                           .map(ExecutionCapability::getCapabilityType)
-                                                           .collect(Collectors.toList());
-                logger.error(
-                    "[DelegateCapability] The original validation {} is different from the alternative for task type {}. Capabilities executed are {}",
-                    original, delegateTask.getData().getTaskType(), capabilityTypes);
-                alternativeResults.forEach(result
-                    -> logger.error("[DelegateCapability] Capability results for Criteria {} is {}",
-                        result.getCriteria(), result.isValidated()));
-              }
-            } catch (InterruptedException exception) {
-              logger.error("Comparison failed.", exception);
-              Thread.currentThread().interrupt();
-            } catch (RuntimeException | ExecutionException exception) {
-              logger.error("Comparison failed.", exception);
             }
           });
         }
@@ -1489,6 +1478,31 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
+    }
+  }
+
+  @NotNull
+  private List<String> getCapabilityDetails(DelegateTask delegateTask) {
+    return delegateTask.getExecutionCapabilities()
+        .stream()
+        .map(executionCapability
+            -> executionCapability.getCapabilityType().name() + ":" + executionCapability.fetchCapabilityBasis())
+        .collect(toList());
+  }
+
+  private void logErrorDetails(
+      DelegateTask delegateTask, List<DelegateConnectionResult> alternativeResults, boolean original) {
+    List<String> resultDetails = alternativeResults.stream()
+                                     .map(result -> result.getCriteria() + ":" + result.isValidated())
+                                     .collect(Collectors.toList());
+    logger.error(
+        "[DelegateCapability] The original validation {} is different from the alternative for task type {}. Result Details for capability are {} ",
+        original, delegateTask.getData().getTaskType(), HarnessStringUtils.join("|", resultDetails));
+    if (delegateTask.getData().getTaskType().equals(TaskType.COMMAND.name())) {
+      CommandExecutionContext commandExecutionContext =
+          (CommandExecutionContext) delegateTask.getData().getParameters()[1];
+      logger.error("[DelegateCapability] CommandExecution context has deployment type {}",
+          commandExecutionContext.getDeploymentType());
     }
   }
 

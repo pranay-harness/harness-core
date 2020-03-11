@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,8 @@ public class JenkinsTaskParams implements ExecutionCapabilityDemander {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(jenkinsConfig, encryptedDataDetails);
+    // Ideally we should check for capability for getting encryption details
+    // but the original validation task does not do that
+    return jenkinsConfig.fetchRequiredExecutionCapabilities();
   }
 }
