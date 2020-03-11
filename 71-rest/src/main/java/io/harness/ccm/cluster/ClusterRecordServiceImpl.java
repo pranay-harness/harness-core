@@ -35,6 +35,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
 
@@ -43,6 +44,7 @@ import java.util.List;
 public class ClusterRecordServiceImpl implements ClusterRecordService {
   @Inject private ClusterRecordDao clusterRecordDao;
   @Inject private AppService appService;
+  @Inject private SettingsService settingsService;
   @Inject @Getter private Subject<ClusterRecordObserver> subject = new Subject<>();
 
   @Override
@@ -148,10 +150,12 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
       case DIRECT_KUBERNETES:
         DirectKubernetesInfrastructure k8sInfrastructure =
             (DirectKubernetesInfrastructure) infraMappingInfrastructureProvider;
-        cluster = DirectKubernetesCluster.builder()
-                      .cloudProviderId(k8sInfrastructure.getCloudProviderId())
-                      .clusterName(k8sInfrastructure.getClusterName())
-                      .build();
+        String cloudProviderId = k8sInfrastructure.getCloudProviderId();
+        String clusterName = k8sInfrastructure.getClusterName();
+        if (StringUtils.isBlank(clusterName)) {
+          clusterName = settingsService.get(cloudProviderId).getName();
+        }
+        cluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).clusterName(clusterName).build();
         break;
       case GCP_KUBERNETES_ENGINE:
         GoogleKubernetesEngine gcpK8SInfrastructure = (GoogleKubernetesEngine) infraMappingInfrastructureProvider;
