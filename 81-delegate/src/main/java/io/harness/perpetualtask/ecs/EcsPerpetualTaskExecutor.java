@@ -225,8 +225,13 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .setEcsTaskResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
         logger.debug("Task published Message {} ", ecsTaskInfo.toString());
+
+        Date startedAt = Date.from(Instant.now());
+        if (null != task.getStartedAt()) {
+          startedAt = task.getStartedAt();
+        }
         eventPublisher.publishMessage(
-            ecsTaskInfo, HTimestamps.fromDate(task.getStartedAt()), ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+            ecsTaskInfo, HTimestamps.fromDate(startedAt), ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       }
 
       if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
