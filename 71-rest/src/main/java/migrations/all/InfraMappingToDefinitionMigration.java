@@ -103,7 +103,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   private final Set<String> accountIdsToExclude = new HashSet<>(Arrays.asList("2aB3xZkET1aWYCidfxPurw",
       "9BSvDjK_RGu1KM41GAQCzA", "bwBVO7N0RmKltRhTjk101A", "en9EZJ2gTCS6WeY9x-XRfg", "qmBAOdC3TpeQ62h7ONmP7g",
       "55563ed1-bea1-456a-943d-f28bc8fb141d", "E6Hr7uoC2fh5o8N9WWHptD", "e05393d5-f171-44f5-9083-387c7455d51c",
-      "gz4oUAlfSgONuOrWmphHif", "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
+      "lU1_N50mRcur3e6OO2_9sg", "x2Ynq8DDwjotzB9sw6X9nl"));
 
   @Override
   public void migrate() {
