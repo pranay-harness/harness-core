@@ -11,7 +11,6 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
-import io.harness.delegate.task.executioncapability.CapabilityCheckFactory;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

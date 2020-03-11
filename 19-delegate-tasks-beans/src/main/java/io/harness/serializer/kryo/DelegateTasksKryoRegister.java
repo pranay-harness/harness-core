@@ -8,6 +8,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
@@ -99,5 +100,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ArtifactFileMetadata.class, 19034);
     kryo.register(AwsElbListenerRuleData.class, 19035);
+    kryo.register(AlwaysFalseValidationCapability.class, 19036);
   }
 }
