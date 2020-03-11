@@ -13,6 +13,7 @@ public class GraphQLConstants {
   public static final String RATE_LIMIT_REACHED =
       "You've reached your account's rate limit for data queries. Please try again later.";
   public static final String INVALID_API_KEY = "Invalid Api Key";
+  public static final String NOT_AUTHORIZED = "User not authorized";
   public static final String INVALID_TOKEN = "Invalid Token";
   public static final String CREATE_APPLICATION_API = "createApplication";
   public static final String DELETE_APPLICATION_API = "deleteApplication";

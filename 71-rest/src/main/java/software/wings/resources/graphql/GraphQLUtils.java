@@ -32,6 +32,11 @@ public class GraphQLUtils {
         Response.status(Status.UNAUTHORIZED).entity(getInvalidApiKeyErrorMessage()).build());
   }
 
+  WebApplicationException getUnauthorizedException() {
+    return new WebApplicationException(
+        Response.status(Status.UNAUTHORIZED).entity(getUnauthorizedErrorMessage()).build());
+  }
+
   WebApplicationException getInvalidTokenException() {
     return new WebApplicationException(
         Response.status(Status.UNAUTHORIZED).entity(getInvalidTokenErrorMessage()).build());
@@ -55,6 +60,11 @@ public class GraphQLUtils {
 
   private String getInvalidApiKeyErrorMessage() {
     String message = GraphQLConstants.INVALID_API_KEY;
+    return getErrorMessage(message);
+  }
+
+  private String getUnauthorizedErrorMessage() {
+    String message = GraphQLConstants.NOT_AUTHORIZED;
     return getErrorMessage(message);
   }
 

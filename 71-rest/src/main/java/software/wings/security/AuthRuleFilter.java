@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -130,6 +130,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     }
     return false;
+  }
+
+  private boolean isGraphQLRequest(String uri) {
+    // GraphQL API calls
+    return uri.equals("graphql") || uri.equals("graphql/int");
   }
 
   private boolean isExternalGraphQLRequest(String uri) {
@@ -211,22 +216,28 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         return;
       } else {
         logger.warn("No user context in operation: {}", uriPath);
-        throw new InvalidRequestException("No user context set", USER);
+        throw new AccessDeniedException("No user context set", USER);
       }
     }
 
     String httpMethod = requestContext.getMethod();
     List<PermissionAttribute> requiredPermissionAttributes;
+    boolean harnessSupportUser = false;
     if (!userService.isUserAssignedToAccount(user, accountId)) {
-      if (!httpMethod.equals(HttpMethod.GET.name()) && !isHarnessUserExemptedRequest) {
-        throw new InvalidRequestException("User not authorized", USER);
+      if (!isHarnessUserExemptedRequest) {
+        if (!httpMethod.equals(HttpMethod.GET.name())) {
+          if (httpMethod.equals(HttpMethod.POST.name()) && !isGraphQLRequest(uriPath)) {
+            throw new AccessDeniedException("User not authorized", USER);
+          }
+        }
       }
 
       Set<Action> actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
 
       if (isEmpty(actions)) {
-        throw new InvalidRequestException("User not authorized", USER);
+        throw new AccessDeniedException("User not authorized", USER);
       }
+      harnessSupportUser = true;
     }
 
     if (servletRequest != null) {
@@ -242,7 +253,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
-      UserRequestContext userRequestContext = buildUserRequestContext(accountId, user, emptyAppIdsInReq);
+      UserRequestContext userRequestContext =
+          buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
       user.setUserRequestContext(userRequestContext);
       return;
     }
@@ -258,7 +270,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
 
     UserRequestContext userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId,
-        emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions);
+        emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions, harnessSupportUser);
     user.setUserRequestContext(userRequestContext);
 
     if (!skipAuth) {
@@ -379,8 +391,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private UserRequestContext buildUserRequestContext(List<PermissionAttribute> requiredPermissionAttributes, User user,
       String accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
-      boolean accountLevelPermissions) {
-    UserRequestContext userRequestContext = buildUserRequestContext(accountId, user, emptyAppIdsInReq);
+      boolean accountLevelPermissions, boolean harnessSupportUser) {
+    UserRequestContext userRequestContext =
+        buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
 
     if (!accountLevelPermissions) {
       authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
@@ -389,7 +402,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return userRequestContext;
   }
 
-  private UserRequestContext buildUserRequestContext(String accountId, User user, boolean emptyAppIdsInReq) {
+  private UserRequestContext buildUserRequestContext(
+      String accountId, User user, boolean emptyAppIdsInReq, boolean harnessSupportUser) {
     UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
 
@@ -403,6 +417,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
     setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
 
+    userRequestContextBuilder.harnessSupportUser(harnessSupportUser);
     return userRequestContextBuilder.build();
   }
 
@@ -601,35 +616,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return classResourceTypes;
     } else {
       return methodResourceTypes;
-    }
-  }
-
-  private List<PermissionAttribute> getAllRequiredPermissionAttrFromScope(ContainerRequestContext requestContext) {
-    List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
-    List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
-
-    Method resourceMethod = resourceInfo.getResourceMethod();
-    Scope methodAnnotations = resourceMethod.getAnnotation(Scope.class);
-    if (null != methodAnnotations) {
-      Stream.of(methodAnnotations.value())
-          .forEach(s
-              -> methodPermissionAttributes.add(
-                  new PermissionAttribute(s, methodAnnotations.scope(), requestContext.getMethod())));
-    }
-
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Scope classAnnotations = resourceClass.getAnnotation(Scope.class);
-    if (null != classAnnotations) {
-      Stream.of(classAnnotations.value())
-          .forEach(s
-              -> classPermissionAttributes.add(
-                  new PermissionAttribute(s, classAnnotations.scope(), requestContext.getMethod())));
-    }
-
-    if (methodPermissionAttributes.isEmpty()) {
-      return classPermissionAttributes;
-    } else {
-      return methodPermissionAttributes;
     }
   }
 
