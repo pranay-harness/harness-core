@@ -270,7 +270,7 @@ public class ApplicationManifestUtils {
       if (Local == applicationManifest.getStoreType()) {
         ManifestFile manifestFile =
             applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
-        if (manifestFile != null) {
+        if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
           valuesFiles.put(k8sValuesLocation, manifestFile.getFileContent());
         }
       }

@@ -940,6 +940,7 @@ public class HelmDeployState extends State {
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
+              .filter(yamlFileContent -> isNotBlank(yamlFileContent))
               .map(yamlFileContent -> {
                 if (imageDetails != null) {
                   if (isNotBlank(imageDetails.getTag())) {
