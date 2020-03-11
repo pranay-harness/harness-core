@@ -808,7 +808,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                     GitDiffRequest.builder()
                                                         .lastProcessedCommitId(processedCommit)
                                                         .yamlGitConfig(yamlGitConfig)
-                                                        .build()})
+                                                        .build(),
+                                                    true /*excludeFilesOutsideSetupFolder */})
                                                 .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                                 .build())
                                       .build();

@@ -25,7 +25,7 @@ public class GitClientUnsupported implements GitClient {
   }
 
   @Override
-  public GitDiffResult diff(GitOperationContext gitOperationContext) {
+  public GitDiffResult diff(GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 
