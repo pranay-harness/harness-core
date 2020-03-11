@@ -67,6 +67,7 @@ import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.lock.AcquiredLock;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
@@ -386,7 +387,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerQueueListeners(injector);
 
-    scheduleJobs(injector);
+    scheduleJobs(injector, configuration);
 
     registerObservers(injector);
 
@@ -516,7 +517,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerStores(MainConfiguration configuration, Injector injector) {
     final HPersistence persistence = injector.getInstance(HPersistence.class);
-    if (isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO
+        && isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
         && !configuration.getMongoConnectionFactory().getLocksUri().equals(
                configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
@@ -604,7 +606,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
-  private void scheduleJobs(Injector injector) {
+  private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
@@ -616,9 +618,11 @@ public class WingsApplication extends Application<MainConfiguration> {
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(
-            injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+          .scheduleWithFixedDelay(
+              injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+    }
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
