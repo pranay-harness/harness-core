@@ -69,7 +69,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
 
       final List<A> aggregateFunctions =
           fetchObject(dataFetchingEnvironment, AGGREGATE_FUNCTION, aggregationFunctionClass);
+
       final List<F> filters = fetchObject(dataFetchingEnvironment, FILTERS, filterClass);
+
       final List<G> groupBy = fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final List<S> sort = fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
       String accountId = utils.getAccountId(dataFetchingEnvironment);

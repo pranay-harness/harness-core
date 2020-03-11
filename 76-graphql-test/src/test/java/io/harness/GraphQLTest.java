@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import graphql.ExecutionInput;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
@@ -49,6 +50,7 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
   @Inject AuthHandler authHandler;
   @Inject AuthService authService;
   private String accountId;
+  @Inject BigQueryService bigQueryService;
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
 

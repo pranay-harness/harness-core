@@ -15,6 +15,8 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CCMSettingServiceImpl;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -961,6 +963,7 @@ public class WingsModule extends DependencyModule {
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
     bind(NameService.class).to(NameServiceImpl.class);
     bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }

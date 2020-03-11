@@ -6,6 +6,12 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): BillingStackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
 
+  gcpBillingTimeSeriesStats(
+    filters: [CCMFilter]
+    aggregateFunction: CCMAggregationFunction
+    groupBy: [CCMGroupBy]
+  ): GcpBillingTimeSeriesStats @dataFetcher(name: gcpBillingTimeSeriesStats)
+
   billingTrendStats(
     filters: [CCMFilter]
     aggregateFunction: CCMAggregationFunction
@@ -47,6 +53,11 @@ extend type Query {
   ): SunburstChartData @dataFetcher(name: sunburstChartStats)
 }
 
+input CEAggregate {
+  operationType: CCMAggregateOperation
+  entity: String
+}
+
 input CCMAggregationFunction {
   operationType: CCMAggregateOperation
   columnName: String
@@ -60,6 +71,7 @@ enum CCMAggregateOperation {
 
 input CCMGroupBy {
   entityGroupBy: CCMEntityGroupBy
+  timeTruncGroupby: CETimeTruncGroupby
   timeAggregation: CCMTimeSeriesAggregation
   tagAggregation: BillingDataTagAggregation
   labelAggregation: BillingDataLabelAggregation
@@ -82,6 +94,11 @@ enum CCMEntityGroupBy {
   ClusterType
   ClusterName
   CloudProvider
+  PROJECT
+}
+
+input CETimeTruncGroupby {
+  resolution: TimeGroupType
 }
 
 input CCMTimeSeriesAggregation {
@@ -222,6 +239,15 @@ type BillingStackedTimeSeriesData {
   label: String
 }
 
+type GcpBillingTimeSeriesStats {
+  stats: [TimeSeriesDataPoints]
+}
+
+type TimeSeriesDataPoints {
+  values: [DataPoint]
+  time: DateTime
+}
+
 type BillingStackedTimeSeriesDataPoint {
   values: [BillingDataPoint]
   time: DateTime
@@ -267,8 +293,8 @@ input CCMFilter {
   taskId: IdFilter
   namespace: IdFilter
   workloadName: IdFilter
-  endTime: TimeFilter
   startTime: TimeFilter
+  endTime: TimeFilter
   cloudProvider: IdFilter
   tag: BillingDataTagFilter
   label: BillingDataLabelFilter

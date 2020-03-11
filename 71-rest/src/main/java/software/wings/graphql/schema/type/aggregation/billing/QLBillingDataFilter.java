@@ -27,8 +27,8 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
   private QLIdFilter cloudProvider;
-  private QLTimeFilter endTime;
   private QLTimeFilter startTime;
+  private QLTimeFilter endTime;
   private QLBillingDataTagFilter tag;
   private QLBillingDataLabelFilter label;
 
