@@ -153,6 +153,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(88, TemplateLibraryYamlMigration.class))
         .add(Pair.of(89, HelmStateTimeoutMigration.class))
         .add(Pair.of(90, BaseMigration.class))
+        .add(Pair.of(91, BaseMigration.class))
         .build();
   }
 }
