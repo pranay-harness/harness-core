@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +22,6 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
-
-import java.io.IOException;
 
 public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
@@ -56,7 +53,7 @@ public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlH
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);

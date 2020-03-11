@@ -20,7 +20,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
@@ -57,7 +56,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
@@ -140,7 +138,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
@@ -173,7 +171,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 

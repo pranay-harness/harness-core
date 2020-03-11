@@ -26,7 +26,6 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
@@ -67,8 +66,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
-
-import java.io.IOException;
 
 public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -196,12 +193,12 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     // testCrud(validYamlContent1);
     testCrud(validYamlContent2);
   }
 
-  private void testCrud(String validYamlContent) throws IOException, HarnessException {
+  private void testCrud(String validYamlContent) throws Exception {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
@@ -233,7 +230,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
     Yaml yamlObject = (Yaml) getYaml(validYamlContent2, EcsInfrastructureMapping.Yaml.class);
