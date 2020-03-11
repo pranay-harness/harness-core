@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
@@ -56,8 +55,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
-
-import java.io.IOException;
 
 public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -147,7 +144,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     when(containerMasterUrlHelper.fetchMasterUrl(any(), any())).thenReturn("master_url");
 
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
@@ -184,7 +181,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 

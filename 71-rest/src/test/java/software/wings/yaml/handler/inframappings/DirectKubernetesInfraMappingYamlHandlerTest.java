@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
@@ -56,8 +55,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
-
-import java.io.IOException;
 
 public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -139,7 +136,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContentWithKubernetesClusterCloudProvider, validYamlFilePath, yamlHandler);
 
@@ -174,7 +171,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 

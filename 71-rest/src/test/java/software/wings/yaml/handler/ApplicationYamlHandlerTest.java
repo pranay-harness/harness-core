@@ -11,7 +11,6 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
@@ -65,7 +64,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws IOException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     GitFileChange gitFileChange = new GitFileChange();
@@ -105,7 +104,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws IOException {
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);

@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
@@ -165,7 +164,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForLocal() throws HarnessException, IOException {
+  public void testCRUDAndGetForLocal() throws IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
         createChangeContext(localValidYamlContent, validYamlFilePath);
 
@@ -185,7 +184,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForRemote() throws HarnessException, IOException {
+  public void testCRUDAndGetForRemote() throws IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(remoteYamlContent, validYamlFilePath);
 
     ApplicationManifest.Yaml yamlObject =
@@ -204,7 +203,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test(expected = WingsException.class)
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
         createChangeContext(localValidYamlContent, invalidYamlFilePath);
 
@@ -255,7 +254,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForEnvOverrideWithLocalStoreType() throws HarnessException, IOException {
+  public void testCRUDAndGetForEnvOverrideWithLocalStoreType() throws IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)
                                                   .storeType(StoreType.Local)
@@ -281,7 +280,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForEnvOverrideWithRemoteStoreType() throws HarnessException, IOException {
+  public void testCRUDAndGetForEnvOverrideWithRemoteStoreType() throws IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)
                                                   .storeType(StoreType.Remote)
@@ -313,7 +312,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForEnvServiceOverrideWithLocalStoreType() throws HarnessException, IOException {
+  public void testCRUDAndGetForEnvServiceOverrideWithLocalStoreType() throws IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(ENV_ID)
                                                   .serviceId(SERVICE_ID)
@@ -340,7 +339,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGetForEnvServiceOverrideWithRemoteStoreType() throws HarnessException, IOException {
+  public void testCRUDAndGetForEnvServiceOverrideWithRemoteStoreType() throws IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
                                                   .envId(WingsTestConstants.ENV_ID)
                                                   .serviceId(SERVICE_ID)
@@ -373,7 +372,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testCRUDFileAndGetForKustomizeManifest() throws HarnessException, IOException {
+  public void testCRUDFileAndGetForKustomizeManifest() throws IOException {
     String kustomizeYamlContent = readResourceFile(kustomizeYamlFile);
     ApplicationManifest kustomizeManifest = kustomizeApplicationManifest.cloneInternal();
     kustomizeManifest.setKustomizeConfig(KustomizeConfig.builder().kustomizeDirPath("a").pluginRootDir("b").build());
