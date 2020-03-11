@@ -24,6 +24,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
@@ -177,7 +178,8 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitDiffResult diff(GitOperationContext gitOperationContext) {
+  public synchronized GitDiffResult diff(
+      GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     String startCommitId = gitOperationContext.getGitDiffRequest().getLastProcessedCommitId();
 
@@ -216,7 +218,7 @@ public class GitClientImpl implements GitClient {
         newTreeIter.reset(reader, head);
 
         List<DiffEntry> diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-        addToGitDiffResult(diffs, diffResult, headCommitId, gitConfig, repository);
+        addToGitDiffResult(diffs, diffResult, headCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder);
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
@@ -251,7 +253,7 @@ public class GitClientImpl implements GitClient {
 
   @VisibleForTesting
   void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
-      Repository repository) throws IOException {
+      Repository repository, boolean excludeFilesOutsideSetupFolder) throws IOException {
     logger.info(GIT_YAML_LOG_PREFIX + "Total diff entries found : " + diffs.size());
     for (DiffEntry entry : diffs) {
       String content = null;
@@ -266,6 +268,10 @@ public class GitClientImpl implements GitClient {
         filePath = entry.getNewPath();
         objectId = entry.getNewId().toObjectId();
       }
+      if (excludeFilesOutsideSetupFolder && filePath != null && !filePath.startsWith(SETUP_FOLDER)) {
+        return;
+      }
+
       ObjectLoader loader = repository.open(objectId);
       content = new String(loader.getBytes(), Charset.forName("utf-8"));
       GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()

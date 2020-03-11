@@ -30,7 +30,7 @@ public interface GitClient {
 
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
-  GitDiffResult diff(GitOperationContext gitOperationContext);
+  GitDiffResult diff(GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder);
 
   GitCheckoutResult checkout(GitOperationContext gitOperationContext);
 

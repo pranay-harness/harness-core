@@ -96,6 +96,13 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
         case DIFF:
           GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
           logger.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
+          boolean excludeFilesOutsideSetupFolder = false;
+
+          try {
+            excludeFilesOutsideSetupFolder = (boolean) parameters[4];
+          } catch (Exception e) {
+            logger.error("Boolean for excluding external files not found. Set to false by default.");
+          }
 
           gitConnectorId = gitDiffRequest.getYamlGitConfig().getGitConnectorId();
           if (isBlank(gitConnectorId)) {
@@ -108,7 +115,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                                     .gitDiffRequest(gitDiffRequest)
                                     .build();
 
-          GitDiffResult gitDiffResult = gitClient.diff(gitOperationContext);
+          GitDiffResult gitDiffResult = gitClient.diff(gitOperationContext, excludeFilesOutsideSetupFolder);
           gitDiffResult.setYamlGitConfig(gitDiffRequest.getYamlGitConfig());
 
           return GitCommandExecutionResponse.builder()
