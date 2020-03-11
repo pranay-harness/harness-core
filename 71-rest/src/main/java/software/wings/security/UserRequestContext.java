@@ -13,6 +13,7 @@ import java.util.Set;
 @Builder
 public class UserRequestContext {
   private String accountId;
+  private boolean harnessSupportUser;
   private UserPermissionInfo userPermissionInfo;
   private UserRestrictionInfo userRestrictionInfo;
 

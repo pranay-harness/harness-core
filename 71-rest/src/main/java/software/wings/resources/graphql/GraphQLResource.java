@@ -69,6 +69,7 @@ public class GraphQLResource {
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
   GraphQLUtils graphQLUtils;
+  private interface Constants { String QUERY = "query"; }
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
@@ -148,10 +149,17 @@ public class GraphQLResource {
     String accountId;
     boolean hasUserContext = false;
     UserRequestContext userRequestContext = null;
+    String query = graphQLQuery.getQuery();
+
     User user = UserThreadLocal.get();
     if (user != null) {
-      accountId = user.getUserRequestContext().getAccountId();
       userRequestContext = user.getUserRequestContext();
+      accountId = userRequestContext.getAccountId();
+      if (userRequestContext.isHarnessSupportUser()) {
+        if (!query.toLowerCase().startsWith(Constants.QUERY)) {
+          throw graphQLUtils.getUnauthorizedException();
+        }
+      }
       hasUserContext = true;
     } else if (isNotEmpty(apiKey)) {
       accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
@@ -185,7 +193,7 @@ public class GraphQLResource {
       if (hasUserContext) {
         final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(),
             userRequestContext.getUserPermissionInfo(), userRequestContext.getUserRestrictionInfo(), accountId,
-            user.getUuid(), TriggeredByType.USER, httpServletRequest, graphQLQuery.getQuery());
+            user.getUuid(), TriggeredByType.USER, httpServletRequest, query);
         executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
@@ -195,9 +203,8 @@ public class GraphQLResource {
           UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
           UserRestrictionInfo apiKeyRestrictions =
               apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
-          final Builder contextBuilder =
-              populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions, apiKeyRestrictions, accountId,
-                  apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, graphQLQuery.getQuery());
+          final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions,
+              apiKeyRestrictions, accountId, apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, query);
           executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
