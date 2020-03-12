@@ -6,9 +6,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -23,18 +25,20 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.api.DeploymentType;
@@ -45,23 +49,26 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.MetricType;
-import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState.Metric;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,7 +89,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private InfrastructureMappingService infraMappingService;
-  @Inject @InjectMocks private NewRelicService newRelicService;
+  @Mock private NewRelicService newRelicService;
+  @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private DelegateService delegateService;
+  @Mock private SecretManager secretManager;
   private String infraMappingId;
   private NewRelicState newRelicState;
 
@@ -198,99 +208,6 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void testMetricsCorrespondingToMetricNames() {
-    /*
-    Case 1: metricNames is an empty list
-    Expected output: Metric Map should contain all metrics present in the YAML file
-     */
-    List<String> metricNames = new ArrayList<>();
-    Map<String, Metric> metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
-    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
-    assertThat(metrics.containsKey("error")).isTrue();
-    assertThat(metrics.containsKey("apdexScore")).isTrue();
-
-    /*
-    Case 2: metricNames contains a non-empty subset of metrics
-     */
-    metricNames = Arrays.asList("apdexScore");
-    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertThat(metrics.containsKey("apdexScore")).isTrue();
-    assertThat(metrics).hasSize(1);
-    assertThat(metrics.get("apdexScore").getTags().size() >= 1).isTrue();
-    assertThat(metrics.get("apdexScore").getTags()).isEqualTo(Sets.newHashSet("WebTransactions"));
-
-    metricNames = Arrays.asList("apdexScore", "averageResponseTime", "requestsPerMinute");
-    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertThat(metrics.containsKey("apdexScore")).isTrue();
-    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
-    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
-    assertThat(metrics).hasSize(3);
-
-    /*
-    Case 3: metricNames contains a list in which are metric names are incorrect
-    Expected output: Empty map
-     */
-    metricNames = Arrays.asList("ApdexScore");
-    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertThat(metrics).isEqualTo(new HashMap<>());
-
-    /*
-    Case 4: metricNames is null
-    Expected output:
-     */
-    metricNames = null;
-    metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
-    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
-    assertThat(metrics.containsKey("error")).isTrue();
-    assertThat(metrics.containsKey("apdexScore")).isTrue();
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void metricNames() {
-    List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
-    assertThat(actualMetrics).isEqualTo(expectedMetrics);
-  }
-
-  private TimeSeriesMetricDefinition buildTimeSeriesMetricDefinition(Metric metric) {
-    return TimeSeriesMetricDefinition.builder()
-        .metricName(metric.getMetricName())
-        .metricType(metric.getMlMetricType())
-        .tags(metric.getTags())
-        .build();
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void metricDefinitions() {
-    Map<String, TimeSeriesMetricDefinition> expectedMetricDefinitions = new HashMap<>();
-    expectedMetricDefinitions.put(
-        requestsPerMinuteMetric.getMetricName(), buildTimeSeriesMetricDefinition(requestsPerMinuteMetric));
-    expectedMetricDefinitions.put(
-        averageResponseTimeMetric.getMetricName(), buildTimeSeriesMetricDefinition(averageResponseTimeMetric));
-    expectedMetricDefinitions.put(errorMetric.getMetricName(), buildTimeSeriesMetricDefinition(errorMetric));
-    expectedMetricDefinitions.put(apdexScoreMetric.getMetricName(), buildTimeSeriesMetricDefinition(apdexScoreMetric));
-
-    List<String> metricNames = Arrays.asList("requestsPerMinute", "averageResponseTime", "error", "apdexScore");
-    Map<String, Metric> metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    Map<String, TimeSeriesMetricDefinition> actualMetricDefinitions =
-        newRelicService.metricDefinitions(metrics.values());
-
-    assertThat(actualMetricDefinitions.get("requestsPerMinute"))
-        .isEqualTo(expectedMetricDefinitions.get("requestsPerMinute"));
-    assertThat(actualMetricDefinitions.get("averageResponseTime"))
-        .isEqualTo(expectedMetricDefinitions.get("averageResponseTime"));
-    assertThat(actualMetricDefinitions.get("error")).isEqualTo(expectedMetricDefinitions.get("error"));
-    assertThat(actualMetricDefinitions.get("apdexScore")).isEqualTo(expectedMetricDefinitions.get("apdexScore"));
-  }
-
-  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricType() {
@@ -377,6 +294,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
         .getEnv();
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     doReturn(false).when(spyNewRelicState).isCVTaskEnqueuingEnabled(anyString());
+    doReturn(AnalysisTolerance.LOW).when(spyNewRelicState).getAnalysisTolerance();
     ExecutionResponse executionResponse = spyNewRelicState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find application by name");
@@ -400,6 +318,25 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreateDataCollectionInfo_withoutTemplatization() {
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    hosts.put("host2", "default");
+    String analysisServerConfigId = generateUuid();
+    newRelicState.setAnalysisServerConfigId(analysisServerConfigId);
+    NewRelicDataCollectionInfoV2 dataCollectionInfo =
+        (NewRelicDataCollectionInfoV2) newRelicState.createDataCollectionInfo(executionContext, hosts);
+
+    assertThat(StateType.NEW_RELIC).isEqualTo(dataCollectionInfo.getStateType());
+    assertThat(dataCollectionInfo.getNewRelicConfig()).isNull();
+    assertThat(dataCollectionInfo.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(dataCollectionInfo.getConnectorId()).isEqualTo(analysisServerConfigId);
+    assertThat(dataCollectionInfo.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_nullSettingsAttribute() {
     Map<String, String> hosts = new HashMap<>();
     hosts.put("host1", "default");
     hosts.put("host2", "default");
@@ -483,5 +420,128 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     assertThat(dataCollectionInfo.getNewRelicAppId()).isEqualTo(Long.parseLong(applicationId));
     assertThat(dataCollectionInfo.getHosts()).isEqualTo(Sets.newHashSet("host1"));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withExpressionApplicationID() {
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    newRelicState.setApplicationId("${NewRelic_Application}");
+    NewRelicState spyState = spy(newRelicState);
+    String applicationId = "" + 74878374747L;
+    doReturn(applicationId).when(spyState).getResolvedFieldValue(any(), any(), any());
+    NewRelicDataCollectionInfoV2 dataCollectionInfo =
+        (NewRelicDataCollectionInfoV2) spyState.createDataCollectionInfo(executionContext, hosts);
+
+    assertThat(StateType.NEW_RELIC).isEqualTo(dataCollectionInfo.getStateType());
+    assertThat(dataCollectionInfo.getNewRelicConfig()).isNull();
+    assertThat(dataCollectionInfo.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+
+    assertThat(dataCollectionInfo.getNewRelicAppId()).isEqualTo(Long.parseLong(applicationId));
+    assertThat(dataCollectionInfo.getHosts()).isEqualTo(Sets.newHashSet("host1"));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withExpressionApplicationName() {
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    newRelicState.setApplicationId("${NewRelic_Application}");
+    NewRelicState spyState = spy(newRelicState);
+
+    String applicationId = "" + 74878374747L;
+    NewRelicApplication newRelicApplication = NewRelicApplication.builder().id(Long.valueOf(applicationId)).build();
+
+    when(newRelicService.resolveApplicationId(any(), any())).thenThrow(new UnexpectedException("exception occurred"));
+    when(newRelicService.resolveApplicationName(any(), any())).thenReturn(newRelicApplication);
+    doReturn(applicationId).when(spyState).getResolvedFieldValue(any(), any(), any());
+    NewRelicDataCollectionInfoV2 dataCollectionInfo =
+        (NewRelicDataCollectionInfoV2) spyState.createDataCollectionInfo(executionContext, hosts);
+
+    assertThat(StateType.NEW_RELIC).isEqualTo(dataCollectionInfo.getStateType());
+    assertThat(dataCollectionInfo.getNewRelicConfig()).isNull();
+    assertThat(dataCollectionInfo.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+
+    assertThat(dataCollectionInfo.getNewRelicAppId()).isEqualTo(Long.parseLong(applicationId));
+    assertThat(dataCollectionInfo.getHosts()).isEqualTo(Sets.newHashSet("host1"));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withExpressionUnresolvedApplication() {
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+    newRelicState.setApplicationId("${NewRelic_Application}");
+    NewRelicState spyState = spy(newRelicState);
+
+    String applicationId = "" + 74878374747L;
+
+    String message = "exception occurred";
+    when(newRelicService.resolveApplicationId(any(), any())).thenThrow(new UnexpectedException(message));
+    when(newRelicService.resolveApplicationName(any(), any())).thenThrow(new UnexpectedException(message));
+    doReturn(applicationId).when(spyState).getResolvedFieldValue(any(), any(), any());
+    assertThatThrownBy(() -> spyState.createDataCollectionInfo(executionContext, hosts))
+        .isInstanceOf(UnexpectedException.class)
+        .hasMessage(message);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenConnectorIdIsValid() {
+    NewRelicState spyState = spy(newRelicState);
+
+    VerificationStateAnalysisExecutionData executionData = VerificationStateAnalysisExecutionData.builder().build();
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+
+    String configId = generateUuid();
+    NewRelicConfig newRelicConfig = NewRelicConfig.builder()
+                                        .accountId(accountId)
+                                        .newRelicUrl("newrelic-url")
+                                        .apiKey(generateUuid().toCharArray())
+                                        .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("relic-config")
+                                            .withValue(newRelicConfig)
+                                            .withUuid(configId)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    doReturn(configId).when(spyState).getResolvedConnectorId(any(), any(), any());
+    spyState.triggerAnalysisDataCollection(executionContext, AnalysisContext.builder().build(), executionData, hosts);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(delegateTaskArgumentCaptor.capture());
+
+    DelegateTask task = delegateTaskArgumentCaptor.getValue();
+    NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) task.getData().getParameters()[0];
+
+    assertThat(dataCollectionInfo.getNewRelicConfig()).isEqualTo(newRelicConfig);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenConnectorIdIsInValid() {
+    NewRelicState spyState = spy(newRelicState);
+    String configId = generateUuid();
+    doReturn(configId).when(spyState).getResolvedConnectorId(any(), any(), any());
+
+    VerificationStateAnalysisExecutionData executionData = VerificationStateAnalysisExecutionData.builder().build();
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("host1", "default");
+
+    assertThatThrownBy(()
+                           -> spyState.triggerAnalysisDataCollection(
+                               executionContext, AnalysisContext.builder().build(), executionData, hosts))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("No new relic config setting with id: " + configId + " found");
   }
 }

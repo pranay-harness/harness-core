@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -14,21 +14,18 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
@@ -42,8 +39,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.DecimalFormat;
@@ -61,10 +56,10 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 8/28/17.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "NewRelicStateKeys")
 public class NewRelicState extends AbstractMetricAnalysisState {
-  @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
-
-  @Attributes(required = true, title = "Application Name") private String applicationId;
+  private String analysisServerConfigId;
+  private String applicationId;
 
   public TimeSeriesMlAnalysisType getAnalysisType() {
     if (getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE) {
@@ -81,38 +76,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
   public NewRelicState(String name) {
     super(name, StateType.NEW_RELIC);
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @Override
@@ -154,38 +117,21 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     metricAnalysisService.saveMetricTemplates(
         context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
     String envId = getEnvId(context);
-    SettingAttribute settingAttribute = null;
-    String finalServerConfigId = analysisServerConfigId;
-    String finalNewRelicApplicationId = applicationId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalServerConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression appIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
-      if (appIdExpression != null) {
-        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
-        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
-        if (triggerBasedDeployment) {
-          try {
-            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
-          } catch (WingsException e) {
-            // see if we can resolve the application by name
-            final NewRelicApplication newRelicApplication =
-                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
-            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
-          }
-        }
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(analysisServerConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
-      }
+    String finalServerConfigId =
+        getResolvedConnectorId(context, NewRelicStateKeys.analysisServerConfigId, analysisServerConfigId);
+    String finalNewRelicApplicationId = getResolvedFieldValue(context, NewRelicStateKeys.applicationId, applicationId);
+
+    SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
+    Preconditions.checkNotNull(
+        settingAttribute, "No new relic config setting with id: " + finalServerConfigId + " found");
+
+    try {
+      newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+    } catch (WingsException e) {
+      // see if we can resolve the application by name
+      final NewRelicApplication newRelicApplication =
+          newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+      finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
@@ -199,7 +145,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .collectionTime(Integer.parseInt(getTimeDuration(context)))
             .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
             .timeSeriesMlAnalysisType(getAnalysisType())
             .dataCollectionMinute(0)
@@ -244,7 +190,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Override
   protected DataCollectionInfoV2 createDataCollectionInfo(
       ExecutionContext context, Map<String, String> hostsToCollect) {
-    String finalNewRelicApplicationId = applicationId;
     final Collection<Metric> metricNameToObjectMap =
         newRelicService.getMetricsCorrespondingToMetricNames(metrics).values();
     final Map<String, TimeSeriesMetricDefinition> metricTemplate =
@@ -252,32 +197,18 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     metricAnalysisService.saveMetricTemplates(
         context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
     String envId = getEnvId(context);
-    SettingAttribute settingAttribute = null;
-    String finalServerConfigId = analysisServerConfigId;
 
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalServerConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression appIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
-      if (appIdExpression != null) {
-        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
-        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
-        if (triggerBasedDeployment) {
-          try {
-            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
-          } catch (WingsException e) {
-            // see if we can resolve the application by name
-            final NewRelicApplication newRelicApplication =
-                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
-            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
-          }
-        }
-      }
+    String finalServerConfigId =
+        getResolvedConnectorId(context, NewRelicStateKeys.analysisServerConfigId, analysisServerConfigId);
+
+    String finalNewRelicApplicationId = getResolvedFieldValue(context, NewRelicStateKeys.applicationId, applicationId);
+    try {
+      newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+    } catch (Exception e) {
+      // see if we can resolve the application by name
+      final NewRelicApplication newRelicApplication =
+          newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+      finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
     }
 
     return NewRelicDataCollectionInfoV2.builder()
