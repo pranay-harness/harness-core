@@ -32,11 +32,10 @@ public class TailerModule extends ProviderModule {
   @Provides
   @Singleton
   @Named("tailer")
-  RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
+  RollingChronicleQueue chronicleQueue() {
     return ChronicleQueue.singleBuilder(config.queueFilePath)
         .rollCycle(EventPublisherConstants.QUEUE_ROLL_CYCLE)
         .timeoutMS(EventPublisherConstants.QUEUE_TIMEOUT_MS)
-        .storeFileListener(fileDeletionManager)
         .build();
   }
 
@@ -69,10 +68,10 @@ public class TailerModule extends ProviderModule {
   @Value
   @Builder
   public static class Config {
-    private final String publishTarget;
-    private final String publishAuthority;
-    private final String accountId;
-    private final String accountSecret;
-    private final String queueFilePath;
+    String publishTarget;
+    String publishAuthority;
+    String accountId;
+    String accountSecret;
+    String queueFilePath;
   }
 }
