@@ -31,6 +31,7 @@ import software.wings.beans.AccountType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,6 +65,12 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         .filter(ConfiguredLimitKeys.accountId, accountId)
         .filter(ConfiguredLimitKeys.key, actionType.toString())
         .get();
+  }
+
+  @Nullable
+  @Override
+  public List<ConfiguredLimit> getAllLimitsConfiguredForAccount(String accountId) {
+    return dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId).asList();
   }
 
   @Nullable

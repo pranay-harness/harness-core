@@ -54,8 +54,8 @@ public class SecretManager {
     AUTH_SECRET(24 * 60 * 60 * 1000), // 24 hr
     JIRA_SERVICE_SECRET(7 * 24 * 60 * 60 * 1000), // 7 days
     MARKETPLACE_SIGNUP(24 * 60 * 60 * 1000), // 1 day
-    API_KEY(10 * 60 * 1000); // 10 mins; API_KEY secret is not configured in config.yml!
-
+    API_KEY(10 * 60 * 1000), // 10 mins; API_KEY secret is not configured in config.yml!
+    DATA_HANDLER_SECRET(60 * 60 * 1000);
     private int validityDuration;
 
     JWT_CATEGORY(int validityDuration) {
@@ -83,6 +83,8 @@ public class SecretManager {
         return configuration.getPortal().getJwtAuthSecret();
       case JIRA_SERVICE_SECRET:
         return configuration.getPortal().getJwtExternalServiceSecret();
+      case DATA_HANDLER_SECRET:
+        return configuration.getPortal().getDataHandlerSecret();
       case MARKETPLACE_SIGNUP:
         return configuration.getPortal().getJwtMarketPlaceSecret();
       case IDENTITY_SERVICE_SECRET:

@@ -18,8 +18,11 @@ import java.util.Map;
  */
 public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironment {
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params);
+
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params, boolean createdFromYaml);
+
   <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId);
+
   <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId);
   <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType);
@@ -50,4 +53,5 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   boolean addToKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
   boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
   TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId);
+  boolean is24x7GuardEnabledForAccount(String accountId);
 }

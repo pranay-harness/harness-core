@@ -395,6 +395,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public long getCountOfAccounts() {
+    return wingsPersistence.createQuery(Account.class).count();
+  }
+
+  @Override
   public String getAccountStatus(String accountId) {
     Account account = getFromCacheWithFallback(accountId);
     if (account == null) {
@@ -538,6 +543,7 @@ public class AccountServiceImpl implements AccountService {
    * Takes a valid account name and checks database for duplicates, if duplicate exists appends
    * "-x" (where x is a random number between 0 and 1000) to the name and repeats the process until it generates a
    * unique account name
+   *
    * @param accountName user input account name
    * @return uniqueAccountName
    */
@@ -556,6 +562,7 @@ public class AccountServiceImpl implements AccountService {
 
   /**
    * Takes an account name and performs a case-insensitive check on all account names in database
+   *
    * @param accountName account name
    * @return Returns true if duplicate is found else false
    */
