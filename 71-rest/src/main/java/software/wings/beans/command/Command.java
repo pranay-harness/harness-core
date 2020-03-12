@@ -48,9 +48,13 @@ import java.util.Set;
 @Attributes(title = "Command")
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
-    fields = { @Field("appId")
-               , @Field("originEntityId"), @Field("version") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true),
+      fields = { @Field("appId")
+                 , @Field("originEntityId"), @Field("version") })
+  ,
+      @Index(options = @IndexOptions(name = "account_idx"), fields = { @Field("accountId") })
+})
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {
   @NotEmpty @SchemaIgnore private String name;
