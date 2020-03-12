@@ -63,6 +63,7 @@ import software.wings.helpers.ext.helm.response.SearchInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -95,6 +96,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private GitClient gitClient;
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private HelmHelper helmHelper;
+  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -374,27 +376,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   @Override
   public HelmCommandResponse ensureHelm3Installed(HelmCommandRequest commandRequest) {
-    try {
-      HelmCliResponse helmCliResponse = helmClient.getClientAndServerVersion(commandRequest);
-
-      if (helmCliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-        return new HelmCommandResponse(CommandExecutionStatus.FAILURE, helmCliResponse.getOutput());
-      }
-
-      boolean helm3 = isHelm3(helmCliResponse.getOutput());
-      CommandExecutionStatus commandExecutionStatus =
-          helm3 ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE;
-      return new HelmCommandResponse(commandExecutionStatus, helmCliResponse.getOutput());
-
-    } catch (TimeoutException e) {
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "Timed out while finding helm version");
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "Interrupted while finding helm version");
-    } catch (IOException e) {
-      logger.info("IOException occurred while finding helm version", e);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "IO Error occurred while finding helm version");
+    String helmPath = k8sGlobalConfigService.getHelmPath(HelmVersion.V3);
+    if (isNotBlank(helmPath)) {
+      return new HelmCommandResponse(CommandExecutionStatus.SUCCESS, format("Helm3 is installed at [%s]", helmPath));
     }
+    return new HelmCommandResponse(CommandExecutionStatus.FAILURE, "Helm3 not installed in the delegate client tools");
   }
 
   @Override

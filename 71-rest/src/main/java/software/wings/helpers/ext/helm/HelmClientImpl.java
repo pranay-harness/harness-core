@@ -12,6 +12,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -32,6 +33,7 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +50,7 @@ import java.util.concurrent.TimeoutException;
 @Singleton
 @Slf4j
 public class HelmClientImpl implements HelmClient {
+  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";
 
   @Override
@@ -372,7 +375,8 @@ public class HelmClientImpl implements HelmClient {
   }
 
   private String getHelmCommandTemplateWithHelmPath(HelmCliCommandType commandType, HelmVersion helmVersion) {
+    String helmPath = helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
     return HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion)
-        .replace(HelmConstants.HELM_PATH_PLACEHOLDER, "helm");
+        .replace(HelmConstants.HELM_PATH_PLACEHOLDER, helmPath);
   }
 }

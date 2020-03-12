@@ -3,18 +3,24 @@ package software.wings.helpers.ext.helm;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.rule.Owner;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -24,13 +30,15 @@ import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class HelmClientImplTest extends WingsBaseTest {
-  private HelmClientImpl helmClient = Mockito.spy(HelmClientImpl.class);
+  @Mock private K8sGlobalConfigService k8sGlobalConfigService;
+  @InjectMocks private HelmClientImpl helmClient = Mockito.spy(HelmClientImpl.class);
   private ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
   private HelmInstallCommandRequest helmInstallCommandRequest = HelmInstallCommandRequest.builder().build();
   private HelmRollbackCommandRequest helmRollbackCommandRequest = HelmRollbackCommandRequest.builder().build();
@@ -44,6 +52,12 @@ public class HelmClientImplTest extends WingsBaseTest {
         .executeHelmCLICommand(anyString(), anyLong());
     buildHelmInstallCommandRequest();
     buildHelmRollbackCommandRequest();
+    when(k8sGlobalConfigService.getHelmPath(any(HelmVersion.class))).thenReturn("/client-tools/v3.1/helm");
+  }
+
+  @After
+  public void after() {
+    verify(k8sGlobalConfigService, never()).getHelmPath(HelmVersion.V2);
   }
 
   private void buildHelmRollbackCommandRequest() {
@@ -90,13 +104,13 @@ public class HelmClientImplTest extends WingsBaseTest {
             "KUBECONFIG=~/.kube/dummy-config helm upgrade --debug --tls crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "helm upgrade  crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
+            "/client-tools/v3.1/helm upgrade  crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm upgrade  crazy-helm harness --repo https://oci-registry --version 0.0.1");
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm upgrade  crazy-helm harness --repo https://oci-registry --version 0.0.1");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm upgrade --debug --tls crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm upgrade --debug --tls crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
   }
 
   @Test
@@ -115,13 +129,13 @@ public class HelmClientImplTest extends WingsBaseTest {
             "KUBECONFIG=~/.kube/dummy-config helm install --debug --tls harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --name crazy-helm --namespace helm-namespace");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --namespace helm-namespace");
+            "/client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --namespace helm-namespace");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1  --debug --tls  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --namespace helm-namespace");
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1  --debug --tls  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --namespace helm-namespace");
   }
 
   @Test
@@ -134,9 +148,10 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmRollbackCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm rollback --debug --tls best-release-ever 2");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmRollbackCommandRequest))
-        .isEqualTo("helm rollback  best-release-ever 2");
+        .isEqualTo("/client-tools/v3.1/helm rollback  best-release-ever 2");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmRollbackCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm rollback  best-release-ever 2 --debug --tls");
+        .isEqualTo(
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm rollback  best-release-ever 2 --debug --tls");
   }
 
   @Test
@@ -151,11 +166,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm hist --debug --tls crazy-helm --max 5");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm hist crazy-helm   --max 5");
+        .isEqualTo("/client-tools/v3.1/helm hist crazy-helm   --max 5");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm hist crazy-helm   --max 5");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm hist crazy-helm   --max 5");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm hist crazy-helm --debug --tls  --max 5");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm hist crazy-helm --debug --tls  --max 5");
   }
 
   @Test
@@ -170,11 +185,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm list --debug --tls ^crazy-helm$");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm list  --filter ^crazy-helm$");
+        .isEqualTo("/client-tools/v3.1/helm list  --filter ^crazy-helm$");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm list  --filter ^crazy-helm$");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm list  --filter ^crazy-helm$");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm list --debug --tls --filter ^crazy-helm$");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm list --debug --tls --filter ^crazy-helm$");
   }
 
   @Test
@@ -208,11 +223,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo add stable https://oci-registry");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo add stable https://oci-registry");
+        .isEqualTo("/client-tools/v3.1/helm repo add stable https://oci-registry");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo add stable https://oci-registry");
+        .isEqualTo("/client-tools/v3.1/helm repo add stable https://oci-registry");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo add stable https://oci-registry");
+        .isEqualTo("/client-tools/v3.1/helm repo add stable https://oci-registry");
   }
 
   @Test
@@ -227,11 +242,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo update");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo update");
+        .isEqualTo("/client-tools/v3.1/helm repo update");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo update");
+        .isEqualTo("/client-tools/v3.1/helm repo update");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo update");
+        .isEqualTo("/client-tools/v3.1/helm repo update");
   }
 
   @Test
@@ -246,11 +261,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo list");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo list");
+        .isEqualTo("/client-tools/v3.1/helm repo list");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo list");
+        .isEqualTo("/client-tools/v3.1/helm repo list");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo list");
+        .isEqualTo("/client-tools/v3.1/helm repo list");
   }
 
   @Test
@@ -265,11 +280,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm delete --debug --tls --purge crazy-helm");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm uninstall crazy-helm");
+        .isEqualTo("/client-tools/v3.1/helm uninstall crazy-helm");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm uninstall crazy-helm");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm uninstall crazy-helm");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm uninstall crazy-helm --debug --tls");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm uninstall crazy-helm --debug --tls");
   }
 
   @Test
@@ -285,11 +300,11 @@ public class HelmClientImplTest extends WingsBaseTest {
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm search harness-helm");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm search repo harness-helm");
+        .isEqualTo("/client-tools/v3.1/helm search repo harness-helm");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm search repo harness-helm");
+        .isEqualTo("/client-tools/v3.1/helm search repo harness-helm");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
-        .isEqualTo("helm search repo harness-helm");
+        .isEqualTo("/client-tools/v3.1/helm search repo harness-helm");
   }
 
   private String getCommandWithCommandFlags(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
@@ -307,7 +322,7 @@ public class HelmClientImplTest extends WingsBaseTest {
             "helm install  harness --repo https://oci-registry --version 0.0.1  --name crazy-helm --namespace helm-namespace");
     assertThat(command_v3)
         .isEqualTo(
-            "helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
+            "/client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
   }
 
   private String getCommandWithNoKubeConfig(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
@@ -325,7 +340,7 @@ public class HelmClientImplTest extends WingsBaseTest {
             "KUBECONFIG=~/.kube/dummy-config helm install  harness --repo https://oci-registry --version 0.0.1  --name crazy-helm --namespace helm-namespace");
     assertThat(command_v3)
         .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
+            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
   }
 
   private String getCommandWithNoValueOverride(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
