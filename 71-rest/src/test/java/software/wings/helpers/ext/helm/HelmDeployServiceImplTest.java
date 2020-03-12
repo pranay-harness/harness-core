@@ -14,7 +14,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -22,6 +21,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
+import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -69,6 +70,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 
@@ -86,6 +88,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private LogCallback logCallback;
   @Mock private HelmTaskHelper helmTaskHelper;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -260,10 +263,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testEnsureHelm3Installed() throws InterruptedException, TimeoutException, IOException {
-    shouldReturnSuccessWhenHelm3Installed();
-    shouldReturnFailureWhenHelm2Installed();
-    shouldReturnFailureWhenHelmNotInstalled();
-    shouldReturnFailureTimeoutException();
+    successWhenHelm3PresentInClientTools();
+    failureWhenHelm3AbsentInClientTools();
   }
 
   @Test
@@ -667,42 +668,20 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     assertThat(response.getContainerInfoList()).isNotEmpty();
   }
 
-  private void shouldReturnSuccessWhenHelm3Installed() throws InterruptedException, IOException, TimeoutException {
-    HelmCliResponse helmCliResponse = new HelmCliResponse(SUCCESS, "v3.0.2+g19e47ee");
-    doReturn(helmCliResponse).when(helmClient).getClientAndServerVersion(null);
+  private void successWhenHelm3PresentInClientTools() throws InterruptedException, IOException, TimeoutException {
+    doReturn("/client-tools/helm").when(k8sGlobalConfigService).getHelmPath(V3);
 
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelm3Installed(null);
 
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
   }
 
-  private void shouldReturnFailureWhenHelm2Installed() throws InterruptedException, IOException, TimeoutException {
-    HelmCliResponse helmCliResponse = new HelmCliResponse(SUCCESS,
-        "Client: &version.Version{SemVer:\"v2.13.1\", GitCommit:\"618447cbf203d147601b4b9bd7f8c37a5d39fbb4\", GitTreeState:\"clean\"}\n"
-            + "Server: &version.Version{SemVer:\"v2.14.1\", GitCommit:\"5270352a09c7e8b6e8c9593002a73535276507c0\", GitTreeState:\"clean\"}");
-    doReturn(helmCliResponse).when(helmClient).getClientAndServerVersion(null);
+  private void failureWhenHelm3AbsentInClientTools() throws InterruptedException, IOException, TimeoutException {
+    doReturn("").when(k8sGlobalConfigService).getHelmPath(V3);
 
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelm3Installed(null);
 
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-  }
-
-  private void shouldReturnFailureWhenHelmNotInstalled() throws InterruptedException, IOException, TimeoutException {
-    HelmCliResponse helmCliResponse = new HelmCliResponse(CommandExecutionStatus.FAILURE, null);
-    doReturn(helmCliResponse).when(helmClient).getClientAndServerVersion(null);
-
-    HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelm3Installed(null);
-
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-  }
-
-  private void shouldReturnFailureTimeoutException() throws InterruptedException, IOException, TimeoutException {
-    doThrow(TimeoutException.class).when(helmClient).getClientAndServerVersion(null);
-
-    HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelm3Installed(null);
-
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(helmCommandResponse.getOutput()).isEqualTo("Timed out while finding helm version");
   }
 
   private void setFakeTimeLimiter() {
@@ -772,8 +751,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   private void shouldCallEnsureHelm2InstalledWhenVersionV2() {
-    HelmInstallCommandRequest helmInstallCommandRequest =
-        HelmInstallCommandRequest.builder().helmVersion(HelmConstants.HelmVersion.V2).build();
+    HelmInstallCommandRequest helmInstallCommandRequest = HelmInstallCommandRequest.builder().helmVersion(V2).build();
     doReturn(null).when(spyHelmDeployService).ensureHelmCliAndTillerInstalled(helmInstallCommandRequest);
 
     spyHelmDeployService.ensureHelmInstalled(helmInstallCommandRequest);
@@ -782,8 +760,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   private void shouldCallEnsureHelm3InstalledWhenVersionV3() {
-    HelmInstallCommandRequest helmInstallCommandRequest =
-        HelmInstallCommandRequest.builder().helmVersion(HelmConstants.HelmVersion.V3).build();
+    HelmInstallCommandRequest helmInstallCommandRequest = HelmInstallCommandRequest.builder().helmVersion(V3).build();
     doReturn(null).when(spyHelmDeployService).ensureHelm3Installed(helmInstallCommandRequest);
 
     spyHelmDeployService.ensureHelmInstalled(helmInstallCommandRequest);
