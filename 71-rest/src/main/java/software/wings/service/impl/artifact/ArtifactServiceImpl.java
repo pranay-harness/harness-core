@@ -583,14 +583,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     // TODO: ASR: update with accountId
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
                                         .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
-    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-      return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
-          .order("-createdAt")
-          .disableValidation()
-          .get();
-    }
-    artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName());
-    return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
+
+    return artifactQuery.filter(ArtifactKeys.metadata_buildNo, regex ? compile(buildNumber) : buildNumber)
         .order("-createdAt")
         .disableValidation()
         .get();
