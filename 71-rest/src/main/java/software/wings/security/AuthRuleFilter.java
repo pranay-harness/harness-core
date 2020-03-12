@@ -32,6 +32,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
+import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
@@ -176,7 +177,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
-        || isIdentityServiceRequest(requestContext)) {
+        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)) {
       return;
     }
 
@@ -469,6 +470,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.IDENTITY_SERVICE_PREFIX);
   }
 
+  private boolean isAdminPortalRequest(ContainerRequestContext requestContext) {
+    return adminPortalAPI()
+        && startsWith(
+               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.ADMIN_PORTAL_PREFIX);
+  }
+
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     // externalAPI() doesn't need any authorization
     return publicAPI() || requestContext.getMethod().equals(OPTIONS) || identityServiceAPI() || harnessClientApi()
@@ -492,6 +499,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
     return resourceMethod.getAnnotation(IdentityServiceAuth.class) != null
         || resourceClass.getAnnotation(IdentityServiceAuth.class) != null;
+  }
+
+  private boolean adminPortalAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(AdminPortalAuth.class) != null
+        || resourceClass.getAnnotation(AdminPortalAuth.class) != null;
   }
 
   private boolean publicAPI() {

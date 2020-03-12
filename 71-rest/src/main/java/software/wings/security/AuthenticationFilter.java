@@ -25,6 +25,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -57,6 +58,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String HARNESS_API_KEY_HEADER = "X-Harness-Api-Key";
   @VisibleForTesting public static final String USER_IDENTITY_HEADER = "X-Identity-User";
   public static final String IDENTITY_SERVICE_PREFIX = "IdentityService ";
+  public static final String ADMIN_PORTAL_PREFIX = "AdminPortal ";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
@@ -139,6 +141,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     GlobalContextManager.set(new GlobalContext());
 
+    if (isAdminPortalRequest()) {
+      String adminPortalToken =
+          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), ADMIN_PORTAL_PREFIX)
+              .trim();
+      secretManager.verifyJWTToken(adminPortalToken, JWT_CATEGORY.DATA_HANDLER_SECRET);
+      return;
+    }
+
     if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
@@ -183,6 +193,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
     String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
     return isNotEmpty(value);
+  }
+
+  protected boolean isAdminPortalRequest() {
+    return resourceInfo.getResourceMethod().getAnnotation(AdminPortalAuth.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(AdminPortalAuth.class) != null;
   }
 
   private boolean checkIfBearerTokenAndValidate(String authHeader, ContainerRequestContext containerRequestContext) {

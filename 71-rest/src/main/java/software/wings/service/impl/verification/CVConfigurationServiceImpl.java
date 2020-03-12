@@ -1156,4 +1156,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
         .get();
   }
+
+  @Override
+  public boolean is24x7GuardEnabledForAccount(String accountId) {
+    CVConfiguration cvConfiguration =
+        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfigurationKeys.accountId, accountId).get();
+    return cvConfiguration != null && cvConfiguration.isEnabled24x7();
+  }
 }

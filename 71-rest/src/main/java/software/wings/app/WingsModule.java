@@ -26,6 +26,8 @@ import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
+import io.harness.datahandler.services.AdminAccountService;
+import io.harness.datahandler.services.AdminAccountServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -661,6 +663,7 @@ public class WingsModule extends DependencyModule {
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);
+    bind(AdminAccountService.class).to(AdminAccountServiceImpl.class);
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);

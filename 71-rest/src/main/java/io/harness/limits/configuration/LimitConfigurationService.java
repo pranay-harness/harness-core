@@ -5,6 +5,7 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.lib.Limit;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -28,6 +29,8 @@ public interface LimitConfigurationService extends OwnedByAccount {
    * @return configured limit, or null if no limit is configured for this account and there is no default.
    */
   @Nullable ConfiguredLimit get(String accountId, ActionType actionType);
+
+  @Nullable List<ConfiguredLimit> getAllLimitsConfiguredForAccount(String accountId);
 
   /**
    * Configure a new limit.
