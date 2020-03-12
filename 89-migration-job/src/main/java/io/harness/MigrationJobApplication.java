@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import io.harness.configuration.DeployMode;
 import io.harness.event.EventsModule;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
@@ -29,7 +30,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
-import software.wings.app.DeployMode;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;

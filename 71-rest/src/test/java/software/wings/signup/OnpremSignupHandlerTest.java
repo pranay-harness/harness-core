@@ -11,6 +11,7 @@ import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.configuration.DeployMode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
 import software.wings.service.intfc.SignupService;

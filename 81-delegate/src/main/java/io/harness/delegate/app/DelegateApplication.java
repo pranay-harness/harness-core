@@ -1,6 +1,8 @@
 package io.harness.delegate.app;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
@@ -13,8 +15,6 @@ import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.app.DeployMode.DEPLOY_MODE;
-import static software.wings.app.DeployMode.isOnPrem;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

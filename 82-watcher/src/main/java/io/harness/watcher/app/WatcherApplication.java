@@ -1,6 +1,8 @@
 package io.harness.watcher.app;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.NEW_WATCHER;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
@@ -126,27 +128,31 @@ public class WatcherApplication {
 
     modules.addAll(new WatcherModule().cumulativeDependencies());
 
-    String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
-    String publishTarget = null;
-    String publishAuthority = null;
-    if (configuration.getPublishTarget() != null && configuration.getPublishAuthority() != null) {
-      publishTarget = configuration.getPublishTarget();
-      publishAuthority = configuration.getPublishAuthority();
-    } else if (managerHostAndPort != null) {
-      publishTarget = extractTarget(managerHostAndPort);
-      publishAuthority = extractAuthority(managerHostAndPort, "events");
-    }
-    if (publishTarget != null && publishAuthority != null) {
-      modules.add(new TailerModule(Config.builder()
-                                       .accountId(configuration.getAccountId())
-                                       .accountSecret(configuration.getAccountSecret())
-                                       .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
-                                                          .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
-                                       .publishTarget(publishTarget)
-                                       .publishAuthority(publishAuthority)
-                                       .build()));
+    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+      String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
+      String publishTarget = null;
+      String publishAuthority = null;
+      if (configuration.getPublishTarget() != null && configuration.getPublishAuthority() != null) {
+        publishTarget = configuration.getPublishTarget();
+        publishAuthority = configuration.getPublishAuthority();
+      } else if (managerHostAndPort != null) {
+        publishTarget = extractTarget(managerHostAndPort);
+        publishAuthority = extractAuthority(managerHostAndPort, "events");
+      }
+      if (publishTarget != null && publishAuthority != null) {
+        modules.add(new TailerModule(Config.builder()
+                                         .accountId(configuration.getAccountId())
+                                         .accountSecret(configuration.getAccountSecret())
+                                         .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
+                                                            .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
+                                         .publishTarget(publishTarget)
+                                         .publishAuthority(publishAuthority)
+                                         .build()));
+      } else {
+        logger.warn("Unable to configure event publisher configs. Event publisher will be disabled");
+      }
     } else {
-      logger.warn("Unable to configure event publisher configs. Event publisher will be disabled");
+      logger.warn("Skipping event publisher configuration for on-prem deployment");
     }
 
     Injector injector = Guice.createInjector(modules);

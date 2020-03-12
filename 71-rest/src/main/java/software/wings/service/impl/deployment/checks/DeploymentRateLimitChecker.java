@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.configuration.DeployMode;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -18,7 +19,6 @@ import io.harness.limits.lib.RateLimitChecker;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.app.DeployMode;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 

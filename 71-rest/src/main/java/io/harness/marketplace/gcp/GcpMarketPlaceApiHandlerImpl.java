@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.JWT;
+import io.harness.configuration.DeployMode;
 import io.harness.exception.WingsException;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
 import io.harness.marketplace.gcp.signup.annotations.ReturningUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.marketplace.MarketPlaceType;

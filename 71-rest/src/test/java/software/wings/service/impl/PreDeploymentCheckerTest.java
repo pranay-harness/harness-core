@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.configuration.DeployMode;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
@@ -42,7 +43,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AccountType;
 import software.wings.beans.GraphNode;
