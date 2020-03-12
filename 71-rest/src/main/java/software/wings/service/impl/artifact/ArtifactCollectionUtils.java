@@ -100,6 +100,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -884,6 +885,7 @@ public class ArtifactCollectionUtils {
         BuildSourceParameters.builder()
             .accountId(artifactStreamAttributes.getAccountId())
             .appId(artifactStream.fetchAppId())
+            .artifactStreamId(artifactStream.getUuid())
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStream.getArtifactStreamType())
             .buildSourceRequestType(requestType)
@@ -893,5 +895,21 @@ public class ArtifactCollectionUtils {
     buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
 
     return buildSourceParametersBuilder.build();
+  }
+
+  public List<Artifact> processBuilds(ArtifactStream artifactStream, List<BuildDetails> builds) {
+    if (isEmpty(builds)) {
+      return new ArrayList<>();
+    }
+    if (artifactStream == null) {
+      logger.info("Artifact stream does not exist. Returning");
+      return new ArrayList<>();
+    }
+
+    // New build are filtered at the delegate. So all the builds coming in the BuildSourceExecutionResponse are the ones
+    // not present in the DB.
+    return builds.stream()
+        .map(buildDetails -> artifactService.create(getArtifact(artifactStream, buildDetails)))
+        .collect(Collectors.toList());
   }
 }
