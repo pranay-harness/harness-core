@@ -35,6 +35,7 @@ public class AwsInstanceInfrastructureYamlHandler
         .hostConnectionAttrsName(hostNameConnectionAttr.getName())
         .type(InfrastructureType.AWS_INSTANCE)
         .expressions(bean.getExpressions())
+        .useAutoScalingGroup(bean.isProvisionInstances())
         .build();
   }
 
@@ -65,6 +66,7 @@ public class AwsInstanceInfrastructureYamlHandler
     bean.setLoadBalancerId(yaml.getLoadBalancerName());
     bean.setRegion(yaml.getRegion());
     bean.setExpressions(yaml.getExpressions());
+    bean.setProvisionInstances(yaml.isUseAutoScalingGroup());
   }
 
   @Override

@@ -1,0 +1,16 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: SSH
+infrastructure:
+- type: AWS_SSH
+  autoScalingGroupName: AMI_BG__2
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  desiredCapacity: 0
+  hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
+  loadBalancerName: a79142b5197c211e888710a45fa1545a
+  region: us-east-1
+  setDesiredCapacity: false
+  useAutoScalingGroup: true
+  usePublicDns: false

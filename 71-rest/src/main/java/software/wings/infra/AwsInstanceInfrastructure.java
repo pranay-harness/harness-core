@@ -39,7 +39,6 @@ import java.util.Set;
 public class AwsInstanceInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, SshBasedInfrastructure, ProvisionerAware {
   private String cloudProviderId;
-  private boolean useAutoScalingGroup;
   @IncludeFieldMap private String region;
   private String hostConnectionAttrs;
   private String loadBalancerId;

@@ -111,6 +111,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     private static final String AZURE_INSTANCE = "azure_instance.yaml";
     private static final String DIRECT_KUBERNETES = "direct_kubernetes.yaml";
     private static final String AWS_INSTANCE = "aws_instance.yaml";
+    private static final String AWS_INSTANCE_GROUP = "aws_instance_group.yaml";
     private static final String AWS_INSTANCE_PROVISIONER = "aws_instance_provisioner.yaml";
     private static final String AWS_CODEDEPLOY = "aws_codedeploy.yaml";
     private static final String GCP_KUBERNETES_PROVISIONER = "gcp_kubernetes_provisioner.yaml";
@@ -216,6 +217,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     testCRUD(validYamlInfraStructureFiles.AWS_INSTANCE, InfrastructureType.AWS_INSTANCE, DeploymentType.WINRM,
         CloudProviderType.AWS);
     testCRUD(validYamlInfraStructureFiles.AWS_INSTANCE_PROVISIONER, InfrastructureType.AWS_INSTANCE, DeploymentType.SSH,
+        CloudProviderType.AWS);
+    testCRUD(validYamlInfraStructureFiles.AWS_INSTANCE_GROUP, InfrastructureType.AWS_INSTANCE, DeploymentType.SSH,
         CloudProviderType.AWS);
   }
 
