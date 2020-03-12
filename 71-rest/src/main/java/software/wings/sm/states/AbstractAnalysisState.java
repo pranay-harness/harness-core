@@ -194,6 +194,13 @@ public abstract class AbstractAnalysisState extends State {
     return timeDuration;
   }
 
+  protected String getTimeDuration(ExecutionContext context) {
+    if (isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return getResolvedFieldValue(context, AbstractAnalysisStateKeys.timeDuration, timeDuration);
+  }
+
   protected boolean isEligibleForPerMinuteTask(String accountId) {
     return getComparisonStrategy() == PREDICTIVE
         || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)

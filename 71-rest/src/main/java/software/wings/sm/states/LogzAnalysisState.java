@@ -80,7 +80,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
-              .collectionTime(Integer.parseInt(getTimeDuration()))
+              .collectionTime(Integer.parseInt(getTimeDuration(context)))
               .initialDelayMinutes(DELAY_MINUTES)
               .hosts(hostBatch)
               .encryptedDataDetails(
