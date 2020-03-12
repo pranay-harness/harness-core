@@ -29,7 +29,7 @@ public class BackoffScheduler extends CustomScheduler {
   public void recordSuccess() {
     long newDelayMs = Math.max(minDelayMs, currentDelayMs / 2);
     if (newDelayMs != currentDelayMs) {
-      logger.info("{} recover from {} to {}", service, currentDelayMs, newDelayMs);
+      logger.info("{} recover from {}ms to {}ms", service, currentDelayMs, newDelayMs);
       currentDelayMs = newDelayMs;
     }
   }
@@ -37,7 +37,7 @@ public class BackoffScheduler extends CustomScheduler {
   public void recordFailure() {
     long newDelayMs = Math.min(maxDelayMs, 2 * currentDelayMs);
     if (newDelayMs != currentDelayMs) {
-      logger.warn("{} back-off from {} to {}", service, currentDelayMs, newDelayMs);
+      logger.warn("{} back-off from {}ms to {}ms", service, currentDelayMs, newDelayMs);
       currentDelayMs = newDelayMs;
     }
   }

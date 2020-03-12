@@ -183,6 +183,13 @@ public class WatcherServiceImpl implements WatcherService {
       }
       if (chronicleEventTailer != null) {
         chronicleEventTailer.startAsync().awaitRunning();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+          // needed to satisfy infer since chronicleEventTailer is not final and it's nullable so it could be null
+          // technically when the hook is executed.
+          if (chronicleEventTailer != null) {
+            chronicleEventTailer.stopAsync().awaitTerminated();
+          }
+        }));
       }
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
 

@@ -1,14 +1,16 @@
 package io.harness.event.client.impl.tailer;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static net.openhft.chronicle.queue.impl.single.SingleChronicleQueue.SUFFIX;
 
-import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import lombok.extern.slf4j.Slf4j;
+import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import net.openhft.chronicle.queue.impl.RollingResourcesCache;
-import net.openhft.chronicle.queue.impl.StoreFileListener;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -17,54 +19,81 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Responsible for deleting old queue files, whose data has already been pushed to server. This is {@link
- * StoreFileListener} so onReleased will be called whenever a file is released by an appender/tailer.
+ * Responsible for deleting old queue files.
  */
 @Singleton
 @Slf4j
-class FileDeletionManager implements StoreFileListener {
-  private volatile RollingChronicleQueue queue;
-  private volatile RollingResourcesCache fileIdMapper;
-  private volatile int sentCycle;
+class FileDeletionManager {
+  private static final String SENT_TAILER = "sent-tailer";
 
-  void setSentCycle(int sentCycle) {
-    this.sentCycle = sentCycle;
-  }
+  private final RollingChronicleQueue queue;
+  private final RollingResourcesCache fileIdMapper;
+  private final ExcerptTailer sentTailer;
 
-  void setQueue(RollingChronicleQueue queue) {
+  @Inject
+  FileDeletionManager(@Named("tailer") RollingChronicleQueue queue) {
     this.queue = queue;
-    // Re-using the rolling mechanism used within the chronicle queue to map file names to timestamps.
     this.fileIdMapper = new RollingResourcesCache(
         queue.rollCycle(), queue.epoch(), name -> new File(queue.fileAbsolutePath(), name + SUFFIX), file -> {
           String s = file.getName();
           return s.substring(0, s.length() - SUFFIX.length());
         });
+    sentTailer = queue.createTailer(SENT_TAILER);
   }
 
-  @Override
-  public void onReleased(int cycle, File releasedFile) {
-    Preconditions.checkNotNull(queue);
-    if (sentCycle >= cycle) {
-      deleteOlderFiles(releasedFile);
+  /*
+  Implementation Note:
+  In CQ, index of an entry has 2 components - cycle & sequenceNumber. The cycle maps 1-1 to the actual file in which the
+  entry is stored, and sequenceNumber is the position of the entry within this file.
+  The cycle of an entry depends on the time at which the entry was appended and the configured RollCycle (eg: for
+  minutely RollCycle, the cycle that an appended entry will be having will change on minute edges)
+   */
+
+  /**
+   * Delete files older than the file sentTailer is on.
+   */
+  void deleteOlderFiles() {
+    logger.info("Checking for old queue files to be deleted");
+    long cycle = sentTailer.cycle();
+    boolean anyFilesDeleted = deleteOlderFilesInternal(cycle);
+    // This method needs to be called to update internal caches whenever we delete any queue files.
+    if (anyFilesDeleted) {
+      queue.refreshDirectlyListing();
     }
   }
 
-  private void deleteOlderFiles(File releasedFile) {
+  private boolean deleteOlderFilesInternal(long cycle) {
     File[] filesInDir = queue.file().listFiles();
     if (filesInDir == null) {
-      return;
+      return false;
     }
+    boolean anyFilesDeleted = false;
     List<File> olderFiles = Arrays.stream(filesInDir)
                                 .filter(file -> file.getName().endsWith(SUFFIX))
-                                .filter(file -> fileIdMapper.toLong(file) < fileIdMapper.toLong(releasedFile))
+                                // < instead of <= because we might want to rewind to previous file
+                                // i.e. there'll always be minimum 2 files in the queue.
+                                .filter(file -> fileIdMapper.toLong(file) < cycle)
+                                .sorted()
                                 .collect(Collectors.toList());
-    logger.info("Deleting files {}", olderFiles);
-    for (File file : olderFiles) {
-      try {
-        Files.deleteIfExists(file.toPath());
-      } catch (Exception e) {
-        logger.error("Failed to delete {}", file.toPath(), e);
+    if (!olderFiles.isEmpty()) {
+      logger.info("Deleting files {}", olderFiles);
+      for (File file : olderFiles) {
+        try {
+          anyFilesDeleted = Files.deleteIfExists(file.toPath()) || anyFilesDeleted;
+        } catch (Exception e) {
+          logger.error("Failed to delete {}", file.toPath(), e);
+        }
       }
     }
+    return anyFilesDeleted;
+  }
+
+  void setSentIndex(long index) {
+    checkArgument(index >= getSentIndex(), "sent-tailer should not be rewinded");
+    QueueUtils.moveToIndex(sentTailer, index);
+  }
+
+  long getSentIndex() {
+    return sentTailer.index();
   }
 }
