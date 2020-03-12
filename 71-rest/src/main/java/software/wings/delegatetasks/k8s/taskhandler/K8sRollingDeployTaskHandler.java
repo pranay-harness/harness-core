@@ -229,7 +229,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
           request.getK8sDelegateManifestConfig(), manifestFilesDirectory, request.getValuesYamlList(), releaseName,
           kubernetesConfig.getNamespace(), executionLogCallback, request);
 
-      resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
+      resources = k8sTaskHelper.readManifestAndOverrideLocalSecrets(
+          manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag());
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       if (request.isInCanaryWorkflow()) {

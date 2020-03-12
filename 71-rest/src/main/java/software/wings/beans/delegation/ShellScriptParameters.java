@@ -72,6 +72,7 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
   private final HostConnectionAttributes.AuthenticationScheme authenticationScheme;
   private final KerberosConfig kerberosConfig;
   private final String keyName;
+  private final boolean localOverrideFeatureFlag;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();

@@ -67,7 +67,9 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
         items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
         items.replaceAll(String::trim);
       }
-      parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
+      if (parameters.isLocalOverrideFeatureFlag()) {
+        parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
+      }
       return executor.executeCommandString(parameters.getScript(), items);
     }
 

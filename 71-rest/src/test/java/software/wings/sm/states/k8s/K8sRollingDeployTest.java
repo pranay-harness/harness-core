@@ -27,6 +27,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -38,6 +39,7 @@ import java.util.HashMap;
 public class K8sRollingDeployTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
 
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @InjectMocks K8sRollingDeploy k8sRollingDeploy;
