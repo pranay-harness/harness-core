@@ -9,6 +9,7 @@ import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddRollbackToDeployment;
 import migrations.timescaledb.AddSchemaForServiceGuardStats;
+import migrations.timescaledb.AddSystemCostBillingData;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.AlterCEUtilizationDataTables;
 import migrations.timescaledb.ChangeToTimeStampTZ;
@@ -49,6 +50,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(17, CreateUtilizationData.class))
         .add(Pair.of(18, AlterCEUtilizationDataTables.class))
         .add(Pair.of(19, UniqueIndexCEUtilizationDataTables.class))
+        .add(Pair.of(20, AddSystemCostBillingData.class))
         .build();
   }
 }
