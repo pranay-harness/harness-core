@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.configuration;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 

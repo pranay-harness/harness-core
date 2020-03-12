@@ -14,9 +14,9 @@ import com.amazonaws.services.marketplacemetering.AWSMarketplaceMeteringClientBu
 import com.amazonaws.services.marketplacemetering.model.AWSMarketplaceMeteringException;
 import com.amazonaws.services.marketplacemetering.model.ResolveCustomerRequest;
 import com.amazonaws.services.marketplacemetering.model.ResolveCustomerResult;
+import io.harness.configuration.DeployMode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
