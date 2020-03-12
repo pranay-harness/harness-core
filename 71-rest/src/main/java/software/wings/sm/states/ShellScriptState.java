@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 
 import com.google.inject.Inject;
@@ -63,6 +64,7 @@ import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -97,6 +99,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
   @Inject @Transient private ServiceTemplateHelper serviceTemplateHelper;
   @Inject @Transient private DelegateService delegateService;
+  @Inject @Transient private FeatureFlagService featureFlagService;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -368,6 +371,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .accessType(accessType)
             .authenticationScheme(authenticationScheme)
             .kerberosConfig(kerberosConfig)
+            .localOverrideFeatureFlag(
+                featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, executionContext.getApp().getAccountId()))
             .keyName(keyName);
     // TODO: This has to be enabled once CS team gives go ahead
     //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,

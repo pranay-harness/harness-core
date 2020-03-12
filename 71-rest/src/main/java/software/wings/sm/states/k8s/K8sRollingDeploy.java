@@ -16,6 +16,7 @@ import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
@@ -32,6 +33,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -57,6 +59,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   public static final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
@@ -110,6 +113,8 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
+            .localOverrideFeatureFlag(
+                featureFlagService.isEnabled(FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE, infraMapping.getAccountId()))
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

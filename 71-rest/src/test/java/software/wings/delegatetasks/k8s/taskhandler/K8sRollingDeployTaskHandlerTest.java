@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -56,13 +57,14 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.emptyList());
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
+    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean()))
+        .thenReturn(Collections.emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(0)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelper, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
-    verify(k8sTaskHelper, times(1)).readManifests(any(), any());
+    verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
@@ -86,14 +88,15 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.emptyList());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
+    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean()))
+        .thenReturn(Collections.emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(1)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelper, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    verify(k8sTaskHelper, times(1)).readManifests(any(), any());
+    verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());

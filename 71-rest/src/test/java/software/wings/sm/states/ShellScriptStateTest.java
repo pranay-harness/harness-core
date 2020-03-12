@@ -68,6 +68,7 @@ import software.wings.beans.template.TemplateUtils;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -102,6 +103,7 @@ public class ShellScriptStateTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private WorkflowStandardParams workflowStandardParams;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks private ShellScriptState shellScriptState = new ShellScriptState("ShellScript");
 
   private ExecutionResponse asyncExecutionResponse;

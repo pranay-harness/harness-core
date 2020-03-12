@@ -921,10 +921,17 @@ public class K8sTaskHelper {
         && !StringUtils.equals(filename, values_filename);
   }
 
+  public List<KubernetesResource> readManifestAndOverrideLocalSecrets(
+      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback, boolean overrideLocalSecrets) {
+    if (overrideLocalSecrets) {
+      replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
+    }
+    return readManifests(manifestFiles, executionLogCallback);
+  }
+
   public List<KubernetesResource> readManifests(
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
-    replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
 
     for (ManifestFile manifestFile : manifestFiles) {
       if (isValidManifestFile(manifestFile.getFileName())) {
