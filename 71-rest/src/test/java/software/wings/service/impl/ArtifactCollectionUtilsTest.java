@@ -5,7 +5,12 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -20,10 +25,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
@@ -31,6 +39,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -38,19 +47,32 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private ArtifactService artifactService;
+  @Mock private Query<Artifact> artifactQuery;
+  @Mock private MorphiaIterator<Artifact, Artifact> artifactIterator;
 
   @Inject @InjectMocks private ArtifactCollectionUtils artifactCollectionUtils;
   private static final String SCRIPT_STRING = "echo Hello World!! and echo ${secrets.getValue(My Secret)}";
+
+  @Before
+  public void setUp() {
+    when(artifactService.prepareArtifactWithMetadataQuery(any(ArtifactStream.class))).thenReturn(artifactQuery);
+    when(artifactQuery.fetch()).thenReturn(artifactIterator);
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(anArtifact().build());
+  }
 
   @Test
   @Owner(developers = GARVIT)
@@ -234,17 +256,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category({UnitTests.class})
   public void shouldPrepareDockerBuildSourceParameters() {
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
-        .thenReturn(DockerArtifactStream.builder()
-                        .appId(APP_ID)
-                        .uuid(ARTIFACT_STREAM_ID)
-                        .accountId(ACCOUNT_ID)
-                        .appId(APP_ID)
-                        .settingId(SETTING_ID)
-                        .imageName("wingsplugins/todolist")
-                        .autoPopulate(true)
-                        .serviceId(SERVICE_ID)
-                        .build());
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(constructDockerArtifactStream());
 
     when(settingsService.get(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
@@ -268,5 +280,50 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(buildSourceParameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
     assertThat(buildSourceParameters.getArtifactStreamAttributes().getArtifactStreamType())
         .isEqualTo(ArtifactStreamType.DOCKER.name());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotProcessNullBuildSourceResponse() {
+    artifactCollectionUtils.processBuilds(constructDockerArtifactStream(), new ArrayList<>());
+    verify(artifactService, never()).create(any());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotProcessIfNoArtifactStream() {
+    artifactCollectionUtils.processBuilds(null, asList(aBuildDetails().build()));
+
+    verify(artifactService, never()).create(any());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldProcessBuilds() {
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withAccountId(ACCOUNT_ID)
+                        .withValue(DockerConfig.builder().dockerRegistryUrl("https://harness.dockerhub.com").build())
+                        .build());
+
+    artifactCollectionUtils.processBuilds(constructDockerArtifactStream(), asList(aBuildDetails().build()));
+
+    verify(artifactService).create(any(Artifact.class));
+  }
+
+  private DockerArtifactStream constructDockerArtifactStream() {
+    return DockerArtifactStream.builder()
+        .appId(APP_ID)
+        .uuid(ARTIFACT_STREAM_ID)
+        .accountId(ACCOUNT_ID)
+        .appId(APP_ID)
+        .settingId(SETTING_ID)
+        .imageName("wingsplugins/todolist")
+        .autoPopulate(true)
+        .serviceId(SERVICE_ID)
+        .build();
   }
 }

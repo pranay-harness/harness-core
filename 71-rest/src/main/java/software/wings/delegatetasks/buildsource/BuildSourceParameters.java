@@ -27,6 +27,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
   @NotNull private ArtifactStreamAttributes artifactStreamAttributes;
   @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
   @NotEmpty private String artifactStreamType;
+  private String artifactStreamId;
   private int limit;
 
   // These fields are used only during artifact collection and cleanup.

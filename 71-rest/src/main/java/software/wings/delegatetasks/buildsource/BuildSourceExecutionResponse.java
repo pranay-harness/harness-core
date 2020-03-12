@@ -22,4 +22,5 @@ public class BuildSourceExecutionResponse implements DelegateTaskNotifyResponseD
   private BuildSourceResponse buildSourceResponse;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
+  private String artifactStreamId;
 }
