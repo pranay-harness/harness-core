@@ -40,7 +40,7 @@ import java.util.Map;
     @Field("artifactStreamId"), @Field("metadata.artifactPath")
   }), @Index(options = @IndexOptions(name = "artifactStream_revision"), fields = {
     @Field("artifactStreamId"), @Field("revision")
-  })
+  }), @Index(options = @IndexOptions(name = "account_idx"), fields = { @Field("accountId") })
 })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
