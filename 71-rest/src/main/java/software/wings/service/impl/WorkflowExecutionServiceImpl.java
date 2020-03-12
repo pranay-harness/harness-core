@@ -3119,20 +3119,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public void refreshBuildExecutionSummary(String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
-    if (workflowExecution == null) {
+    if (workflowExecution == null
+        || containsBuildExecutionSummary(workflowExecution.getBuildExecutionSummaries(), buildExecutionSummary)) {
       return;
     }
 
-    List<BuildExecutionSummary> buildExecutionSummaries = workflowExecution.getBuildExecutionSummaries();
-    if (isEmpty(buildExecutionSummaries)) {
-      buildExecutionSummaries = new ArrayList<>();
+    wingsPersistence.update(
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.uuid, workflowExecutionId),
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .addToSet(WorkflowExecutionKeys.buildExecutionSummaries, buildExecutionSummary));
+  }
+
+  private boolean containsBuildExecutionSummary(
+      List<BuildExecutionSummary> buildExecutionSummaries, BuildExecutionSummary buildExecutionSummary) {
+    if (isEmpty(buildExecutionSummaries) || buildExecutionSummary == null) {
+      return false;
     }
-    buildExecutionSummaries.add(buildExecutionSummary);
-    buildExecutionSummaries = buildExecutionSummaries.stream()
-                                  .filter(distinctByKey(BuildExecutionSummary::getArtifactStreamId))
-                                  .collect(toList());
-    wingsPersistence.updateField(
-        WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
+
+    return buildExecutionSummaries.stream().anyMatch(
+        summary -> summary.getArtifactStreamId().equals(buildExecutionSummary.getArtifactStreamId()));
   }
 
   @Override
