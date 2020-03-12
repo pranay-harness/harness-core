@@ -86,7 +86,7 @@ public class GlobalEncryptDecryptClient {
     if (featureFlagService.isEnabled(FeatureName.SWITCH_GLOBAL_TO_GCP_KMS, accountId)) {
       try {
         GcpKmsConfig gcpKmsConfig = getGcpGlobalSecretManager();
-        if (gcpKmsConfig != null) {
+        if (gcpKmsConfig != null && plainTextSecret != null) {
           EncryptedData newEncryptedData = (EncryptedData) gcpKmsEncryptDecryptClient.encrypt(
               String.valueOf(plainTextSecret), accountId, gcpKmsConfig, null);
 
@@ -161,7 +161,7 @@ public class GlobalEncryptDecryptClient {
     try {
       return gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
     } catch (Exception e) {
-      logger.error("Decryption failed due to the following error", e);
+      logger.error("Decryption failed using primary global kms due to the following error", e);
     }
 
     KmsConfig kmsConfig = getAWSGlobalSecretManager();
