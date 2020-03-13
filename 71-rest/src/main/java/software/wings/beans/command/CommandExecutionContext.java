@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
 
@@ -11,7 +12,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -19,6 +19,7 @@ import lombok.Data;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
@@ -27,6 +28,9 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -188,28 +192,47 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     DeploymentType dType = DeploymentType.valueOf(getDeploymentType());
     switch (dType) {
       case KUBERNETES:
-      case WINRM:
         return CapabilityHelper.generateDelegateCapabilities(cloudProviderSetting.getValue(), cloudProviderCredentials);
+      case WINRM:
+        return singletonList(WinrmHostValidationCapability.builder()
+                                 .validationInfo(BasicValidationInfo.builder()
+                                                     .accountId(accountId)
+                                                     .appId(appId)
+                                                     .activityId(activityId)
+                                                     .executeOnDelegate(executeOnDelegate)
+                                                     .publicDns(host.getPublicDns())
+                                                     .build())
+
+                                 .winRmConnectionAttributes(winrmConnectionAttributes)
+                                 .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+                                 .build());
       case SSH:
-        if (isExecuteOnDelegate()) {
-          return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
-        } else {
-          String hostName = getHost().getPublicDns();
-          return Collections.singletonList(
-              SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(hostName));
-        }
+        return singletonList(SSHHostValidationCapability.builder()
+                                 .validationInfo(BasicValidationInfo.builder()
+                                                     .accountId(accountId)
+                                                     .appId(appId)
+                                                     .activityId(activityId)
+                                                     .executeOnDelegate(executeOnDelegate)
+                                                     .publicDns(host.getPublicDns())
+                                                     .build())
+                                 .hostConnectionAttributes(hostConnectionAttributes)
+                                 .bastionConnectionAttributes(bastionConnectionAttributes)
+                                 .hostConnectionCredentials(hostConnectionCredentials)
+                                 .bastionConnectionCredentials(bastionConnectionCredentials)
+                                 .sshExecutionCredential((SSHExecutionCredential) executionCredential)
+                                 .build());
       case ECS:
         if (containerSetupParams != null) {
           region = ((EcsSetupParams) containerSetupParams).getRegion();
         } else if (containerResizeParams != null) {
           region = ((EcsResizeParams) containerResizeParams).getRegion();
         }
-        return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+        return singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
       case AWS_CODEDEPLOY:
-        return Collections.singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
+        return singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
       case AMI:
       case AWS_LAMBDA:
-        return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+        return singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
       default:
         unhandled(deploymentType);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
