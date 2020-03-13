@@ -1,9 +1,12 @@
-/target
+target
 81-delegate.iml
-/eventQueue
 local-scripts
 repository
 restart.sh
 delgate.out
 profile
 profile.result
+delegate-gc-logs.gc
+delegate*.log
+delegate.lock
+delegate_sequence_config

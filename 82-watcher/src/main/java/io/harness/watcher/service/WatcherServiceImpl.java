@@ -81,6 +81,7 @@ import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
+import io.harness.threading.Schedulable;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
 import io.harness.watcher.logging.WatcherStackdriverLogAppender;
@@ -256,24 +257,30 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void startUpgradeCheck() {
-    upgradeExecutor.scheduleWithFixedDelay(() -> {
-      boolean forCodeFormattingOnly; // This line is here for clang-format
-      synchronized (this) {
-        if (!working.get()) {
-          checkForWatcherUpgrade();
-        }
+    upgradeExecutor.scheduleWithFixedDelay(
+        new Schedulable("Error while checking for upgrades", this ::syncCheckForWatcherUpgrade), 0,
+        watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+  }
+
+  private void syncCheckForWatcherUpgrade() {
+    synchronized (this) {
+      if (!working.get()) {
+        checkForWatcherUpgrade();
       }
-    }, 0, watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+    }
   }
 
   private void startCommandCheck() {
-    commandCheckExecutor.scheduleWithFixedDelay(() -> {
-      boolean forCodeFormattingOnly; // This line is here for clang-format
-      synchronized (this) {
-        checkAccountStatus();
-        checkForCommands();
-      }
-    }, 0, 3, TimeUnit.MINUTES);
+    commandCheckExecutor.scheduleWithFixedDelay(
+        new Schedulable("Error while checking for account status and commands", this ::syncCommandCheck), 0, 3,
+        TimeUnit.MINUTES);
+  }
+
+  private void syncCommandCheck() {
+    synchronized (this) {
+      checkAccountStatus();
+      checkForCommands();
+    }
   }
 
   @SuppressWarnings({"unchecked"})
@@ -281,8 +288,10 @@ public class WatcherServiceImpl implements WatcherService {
     runningDelegates.addAll(
         Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
 
-    heartbeatExecutor.scheduleWithFixedDelay(this ::heartbeat, 0, 10, TimeUnit.SECONDS);
-    watchExecutor.scheduleWithFixedDelay(this ::syncWatchDelegate, 0, 10, TimeUnit.SECONDS);
+    heartbeatExecutor.scheduleWithFixedDelay(
+        new Schedulable("Error while heart-beating", this ::heartbeat), 0, 10, TimeUnit.SECONDS);
+    watchExecutor.scheduleWithFixedDelay(
+        new Schedulable("Error while watching delegate", this ::syncWatchDelegate), 0, 10, TimeUnit.SECONDS);
   }
 
   private void heartbeat() {
