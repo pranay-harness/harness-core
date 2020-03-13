@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
@@ -36,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.TaskType;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
@@ -108,6 +110,30 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.saveDelegateTask(delegateTask);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void shouldObtainDelegateName() {
+    String delegateId = generateUuid();
+    assertThat(delegateService.obtainDelegateName(null, delegateId, true)).isEqualTo("");
+    assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
+
+    DelegateBuilder delegateBuilder = Delegate.builder();
+
+    delegateService.add(delegateBuilder.uuid(delegateId).build());
+    assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
+
+    String accountId = generateUuid();
+    delegateService.add(delegateBuilder.accountId(accountId).build());
+    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo(delegateId);
+
+    delegateService.add(delegateBuilder.hostName("hostName").build());
+    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo("hostName");
+
+    delegateService.add(delegateBuilder.delegateName("delegateName").build());
+    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo("delegateName");
   }
 
   private DelegateTask getDelegateTask() {
