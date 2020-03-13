@@ -1,16 +1,23 @@
 package software.wings.delegatetasks.buildsource;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.settings.SettingValue;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -38,6 +45,38 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateCapabilities(settingValue, artifactStreamAttributes);
+    switch (settingValue.getSettingType()) {
+      case JENKINS:
+      case BAMBOO:
+      case DOCKER:
+      case NEXUS:
+      case ARTIFACTORY:
+        return settingValue.fetchRequiredExecutionCapabilities();
+      default:
+        return getExecutionCapabilitiesFromArtifactStreamType();
+    }
+  }
+
+  private List<ExecutionCapability> getExecutionCapabilitiesFromArtifactStreamType() {
+    if (artifactStreamType.equals(GCR.name())) {
+      String gcrHostName = artifactStreamAttributes.getRegistryHostName();
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl(gcrHostName)));
+    } else if (artifactStreamType.equals(AZURE_ARTIFACTS.name())) {
+      return settingValue.fetchRequiredExecutionCapabilities();
+    } else if (artifactStreamType.equals(ACR.name())) {
+      final String default_server = "azure.microsoft.com";
+      String loginServer = isNotEmpty(artifactStreamAttributes.getRegistryHostName())
+          ? artifactStreamAttributes.getRegistryHostName()
+          : default_server;
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl(loginServer)));
+    } else {
+      return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+    }
+  }
+
+  private String getUrl(String gcrHostName) {
+    return "https://" + gcrHostName + (gcrHostName.endsWith("/") ? "" : "/");
   }
 }
