@@ -46,7 +46,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResetDelegateId() {
     String taskId = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
-    perpetualTaskRecordDao.resetDelegateId(ACCOUNT_ID, DELEGATE_ID);
+    perpetualTaskRecordDao.resetDelegateId(ACCOUNT_ID, taskId);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();
     assertThat(task.getDelegateId()).isEqualTo("");

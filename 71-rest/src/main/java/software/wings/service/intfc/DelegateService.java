@@ -32,8 +32,6 @@ public interface DelegateService extends OwnedByAccount {
 
   boolean isDelegateConnected(String delegateId);
 
-  boolean isDelegateConnected(Delegate delegate);
-
   List<String> getKubernetesDelegateNames(String accountId);
 
   Set<String> getAllDelegateTags(String accountId);
