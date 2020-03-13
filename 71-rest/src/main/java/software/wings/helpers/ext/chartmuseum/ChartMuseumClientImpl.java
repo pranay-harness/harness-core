@@ -23,6 +23,7 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SERVER
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNATURE_DOES_NOT_MATCH_ERROR_CODE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -96,10 +97,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
 
-    Map<String, String> environment = new HashMap<>();
-    environment.put(AWS_ACCESS_KEY_ID, awsConfig.getAccessKey());
-    environment.put(AWS_SECRET_ACCESS_KEY, new String(awsConfig.getSecretKey()));
-
+    Map<String, String> environment = getEnvForAwsConfig(awsConfig);
     String evaluatedTemplate =
         AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", amazonS3HelmRepoConfig.getBucketName())
             .replace("${FOLDER_PATH}", basePath)
@@ -111,6 +109,16 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
         .append(evaluatedTemplate);
 
     return startServer(builder.toString(), environment);
+  }
+
+  @VisibleForTesting
+  Map<String, String> getEnvForAwsConfig(AwsConfig awsConfig) {
+    Map<String, String> environment = new HashMap<>();
+    if (!awsConfig.isUseEc2IamCredentials()) {
+      environment.put(AWS_ACCESS_KEY_ID, awsConfig.getAccessKey());
+      environment.put(AWS_SECRET_ACCESS_KEY, new String(awsConfig.getSecretKey()));
+    }
+    return environment;
   }
 
   private ChartMuseumServer startServer(String command, Map<String, String> environment) throws Exception {
