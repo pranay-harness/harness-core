@@ -20,6 +20,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -163,6 +164,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
@@ -192,6 +201,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifactForRolling() {
     nodeSelectState.setInstanceCount(3);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
@@ -222,6 +239,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsForPhysicalSshInfra() {
     nodeSelectState.setInstanceCount(3);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
@@ -255,6 +280,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
@@ -280,6 +313,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
   public void shouldSucceedForPartialPercentageInstances() {
     nodeSelectState.setInstanceCount(1);
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());

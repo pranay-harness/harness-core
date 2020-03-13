@@ -52,7 +52,6 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -220,7 +219,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldReturnInstancesFromParamFFOn() {
+  public void shouldReturnInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
@@ -247,60 +246,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
     when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setSweepingOutputService(sweepingOutputService);
-    processor.setFeatureFlagService(featureFlagService);
-    PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
-
-    assertThat(pageRequest).isNotNull();
-    assertThat(pageRequest.getFilters()).isNotNull();
-
-    boolean appIdFound = false;
-    boolean instanceIdsMatched = false;
-    for (SearchFilter filter : pageRequest.getFilters()) {
-      assertThat(filter.getFieldValues()).isNotEmpty();
-      if (filter.getFieldName().equals("appId")) {
-        assertThat(filter.getFieldValues()[0]).isEqualTo(appId);
-        appIdFound = true;
-      } else if (filter.getFieldName().equals(ID_KEY)) {
-        assertThat(filter.getFieldValues().length).isEqualTo(2);
-        assertThat(filter.getFieldValues()[0]).isEqualTo(instance1);
-        assertThat(filter.getFieldValues()[1]).isEqualTo(instance2);
-        instanceIdsMatched = true;
-      }
-    }
-    assertThat(appIdFound).isTrue();
-    assertThat(instanceIdsMatched).isTrue();
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void shouldReturnInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
-    String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
-
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getApp()).thenReturn(app);
-    when(context.getEnv()).thenReturn(env);
-    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-
-    String instance1 = generateUuid();
-    String instance2 = generateUuid();
-
-    ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
-    element.setInstanceIds(Lists.newArrayList(instance1, instance2));
-
-    List<ContextElement> paramList = Lists.newArrayList(element);
-    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
-
-    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
-        .thenReturn(new PageResponse<>());
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
-    processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setFeatureFlagService(featureFlagService);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
@@ -331,7 +278,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldReturnCommonInstancesFromParamFFOn() {
+  public void shouldReturnCommonInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
@@ -357,71 +304,12 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     element.setInstanceIds(Lists.newArrayList(instance1, instance2));
 
     when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setSweepingOutputService(sweepingOutputService);
-    processor.setFeatureFlagService(featureFlagService);
-    processor.withInstanceIds(instance1, instance2, instance3);
-    PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
-
-    assertThat(pageRequest).isNotNull();
-    assertThat(pageRequest.getFilters()).isNotNull();
-
-    boolean appIdFound = false;
-    boolean instanceIdsMatched = false;
-    for (SearchFilter filter : pageRequest.getFilters()) {
-      assertThat(filter.getFieldValues()).isNotEmpty();
-      if (filter.getFieldName().equals("appId")) {
-        assertThat(filter.getFieldValues()[0]).isEqualTo(appId);
-        appIdFound = true;
-      } else if (filter.getFieldName().equals(ID_KEY)) {
-        assertThat(filter.getFieldValues().length).isEqualTo(2);
-        assertThat(filter.getFieldValues()[0]).isIn(instance1, instance2);
-        assertThat(filter.getFieldValues()[1]).isIn(instance1, instance2);
-        instanceIdsMatched = true;
-      }
-    }
-    assertThat(appIdFound).isTrue();
-    assertThat(instanceIdsMatched).isTrue();
-  }
-
-  /**
-   * Should return common instances from param.
-   */
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void shouldReturnCommonInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
-    String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
-
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getApp()).thenReturn(app);
-    when(context.getEnv()).thenReturn(env);
-    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-
-    String instance1 = generateUuid();
-    String instance2 = generateUuid();
-    String instance3 = generateUuid();
-
-    ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
-    element.setInstanceIds(Lists.newArrayList(instance1, instance2));
-
-    List<ContextElement> paramList = Lists.newArrayList(element);
-    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
-
-    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
-        .thenReturn(new PageResponse<>());
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
-    processor.setServiceTemplateService(serviceTemplateServiceMock);
-    processor.setFeatureFlagService(featureFlagService);
-
     processor.withInstanceIds(instance1, instance2, instance3);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
@@ -456,17 +344,27 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .onDemandRollback(false)
+                                    .build();
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
 
     String instance1 = generateUuid();
     String instance2 = generateUuid();
 
     ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
     element.setInstanceIds(Lists.newArrayList(instance1, instance2));
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
 
     List<ContextElement> paramList = Lists.newArrayList(element);
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
@@ -474,9 +372,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(false);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
-    processor.setFeatureFlagService(featureFlagService);
+    processor.setSweepingOutputService(sweepingOutputService);
 
     processor.withInstanceIds(instance1);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
@@ -563,7 +460,6 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
     when(sweepingOutputService.findSweepingOutput(any())).thenReturn(element);
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());

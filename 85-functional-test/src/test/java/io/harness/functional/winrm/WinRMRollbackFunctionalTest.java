@@ -26,7 +26,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -56,7 +55,6 @@ public class WinRMRollbackFunctionalTest extends AbstractFunctionalTest {
   public void setUp() {
     owners = ownerManager.create();
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
-    featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, owners.obtainAccount().getUuid());
     resetCache(owners.obtainAccount().getUuid());
   }
 

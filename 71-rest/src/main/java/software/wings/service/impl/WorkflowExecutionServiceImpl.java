@@ -50,7 +50,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.FeatureName.NODE_AGGREGATION;
-import static software.wings.beans.FeatureName.SSH_WINRM_SO;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -3933,10 +3932,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private boolean rollbackEnabledForDeploymentType(InfrastructureDefinition infrastructureDefinition) {
     return DeploymentType.PCF == infrastructureDefinition.getDeploymentType()
-        || ((DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
-                || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType())
-               && featureFlagService.isEnabled(
-                      SSH_WINRM_SO, appService.getAccountIdByAppId(infrastructureDefinition.getAppId())));
+        || DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
+        || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType();
   }
 
   @Override

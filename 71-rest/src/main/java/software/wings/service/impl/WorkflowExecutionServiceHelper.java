@@ -22,7 +22,6 @@ import software.wings.api.DeploymentType;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -123,9 +122,8 @@ public class WorkflowExecutionServiceHelper {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
       if (services.size() == 1) {
         Service targetService = services.get(0);
-        boolean useSweepingOutput = (targetService.getDeploymentType() == DeploymentType.SSH
-                                        || targetService.getDeploymentType() == DeploymentType.WINRM)
-            && featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, workflow.getAccountId());
+        boolean useSweepingOutput = targetService.getDeploymentType() == DeploymentType.SSH
+            || targetService.getDeploymentType() == DeploymentType.WINRM;
         workflowExecution.setUseSweepingOutputs(useSweepingOutput);
       }
     }
