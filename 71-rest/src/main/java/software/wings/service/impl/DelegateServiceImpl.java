@@ -47,7 +47,6 @@ import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -271,6 +270,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Inject private DelegateDao delegateDao;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -338,17 +338,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public boolean isDelegateConnected(String delegateId) {
-    Delegate delegate = wingsPersistence.get(Delegate.class, delegateId);
-    return isDelegateConnected(delegate);
-  }
-
-  @Override
-  public boolean isDelegateConnected(Delegate delegate) {
-    Preconditions.checkNotNull(delegate.getUuid());
-    if (delegate.isConnected() && !delegateConnectionDao.list(delegate).isEmpty()) {
-      return true;
+    Delegate delegate = delegateDao.get(delegateId);
+    if (delegate == null || !delegate.isConnected() || delegateConnectionDao.list(delegate).isEmpty()) {
+      return false;
     }
-    return false;
+    return true;
   }
 
   @Override

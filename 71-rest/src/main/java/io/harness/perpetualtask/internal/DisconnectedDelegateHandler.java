@@ -10,48 +10,43 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.service.intfc.DelegateService;
 
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
-public class DisconnectedDelegateHandler implements Handler<Delegate> {
+public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord> {
   private static final long ITERATOR_INTERVAL_MINUTE = 5;
-  private static long DELEGATE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private DelegateService delegateService;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
-            .name("DelegateProcessor")
+            .name("PerpetualTaskRecordProcessor")
             .poolSize(3)
             .interval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .build(),
         Delegate.class,
-        MongoPersistenceIterator.<Delegate>builder()
-            .clazz(Delegate.class)
-            .fieldName(DelegateKeys.nextRecentlyDisconnectedIteration)
+        MongoPersistenceIterator.<PerpetualTaskRecord>builder()
+            .clazz(PerpetualTaskRecord.class)
+            .fieldName(PerpetualTaskRecordKeys.resetterIteration)
             .targetInterval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
-            .filterExpander(q
-                -> q.criteria(DelegateKeys.lastHeartBeat).greaterThan(Instant.now().toEpochMilli() - DELEGATE_TIMEOUT))
             .schedulingType(REGULAR)
             .redistribute(true));
   }
 
   @Override
-  public void handle(Delegate delegate) {
-    if (!delegateService.isDelegateConnected(delegate)) {
-      logger.info("Resetting perpetual tasks assigned to disconnected delegate with id={}", delegate.getUuid());
-      perpetualTaskRecordDao.resetDelegateId(delegate.getAccountId(), delegate.getUuid());
+  public void handle(PerpetualTaskRecord pTask) {
+    if (!delegateService.isDelegateConnected(pTask.getDelegateId())) {
+      logger.info("Resetting perpetual tasks assigned to disconnected delegate with id={}", pTask.getDelegateId());
+      perpetualTaskService.resetTask(pTask.getAccountId(), pTask.getUuid());
     }
   }
 }

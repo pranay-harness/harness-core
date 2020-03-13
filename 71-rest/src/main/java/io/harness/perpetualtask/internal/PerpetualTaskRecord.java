@@ -39,6 +39,7 @@ public class PerpetualTaskRecord
   long lastHeartbeat;
 
   @Indexed Long assignerIteration;
+  @Indexed Long resetterIteration;
 
   long createdAt;
   long lastUpdatedAt;
@@ -48,6 +49,10 @@ public class PerpetualTaskRecord
     if (PerpetualTaskRecordKeys.assignerIteration.equals(fieldName)) {
       return this.assignerIteration;
     }
+
+    if (PerpetualTaskRecordKeys.resetterIteration.equals(fieldName)) {
+      return this.resetterIteration;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -55,6 +60,10 @@ public class PerpetualTaskRecord
   public void updateNextIteration(String fieldName, Long nextIteration) {
     if (PerpetualTaskRecordKeys.assignerIteration.equals(fieldName)) {
       this.assignerIteration = nextIteration;
+      return;
+    }
+    if (PerpetualTaskRecordKeys.resetterIteration.equals(fieldName)) {
+      this.resetterIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);

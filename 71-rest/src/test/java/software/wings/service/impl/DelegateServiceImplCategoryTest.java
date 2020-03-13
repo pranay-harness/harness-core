@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
@@ -10,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,18 +33,24 @@ public class DelegateServiceImplCategoryTest extends CategoryTest {
   @Mock private Broadcaster broadcaster;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
+  @Mock private DelegateDao delegateDao;
   @Mock private DelegateConnectionDao delegateConnectionDao;
   @InjectMocks private DelegateServiceImpl delegateService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+  @Before
+  public void setUp() {
+    delegate = Delegate.builder().uuid(delegateId).connected(true).build();
+    when(delegateDao.get(eq(delegateId))).thenReturn(delegate);
+  }
+
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldReturnTrueWhenDelegateConnected() {
-    delegate = Delegate.builder().uuid(delegateId).connected(true).build();
     when(delegateConnectionDao.list(delegate)).thenReturn(new ArrayList<>(Arrays.asList(delegateConnection)));
-    boolean result = delegateService.isDelegateConnected(delegate);
+    boolean result = delegateService.isDelegateConnected(delegateId);
     assertThat(result).isTrue();
   }
 
@@ -52,12 +60,12 @@ public class DelegateServiceImplCategoryTest extends CategoryTest {
   public void shouldReturnFalseWhenDelegateDisconnected() {
     delegate = Delegate.builder().uuid(delegateId).connected(true).build();
     when(delegateConnectionDao.list(delegate)).thenReturn(emptyList());
-    boolean result1 = delegateService.isDelegateConnected(delegate);
+    boolean result1 = delegateService.isDelegateConnected(delegateId);
     assertThat(result1).isFalse();
 
     delegate = Delegate.builder().uuid(delegateId).connected(false).build();
     when(delegateConnectionDao.list(delegate)).thenReturn(new ArrayList<>(Arrays.asList(delegateConnection)));
-    boolean result2 = delegateService.isDelegateConnected(delegate);
+    boolean result2 = delegateService.isDelegateConnected(delegateId);
     assertThat(result2).isFalse();
   }
 }
