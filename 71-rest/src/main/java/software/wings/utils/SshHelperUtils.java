@@ -137,7 +137,7 @@ public class SshHelperUtils {
     return builder.build();
   }
 
-  private static void populateBuilderWithCredentials(
+  public static void populateBuilderWithCredentials(
       Builder builder, SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
     ExecutorType executorType = getExecutorType(hostConnectionSetting, bastionHostConnectionSetting);
 

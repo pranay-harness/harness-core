@@ -364,7 +364,10 @@ import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTa
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
-import software.wings.delegatetasks.validation.capabilities.EmailSenderCapability;
+import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
@@ -1512,6 +1515,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsSecurityGroup.class, 7321);
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);
-    kryo.register(EmailSenderCapability.class, 7324);
+    kryo.register(SmtpCapability.class, 7324);
+    kryo.register(BasicValidationInfo.class, 7325);
+    kryo.register(SSHHostValidationCapability.class, 7326);
+    kryo.register(WinrmHostValidationCapability.class, 7327);
   }
 }

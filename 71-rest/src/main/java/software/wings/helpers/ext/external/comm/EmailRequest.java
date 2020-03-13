@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.delegatetasks.validation.capabilities.EmailSenderCapability;
+import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -47,6 +47,7 @@ public class EmailRequest extends CollaborationProviderRequest {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(EmailSenderCapability.builder().emailRequest(this).build());
+    return Collections.singletonList(
+        SmtpCapability.builder().smtpConfig(smtpConfig).encryptionDetails(encryptionDetails).build());
   }
 }

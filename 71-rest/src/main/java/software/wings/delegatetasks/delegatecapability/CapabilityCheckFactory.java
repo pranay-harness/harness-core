@@ -14,7 +14,9 @@ import io.harness.delegate.task.executioncapability.IgnoreValidationCapabilityCh
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.EmailSenderCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
 @Singleton
 public class CapabilityCheckFactory {
@@ -26,8 +28,10 @@ public class CapabilityCheckFactory {
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
   @Inject HelmCapabilityCheck helmCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
-  @Inject EmailSenderCapabilityCheck emailSenderCapabilityCheck;
+  @Inject SmtpCapabilityCheck smtpCapabilityCheck;
   @Inject AlwaysFalseValidationCapabilityCheck alwaysFalseValidationCapabilityCheck;
+  @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
+  @Inject SSHHostValidationCapabilityCheck sshHostValidationCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -47,10 +51,14 @@ public class CapabilityCheckFactory {
         return helmCapabilityCheck;
       case CHART_MUSEUM:
         return chartMuseumCapabilityCheck;
-      case EMAIL_SENDER:
-        return emailSenderCapabilityCheck;
+      case SMTP:
+        return smtpCapabilityCheck;
       case ALWAYS_FALSE:
         return alwaysFalseValidationCapabilityCheck;
+      case WINRM_HOST_CONNECTION:
+        return winrmHostValidationCapabilityCheck;
+      case SSH_HOST_CONNECTION:
+        return sshHostValidationCapabilityCheck;
       default:
         return null;
     }
