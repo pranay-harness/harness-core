@@ -171,6 +171,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .instanceState(InstanceState.INITIALIZING)
         .harnessServiceInfo(harnessServiceInfo())
         .resource(resource())
+        .allocatableResource(resource())
         .metaData(metaData())
         .labels(label())
         .build();

@@ -53,6 +53,9 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                                   .totalCost(dataPoint.getCost())
                                   .cpuTotalCost(dataPoint.getCpuCost())
                                   .memoryTotalCost(dataPoint.getMemoryCost())
+                                  .totalSystemCost(dataPoint.getSystemCost())
+                                  .memorySystemCost(dataPoint.getMemorySystemCost())
+                                  .cpuSystemCost(dataPoint.getCpuSystemCost())
                                   .build();
           }
           unallocatedCostMap.replace(dataPoint.getClusterId(), clusterCostData);
@@ -73,6 +76,9 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                         .totalCost(dataPoint.getCost())
                         .cpuTotalCost(dataPoint.getCpuCost())
                         .memoryTotalCost(dataPoint.getMemoryCost())
+                        .totalSystemCost(dataPoint.getSystemCost())
+                        .memorySystemCost(dataPoint.getMemorySystemCost())
+                        .cpuSystemCost(dataPoint.getCpuSystemCost())
                         .startTime(dataPoint.getStartTime())
                         .endTime(dataPoint.getEndTime())
                         .build());
@@ -90,11 +96,12 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                 .billingAccountId(commonFields.getBillingAccountId())
                 .startTimestamp(clusterCostData.getStartTime())
                 .endTimestamp(clusterCostData.getEndTime())
-                .billingAmount(BigDecimal.valueOf(clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost()))
-                .cpuBillingAmount(
-                    BigDecimal.valueOf(clusterCostData.getCpuTotalCost() - clusterCostData.getCpuUtilizedCost()))
-                .memoryBillingAmount(
-                    BigDecimal.valueOf(clusterCostData.getMemoryTotalCost() - clusterCostData.getMemoryUtilizedCost()))
+                .billingAmount(BigDecimal.valueOf(clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost()
+                    - clusterCostData.getTotalSystemCost()))
+                .cpuBillingAmount(BigDecimal.valueOf(clusterCostData.getCpuTotalCost()
+                    - clusterCostData.getCpuUtilizedCost() - clusterCostData.getCpuSystemCost()))
+                .memoryBillingAmount(BigDecimal.valueOf(clusterCostData.getMemoryTotalCost()
+                    - clusterCostData.getMemoryUtilizedCost() - clusterCostData.getMemorySystemCost()))
                 .idleCost(BigDecimal.ZERO)
                 .cpuIdleCost(BigDecimal.ZERO)
                 .memoryIdleCost(BigDecimal.ZERO)

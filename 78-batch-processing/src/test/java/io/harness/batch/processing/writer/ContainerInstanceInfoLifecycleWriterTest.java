@@ -72,9 +72,11 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
     Map<String, String> instanceDataMetaData = instanceData.getMetaData();
     assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY)).isNotNull();
     assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.REGION)).isNotNull();
+    Resource allocatableResource = instanceData.getAllocatableResource();
+    assertThat(allocatableResource.getCpuUnits()).isEqualTo(512);
     Resource totalResource = instanceData.getTotalResource();
-    assertThat(totalResource).isNotNull();
-    assertThat(totalResource.getCpuUnits()).isEqualTo(512);
+    assertThat(totalResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(totalResource.getMemoryMb()).isEqualTo(1024.0);
   }
 
   @Test

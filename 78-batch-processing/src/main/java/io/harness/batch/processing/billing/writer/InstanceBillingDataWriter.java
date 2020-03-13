@@ -55,11 +55,11 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
       Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
           instanceDataList, startTime.toString(), endTime.toString(), firstInstanceData.getAccountId(),
           firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
+
       instanceDataList.stream()
-          .filter(instanceData -> {
-            return billingDataGenerationValidator.shouldGenerateBillingData(
-                instanceData.getAccountId(), instanceData.getClusterId(), startTime);
-          })
+          .filter(instanceData
+              -> billingDataGenerationValidator.shouldGenerateBillingData(
+                  instanceData.getAccountId(), instanceData.getClusterId(), startTime))
           .forEach(instanceData -> {
             UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
             BillingData billingData =
@@ -84,6 +84,9 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .billingAmount(billingData.getBillingAmountBreakup().getBillingAmount())
                     .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
                     .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
+                    .systemCost(billingData.getSystemCostData().getSystemCost())
+                    .cpuSystemCost(billingData.getSystemCostData().getCpuSystemCost())
+                    .memorySystemCost(billingData.getSystemCostData().getMemorySystemCost())
                     .idleCost(billingData.getIdleCostData().getIdleCost())
                     .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
                     .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())

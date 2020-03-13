@@ -48,12 +48,16 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   private final String CLUSTER_ID_1 = "clusterId_1";
   private final String CLUSTER_ID_2 = "clusterId_2";
   private final double COST_POD = 2.0;
+  private final double SYSTEM_COST_POD = 0.0;
   private final double COST_NODE = 4.0;
+  private final double SYSTEM_COST_NODE = 0.75;
   // ECS Data
   private final String CLUSTER_ID_3 = "clusterId_3";
   private final String CLUSTER_ID_4 = "clusterId_4";
-  private final double COST_CONTAINER = 4.0;
-  private final double COST_TASK = 2.0;
+  private final double COST_CONTAINER = 2.5;
+  private final double SYSTEM_COST_CONTAINER = 0.5;
+  private final double COST_TASK = 1.2;
+  private final double SYSTEM_COST_TASK = 0.0;
 
   // Common Data
   private static final String BILLING_ACCOUNT_ID = "billingAccountId";
@@ -73,23 +77,31 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
     when(billingDataService.create(any())).thenReturn(true);
     // K8s Mock Data
     UnallocatedCostData unallocatedCostDataPodCluster1 =
-        getMockUnallocatedCostData(CLUSTER_ID_1, InstanceType.K8S_POD.name(), COST_POD);
+        getMockUnallocatedCostData(CLUSTER_ID_1, InstanceType.K8S_POD.name(), COST_POD, SYSTEM_COST_POD, COST_POD * .5,
+            SYSTEM_COST_POD, COST_POD * .5, SYSTEM_COST_POD);
     UnallocatedCostData unallocatedCostDataNodeCluster1 =
-        getMockUnallocatedCostData(CLUSTER_ID_1, InstanceType.K8S_NODE.name(), COST_NODE);
+        getMockUnallocatedCostData(CLUSTER_ID_1, InstanceType.K8S_NODE.name(), COST_NODE, SYSTEM_COST_NODE,
+            COST_NODE * .3, SYSTEM_COST_NODE * .3, COST_NODE * .7, SYSTEM_COST_NODE * .7);
     UnallocatedCostData unallocatedCostDataPodCluster2 =
-        getMockUnallocatedCostData(CLUSTER_ID_2, InstanceType.K8S_POD.name(), COST_POD);
+        getMockUnallocatedCostData(CLUSTER_ID_2, InstanceType.K8S_POD.name(), COST_POD, SYSTEM_COST_POD, COST_POD * .5,
+            SYSTEM_COST_POD, COST_POD * .5, SYSTEM_COST_POD);
     UnallocatedCostData unallocatedCostDataNodeCluster2 =
-        getMockUnallocatedCostData(CLUSTER_ID_2, InstanceType.K8S_NODE.name(), COST_NODE);
+        getMockUnallocatedCostData(CLUSTER_ID_2, InstanceType.K8S_NODE.name(), COST_NODE, SYSTEM_COST_NODE,
+            COST_NODE * .7, SYSTEM_COST_NODE * .7, COST_NODE * .3, SYSTEM_COST_NODE * .3);
 
     // ECS Mock Data
-    UnallocatedCostData unallocatedCostDataContainerCluster3 =
-        getMockUnallocatedCostData(CLUSTER_ID_3, InstanceType.ECS_CONTAINER_INSTANCE.name(), COST_CONTAINER);
+    UnallocatedCostData unallocatedCostDataContainerCluster3 = getMockUnallocatedCostData(CLUSTER_ID_3,
+        InstanceType.ECS_CONTAINER_INSTANCE.name(), COST_CONTAINER, SYSTEM_COST_CONTAINER, COST_CONTAINER * .6,
+        SYSTEM_COST_CONTAINER * .6, COST_CONTAINER * .4, SYSTEM_COST_CONTAINER * .4);
     UnallocatedCostData unallocatedCostDataTaskCluster3 =
-        getMockUnallocatedCostData(CLUSTER_ID_3, InstanceType.ECS_TASK_EC2.name(), COST_TASK);
-    UnallocatedCostData unallocatedCostDataContainerCluster4 =
-        getMockUnallocatedCostData(CLUSTER_ID_4, InstanceType.ECS_CONTAINER_INSTANCE.name(), COST_CONTAINER);
+        getMockUnallocatedCostData(CLUSTER_ID_3, InstanceType.ECS_TASK_EC2.name(), COST_TASK, SYSTEM_COST_TASK,
+            COST_TASK * .5, SYSTEM_COST_TASK, COST_TASK * .5, SYSTEM_COST_TASK);
+    UnallocatedCostData unallocatedCostDataContainerCluster4 = getMockUnallocatedCostData(CLUSTER_ID_4,
+        InstanceType.ECS_CONTAINER_INSTANCE.name(), COST_CONTAINER, SYSTEM_COST_CONTAINER, COST_CONTAINER * .4,
+        SYSTEM_COST_CONTAINER * .4, COST_CONTAINER * .6, SYSTEM_COST_CONTAINER * .6);
     UnallocatedCostData unallocatedCostDataTaskCluster4 =
-        getMockUnallocatedCostData(CLUSTER_ID_4, InstanceType.ECS_TASK_EC2.name(), COST_TASK);
+        getMockUnallocatedCostData(CLUSTER_ID_4, InstanceType.ECS_TASK_EC2.name(), COST_TASK, SYSTEM_COST_TASK,
+            COST_TASK * .75, SYSTEM_COST_TASK, COST_TASK * .25, SYSTEM_COST_TASK);
     // Creating a List
     unallocatedCostDataList = Arrays.asList(unallocatedCostDataPodCluster1, unallocatedCostDataNodeCluster1,
         unallocatedCostDataNodeCluster2, unallocatedCostDataPodCluster2, unallocatedCostDataContainerCluster3,
@@ -126,26 +138,50 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
     List<InstanceBillingData> instanceUtilizationData = instanceBillingDataArgumentCaptor.getAllValues();
     assertThat(instanceUtilizationData.get(0).getClusterId()).isEqualTo(CLUSTER_ID_1);
     assertThat(instanceUtilizationData.get(0).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
-    assertThat(instanceUtilizationData.get(0).getBillingAmount()).isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD));
+    assertThat(instanceUtilizationData.get(0).getBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD - SYSTEM_COST_NODE));
+    assertThat(instanceUtilizationData.get(0).getCpuBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE * .3 - COST_POD * .5 - SYSTEM_COST_NODE * .3));
+    assertThat(instanceUtilizationData.get(0).getMemoryBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE * .7 - COST_POD * .5 - SYSTEM_COST_NODE * .7));
     assertThat(instanceUtilizationData.get(1).getClusterId()).isEqualTo(CLUSTER_ID_2);
     assertThat(instanceUtilizationData.get(1).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
-    assertThat(instanceUtilizationData.get(1).getBillingAmount()).isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD));
+    assertThat(instanceUtilizationData.get(1).getBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD - SYSTEM_COST_NODE));
+    assertThat(instanceUtilizationData.get(1).getCpuBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE * .7 - COST_POD * .5 - SYSTEM_COST_NODE * .7));
+    assertThat(instanceUtilizationData.get(1).getMemoryBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_NODE * .3 - COST_POD * .5 - SYSTEM_COST_NODE * .3));
     assertThat(instanceUtilizationData.get(2).getClusterId()).isEqualTo(CLUSTER_ID_3);
     assertThat(instanceUtilizationData.get(2).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
     assertThat(instanceUtilizationData.get(2).getBillingAmount())
-        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK));
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK - SYSTEM_COST_CONTAINER));
+    assertThat(instanceUtilizationData.get(2).getCpuBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .6 - COST_TASK * .5 - SYSTEM_COST_CONTAINER * .6));
+    assertThat(instanceUtilizationData.get(2).getMemoryBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .4 - COST_TASK * .5 - SYSTEM_COST_CONTAINER * .4));
     assertThat(instanceUtilizationData.get(3).getClusterId()).isEqualTo(CLUSTER_ID_4);
     assertThat(instanceUtilizationData.get(3).getBillingAmount())
-        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK));
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK - SYSTEM_COST_CONTAINER));
+    assertThat(instanceUtilizationData.get(3).getCpuBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .4 - COST_TASK * .75 - SYSTEM_COST_CONTAINER * .4));
+    assertThat(instanceUtilizationData.get(3).getMemoryBillingAmount())
+        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .6 - COST_TASK * .25 - SYSTEM_COST_CONTAINER * .6));
     assertThat(instanceUtilizationData.get(3).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
   }
 
-  UnallocatedCostData getMockUnallocatedCostData(String clusterId, String instanceType, double cost) {
+  UnallocatedCostData getMockUnallocatedCostData(String clusterId, String instanceType, double cost, double systemCost,
+      double cpuCost, double cpuSystemCost, double memoryCost, double memorySystemCost) {
     return UnallocatedCostData.builder()
         .clusterId(clusterId)
         .accountId(ACCOUNT_ID)
         .instanceType(instanceType)
         .cost(cost)
+        .systemCost(systemCost)
+        .cpuCost(cpuCost)
+        .cpuSystemCost(cpuSystemCost)
+        .memoryCost(memoryCost)
+        .memorySystemCost(memorySystemCost)
         .startTime(START_TIME_MILLIS)
         .endTime(END_TIME_MILLIS)
         .build();

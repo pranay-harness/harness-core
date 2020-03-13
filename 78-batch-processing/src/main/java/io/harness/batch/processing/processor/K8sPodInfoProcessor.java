@@ -4,6 +4,7 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
@@ -86,6 +87,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
       logger.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podInfo.getPodUid());
     }
 
+    Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
+
     return InstanceInfo.builder()
         .accountId(accountId)
         .settingId(podInfo.getCloudProviderId())
@@ -95,7 +98,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
         .instanceState(InstanceState.INITIALIZING)
-        .resource(K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap()))
+        .resource(resource)
+        .allocatableResource(resource)
         .metaData(metaData)
         //.containerList(podInfo.getContainersList())
         .labels(labelsMap)

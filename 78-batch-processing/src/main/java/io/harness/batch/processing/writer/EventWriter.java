@@ -6,6 +6,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public abstract class EventWriter {
   @Autowired protected InstanceDataService instanceDataService;
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired protected InstanceResourceService instanceResourceService;
 
   protected InstanceData fetchActiveInstanceData(String accountId, String clusterId, String instanceId) {
     List<InstanceState> instanceStates =

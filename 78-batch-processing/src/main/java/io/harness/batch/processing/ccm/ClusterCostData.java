@@ -10,10 +10,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClusterCostData {
   double totalCost;
+  double totalSystemCost;
   double utilizedCost;
   double cpuTotalCost;
+  double cpuSystemCost;
   double cpuUtilizedCost;
   double memoryTotalCost;
+  double memorySystemCost;
   double memoryUtilizedCost;
   long startTime;
   long endTime;

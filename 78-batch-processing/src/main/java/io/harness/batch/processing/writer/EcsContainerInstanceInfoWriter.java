@@ -72,7 +72,8 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
                                .settingId(settingId)
                                .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
                                .instanceState(InstanceState.INITIALIZING)
-                               .totalResource(resource)
+                               .totalResource(ec2InstanceData.getTotalResource())
+                               .allocatableResource(resource)
                                .metaData(metaData)
                                .build();
             logger.info("Creating container instance {} ", containerInstanceId);

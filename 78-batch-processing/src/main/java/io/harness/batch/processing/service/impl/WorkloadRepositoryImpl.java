@@ -21,7 +21,7 @@ import java.util.Optional;
 @Service
 public class WorkloadRepositoryImpl implements WorkloadRepository {
   private final HPersistence hPersistence;
-  private final Cache<CacheKey, Boolean> saved = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(1)).build();
+  private final Cache<CacheKey, Boolean> saved = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(20)).build();
 
   @Value
   private static class CacheKey {

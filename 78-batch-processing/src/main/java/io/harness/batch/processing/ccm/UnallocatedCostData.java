@@ -15,6 +15,9 @@ public class UnallocatedCostData {
   double cost;
   double cpuCost;
   double memoryCost;
+  double systemCost;
+  double cpuSystemCost;
+  double memorySystemCost;
   long startTime;
   long endTime;
 }

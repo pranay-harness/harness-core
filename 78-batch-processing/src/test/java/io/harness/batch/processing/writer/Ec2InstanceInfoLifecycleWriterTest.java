@@ -4,6 +4,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,9 +14,11 @@ import com.google.protobuf.Timestamp;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
@@ -41,6 +44,7 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @InjectMocks private Ec2InstanceInfoWriter ec2InstanceInfoWriter;
   @InjectMocks private Ec2InstanceLifecycleWriter ec2InstanceLifecycleWriter;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceResourceService instanceResourceService;
 
   private final String TEST_CLUSTER_ID = "CLUSTER_ID_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
@@ -61,6 +65,8 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteEc2InstanceInfo() throws Exception {
+    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
+        .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build());
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN, TEST_CLUSTER_ID);
     ec2InstanceInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage));
@@ -73,6 +79,8 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
     assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY)).isNotNull();
     assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.REGION)).isNotNull();
     assertThat(instanceData.getInstanceState()).isEqualTo(InstanceState.INITIALIZING);
+    assertThat(instanceData.getTotalResource().getMemoryMb()).isEqualTo(1024.0);
+    assertThat(instanceData.getTotalResource().getCpuUnits()).isEqualTo(1024.0);
   }
 
   @Test
