@@ -90,8 +90,17 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldDeleteExistingClusters() {
     clusterRecordService.upsert(clusterRecord);
-    Boolean pass2 = clusterRecordService.delete(accountId, cloudProviderId);
+    clusterRecordService.delete(accountId, cloudProviderId);
     verify(clusterRecordDao).delete(eq(accountId), eq(cloudProviderId));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDeactivateClusters() {
+    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.deactivate(accountId, cloudProviderId);
+    verify(clusterRecordDao).setStatus(eq(accountId), eq(cloudProviderId), eq(true));
   }
 
   @Test

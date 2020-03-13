@@ -27,6 +27,7 @@ public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess
   @Indexed String accountId;
   final Cluster cluster;
   String[] perpetualTaskIds; // reference
+  boolean isDeactivated;
   @SchemaIgnore long createdAt;
   long lastUpdatedAt;
 }

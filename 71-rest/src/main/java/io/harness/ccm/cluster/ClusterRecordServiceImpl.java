@@ -73,19 +73,42 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   }
 
   @Override
-  public List<ClusterRecord> list(String accountId, String cloudProviderId, Integer count, Integer startIndex) {
-    return clusterRecordDao.list(accountId, cloudProviderId, count, startIndex);
+  public List<ClusterRecord> list(String accountId, String cloudProviderId) {
+    return list(accountId, cloudProviderId, false);
   }
 
   @Override
-  public List<ClusterRecord> list(String accountId, String cloudProviderId) {
-    return clusterRecordDao.list(accountId, cloudProviderId, 0, 0);
+  public List<ClusterRecord> list(String accountId, String cloudProviderId, boolean isDeactivated) {
+    return list(accountId, cloudProviderId, isDeactivated, 0, 0);
+  }
+
+  @Override
+  public List<ClusterRecord> list(
+      String accountId, String cloudProviderId, boolean isActive, Integer count, Integer startIndex) {
+    return clusterRecordDao.list(accountId, cloudProviderId, count, startIndex);
+  }
+
+  public ClusterRecord deactivate(String accountId, String cloudProviderId) {
+    // get the list of Clusters associated with the cloudProvider
+    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
+    if (isNull(clusterRecords)) {
+      logger.warn("Cloud Provider with id={} has no Clusters to be deactivated.", cloudProviderId);
+    } else {
+      for (ClusterRecord clusterRecord : clusterRecords) {
+        try {
+          subject.fireInform(ClusterRecordObxxxxxxxx:onDeactivating, clusterRecord);
+        } catch (Exception e) {
+          logger.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
+        }
+      }
+    }
+    return clusterRecordDao.setStatus(accountId, cloudProviderId, true);
   }
 
   @Override
   public boolean delete(String accountId, String cloudProviderId) {
     // get the list of Clusters associated with the cloudProvider
-    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId);
+    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
     if (isNull(clusterRecords)) {
       logger.warn("Cloud Provider with id={} has no Clusters to be deleted.", cloudProviderId);
     } else {
