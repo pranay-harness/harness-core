@@ -5,9 +5,12 @@ import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -22,6 +25,7 @@ import java.util.Map;
 @Slf4j
 public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private CloudProviderService cloudProviderService;
+  @Autowired private InstanceResourceService instanceResourceService;
 
   private static final String AWS_SPOT_INSTANCE = "spot";
 
@@ -42,6 +46,10 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
+    Resource totalResource = instanceResourceService.getComputeVMResource(
+        InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
+        InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
+        k8SCloudProvider);
 
     return InstanceInfo.builder()
         .accountId(publishedMessage.getAccountId())
@@ -52,7 +60,8 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
         .instanceState(InstanceState.INITIALIZING)
-        .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap()))
+        .resource(totalResource)
+        .allocatableResource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap()))
         .labels(nodeInfo.getLabelsMap())
         .metaData(metaData)
         .build();

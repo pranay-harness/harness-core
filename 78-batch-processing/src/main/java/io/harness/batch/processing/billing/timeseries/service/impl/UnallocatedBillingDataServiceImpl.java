@@ -23,7 +23,7 @@ public class UnallocatedBillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
 
   static final String GET_UNALLOCATED_COST_DATA =
-      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, ACCOUNTID, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY ACCOUNTID, CLUSTERID, INSTANCETYPE";
+      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, SUM(SYSTEMCOST) AS SYSTEMCOST, SUM(CPUSYSTEMCOST) AS CPUSYSTEMCOST, SUM(MEMORYSYSTEMCOST) AS MEMORYSYSTEMCOST,  ACCOUNTID, CLUSTERID, INSTANCETYPE FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY ACCOUNTID, CLUSTERID, INSTANCETYPE";
 
   static final String GET_COMMON_FIELDS =
       "SELECT BILLINGACCOUNTID, ACCOUNTID, CLUSTERNAME, SETTINGID, REGION, CLOUDPROVIDER, CLUSTERTYPE, WORKLOADTYPE FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID = '%s' AND INSTANCETYPE IN ('K8S_POD', 'K8S_NODE', 'ECS_CONTAINER_INSTANCE', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND ENDTIME <= '%s' LIMIT 1";
@@ -45,6 +45,9 @@ public class UnallocatedBillingDataServiceImpl {
                                         .cost(resultSet.getDouble("COST"))
                                         .cpuCost(resultSet.getDouble("CPUCOST"))
                                         .memoryCost(resultSet.getDouble("MEMORYCOST"))
+                                        .systemCost(resultSet.getDouble("SYSTEMCOST"))
+                                        .cpuSystemCost(resultSet.getDouble("CPUSYSTEMCOST"))
+                                        .memorySystemCost(resultSet.getDouble("MEMORYSYSTEMCOST"))
                                         .startTime(startDate)
                                         .endTime(endDate)
                                         .build());

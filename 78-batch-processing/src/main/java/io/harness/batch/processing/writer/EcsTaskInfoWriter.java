@@ -94,6 +94,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
                                .instanceType(instanceType)
                                .instanceState(InstanceState.INITIALIZING)
                                .totalResource(resource)
+                               .allocatableResource(resource)
                                .metaData(metaData)
                                .harnessServiceInfo(harnessServiceInfo)
                                .build();

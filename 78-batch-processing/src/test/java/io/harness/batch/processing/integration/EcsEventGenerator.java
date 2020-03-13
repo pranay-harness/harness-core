@@ -209,6 +209,7 @@ public interface EcsEventGenerator {
         .accountId(accountId)
         .instanceType(InstanceType.EC2_INSTANCE)
         .metaData(metaData)
+        .totalResource(Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build())
         .build();
   }
 

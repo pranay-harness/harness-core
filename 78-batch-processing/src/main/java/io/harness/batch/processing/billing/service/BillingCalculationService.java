@@ -59,7 +59,8 @@ public class BillingCalculationService {
     BillingAmountBreakup billingAmountForResource =
         getBillingAmountForResource(instanceData, billingAmount, cpuUnit, memoryMb);
     return new BillingData(billingAmountForResource,
-        getIdleCostForResource(billingAmountForResource, utilizationData, instanceData), instanceActiveSeconds,
+        getIdleCostForResource(billingAmountForResource, utilizationData, instanceData),
+        getSystemCostForResource(billingAmountForResource, instanceData), instanceActiveSeconds,
         cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
   }
 
@@ -85,6 +86,30 @@ public class BillingCalculationService {
         .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
         .memoryBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
         .build();
+  }
+
+  SystemCostData getSystemCostForResource(BillingAmountBreakup billingDataForResource, InstanceData instanceData) {
+    BigDecimal cpuSystemCost = BigDecimal.ZERO;
+    BigDecimal memorySystemCost = BigDecimal.ZERO;
+    BigDecimal systemCost = BigDecimal.ZERO;
+    if (instanceData.getAllocatableResource() != null && instanceData.getTotalResource() != null) {
+      BigDecimal cpuBillingAmount = billingDataForResource.getCpuBillingAmount();
+      BigDecimal memoryBillingAmount = billingDataForResource.getMemoryBillingAmount();
+      if (instanceData.getTotalResource().getCpuUnits() > 0) {
+        cpuSystemCost = BigDecimal.valueOf(cpuBillingAmount.doubleValue()
+            * (1
+                  - (instanceData.getAllocatableResource().getCpuUnits()
+                        / instanceData.getTotalResource().getCpuUnits())));
+      }
+      if (instanceData.getTotalResource().getMemoryMb() > 0) {
+        memorySystemCost = BigDecimal.valueOf(memoryBillingAmount.doubleValue()
+            * (1
+                  - (instanceData.getAllocatableResource().getMemoryMb()
+                        / instanceData.getTotalResource().getMemoryMb())));
+      }
+      systemCost = cpuSystemCost.add(memorySystemCost);
+    }
+    return new SystemCostData(systemCost, cpuSystemCost, memorySystemCost);
   }
 
   IdleCostData getIdleCostForResource(

@@ -14,8 +14,10 @@ import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
@@ -43,6 +45,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sNodeEventProcessor k8sNodeEventProcessor;
   @InjectMocks private K8sNodeInfoProcessor k8sNodeInfoProcessor;
   @Mock private CloudProviderService cloudProviderService;
+  @Mock private InstanceResourceService instanceResourceService;
 
   private static final String NODE_UID = "node_uid";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
@@ -92,6 +95,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfo() throws Exception {
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
+    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
+        .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build());
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -103,6 +108,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
         CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    io.harness.batch.processing.ccm.Resource infoAllocatableResource = instanceInfo.getAllocatableResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -110,7 +116,9 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
-    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1024.0);
+    assertThat(infoAllocatableResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(infoAllocatableResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
     assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.ON_DEMAND.name());
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.GCP.name());
@@ -121,6 +129,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfoForAwsSpot() throws Exception {
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.AWS);
+    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
+        .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(2048.0).build());
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -140,7 +150,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
-    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(2048.0);
     assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.SPOT.name());
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.AWS.name());

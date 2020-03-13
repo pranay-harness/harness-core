@@ -43,6 +43,7 @@ public class UnallocatedBillingDataServiceImplTest {
   private static final String CLUSTER_ID = "clusterId";
   private static final String INSTANCE_TYPE = "Pod";
   private static final double COST = 0.5;
+  private static final double SYSTEM_COST = 0.25;
   private final long START_TIME = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME = NOW.toEpochMilli();
   private static final String BILLING_ACCOUNT_ID = "billingAccountId";
@@ -75,6 +76,9 @@ public class UnallocatedBillingDataServiceImplTest {
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> COST);
     when(resultSet.getDouble("CPUCOST")).thenAnswer((Answer<Double>) invocation -> COST / 2);
     when(resultSet.getDouble("MEMORYCOST")).thenAnswer((Answer<Double>) invocation -> COST / 2);
+    when(resultSet.getDouble("SYSTEMCOST")).thenAnswer((Answer<Double>) invocation -> SYSTEM_COST);
+    when(resultSet.getDouble("CPUSYSTEMCOST")).thenAnswer((Answer<Double>) invocation -> SYSTEM_COST / 2);
+    when(resultSet.getDouble("MEMORYSYSTEMCOST")).thenAnswer((Answer<Double>) invocation -> SYSTEM_COST / 2);
     when(resultSet.getString("BILLINGACCOUNTID")).thenAnswer((Answer<String>) invocation -> BILLING_ACCOUNT_ID);
     when(resultSet.getString("ACCOUNTID")).thenAnswer((Answer<String>) invocation -> ACCOUNT_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER_NAME);
@@ -100,6 +104,9 @@ public class UnallocatedBillingDataServiceImplTest {
     assertThat(unallocatedCostDataList.get(0).getCost()).isEqualTo(COST);
     assertThat(unallocatedCostDataList.get(0).getCpuCost()).isEqualTo(COST / 2);
     assertThat(unallocatedCostDataList.get(0).getMemoryCost()).isEqualTo(COST / 2);
+    assertThat(unallocatedCostDataList.get(0).getSystemCost()).isEqualTo(SYSTEM_COST);
+    assertThat(unallocatedCostDataList.get(0).getCpuSystemCost()).isEqualTo(SYSTEM_COST / 2);
+    assertThat(unallocatedCostDataList.get(0).getMemorySystemCost()).isEqualTo(SYSTEM_COST / 2);
   }
 
   @Test

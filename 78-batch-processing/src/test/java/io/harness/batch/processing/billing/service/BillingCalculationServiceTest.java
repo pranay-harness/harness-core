@@ -227,8 +227,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
-    InstanceData instanceData = getInstance(
-        instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountForResource(
         instanceData, BigDecimal.valueOf(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb());
     assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
@@ -241,8 +241,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
-    InstanceData instanceData = getInstance(
-        instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     BigDecimal billingAmount = BigDecimal.valueOf(200);
     BigDecimal cpuBillingAmount = BigDecimal.valueOf(100);
     BigDecimal memoryBillingAmount = BigDecimal.valueOf(100);
@@ -266,8 +266,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     addParentResource(metaData, 1024, 1024);
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
-    InstanceData instanceData = getInstance(
-        instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
@@ -291,8 +291,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
-    InstanceData instanceData = getInstance(
-        instanceResource, metaData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilizationWithValues(CPU_UTILIZATION_HIGH, MEMORY_UTILIZATION_HIGH, 256, 512);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
@@ -313,7 +313,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   public void testGetBillingAmountWhereResourceIsNotPresent() {
     PricingData pricingData = new PricingData(10, 256.0, 512.0);
     Map<String, String> metaData = new HashMap<>();
-    InstanceData instanceData = getInstance(null, metaData, INSTANCE_START_TIMESTAMP,
+    InstanceData instanceData = getInstance(null, null, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.EC2_INSTANCE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount =
@@ -345,7 +345,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
     addParentResource(metaData, DEFAULT_INSTANCE_CPU * 1024, DEFAULT_INSTANCE_MEMORY * 1024);
-    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_EC2);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
@@ -367,7 +367,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
         .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
-    Resource instanceResource = getInstanceResource(4096, 15360);
+    Resource totalResource = getInstanceResource(4096, 15360);
+    Resource instanceResource = getInstanceResource(3988, 14360);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, GCP_INSTANCE_FAMILY);
@@ -375,7 +376,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.SPOT.name());
     metaData.put(InstanceMetaDataConstants.ZONE, GCP_ZONE_1);
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
-    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+    InstanceData instanceData = getInstance(totalResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
@@ -384,6 +385,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("2.4"));
     assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("1.2"));
     assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("1.2"));
+    assertThat(billingAmount.getSystemCostData().getMemorySystemCost())
+        .isEqualTo(BigDecimal.valueOf(0.15624999999999992));
+    assertThat(billingAmount.getSystemCostData().getCpuSystemCost()).isEqualTo(BigDecimal.valueOf(0.06328125));
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(4096 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(15360 * HALF_DAY_SECONDS);
@@ -401,7 +405,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
     metaData.put(InstanceMetaDataConstants.REGION, REGION);
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
-    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_FARGATE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
@@ -429,7 +433,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.SPOT.name());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     addParentResource(metaData, 8 * 1024, 20 * 1024);
-    InstanceData instanceData = getInstance(instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
@@ -442,10 +446,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
     return InstanceData.builder().usageStartTime(startInstant).usageStopTime(endInstant).build();
   }
 
-  private InstanceData getInstance(Resource instanceResource, Map<String, String> metaData, Instant startInstant,
-      Instant endInstant, InstanceType instanceType) {
+  private InstanceData getInstance(Resource totalResource, Resource instanceResource, Map<String, String> metaData,
+      Instant startInstant, Instant endInstant, InstanceType instanceType) {
     return InstanceData.builder()
-        .totalResource(instanceResource)
+        .totalResource(totalResource)
+        .allocatableResource(instanceResource)
         .metaData(metaData)
         .usageStartTime(startInstant)
         .usageStopTime(endInstant)

@@ -5,8 +5,10 @@ import com.google.inject.Singleton;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -44,6 +46,12 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
             metaData.put(InstanceMetaDataConstants.REGION, ec2InstanceInfo.getRegion());
             metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
             metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(ec2InstanceInfo).name());
+            Resource totalResource = instanceResourceService.getComputeVMResource(
+                InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                    InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
+                InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
+                CloudProvider.AWS);
+
             instanceData = InstanceData.builder()
                                .accountId(accountId)
                                .instanceId(instanceId)
@@ -51,6 +59,8 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
                                .instanceType(InstanceType.EC2_INSTANCE)
                                .instanceState(InstanceState.INITIALIZING)
                                .metaData(metaData)
+                               .totalResource(totalResource)
+                               .allocatableResource(totalResource)
                                .clusterId(clusterId)
                                .settingId(settingId)
                                .build();
