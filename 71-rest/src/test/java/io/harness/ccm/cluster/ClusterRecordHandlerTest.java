@@ -108,7 +108,7 @@ public class ClusterRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testOnDeletedCloudProvider() {
     handler.onDeleted(settingAttribute);
-    verify(clusterRecordService).delete(accountId, cloudProviderId);
+    verify(clusterRecordService).deactivate(accountId, cloudProviderId);
   }
 
   @Test

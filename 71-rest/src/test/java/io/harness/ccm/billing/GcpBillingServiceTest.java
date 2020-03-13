@@ -54,7 +54,7 @@ public class GcpBillingServiceTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void ShouldGetGcpBillingTimeSeriesStats() throws InterruptedException {
+  public void shouldGetGcpBillingTimeSeriesStats() throws InterruptedException {
     Calendar calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     Calendar calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
 

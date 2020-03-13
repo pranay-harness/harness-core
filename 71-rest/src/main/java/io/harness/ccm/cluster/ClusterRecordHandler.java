@@ -68,11 +68,11 @@ public class ClusterRecordHandler
 
   @Override
   public void onDeleted(SettingAttribute settingAttribute) {
-    deleteClusterRecords(settingAttribute);
+    deactivateClusterRecords(settingAttribute);
   }
 
-  private boolean deleteClusterRecords(SettingAttribute settingAttribute) {
-    return clusterRecordService.delete(settingAttribute.getAccountId(), settingAttribute.getUuid());
+  private ClusterRecord deactivateClusterRecords(SettingAttribute settingAttribute) {
+    return clusterRecordService.deactivate(settingAttribute.getAccountId(), settingAttribute.getUuid());
   }
 
   @Override

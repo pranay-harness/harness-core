@@ -41,7 +41,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Before
   public void setUp() {
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(k8sCloudProviderId).build();
-    k8sClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
+    k8sClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).isDeactivated(true).build();
 
     ecsCluster =
         EcsCluster.builder().cloudProviderId(ecsCloudProviderId).region(region).clusterName(clusterName).build();
@@ -125,6 +125,16 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
     assertThat(pass).isTrue();
     List<ClusterRecord> clusterRecordList = clusterRecordDao.list(accountId, k8sCloudProviderId, 0, 0);
     assertThat(clusterRecordList).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldSetStatusForCluster() {
+    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord);
+    ClusterRecord deactivatedCluster = clusterRecordDao.setStatus(accountId, k8sCloudProviderId, true);
+    assertThat(upsertedCluster.isDeactivated()).isFalse();
+    assertThat(deactivatedCluster.isDeactivated()).isTrue();
   }
 
   @Test

@@ -80,6 +80,18 @@ public class ClusterRecordDao {
     return persistence.delete(query);
   }
 
+  public ClusterRecord setStatus(String accountId, String cloudProviderId, boolean isDeactivated) {
+    Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class, excludeValidate)
+                                     .field(ClusterRecordKeys.accountId)
+                                     .equal(accountId)
+                                     .field(cloudProviderField)
+                                     .equal(cloudProviderId);
+    UpdateOperations<ClusterRecord> updateOperations =
+        persistence.createUpdateOperations(ClusterRecord.class).set(ClusterRecordKeys.isDeactivated, isDeactivated);
+    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
+    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+  }
+
   public ClusterRecord insertTask(ClusterRecord clusterRecord, String taskId) {
     Query<ClusterRecord> query = getQuery(clusterRecord);
     UpdateOperations<ClusterRecord> updateOperations =

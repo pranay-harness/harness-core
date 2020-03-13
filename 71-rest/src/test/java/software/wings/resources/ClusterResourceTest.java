@@ -52,6 +52,6 @@ public class ClusterResourceTest extends CategoryTest {
             "/clusters?accountId=%s&cloudProviderId=%s&count=%d&startIndex=%d", accountId, cloudProviderId, count, 0))
         .request()
         .get(new GenericType<RestResponse<List<ClusterRecord>>>() {});
-    verify(clusterRecordService).list(eq(accountId), eq(cloudProviderId), eq(count), eq(startIndex));
+    verify(clusterRecordService).list(eq(accountId), eq(cloudProviderId), eq(false), eq(count), eq(startIndex));
   }
 }

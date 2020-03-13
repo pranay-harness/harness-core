@@ -33,4 +33,9 @@ public class CCMPerpetualTaskHandler implements ClusterRecordObserver {
   public void onDeleting(ClusterRecord clusterRecord) {
     ccmPerpetualTaskManager.deletePerpetualTasks(clusterRecord);
   }
+
+  @Override
+  public void onDeactivating(ClusterRecord clusterRecord) {
+    ccmPerpetualTaskManager.deletePerpetualTasks(clusterRecord);
+  }
 }

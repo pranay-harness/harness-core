@@ -909,6 +909,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     try {
       if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
+        logger.info("Deleted the cloud provider with id={}", settingAttribute.getUuid());
         subject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
       }
     } catch (Exception e) {

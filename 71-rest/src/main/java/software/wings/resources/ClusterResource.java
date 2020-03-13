@@ -42,6 +42,6 @@ public class ClusterResource {
   public RestResponse<List<ClusterRecord>> list(@NotEmpty @QueryParam("accountId") String accountId,
       @QueryParam("cloudProviderId") String cloudProviderId, @QueryParam("count") Integer count,
       @QueryParam("startIndex") Integer startIndex) {
-    return new RestResponse<>(clusterRecordService.list(accountId, cloudProviderId, count, startIndex));
+    return new RestResponse<>(clusterRecordService.list(accountId, cloudProviderId, false, count, startIndex));
   }
 }
