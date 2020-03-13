@@ -34,7 +34,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
+import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
@@ -1464,7 +1464,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(DelegateConnection.class)
             .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
             .set(DelegateConnectionKeys.validUntil,
-                Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant())));
+                Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant())));
 
     if (updated != null && updated.getWriteResult() != null && updated.getWriteResult().getN() == 0) {
       // connection does not exist. Create one.
@@ -1474,7 +1474,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .delegateId(delegateId)
               .version(heartbeat.getVersion())
               .lastHeartbeat(currentTimeMillis())
-              .validUntil(Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant()))
+              .validUntil(Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant()))
               .build();
       connection.setUuid(heartbeat.getDelegateConnectionId());
       wingsPersistence.save(connection);
@@ -1542,7 +1542,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       responseData = completedTask.getNotifyResponse();
       if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        final String delegateName = completedTask.getDelegateId() == null
+        String delegateName = completedTask.getDelegateId() == null
             ? ""
             : Optional.ofNullable(get(completedTask.getAccountId(), completedTask.getDelegateId(), false))
                   .map(Delegate::getHostName)
@@ -1885,7 +1885,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Entering resolvePreAssignmentExpressions");
 
     try {
-      final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
+      ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtils,
               delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
@@ -1897,7 +1897,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
 
-        final SecretManagerFunctor secretManagerFunctor =
+        SecretManagerFunctor secretManagerFunctor =
             (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
 
         if (secretManagerFunctor == null) {
@@ -2618,7 +2618,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private Delegate updateAllDelegatesIfECSType(
       Delegate delegate, UpdateOperations<Delegate> updateOperations, String fieldBeingUpdate) {
-    final List<Delegate> retVal = new ArrayList<>();
+    List<Delegate> retVal = new ArrayList<>();
     List<Delegate> delegates = getAllDelegatesMatchingGroupName(delegate);
 
     if (isEmpty(delegates)) {

@@ -34,7 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
+import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -97,6 +97,7 @@ import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
@@ -1074,8 +1075,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDoConnectionHeartbeat() {
     delegateService.doConnectionHeartbeat(
         ACCOUNT_ID, DELEGATE_ID, DelegateConnectionHeartbeat.builder().version("1.0.1").alive(true).build());
-    DelegateConnection connection =
-        wingsPersistence.createQuery(DelegateConnection.class).filter("accountId", ACCOUNT_ID).get();
+    DelegateConnection connection = wingsPersistence.createQuery(DelegateConnection.class)
+                                        .filter(DelegateConnectionKeys.accountId, ACCOUNT_ID)
+                                        .get();
     assertThat(connection.getVersion()).isEqualTo("1.0.1");
   }
 
@@ -1089,7 +1091,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .delegateId(DELEGATE_ID)
             .version("1.0.1")
             .lastHeartbeat(System.currentTimeMillis())
-            .validUntil(Date.from(OffsetDateTime.now().plusMinutes(defaultExpiryTimeInMinutes).toInstant()))
+            .validUntil(Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant()))
             .build();
     wingsPersistence.save(connection);
 
