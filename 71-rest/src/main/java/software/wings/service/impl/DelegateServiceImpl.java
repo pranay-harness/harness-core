@@ -445,7 +445,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (forceRefresh) {
         delegateCache.refresh(delegateId);
       }
-      return delegateCache.get(delegateId).orElse(null);
+      Delegate delegate = delegateCache.get(delegateId).orElse(null);
+      if (delegate != null && (delegate.getAccountId() == null || !delegate.getAccountId().equals(accountId))) {
+        // TODO: this is serious, we should not return the delegate if the account is not the expected one
+        //       just to be on the safe side, make sure that all such scenarios are first fixed
+        logger.error("Delegate account id mismatch", new Exception(""));
+      }
+      return delegate;
     } catch (ExecutionException e) {
       logger.error("Execution exception", e);
     } catch (UncheckedExecutionException e) {
@@ -1542,16 +1548,31 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       responseData = completedTask.getNotifyResponse();
       if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        String delegateName = completedTask.getDelegateId() == null
-            ? ""
-            : Optional.ofNullable(get(completedTask.getAccountId(), completedTask.getDelegateId(), false))
-                  .map(Delegate::getHostName)
-                  .orElse(completedTask.getDelegateId());
+        String delegateName = obtainDelegateName(completedTask.getAccountId(), completedTask.getDelegateId(), false);
         throw new TimeoutException("Harness delegate", "Delegate (" + delegateName + ")", USER_ADMIN);
       }
       logger.info("Returning response to calling function for delegate task");
     }
     return (T) responseData;
+  }
+
+  public String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh) {
+    if (accountId == null || delegateId == null) {
+      return "";
+    }
+    Delegate delegate = get(accountId, delegateId, forceRefresh);
+    if (delegate == null) {
+      return delegateId;
+    }
+    String delegateName = delegate.getDelegateName();
+    if (delegateName != null) {
+      return delegateName;
+    }
+    String hostName = delegate.getHostName();
+    if (hostName != null) {
+      return hostName;
+    }
+    return delegateId;
   }
 
   @VisibleForTesting
