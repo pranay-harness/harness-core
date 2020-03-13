@@ -15,7 +15,6 @@ jacoco-it.exec
 *.iws
 *.orig
 *.xml.bak
-*/delegate*.log
 */upgrade.sh
 .checkstyle
 .classpath
@@ -25,9 +24,6 @@ jacoco-it.exec
 setting.xml
 access*gz
 access.log
-delegate-gc-logs.gc
-delegate.*.log
-delegate.log
 dependency-reduced-pom.xml
 dump.tar.gz
 dump/
@@ -48,8 +44,7 @@ package-lock.json
 infer-out
 infer-out/*
 client-tools
-delegate.lock
-delegate_sequence_config
+eventQueue
 # The Terraform code in this app is just an example, so ignore any files that may store Terraform state from a real
 # deployment. You may want to remove these gitignore entries for a real app.
 **/terraform.tfvars
@@ -57,5 +52,4 @@ delegate_sequence_config
 **/*.tfstate
 **/*.tfstate.backup
 **/tfplan
-**/*.lock.info
-eventQueue/
+**/*.lock.info\

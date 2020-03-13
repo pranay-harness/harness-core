@@ -2,6 +2,7 @@ package io.harness.delegate.message;
 
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.releaseLock;
+import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
@@ -16,7 +17,9 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
+import io.harness.exception.GeneralException;
 import io.harness.serializer.JsonUtils;
+import io.harness.threading.Schedulable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -184,6 +187,11 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
+  public void shutdown() {
+    running.set(false);
+  }
+
+  @Override
   public Runnable getMessageCheckingRunnableForChannel(
       MessengerType sourceType, String sourceProcessId, long readTimeout, Consumer<Message> messageHandler) {
     try {
@@ -191,30 +199,24 @@ public class MessageServiceImpl implements MessageService {
     } catch (IOException e) {
       logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
     }
-    return () -> {
-      if (running.get()) {
-        try {
-          Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
-          if (message != null) {
-            if (messageHandler != null) {
-              messageHandler.accept(message);
-            }
-            try {
-              messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
+    return new Schedulable(
+        format("Error while checking for message from channel %s %s", sourceType, sourceProcessId), () -> {
+          if (running.get()) {
+            Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
+            if (message != null) {
+              if (messageHandler != null) {
+                messageHandler.accept(message);
+              }
+              try {
+                messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              } catch (IOException e) {
+                throw new GeneralException(e.getMessage(), e);
+              }
             }
           }
-        } catch (Exception e) {
-          logger.error("Error while checking for message from channel {} {}", sourceType, sourceProcessId, e);
-        }
-      }
-    };
-  }
-
-  @Override
-  public void shutdown() {
-    this.running.set(false);
+        });
   }
 
   @Override
@@ -380,7 +382,6 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  @SuppressWarnings({"unchecked"})
   public <T> T getData(String name, String key, Class<T> valueClass) {
     Map<String, Object> allData = getAllData(name);
     if (allData == null) {
@@ -510,7 +511,6 @@ public class MessageServiceImpl implements MessageService {
     return file;
   }
 
-  @SuppressWarnings({"unchecked"})
   private Map<String, Object> getDataMap(File file) throws Exception {
     return timeLimiter.callWithTimeout(() -> {
       while (true) {
