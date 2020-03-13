@@ -20,7 +20,6 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -44,7 +43,6 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -189,7 +187,6 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
     when(sweepingOutputService.findSweepingOutput(any())).thenReturn(serviceInstanceIdsParam);
-    when(featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, ACCOUNT_ID)).thenReturn(true);
 
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);

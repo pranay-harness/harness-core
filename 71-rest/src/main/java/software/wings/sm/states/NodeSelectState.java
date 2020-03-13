@@ -186,14 +186,11 @@ public abstract class NodeSelectState extends State {
     ServiceInstanceIdsParam serviceIdParamElement =
         aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
 
-    if (featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, context.getAccountId())) {
-      // Save this to the sweeping output here.......
-      sweepingOutputService.save(
-          context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-              .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName().trim())
-              .value(serviceIdParamElement)
-              .build());
-    }
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+            .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName().trim())
+            .value(serviceIdParamElement)
+            .build());
 
     ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
                                                      .contextElement(serviceIdParamElement)

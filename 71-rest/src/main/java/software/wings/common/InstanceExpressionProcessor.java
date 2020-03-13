@@ -32,7 +32,6 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -413,10 +412,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   @Nullable
   private ServiceInstanceIdsParam getServiceInstanceIdsParam() {
-    if (featureFlagService.isEnabled(FeatureName.SSH_WINRM_SO, context.getAccountId())) {
-      return getServiceInstanceIdsParamFromSweepingOutput();
-    }
-    return getServiceInstanceIdsParamFromContextElement();
+    return getServiceInstanceIdsParamFromSweepingOutput();
   }
 
   @Nullable
