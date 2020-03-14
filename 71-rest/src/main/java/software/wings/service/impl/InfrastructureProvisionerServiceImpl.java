@@ -49,6 +49,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -162,6 +163,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      checkForDuplicate(infrastructureProvisioner);
       populateDerivedFields(infrastructureProvisioner);
 
       removeDuplicateVariables(infrastructureProvisioner);
@@ -175,6 +177,26 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
       return finalInfraProvisioner;
     });
+  }
+
+  @VisibleForTesting
+  void checkForDuplicate(InfrastructureProvisioner provisioner) {
+    if (differentProvisionerWithSameNameExists(provisioner.getAppId(), provisioner.getUuid(), provisioner.getName())) {
+      throw new InvalidRequestException(format("Provisioner with name [%s] already exists", provisioner.getName()));
+    }
+  }
+
+  @VisibleForTesting
+  boolean differentProvisionerWithSameNameExists(String appId, String uuid, String name) {
+    Query<InfrastructureProvisioner> query = wingsPersistence.createQuery(InfrastructureProvisioner.class)
+                                                 .field(InfrastructureProvisioner.APP_ID_KEY)
+                                                 .equal(appId)
+                                                 .field(InfrastructureProvisioner.NAME_KEY)
+                                                 .equal(name);
+    if (isNotEmpty(uuid)) {
+      query.field(InfrastructureProvisioner.ID_KEY).notEqual(uuid);
+    }
+    return query.count() > 0;
   }
 
   void removeDuplicateVariables(InfrastructureProvisioner infrastructureProvisioner) {
@@ -213,6 +235,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   @ValidationGroups(Update.class)
   public InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner) {
+    checkForDuplicate(infrastructureProvisioner);
     populateDerivedFields(infrastructureProvisioner);
 
     removeDuplicateVariables(infrastructureProvisioner);
