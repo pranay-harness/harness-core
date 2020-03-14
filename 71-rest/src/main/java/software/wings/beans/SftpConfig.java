@@ -1,11 +1,12 @@
 package software.wings.beans;
 
+import static java.util.Collections.singletonList;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -15,12 +16,12 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
+import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
-import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("SFTP")
@@ -58,8 +59,7 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(
-        SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(sftpUrl));
+    return singletonList(SftpCapability.builder().sftpUrl(getSftpUrl()).build());
   }
 
   @Data

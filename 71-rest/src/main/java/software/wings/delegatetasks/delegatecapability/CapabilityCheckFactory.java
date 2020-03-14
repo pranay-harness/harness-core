@@ -15,6 +15,7 @@ import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityChe
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
@@ -32,6 +33,7 @@ public class CapabilityCheckFactory {
   @Inject AlwaysFalseValidationCapabilityCheck alwaysFalseValidationCapabilityCheck;
   @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
   @Inject SSHHostValidationCapabilityCheck sshHostValidationCapabilityCheck;
+  @Inject SftpCapabilityCheck sftpCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -59,6 +61,8 @@ public class CapabilityCheckFactory {
         return winrmHostValidationCapabilityCheck;
       case SSH_HOST_CONNECTION:
         return sshHostValidationCapabilityCheck;
+      case SFTP:
+        return sftpCapabilityCheck;
       default:
         return null;
     }
