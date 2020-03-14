@@ -968,7 +968,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
             -> pattern != null
                 && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + EXPRESSION_SUFFIX)
                        || pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + SUBFIELD_ACCESS)
-                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST)))) {
+                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST + SUBFIELD_ACCESS)))) {
       return ContextElementType.INSTANCE;
     }
 
