@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -25,6 +26,7 @@ import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringT
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -96,7 +98,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
-  @Mock WingsPersistence wingsPersistence;
+  @Mock WingsPersistence mockWingsPersistence;
   @Mock ExecutionContext executionContext;
   @Mock Query query;
   @Mock DBCursor dbCursor;
@@ -110,6 +112,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock AppService appService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Test
   @Owner(developers = SATYAM)
@@ -136,9 +139,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                            .build()))
             .build();
     doReturn(infrastructureProvisioner)
-        .when(wingsPersistence)
+        .when(mockWingsPersistence)
         .getWithAppId(eq(InfrastructureProvisioner.class), anyString(), anyString());
-    doReturn(query).when(wingsPersistence).createQuery(eq(InfrastructureMapping.class));
+    doReturn(query).when(mockWingsPersistence).createQuery(eq(InfrastructureMapping.class));
     doReturn(query).doReturn(query).when(query).filter(anyString(), any());
     doReturn(infrastructureMappings).when(query).fetch();
     doReturn(new HashMap<>()).when(executionContext).asMap();
@@ -567,5 +570,89 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThat(provisioner.getVariables()).hasSize(2);
     assertThat(provisioner.getVariables().get(0)).isEqualTo(var1);
     assertThat(provisioner.getVariables().get(1)).isEqualTo(var2);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void checkForDuplicate() {
+    InfrastructureProvisionerServiceImpl provisionerService = spy(InfrastructureProvisionerServiceImpl.class);
+    Reflect.on(provisionerService).set("wingsPersistence", wingsPersistence);
+    testSaveProvisionerWithNewName(provisionerService);
+    testSaveProvisionerWithExistingName(provisionerService);
+    testUpdateProvisionerWithNewName(provisionerService);
+    testUpdateProvisionerWithExistingName(provisionerService);
+    testSaveProvisionerWithExistingNameInNewApp(provisionerService);
+  }
+
+  private void testUpdateProvisionerWithExistingName(InfrastructureProvisionerServiceImpl provisionerService) {
+    InfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                .appId(APP_ID)
+                                                .name(PROVISIONER_NAME)
+                                                .uuid(PROVISIONER_ID + "_1")
+                                                .build();
+    InfrastructureProvisioner existingProvisioner = TerraformInfrastructureProvisioner.builder()
+                                                        .appId(provisioner.getAppId())
+                                                        .name(provisioner.getName())
+                                                        .uuid(PROVISIONER_ID + "_2")
+                                                        .build();
+
+    wingsPersistence.save(existingProvisioner);
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.checkForDuplicate(provisioner))
+        .withMessageContaining("Provisioner with name");
+
+    wingsPersistence.delete(provisioner);
+  }
+
+  private void testUpdateProvisionerWithNewName(InfrastructureProvisionerServiceImpl provisionerService) {
+    InfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                .appId(APP_ID)
+                                                .name("harness-test")
+                                                .uuid(PROVISIONER_ID + "_1")
+                                                .build();
+    InfrastructureProvisioner existingProvisioner = TerraformInfrastructureProvisioner.builder()
+                                                        .appId(provisioner.getAppId())
+                                                        .name("some-other-name")
+                                                        .uuid(PROVISIONER_ID + "_2")
+                                                        .build();
+    wingsPersistence.save(existingProvisioner);
+    provisionerService.checkForDuplicate(provisioner);
+    wingsPersistence.delete(existingProvisioner);
+  }
+
+  private void testSaveProvisionerWithExistingName(InfrastructureProvisionerServiceImpl provisionerService) {
+    InfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).name("yet-another-common-name").build();
+    InfrastructureProvisioner existingProvisioner = TerraformInfrastructureProvisioner.builder()
+                                                        .appId(provisioner.getAppId())
+                                                        .name(provisioner.getName())
+                                                        .uuid(PROVISIONER_ID)
+                                                        .build();
+
+    wingsPersistence.save(existingProvisioner);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.checkForDuplicate(provisioner))
+        .withMessageContaining("Provisioner with name");
+    wingsPersistence.delete(existingProvisioner);
+  }
+
+  private void testSaveProvisionerWithNewName(InfrastructureProvisionerServiceImpl provisionerService) {
+    InfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).name("some-random-name").build();
+    provisionerService.checkForDuplicate(provisioner);
+  }
+
+  private void testSaveProvisionerWithExistingNameInNewApp(InfrastructureProvisionerServiceImpl provisionerService) {
+    InfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).name("foo-bar").build();
+    InfrastructureProvisioner existingProvisioner = TerraformInfrastructureProvisioner.builder()
+                                                        .appId(provisioner.getAppId() + "_1")
+                                                        .name(provisioner.getName())
+                                                        .uuid(PROVISIONER_ID)
+                                                        .build();
+    wingsPersistence.save(existingProvisioner);
+    provisionerService.checkForDuplicate(provisioner);
   }
 }
