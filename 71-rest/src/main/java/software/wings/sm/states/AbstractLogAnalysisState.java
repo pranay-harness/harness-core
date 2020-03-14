@@ -50,6 +50,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.StackDriverLogState.StackDriverLogStateKeys;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -515,15 +516,16 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                   .getValue();
         return StackDriverLogDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
-            .hostnameField(analysisContext.getHostNameField())
+            .hostnameField(getResolvedFieldValue(executionContext, AnalysisContextKeys.hostNameField, hostnameField))
             .stateType(StateType.STACK_DRIVER_LOG)
             .applicationId(analysisContext.getAppId())
-            .logMessageField(stackDriverLogState.getMessageField())
+            .logMessageField(getResolvedFieldValue(
+                executionContext, StackDriverLogStateKeys.messageField, stackDriverLogState.getMessageField()))
             .stateExecutionId(analysisContext.getStateExecutionId())
             .workflowId(analysisContext.getWorkflowId())
             .workflowExecutionId(analysisContext.getWorkflowExecutionId())
             .serviceId(analysisContext.getServiceId())
-            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .collectionTime(Integer.parseInt(getTimeDuration(executionContext)))
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .accountId(analysisContext.getAccountId())
             .query(getRenderedQuery())

@@ -19,6 +19,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.config.LogzConfig;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
@@ -73,10 +74,11 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
               .query(getRenderedQuery())
-              .hostnameField(hostnameField)
-              .messageField(messageField)
+              .hostnameField(getResolvedFieldValue(context, AnalysisContextKeys.hostNameField, hostnameField))
+              .messageField(getResolvedFieldValue(context, ElkAnalysisStateKeys.messageField, messageField))
               .timestampField(DEFAULT_TIME_FIELD)
-              .timestampFieldFormat(getTimestampFormat())
+              .timestampFieldFormat(
+                  getResolvedFieldValue(context, ElkAnalysisStateKeys.timestampFormat, getTimestampFormat()))
               .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
