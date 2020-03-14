@@ -165,4 +165,6 @@ public interface AccountService {
    * Checks whether subdomain URL is taken by another account
    */
   boolean checkDuplicateSubdomainUrl(SubdomainUrl subdomainUrl);
+
+  void validateAccount(Account account);
 }
