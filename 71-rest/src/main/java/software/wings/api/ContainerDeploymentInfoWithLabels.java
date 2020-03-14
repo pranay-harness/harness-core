@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.Label;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import java.util.List;
 
@@ -20,13 +21,15 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
   private List<Label> labels;
   private String newVersion;
   private String namespace;
+  private HelmChartInfo helmChartInfo;
 
   @Builder
   public ContainerDeploymentInfoWithLabels(
-      String clusterName, List<Label> labels, String newVersion, String namespace) {
+      String clusterName, List<Label> labels, String newVersion, String namespace, HelmChartInfo helmChartInfo) {
     super(clusterName);
     this.labels = labels;
     this.newVersion = newVersion;
     this.namespace = namespace;
+    this.helmChartInfo = helmChartInfo;
   }
 }

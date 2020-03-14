@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.container.Label.Builder.aLabel;
 import static software.wings.beans.infrastructure.instance.InstanceType.KUBERNETES_CONTAINER_INSTANCE;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
@@ -49,8 +51,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.K8sDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
@@ -58,6 +62,7 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
@@ -70,6 +75,7 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
@@ -828,5 +834,58 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactName()).isEqualTo("image3:version3");
     assertThat(instance.getLastArtifactSourceName()).isEqualTo("image3");
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version3");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testSetHelmChartVersionToContainerInfo() {
+    setHelmChartVersionForHelmDeploymentInfo();
+    doNothingIfNonHelmDeploymentInfo();
+    doNothingIfNullDeploymentSummary();
+  }
+
+  private void doNothingIfNullDeploymentSummary() {
+    containerInstanceHandler.setHelmChartInfoToContainerInfo(null, null);
+  }
+
+  private void doNothingIfNonHelmDeploymentInfo() {
+    DeploymentSummary deploymentSummary =
+        DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
+    KubernetesContainerInfo k8sInfo = KubernetesContainerInfo.builder().build();
+    containerInstanceHandler.setHelmChartInfoToContainerInfo(deploymentSummary, k8sInfo);
+    assertThat(k8sInfo.getHelmChartInfo()).isNull();
+  }
+
+  private void setHelmChartVersionForHelmDeploymentInfo() {
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().version("0.1.1").name("harness").build();
+    DeploymentSummary deploymentSummary =
+        DeploymentSummary.builder()
+            .deploymentInfo(ContainerDeploymentInfoWithLabels.builder().helmChartInfo(helmChartInfo).build())
+            .build();
+    KubernetesContainerInfo k8sInfo = KubernetesContainerInfo.builder().build();
+    containerInstanceHandler.setHelmChartInfoToContainerInfo(deploymentSummary, k8sInfo);
+    assertThat(k8sInfo.getHelmChartInfo().getVersion()).isEqualTo("0.1.1");
+    assertThat(k8sInfo.getHelmChartInfo().getName()).isEqualTo("harness");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getContainerDeploymentInfosWithLabelsForHelm() {
+    HelmSetupExecutionSummary helmSetupExecutionSummary =
+        HelmSetupExecutionSummary.builder().namespace("default").releaseName("test").newVersion(1).build();
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().version("1.1.1").name("harness").build();
+
+    ContainerDeploymentInfoWithLabels deploymentInfo =
+        (ContainerDeploymentInfoWithLabels) containerInstanceHandler.getContainerDeploymentInfosWithLabelsForHelm(
+            "harness", helmSetupExecutionSummary.getNamespace(), asList(aLabel().build()), helmSetupExecutionSummary,
+            HelmExecutionSummary.builder().helmChartInfo(helmChartInfo).build());
+    assertThat(deploymentInfo.getHelmChartInfo().getVersion()).isEqualTo("1.1.1");
+    assertThat(deploymentInfo.getHelmChartInfo().getName()).isEqualTo("harness");
+    assertThat(deploymentInfo.getClusterName()).isEqualTo("harness");
+    assertThat(deploymentInfo.getNamespace()).isEqualTo("default");
+    assertThat(deploymentInfo.getNewVersion()).isEqualTo("1");
+    assertThat(deploymentInfo.getLabels()).hasSize(1);
   }
 }

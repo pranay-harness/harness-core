@@ -57,6 +57,7 @@ import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastruc
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -75,6 +76,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDepl
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
@@ -642,6 +644,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     phaseExecutionSummary = instaceHelperTestHelper.initKubernetesPhaseExecutionSummary(
         InfrastructureMappingType.GCP_KUBERNETES, WorkflowServiceHelper.DEPLOY_CONTAINERS, true);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
+    WorkflowExecution helmWorkflowExecution = getHelmWorkflowExecution();
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -656,7 +659,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, helmWorkflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -708,6 +711,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     phaseExecutionSummary = instaceHelperTestHelper.initKubernetesPhaseExecutionSummary(
         InfrastructureMappingType.GCP_KUBERNETES, WorkflowServiceHelper.DEPLOY_CONTAINERS, true);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
+    WorkflowExecution helmWorkflowExecution = getHelmWorkflowExecution();
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -722,7 +726,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, helmWorkflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -766,6 +770,25 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getName()).isEqualTo("release");
     assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getValue()).isEqualTo("version1");
+  }
+
+  private WorkflowExecution getHelmWorkflowExecution() {
+    return WorkflowExecution.builder()
+        .appId("app_1")
+        .appName("app1")
+        .uuid(WORKFLOW_EXECUTION_ID)
+        .name("workflow1")
+        .pipelineSummary(null)
+        .envName("envName")
+        .envId("env_1")
+        .envType(EnvironmentType.PROD)
+        .triggeredBy(EmbeddedUser.builder().name("user1").uuid("user_1").build())
+        .helmExecutionSummary(
+            HelmExecutionSummary.builder()
+                .helmChartInfo(HelmChartInfo.builder().name("stable").version("1.0.0").repoUrl("foo.com").build())
+                .releaseName("release")
+                .build())
+        .build();
   }
 
   @Test
