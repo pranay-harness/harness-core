@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 /**
  * @author rktummala on 09/05/17
@@ -19,9 +20,12 @@ public class KubernetesContainerInfo extends ContainerInfo {
   private String ip;
   private String namespace;
 
+  // only applicable for helm deployments
+  private HelmChartInfo helmChartInfo;
+
   @Builder
   public KubernetesContainerInfo(String clusterName, String controllerType, String controllerName, String serviceName,
-      String podName, String ip, String namespace) {
+      String podName, String ip, String namespace, HelmChartInfo helmChartInfo) {
     super(clusterName);
     this.controllerType = controllerType;
     this.controllerName = controllerName;
@@ -29,5 +33,6 @@ public class KubernetesContainerInfo extends ContainerInfo {
     this.podName = podName;
     this.ip = ip;
     this.namespace = namespace;
+    this.helmChartInfo = helmChartInfo;
   }
 }

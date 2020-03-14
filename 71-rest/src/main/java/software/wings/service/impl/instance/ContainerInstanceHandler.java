@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.container.Label.Builder.aLabel;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -43,6 +44,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -175,6 +177,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
               KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
               String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
               latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
+              setHelmChartInfoToContainerInfo(deploymentSummaryMap.get(containerMetadata), k8sInfo);
             } else {
               latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
             }
@@ -252,6 +255,16 @@ public class ContainerInstanceHandler extends InstanceHandler {
         }
       }
     }
+  }
+
+  @VisibleForTesting
+  void setHelmChartInfoToContainerInfo(DeploymentSummary deploymentSummary, KubernetesContainerInfo k8sInfo) {
+    Optional.ofNullable(deploymentSummary).ifPresent(summary -> {
+      DeploymentInfo deploymentInfo = summary.getDeploymentInfo();
+      if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
+        k8sInfo.setHelmChartInfo(((ContainerDeploymentInfoWithLabels) deploymentInfo).getHelmChartInfo());
+      }
+    });
   }
 
   private void syncK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
@@ -533,8 +546,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
           if (stepExecutionSummary instanceof HelmSetupExecutionSummary) {
             HelmSetupExecutionSummary helmSetupExecutionSummary = (HelmSetupExecutionSummary) stepExecutionSummary;
             labels.add(aLabel().withName("release").withValue(helmSetupExecutionSummary.getReleaseName()).build());
-            deploymentInfo = getContainerDeploymentInfosWithLabelsForHelm(
-                clusterName, helmSetupExecutionSummary.getNamespace(), labels, helmSetupExecutionSummary);
+            deploymentInfo =
+                getContainerDeploymentInfosWithLabelsForHelm(clusterName, helmSetupExecutionSummary.getNamespace(),
+                    labels, helmSetupExecutionSummary, workflowExecution.getHelmExecutionSummary());
           } else {
             KubernetesSteadyStateCheckExecutionSummary kubernetesSteadyStateCheckExecutionSummary =
                 (KubernetesSteadyStateCheckExecutionSummary) stepExecutionSummary;
@@ -592,8 +606,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
         .build();
   }
 
-  private DeploymentInfo getContainerDeploymentInfosWithLabelsForHelm(
-      String clusterName, String namespace, List<Label> labels, HelmSetupExecutionSummary executionSummary) {
+  @VisibleForTesting
+  DeploymentInfo getContainerDeploymentInfosWithLabelsForHelm(String clusterName, String namespace, List<Label> labels,
+      HelmSetupExecutionSummary executionSummary, HelmExecutionSummary helmExecutionSummary) {
     Integer version = executionSummary.getRollbackVersion() == null ? executionSummary.getNewVersion()
                                                                     : executionSummary.getRollbackVersion();
 
@@ -606,6 +621,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         .namespace(namespace)
         .labels(labels)
         .newVersion(version.toString())
+        .helmChartInfo(helmExecutionSummary.getHelmChartInfo())
         .build();
   }
 
