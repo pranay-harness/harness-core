@@ -162,7 +162,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
             .startMinute((int) (dataCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
             .startTime(dataCollectionStartTimeStamp)
             // Collection time is amount of time data collection needs to happen
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration(context)))
             .initialDelayMinutes(DELAY_MINUTES)
             // its a counter for each minute data. So basically the max value of
             // dataCollectionMinute can be equal to timeDuration

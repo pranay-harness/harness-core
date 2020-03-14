@@ -6,6 +6,7 @@ import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LO
 import static software.wings.common.VerificationConstants.STACK_DRIVER_DEFAULT_HOSTNAME;
 
 import com.github.reinert.jjschema.Attributes;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
@@ -22,6 +23,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.util.Set;
 
 @Slf4j
+@FieldNameConstants(innerTypeName = "StackDriverLogStateKeys")
 public class StackDriverLogState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "GCP account") private String analysisServerConfigId;
 
