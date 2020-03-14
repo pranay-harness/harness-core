@@ -137,6 +137,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.FeatureName;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
@@ -1737,11 +1738,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           return null;
         }
 
-        if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-          return assignTask(delegateId, taskId, delegateTask);
-        } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
+        // PL-9595 - Revalidate all tasks that are already whitelisted before executing them
+        if ((featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
+                && assignDelegateService.isWhitelisted(delegateTask, delegateId))
+            || assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
           return DelegateTaskPackage.builder().delegateTask(delegateTask).build();
+        } else if (!featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
+            && assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+          // Directly assign task only when FF is off and task is already whitelisted.
+          return assignTask(delegateId, taskId, delegateTask);
         } else {
           logger.info("Delegate is blacklisted for task");
           return null;
