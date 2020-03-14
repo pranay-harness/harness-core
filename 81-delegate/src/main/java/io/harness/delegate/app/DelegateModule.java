@@ -2,9 +2,12 @@ package io.harness.delegate.app;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -268,87 +271,141 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by peeyushaggarwal on 11/29/16.
- */
 public class DelegateModule extends DependencyModule {
+  @Provides
+  @Singleton
+  @Named("heartbeatExecutor")
+  public ScheduledExecutorService heartbeatExecutor() {
+    ScheduledExecutorService heartbeatExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("heartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { heartbeatExecutor.shutdownNow(); }));
+    return heartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("localHeartbeatExecutor")
+  public ScheduledExecutorService localHeartbeatExecutor() {
+    ScheduledExecutorService localHeartbeatExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { localHeartbeatExecutor.shutdownNow(); }));
+    return localHeartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("upgradeExecutor")
+  public ScheduledExecutorService upgradeExecutor() {
+    ScheduledExecutorService upgradeExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("upgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { upgradeExecutor.shutdownNow(); }));
+    return upgradeExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("inputExecutor")
+  public ScheduledExecutorService inputExecutor() {
+    ScheduledThreadPoolExecutor inputExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("input-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { inputExecutor.shutdownNow(); }));
+    return inputExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("installCheckExecutor")
+  public ScheduledExecutorService installCheckExecutor() {
+    ScheduledExecutorService installCheckExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("installCheck-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { installCheckExecutor.shutdownNow(); }));
+    return installCheckExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("verificationExecutor")
+  public ScheduledExecutorService verificationExecutor() {
+    ScheduledExecutorService verificationExecutor = new ScheduledThreadPoolExecutor(
+        2, new ThreadFactoryBuilder().setNameFormat("verification-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { verificationExecutor.shutdownNow(); }));
+    return verificationExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("verificationDataCollectorExecutor")
+  public ExecutorService verificationDataCollectorExecutor() {
+    ExecutorService verificationDataCollectorExecutor = ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder()
+            .setNameFormat("verificationDataCollector-%d")
+            .setPriority(Thread.MIN_PRIORITY)
+            .build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { verificationDataCollectorExecutor.shutdownNow(); }));
+    return verificationDataCollectorExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("alternativeExecutor")
+  public ExecutorService alternativeExecutor() {
+    ExecutorService alternativeExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("alternative-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { alternativeExecutor.shutdownNow(); }));
+    return alternativeExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("systemExecutor")
+  public ExecutorService systemExecutor() {
+    ExecutorService systemExecutor = ThreadPool.create(4, 9, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { systemExecutor.shutdownNow(); }));
+    return systemExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("asyncExecutor")
+  public ExecutorService asyncExecutor() {
+    ExecutorService asyncExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("async-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncExecutor.shutdownNow(); }));
+    return asyncExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("artifactExecutor")
+  public ExecutorService artifactExecutor() {
+    ExecutorService artifactExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("artifact-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { artifactExecutor.shutdownNow(); }));
+    return artifactExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("timeoutExecutor")
+  public ExecutorService timeoutExecutor() {
+    ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("timeout-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { timeoutExecutor.shutdownNow(); }));
+    return timeoutExecutor;
+  }
+
   @Override
   protected void configure() {
     bind(DelegateService.class).to(DelegateServiceImpl.class);
     bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("heartbeatExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("Heartbeat-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("localHeartbeatExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder()
-                .setNameFormat("LocalHeartbeat-Thread")
-                .setPriority(Thread.MAX_PRIORITY)
-                .build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("upgradeExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("UpgradeCheck-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ScheduledThreadPoolExecutor(
             1, new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("inputExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("installCheckExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("InstallCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
-
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("verificationExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(2,
-            new ThreadFactoryBuilder()
-                .setNameFormat("Verification-Thread-%d")
-                .setPriority(Thread.NORM_PRIORITY)
-                .build()));
-
     bind(ExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutorService"))
         .toInstance(ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("task-poll-exec-%d").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("verificationDataCollector"))
-        .toInstance(ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder()
-                .setNameFormat("Verification-Data-Collector-%d")
-                .setPriority(Thread.MIN_PRIORITY)
-                .build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("systemExecutor"))
-        .toInstance(ThreadPool.create(4, 9, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("asyncExecutor"))
-        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("alternativeExecutor"))
-        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder()
-                .setNameFormat("alternative-validation-task-%d")
-                .setPriority(Thread.MIN_PRIORITY)
-                .build()));
-
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("artifactExecutor"))
-        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder()
-                .setNameFormat("artifact-collection-%d")
-                .setPriority(Thread.MIN_PRIORITY)
-                .build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("timeoutExecutor"))
-        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);

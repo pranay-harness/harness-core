@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 @Singleton
 @Slf4j
 public class DataCollectionExecutorService {
-  @Inject @Named("verificationDataCollector") protected ExecutorService dataCollectionService;
+  @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
 
   public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);

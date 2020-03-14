@@ -111,7 +111,7 @@ public class VerificationServiceModule extends AbstractModule {
                 .build()));
 
     bind(ExecutorService.class)
-        .annotatedWith(Names.named("verificationDataCollector"))
+        .annotatedWith(Names.named("verificationDataCollectorExecutor"))
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("Verification-Data-Collector-%d")
@@ -147,7 +147,7 @@ public class VerificationServiceModule extends AbstractModule {
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
+          getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
     } catch (IOException e) {
       throw new RuntimeException("Could not load versionInfo.yaml", e);
