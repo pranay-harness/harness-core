@@ -941,7 +941,7 @@ public class WingsModule extends DependencyModule {
     bind(PipelineGovernanceService.class).to(PipelineGovernanceServiceImpl.class);
 
     bind(ExecutorService.class)
-        .annotatedWith(Names.named("verificationDataCollector"))
+        .annotatedWith(Names.named("verificationDataCollectorExecutor"))
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("Verification-Data-Collector-%d")
