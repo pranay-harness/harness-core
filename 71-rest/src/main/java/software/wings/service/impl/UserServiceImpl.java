@@ -56,6 +56,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
+import graphql.VisibleForTesting;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -293,6 +294,16 @@ public class UserServiceImpl implements UserService {
     return userInvite;
   }
 
+  /*
+   * This function validates the account Name give in the userInvite is correct
+   *
+   */
+  @VisibleForTesting
+  void validateAccountName(String companyName, String accountName) {
+    Account account = Account.Builder.anAccount().withCompanyName(companyName).withAccountName(accountName).build();
+    accountService.validateAccount(account);
+  }
+
   /**
    * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
    * invitation completion.
@@ -314,6 +325,9 @@ public class UserServiceImpl implements UserService {
       userInvite.setCompleted(false);
       String hashed = hashpw(new String(userInvite.getPassword()), BCrypt.gensalt());
       userInvite.setPasswordHash(hashed);
+
+      // validate that the account name or the company name is correct
+      validateAccountName(userInvite.getCompanyName(), userInvite.getCompanyName());
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
@@ -2589,6 +2603,11 @@ public class UserServiceImpl implements UserService {
 
   private Account getAccountFromResetPasswordToken(String resetPasswordToken) {
     User user = verifyJWTToken(resetPasswordToken, JWT_CATEGORY.PASSWORD_SECRET);
+    // Adding this check for infer checks, this condition won't happen, as if the user is null
+    // verifyJWTToken will throw a exception
+    if (user == null) {
+      return null;
+    }
     return accountService.get(user.getDefaultAccountId());
   }
 

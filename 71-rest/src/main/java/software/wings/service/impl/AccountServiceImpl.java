@@ -289,7 +289,7 @@ public class AccountServiceImpl implements AccountService {
         Event.builder().eventData(eventData).eventType(EventType.ACCOUNT_ENTITY_CHANGE).build());
   }
 
-  private void validateAccount(Account account) {
+  public void validateAccount(Account account) {
     String companyName = account.getCompanyName();
     String accountName = account.getAccountName();
     if (isBlank(companyName)) {
