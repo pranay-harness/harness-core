@@ -105,6 +105,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private int initialDelaySeconds;
   private int dataCollectionIntervalMins;
   private boolean isHistoricalDataCollection;
+  private boolean inspectHostsInLogs;
 
   @JsonIgnore
   @SchemaIgnore
@@ -125,7 +126,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
       DataCollectionInfo dataCollectionInfo, int initialDelaySeconds, int dataCollectionIntervalMins,
-      boolean isHistoricalDataCollection, String customThresholdRefId) {
+      boolean isHistoricalDataCollection, String customThresholdRefId, boolean inspectHostsInLogs) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -168,6 +169,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     this.dataCollectionIntervalMins = dataCollectionIntervalMins;
     this.isHistoricalDataCollection = isHistoricalDataCollection;
     this.customThresholdRefId = customThresholdRefId;
+    this.inspectHostsInLogs = inspectHostsInLogs;
   }
 
   public LogClusterContext getClusterContext() {

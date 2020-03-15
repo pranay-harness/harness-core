@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
@@ -65,19 +64,9 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
     private VerificationManagerClient managerClient;
     private DataStoreService dataStoreService;
 
-    private Set<String> getCollectedNodes() {
-      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        Set<String> nodes = Sets.newHashSet(context.getControlNodes().keySet());
-        nodes.addAll(context.getTestNodes().keySet());
-        return nodes;
-      } else {
-        return Sets.newHashSet(context.getTestNodes().keySet());
-      }
-    }
-
     private void cluster() {
       try {
-        Set<String> nodes = getCollectedNodes();
+        Set<String> nodes = analysisService.getCollectedNodes(context, ClusterLevel.L0);
         // TODO handle pause
         for (String node : nodes) {
           logger.info("Running cluster task for {}, node {}", context.getStateExecutionId(), node);
@@ -85,6 +74,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
            * Work flow is invalid
            * exit immediately
            */
+
           if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             logger.info("Log Cluster : State no longer valid. skipping." + context.getStateExecutionId());
             break;

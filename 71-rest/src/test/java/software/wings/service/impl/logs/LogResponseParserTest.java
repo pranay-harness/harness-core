@@ -95,4 +95,39 @@ public class LogResponseParserTest extends CategoryTest {
     assertThat(logs).isNotNull();
     assertThat(5 == logs.size()).isTrue();
   }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseValidResponse_doHostBasedFiltering() throws IOException {
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+
+    List<String> hostList = Arrays.asList("harness-manager-1.0.5922-198-b5bbc487d-bcqx6");
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
+    responseMappers.put("timestamp",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.@timestamp"))
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+            .build());
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("host")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.kubernetes.pod.name"))
+            .build());
+    responseMappers.put("logMessage",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("logMessage")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.log"))
+            .build());
+
+    LogResponseParser parser = new LogResponseParser();
+    LogResponseParser.LogResponseData data =
+        new LogResponseData(textLoad, new HashSet<>(hostList), true, responseMappers);
+
+    List<LogElement> logs = parser.extractLogs(data);
+    assertThat(logs).isNotNull();
+    assertThat(1 == logs.size()).isTrue();
+  }
 }

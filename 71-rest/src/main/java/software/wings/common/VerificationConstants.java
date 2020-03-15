@@ -226,6 +226,7 @@ public class VerificationConstants {
   public static final String KUBERNETES_HOSTNAME = "pod_name";
   public static final String DATA_DOG_DEFAULT_HOSTNAME = "container_id";
   public static final String STACK_DRIVER_DEFAULT_HOSTNAME = "container_name";
+  public static final String NON_HOST_PREVIOUS_ANALYSIS = "NON_HOST_PREVIOUS_ANALYSIS";
   public static final long KB = 1024;
   public static final long MB = KB * KB;
   public static final long GB = MB * MB;

@@ -211,7 +211,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .startMinute(0)
             .responseDefinition(constructLogDefinitions(projectId, releaseStage))
-            .shouldInspectHosts(!isBrowserApplication())
+            .shouldDoHostBasedFiltering(!isBrowserApplication())
             .collectionFrequency(1)
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(accountId)

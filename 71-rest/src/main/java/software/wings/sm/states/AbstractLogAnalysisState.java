@@ -426,6 +426,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
+            .inspectHostsInLogs(shouldInspectHostsForLogAnalysis())
             .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
             .build();
 
@@ -445,6 +446,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           getCVTaskFeatureName().get(), isCVTaskEnqueuingEnabled(analysisContext.getAccountId()));
     }
     return analysisContext;
+  }
+
+  protected boolean shouldInspectHostsForLogAnalysis() {
+    return true;
   }
 
   public String getHostnameField(ExecutionContext context) {
@@ -503,7 +508,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .hostnameField(analysisContext.getHostNameField())
             .responseDefinition(
                 datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField(), false))
-            .shouldInspectHosts(true)
+            .shouldDoHostBasedFiltering(shouldInspectHostsForLogAnalysis())
             .collectionFrequency(1)
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(analysisContext.getAccountId())
