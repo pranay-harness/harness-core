@@ -1,6 +1,8 @@
 package software.wings.resources;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,8 +13,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.rest.RestResponse;
@@ -30,6 +34,8 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
+import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -53,6 +59,8 @@ public class DelegateAgentResourceTest {
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
+      mock(ArtifactCollectionResponseHandler.class);
 
   @Parameter public String apiUrl;
 
@@ -64,8 +72,8 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new DelegateAgentResource(
-              delegateService, accountService, wingsPersistence, delegateRequestRateLimiter, subdomainUrlHelper))
+          .addResource(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -170,5 +178,27 @@ public class DelegateAgentResourceTest {
     assertThat(captorValue.getAccountId()).isEqualTo(ACCOUNT_ID);
     Delegate resource = restResponse.getResource();
     assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldProcessArtifactCollection() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse =
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .buildSourceResponse(BuildSourceResponse.builder().build())
+            .build();
+
+    RestResponse<Boolean> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/artifact-collection/12345679?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(buildSourceExecutionResponse, MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<Boolean>>() {});
+
+    verify(artifactCollectionResponseHandler, atLeastOnce())
+        .processArtifactCollectionResult(buildSourceExecutionResponse);
   }
 }
