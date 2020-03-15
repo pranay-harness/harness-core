@@ -43,7 +43,8 @@ public class BillingCalculationService {
     if (null != instanceData.getTotalResource()) {
       cpuUnit = instanceData.getTotalResource().getCpuUnits();
       memoryMb = instanceData.getTotalResource().getMemoryMb();
-      if (instanceData.getMetaData().get(InstanceMetaDataConstants.CLUSTER_TYPE).equals(ClusterType.K8S.name())) {
+      if (null != instanceData.getMetaData().get(InstanceMetaDataConstants.CLUSTER_TYPE)
+          && instanceData.getMetaData().get(InstanceMetaDataConstants.CLUSTER_TYPE).equals(ClusterType.K8S.name())) {
         if (utilizationData.getAvgCpuUtilizationValue() > cpuUnit) {
           cpuUnit = utilizationData.getAvgCpuUtilizationValue();
         }
