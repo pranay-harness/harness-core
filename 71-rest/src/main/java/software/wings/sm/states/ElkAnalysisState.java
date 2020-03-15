@@ -237,12 +237,13 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
         .envId(getEnvId(context))
         .applicationId(context.getAppId())
         .query(getRenderedQuery())
-        .hostnameField(getHostnameField())
+        .hostnameField(getResolvedFieldValue(context, AbstractAnalysisStateKeys.hostnameField, getHostnameField()))
         .hosts(hosts)
         .indices(getResolvedFieldValue(context, ElkAnalysisStateKeys.indices, indices))
-        .messageField(messageField)
-        .timestampField(getTimestampField())
-        .timestampFieldFormat(getTimestampFormat())
+        .messageField(getResolvedFieldValue(context, ElkAnalysisStateKeys.messageField, messageField))
+        .timestampField(getResolvedFieldValue(context, ElkAnalysisStateKeys.timestampField, getTimestampField()))
+        .timestampFieldFormat(
+            getResolvedFieldValue(context, ElkAnalysisStateKeys.timestampFormat, getTimestampFormat()))
         .queryType(getQueryType())
         .build();
   }

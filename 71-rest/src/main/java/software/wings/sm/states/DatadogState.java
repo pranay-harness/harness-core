@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
 import static software.wings.common.VerificationConstants.DD_HOST_NAME_EXPRESSION;
 import static software.wings.common.VerificationConstants.DD_K8s_HOST_NAME;
@@ -28,20 +27,17 @@ import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -53,7 +49,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 
@@ -75,6 +70,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
+@FieldNameConstants(innerTypeName = "DatadogStateKeys")
 public class DatadogState extends AbstractMetricAnalysisState {
   private static final int DATA_COLLECTION_RATE_MINS = 5;
   private static final URL DATADOG_URL = DatadogState.class.getResource("/apm/datadog.yml");
@@ -108,17 +104,6 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Attributes(required = false, title = "Metrics") private String metrics;
 
   @Attributes(required = false, title = "Custom Metrics") private Map<String, Set<Metric>> customMetrics;
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
-  }
 
   public static Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> metricGroup(
       Map<String, List<APMMetricInfo>> metricInfos) {
@@ -172,28 +157,13 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    SettingAttribute settingAttribute = null;
-    String serverConfigId = analysisServerConfigId;
+    String serverConfigId =
+        getResolvedConnectorId(context, DatadogStateKeys.analysisServerConfigId, analysisServerConfigId);
     String serviceName = this.datadogServiceName;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        serverConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression serviceNameExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "datadogServiceName");
-      if (serviceNameExpression != null) {
-        serviceName = templateExpressionProcessor.resolveTemplateExpression(context, serviceNameExpression);
-      }
-    }
 
+    SettingAttribute settingAttribute = settingsService.get(serverConfigId);
     if (settingAttribute == null) {
-      settingAttribute = settingsService.get(serverConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No Datadog setting with id: " + analysisServerConfigId + " found");
-      }
+      throw new DataCollectionException("No Datadog setting with id: " + analysisServerConfigId + " found");
     }
 
     final DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
@@ -243,17 +213,6 @@ public class DatadogState extends AbstractMetricAnalysisState {
         DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
 
     return delegateService.queueTask(delegateTask);
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
   @Override
