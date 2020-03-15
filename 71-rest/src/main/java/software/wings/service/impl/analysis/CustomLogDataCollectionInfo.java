@@ -28,17 +28,17 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   private Map<String, String> options;
   private Map<String, Object> body;
   private int collectionFrequency;
-  private boolean shouldInspectHosts;
   private String hostnameSeparator;
+  private boolean shouldDoHostBasedFiltering = true;
 
   @Builder
   public CustomLogDataCollectionInfo(String baseUrl, String validationUrl, String dataUrl,
       Map<String, Map<String, ResponseMapper>> responseDefinition, Map<String, String> headers,
-      Map<String, String> options, Map<String, Object> body, int collectionFrequency, boolean shouldInspectHosts,
-      String accountId, String applicationId, String stateExecutionId, String cvConfidId, String workflowId,
-      String workflowExecutionId, String serviceId, String query, long startTime, long endTime, int startMinute,
-      int collectionTime, String hostnameField, Set<String> hosts, StateType stateType,
-      List<EncryptedDataDetail> encryptedDataDetails, int initialDelayMinutes, String hostnameSeparator) {
+      Map<String, String> options, Map<String, Object> body, int collectionFrequency, String accountId,
+      String applicationId, String stateExecutionId, String cvConfidId, String workflowId, String workflowExecutionId,
+      String serviceId, String query, long startTime, long endTime, int startMinute, int collectionTime,
+      String hostnameField, Set<String> hosts, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails,
+      int initialDelayMinutes, String hostnameSeparator, boolean shouldDoHostBasedFiltering) {
     super(accountId, applicationId, stateExecutionId, cvConfidId, workflowId, workflowExecutionId, serviceId, query,
         startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails,
         initialDelayMinutes);
@@ -50,8 +50,8 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     this.options = options;
     this.body = body;
     this.collectionFrequency = collectionFrequency;
-    this.shouldInspectHosts = shouldInspectHosts;
     this.hostnameSeparator = hostnameSeparator;
+    this.shouldDoHostBasedFiltering = shouldDoHostBasedFiltering;
   }
 
   @Override

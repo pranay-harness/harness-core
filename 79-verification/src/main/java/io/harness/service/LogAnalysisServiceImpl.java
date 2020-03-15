@@ -13,6 +13,7 @@ import static java.util.Collections.emptySet;
 import static software.wings.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
+import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
@@ -1136,6 +1137,40 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
+  public long getMinuteForHost(String appId, String stateExecutionId, String hostName, ClusterLevel clusterLevel) {
+    LogDataRecord record = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                               .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+                               .filter(LogDataRecordKeys.host, hostName)
+                               .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
+                               .order(Sort.ascending(LogDataRecordKeys.logCollectionMinute))
+                               .get();
+    if (record != null) {
+      return record.getLogCollectionMinute();
+    }
+    return -1;
+  }
+
+  @Override
+  public Set<String> getHostsForClusterLevel(
+      String appId, String fieldNameForQuery, String fieldValueForQuery, ClusterLevel... clusterLevels) {
+    Set<String> hosts = new HashSet<>();
+    Set<ClusterLevel> finalClusterLevels = Sets.newHashSet(clusterLevels);
+
+    Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                                  .filter(fieldNameForQuery, fieldValueForQuery)
+                                                  .field(LogDataRecordKeys.clusterLevel)
+                                                  .in(finalClusterLevels)
+                                                  .project(LogDataRecordKeys.logMessage, false);
+    try (HIterator<LogDataRecord> logRecordIterator = new HIterator<>(logDataRecordQuery.fetch())) {
+      while (logRecordIterator.hasNext()) {
+        final LogDataRecord logDataRecord = logRecordIterator.next();
+        hosts.add(logDataRecord.getHost());
+      }
+    }
+    return hosts;
+  }
+
+  @Override
   public long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status) {
     final LogMLAnalysisRecord mlAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
@@ -1196,5 +1231,29 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           ex);
     }
     return false;
+  }
+
+  public Set<String> getCollectedNodes(AnalysisContext context, ClusterLevel level) {
+    if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+      Set<String> nodes = Sets.newHashSet(context.getControlNodes().keySet());
+      if (ClusterLevel.L2 == level) {
+        nodes = new HashSet<>();
+      }
+      nodes.addAll(context.getTestNodes().keySet());
+      return nodes;
+    } else if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+        && !context.isInspectHostsInLogs()) {
+      // get the earliest H1 with hostname: NON_HOST_PREVIOUS_ANALYSIS
+      // and get all the hosts that have the same logCollectionMinute as that
+      long minute = getMinuteForHost(context.getAppId(), context.getStateExecutionId(), NON_HOST_PREVIOUS_ANALYSIS,
+          ClusterLevel.getHeartBeatLevel(level));
+      if (minute != -1) {
+        return getHostsForMinute(context.getAppId(), LogDataRecordKeys.stateExecutionId, context.getStateExecutionId(),
+            minute, ClusterLevel.getHeartBeatLevel(level));
+      }
+      return new HashSet<>();
+    } else {
+      return Sets.newHashSet(context.getTestNodes().keySet());
+    }
   }
 }

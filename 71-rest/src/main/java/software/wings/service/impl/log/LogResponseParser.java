@@ -38,7 +38,7 @@ public class LogResponseParser {
   public static class LogResponseData {
     String responseText;
     Set<String> hostList;
-    boolean shouldInspectHosts;
+    boolean shouldDoHostBasedFiltering;
     private Map<String, ResponseMapper> responseMappers;
   }
 
@@ -76,13 +76,13 @@ public class LogResponseParser {
     createRecords(output, resultMap, timestampFormat);
     // filter only the hosts we care about
     List<LogElement> logs = new ArrayList<>();
-    if (resultMap.size() > 0 && data.shouldInspectHosts) {
+    if (resultMap.size() > 0 && data.shouldDoHostBasedFiltering) {
       for (LogElement logElement : resultMap.values()) {
         if (data.hostList.contains(logElement.getHost())) {
           logs.add(logElement);
         }
       }
-    } else if (!data.shouldInspectHosts) {
+    } else if (!data.shouldDoHostBasedFiltering) {
       logs.addAll(resultMap.values());
     }
     return logs;

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
 import com.google.common.collect.Lists;
 
@@ -154,9 +155,11 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     }
 
     final APMVerificationConfig logConfig = (APMVerificationConfig) settingAttribute.getValue();
+    boolean shouldDoHostbasedFiltering = shouldInspectHostsForLogAnalysis();
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
 
+    Map<String, Map<String, ResponseMapper>> logDefinitions = constructLogDefinitions(context, logCollectionInfos);
     CustomLogDataCollectionInfo dataCollectionInfo =
         CustomLogDataCollectionInfo.builder()
             .baseUrl(logConfig.getUrl())
@@ -174,10 +177,11 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .startMinute(0)
-            .responseDefinition(constructLogDefinitions(context, logCollectionInfos))
+            .responseDefinition(logDefinitions)
             .collectionFrequency(getDataCollectionRate())
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(accountId)
+            .shouldDoHostBasedFiltering(shouldDoHostbasedFiltering)
             .build();
 
     String waitId = generateUuid();
@@ -207,6 +211,17 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .build(),
         waitId);
     return delegateService.queueTask(delegateTask);
+  }
+
+  @Override
+  protected boolean shouldInspectHostsForLogAnalysis() {
+    boolean shouldDoHostbasedFiltering = true;
+    if (getComparisonStrategy().equals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)) {
+      shouldDoHostbasedFiltering = logCollectionInfos.stream().allMatch(logCollectionInfo
+          -> logCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
+              || logCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER));
+    }
+    return shouldDoHostbasedFiltering;
   }
 
   public static Map<String, Map<String, ResponseMapper>> constructLogDefinitions(

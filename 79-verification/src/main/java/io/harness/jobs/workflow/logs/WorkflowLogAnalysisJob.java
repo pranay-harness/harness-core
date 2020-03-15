@@ -1,6 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -19,7 +18,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import software.wings.beans.FeatureName;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -104,16 +102,6 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
       }
     }
 
-    private Set<String> getCollectedNodes() {
-      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        Set<String> nodes = Sets.newHashSet(context.getControlNodes().keySet());
-        nodes.addAll(context.getTestNodes().keySet());
-        return nodes;
-      } else {
-        return Sets.newHashSet(context.getTestNodes().keySet());
-      }
-    }
-
     @Override
     public Long call() {
       boolean completeCron = false;
@@ -140,27 +128,31 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
           completeCron = true;
 
         } else {
-          long logAnalysisClusteringTestMinute =
-              analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
-                  context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
+          long logAnalysisClusteringTestMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(),
+              context.getAppId(), context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1,
+              analysisService.getCollectedNodes(context, ClusterLevel.L1));
           logger.info("For {} logAnalysisClusteringTestMinute is {}", context.getStateExecutionId(),
               logAnalysisClusteringTestMinute);
           if (logAnalysisClusteringTestMinute != -1) {
             boolean hasTestRecords =
                 analysisService.hasDataRecords(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
-                    context.getStateType(), getCollectedNodes(), ClusterLevel.L1, logAnalysisClusteringTestMinute);
+                    context.getStateType(), analysisService.getCollectedNodes(context, ClusterLevel.L1),
+                    ClusterLevel.L1, logAnalysisClusteringTestMinute);
             logger.info("For {} hasTestRecords is {}", context.getStateExecutionId(), hasTestRecords);
             if (hasTestRecords) {
-              preProcess(logAnalysisClusteringTestMinute, context.getQuery(), getCollectedNodes());
+              preProcess(logAnalysisClusteringTestMinute, context.getQuery(),
+                  analysisService.getCollectedNodes(context, ClusterLevel.L1));
             } else {
               analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-                  context.getAppId(), context.getQuery(), getCollectedNodes(), logAnalysisClusteringTestMinute,
-                  ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
+                  context.getAppId(), context.getQuery(), analysisService.getCollectedNodes(context, ClusterLevel.L1),
+                  logAnalysisClusteringTestMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
+                  ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
             }
           }
 
           logAnalysisMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
-              context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
+              context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2,
+              analysisService.getCollectedNodes(context, ClusterLevel.L2));
           if (logAnalysisMinute != -1) {
             logger.info("For {} logAnalysisMinute is {}", context.getStateExecutionId(), logAnalysisMinute);
             if (learningEngineService.hasAnalysisTimedOut(

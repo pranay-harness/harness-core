@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.SPLUNKV2;
@@ -72,6 +73,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -123,6 +125,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2282,5 +2285,106 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
     assertThat(analysisService.isAnalysisPresentForMinute(cvConfigId, minute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
         .isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCollectednNodes_CompareCurrent() {
+    Map<String, String> testNodes = new HashMap<>();
+    testNodes.put("testNode1", "group1");
+    testNodes.put("testNode2", "group1");
+
+    Map<String, String> controlNodes = new HashMap<>();
+    controlNodes.put("controlNode1", "group1");
+    controlNodes.put("controlNode2", "group1");
+
+    AnalysisContext context = AnalysisContext.builder()
+                                  .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT)
+                                  .testNodes(testNodes)
+                                  .controlNodes(controlNodes)
+                                  .serviceId(serviceId)
+                                  .stateExecutionId(stateExecutionId)
+                                  .appId(appId)
+                                  .build();
+    wingsPersistence.save(context);
+
+    Set<String> nodes = analysisService.getCollectedNodes(context, null);
+    assertThat(nodes).isNotNull();
+    assertThat(nodes.size()).isEqualTo(4);
+    assertThat(nodes.containsAll(Arrays.asList("testNode1", "testNode2", "controlNode2", "controlNode2"))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCollectednNodes_ComparePreviousInspectHosts() {
+    Map<String, String> testNodes = new HashMap<>();
+    testNodes.put("testNode1", "group1");
+    testNodes.put("testNode2", "group1");
+
+    Map<String, String> controlNodes = new HashMap<>();
+    controlNodes.put("controlNode1", "group1");
+    controlNodes.put("controlNode2", "group1");
+
+    AnalysisContext context = AnalysisContext.builder()
+                                  .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+                                  .inspectHostsInLogs(true)
+                                  .testNodes(testNodes)
+                                  .controlNodes(controlNodes)
+                                  .serviceId(serviceId)
+                                  .stateExecutionId(stateExecutionId)
+                                  .appId(appId)
+                                  .build();
+    wingsPersistence.save(context);
+
+    Set<String> nodes = analysisService.getCollectedNodes(context, null);
+    assertThat(nodes).isNotNull();
+    assertThat(nodes.size()).isEqualTo(2);
+    assertThat(nodes.containsAll(Arrays.asList("testNode1", "testNode2"))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCollectednNodes_ComparePreviousNoInspectHostsL0() {
+    Map<String, String> testNodes = new HashMap<>();
+    testNodes.put("testNode1", "group1");
+    testNodes.put("testNode2", "group1");
+
+    Map<String, String> controlNodes = new HashMap<>();
+    testNodes.put("controlNode1", "group1");
+    testNodes.put("controlNode2", "group1");
+
+    AnalysisContext context = AnalysisContext.builder()
+                                  .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+                                  .inspectHostsInLogs(false)
+                                  .testNodes(testNodes)
+                                  .controlNodes(controlNodes)
+                                  .serviceId(serviceId)
+                                  .stateExecutionId(stateExecutionId)
+                                  .appId(appId)
+                                  .build();
+    wingsPersistence.save(context);
+    for (int i = 0; i < 10; i++) {
+      LogDataRecord record = LogDataRecord.builder()
+                                 .logCollectionMinute(1)
+                                 .stateExecutionId(stateExecutionId)
+                                 .clusterLevel(ClusterLevel.H0)
+                                 .host("host" + i)
+                                 .build();
+      wingsPersistence.save(record);
+    }
+    LogDataRecord record = LogDataRecord.builder()
+                               .logCollectionMinute(1)
+                               .stateExecutionId(stateExecutionId)
+                               .clusterLevel(ClusterLevel.H0)
+                               .host(NON_HOST_PREVIOUS_ANALYSIS)
+                               .build();
+    wingsPersistence.save(record);
+
+    Set<String> nodes = analysisService.getCollectedNodes(context, ClusterLevel.L0);
+    assertThat(nodes).isNotNull();
+    assertThat(nodes.size()).isEqualTo(11);
   }
 }

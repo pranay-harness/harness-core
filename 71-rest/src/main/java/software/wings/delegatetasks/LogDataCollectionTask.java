@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.BODY_STRING;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
+import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.collect.BiMap;
@@ -44,13 +45,16 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Praveen
@@ -238,7 +242,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           delegateLogService.save(getAccountId(), apiCallLog);
           return JsonUtils.asJson(response.body());
         } else {
-          apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
+          apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
           delegateLogService.save(getAccountId(), apiCallLog);
           throw new WingsException("Exception while fetching logs from provider. Error code " + response.code());
         }
@@ -263,8 +267,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(),
                 dataCollectionInfo.getHosts(), dataCollectionInfo.getHostnameSeparator());
 
-            LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
-                dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldInspectHosts(), logDataInfo.getValue());
+            LogResponseParser.LogResponseData data =
+                new LogResponseParser.LogResponseData(searchResponse, dataCollectionInfo.getHosts(),
+                    dataCollectionInfo.isShouldDoHostBasedFiltering(), logDataInfo.getValue());
             // parse the results that were fetched.
             List<LogElement> logs = new LogResponseParser().extractLogs(data);
             int i = 0;
@@ -273,20 +278,32 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
               log.setLogCollectionMinute(logCollectionMinute);
               log.setClusterLabel(String.valueOf(i++));
               log.setQuery(dataCollectionInfo.getQuery());
-              if (!dataCollectionInfo.isShouldInspectHosts()) {
+              if (log.getHost() == null) {
                 log.setHost(tempHost);
               }
             }
 
-            for (String host : dataCollectionInfo.getHosts()) {
-              addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logs);
+            List<LogElement> filteredLogs = new ArrayList<>(logs);
+            Set<String> allHosts = new HashSet<>(dataCollectionInfo.getHosts());
+            if (dataCollectionInfo.isShouldDoHostBasedFiltering()) {
+              filteredLogs = logs.stream()
+                                 .filter(log -> dataCollectionInfo.getHosts().contains(log.getHost()))
+                                 .collect(Collectors.toList());
+            }
+            filteredLogs.forEach(log -> allHosts.add(log.getHost()));
+            for (String host : allHosts) {
+              addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
+            }
+
+            if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {
+              addHeartbeat(NON_HOST_PREVIOUS_ANALYSIS, dataCollectionInfo, logCollectionMinute, filteredLogs);
             }
 
             boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
                 dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                 dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
                 dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                dataCollectionInfo.getServiceId(), delegateTaskId, logs);
+                dataCollectionInfo.getServiceId(), delegateTaskId, filteredLogs);
             if (!response) {
               logger.error(
                   "Error while saving logs for stateExecutionId: {}", dataCollectionInfo.getStateExecutionId());

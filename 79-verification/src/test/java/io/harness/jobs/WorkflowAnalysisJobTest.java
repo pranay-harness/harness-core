@@ -223,6 +223,8 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     when(logAnalysisService.getCollectionMinuteForLevel(
              query, appId, stateExecutionId, StateType.SUMO, ClusterLevel.L2, collectedNodes))
         .thenReturn(logAnalysisMinute);
+
+    when(logAnalysisService.getCollectedNodes(any(), any())).thenReturn(Sets.newHashSet("test1", "test2"));
   }
 
   private AnalysisContext getAnalysisContext(StateType appDynamics) {
@@ -244,6 +246,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
         .isSSL(true)
         .appPort(1234)
         .comparisonStrategy(COMPARE_WITH_PREVIOUS)
+        .inspectHostsInLogs(true)
         .timeDuration(15)
         .stateType(appDynamics)
         .analysisServerConfigId(analysisServerConfigId)

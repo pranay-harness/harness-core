@@ -69,7 +69,7 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.accountId = context.getAccountId();
     this.workflowId = context.getWorkflowId();
     this.serviceId = context.getServiceId();
-    this.testNodes = context.getTestNodes().keySet();
+    this.testNodes = analysisService.getCollectedNodes(context, ClusterLevel.L2);
     this.controlNodes = context.getControlNodes().keySet();
     this.query = context.getQuery();
     this.logAnalysisMinute = logAnalysisMinute;

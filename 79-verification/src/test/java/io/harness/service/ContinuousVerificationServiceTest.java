@@ -1432,7 +1432,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                                          .serviceId(serviceId)
 
                                                          .hostnameSeparator(DatadogLogState.HOST_NAME_SEPARATOR)
-                                                         .shouldInspectHosts(true)
+                                                         .shouldDoHostBasedFiltering(true)
                                                          .collectionFrequency(1)
                                                          .collectionTime(15)
                                                          .accountId(accountId)

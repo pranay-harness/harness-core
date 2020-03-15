@@ -106,6 +106,11 @@ public interface LogAnalysisService {
   Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery, long logRecordMinute,
       ClusterLevel... clusterLevels);
 
+  long getMinuteForHost(String appId, String stateExecutionId, String hostName, ClusterLevel clusterLevel);
+
+  Set<String> getHostsForClusterLevel(
+      String appId, String fieldNameForQuery, String fieldValueForQuery, ClusterLevel... clusterLevels);
+
   long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status);
 
   long getLastWorkflowAnalysisMinute(String appId, String stateExecutionId, LogMLAnalysisStatus status);
@@ -116,4 +121,5 @@ public interface LogAnalysisService {
 
   boolean createAndUpdateFeedbackAnalysis(String fieldName, String fieldValue, long analysisMinute);
   int getEndTimeForLogAnalysis(AnalysisContext context);
+  Set<String> getCollectedNodes(AnalysisContext context, ClusterLevel level);
 }
