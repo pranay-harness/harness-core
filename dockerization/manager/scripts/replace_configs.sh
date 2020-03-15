@@ -173,8 +173,8 @@ if [[ "" != "$jwtIdentityServiceSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtIdentityServiceSecret "$jwtIdentityServiceSecret"
 fi
 
-if [[ "" != "jwtDataHandlerSecret" ]]; then
-  yq write -i $CONFIG_FILE portal.jwtDataHandlerSecret "jwtDataHandlerSecret"
+if [[ "" != "$jwtDataHandlerSecret" ]]; then
+  yq write -i $CONFIG_FILE portal.jwtDataHandlerSecret "$jwtDataHandlerSecret"
 fi
 
 if [[ "" != "$FEATURES" ]]; then
