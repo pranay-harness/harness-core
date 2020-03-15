@@ -133,7 +133,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     InstanceData instanceData =
         InstanceData.builder().instanceType(InstanceType.ECS_TASK_EC2).metaData(metaDataMap).build();
     String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
-    assertThat(cloudServiceName).isEqualTo("dangling_task_service_ec2");
+    assertThat(cloudServiceName).isEqualTo("none");
   }
 
   @Test
@@ -145,7 +145,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     InstanceData instanceData =
         InstanceData.builder().instanceType(InstanceType.ECS_TASK_FARGATE).metaData(metaDataMap).build();
     String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
-    assertThat(cloudServiceName).isEqualTo("dangling_task_service_fargate");
+    assertThat(cloudServiceName).isEqualTo("none");
   }
 
   @Test
