@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -113,8 +114,9 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     return yaml;
   }
 
+  @VisibleForTesting
   @Override
-  protected SettingAttribute toBean(
+  public SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Optional<SettingAttribute> optionalPrevious = Optional.ofNullable(previous);
     String uuid = null;
@@ -133,6 +135,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setUsername(yaml.getUsername());
     kubernetesClusterConfig.setClientKeyAlgo(yaml.getClientKeyAlgo());
 
+    kubernetesClusterConfig.setEncryptedServiceAccountToken(yaml.getServiceAccountToken());
     kubernetesClusterConfig.setEncryptedPassword(yaml.getPassword());
     kubernetesClusterConfig.setEncryptedCaCert(yaml.getCaCert());
     kubernetesClusterConfig.setEncryptedClientCert(yaml.getClientCert());
