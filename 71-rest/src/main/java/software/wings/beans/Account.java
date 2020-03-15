@@ -42,9 +42,14 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Indexes(@Index(options = @IndexOptions(name = "next_iteration_license_info2"),
-    fields = { @Field("licenseExpiryCheckIteration")
-               , @Field("encryptedLicenseInfo") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "next_iteration_license_info2"),
+      fields = { @Field("licenseExpiryCheckIteration")
+                 , @Field("encryptedLicenseInfo") })
+  ,
+      @Index(options = @IndexOptions(name = "next_iteration_git_sync_error"),
+          fields = { @Field("gitSyncExpiryCheckIteration") })
+})
 
 public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
@@ -103,6 +108,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @Indexed private Long workflowDataCollectionIteration;
   @Indexed private Long usageMetricsTaskIteration;
   @Indexed private Long licenseExpiryCheckIteration;
+  @Indexed private Long gitSyncExpiryCheckIteration;
   @Indexed private Long secretManagerValidationIterator;
   private boolean cloudCostEnabled;
 
@@ -375,6 +381,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.gitSyncExpiryCheckIteration.equals(fieldName)) {
+      this.gitSyncExpiryCheckIteration = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -398,6 +409,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       return this.licenseExpiryCheckIteration;
+    }
+
+    else if (AccountKeys.gitSyncExpiryCheckIteration.equals(fieldName)) {
+      return this.gitSyncExpiryCheckIteration;
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -601,5 +616,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String name = "name";
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
     public static final String subdomainUrl = "subdomainUrl";
+    public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
   }
 }
