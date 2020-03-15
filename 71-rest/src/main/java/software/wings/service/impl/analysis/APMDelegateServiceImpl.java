@@ -16,7 +16,6 @@ import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.APMValidateCollectorConfig;
@@ -59,18 +58,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
           resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
     }
 
-    final Response<Object> response;
-    try {
-      response = request.execute();
-      if (response.isSuccessful()) {
-        return true;
-      } else {
-        logger.error("Request not successful. Reason: {}", response);
-        throw new WingsException(response.errorBody().string());
-      }
-    } catch (Exception e) {
-      throw new WingsException(e);
-    }
+    requestExecutor.executeRequest(request);
+    return true;
   }
 
   private String resolveDollarReferences(String input) {

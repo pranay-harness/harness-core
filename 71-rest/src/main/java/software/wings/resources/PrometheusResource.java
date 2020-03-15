@@ -123,15 +123,6 @@ public class PrometheusResource implements LogAnalysisResource {
     return invalidFields;
   }
 
-  public static List<TimeSeries> renderFetchQueries(List<TimeSeries> timeSeriesToAnalyze) {
-    timeSeriesToAnalyze.stream()
-        .filter(timeSeries -> !timeSeries.getUrl().contains("api/v1/query_range"))
-        .forEach(timeSeries
-            -> timeSeries.setUrl(
-                "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=" + timeSeries.getUrl()));
-    return timeSeriesToAnalyze;
-  }
-
   /**
    * Api to fetch Metric data for given node.
    * @param accountId

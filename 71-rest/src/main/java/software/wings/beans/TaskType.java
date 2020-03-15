@@ -338,8 +338,6 @@ public enum TaskType {
   ECS_COMMAND_TASK(TaskGroup.AWS, EcsCommandTask.class, AwsConnectionValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
-  PROMETHEUS_VALIDATE_CONFIGURATION_TASK(
-      TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
   PROMETHEUS_METRIC_DATA_COLLECTION_TASK(
       TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
   PROMETHEUS_METRIC_DATA_PER_HOST(TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),

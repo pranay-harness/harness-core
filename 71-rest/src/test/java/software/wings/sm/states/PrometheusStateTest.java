@@ -10,6 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
+import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -31,11 +34,13 @@ import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.TimeSeries;
-import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
@@ -45,6 +50,8 @@ import java.util.Map;
 
 public class PrometheusStateTest extends APMStateVerificationTestBase {
   @InjectMocks private PrometheusState prometheusState;
+  @Inject protected SecretManager secretManager;
+  @Inject private PrometheusAnalysisService prometheusAnalysisService;
   @Mock SettingsService settingsService;
   @Mock MetricDataAnalysisService metricAnalysisService;
   @Mock AppService appService;
@@ -56,6 +63,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
+    FieldUtils.writeField(prometheusState, "prometheusAnalysisService", prometheusAnalysisService, true);
+    FieldUtils.writeField(prometheusState, "secretManager", secretManager, true);
   }
 
   @Test
@@ -74,11 +83,12 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     Map<String, String> hosts = new HashMap<>();
     hosts.put("prometheus.host", "default");
 
-    when(settingsService.get(any())).thenReturn(mock(SettingAttribute.class));
+    when(settingsService.get(any()))
+        .thenReturn(aSettingAttribute().withValue(PrometheusConfig.builder().build()).build());
     when(appService.get(anyString())).thenReturn(application);
 
     String renderedUrl =
-        "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=jvm_memory_max_bytes{pod_name=\"$hostName\"}";
+        "/api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=jvm_memory_max_bytes{pod_name=\"${host}\"}";
     String testUrl = "jvm_memory_max_bytes{pod_name=\"$hostName\"}";
     List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
     TimeSeries timeSeries =
@@ -94,9 +104,9 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     TaskData taskData = argument.getValue().getData();
     Object parameters[] = taskData.getParameters();
     assertThat(1).isEqualTo(parameters.length);
-    assertThat(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name()).isEqualTo(taskData.getTaskType());
-    PrometheusDataCollectionInfo prometheusDataCollectionInfo = (PrometheusDataCollectionInfo) parameters[0];
-    assertThat(prometheusDataCollectionInfo.getTimeSeriesToCollect().get(0).getUrl()).isEqualTo(renderedUrl);
+    assertThat(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name()).isEqualTo(taskData.getTaskType());
+    APMDataCollectionInfo prometheusDataCollectionInfo = (APMDataCollectionInfo) parameters[0];
+    assertThat(prometheusDataCollectionInfo.getMetricEndpoints()).containsKey(renderedUrl);
   }
 
   @Test
@@ -109,8 +119,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     hosts.put("prometheus.host", "default");
     String resolvedAnalysisServerConfigId = generateUuid();
 
-    PrometheusConfig prometheusConfig = PrometheusConfig.builder().build();
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+    PrometheusConfig prometheusConfig = PrometheusConfig.builder().url(generateUuid()).build();
+    SettingAttribute settingAttribute = aSettingAttribute()
                                             .withUuid(resolvedAnalysisServerConfigId)
                                             .withValue(prometheusConfig)
                                             .withName("prometheus")
@@ -138,8 +148,8 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     TaskData taskData = argument.getValue().getData();
     Object parameters[] = taskData.getParameters();
     assertThat(1).isEqualTo(parameters.length);
-    assertThat(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name()).isEqualTo(taskData.getTaskType());
-    PrometheusDataCollectionInfo prometheusDataCollectionInfo = (PrometheusDataCollectionInfo) parameters[0];
-    assertThat(prometheusDataCollectionInfo.getPrometheusConfig()).isEqualTo(settingAttribute.getValue());
+    assertThat(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name()).isEqualTo(taskData.getTaskType());
+    APMDataCollectionInfo prometheusDataCollectionInfo = (APMDataCollectionInfo) parameters[0];
+    assertThat(prometheusDataCollectionInfo.getBaseUrl()).isEqualTo(prometheusConfig.getUrl());
   }
 }

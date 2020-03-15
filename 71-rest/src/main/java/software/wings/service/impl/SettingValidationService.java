@@ -273,7 +273,8 @@ public class SettingValidationService {
     } else if (settingValue instanceof DynaTraceConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE, encryptedDataDetails);
     } else if (settingValue instanceof PrometheusConfig) {
-      newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS, encryptedDataDetails);
+      newRelicService.validateAPMConfig(
+          settingAttribute, ((PrometheusConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof GitConfig) {
       validateGitConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof HostConnectionAttributes) {

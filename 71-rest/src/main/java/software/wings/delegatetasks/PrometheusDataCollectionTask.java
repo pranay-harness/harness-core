@@ -14,17 +14,14 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.VerificationOperationException;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -138,6 +135,11 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
           }
           break;
+        } catch (DataCollectionException e) {
+          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+          taskResult.setErrorMessage(e.getMessage());
+          completed.set(true);
+          break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
@@ -223,33 +225,25 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
           url = url.replace(HOST_NAME_PLACE_HOLDER, host);
         }
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-        try {
-          PrometheusMetricDataResponse response =
-              prometheusDelegateService.fetchMetricData(prometheusConfig, url, apiCallLog);
-          TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords =
-              response.getMetricRecords(timeSeries.getTxnName(), timeSeries.getMetricName(),
-                  dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowId(),
-                  dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getStateExecutionId(),
-                  dataCollectionInfo.getServiceId(), host, dataCollectionInfo.getHosts().get(host),
-                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task, url,
-                  delegateCVActivityLogService.getLogger(getAccountId(), dataCollectionInfo.getCvConfigId(),
-                      dataCollectionInfo.getDataCollectionMinute(), dataCollectionInfo.getStateExecutionId()));
-          metricRecords.cellSet().forEach(cell -> {
-            if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
-              NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
-              metricDataRecord.getValues().putAll(cell.getValue().getValues());
-              metricDataRecord.getDeeplinkMetadata().putAll(cell.getValue().getDeeplinkMetadata());
-            } else {
-              rv.put(cell.getRowKey(), cell.getColumnKey(), cell.getValue());
-            }
-          });
-        } catch (IOException e) {
-          apiCallLog.addFieldToResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage(), FieldType.TEXT);
-          delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
-          logger.error("for {} error occurred while fetching metrics", dataCollectionInfo.getStateExecutionId(), e);
-          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
-              "Exception occured while fetching metrics from Prometheus. " + ExceptionUtils.getMessage(e));
-        }
+        PrometheusMetricDataResponse response =
+            prometheusDelegateService.fetchMetricData(prometheusConfig, url, apiCallLog);
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords =
+            response.getMetricRecords(timeSeries.getTxnName(), timeSeries.getMetricName(),
+                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowId(),
+                dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getStateExecutionId(),
+                dataCollectionInfo.getServiceId(), host, dataCollectionInfo.getHosts().get(host),
+                dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task, url,
+                delegateCVActivityLogService.getLogger(getAccountId(), dataCollectionInfo.getCvConfigId(),
+                    dataCollectionInfo.getDataCollectionMinute(), dataCollectionInfo.getStateExecutionId()));
+        metricRecords.cellSet().forEach(cell -> {
+          if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
+            NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
+            metricDataRecord.getValues().putAll(cell.getValue().getValues());
+            metricDataRecord.getDeeplinkMetadata().putAll(cell.getValue().getDeeplinkMetadata());
+          } else {
+            rv.put(cell.getRowKey(), cell.getColumnKey(), cell.getValue());
+          }
+        });
       });
       rv.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
           NewRelicMetricDataRecord.builder()

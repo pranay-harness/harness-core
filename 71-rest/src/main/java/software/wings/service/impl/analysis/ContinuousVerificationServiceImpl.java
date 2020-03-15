@@ -34,7 +34,6 @@ import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FO
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
-import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.APMVerificationState.buildMetricInfoMap;
 import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
@@ -129,7 +128,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
-import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
@@ -143,6 +141,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
@@ -241,6 +240,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject private StateExecutionService stateExecutionService;
+  @Inject private PrometheusAnalysisService prometheusAnalysisService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -1965,21 +1965,28 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       PrometheusCVServiceConfiguration config, String waitId, long startTime, long endTime) {
     PrometheusConfig prometheusConfig = (PrometheusConfig) settingsService.get(config.getConnectorId()).getValue();
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-    final PrometheusDataCollectionInfo dataCollectionInfo =
-        PrometheusDataCollectionInfo.builder()
-            .prometheusConfig(prometheusConfig)
+
+    final APMDataCollectionInfo dataCollectionInfo =
+        APMDataCollectionInfo.builder()
+            .baseUrl(prometheusConfig.getUrl())
+            .validationUrl(PrometheusConfig.VALIDATION_URL)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(prometheusConfig, config.getAppId(), null))
+            .stateType(StateType.PROMETHEUS)
             .applicationId(config.getAppId())
             .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
             .serviceId(config.getServiceId())
-            .cvConfigId(config.getUuid())
             .startTime(startTime)
-            .collectionTime(timeDuration)
-            .timeSeriesToCollect(renderFetchQueries(config.getTimeSeriesToAnalyze()))
-            .hosts(new HashMap<>())
-            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .cvConfigId(config.getUuid())
             .dataCollectionMinute(0)
+            .metricEndpoints(prometheusAnalysisService.apmMetricEndPointsFetchInfo(config.getTimeSeriesToAnalyze()))
+            .accountId(config.getAccountId())
+            .strategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .dataCollectionFrequency(1)
+            .dataCollectionTotalTime(timeDuration)
+            .initialDelaySeconds(0)
             .build();
-    return createDelegateTask(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+
+    return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
         dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }

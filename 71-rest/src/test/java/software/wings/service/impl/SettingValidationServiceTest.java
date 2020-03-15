@@ -60,6 +60,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -71,7 +72,6 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
@@ -93,7 +93,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private DynaTraceDelegateService dynaTraceDelegateService;
-  @Inject private PrometheusDelegateService prometheusDelegateService;
+  @Inject private APMDelegateService apmDelegateService;
   @Inject private RequestExecutor requestExecutor;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -121,7 +121,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     FieldUtils.writeField(newRelicDelegateService, "requestExecutor", spyRequestExecutor, true);
     FieldUtils.writeField(appdynamicsDelegateService, "requestExecutor", spyRequestExecutor, true);
     FieldUtils.writeField(dynaTraceDelegateService, "requestExecutor", spyRequestExecutor, true);
-    FieldUtils.writeField(prometheusDelegateService, "requestExecutor", spyRequestExecutor, true);
+    FieldUtils.writeField(apmDelegateService, "requestExecutor", spyRequestExecutor, true);
 
     spySplunkDelegateService = spy(splunkDelegateService);
     when(delegateProxyFactory.get(eq(SplunkDelegateService.class), any(SyncTaskContext.class)))
@@ -140,8 +140,8 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         .thenReturn(appdynamicsDelegateService);
     when(delegateProxyFactory.get(eq(DynaTraceDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(dynaTraceDelegateService);
-    when(delegateProxyFactory.get(eq(PrometheusDelegateService.class), any(SyncTaskContext.class)))
-        .thenReturn(prometheusDelegateService);
+    when(delegateProxyFactory.get(eq(APMDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(apmDelegateService);
   }
 
   @Test
@@ -673,7 +673,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testValidateConnectivity_whenIllegalUrlPrometheusConnector() {
-    final PrometheusConfig prometheusConfig = PrometheusConfig.builder().url(generateUuid()).build();
+    final PrometheusConfig prometheusConfig = PrometheusConfig.builder().url(generateUuid() + "/").build();
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(prometheusConfig).build());
     assertThat(validationResult.isValid()).isFalse();
@@ -691,15 +691,14 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(prometheusConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: prometheus-example.com: Name or service not known");
+        .isEqualTo("Error while saving configuration. The Base URL must end with a / (forward slash)");
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testValidateConnectivity_whenValidPrometheusConnector() {
-    final PrometheusConfig prometheusConfig = PrometheusConfig.builder().url("https://prometheus-example.com").build();
+    final PrometheusConfig prometheusConfig = PrometheusConfig.builder().url("https://prometheus-example.com/").build();
     prometheusConfig.setDecrypted(true);
     doReturn(new ArrayList<>()).when(spyRequestExecutor).executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
