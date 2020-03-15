@@ -16,9 +16,11 @@ import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,6 +31,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class PrometheusConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+  public static final String VALIDATION_URL = "api/v1/query?query=up";
   @Attributes(title = "URL", required = true) private String url;
 
   @SchemaIgnore @NotEmpty private String accountId;
@@ -51,6 +54,20 @@ public class PrometheusConfig extends SettingValue implements EncryptableSetting
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
+  }
+
+  public APMValidateCollectorConfig createAPMValidateCollectorConfig() {
+    return createAPMValidateCollectorConfig(VALIDATION_URL);
+  }
+
+  public APMValidateCollectorConfig createAPMValidateCollectorConfig(String urlToFetch) {
+    return APMValidateCollectorConfig.builder()
+        .baseUrl(url)
+        .url(urlToFetch)
+        .collectionMethod(APMVerificationState.Method.GET)
+        .headers(new HashMap<>())
+        .options(new HashMap<>())
+        .build();
   }
 
   @Data

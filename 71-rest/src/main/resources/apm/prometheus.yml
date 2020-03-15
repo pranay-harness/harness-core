@@ -1,0 +1,8 @@
+url: /api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=${query}
+responseMappers:
+  timestamp:
+    fieldName: timestamp
+    jsonPath: data.result[*].values[*].[0]
+  value:
+    fieldName: value
+    jsonPath: data.result[*].values[*].[1]

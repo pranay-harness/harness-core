@@ -32,7 +32,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
-import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.common.VerificationConstants;
@@ -50,7 +49,6 @@ import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.StateType;
@@ -90,30 +88,25 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
-    try {
-      if (isNotEmpty(config.getUrl()) && isNotEmpty(config.getBaseUrl())) {
-        if (!config.getBaseUrl().endsWith("/")) {
-          throw new VerificationOperationException(
-              ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL must end with a / (forward slash)");
-        }
-        if (config.getUrl().charAt(0) == '/') {
-          throw new VerificationOperationException(
-              ErrorCode.APM_CONFIGURATION_ERROR, "The validation path must not begin with a / (forward slash)");
-        }
-      } else {
+    if (isNotEmpty(config.getUrl()) && isNotEmpty(config.getBaseUrl())) {
+      if (!config.getBaseUrl().endsWith("/")) {
         throw new VerificationOperationException(
-            ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL and validation path must not be empty");
+            ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL must end with a / (forward slash)");
       }
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settingAttribute.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
-    } catch (Exception e) {
-      String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
+      if (config.getUrl().charAt(0) == '/') {
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "The validation path must not begin with a / (forward slash)");
+      }
+    } else {
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL and validation path must not be empty");
     }
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
+    delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
   }
 
   @Override
@@ -174,10 +167,6 @@ public class NewRelicServiceImpl implements NewRelicService {
         DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
         delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
             .validateConfig(dynaTraceConfig, encryptedDataDetails);
-        return;
-      case PROMETHEUS:
-        PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
-        delegateProxyFactory.get(PrometheusDelegateService.class, syncTaskContext).validateConfig(prometheusConfig);
         return;
       default:
         unhandled(stateType);

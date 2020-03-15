@@ -53,6 +53,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMParserTest;
@@ -62,11 +63,11 @@ import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
-import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
@@ -105,6 +106,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
   @Inject private APMDelegateService apmDelegateService;
+  @Inject private PrometheusAnalysisService prometheusAnalysisService;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -112,6 +114,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     FieldUtils.writeField(service, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(service, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(service, "cvActivityLogService", cvActivityLogService, true);
+    FieldUtils.writeField(service, "prometheusAnalysisService", prometheusAnalysisService, true);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
     when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(mock(Logger.class));
@@ -494,7 +497,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setStateType(StateType.PROMETHEUS);
     config.setTimeSeriesToAnalyze(Lists.newArrayList(TimeSeries.builder()
                                                          .txnName(generateUUID())
-                                                         .metricType(generateUUID())
+                                                         .metricType(MetricType.INFRA.name())
                                                          .url("jvm_memory_max_bytes{pod_name=\"$hostName\"}")
                                                          .build()));
     wingsPersistence.save(config);
@@ -512,13 +515,13 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAllOn(any(), anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertThat(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name())
+    assertThat(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name())
         .isEqualTo(taskCaptor.getValue().getData().getTaskType());
-    PrometheusDataCollectionInfo dataCollectionInfo =
-        (PrometheusDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
+    APMDataCollectionInfo dataCollectionInfo =
+        (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(15).isEqualTo(dataCollectionInfo.getDataCollectionTotalTime());
     assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
-    assertThat(TimeSeriesMlAnalysisType.PREDICTIVE).isEqualTo(dataCollectionInfo.getTimeSeriesMlAnalysisType());
+    assertThat(AnalysisComparisonStrategy.PREDICTIVE).isEqualTo(dataCollectionInfo.getStrategy());
   }
 
   @Test

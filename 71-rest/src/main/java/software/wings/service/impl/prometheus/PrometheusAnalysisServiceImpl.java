@@ -4,33 +4,43 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
-import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
-import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
+import io.harness.serializer.JsonUtils;
+import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
+import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
-import software.wings.service.intfc.prometheus.PrometheusDelegateService;
+import software.wings.sm.states.APMVerificationState.Method;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -41,9 +51,23 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @Slf4j
 public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService {
+  private static final String START_TIME_PLACE_HOLDER = "${start_time_seconds}";
+  private static final String END_TIME_PLACE_HOLDER = "${end_time_seconds}";
+  private static final String HOST_NAME_PLACE_HOLDER = "${host}";
+
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private MLServiceUtils mlServiceUtils;
+
+  private static final URL PROMETHEUS_URL_ = PrometheusAnalysisServiceImpl.class.getResource("/apm/prometheus.yml");
+  private static final String PROMETHEUS_YAML;
+  static {
+    try {
+      PROMETHEUS_YAML = Resources.toString(PROMETHEUS_URL_, Charsets.UTF_8);
+    } catch (IOException ex) {
+      throw new DataCollectionException(ex);
+    }
+  }
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(PrometheusSetupTestNodeData setupTestNodeData) {
@@ -52,15 +76,17 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
     // Request is made without host
-    Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithoutHost =
-        getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, null);
+    String hostName =
+        setupTestNodeData.isServiceLevel() ? null : mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
+    Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeries =
+        getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, hostName);
 
-    if (metricDataResponseByTimeSeriesWithoutHost == null) {
+    if (metricDataResponseByTimeSeries == null) {
       // exception occurred during the call, provider not reachable.
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     PrometheusMetricDataResponse responseDataFromDelegateForServiceLevel =
-        metricDataResponseByTimeSeriesWithoutHost.values().iterator().next();
+        metricDataResponseByTimeSeries.values().iterator().next();
     boolean isLoadPresentForServiceLevel = responseDataFromDelegateForServiceLevel != null
         && isNotEmpty(responseDataFromDelegateForServiceLevel.getData().getResult());
 
@@ -76,11 +102,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     }
 
     // make a call with hostname
-    String hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
-    Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithHost =
-        getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, hostName);
-
-    if (isEmpty(metricDataResponseByTimeSeriesWithHost)) {
+    if (isEmpty(metricDataResponseByTimeSeries)) {
       // provider was reachable based on first find but something happened in the call with host.
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -91,9 +113,9 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
           .dataForNode(null)
           .build();
     }
-    validateMetricDataResponseByTimeSeriesWithHost(metricDataResponseByTimeSeriesWithHost);
+    validateMetricDataResponseByTimeSeriesWithHost(metricDataResponseByTimeSeries);
     PrometheusMetricDataResponse responseDataFromDelegateForHost =
-        metricDataResponseByTimeSeriesWithHost.values().iterator().next();
+        metricDataResponseByTimeSeries.values().iterator().next();
     Object responseDataForHost;
     if (responseDataFromDelegateForHost == null || responseDataFromDelegateForHost.getData() == null) {
       responseDataForHost = null;
@@ -153,9 +175,12 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                         .build();
       try {
+        final PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
+        APMValidateCollectorConfig apmValidateCollectorConfig = prometheusConfig.createAPMValidateCollectorConfig(url);
+        final String validateResponseJson = delegateProxyFactory.get(APMDelegateService.class, taskContext)
+                                                .fetch(apmValidateCollectorConfig, apiCallLog);
         PrometheusMetricDataResponse response =
-            delegateProxyFactory.get(PrometheusDelegateService.class, taskContext)
-                .fetchMetricData((PrometheusConfig) settingAttribute.getValue(), url, apiCallLog);
+            JsonUtils.asObject(validateResponseJson, PrometheusMetricDataResponse.class);
         metricDataResponseByTimeSeries.put(timeSeries, response);
       } catch (Exception e) {
         logger.info("Exception while trying to collect data for prometheus test: ", e);
@@ -177,5 +202,50 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     } else {
       return url.replace(HOST_NAME_PLACE_HOLDER, hostName);
     }
+  }
+
+  private void renderFetchQueries(List<TimeSeries> timeSeriesToAnalyze) {
+    timeSeriesToAnalyze.stream()
+        .filter(timeSeries -> !timeSeries.getUrl().contains("api/v1/query_range"))
+        .forEach(timeSeries
+            -> timeSeries.setUrl(
+                "/api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query="
+                + timeSeries.getUrl()));
+
+    timeSeriesToAnalyze.forEach(timeSeries
+        -> timeSeries.setUrl(timeSeries.getUrl()
+                                 .replace("$startTime", "${start_time_seconds}")
+                                 .replace("$endTime", "${end_time_seconds}")
+                                 .replace("$hostName", "${host}")));
+  }
+
+  public Map<String, List<APMMetricInfo>> apmMetricEndPointsFetchInfo(List<TimeSeries> timeSeriesInfos) {
+    Map<String, List<APMMetricInfo>> rv = new HashMap<>();
+    if (isEmpty(timeSeriesInfos)) {
+      return rv;
+    }
+    renderFetchQueries(timeSeriesInfos);
+    YamlUtils yamlUtils = new YamlUtils();
+    APMMetricInfo metricInfos;
+    try {
+      metricInfos = yamlUtils.read(PROMETHEUS_YAML, new TypeReference<APMMetricInfo>() {});
+    } catch (IOException e) {
+      throw new DataCollectionException(e);
+    }
+    timeSeriesInfos.forEach(timeSeries -> {
+      final HashMap<String, APMMetricInfo.ResponseMapper> responseMappers =
+          new HashMap<>(metricInfos.getResponseMappers());
+      responseMappers.put("txnName",
+          APMMetricInfo.ResponseMapper.builder().fieldName("txnName").fieldValue(timeSeries.getTxnName()).build());
+      rv.put(timeSeries.getUrl(),
+          Lists.newArrayList(APMMetricInfo.builder()
+                                 .metricName(timeSeries.getMetricName())
+                                 .metricType(MetricType.valueOf(timeSeries.getMetricType()))
+                                 .method(Method.GET)
+                                 .responseMappers(responseMappers)
+                                 .build()));
+    });
+
+    return rv;
   }
 }

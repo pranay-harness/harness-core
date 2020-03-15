@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,10 +22,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
+import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
@@ -36,13 +41,13 @@ import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private PrometheusDelegateService prometheusDelegateService;
+  @Mock private APMDelegateService apmDelegateService;
   @Mock private MLServiceUtils mlServiceUtils;
   @InjectMocks private PrometheusAnalysisServiceImpl prometheusAnalysisService;
 
@@ -52,9 +57,12 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   public void setup() {
     settingId = generateUuid();
     MockitoAnnotations.initMocks(this);
-    when(delegateProxyFactory.get(any(), any())).thenReturn(prometheusDelegateService);
+    when(delegateProxyFactory.get(eq(PrometheusDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(prometheusDelegateService);
+    when(delegateProxyFactory.get(eq(APMDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(apmDelegateService);
     when(mlServiceUtils.getHostNameFromExpression(any())).thenReturn("dummyHostName");
-    PrometheusConfig config = PrometheusConfig.builder().build();
+    PrometheusConfig config = PrometheusConfig.builder().url("http://34.68.138.55:8080/").build();
     when(settingsService.get(settingId))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(config).build());
   }
@@ -62,21 +70,23 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetNodeDataCheckDelegateCalledTwice() throws Exception {
+  public void testGetNodeDataCheckDelegateCalledTwice() {
     PrometheusSetupTestNodeData nodeData = buildInput();
+    when(apmDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(JsonUtils.asJson(createResponse()));
     prometheusAnalysisService.getMetricsWithDataForNode(nodeData);
 
-    verify(prometheusDelegateService, times(2)).fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class));
+    verify(apmDelegateService, times(1)).fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class));
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetNodeData() throws Exception {
+  public void testGetNodeData() {
     PrometheusSetupTestNodeData nodeData = buildInput();
 
-    when(prometheusDelegateService.fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class)))
-        .thenReturn(createResponse());
+    when(apmDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(JsonUtils.asJson(createResponse()));
     VerificationNodeDataSetupResponse setupResponse = prometheusAnalysisService.getMetricsWithDataForNode(nodeData);
 
     assertThat(setupResponse).isNotNull();
@@ -88,11 +98,11 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetNodeData_withMultipleMetricValuesAreReturned() throws Exception {
+  public void testGetNodeData_withMultipleMetricValuesAreReturned() {
     PrometheusSetupTestNodeData nodeData = buildInput();
 
-    when(prometheusDelegateService.fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class)))
-        .thenReturn(createResponseWithMultipleMetricsResponses());
+    when(apmDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(JsonUtils.asJson(createResponseWithMultipleMetricsResponses()));
     assertThatThrownBy(() -> prometheusAnalysisService.getMetricsWithDataForNode(nodeData))
         .isInstanceOf(VerificationOperationException.class);
   }
@@ -100,28 +110,11 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetNodeDataBadHostCall() throws Exception {
+  public void testGetNotReachable() {
     PrometheusSetupTestNodeData nodeData = buildInput();
 
-    when(prometheusDelegateService.fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class)))
-        .thenReturn(createResponse())
-        .thenThrow(new IOException("Exception during the host call"));
-    VerificationNodeDataSetupResponse setupResponse = prometheusAnalysisService.getMetricsWithDataForNode(nodeData);
-
-    assertThat(setupResponse).isNotNull();
-    assertThat(setupResponse.isProviderReachable()).isTrue();
-    assertThat(setupResponse.getLoadResponse().isLoadPresent()).isTrue();
-    assertThat(setupResponse.getDataForNode()).isNull();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testGetNotReachable() throws Exception {
-    PrometheusSetupTestNodeData nodeData = buildInput();
-
-    when(prometheusDelegateService.fetchMetricData(any(), anyString(), any(ThirdPartyApiCallLog.class)))
-        .thenThrow(new IOException("unsuccessful call"));
+    when(apmDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenThrow(new DataCollectionException("unsuccessful call"));
     VerificationNodeDataSetupResponse setupResponse = prometheusAnalysisService.getMetricsWithDataForNode(nodeData);
 
     assertThat(setupResponse).isNotNull();

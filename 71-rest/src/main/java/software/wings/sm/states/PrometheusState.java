@@ -2,11 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.resources.PrometheusResource.renderFetchQueries;
-import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -24,19 +22,14 @@ import software.wings.beans.TaskType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeries;
-import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
-import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.HashMap;
@@ -54,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
+  @Inject private PrometheusAnalysisService prometheusAnalysisService;
 
   @Attributes(required = true, title = "Prometheus Server") private String analysisServerConfigId;
 
@@ -61,38 +55,6 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
   public PrometheusState(String name) {
     super(name, StateType.PROMETHEUS);
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @Override
@@ -110,9 +72,6 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     final SettingAttribute settingAttribute = settingsService.get(resolvedAnalysisServerConfigId);
     Preconditions.checkNotNull(
         settingAttribute, "No prometheus setting with id: " + resolvedAnalysisServerConfigId + " found");
-    TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
-        ? PREDICTIVE
-        : TimeSeriesMlAnalysisType.COMPARATIVE;
 
     final PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
 
@@ -120,21 +79,29 @@ public class PrometheusState extends AbstractMetricAnalysisState {
         context.getStateExecutionInstanceId(), null, createMetricTemplates(timeSeriesToAnalyze));
 
     renderURLExpressions(context, timeSeriesToAnalyze);
+    final Map<String, List<APMMetricInfo>> metricEndpoints =
+        prometheusAnalysisService.apmMetricEndPointsFetchInfo(timeSeriesToAnalyze);
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
-    final PrometheusDataCollectionInfo dataCollectionInfo =
-        PrometheusDataCollectionInfo.builder()
-            .prometheusConfig(prometheusConfig)
+    final APMDataCollectionInfo dataCollectionInfo =
+        APMDataCollectionInfo.builder()
+            .baseUrl(prometheusConfig.getUrl())
+            .validationUrl(PrometheusConfig.VALIDATION_URL)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                prometheusConfig, context.getAppId(), context.getWorkflowExecutionId()))
+            .hosts(hosts)
+            .stateType(StateType.PROMETHEUS)
             .applicationId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())
             .workflowId(context.getWorkflowId())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(getTimeDuration()))
-            .timeSeriesToCollect(renderFetchQueries(timeSeriesToAnalyze))
             .dataCollectionMinute(0)
-            .hosts(hosts)
-            .timeSeriesMlAnalysisType(analyzedTierAnalysisType)
+            .metricEndpoints(metricEndpoints)
+            .accountId(appService.getAccountIdByAppId(context.getAppId()))
+            .strategy(getComparisonStrategy())
+            .dataCollectionTotalTime(Integer.parseInt(getTimeDuration()))
+            .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .build();
 
     String waitId = generateUuid();
@@ -142,11 +109,11 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
-            .accountId(appService.get(context.getAppId()).getAccountId())
+            .accountId(appService.getAccountIdByAppId(context.getAppId()))
             .appId(context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
-                      .taskType(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name())
+                      .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                       .build())
