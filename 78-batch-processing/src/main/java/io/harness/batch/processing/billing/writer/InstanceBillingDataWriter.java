@@ -3,7 +3,6 @@ package io.harness.batch.processing.billing.writer;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 
-import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
 import io.harness.batch.processing.billing.service.UtilizationData;
@@ -132,12 +131,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     InstanceType instanceType = instanceData.getInstanceType();
     if (null == cloudServiceName
         && ImmutableSet.of(InstanceType.ECS_TASK_FARGATE, InstanceType.ECS_TASK_EC2).contains(instanceType)) {
-      String launchType = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData);
-      if (LaunchType.EC2.name().equals(launchType)) {
-        cloudServiceName = "dangling_task_service_ec2";
-      } else if (LaunchType.FARGATE.name().equals(launchType)) {
-        cloudServiceName = "dangling_task_service_fargate";
-      }
+      cloudServiceName = "none";
     }
     return cloudServiceName;
   }
