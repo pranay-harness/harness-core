@@ -22,7 +22,7 @@ public class ArtifactStreamPerpetualTaskManager implements ArtifactStreamService
   @Override
   public void onSaved(ArtifactStream artifactStream) {
     PerpetualTaskServiceClient client = clientRegistry.getClient(PerpetualTaskType.ARTIFACT_COLLECTION);
-    Validator.notNullCheck("Artifact StremId is missing", artifactStream.getUuid());
+    Validator.notNullCheck("ArtifactStreamId is missing", artifactStream.getUuid());
     ArtifactCollectionPTaskClientParams artifactCollectionPTaskClientParams =
         ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getUuid()).build();
     logger.info("Creating Perpetual Task for artifactStreamId [{}] of accountId [{}]", artifactStream.getUuid(),

@@ -628,6 +628,7 @@ public class ArtifactCollectionUtils {
             .appId(appId)
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStreamType)
+            .artifactStreamId(artifactStream.getUuid())
             .settingValue(settingValue)
             .encryptedDataDetails(encryptedDataDetails)
             .buildSourceRequestType(requestType)
@@ -851,6 +852,12 @@ public class ArtifactCollectionUtils {
             settingAttribute.getConnectivityError());
         return true;
       }
+    }
+    if (isCollection && isNotEmpty(artifactStream.getPerpetualTaskIds())) {
+      logger.info(
+          "Perpetual task enabled for the artifactStream {}, Skipping the artifact collection through iterator.",
+          artifactStream.getUuid());
+      return true;
     }
     return false;
   }

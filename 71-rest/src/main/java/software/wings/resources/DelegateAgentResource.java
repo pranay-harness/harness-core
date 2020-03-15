@@ -8,12 +8,14 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import freemarker.template.TemplateException;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -24,6 +26,7 @@ import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -62,16 +65,18 @@ public class DelegateAgentResource {
   private WingsPersistence wingsPersistence;
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
-      SubdomainUrlHelperIntfc subdomainUrlHelper) {
+      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler) {
     this.delegateService = delegateService;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
+    this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
   }
 
   @DelegateAuth
@@ -291,5 +296,21 @@ public class DelegateAgentResource {
 
   private String getVerificationUrl(HttpServletRequest request) {
     return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("artifact-collection/{perpetualTaskId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> processArtifactCollectionResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, BuildSourceExecutionResponse executionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+      artifactCollectionResponseHandler.processArtifactCollectionResult(executionResponse);
+    }
+    return new RestResponse<>(true);
   }
 }

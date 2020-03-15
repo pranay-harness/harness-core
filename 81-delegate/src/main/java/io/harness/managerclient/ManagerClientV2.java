@@ -25,6 +25,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
@@ -128,4 +129,8 @@ public interface ManagerClientV2 {
 
   @GET("agent/infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
+
+  @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
 }

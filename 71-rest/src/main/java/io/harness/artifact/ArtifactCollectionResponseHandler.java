@@ -61,6 +61,9 @@ public class ArtifactCollectionResponseHandler {
   void handleResponseInternal(BuildSourceExecutionResponse buildSourceExecutionResponse) {
     BuildSourceResponse buildSourceResponse = buildSourceExecutionResponse.getBuildSourceResponse();
     ArtifactStream artifactStream = artifactStreamService.get(buildSourceExecutionResponse.getArtifactStreamId());
+    if (artifactStream == null) {
+      return; // Should Perpetual task to be cleaned up. Same case for SettingAttribute
+    }
     List<BuildDetails> builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
     // NOTE: buildSourceResponse is not null at this point.
 

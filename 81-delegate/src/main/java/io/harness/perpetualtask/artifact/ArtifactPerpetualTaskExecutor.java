@@ -1,14 +1,18 @@
 package io.harness.perpetualtask.artifact;
 
+import static io.harness.network.SafeHttpCall.execute;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.managerclient.ManagerClientV2;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 
 import java.time.Instant;
@@ -17,10 +21,12 @@ import java.time.Instant;
 @Slf4j
 public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private ArtifactRepositoryServiceImpl artifactRepositoryService;
-
+  private ManagerClientV2 managerClient;
   @Inject
-  public ArtifactPerpetualTaskExecutor(ArtifactRepositoryServiceImpl artifactRepositoryService) {
+  public ArtifactPerpetualTaskExecutor(
+      ArtifactRepositoryServiceImpl artifactRepositoryService, ManagerClientV2 managerClient) {
     this.artifactRepositoryService = artifactRepositoryService;
+    this.managerClient = managerClient;
   }
 
   @Override
@@ -32,7 +38,17 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     final BuildSourceParameters buildSourceParameters =
         (BuildSourceParameters) KryoUtils.asObject(artifactCollectionTaskParams.getBuildSourceParams().toByteArray());
     // Fetch the Builds
-    artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
+    final BuildSourceExecutionResponse buildSourceExecutionResponse =
+        artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
+    // Publish the data
+    try {
+      execute(managerClient.publishArtifactCollectionResult(
+          taskId.getId(), buildSourceParameters.getAccountId(), buildSourceExecutionResponse));
+    } catch (Exception ex) {
+      logger.error(
+          "Failed to publish the artifact collection result to manager for artifactStreamId {} and PerpetualTaskId {}",
+          taskId.getId(), ex);
+    }
     logger.info("Published artifact successfully");
     return true;
   }
