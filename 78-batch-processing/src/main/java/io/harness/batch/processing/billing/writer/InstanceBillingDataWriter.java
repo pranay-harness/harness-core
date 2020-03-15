@@ -1,7 +1,9 @@
 package io.harness.batch.processing.billing.writer;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
 import io.harness.batch.processing.billing.service.UtilizationData;
@@ -113,8 +115,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
                     .workloadType(
                         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
-                    .cloudServiceName(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
+                    .cloudServiceName(getCloudServiceName(instanceData))
                     .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
                     .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
                     .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
@@ -123,6 +124,22 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
             billingDataService.create(instanceBillingData);
           });
     });
+  }
+
+  String getCloudServiceName(InstanceData instanceData) {
+    String cloudServiceName =
+        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData);
+    InstanceType instanceType = instanceData.getInstanceType();
+    if (null == cloudServiceName
+        && ImmutableSet.of(InstanceType.ECS_TASK_FARGATE, InstanceType.ECS_TASK_EC2).contains(instanceType)) {
+      String launchType = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData);
+      if (LaunchType.EC2.name().equals(launchType)) {
+        cloudServiceName = "dangling_task_service_ec2";
+      } else if (LaunchType.FARGATE.name().equals(launchType)) {
+        cloudServiceName = "dangling_task_service_fargate";
+      }
+    }
+    return cloudServiceName;
   }
 
   HarnessServiceInfo getHarnessServiceInfo(InstanceData instanceData) {

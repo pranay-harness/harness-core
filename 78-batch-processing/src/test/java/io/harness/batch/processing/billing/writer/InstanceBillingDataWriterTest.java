@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.BillingAmountBreakup;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
@@ -121,6 +122,40 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     HarnessServiceInfo harnessServiceInfo = instanceBillingDataWriter.getHarnessServiceInfo(instanceData);
     assertThat(harnessServiceInfo).isNotNull();
     assertThat(harnessServiceInfo.getAppId()).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetCloudServiceNameWhenNotPresentForEC2() {
+    Map<String, String> metaDataMap = new HashMap<>();
+    metaDataMap.put(InstanceMetaDataConstants.LAUNCH_TYPE, LaunchType.EC2.name());
+    InstanceData instanceData =
+        InstanceData.builder().instanceType(InstanceType.ECS_TASK_EC2).metaData(metaDataMap).build();
+    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    assertThat(cloudServiceName).isEqualTo("dangling_task_service_ec2");
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetCloudServiceNameWhenNotPresentForFargate() {
+    Map<String, String> metaDataMap = new HashMap<>();
+    metaDataMap.put(InstanceMetaDataConstants.LAUNCH_TYPE, LaunchType.FARGATE.name());
+    InstanceData instanceData =
+        InstanceData.builder().instanceType(InstanceType.ECS_TASK_FARGATE).metaData(metaDataMap).build();
+    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    assertThat(cloudServiceName).isEqualTo("dangling_task_service_fargate");
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetCloudServiceNameWhenNotPresent() {
+    Map<String, String> metaDataMap = new HashMap<>();
+    InstanceData instanceData = InstanceData.builder().build();
+    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    assertThat(cloudServiceName).isNull();
   }
 
   @Test
