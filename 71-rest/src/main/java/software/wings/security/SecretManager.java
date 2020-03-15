@@ -84,7 +84,7 @@ public class SecretManager {
       case JIRA_SERVICE_SECRET:
         return configuration.getPortal().getJwtExternalServiceSecret();
       case DATA_HANDLER_SECRET:
-        return configuration.getPortal().getDataHandlerSecret();
+        return configuration.getPortal().getJwtDataHandlerSecret();
       case MARKETPLACE_SIGNUP:
         return configuration.getPortal().getJwtMarketPlaceSecret();
       case IDENTITY_SERVICE_SECRET:
