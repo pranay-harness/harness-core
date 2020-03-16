@@ -165,7 +165,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return getWorkflowExecutionWithVerification(bearerToken, appId, envId, executionArgs);
   }
 
-  private WorkflowExecution getWorkflowExecution(
+  public WorkflowExecution getWorkflowExecution(
       String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
 
