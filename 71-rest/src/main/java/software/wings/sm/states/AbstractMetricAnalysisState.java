@@ -8,6 +8,8 @@ import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
+import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -134,7 +136,18 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
             "The expression " + hostnameTemplate + " could not be resolved for hosts");
       }
+      if (analysisContext.isHistoricalDataCollection()) {
+        Map<String, String> testNodeMap = analysisContext.getTestNodes();
+        Map<String, String> controlNodeMap = analysisContext.getControlNodes();
+        testNodeMap.put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+        analysisContext.setTestNodes(testNodeMap);
 
+        controlNodeMap.put(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
+        for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
+          controlNodeMap.put(CONTROL_HOST_NAME + "-" + i, DEFAULT_GROUP_NAME);
+        }
+        analysisContext.setControlNodes(controlNodeMap);
+      }
       saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
       if (isDemoPath(analysisContext)) {
@@ -412,7 +425,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
-
+    boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(appService.get(context.getAppId()).getAccountId())
@@ -439,7 +452,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-            .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
+            .isHistoricalDataCollection(isHistoricalDataCollection)
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .dataCollectionIntervalMins(getDataCollectionRate())
             .build();

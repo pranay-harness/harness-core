@@ -42,12 +42,17 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
     final List<LogElement> logElements = new ArrayList<>();
     final List<Callable<List<LogElement>>> callables = new ArrayList<>();
     if (dataCollectionInfo.getHosts().isEmpty()) {
-      addHeartbeats(Optional.empty(), dataCollectionInfo, logElements);
+      if (dataCollectionInfo.isShouldSendHeartbeat()) {
+        addHeartbeats(Optional.empty(), dataCollectionInfo, logElements);
+      }
       callables.add(() -> logDataCollector.fetchLogs());
     } else {
       Iterables.partition(dataCollectionInfo.getHosts(), logDataCollector.getHostBatchSize())
           .forEach(batch -> callables.add(() -> logDataCollector.fetchLogs(batch)));
-      dataCollectionInfo.getHosts().forEach(host -> addHeartbeats(Optional.of(host), dataCollectionInfo, logElements));
+      if (dataCollectionInfo.isShouldSendHeartbeat()) {
+        dataCollectionInfo.getHosts().forEach(
+            host -> addHeartbeats(Optional.of(host), dataCollectionInfo, logElements));
+      }
     }
     List<Optional<List<LogElement>>> results = executeParallel(callables);
     List<LogElement> allLogs = new ArrayList<>();
