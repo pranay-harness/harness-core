@@ -6,7 +6,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -47,17 +46,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
   @Override
   public DelegateProfile get(String accountId, String delegateProfileId) {
     return wingsPersistence.createQuery(DelegateProfile.class)
-        .filter(DelegateProfile.ACCOUNT_ID_KEY, accountId)
-        .filter(DelegateProfile.ID_KEY, delegateProfileId)
+        .filter(DelegateProfileKeys.uuid, delegateProfileId)
+        .filter(DelegateProfileKeys.accountId, accountId)
         .get();
   }
 
   @Override
   public DelegateProfile update(DelegateProfile delegateProfile) {
     UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
-    setUnset(updateOperations, "name", delegateProfile.getName());
-    setUnset(updateOperations, "description", delegateProfile.getDescription());
-    setUnset(updateOperations, "startupScript", delegateProfile.getStartupScript());
+    setUnset(updateOperations, DelegateProfileKeys.name, delegateProfile.getName());
+    setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
+    setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
 
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
@@ -73,13 +72,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
 
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
-    delegateProfile.setAppId(GLOBAL_APP_ID);
-    DelegateProfile persistedProfile = wingsPersistence.saveAndGet(DelegateProfile.class, delegateProfile);
-    logger.info("Added delegate profile: {}", persistedProfile.getUuid());
+    wingsPersistence.save(delegateProfile);
+    logger.info("Added delegate profile: {}", delegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
     logger.info("Auditing adding of Delegate Profile for accountId={}", delegateProfile.getAccountId());
-    return persistedProfile;
+    return delegateProfile;
   }
 
   @Override
