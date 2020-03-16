@@ -1529,13 +1529,21 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateValidateTask getDelegateValidateTask(DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
-    return TaskType.valueOf(delegateTask.getData().getTaskType())
-        .getDelegateValidateTask(
-            delegateId, delegateTask, getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid()));
+    Consumer<List<DelegateConnectionResult>> postValidationFunction =
+        getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid());
+
+    if (delegateTask.isCapabilityFrameworkEnabled()) {
+      return TaskType.valueOf(delegateTask.getData().getTaskType())
+          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, postValidationFunction);
+
+    } else {
+      return TaskType.valueOf(delegateTask.getData().getTaskType())
+          .getDelegateValidateTask(delegateId, delegateTask, postValidationFunction);
+    }
   }
 
   private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTask delegateTask) {
-    if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
+    if (isNotEmpty(delegateTask.getExecutionCapabilities()) && !delegateTask.isCapabilityFrameworkEnabled()) {
       return TaskType.valueOf(delegateTask.getData().getTaskType())
           .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, null);
     }
@@ -1987,8 +1995,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   void applyDelegateSecretFunctor(DelegateTaskPackage delegateTaskPackage) {
-    final Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
-    final Map<String, SecretDetail> secretDetails = delegateTaskPackage.getSecretDetails();
+    Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
+    Map<String, SecretDetail> secretDetails = delegateTaskPackage.getSecretDetails();
     if (isEmpty(encryptionConfigs) || isEmpty(secretDetails)) {
       return;
     }
@@ -1999,14 +2007,14 @@ public class DelegateServiceImpl implements DelegateService {
       encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
     });
 
-    final Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);
+    Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);
     Map<String, char[]> secretUuidToValues = new HashMap<>();
     secretDetails.forEach(
         (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
 
-    final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
         secretUuidToValues, delegateTaskPackage.getDelegateTask().getData().getExpressionFunctorToken());
-    final DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
+    DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
     if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
         && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
       logger.info("Applying DelegateExpression Evaluator for delegateTask {}", delegateTask.getUuid());

@@ -10,7 +10,7 @@ import java.util.Set;
 // New Capability Framework. This should go away once that happens.
 @UtilityClass
 public class CapabilityUtils {
-  private static Set<String> taskTypesMigratedToCapabilityFramework = new HashSet<>(Arrays.asList(
+  private static Set<String> taskTypesMigratedToCapabilityFrameworkPhase1 = new HashSet<>(Arrays.asList(
       // Artifact Providers
 
       "JENKINS", "JENKINS_COLLECTION", "JENKINS_GET_BUILDS", "JENKINS_GET_JOBS", "JENKINS_GET_JOB",
@@ -126,15 +126,18 @@ public class CapabilityUtils {
 
       "BUILD_SOURCE_TASK"
 
-      // Tasks Not Enabled
-      //      "AZURE_VAULT_ENCRYPT",
-      //      "AZURE_VAULT_DECRYPT", "AZURE_VAULT_DELETE", "KMS_ENCRYPT", "KMS_DECRYPT", "VAULT_ENCRYPT",
-      //      "VAULT_DELETE_SECRET", "VAULT_DECRYPT", "VAULT_GET_CHANGELOG", "VAULT_RENEW_TOKEN", "ASM_ENCRYPT",
-      //      "ASM_DECRYPT", "ASM_DELETE_SECRET", "SECRET_DECRYPT", "SECRET_DECRYPT_REF", "GIT_COMMAND",
-      //      "GIT_FETCH_FILES_TASK"
+      // ************* WARNING: do not add tasks to this list ************
+      // It is too late for phase 1, add it to phase 2
+
       ));
 
-  public static boolean isTaskTypeMigratedToCapabilityFramework(String taskType) {
-    return taskTypesMigratedToCapabilityFramework.contains(taskType);
+  public static boolean isTaskTypeMigratedToCapabilityFrameworkPhase1(String taskType) {
+    return taskTypesMigratedToCapabilityFrameworkPhase1.contains(taskType);
+  }
+
+  private static Set<String> taskTypesMigratedToCapabilityFrameworkPhase2 = new HashSet<>(Arrays.asList());
+
+  public static boolean isTaskTypeMigratedToCapabilityFrameworkPhase2(String taskType) {
+    return taskTypesMigratedToCapabilityFrameworkPhase2.contains(taskType);
   }
 }

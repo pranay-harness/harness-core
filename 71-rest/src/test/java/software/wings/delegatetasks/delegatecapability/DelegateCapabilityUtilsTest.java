@@ -35,7 +35,7 @@ public class DelegateCapabilityUtilsTest extends CategoryTest {
 
     List<TaskType> taskTypesVerified =
         taskTypeList.stream()
-            .filter(taskType -> CapabilityUtils.isTaskTypeMigratedToCapabilityFramework(taskType.name()))
+            .filter(taskType -> CapabilityUtils.isTaskTypeMigratedToCapabilityFrameworkPhase1(taskType.name()))
             .collect(toList());
 
     assertThat(taskTypesVerified).hasSize(taskTypeList.size());
