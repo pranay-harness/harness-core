@@ -31,8 +31,16 @@ import java.util.Optional;
 @Slf4j
 public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
-  private final EventPublisher eventPublisher;
 
+  static {
+    try {
+      Reflect.on(Yaml.class).call("initModelMap");
+    } catch (Exception e) {
+      logger.error("Unexpected exception while loading classes: " + e);
+    }
+  }
+
+  private final EventPublisher eventPublisher;
   private final K8sWatchEvent clusterDetailsProto;
 
   public BaseHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
