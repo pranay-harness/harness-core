@@ -178,7 +178,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                     .setLastProcessedTimestamp(HTimestamps.fromInstant(startTime))
                                     .build();
 
-    logger.info("Esc sync published Message {} ", ecsSyncEvent.toString());
+    logger.debug("Esc sync published Message {} ", ecsSyncEvent.toString());
     eventPublisher.publishMessage(
         ecsSyncEvent, ecsSyncEvent.getLastProcessedTimestamp(), ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
   }
@@ -187,16 +187,15 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       Set<String> currentActiveTaskArns, Instant lastProcessedTime, List<Task> tasks,
       Map<String, String> taskArnServiceNameMap) {
     Set<String> activeTaskArns = fetchActiveTaskArns(clusterId);
-    logger.info("Active tasks {} task size {} ", activeTaskArns, tasks.size());
+    logger.debug("Active tasks {} task size {} ", activeTaskArns, tasks.size());
     publishMissingTaskLifecycleEvent(clusterId, settingId, activeTaskArns, tasks);
 
     for (Task task : tasks) {
-      if (null == task.getStoppedAt()) {
+      if (null == task.getStoppedAt() && null != task.getPullStartedAt()) {
         currentActiveTaskArns.add(task.getTaskArn());
       }
 
-      if (!activeTaskArns.contains(task.getTaskArn())
-          && convertDateToInstant(task.getPullStartedAt()).isAfter(lastProcessedTime)) {
+      if (!activeTaskArns.contains(task.getTaskArn())) {
         int memory = Integer.parseInt(task.getMemory());
         int cpu = Integer.parseInt(task.getCpu());
         if (null != task.getPullStartedAt()) {
@@ -303,7 +302,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       Set<String> currentActiveArns, Instant lastProcessedTime, List<ContainerInstance> containerInstances) {
     logger.info("Container instance size is {} ", containerInstances.size());
     Set<String> activeContainerInstancesArns = fetchActiveContainerInstancesArns(clusterId);
-    logger.info("Container instances in cache {} ", activeContainerInstancesArns);
+    logger.debug("Container instances in cache {} ", activeContainerInstancesArns);
 
     publishStoppedContainerInstanceEvents(clusterId, settingId, activeContainerInstancesArns, currentActiveArns);
     for (ContainerInstance containerInstance : containerInstances) {
@@ -338,7 +337,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .setEcsContainerInstanceResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
 
-        logger.info("Container published Message {} ", ecsContainerInstanceInfo.toString());
+        logger.debug("Container published Message {} ", ecsContainerInstanceInfo.toString());
         eventPublisher.publishMessage(ecsContainerInstanceInfo,
             HTimestamps.fromDate(containerInstance.getRegisteredAt()),
             ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
@@ -363,7 +362,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       Set<String> currentActiveEc2InstanceIds, List<Instance> instances) {
     logger.info("Instance list size is {} ", instances.size());
     Set<String> activeEc2InstanceIds = fetchActiveEc2InstanceIds(clusterId);
-    logger.info("Active instance in cache {}", activeEc2InstanceIds);
+    logger.debug("Active instance in cache {}", activeEc2InstanceIds);
     publishMissingInstancesLifecycleEvent(clusterId, settingId, activeEc2InstanceIds, instances);
 
     for (Instance instance : instances) {
@@ -403,7 +402,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
         }
 
         Ec2InstanceInfo ec2InstanceInfo = ec2InstanceInfoBuilder.build();
-        logger.info("EC2 published Message {} ", ec2InstanceInfo.toString());
+        logger.debug("EC2 published Message {} ", ec2InstanceInfo.toString());
         eventPublisher.publishMessage(ec2InstanceInfo, HTimestamps.fromDate(instance.getLaunchTime()),
             ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       }
@@ -533,7 +532,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
   private void updateActiveInstanceCache(String clusterId, Set<String> activeEc2InstanceIds,
       Set<String> activeContainerInstanceArns, Set<String> activeTaskArns, Instant startTime) {
-    logger.info("Params to update cache {} ; {} ; {} ; {} ; {} ", clusterId, activeEc2InstanceIds,
+    logger.debug("Params to update cache {} ; {} ; {} ; {} ; {} ", clusterId, activeEc2InstanceIds,
         activeContainerInstanceArns, activeTaskArns, startTime);
     Optional.ofNullable(cache.get(clusterId, s -> createDefaultCache()))
         .ifPresent(activeInstancesCache
