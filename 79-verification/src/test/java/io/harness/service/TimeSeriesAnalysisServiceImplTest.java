@@ -1147,7 +1147,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetMetricTemplateWithCategorizedThresholdsWhenOnlyDefaultThresholdsAreDefinedForNewRelic() {
+  public void testGetMetricTemplateWithCategorizedThresholds_whenOnlyDefaultThresholdsAreDefinedForNewRelic() {
     Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplateWithCategorizedThresholds =
         timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(appId, StateType.NEW_RELIC,
             stateExecutionId, serviceId, cvConfigId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, Version.PROD);
@@ -1258,7 +1258,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
         + "          {\n"
         + "            \"thresholdType\": \"ALERT_WHEN_LOWER\",\n"
         + "            \"comparisonType\": \"DELTA\",\n"
-        + "            \"ml\": 0.2\n"
+        + "            \"ml\": 0.01\n"
         + "          }\n"
         + "        ]\n"
         + "      },\n"
@@ -1271,7 +1271,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
         + "        {\n"
         + "          \"thresholdType\": \"ALERT_WHEN_LOWER\",\n"
         + "          \"comparisonType\": \"DELTA\",\n"
-        + "          \"ml\": 0.2\n"
+        + "          \"ml\": 0.01\n"
         + "        }\n"
         + "      ]\n"
         + "    }\n"
