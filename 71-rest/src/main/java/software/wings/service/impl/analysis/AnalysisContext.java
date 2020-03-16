@@ -102,6 +102,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   @Indexed private Long logAnalysisIteration;
   @Indexed private Long logClusterIteration;
   @Indexed private Long cvTaskCreationIteration;
+  @Indexed private Long feedbackIteration;
   private int initialDelaySeconds;
   private int dataCollectionIntervalMins;
   private boolean isHistoricalDataCollection;
@@ -207,6 +208,10 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
       this.cvTaskCreationIteration = nextIteration;
       return;
     }
+    if (AnalysisContextKeys.feedbackIteration.equals(fieldName)) {
+      this.feedbackIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -223,6 +228,9 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     }
     if (AnalysisContextKeys.cvTaskCreationIteration.equals(fieldName)) {
       return this.cvTaskCreationIteration;
+    }
+    if (AnalysisContextKeys.feedbackIteration.equals(fieldName)) {
+      return this.feedbackIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

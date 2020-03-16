@@ -64,6 +64,7 @@ import io.harness.jobs.sg247.logs.ServiceGuardCleanUpAlertsJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.workflow.WorkflowCVTaskCreationHandler;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
+import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
@@ -330,6 +331,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AnalysisContextKeys.logAnalysisIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowLogClusterJob(),
         AnalysisContextKeys.logClusterIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
+    registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowFeedbackAnalysisJob(),
+        AnalysisContextKeys.feedbackIteration, MLAnalysisType.FEEDBACK_ANALYSIS, ofSeconds(30), 4);
     registerCreateCVTaskIterator(injector, workflowVerificationExecutor, ofSeconds(30), 4);
   }
 
