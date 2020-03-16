@@ -2,9 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -12,15 +10,10 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
@@ -29,8 +22,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
@@ -38,10 +29,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -73,22 +61,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<NewRelicApplication> getAllApplications(
-      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
     final Call<List<NewRelicApplication>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails));
-    final Response<List<NewRelicApplication>> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body()
-          .stream()
-          .filter(application -> isNotEmpty(application.getName()))
-          .sorted(Comparator.comparing(NewRelicApplication::getName))
-          .collect(Collectors.toList());
-    } else {
-      logger.info("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics applications");
+    List<NewRelicApplication> newRelicApplications = requestExecutor.executeRequest(request);
+
+    if (isNotEmpty(newRelicApplications)) {
+      newRelicApplications = newRelicApplications.stream()
+                                 .filter(application -> isNotEmpty(application.getName()))
+                                 .sorted(Comparator.comparing(NewRelicApplication::getName))
+                                 .collect(Collectors.toList());
     }
+    return newRelicApplications;
   }
 
   @Override
@@ -102,12 +87,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.setTitle("Fetching tiers for application " + appdynamicsAppId);
     final Set<AppdynamicsTier> response = requestExecutor.executeRequest(apiCallLog, request);
     response.forEach(tier -> tier.setExternalTiers(new HashSet<>()));
-    return response.stream().sorted(Comparator.comparing(AppdynamicsTier::getName)).collect(Collectors.toSet());
+    return new HashSet<>(response);
   }
 
   @Override
   public Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     Set<AppdynamicsTier> tiers = getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
     List<Callable<Void>> callables = new ArrayList<>();
@@ -118,35 +103,15 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
               .listMetrices(
                   getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
-      try {
-        final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
-        if (!tierBTResponse.isSuccessful()) {
-          logger.info("Request not successful. Reason: {}", tierBTResponse);
-          throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-              .addParam("reason", "could not fetch Appdynamics tier BTs : " + tierBTResponse);
-        }
-
-        List<AppdynamicsMetric> tierBtMetrics = tierBTResponse.body();
-        tierBtMetrics.forEach(tierBtMetric -> {
-          try {
-            List<AppdynamicsMetric> externalCallMetrics =
-                getExternalCallMetrics(appDynamicsConfig, appdynamicsAppId, tierBtMetric, tierBTsPath + "|",
-                    encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), null));
-            externalCallMetrics.forEach(
-                externalCallMetric -> parseAndAddExternalTier(tier.getExternalTiers(), externalCallMetric, tiers));
-          } catch (IOException e) {
-            throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e)
-                .addParam("reason", "could not fetch Appdynamics tier BTs");
-          } catch (CloneNotSupportedException e) {
-            throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e)
-                .addParam("reason", "could not fetch Appdynamics tier BTs");
-          }
-        });
-        return null;
-      } catch (Exception e) {
-        throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e)
-            .addParam("reason", "could not fetch Appdynamics tier BTs");
-      }
+      List<AppdynamicsMetric> tierBtMetrics = requestExecutor.executeRequest(tierBTMetricRequest);
+      tierBtMetrics.forEach(tierBtMetric -> {
+        List<AppdynamicsMetric> externalCallMetrics =
+            getExternalCallMetrics(appDynamicsConfig, appdynamicsAppId, tierBtMetric, tierBTsPath + "|",
+                encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), null));
+        externalCallMetrics.forEach(
+            externalCallMetric -> parseAndAddExternalTier(tier.getExternalTiers(), externalCallMetric, tiers));
+      });
+      return null;
     }));
     dataCollectionService.executeParrallel(callables);
 
@@ -194,94 +159,29 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching node list for app: " + appdynamicsAppId + " tier: " + tierId);
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("utl")
-                                     .type(FieldType.URL)
-                                     .value(request.request().url().toString())
-                                     .build());
-    Response<List<AppdynamicsNode>> response;
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching nodes from AppDynamics. Error message: " + e.getMessage()
-                  + " Request: " + request.request().url());
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      return response.body().stream().collect(Collectors.toSet());
-    } else {
-      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching nodesfrom AppDynamics. Error code: " + response.code()
-                  + ". Error:" + response.errorBody());
-    }
+    return new HashSet<>(requestExecutor.executeRequest(apiCallLog, request));
   }
 
   @Override
   public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     final AppdynamicsTier tier =
-        getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails, apiCallLog.copy());
+        getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails, apiCallLog);
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
     apiCallLog.setTitle("Fetching business transactions for tier from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .value(tierBTMetricRequest.request().url().toString())
-                                     .type(FieldType.URL)
-                                     .build());
 
-    Response<List<AppdynamicsMetric>> tierBTResponse;
-
-    try {
-      tierBTResponse = tierBTMetricRequest.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
-                  + " Request: " + tierBTsPath);
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (!tierBTResponse.isSuccessful()) {
-      apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      logger.info("Request not successful. Reason: {}", tierBTResponse);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching tier BTs from AppDynamics. Error code: " + tierBTResponse.code()
-                  + ". Error:" + tierBTResponse.errorBody());
-    }
-
-    apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.body(), FieldType.JSON);
-    delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-    List<AppdynamicsMetric> rv = tierBTResponse.body();
-    logger.info("metrics to analyze: " + rv);
-    return rv;
+    return requestExecutor.executeRequest(apiCallLog, tierBTMetricRequest);
   }
 
   @Override
@@ -289,69 +189,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       String tierName, String btName, String hostName, Long startTime, Long endTime,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
-    for (int i = 1; i <= RETRIES; i++) {
-      apiCallLog = apiCallLog.copy();
-      logger.info("getting AppDynamics metric data for state {}  host {}, app {}, tier {}, bt {}",
-          apiCallLog.getStateExecutionId(), hostName, appdynamicsAppId, tierName, btName);
-      String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|";
+    Preconditions.checkNotNull(startTime, "Start time was null while getting data from Appdynamics. StateExecutionId: ",
+        apiCallLog.getStateExecutionId());
+    Preconditions.checkNotNull(endTime,
+        "End time was null while getting data from Appdynamics. StateExecutionId: ", apiCallLog.getStateExecutionId());
 
-      metricPath += isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*";
-      logger.info("fetching metrics for path {} ", metricPath);
-
-      apiCallLog.setTitle("Fetching metric data for " + metricPath);
-      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      try {
-        Call<List<AppdynamicsMetricData>> tierBTMetricRequest;
-
-        if (startTime != null && endTime != null) {
-          tierBTMetricRequest =
-              getAppdynamicsRestClient(appDynamicsConfig)
-                  .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails),
-                      appdynamicsAppId, metricPath, startTime, endTime);
-          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                           .name("url")
-                                           .value(tierBTMetricRequest.request().url().toString())
-                                           .type(FieldType.URL)
-                                           .build());
-        } else {
-          throw new WingsException(
-              "Start time or end Time was null while getting data from AppDynamics. StateExecutionId: "
-              + apiCallLog.getStateExecutionId());
-        }
-
-        Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (tierBTMResponse.isSuccessful()) {
-          apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.body(), FieldType.JSON);
-          delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-          logger.info("for {} got {} metrics for path {}", apiCallLog.getStateExecutionId(),
-              tierBTMResponse.body().size(), metricPath);
-          return tierBTMResponse.body();
-        } else {
-          logger.info(
-              "Request not successful for state {}. Reason: {}", apiCallLog.getStateExecutionId(), tierBTMResponse);
-          apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.errorBody().string(), FieldType.TEXT);
-          delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-          throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-              .addParam("reason",
-                  "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierBTMResponse.code()
-                      + ". Error message: " + tierBTMResponse.errorBody());
-        }
-      } catch (Exception e) {
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-        delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-        if (i >= RETRIES) {
-          throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-              .addParam("reason",
-                  "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
-                      + " Request: " + metricPath);
-        } else {
-          sleep(Duration.ofSeconds(2));
-        }
-      }
-    }
-    throw new IllegalStateException("This state for " + apiCallLog.getStateExecutionId() + " should never reach");
+    String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|"
+        + (isEmpty(hostName) ? "*" : "Individual Nodes|") + hostName + "|*";
+    logger.info("fetching metrics for path {} ", metricPath);
+    Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
+                metricPath, startTime, endTime);
+    return requestExecutor.executeRequest(apiCallLog, tierBTMetricRequest);
   }
 
   @Override
@@ -368,7 +218,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
       AppdynamicsMetric appdynamicsMetric, String parentMetricPath, boolean includeExternal,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     if (appdynamicsMetric.getType() != AppdynamicsMetricType.folder) {
       return Collections.emptyList();
@@ -379,130 +229,62 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     }
 
     final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + applicationId
-                                         + "/metrics?output=JSON&metric-path=" + childMetricPath)
-                                     .type(FieldType.URL)
-                                     .build());
     apiCallLog.setTitle("Fetching metric names from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
-    Response<List<AppdynamicsMetric>> response;
+    final List<AppdynamicsMetric> allMetrics = requestExecutor.executeRequest(apiCallLog, request);
+    for (Iterator<AppdynamicsMetric> iterator = allMetrics.iterator(); iterator.hasNext();) {
+      final AppdynamicsMetric metric = iterator.next();
 
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
-                  + " Request: " + childMetricPath);
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      final List<AppdynamicsMetric> allMetrices = response.body();
-      for (Iterator<AppdynamicsMetric> iterator = allMetrices.iterator(); iterator.hasNext();) {
-        final AppdynamicsMetric metric = iterator.next();
-
-        // While getting the metric names we do not need to go to individual metrics names since the metric names in
-        // each node are the same and there can be thousands of nodes in case of recycled nodes for container world
-        // We would not be monitoring external calls metrics because one deployment is not going to effect multiple
-        // tiers
-        if (metric.getName().contains(INDIVIDUAL_NODES)) {
-          iterator.remove();
-          continue;
-        }
-
-        if (!includeExternal && metric.getName().contains(EXTERNAL_CALLS)) {
-          iterator.remove();
-          continue;
-        }
-
-        metric.setChildMetrices(getChildMetrics(appDynamicsConfig, applicationId, metric, childMetricPath,
-            includeExternal, encryptionDetails, apiCallLog.copy()));
+      // While getting the metric names we do not need to go to individual metrics names since the metric names in
+      // each node are the same and there can be thousands of nodes in case of recycled nodes for container world
+      // We would not be monitoring external calls metrics because one deployment is not going to effect multiple
+      // tiers
+      if (metric.getName().contains(INDIVIDUAL_NODES)
+          || !includeExternal && metric.getName().contains(EXTERNAL_CALLS)) {
+        iterator.remove();
+        continue;
       }
-      return allMetrices;
-    } else {
-      logger.info("Request not successful. Reason: {}", response);
-      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from AppDynamics. Error code: "
-          + response.code() + ". Error message: " + response.errorBody());
+
+      metric.setChildMetrices(getChildMetrics(appDynamicsConfig, applicationId, metric, childMetricPath,
+          includeExternal, encryptionDetails, apiCallLog.copy()));
     }
+    return allMetrics;
   }
 
   private List<AppdynamicsMetric> getExternalCallMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
       AppdynamicsMetric appdynamicsMetric, String parentMetricPath, List<EncryptedDataDetail> encryptionDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException {
+      ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     if (appdynamicsMetric.getType() != AppdynamicsMetricType.folder) {
       return Collections.emptyList();
     }
 
     final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + applicationId
-                                         + "/metrics?output=JSON&metric-path=" + childMetricPath)
-                                     .type(FieldType.URL)
-                                     .build());
     apiCallLog.setTitle("Fetching external calls metric names from " + appDynamicsConfig.getControllerUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
-    final Response<List<AppdynamicsMetric>> response;
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
-                  + " Request: " + childMetricPath);
-    }
-
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      final List<AppdynamicsMetric> allMetrices = response.body();
-      for (Iterator<AppdynamicsMetric> iterator = allMetrices.iterator(); iterator.hasNext();) {
-        final AppdynamicsMetric metric = iterator.next();
-
-        if (!metric.getName().contains(EXTERNAL_CALLS)) {
-          iterator.remove();
-          continue;
-        }
-
-        metric.setChildMetrices(getChildMetrics(
-            appDynamicsConfig, applicationId, metric, childMetricPath, true, encryptionDetails, apiCallLog.copy()));
+    final List<AppdynamicsMetric> allMetrics = requestExecutor.executeRequest(apiCallLog, request);
+    for (Iterator<AppdynamicsMetric> iterator = allMetrics.iterator(); iterator.hasNext();) {
+      final AppdynamicsMetric metric = iterator.next();
+      if (!metric.getName().contains(EXTERNAL_CALLS)) {
+        iterator.remove();
+        continue;
       }
-      return allMetrices;
-    } else {
-      logger.info("Request not successful. Reason: {}", response);
-      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from AppDynamics. Error code: "
-          + response.code() + ". Error message: " + response.errorBody());
+      metric.setChildMetrices(getChildMetrics(
+          appDynamicsConfig, applicationId, metric, childMetricPath, true, encryptionDetails, apiCallLog.copy()));
     }
+    return allMetrics;
   }
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ThirdPartyApiCallLog apiCallLog) {
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, setupTestNodeData.getApplicationId(),
         setupTestNodeData.getTierId(), encryptionDetails, apiCallLog.copy());
     final List<AppdynamicsMetric> tierMetrics = getTierBTMetrics(appDynamicsConfig,

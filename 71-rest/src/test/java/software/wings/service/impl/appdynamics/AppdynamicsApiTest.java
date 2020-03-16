@@ -103,11 +103,10 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNullApplicationName() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
-    when(restCall.execute())
-        .thenReturn(
-            Response.success(Lists.newArrayList(NewRelicApplication.builder().id(123).name(generateUuid()).build(),
-                NewRelicApplication.builder().id(345).build())));
-    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
+    List<NewRelicApplication> allApplications =
+        Lists.newArrayList(NewRelicApplication.builder().id(123).name(generateUuid()).build(),
+            NewRelicApplication.builder().id(345).build());
+    when(requestExecutor.executeRequest(any())).thenReturn(allApplications);
 
     String savedAttributeId = saveAppdynamicsConfig();
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -121,7 +120,6 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetApplications() throws IOException {
-    Call<List<NewRelicApplication>> restCall = mock(Call.class);
     List<NewRelicApplication> applications = Lists.newArrayList(
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build(),
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build());
@@ -129,11 +127,9 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     List<NewRelicApplication> sortedApplicationsByName =
         applications.stream().sorted(Comparator.comparing(NewRelicApplication::getName)).collect(Collectors.toList());
 
-    when(restCall.execute()).thenReturn(Response.success(applications));
-    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
-
     String savedAttributeId = saveAppdynamicsConfig();
 
+    when(requestExecutor.executeRequest(any())).thenReturn(applications);
     RestResponse<List<NewRelicApplication>> allApplications =
         appdynamicsResource.getAllApplications(accountId, savedAttributeId);
     assertThat(allApplications.getResponseMessages().isEmpty()).isTrue();
@@ -223,6 +219,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     when(btsCall.execute()).thenReturn(Response.success(bts));
     when(btsCall.request()).thenReturn(new Request.Builder().url("https://google.com").build());
     when(appdynamicsRestClient.listMetrices(anyString(), anyLong(), anyString())).thenReturn(btsCall);
+    when(requestExecutor.executeRequest(any(), eq(btsCall))).thenReturn(bts);
 
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
@@ -313,6 +310,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     when(btDataCall.execute()).thenReturn(Response.success(btData));
     when(appdynamicsRestClient.getMetricDataTimeRange(anyString(), anyLong(), anyString(), anyLong(), anyLong()))
         .thenReturn(btDataCall);
+    when(requestExecutor.executeRequest(any(), eq(btDataCall))).thenReturn(btData);
 
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
