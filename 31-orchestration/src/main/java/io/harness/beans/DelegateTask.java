@@ -49,6 +49,9 @@ import javax.validation.constraints.NotNull;
   })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
+  private boolean capabilityFrameworkEnabled;
+
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;
 
