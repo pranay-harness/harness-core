@@ -202,7 +202,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                                                      .executeOnDelegate(executeOnDelegate)
                                                      .publicDns(host.getPublicDns())
                                                      .build())
-
                                  .winRmConnectionAttributes(winrmConnectionAttributes)
                                  .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
                                  .build());
