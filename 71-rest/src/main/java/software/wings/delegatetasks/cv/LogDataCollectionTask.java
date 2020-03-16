@@ -49,7 +49,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
           .forEach(batch -> callables.add(() -> logDataCollector.fetchLogs(batch)));
       dataCollectionInfo.getHosts().forEach(host -> addHeartbeats(Optional.of(host), dataCollectionInfo, logElements));
     }
-    List<Optional<List<LogElement>>> results = execute(callables);
+    List<Optional<List<LogElement>>> results = executeParallel(callables);
     List<LogElement> allLogs = new ArrayList<>();
 
     results.forEach(result -> {
@@ -92,17 +92,6 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
     } catch (IOException e) {
       throw new DataCollectionException(e);
     }
-  }
-
-  private List<Optional<List<LogElement>>> execute(List<Callable<List<LogElement>>> callables)
-      throws DataCollectionException {
-    List<Optional<List<LogElement>>> results;
-    try {
-      results = executeParallel(callables);
-    } catch (IOException e) {
-      throw new DataCollectionException(e);
-    }
-    return results;
   }
 
   protected void addHeartbeats(

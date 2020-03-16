@@ -17,8 +17,6 @@ import software.wings.helpers.ext.prometheus.PrometheusRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 
-import java.time.OffsetDateTime;
-
 /**
  * Created by rsingh on 3/14/18.
  */
@@ -33,7 +31,6 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
       PrometheusConfig prometheusConfig, String url, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching metric data from " + prometheusConfig.getUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
     return requestExecutor.executeRequest(apiCallLog, request);
   }

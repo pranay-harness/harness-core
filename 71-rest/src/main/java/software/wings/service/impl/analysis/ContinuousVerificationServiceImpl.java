@@ -168,6 +168,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
+import software.wings.verification.ServiceGuardThroughputToErrorsMap;
 import software.wings.verification.ServiceGuardTimeSeries;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
@@ -949,12 +950,27 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return null;
   }
 
-  private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord, StateType stateType) {
-    switch (stateType) {
+  private Double getNormalizedMetricValue(
+      String metricName, NewRelicMetricDataRecord dataRecord, CVConfiguration cvConfiguration) {
+    final List<ServiceGuardThroughputToErrorsMap> throughputToErrors = cvConfiguration.getThroughputToErrors();
+
+    // this swicth block should be needed once we move all the providers to use the percentage conversion method
+    switch (cvConfiguration.getStateType()) {
       case APP_DYNAMICS:
         return AppDynamicsState.getNormalizedValue(metricName, dataRecord);
       case NEW_RELIC:
         return NewRelicState.getNormalizedErrorMetric(metricName, dataRecord);
+      case PROMETHEUS:
+        final Optional<ServiceGuardThroughputToErrorsMap> txnThroughputToError =
+            throughputToErrors.stream()
+                .filter(throughputToErrorsMap
+                    -> isNotEmpty(throughputToErrorsMap.getTxnName())
+                        && throughputToErrorsMap.getTxnName().equals(dataRecord.getName()))
+                .findFirst();
+        if (txnThroughputToError.isPresent()) {
+          dataRecord.convertErrorsToPercentage(txnThroughputToError.get().getThroughputToErrorsMap());
+        }
+        return dataRecord.getValues().get(metricName);
       default:
         return dataRecord.getValues().get(metricName);
     }
@@ -1360,7 +1376,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         // fill in the metrics for this record at the correct spots
         metricMap.get(metricName)
             .addToTimeSeriesMap(metricRecord.getDataCollectionMinute(),
-                getNormalizedMetricValue(metricName, metricRecord, cvConfiguration.getStateType()));
+                getNormalizedMetricValue(metricName, metricRecord, cvConfiguration));
         metricMap.get(metricName).setMetricType(getMetricType(cvConfiguration, metricName));
         if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
           if (metricRecord.getDeeplinkUrl().containsKey(metricName)) {

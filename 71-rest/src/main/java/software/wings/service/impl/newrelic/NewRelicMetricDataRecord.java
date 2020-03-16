@@ -9,6 +9,7 @@ import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
+import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,9 +41,11 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,7 +74,6 @@ import java.util.Map;
 @IgnoreUnusedIndex
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 
@@ -234,5 +236,19 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     if (isNotEmpty(value)) {
       keyBuilder.append(':').append(value);
     }
+  }
+
+  public void convertErrorsToPercentage(Map<String, List<String>> throughputToErrorsMap) {
+    Preconditions.checkNotNull(throughputToErrorsMap);
+    DecimalFormat twoDForm = new DecimalFormat("#.00");
+    throughputToErrorsMap.forEach((throughput, errors) -> {
+      if (values.containsKey(throughput) && values.get(throughput) != 0) {
+        errors.forEach(error -> {
+          if (values.containsKey(error)) {
+            values.put(error, Double.valueOf(twoDForm.format(values.get(error) * 100 / values.get(throughput))));
+          }
+        });
+      }
+    });
   }
 }

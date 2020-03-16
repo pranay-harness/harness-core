@@ -31,6 +31,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -167,5 +168,10 @@ public class CVConfiguration extends Base implements NameAccess {
     cvConfiguration.setSnoozeStartTime(this.getSnoozeStartTime());
     cvConfiguration.setSnoozeEndTime(this.getSnoozeEndTime());
     cvConfiguration.setAppId(this.getAppId());
+  }
+
+  @JsonIgnore
+  public List<ServiceGuardThroughputToErrorsMap> getThroughputToErrors() {
+    return Collections.emptyList();
   }
 }

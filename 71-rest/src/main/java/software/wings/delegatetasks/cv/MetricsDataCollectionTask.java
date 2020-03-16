@@ -15,7 +15,6 @@ import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +48,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
       Iterables.partition(dataCollectionInfo.getHosts(), metricsDataCollector.getHostBatchSize())
           .forEach(batch -> callables.add(() -> metricsDataCollector.fetchMetrics(batch)));
     }
-    List<Optional<List<MetricElement>>> results = execute(callables);
+    List<Optional<List<MetricElement>>> results = executeParallel(callables);
     results.forEach(result -> {
       if (result.isPresent()) {
         newRelicMetrics.addAll(
@@ -95,17 +94,6 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     if (!response) {
       throw new DataCollectionException("Unable to save metrics elements. Manager API returned false");
     }
-  }
-
-  private List<Optional<List<MetricElement>>> execute(List<Callable<List<MetricElement>>> callables)
-      throws DataCollectionException {
-    List<Optional<List<MetricElement>>> results = null;
-    try {
-      results = executeParallel(callables);
-    } catch (IOException e) {
-      throw new DataCollectionException(e);
-    }
-    return results;
   }
 
   protected void addHeartbeats(
