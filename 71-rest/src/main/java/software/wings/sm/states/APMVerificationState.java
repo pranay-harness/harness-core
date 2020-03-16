@@ -4,13 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -26,20 +26,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
@@ -50,7 +47,6 @@ import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.UnsupportedEncodingException;
@@ -68,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
+@FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
 public class APMVerificationState extends AbstractMetricAnalysisState {
   @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
 
@@ -121,38 +118,6 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     this.includePreviousPhaseNodes = includePreviousPhaseNodes;
   }
 
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  @Override
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
-  }
-
   @Attributes(title = "Initial Delay (10s, 30s, 1m, 2m")
   @DefaultValue("2m")
   public String getInitialAnalysisDelay() {
@@ -199,11 +164,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             isNotEmpty(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
     APMVerificationConfig apmConfig = getApmVerificationConfig(context);
     return CustomAPMDataCollectionInfo.builder()
-        .connectorId(analysisServerConfigId)
+        .connectorId(
+            getResolvedConnectorId(context, APMVerificationStateKeys.analysisServerConfigId, analysisServerConfigId))
         .workflowExecutionId(context.getWorkflowExecutionId())
         .stateExecutionId(context.getStateExecutionInstanceId())
         .workflowId(context.getWorkflowId())
-        .accountId(appService.get(context.getAppId()).getAccountId())
+        .accountId(context.getAccountId())
         .envId(envId)
         .applicationId(context.getAppId())
         .hosts(hostsToCollect.keySet())
@@ -357,47 +323,20 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   private APMVerificationConfig getApmVerificationConfig(ExecutionContext context) {
-    SettingAttribute settingAttribute = null;
-    String serverConfigId = analysisServerConfigId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        serverConfigId = settingAttribute.getUuid();
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(serverConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No Datadog setting with id: " + analysisServerConfigId + " found");
-      }
-    }
-
+    String serverConfigId =
+        getResolvedConnectorId(context, APMVerificationStateKeys.analysisServerConfigId, analysisServerConfigId);
+    SettingAttribute settingAttribute = settingsService.get(serverConfigId);
+    Preconditions.checkNotNull(settingAttribute, "No AMP settings with id: " + analysisServerConfigId + " found");
     return (APMVerificationConfig) settingAttribute.getValue();
   }
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     String envId = getEnvId(context);
-
-    SettingAttribute settingAttribute = null;
-    String serverConfigId = analysisServerConfigId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        serverConfigId = settingAttribute.getUuid();
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(serverConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No Datadog setting with id: " + analysisServerConfigId + " found");
-      }
-    }
-
+    String serverConfigId =
+        getResolvedConnectorId(context, APMVerificationStateKeys.analysisServerConfigId, analysisServerConfigId);
+    SettingAttribute settingAttribute = settingsService.get(serverConfigId);
+    Preconditions.checkNotNull(settingAttribute, "No AMP settings with id: " + analysisServerConfigId + " found");
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
 
     List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
