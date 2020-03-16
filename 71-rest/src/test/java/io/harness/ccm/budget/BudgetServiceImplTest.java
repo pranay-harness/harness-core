@@ -250,4 +250,14 @@ public class BudgetServiceImplTest extends CategoryTest {
     assertThat(budgetDetails.getScopeType()).isEqualTo("CLUSTER");
     assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
   }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void shouldCloneBudget() {
+    when(budgetDao.get(budgetId)).thenReturn(budget);
+    when(budgetDao.save(any())).thenReturn(anyString());
+    String cloneBudgetId = budgetService.clone(budgetId, "CLONE");
+    assertThat(cloneBudgetId).isNotNull();
+  }
 }
