@@ -305,7 +305,7 @@ public class HelmTaskHelper {
 
   public void cleanup(String workingDirectory) {
     try {
-      logger.warn("Cleaning up directory " + workingDirectory);
+      logger.info("Cleaning up directory " + workingDirectory);
       deleteDirectoryAndItsContentIfExists(workingDirectory);
     } catch (Exception ex) {
       logger.warn("Exception in directory cleanup.", ex);
