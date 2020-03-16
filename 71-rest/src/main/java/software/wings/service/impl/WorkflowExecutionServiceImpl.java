@@ -1371,6 +1371,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             workflowExecution.getExecutionArgs().getArtifactVariables());
       }
     }
+    // set pipeline variables
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      Map<String, String> workflowVariables = workflowExecution.getExecutionArgs().getWorkflowVariables();
+      if (isNotEmpty(workflowVariables)) {
+        stdParams.getWorkflowElement().setVariables(new HashMap<>(workflowVariables));
+      }
+    }
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getWorkflowType() == PIPELINE
             ? workflowExecution.getUuid()
             : workflowExecution.getPipelineExecutionId());
