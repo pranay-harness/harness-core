@@ -44,6 +44,7 @@ import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -188,7 +189,9 @@ public class K8sTaskHelper {
       FileIo.writeUtf8StringToFile(
           k8sDelegateTaskParams.getWorkingDirectory() + "/manifests-dry-run.yaml", ManifestHelper.toYaml(resources));
 
-      ProcessResult result = executeCommand(client.apply().filename("manifests-dry-run.yaml").dryrun(true),
+      Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
+
+      ProcessResult result = executeCommand(overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true),
           k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
@@ -204,12 +207,28 @@ public class K8sTaskHelper {
     return true;
   }
 
+  private Kubectl getOverriddenClient(
+      Kubectl client, List<KubernetesResource> resources, K8sDelegateTaskParams k8sDelegateTaskParams) {
+    List<KubernetesResource> openshiftResourcesList =
+        resources.stream()
+            .filter(kubernetesResource
+                -> K8sTaskHelper.openshiftResources.contains(kubernetesResource.getResourceId().getKind()))
+            .collect(Collectors.toList());
+    if (isEmpty(openshiftResourcesList)) {
+      return client;
+    }
+
+    return Kubectl.client(k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath());
+  }
+
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
-    ProcessResult result = executeCommand(client.apply().filename("manifests.yaml").record(true),
+    Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
+
+    ProcessResult result = executeCommand(overriddenClient.apply().filename("manifests.yaml").record(true),
         k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
     if (result.getExitValue() != 0) {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
@@ -1710,4 +1729,6 @@ public class K8sTaskHelper {
         .append(resourceId.getName())
         .toString();
   }
+
+  private static final Set<String> openshiftResources = ImmutableSet.of("Route");
 }

@@ -1,5 +1,6 @@
 package io.harness.k8s.kubectl;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -85,5 +86,23 @@ public class ApplyCommandTest extends CategoryTest {
 
     applyCommand.record(false);
     assertThat(applyCommand.command().contains("--record")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetPrintableCommand() {
+    Kubectl client = Kubectl.client("kubectl", "config");
+
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true).output("yaml");
+    String printableCommand = ApplyCommand.getPrintableCommand(applyCommand.command());
+    assertThat(printableCommand)
+        .isEqualTo("kubectl --kubeconfig=config apply --filename=manifests.yaml --record --output=yaml");
+
+    client = Kubectl.client("oc", "config");
+    applyCommand = client.apply().filename("manifests.yaml").record(true).output("yaml");
+    printableCommand = ApplyCommand.getPrintableCommand(applyCommand.command());
+    assertThat(printableCommand)
+        .isEqualTo("oc --kubeconfig=config apply --filename=manifests.yaml --record --output=yaml");
   }
 }

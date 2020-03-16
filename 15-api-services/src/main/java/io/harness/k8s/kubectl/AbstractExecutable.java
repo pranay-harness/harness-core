@@ -26,7 +26,12 @@ public abstract class AbstractExecutable implements Executable {
   }
 
   public static String getPrintableCommand(String command) {
-    return command.substring(command.indexOf("kubectl --kubeconfig"));
+    int index = command.indexOf("kubectl --kubeconfig");
+    if (index != -1) {
+      return command.substring(index);
+    }
+
+    return command.substring(command.indexOf("oc --kubeconfig"));
   }
 
   private void writeCommandToOutput(String command, OutputStream output) throws Exception {
