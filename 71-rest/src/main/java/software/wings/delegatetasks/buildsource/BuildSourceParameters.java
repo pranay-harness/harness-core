@@ -76,7 +76,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
     }
   }
 
-  private String getUrl(String gcrHostName) {
-    return "https://" + gcrHostName + (gcrHostName.endsWith("/") ? "" : "/");
+  private String getUrl(String hostName) {
+    return "https://" + hostName + (hostName.endsWith("/") ? "" : "/");
   }
 }
