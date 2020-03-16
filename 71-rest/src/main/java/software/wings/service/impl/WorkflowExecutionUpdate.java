@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -299,7 +300,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         // checking string equals null as the jexl library seems to be returning the string "null" in some cases when
         // the expression can't be evaluated instead of returning the original expression
         // if key can't be evaluated, don't store it
-        if (tagKey == null || tagKey.equals("null")
+        if (isEmpty(tagKey) || tagKey.equals("null")
             || (harnessTagLink.getKey().startsWith("${") && harnessTagLink.getKey().equals(tagKey))) {
           continue;
         }

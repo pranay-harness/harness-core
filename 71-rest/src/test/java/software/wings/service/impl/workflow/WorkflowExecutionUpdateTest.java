@@ -195,6 +195,8 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     harnessTagLinkList.add(constructHarnessTagLink("env", "${workflow.variables.env}"));
     harnessTagLinkList.add(constructHarnessTagLink("company", "foobar"));
     harnessTagLinkList.add(constructHarnessTagLink("${account.defaults.owner}", ""));
+    harnessTagLinkList.add(constructHarnessTagLink("${workflow.variables.mytag}", ""));
+    harnessTagLinkList.add(constructHarnessTagLink("${workflow.variables.mytag2}", ""));
     when(harnessTagService.getTagLinksWithEntityId(anyString(), anyString())).thenReturn(harnessTagLinkList);
     when(context.renderExpression(eq("foo"))).thenReturn("foo");
     when(context.renderExpression(eq(""))).thenReturn("");
@@ -203,6 +205,8 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     when(context.renderExpression(eq("company"))).thenReturn("company");
     when(context.renderExpression(eq("foobar"))).thenReturn("foobar");
     when(context.renderExpression(eq("${account.defaults.owner}"))).thenReturn("${account.defaults.owner}");
+    when(context.renderExpression(eq("${workflow.variables.mytag}"))).thenReturn("");
+    when(context.renderExpression(eq("${workflow.variables.mytag2}"))).thenReturn(null);
     List<NameValuePair> tags = workflowExecutionUpdate.resolveDeploymentTags(context, WORKFLOW_ID);
     assertThat(tags).isNotEmpty();
     assertThat(tags.size()).isEqualTo(3);
