@@ -1,11 +1,14 @@
 package io.harness.jobs.workflow.logs;
 
+import static software.wings.beans.FeatureName.REMOVE_FEEDBACK_CRON;
+
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -25,11 +28,12 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowFeedbackAnalysisJob implements Job {
+public class WorkflowFeedbackAnalysisJob implements Job, MongoPersistenceIterator.Handler<AnalysisContext> {
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
@@ -45,10 +49,22 @@ public class WorkflowFeedbackAnalysisJob implements Job {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting feedback analysis cron " + JsonUtils.asJson(context));
-      new WorkflowFeedbackAnalysisJob
-          .FeedbackAnalysisTask(analysisService, context, jobExecutionContext, learningEngineService, managerClient,
-              managerClientHelper, dataStoreService)
-          .call();
+      if (managerClientHelper
+              .callManagerWithRetry(managerClient.isFeatureEnabled(REMOVE_FEEDBACK_CRON, context.getAccountId()))
+              .getResource()) {
+        logger.info("The feature REMOVE_FEEDBACK_CRON is enabled for {}, it will be handled by the iterators",
+            context.getAccountId());
+      } else {
+        logger.info("Executing workflow feedback cron job with context : {} and params : {}", context, params);
+        new WorkflowFeedbackAnalysisJob
+            .FeedbackAnalysisTask(analysisService, context, Optional.of(jobExecutionContext), learningEngineService,
+                managerClient, managerClientHelper, dataStoreService)
+            .call();
+      }
+      if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        logger.info("The state {} is no longer valid, so we are deleting the cron now.", context.getStateExecutionId());
+        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+      }
       logger.info("Finish feedback analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
       logger.warn("feedback analysis cron failed with error", ex);
@@ -60,12 +76,33 @@ public class WorkflowFeedbackAnalysisJob implements Job {
     }
   }
 
+  @Override
+  public void handle(AnalysisContext analysisContext) {
+    if (!managerClientHelper
+             .callManagerWithRetry(managerClient.isFeatureEnabled(REMOVE_FEEDBACK_CRON, analysisContext.getAccountId()))
+             .getResource()) {
+      logger.info(
+          "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is not enabled for {}, it will be handled by the cron",
+          analysisContext.getAccountId());
+      return;
+    }
+    logger.info(
+        "Handling the feedback for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
+    try {
+      new FeedbackAnalysisTask(analysisService, analysisContext, Optional.empty(), learningEngineService, managerClient,
+          managerClientHelper, dataStoreService)
+          .call();
+    } catch (Exception e) {
+      logger.error("Feedback analysis iterator failed for {}", analysisContext.getStateExecutionId(), e);
+    }
+  }
+
   @AllArgsConstructor
   public static class FeedbackAnalysisTask implements Callable<Long> {
     private LogAnalysisService analysisService;
 
     private AnalysisContext context;
-    private JobExecutionContext jobExecutionContext;
+    private Optional<JobExecutionContext> jobExecutionContext;
     private LearningEngineService learningEngineService;
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
@@ -139,11 +176,13 @@ public class WorkflowFeedbackAnalysisJob implements Job {
             } catch (Exception e) {
               logger.error("Send notification failed for feedback analysis manager", e);
             } finally {
-              try {
-                jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-              } catch (Exception e) {
-                logger.error("Delete cron failed", e);
-              }
+              jobExecutionContext.ifPresent(jobContext -> {
+                try {
+                  jobContext.getScheduler().deleteJob(jobContext.getJobDetail().getKey());
+                } catch (SchedulerException e) {
+                  logger.error("Delete cron failed", e);
+                }
+              });
             }
           }
         } catch (Exception ex) {
