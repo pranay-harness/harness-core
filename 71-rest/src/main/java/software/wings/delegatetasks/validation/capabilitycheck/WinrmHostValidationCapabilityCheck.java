@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation.capabilitycheck;
 
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
@@ -38,7 +39,7 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
     logger.info("Validating Winrm Session to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
         config.isUseSSL());
 
-    try (WinRmSession ignore = new WinRmSession(config)) {
+    try (WinRmSession ignore = makeSession(config)) {
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
       logger.info("Exception in WinrmSession Validation: {}", e);
@@ -65,5 +66,10 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
         .workingDirectory(WINDOWS_HOME_DIR)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
         .build();
+  }
+
+  @VisibleForTesting
+  WinRmSession makeSession(WinRmSessionConfig config) {
+    return new WinRmSession(config);
   }
 }
