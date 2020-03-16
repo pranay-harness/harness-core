@@ -1,4 +1,5 @@
 - collectionUrl: customLogVerificationQuery
+  collectionBody: body${host}
   responseType: JSON
   method: GET
   responseMapping:

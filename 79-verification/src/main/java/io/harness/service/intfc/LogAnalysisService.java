@@ -108,9 +108,6 @@ public interface LogAnalysisService {
 
   long getMinuteForHost(String appId, String stateExecutionId, String hostName, ClusterLevel clusterLevel);
 
-  Set<String> getHostsForClusterLevel(
-      String appId, String fieldNameForQuery, String fieldValueForQuery, ClusterLevel... clusterLevels);
-
   long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status);
 
   long getLastWorkflowAnalysisMinute(String appId, String stateExecutionId, LogMLAnalysisStatus status);
