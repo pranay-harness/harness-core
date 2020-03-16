@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -144,7 +143,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     }
   }
 
-  protected <T> List<Optional<T>> executeParallel(List<Callable<T>> callables) throws IOException {
+  protected <T> List<Optional<T>> executeParallel(List<Callable<T>> callables) {
     return dataCollectionService.executeParrallel(callables);
   }
 

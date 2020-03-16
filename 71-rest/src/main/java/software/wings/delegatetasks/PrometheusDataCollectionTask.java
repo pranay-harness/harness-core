@@ -135,9 +135,11 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
           }
           break;
-        } catch (DataCollectionException e) {
+        } catch (DataCollectionException ex) {
+          logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+              dataCollectionMinute, ex);
+          taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
           taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-          taskResult.setErrorMessage(e.getMessage());
           completed.set(true);
           break;
         } catch (Throwable ex) {
@@ -165,7 +167,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
       }
     }
 
-    public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
+    public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
 
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
