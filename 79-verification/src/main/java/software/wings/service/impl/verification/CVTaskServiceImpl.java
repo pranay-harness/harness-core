@@ -98,10 +98,12 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   private List<CVTask> createCVTasksForHistoricalDataCollection(AnalysisContext context, int timeDuration) {
     List<CVTask> cvTasks = new ArrayList<>();
+    Instant dataCollectionStartTime =
+        Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute()));
     long startTime = TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute());
     for (int minute = 0; minute < timeDuration; minute++) {
       long startTimeMillis = startTime + Duration.ofMinutes(minute).toMillis();
-      long endTimeMillis = Duration.ofMinutes(Math.min(timeDuration - minute, 1)).toMillis();
+      long endTimeMillis = startTimeMillis + Duration.ofMinutes(Math.min(timeDuration - minute, 1)).toMillis();
       for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
         String hostName = getHostNameForTestControl(i);
         long thisEndTime = endTimeMillis - TimeUnit.DAYS.toMillis(i);
@@ -110,6 +112,8 @@ public class CVTaskServiceImpl implements CVTaskService {
         copy.setStartTime(Instant.ofEpochMilli(thisStartTime));
         copy.setEndTime(Instant.ofEpochMilli(thisEndTime));
         copy.setHosts(Sets.newHashSet(hostName));
+        copy.setDataCollectionStartTime(dataCollectionStartTime.minus(i, ChronoUnit.DAYS));
+        copy.setShouldSendHeartbeat(false);
         CVTask cvTask =
             CVTask.builder()
                 .accountId(context.getAccountId())
@@ -121,6 +125,7 @@ public class CVTaskServiceImpl implements CVTaskService {
                 .build();
         cvTasks.add(cvTask);
       }
+      cvTasks.get(cvTasks.size() - 1).getDataCollectionInfo().setShouldSendHeartbeat(true);
     }
 
     return cvTasks;

@@ -45,6 +45,7 @@ public abstract class DataCollectionInfoV2 implements TaskParameters, ExecutionC
   private String connectorId;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private Instant dataCollectionStartTime;
+  private boolean shouldSendHeartbeat = true;
 
   public Set<String> getHosts() {
     // morphia converts empty objects to null while saving to database so making sure it's always returns empty set if
@@ -80,6 +81,7 @@ public abstract class DataCollectionInfoV2 implements TaskParameters, ExecutionC
     dataCollectionInfo.setServiceId(this.serviceId);
     dataCollectionInfo.setCvTaskId(this.cvTaskId);
     dataCollectionInfo.setConnectorId(this.connectorId);
+    dataCollectionInfo.setShouldSendHeartbeat(this.shouldSendHeartbeat);
     if (encryptedDataDetails != null) {
       dataCollectionInfo.setEncryptedDataDetails(new ArrayList<>(encryptedDataDetails));
     }

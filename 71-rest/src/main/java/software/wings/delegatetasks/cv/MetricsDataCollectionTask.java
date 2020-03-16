@@ -41,7 +41,9 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     this.metricsDataCollector = (MetricsDataCollector<T>) getDataCollector();
     final List<NewRelicMetricDataRecord> newRelicMetrics = new ArrayList<>();
     final List<Callable<List<MetricElement>>> callables = new ArrayList<>();
-    addHeartbeats(dataCollectionInfo, newRelicMetrics);
+    if (dataCollectionInfo.isShouldSendHeartbeat()) {
+      addHeartbeats(dataCollectionInfo, newRelicMetrics);
+    }
     if (dataCollectionInfo.getHosts().isEmpty()) {
       callables.add(() -> metricsDataCollector.fetchMetrics());
     } else {
@@ -103,6 +105,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     for (Map.Entry<String, String> entry : metricsDataCollectionInfo.getHostsToGroupNameMap().entrySet()) {
       if (!groups.contains(entry.getValue())) {
         int dataCollectionMinute = heartbeatMin;
+        logger.info("Heartbeat min: " + heartbeatMin);
         if (metricsDataCollectionInfo.getDataCollectionStartTime() != null) {
           // unfortunately there is a inconsistency between how heartbeat is created for workflow and how it's created
           // for service guard.
@@ -111,6 +114,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
                          - TimeUnit.MILLISECONDS.toMinutes(
                                metricsDataCollectionInfo.getDataCollectionStartTime().toEpochMilli()))
                   - 1);
+          logger.info("dataCollectionMinute min: " + dataCollectionMinute);
         }
         newRelicMetrics.add(NewRelicMetricDataRecord.builder()
                                 .stateType(metricsDataCollectionInfo.getStateType())

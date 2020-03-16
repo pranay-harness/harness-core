@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class CVTaskServiceTest extends VerificationBaseTest {
   @Inject CVTaskService cvTaskService;
@@ -429,7 +430,14 @@ public class CVTaskServiceTest extends VerificationBaseTest {
       }
       dayTaskMap.get((int) day).add(task);
     });
-    dayTaskMap.forEach((day, taskList) -> { assertThat(taskList.size()).isEqualTo(10); });
+    List<CVTask> tasksWithHeartbeat = cvTasks.stream()
+                                          .filter(task -> task.getDataCollectionInfo().isShouldSendHeartbeat())
+                                          .collect(Collectors.toList());
+    assertThat(tasksWithHeartbeat.size()).isEqualTo(10);
+    tasksWithHeartbeat.forEach(task -> {
+      assertThat(task.getDataCollectionInfo().getHosts().size()).isEqualTo(1);
+      assertThat(task.getDataCollectionInfo().getHosts().contains("controlNode-7")).isTrue();
+    });
   }
 
   private List<CVTask> getByStateExecutionId(String stateExecutionId) {

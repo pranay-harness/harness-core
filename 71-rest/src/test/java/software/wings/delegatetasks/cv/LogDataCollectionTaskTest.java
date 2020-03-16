@@ -199,6 +199,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
     Instant now = Instant.now();
     when(dataCollectionInfoV2.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
     when(dataCollectionInfoV2.getEndTime()).thenReturn(now);
+    when(dataCollectionInfoV2.isShouldSendHeartbeat()).thenReturn(true);
     return dataCollectionInfoV2;
   }
 }

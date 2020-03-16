@@ -27,7 +27,7 @@ public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 {
       List<EncryptedDataDetail> encryptedDataDetails, Instant dataCollectionStartTime, String query,
       String hostnameField) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime);
+        workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime, true);
     this.query = query;
     this.hostnameField = hostnameField;
   }

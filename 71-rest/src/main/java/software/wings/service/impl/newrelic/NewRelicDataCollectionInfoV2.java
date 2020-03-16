@@ -48,7 +48,7 @@ public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo {
       long newRelicAppId, Map<String, String> hostsToGroupNameMap) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime,
-        hostsToGroupNameMap);
+        hostsToGroupNameMap, true);
     this.newRelicConfig = newRelicConfig;
     this.newRelicAppId = newRelicAppId;
   }

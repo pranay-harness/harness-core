@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -94,6 +95,29 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
                    .map(newRelicMetricDataRecord -> newRelicMetricDataRecord.getDataCollectionMinute())
                    .collect(Collectors.toList()))
         .isEqualTo(Lists.newArrayList(0, 0, 0));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSavingHeartbeatsForAllHosts_ShouldSendHeartbeatFalse() throws DataCollectionException {
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.isShouldSendHeartbeat()).thenReturn(false);
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3", "host4"));
+    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host1", "default");
+    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host2", "default");
+    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host3", "group1");
+    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host4", "group2");
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now.plus(1, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
+    when(metricsDataCollectionInfo.getDataCollectionStartTime()).thenReturn(now);
+    metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(metricStoreService)
+        .saveNewRelicMetrics(anyString(), anyString(), anyString(), anyString(), captor.capture());
+    List<NewRelicMetricDataRecord> capturedList = captor.getValue();
+    assertThat(capturedList.size()).isEqualTo(0);
   }
 
   @Test
@@ -235,6 +259,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     when(dataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
     when(dataCollectionInfo.getEndTime()).thenReturn(now);
     when(dataCollectionInfo.getHostsToGroupNameMap()).thenReturn(new HashMap<>());
+    when(dataCollectionInfo.isShouldSendHeartbeat()).thenReturn(true);
     return dataCollectionInfo;
   }
 }
