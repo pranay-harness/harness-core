@@ -5,8 +5,10 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.populateBuilderWithCredentials;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import com.jcraft.jsch.JSchException;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -44,13 +46,18 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
       hostConnectionTest.setSocketConnectTimeout(timeout);
       hostConnectionTest.setSshConnectionTimeout(timeout);
       hostConnectionTest.setSshSessionTimeout(timeout);
-      getSSHSession(hostConnectionTest).disconnect();
+      performTest(hostConnectionTest);
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
       logger.error("Failed to validate host - public dns:" + capability.getValidationInfo().getPublicDns(), e);
       capabilityResponseBuilder.validated(false);
     }
     return capabilityResponseBuilder.build();
+  }
+
+  @VisibleForTesting
+  void performTest(SshSessionConfig hostConnectionTest) throws JSchException {
+    getSSHSession(hostConnectionTest).disconnect();
   }
 
   private void decryptCredentials(SettingAttribute hostConnectionAttributes,
