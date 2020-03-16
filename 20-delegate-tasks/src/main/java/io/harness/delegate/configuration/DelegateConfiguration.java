@@ -30,4 +30,8 @@ public class DelegateConfiguration {
   private String managerTarget;
   private String managerAuthority;
   private String queueFilePath;
+
+  private boolean useCdn;
+
+  private String cdnUrl;
 }

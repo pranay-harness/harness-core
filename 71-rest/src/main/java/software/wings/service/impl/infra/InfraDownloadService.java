@@ -13,4 +13,8 @@ public interface InfraDownloadService {
   String getDownloadUrlForWatcher(@NotEmpty String version, String accountId);
 
   AccessTokenBean getStackdriverLoggingToken();
+
+  String getCdnWatcherMetaDataFileUrl();
+
+  String getCdnWatcherUrl();
 }

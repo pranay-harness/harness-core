@@ -94,6 +94,8 @@ spec:
           value: http://localhost:8888
         - name: WATCHER_CHECK_LOCATION
           value: watcherci.txt
+        - name: REMOTE_WATCHER_URL_CDN
+          value: http://localhost:9500/builds/9/watcher.jar
         - name: DELEGATE_STORAGE_URL
           value: http://localhost:8888
         - name: DELEGATE_CHECK_LOCATION
@@ -130,4 +132,8 @@ spec:
           value: ""
         - name: CF_PLUGIN_HOME
           value: ""
+        - name: USE_CDN
+          value: "false"
+        - name: CDN_URL
+          value: http://localhost:9500
       restartPolicy: Always

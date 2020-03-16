@@ -32,6 +32,7 @@ public interface MessageConstants {
   String DELEGATE_SHUTDOWN_STARTED = "shutdownStarted";
   String DELEGATE_SELF_DESTRUCT = "selfDestruct";
   String DELEGATE_MIGRATE = "migrate";
+  String DELEGATE_SWITCH_STORAGE = "switchStorage";
 
   // Messages sent from watcher to delegate processes
   String UPGRADING_DELEGATE = "upgrading";

@@ -94,6 +94,8 @@ spec:
           value: ${watcherStorageUrl}
         - name: WATCHER_CHECK_LOCATION
           value: ${watcherCheckLocation}
+        - name: REMOTE_WATCHER_URL_CDN
+          value: ${remoteWatcherUrlCdn}
         - name: DELEGATE_STORAGE_URL
           value: ${delegateStorageUrl}
         - name: DELEGATE_CHECK_LOCATION
@@ -130,4 +132,8 @@ spec:
           value: ""
         - name: CF_PLUGIN_HOME
           value: ""
+        - name: USE_CDN
+          value: "${useCdn}"
+        - name: CDN_URL
+          value: ${cdnUrl}
       restartPolicy: Always

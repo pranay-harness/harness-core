@@ -10,13 +10,16 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
+import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
@@ -33,6 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +49,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Mock WingsPersistence wingsPersistence;
   @Mock Query query;
   @Mock UpdateOperations updateOperations;
+  @Mock FeatureFlagService featureFlagService;
 
   /**
    * Test keepAlivePath is taken when delegate.KeepAlivePacket = true
@@ -74,6 +79,10 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     doReturn(aDelegateSequenceBuilder().withHostName("delegate").withSequenceNum(1).withDelegateToken("token").build())
         .when(delegateService)
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
+
+    on(delegateService).set("featureFlagService", featureFlagService);
+    when(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(false);
+
     delegateService.handleEcsDelegateRequest(Delegate.builder().keepAlivePacket(false).build());
 
     verify(delegateService, times(0)).handleEcsDelegateKeepAlivePacket(any());

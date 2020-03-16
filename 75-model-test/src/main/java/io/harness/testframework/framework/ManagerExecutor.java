@@ -13,7 +13,6 @@ import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.testframework.framework.utils.FileUtils;
-import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.threading.Poller;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
@@ -37,7 +36,7 @@ public class ManagerExecutor {
   public static void ensureManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
       final Path config = Paths.get(Project.rootDirectory(clazz), "71-rest", "config.yml");
-      FileUtils.modifySMTPInConfigFile(new File(config.toString()), TestUtils.getDefaultSmtpConfig());
+      FileUtils.modifyConfigFile(new File(config.toString()));
       executeLocalManager(clazz, alpnPath, alpnJarPath);
     }
   }
@@ -49,7 +48,7 @@ public class ManagerExecutor {
 
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
-    final File lockfile = new File(directoryPath, "manager");
+    final File lockfile = new File(directoryPath, "man  ager");
 
     if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
       try {

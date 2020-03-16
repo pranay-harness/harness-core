@@ -6,6 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.logging.v2.LoggingScopes;
@@ -17,12 +18,18 @@ import com.google.inject.Singleton;
 
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
+import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +52,8 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
 
   @Inject private GcsUtils gcsUtil;
   @Inject private SystemEnvironment sysenv;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private CdnStorageUrlGenerator cdnStorageUrlGenerator;
 
   private final Map<String, String> serviceAccountCache = new HashMap<>();
 
@@ -86,16 +95,22 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
-    String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
-    if (isNotBlank(serviceAccountJson)) {
-      try {
-        return getGcsUtil().getSignedUrlForServiceAccount(
-            "/harness-" + envString + "-delegates" + BUILDS_PATH + version + "/" + DELEGATE_JAR, serviceAccountJson,
-            3600L, accountId);
-      } catch (Exception e) {
-        logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+
+    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
+      return cdnStorageUrlGenerator.getDelegateJarUrl(version);
+    } else {
+      String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
+      if (isNotBlank(serviceAccountJson)) {
+        try {
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/harness-" + envString + "-delegates" + BUILDS_PATH + version + "/" + DELEGATE_JAR, serviceAccountJson,
+              3600L, accountId);
+        } catch (Exception e) {
+          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+        }
       }
     }
+
     return DEFAULT_ERROR_STRING;
   }
 
@@ -104,15 +119,19 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
-    String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
-    if (isNotBlank(serviceAccountJson)) {
-      try {
-        return getGcsUtil().getSignedUrlForServiceAccount(
-            "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR, serviceAccountJson,
-            3600L, accountId);
+    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
+      return cdnStorageUrlGenerator.getWatcherJarUrl(version);
+    } else {
+      String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
+      if (isNotBlank(serviceAccountJson)) {
+        try {
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR, serviceAccountJson,
+              3600L, accountId);
 
-      } catch (Exception e) {
-        logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+        } catch (Exception e) {
+          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+        }
       }
     }
     return DEFAULT_ERROR_STRING;
@@ -142,6 +161,31 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       logger.error("Failed to get logging token", e);
     }
     return null;
+  }
+
+  @Override
+  public String getCdnWatcherMetaDataFileUrl() {
+    return cdnStorageUrlGenerator.getWatcherMetaDataFileUrl(getEnv());
+  }
+
+  @Override
+  public String getCdnWatcherUrl() {
+    String watcherLatestVersion;
+    try {
+      watcherLatestVersion = getWatcherLatestVersion();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    return cdnStorageUrlGenerator.getWatcherJarUrl(getMinorVersion(watcherLatestVersion));
+  }
+
+  private String getMinorVersion(String fullVersion) {
+    return fullVersion.substring(fullVersion.lastIndexOf('.') + 1);
+  }
+
+  private String getWatcherLatestVersion() throws IOException {
+    String watcherMetadata = Http.getResponseStringFromUrl(getCdnWatcherMetaDataFileUrl(), 10, 10);
+    return substringBefore(watcherMetadata, " ").trim();
   }
 
   protected String getEnv() {

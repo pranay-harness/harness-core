@@ -13,6 +13,8 @@ import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
+import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
+import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -26,6 +28,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PEN
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
@@ -274,6 +277,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean selfDestruct = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
   private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
+  private final AtomicBoolean switchStorage = new AtomicBoolean(false);
 
   private Socket socket;
   private RequestBuilder request;
@@ -286,6 +290,7 @@ public class DelegateServiceImpl implements DelegateService {
   private long watcherVersionMatchedAt = System.currentTimeMillis();
 
   private final String delegateConnectionId = generateUuid();
+  private volatile boolean switchStorageMsgSent;
   private DelegateConnectionHeartbeat connectionHeartbeat;
 
   private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
@@ -668,6 +673,10 @@ public class DelegateServiceImpl implements DelegateService {
       initiateSelfDestruct();
     } else if (StringUtils.equals(message, SELF_DESTRUCT + delegateId)) {
       initiateSelfDestruct();
+    } else if (StringUtils.equals(message, USE_CDN)) {
+      setSwitchStorage(true);
+    } else if (StringUtils.equals(message, USE_STORAGE_PROXY)) {
+      setSwitchStorage(false);
     } else if (StringUtils.startsWith(message, MIGRATE)) {
       migrate(StringUtils.substringAfter(message, MIGRATE));
     } else if (!StringUtils.equals(message, "X")) {
@@ -1126,6 +1135,10 @@ public class DelegateServiceImpl implements DelegateService {
             statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
             statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
             statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+            if (switchStorage.get() && !switchStorageMsgSent) {
+              statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+              switchStorageMsgSent = true;
+            }
             if (upgradePending.get()) {
               statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
             }
@@ -1296,6 +1309,8 @@ public class DelegateServiceImpl implements DelegateService {
         updateTokenAndSeqNumFromPollingResponse(delegateReceived);
       }
 
+      setSwitchStorage(delegateReceived.isUseCdn());
+
       timeLimiter.callWithTimeout(
           ()
               -> execute(managerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
@@ -1306,6 +1321,13 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Timed out sending heartbeat");
     } catch (Exception e) {
       logger.error("Error sending heartbeat", e);
+    }
+  }
+
+  private void setSwitchStorage(boolean useCdn) {
+    boolean usingCdn = delegateConfiguration.isUseCdn();
+    if (usingCdn != useCdn) {
+      switchStorage.set(true);
     }
   }
 

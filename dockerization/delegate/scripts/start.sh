@@ -91,9 +91,15 @@ if [[ $DESIRED_VERSION != "" ]]; then
   helm init --client-only
 fi
 
+USE_CDN="${USE_CDN:-false}"
+
 echo "Checking Watcher latest version..."
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION)
-REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+if [ "$USE_CDN" = false ]; then
+  REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+else
+  REMOTE_WATCHER_URL=$REMOTE_WATCHER_URL_CDN
+fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]; then
@@ -144,12 +150,16 @@ if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
 fi
 if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
   echo "upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-watcher.yml
+else
+  sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >> config-watcher.yml
+else
+  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION|" config-watcher.yml
 fi
 
 if [ ! -e config-delegate.yml ]; then
@@ -165,6 +175,8 @@ if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
   echo "watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-delegate.yml
+else
+  sed -i.bak "s|^watcherCheckLocation:.*$|watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION|" config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
@@ -188,6 +200,20 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
 fi
+
+if ! `grep useCdn config-delegate.yml > /dev/null`; then
+  echo "useCdn: $USE_CDN" >> config-delegate.yml
+else
+  sed -i.bak "s|^useCdn:.*$|useCdn: $USE_CDN|" config-delegate.yml
+fi
+
+if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
+  echo "cdnUrl: $CDN_URL" >> config-delegate.yml
+else
+  sed -i.bak "s|^cdnUrl:.*$|cdnUrl: $CDN_URL|" config-delegate.yml
+fi
+
+rm -f -- *.bak
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

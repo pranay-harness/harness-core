@@ -111,11 +111,13 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
+import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
@@ -188,10 +190,16 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    CdnConfig cdnConfig = new CdnConfig();
+    cdnConfig.setUrl("http://localhost:9500");
+    JreConfig jreConfig = new JreConfig("jre1.8.0_191", "jre1.8.0_191.jre", "jre/8u191/jre-8u191-solaris-x64.tar.gz",
+        "jre/8u191/jre-8u191-macosx-x64.tar.gz", "jre/8u191/jre-8u191-linux-x64.tar.gz");
     when(subdomainUrlHelper.getDelegateMetadataUrl(any())).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
+    when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
+    when(mainConfiguration.getJreConfig()).thenReturn(jreConfig);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
@@ -201,6 +209,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
+    when(infraDownloadService.getCdnWatcherUrl()).thenReturn("http://localhost:9500/builds/9/watcher.jar");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)

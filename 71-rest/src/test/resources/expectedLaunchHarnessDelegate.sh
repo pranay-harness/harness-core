@@ -8,6 +8,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e MANAGER_HOST_AND_PORT=https://localhost:9090 \
 -e WATCHER_STORAGE_URL=http://localhost:8888 \
 -e WATCHER_CHECK_LOCATION=watcherci.txt \
+-e REMOTE_WATCHER_URL_CDN=http://localhost:9500/builds/9/watcher.jar \
 -e DELEGATE_STORAGE_URL=http://localhost:8888 \
 -e DELEGATE_CHECK_LOCATION=delegateci.txt \
 -e DEPLOY_MODE=KUBERNETES \
@@ -21,4 +22,6 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
 -e CF_PLUGIN_HOME= \
+-e USE_CDN=false \
+-e CDN_URL=http://localhost:9500 \
 harness/delegate:latest

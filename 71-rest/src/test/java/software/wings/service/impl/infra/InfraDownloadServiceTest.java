@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -31,6 +33,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.GcsUtils;
 
 import java.io.File;
@@ -46,6 +50,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Mock private GcsUtils gcsUtils;
   @Mock private SystemEnvironment sysenv;
   @Mock private MainConfiguration mainConfiguration;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject InfraDownloadServiceImpl infraDownloadService;
 
   @Mock private GoogleCredential credential;
@@ -71,6 +76,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
     PowerMockito.when(GoogleCredential.fromStream(any(InputStream.class))).thenReturn(credential);
     when(credential.createScoped(any())).thenReturn(credential);
+    when(featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(true);
   }
 
   @Test
