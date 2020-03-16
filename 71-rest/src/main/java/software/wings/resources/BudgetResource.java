@@ -39,6 +39,15 @@ public class BudgetResource {
     return new RestResponse<>(budgetService.create(budget));
   }
 
+  @POST
+  @Path("{id}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> clone(
+      @QueryParam("accountId") String accountId, @PathParam("id") String budgetId, String budgetName) {
+    return new RestResponse<>(budgetService.clone(budgetId, budgetName));
+  }
+
   @GET
   @Path("{id}")
   @Timed

@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface BudgetService {
   String create(Budget budgetRecord);
+  String clone(String budgetId, String budgetName);
 
   Budget get(String budgetId);
 

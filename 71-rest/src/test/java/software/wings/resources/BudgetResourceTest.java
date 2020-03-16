@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.mockito.Matchers.eq;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 public class BudgetResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String budgetId = "BUDGET_ID";
+  private String cloneBudgetName = "CLONE";
   private Budget budget;
 
   private static BudgetService budgetService = mock(BudgetService.class);
@@ -49,6 +51,17 @@ public class BudgetResourceTest extends CategoryTest {
         .request()
         .post(entity(budget, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
     verify(budgetService).create(eq(budget));
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testClone() {
+    RESOURCES.client()
+        .target(format("/budgets/%s/?accountId=%s", budgetId, accountId))
+        .request()
+        .post(entity(cloneBudgetName, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
+    verify(budgetService).clone(eq(budgetId), eq(cloneBudgetName));
   }
 
   @Test

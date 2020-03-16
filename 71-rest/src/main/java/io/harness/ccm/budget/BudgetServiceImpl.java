@@ -61,6 +61,21 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
+  public String clone(String budgetId, String cloneBudgetName) {
+    Budget budget = budgetDao.get(budgetId);
+    Budget cloneBudget = Budget.builder()
+                             .accountId(budget.getAccountId())
+                             .name(cloneBudgetName)
+                             .scope(budget.getScope())
+                             .type(budget.getType())
+                             .budgetAmount(budget.getBudgetAmount())
+                             .alertThresholds(budget.getAlertThresholds())
+                             .userGroupIds(budget.getUserGroupIds())
+                             .build();
+    return budgetDao.save(cloneBudget);
+  }
+
+  @Override
   public void update(String budgetId, Budget budget) {
     budgetDao.update(budgetId, budget);
   }
