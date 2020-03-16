@@ -261,6 +261,10 @@ if [[ "" != "$SALESFORCE_API_VERSION" ]]; then
   yq write -i $CONFIG_FILE salesforceConfig.apiVersion "$SALESFORCE_API_VERSION"
 fi
 
+if [[ "" != "$SALESFORCE_INTEGRATION_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE salesforceConfig.enabled "$SALESFORCE_INTEGRATION_ENABLED"
+fi
+
 if [[ "" != "$DATADOG_ENABLED" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
 fi

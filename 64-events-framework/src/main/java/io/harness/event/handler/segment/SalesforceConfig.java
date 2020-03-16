@@ -23,4 +23,5 @@ public class SalesforceConfig {
   String grantType;
   String loginInstanceDomain;
   String apiVersion;
+  boolean enabled;
 }
