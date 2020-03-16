@@ -83,5 +83,36 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
     assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
     assertThat("hits.hits[*]._source.log").isEqualTo(mapping.get("logMessage").getJsonPath().get(0));
+    assertThat(state.shouldInspectHostsForLogAnalysis()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldDoHostFiltering() throws IOException {
+    CustomLogVerificationState state = new CustomLogVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        CustomLogVerificationStateTest.class.getResource("/apm/log_config_noHost.yml"), Charsets.UTF_8);
+    List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
+    state.setLogCollectionInfos(collectionInfos);
+
+    boolean shouldDOHostFiltering = state.shouldInspectHostsForLogAnalysis();
+    assertThat(shouldDOHostFiltering).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldDoHostFiltering_true() throws IOException {
+    CustomLogVerificationState state = new CustomLogVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(CustomLogVerificationStateTest.class.getResource("/apm/log_config.yml"), Charsets.UTF_8);
+    List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
+    state.setLogCollectionInfos(collectionInfos);
+
+    boolean shouldDOHostFiltering = state.shouldInspectHostsForLogAnalysis();
+    assertThat(shouldDOHostFiltering).isTrue();
   }
 }

@@ -1151,26 +1151,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public Set<String> getHostsForClusterLevel(
-      String appId, String fieldNameForQuery, String fieldValueForQuery, ClusterLevel... clusterLevels) {
-    Set<String> hosts = new HashSet<>();
-    Set<ClusterLevel> finalClusterLevels = Sets.newHashSet(clusterLevels);
-
-    Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                                  .filter(fieldNameForQuery, fieldValueForQuery)
-                                                  .field(LogDataRecordKeys.clusterLevel)
-                                                  .in(finalClusterLevels)
-                                                  .project(LogDataRecordKeys.logMessage, false);
-    try (HIterator<LogDataRecord> logRecordIterator = new HIterator<>(logDataRecordQuery.fetch())) {
-      while (logRecordIterator.hasNext()) {
-        final LogDataRecord logDataRecord = logRecordIterator.next();
-        hosts.add(logDataRecord.getHost());
-      }
-    }
-    return hosts;
-  }
-
-  @Override
   public long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status) {
     final LogMLAnalysisRecord mlAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)

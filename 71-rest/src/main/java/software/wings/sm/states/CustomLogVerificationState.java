@@ -219,7 +219,8 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     if (getComparisonStrategy().equals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)) {
       shouldDoHostbasedFiltering = logCollectionInfos.stream().allMatch(logCollectionInfo
           -> logCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
-              || logCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER));
+              || (logCollectionInfo.getCollectionBody() != null
+                     && logCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER)));
     }
     return shouldDoHostbasedFiltering;
   }
