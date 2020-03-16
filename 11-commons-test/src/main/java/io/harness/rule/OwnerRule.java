@@ -247,7 +247,11 @@ public class OwnerRule implements TestRule {
   }
 
   public static void checkForJira(String test, String developer, String priority) {
-    final DevInfo devInfo = active.get(developer);
+    if (!"true".equals(System.getenv("ENABLE_TEST_JIRA_REPORTS"))) {
+      return;
+    }
+
+    DevInfo devInfo = active.get(developer);
     if (devInfo == null) {
       return;
     }
@@ -306,7 +310,7 @@ public class OwnerRule implements TestRule {
   public static void fileOwnerAs(String developer, String type) {
     logger.info("Developer {} is found to be owner of {} test", developer, type);
 
-    final DevInfo devInfo = active.get(developer);
+    DevInfo devInfo = active.get(developer);
     if (devInfo == null) {
       return;
     }
@@ -314,7 +318,7 @@ public class OwnerRule implements TestRule {
     String identify = devInfo.getSlack() == null ? developer : "<@" + devInfo.getSlack() + ">";
 
     try {
-      final File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
+      File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
 
       file.getParentFile().mkdirs();
       if (!file.createNewFile()) {
