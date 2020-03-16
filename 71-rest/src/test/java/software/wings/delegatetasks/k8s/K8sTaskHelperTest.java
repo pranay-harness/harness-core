@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
@@ -19,6 +20,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
@@ -33,6 +35,8 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.kubectl.AbstractExecutable;
+import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.KubernetesResource;
@@ -71,8 +75,10 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -441,5 +447,81 @@ public class K8sTaskHelperTest extends WingsBaseTest {
       when(mockPath.relativize(any(Path.class))).thenAnswer(invocationOnMock -> new MockPath("foo"));
     }
     return paths;
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDryRunForOpenshiftResources() throws Exception {
+    mockStatic(K8sTaskHelper.class);
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("abc".getBytes()));
+    when(K8sTaskHelper.executeCommand(any(AbstractExecutable.class), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(processResult);
+
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory("/tmp/test")
+                                                      .ocPath("oc")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    helper.dryRunManifests(client, Collections.emptyList(), k8sDelegateTaskParams, executionLogCallback);
+
+    ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
+    PowerMockito.verifyStatic(K8sTaskHelper.class);
+    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    assertThat(captor.getValue().command())
+        .isEqualTo("kubectl --kubeconfig=config-path apply --filename=manifests-dry-run.yaml --dry-run");
+
+    helper.dryRunManifests(client,
+        asList(KubernetesResource.builder()
+                   .spec("")
+                   .resourceId(KubernetesResourceId.builder().kind("Route").build())
+                   .build()),
+        k8sDelegateTaskParams, executionLogCallback);
+    PowerMockito.verifyStatic(K8sTaskHelper.class, times(2));
+    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    assertThat(captor.getValue().command())
+        .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests-dry-run.yaml --dry-run");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testApplyForOpenshiftResources() throws Exception {
+    mockStatic(K8sTaskHelper.class);
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("abc".getBytes()));
+    when(K8sTaskHelper.executeCommand(any(AbstractExecutable.class), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(processResult);
+
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory("/tmp/test")
+                                                      .kubectlPath("kubectl")
+                                                      .ocPath("oc")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    helper.applyManifests(client, Collections.emptyList(), k8sDelegateTaskParams, executionLogCallback);
+
+    ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
+    PowerMockito.verifyStatic(K8sTaskHelper.class);
+    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    assertThat(captor.getValue().command())
+        .isEqualTo("kubectl --kubeconfig=config-path apply --filename=manifests.yaml --record");
+
+    helper.applyManifests(client,
+        asList(KubernetesResource.builder()
+                   .spec("")
+                   .resourceId(KubernetesResourceId.builder().kind("Route").build())
+                   .build()),
+        k8sDelegateTaskParams, executionLogCallback);
+    PowerMockito.verifyStatic(K8sTaskHelper.class, times(2));
+    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    assertThat(captor.getValue().command())
+        .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
   }
 }
