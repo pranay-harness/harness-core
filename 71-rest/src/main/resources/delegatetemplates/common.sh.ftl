@@ -7,19 +7,19 @@ if [ ! -e start.sh ]; then
   exit 1
 fi
 
-JRE_DIR=jre1.8.0_191
+JRE_DIR=${jre_dir}
 JRE_BINARY=$JRE_DIR/bin/java
 case "$OSTYPE" in
   solaris*)
-    JVM_URL=${delegateStorageUrl}/jre/8u191/jre-8u191-solaris-x64.tar.gz
+    JVM_URL=${delegateStorageUrl}/${jre_tar_path_solaris}
     ;;
   darwin*)
-    JVM_URL=${delegateStorageUrl}/jre/8u191/jre-8u191-macosx-x64.tar.gz
-    JRE_DIR=jre1.8.0_191.jre
+    JVM_URL=${delegateStorageUrl}/${jre_tar_path_macos}
+    JRE_DIR=${jre_dir_macos}
     JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=${delegateStorageUrl}/jre/8u191/jre-8u191-linux-x64.tar.gz
+    JVM_URL=${delegateStorageUrl}/${jre_tar_path_linux}
     ;;
   bsd*)
     echo "freebsd not supported."

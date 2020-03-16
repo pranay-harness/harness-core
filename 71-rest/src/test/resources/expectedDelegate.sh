@@ -167,6 +167,8 @@ if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
   echo "watcherCheckLocation: http://localhost:8888/watcherci.txt" >> config-delegate.yml
+else
+  sed -i.bak "s|^watcherCheckLocation:.*$|watcherCheckLocation: http://localhost:8888/watcherci.txt|" config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
@@ -190,6 +192,19 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: false" >> config-delegate.yml
   fi
 fi
+
+if ! `grep useCdn config-delegate.yml > /dev/null`; then
+  echo "useCdn: false" >> config-delegate.yml
+else
+  sed -i.bak "s|^useCdn:.*$|useCdn: false|" config-delegate.yml
+fi
+if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
+  echo "cdnUrl: http://localhost:9500" >> config-delegate.yml
+else
+  sed -i.bak "s|^cdnUrl:.*$|cdnUrl: http://localhost:9500|" config-delegate.yml
+fi
+
+rm -f -- *.bak
 
 export KUBECTL_VERSION=v1.12.2
 

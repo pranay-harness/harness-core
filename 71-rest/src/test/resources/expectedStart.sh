@@ -148,10 +148,16 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
+USE_CDN=false
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/watcherci.txt)
-REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+if [ "$USE_CDN" = false ]; then
+    REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+else
+    REMOTE_WATCHER_URL=http://localhost:9500/builds/9/watcher.jar
+fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]; then
@@ -205,13 +211,19 @@ if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
 fi
 if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
   echo "upgradeCheckLocation: http://localhost:8888/watcherci.txt" >> config-watcher.yml
+else
+  sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: http://localhost:8888/watcherci.txt|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml
+else
+  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:8888/delegateci.txt|" config-watcher.yml
 fi
+
+rm -f -- *.bak
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

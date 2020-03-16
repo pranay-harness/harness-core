@@ -12,6 +12,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
+import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
+import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -40,6 +42,7 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
+import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
@@ -47,6 +50,7 @@ import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -147,6 +151,7 @@ import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -157,6 +162,7 @@ import software.wings.expression.SecretManagerFunctor;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -522,6 +528,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       existingDelegate.setStatus(Status.DELETED);
     }
 
+    existingDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
+
     return existingDelegate;
   }
 
@@ -699,6 +707,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     boolean jarFileExists = false;
     boolean versionChanged = false;
     String delegateDockerImage = "harness/delegate:latest";
+    CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
+    final boolean useCDN =
+        featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
 
     try {
       String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(inquiry.getAccountId());
@@ -711,6 +722,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         versionChanged = true;
+        if (useCDN) {
+          delegateStorageUrl = cdnConfig.getUrl();
+          logger.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
+        }
       } else {
         logger.info("Delegate metadata URL is " + delegateMetadataUrl);
         String delegateMatadata = delegateVersionCache.get(inquiry.getAccountId());
@@ -738,9 +753,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
     if (versionChanged && jarFileExists) {
-      String watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(inquiry.getAccountId());
-      String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
-      String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
+      String watcherMetadataUrl;
+      String watcherStorageUrl;
+      String watcherCheckLocation;
+      String remoteWatcherUrlCdn;
+
+      if (useCDN) {
+        watcherMetadataUrl = infraDownloadService.getCdnWatcherMetaDataFileUrl();
+      } else {
+        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(inquiry.getAccountId());
+      }
+      remoteWatcherUrlCdn = infraDownloadService.getCdnWatcherUrl();
+      watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
+      watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 
       Account account = accountService.get(inquiry.getAccountId());
 
@@ -763,6 +788,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .put("verificationHostAndPort", inquiry.getVerificationHost())
               .put("watcherStorageUrl", watcherStorageUrl)
               .put("watcherCheckLocation", watcherCheckLocation)
+              .put("remoteWatcherUrlCdn", remoteWatcherUrlCdn)
               .put("delegateStorageUrl", delegateStorageUrl)
               .put("delegateCheckLocation", delegateCheckLocation)
               .put("deployMode", mainConfiguration.getDeployMode().name())
@@ -779,6 +805,22 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (inquiry.getDelegateProfile() != null) {
         params.put("delegateProfile", inquiry.getDelegateProfile());
       }
+
+      params.put("useCdn", String.valueOf(useCDN));
+      params.put("cdnUrl", cdnConfig.getUrl());
+
+      JreConfig jreConfig = useCDN && mainConfiguration.getCdnConfig() != null
+          ? mainConfiguration.getCdnConfig().getJreConfig()
+          : mainConfiguration.getJreConfig();
+
+      Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
+
+      params.put("jre_dir", jreConfig.getJreDir());
+      params.put("jre_dir_macos", jreConfig.getJreDirMacOs());
+      params.put("jre_tar_path_solaris", jreConfig.getJreTarPathSolaris());
+      params.put("jre_tar_path_macos", jreConfig.getJreTarPathMacOs());
+      params.put("jre_tar_path_linux", jreConfig.getJreTarPathLinux());
+
       return params.build();
     }
 
@@ -1246,6 +1288,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
+
+    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
+        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
 
     if (accountService.isAccountMigrated(delegate.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
@@ -2262,6 +2308,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
     Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
     updateExistingDelegateWithSequenceConfigData(registeredDelegate);
+    registeredDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
+
     return registeredDelegate;
   }
 

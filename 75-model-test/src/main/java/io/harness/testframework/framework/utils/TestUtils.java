@@ -13,6 +13,7 @@ import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.restutils.MailinatorRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.AlertNotificationRule;
+import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.io.IOException;
@@ -63,6 +64,13 @@ public class TestUtils {
         .username("apikey")
         .password(secret.toCharArray())
         .build();
+  }
+
+  public static CdnConfig getDefaultCdnConfig() {
+    String secret = new ScmSecret().decryptToString(new SecretName("cdn_key_secret"));
+    CdnConfig cdnConfig = new CdnConfig();
+    cdnConfig.setKeySecret(secret);
+    return cdnConfig;
   }
 
   public static String getInviteIdFromUrl(String url) {

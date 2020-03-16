@@ -16,6 +16,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PEN
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
@@ -36,6 +37,7 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.threading.Morpheus.sleep;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
+import static java.lang.String.join;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -57,7 +59,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
@@ -143,6 +145,8 @@ public class WatcherServiceImpl implements WatcherService {
     String deployMode = System.getenv().get("DEPLOY_MODE");
     multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
+
+  private static final String DELEGATE_SCRIPT = "delegate.sh";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -393,6 +397,9 @@ public class WatcherServiceImpl implements WatcherService {
               selfDestruct();
             } else if (delegateData.containsKey(DELEGATE_MIGRATE)) {
               migrate((String) delegateData.get(DELEGATE_MIGRATE));
+            } else if (delegateData.containsKey(DELEGATE_SWITCH_STORAGE)
+                && (Boolean) delegateData.get(DELEGATE_SWITCH_STORAGE)) {
+              switchStorage();
             } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
@@ -526,7 +533,7 @@ public class WatcherServiceImpl implements WatcherService {
         logger.info("Watching delegate processes: {}",
             runningVersions.keySet()
                 .stream()
-                .map(version -> version + " (" + Joiner.on(", ").join(runningVersions.get(version)) + ")")
+                .map(version -> version + " (" + join(", ", runningVersions.get(version)) + ")")
                 .collect(toList()));
 
         // Make sure at least one of each expected version is acquiring
@@ -534,7 +541,7 @@ public class WatcherServiceImpl implements WatcherService {
           if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
             logger.info("New delegate process for version {} will be started", version);
             try {
-              downloadRunScripts(version);
+              downloadRunScripts(version, false);
               downloadDelegateJar(version);
               startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
               break;
@@ -558,6 +565,28 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } catch (Exception e) {
       logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+    }
+  }
+
+  private void switchStorage() throws Exception {
+    logger.info("Switching Storage");
+    if (multiVersion) {
+      for (String expectedVersion : findExpectedDelegateVersions()) {
+        downloadRunScripts(expectedVersion, true);
+      }
+    } else {
+      downloadRunScripts(".", true);
+    }
+
+    restartDelegate();
+    restartWatcher();
+  }
+
+  private void restartDelegate() {
+    if (multiVersion) {
+      runningDelegates.forEach(this ::drainDelegateProcess);
+    } else if (working.compareAndSet(false, true)) {
+      startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), "DelegateRestartScript", getProcessId());
     }
   }
 
@@ -608,8 +637,8 @@ public class WatcherServiceImpl implements WatcherService {
     return 0;
   }
 
-  private void downloadRunScripts(String version) throws Exception {
-    if (new File(version + "/delegate.sh").exists()) {
+  private void downloadRunScripts(String version, boolean forceDownload) throws Exception {
+    if (!forceDownload && new File(version + File.separator + DELEGATE_SCRIPT).exists()) {
       return;
     }
 
@@ -624,9 +653,9 @@ public class WatcherServiceImpl implements WatcherService {
       Files.createDirectory(versionDir);
     }
 
-    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh", "setup-proxy.sh")) {
+    for (String fileName : asList("start.sh", "stop.sh", DELEGATE_SCRIPT, "setup-proxy.sh")) {
       String filePath = fileName;
-      if ("delegate.sh".equals(fileName)) {
+      if (DELEGATE_SCRIPT.equals(fileName)) {
         filePath = version + "/" + fileName;
       }
       File scriptFile = new File(filePath);
@@ -663,10 +692,11 @@ public class WatcherServiceImpl implements WatcherService {
       logger.info("Replacing delegate jar version {}", version);
       FileUtils.forceDelete(destination);
     }
+    Stopwatch timer = Stopwatch.createStarted();
     try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
       FileUtils.copyInputStreamToFile(stream, destination);
     }
-    logger.info("Finished downloading delegate jar version {}", version);
+    logger.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
   }
 
   private void drainDelegateProcess(String delegateProcess) {
@@ -676,7 +706,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void startDelegateProcess(String version, String versionFolder, List<String> oldDelegateProcesses,
       String scriptName, String watcherProcess) {
-    if (!new File(versionFolder + "/delegate.sh").exists()) {
+    if (!new File(versionFolder + File.separator + DELEGATE_SCRIPT).exists()) {
       working.set(false);
       return;
     }
@@ -684,11 +714,12 @@ public class WatcherServiceImpl implements WatcherService {
     executorService.submit(() -> {
       StartedProcess newDelegate = null;
       try {
-        newDelegate = new ProcessExecutor()
-                          .command("nohup", versionFolder + "/delegate.sh", watcherProcess, versionFolder)
-                          .redirectError(Slf4jStream.of(scriptName).asError())
-                          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                          .start();
+        newDelegate =
+            new ProcessExecutor()
+                .command("nohup", versionFolder + File.separator + DELEGATE_SCRIPT, watcherProcess, versionFolder)
+                .redirectError(Slf4jStream.of(scriptName).asError())
+                .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                .start();
 
         boolean success = false;
         String newDelegateProcess = null;
@@ -1055,18 +1086,16 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       logger.info("Delegate processes {} will be restarted to complete migration.", runningDelegates);
-      if (multiVersion) {
-        runningDelegates.forEach(this ::drainDelegateProcess);
-      } else if (working.compareAndSet(false, true)) {
-        startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), "DelegateRestartScript", getProcessId());
-      }
-
-      working.set(true);
-      upgradeWatcher(getVersion(), getVersion());
-
+      restartDelegate();
+      restartWatcher();
     } catch (Exception e) {
       logger.error("Error updating config.", e);
     }
+  }
+
+  private void restartWatcher() {
+    working.set(true);
+    upgradeWatcher(getVersion(), getVersion());
   }
 
   private void selfDestruct() {

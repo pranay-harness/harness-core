@@ -42,7 +42,9 @@ import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
+import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.jre.JreConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
@@ -103,7 +105,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("trialRegistrationAllowedForBugathon") private boolean trialRegistrationAllowedForBugathon;
+  @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
+  private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
   @JsonProperty("pwnedPasswordsAllowed") private boolean pwnedPasswordsAllowed;
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
@@ -131,6 +134,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
+  @JsonProperty("jreConfig") private JreConfig jreConfig;
+  @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

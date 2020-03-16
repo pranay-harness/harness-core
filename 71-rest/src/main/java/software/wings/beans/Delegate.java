@@ -56,6 +56,8 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware {
 
   @Transient private List<String> currentlyExecutingDelegateTasks;
 
+  @Transient private boolean useCdn;
+
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
   private List<String> tags;

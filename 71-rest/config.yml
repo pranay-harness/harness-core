@@ -209,7 +209,9 @@ elasticsearch:
   mongoTagValue: none
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
+
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
+
 apiUrl: "http://localhost:8080"
 deployMode: AWS
 envPath: ""
@@ -408,4 +410,26 @@ pipelineConfig:
   enabled: true
   envStateTimeout: -1
   approvalStateTimeout: -1
+
+#Jre config
+jreConfig:
+  jreDir: jre1.8.0_191
+  jreDirMacOs: jre1.8.0_191.jre
+  jreTarPathSolaris: jre/8u191/jre-8u191-solaris-x64.tar.gz
+  jreTarPathMacOs: jre/8u191/jre-8u191-macosx-x64.tar.gz
+  jreTarPathLinux: jre/8u191/jre-8u191-linux-x64.tar.gz
+
+cdnConfig:
+  url: https://storage-qa.harness.io
+  keyName: storage-qa-private
+  keySecret: cdnSignedUrlKey
+  delegateJarPath: private/shared/delegates/builds/oracle-8u191/%s/delegate.jar
+  watcherJarPath: public/shared/watchers/builds/oracle-8u191/%s/watcher.jar
+  watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  jreConfig:
+    jreDir: jre1.8.0_191
+    jreDirMacOs: jre1.8.0_191.jre
+    jreTarPathSolaris: public/shared/jre/oracle-8u191/jre-8u191-solaris-x64.tar.gz
+    jreTarPathMacOs: public/shared/jre/oracle-8u191/jre-8u191-macosx-x64.tar.gz
+    jreTarPathLinux: public/shared/jre/oracle-8u191/jre-8u191-linux-x64.tar.gz
 

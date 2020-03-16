@@ -59,8 +59,20 @@
           "value": "${watcherStorageUrl}"
         },
         {
+          "name": "REMOTE_WATCHER_URL_CDN",
+          "value": "${remoteWatcherUrlCdn}"
+        },
+        {
           "name": "CF_PLUGIN_HOME",
           "value": ""
+        },
+        {
+          "name": "USE_CDN",
+          "value": "${useCdn}"
+        },
+        {
+          "name": "CDN_URL",
+          "value": "${cdnUrl}"
         }
       ],
       "memory": 6144,

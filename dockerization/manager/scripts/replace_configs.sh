@@ -486,3 +486,61 @@ fi
 if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
     yq write -i $CONFIG_FILE redisConfig.envNamespace "$REDIS_ENV_NAMESPACE"
 fi
+
+if [[ "" != "$JRE_DIR" ]]; then
+  yq write -i $CONFIG_FILE jreConfig.jreDir "$JRE_DIR"
+  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreDir "$JRE_DIR"
+fi
+
+if [[ "" != "$JRE_DIR_MACOS" ]]; then
+  yq write -i $CONFIG_FILE jreConfig.jreDirMacOs "$JRE_DIR_MACOS"
+  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreDirMacOs "$JRE_DIR_MACOS"
+fi
+
+if [[ "" != "$JRE_TAR_PATH_SOLARIS" ]]; then
+  yq write -i $CONFIG_FILE jreConfig.jreTarPathSolaris "$JRE_TAR_PATH_SOLARIS"
+fi
+
+if [[ "" != "$JRE_TAR_PATH_MACOS" ]]; then
+  yq write -i $CONFIG_FILE jreConfig.jreTarPathMacOs "$JRE_TAR_PATH_MACOS"
+fi
+
+if [[ "" != "$JRE_TAR_PATH_LINUX" ]]; then
+  yq write -i $CONFIG_FILE jreConfig.jreTarPathLinux "$JRE_TAR_PATH_LINUX"
+fi
+
+if [[ "" != "$CDN_URL" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.url "$CDN_URL"
+fi
+
+if [[ "" != "$CDN_KEY" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.keyName "$CDN_KEY"
+fi
+
+if [[ "" != "$CDN_KEY_SECRET" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.keySecret "$CDN_KEY_SECRET"
+fi
+
+if [[ "" != "$CDN_DELEGATE_JAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.delegateJarPath "$CDN_DELEGATE_JAR_PATH"
+fi
+
+if [[ "" != "$CDN_WATCHER_JAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherJarPath "$CDN_WATCHER_JAR_PATH"
+fi
+
+if [[ "" != "$CDN_WATCHER_METADATA_FILE_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherMetaDataFilePath "$CDN_WATCHER_METADATA_FILE_PATH"
+fi
+
+if [[ "" != "$CDN_JRE_TAR_PATH_SOLARIS" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathSolaris "$CDN_JRE_TAR_PATH_SOLARIS"
+fi
+
+if [[ "" != "$CDN_JRE_TAR_PATH_MACOS" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathMacOs "$CDN_JRE_TAR_PATH_MACOS"
+fi
+
+if [[ "" != "$CDN_JRE_TAR_PATH_LINUX" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathLinux "$CDN_JRE_TAR_PATH_LINUX"
+fi

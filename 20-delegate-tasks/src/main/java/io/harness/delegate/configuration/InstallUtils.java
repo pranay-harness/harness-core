@@ -73,6 +73,17 @@ public class InstallUtils {
   private static final String terraformConfigInspectVersion = "v1.0"; // This is not the
   // version provided by Hashicorp because currently they do not maintain releases as such
 
+  private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
+  private static final String CHART_MUSEUM_CDN_PATH =
+      "public/shared/tools/chartmuseum/release/%s/bin/%s/amd64/chartmuseum";
+  private static final String GO_TEMPLATE_CDN_PATH =
+      "public/shared/tools/go-template/release/%s/bin/%s/amd64/go-template";
+  private static final String OC_CDN_PATH = "public/shared/tools/oc/release/%s/bin/%s/amd64/oc";
+  private static final String HELM_CDN_PATH = "public/shared/tools/helm/release/%s/bin/%s/amd64/helm";
+  private static final String TERRAFORM_CONFIG_CDN_PATH =
+      "public/shared/tools/terraform-config-inspect/%s/%s/amd64/terraform-config-inspect";
+  private static final String KUSTOMIZE_CDN_PATH = "public/shared/tools/kustomize/release/%s/bin/%s/amd64/kustomize";
+
   public static String getTerraformConfigInspectPath() {
     return join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
         terraformConfigInspectBinary);
@@ -138,7 +149,7 @@ public class InstallUtils {
 
       createDirectoryIfDoesNotExist(kubectlDirectory);
 
-      String downloadUrl = getKubectlDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), version);
+      String downloadUrl = getKubectlDownloadUrl(configuration, version);
 
       logger.info("download Url is {}", downloadUrl);
 
@@ -201,9 +212,13 @@ public class InstallUtils {
     }
   }
 
-  private static String getKubectlDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/kubernetes-release/release/" + version + "/bin/" + getOsPath()
-        + "/amd64/kubectl";
+  private static String getKubectlDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(KUBECTL_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/kubernetes-release/release/" + version + "/bin/" + getOsPath() + "/amd64/kubectl";
   }
 
   public static boolean installGoTemplateTool(DelegateConfiguration configuration) {
@@ -226,8 +241,7 @@ public class InstallUtils {
 
       createDirectoryIfDoesNotExist(goTemplateClientDirectory);
 
-      String downloadUrl =
-          getGoTemplateDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), goTemplateClientVersion);
+      String downloadUrl = getGoTemplateDownloadUrl(configuration, goTemplateClientVersion);
 
       logger.info("download Url is {}", downloadUrl);
 
@@ -291,8 +305,13 @@ public class InstallUtils {
     }
   }
 
-  private static String getGoTemplateDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/snapshot-go-template/release/" + version + "/bin/" + getOsPath()
+  private static String getGoTemplateDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(GO_TEMPLATE_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/snapshot-go-template/release/" + version + "/bin/" + getOsPath()
         + "/amd64/go-template";
   }
 
@@ -343,14 +362,22 @@ public class InstallUtils {
     }
   }
 
-  private static String getKustomizeDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/harness-kustomize/release/" + version + "/bin/" + getOsPath()
-        + "/amd64/kustomize";
+  private static String getKustomizeDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(KUSTOMIZE_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/harness-kustomize/release/" + version + "/bin/" + getOsPath() + "/amd64/kustomize";
   }
 
-  private static String getHelmDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/harness-helm/release/" + version + "/bin/" + getOsPath()
-        + "/amd64/helm";
+  private static String getHelmDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(HELM_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl()) + "storage/harness-download/harness-helm/release/"
+        + version + "/bin/" + getOsPath() + "/amd64/helm";
   }
 
   private static boolean initHelmClient(String helmVersion) throws InterruptedException, TimeoutException, IOException {
@@ -422,7 +449,7 @@ public class InstallUtils {
       logger.info(format("Installing helm %s", helmVersion));
       createDirectoryIfDoesNotExist(helmDirectory);
 
-      String downloadUrl = getHelmDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), helmVersion);
+      String downloadUrl = getHelmDownloadUrl(configuration, helmVersion);
       logger.info("Download Url is " + downloadUrl);
 
       String versionCommand = getHelmVersionCommand(helmVersion);
@@ -496,8 +523,13 @@ public class InstallUtils {
     }
   }
 
-  private static String getChartMuseumDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/harness-chartmuseum/release/" + version + "/bin/" + getOsPath()
+  private static String getChartMuseumDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(CHART_MUSEUM_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/harness-chartmuseum/release/" + version + "/bin/" + getOsPath()
         + "/amd64/chartmuseum";
   }
 
@@ -518,8 +550,7 @@ public class InstallUtils {
       logger.info("Installing chartmuseum");
       createDirectoryIfDoesNotExist(chartMuseumDirectory);
 
-      String downloadUrl =
-          getChartMuseumDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), chartMuseumVersion);
+      String downloadUrl = getChartMuseumDownloadUrl(configuration, chartMuseumVersion);
       logger.info("Download Url is " + downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
@@ -573,7 +604,7 @@ public class InstallUtils {
       logger.info("Installing terraform-config-inspect");
       createDirectoryIfDoesNotExist(terraformConfigInspectVersionedDirectory);
 
-      String downloadUrl = getTerraformConfigInspectDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()));
+      String downloadUrl = getTerraformConfigInspectDownloadUrl(configuration);
       logger.info("Download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
@@ -600,8 +631,12 @@ public class InstallUtils {
     }
   }
 
-  private static String getTerraformConfigInspectDownloadUrl(String managerBaseUrl) {
-    return join("/", managerBaseUrl,
+  private static String getTerraformConfigInspectDownloadUrl(DelegateConfiguration delegateConfiguration) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(),
+          String.format(TERRAFORM_CONFIG_CDN_PATH, terraformConfigInspectVersion, getOsPath()));
+    }
+    return join("/", getManagerBaseUrl(delegateConfiguration.getManagerUrl()),
         "storage/harness-download/harness-terraform-config"
             + "-inspect",
         terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
@@ -643,7 +678,7 @@ public class InstallUtils {
       logger.info("Installing oc");
       createDirectoryIfDoesNotExist(ocDirectory);
 
-      String downloadUrl = getOcDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), version);
+      String downloadUrl = getOcDownloadUrl(configuration, version);
       logger.info("download url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
@@ -706,9 +741,12 @@ public class InstallUtils {
     }
   }
 
-  private static String getOcDownloadUrl(String managerBaseUrl, String version) {
-    return managerBaseUrl + "storage/harness-download/harness-oc/release/" + version + "/bin/" + getOsPath()
-        + "/amd64/oc";
+  private static String getOcDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(OC_CDN_PATH, version, getOsPath()));
+    }
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl()) + "storage/harness-download/harness-oc/release/"
+        + version + "/bin/" + getOsPath() + "/amd64/oc";
   }
 
   public static boolean installKustomize(DelegateConfiguration configuration) {
@@ -736,7 +774,7 @@ public class InstallUtils {
 
       createDirectoryIfDoesNotExist(kustomizeDir);
 
-      String downloadUrl = getKustomizeDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), kustomizeVersion);
+      String downloadUrl = getKustomizeDownloadUrl(configuration, kustomizeVersion);
 
       logger.info("download Url is {}", downloadUrl);
 

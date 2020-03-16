@@ -560,6 +560,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.signup.SignupServiceImpl;
 import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.CacheManager.CacheManagerConfig;
+import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
@@ -600,6 +601,12 @@ public class WingsModule extends DependencyModule {
   public UrlConfiguration urlConfiguration() {
     return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl(),
         configuration.getDelegateMetadataUrl(), configuration.getWatcherMetadataUrl());
+  }
+
+  @Provides
+  @Singleton
+  public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
+    return new CdnStorageUrlGenerator(configuration.getCdnConfig(), configuration.isTrialRegistrationAllowed());
   }
 
   @Override

@@ -2,6 +2,7 @@ package io.harness.testframework.framework.utils;
 
 import io.harness.resource.Project;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.io.BufferedReader;
@@ -18,7 +19,11 @@ import java.util.List;
 
 @Slf4j
 public class FileUtils {
-  public static void modifySMTPInConfigFile(File file, SmtpConfig smtpConfig) {
+  public static void modifyConfigFile(File file) {
+    modifySMTPInConfigFile(file, TestUtils.getDefaultSmtpConfig(), TestUtils.getDefaultCdnConfig());
+  }
+
+  public static void modifySMTPInConfigFile(File file, SmtpConfig smtpConfig, CdnConfig config) {
     Path path = Paths.get(file.getParent(), "modified_config.yml");
     File outputFile = new File(path.toString());
 
@@ -39,6 +44,9 @@ public class FileUtils {
           // line = line.replace("password: \"smtp_password_placeholder\"", "encryptedPassword: " +
           // String.valueOf(smtpConfig.getPassword()));
           line = line.replace("\"smtp_password_placeholder\"", String.valueOf(smtpConfig.getPassword()));
+        }
+        if (line.contains("cdnSignedUrlKey")) {
+          line = line.replace("cdnSignedUrlKey", config.getKeySecret());
         }
         lines.add(line);
         line = in.readLine();
