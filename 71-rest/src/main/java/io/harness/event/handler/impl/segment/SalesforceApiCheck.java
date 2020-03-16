@@ -25,7 +25,6 @@ import org.json.JSONObject;
 import software.wings.beans.Account;
 
 import java.io.IOException;
-import javax.security.auth.login.LoginException;
 
 @Slf4j
 @Singleton
@@ -55,6 +54,9 @@ public class SalesforceApiCheck {
     return salesforceAccountName;
   }
 
+  public boolean isSalesForceIntegrationEnabled() {
+    return this.salesforceConfig.isEnabled();
+  }
   private String getLoginUrl() {
     String requestBodyText = "?grant_type=password";
     requestBodyText += "&client_id=";
@@ -69,7 +71,7 @@ public class SalesforceApiCheck {
     return "https://" + salesforceConfig.getLoginInstanceDomain() + OAUTH_ENDPOINT + requestBodyText;
   }
 
-  private String login() throws LoginException {
+  private String login() {
     HttpPost httpPost = new HttpPost(loginUrl);
     HttpResponse response = null;
     try {
@@ -101,23 +103,13 @@ public class SalesforceApiCheck {
     }
   }
 
-  private String getLoginResponse() {
-    String loginResponse = null;
-    try {
-      loginResponse = login();
-    } catch (LoginException le) {
-      logger.error("Could not login to Salesforce with given userName={}", salesforceConfig.getUserName(), le);
-    }
-    return loginResponse;
-  }
-
   private String querySalesforce(String queryString) {
     HttpResponse response = null;
     int count = 0;
     String loginResponseString;
 
     while (true) {
-      loginResponseString = getLoginResponse();
+      loginResponseString = login();
       count++;
       if (EmptyPredicate.isNotEmpty(loginResponseString)) {
         break;

@@ -31,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -41,7 +40,6 @@ import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.impl.AuthServiceImpl.Keys;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -63,7 +61,6 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private HPersistence hPersistence;
   @Inject private AccountService accountService;
   @Inject private SalesforceApiCheck salesforceApiCheck;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private Utils utils;
 
   private Map<String, Boolean> integrations = new HashMap<>();
@@ -172,9 +169,8 @@ public class AccountChangeHandler implements EventHandler {
                   .count();
     }
 
-    boolean isPresentInSalesforce = featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, accountId)
-        && salesforceApiCheck.isPresentInSalesforce(account);
-
+    boolean isPresentInSalesforce =
+        salesforceApiCheck.isSalesForceIntegrationEnabled() && salesforceApiCheck.isPresentInSalesforce(account);
     if (isPresentInSalesforce) {
       name = salesforceApiCheck.getSalesforceAccountName();
     }

@@ -1,6 +1,7 @@
 package software.wings.events;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyString;
@@ -39,7 +40,6 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -66,7 +66,6 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private EventListener eventListener;
   @Mock private UserService userService;
-  @Mock private MainConfiguration mainConfiguration;
   @Mock private InstanceStatService instanceStatService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private SalesforceAccountCheck salesforceAccountCheck;
@@ -75,7 +74,6 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private SalesforceApiCheck salesforceApiCheck;
   @Inject private HPersistence hPersistence;
   @Inject private TestUtils eventTestHelper;
-
   private User user;
   private Account account;
   private AccountChangeHandler accountChangeHandler;
@@ -97,7 +95,6 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "hPersistence", hPersistence, true);
     FieldUtils.writeField(accountChangeHandler, "accountService", accountService, true);
     FieldUtils.writeField(accountChangeHandler, "salesforceApiCheck", salesforceApiCheck, true);
-    FieldUtils.writeField(accountChangeHandler, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(accountChangeHandler, "utils", utils, true);
 
     when(accountService.get(anyString())).thenReturn(account);
@@ -121,6 +118,121 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void TC0_testSalesForceIntegrationDisabled() {
+    UserThreadLocal.set(user);
+    try {
+      EventType eventType = EventType.ACCOUNT_ENTITY_CHANGE;
+      Map<String, String> properties = new HashMap<>();
+      properties.put("ACCOUNT_ID", "ACCOUNT_ID");
+      properties.put("EMAIL_ID", "admin@harness.io");
+
+      AccountEntityEvent accountEntityEvent = new AccountEntityEvent(account);
+      EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
+      Event event = Event.builder().eventData(eventData).eventType(eventType).build();
+
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
+      when(userService.getUserByEmail(anyString())).thenReturn(newUser);
+      when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(false);
+      when(userService.update(any(User.class))).thenReturn(newUser);
+      when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
+      when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
+          .thenReturn(50.0);
+      SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
+      when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
+      when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
+      accountChangeHandler.handleEvent(event);
+
+      verify(salesforceApiCheck, times(1)).isSalesForceIntegrationEnabled();
+      verify(salesforceApiCheck, times(0)).isPresentInSalesforce(any(Account.class));
+      verify(salesforceApiCheck, times(0)).getSalesforceAccountName();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void TC0_testSalesForceIntegrationEnabled() {
+    UserThreadLocal.set(user);
+    try {
+      EventType eventType = EventType.ACCOUNT_ENTITY_CHANGE;
+      Map<String, String> properties = new HashMap<>();
+      properties.put("ACCOUNT_ID", "ACCOUNT_ID");
+      properties.put("EMAIL_ID", "admin@harness.io");
+
+      AccountEntityEvent accountEntityEvent = new AccountEntityEvent(account);
+      EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
+      Event event = Event.builder().eventData(eventData).eventType(eventType).build();
+
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
+      when(userService.getUserByEmail(anyString())).thenReturn(newUser);
+      when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
+      when(userService.update(any(User.class))).thenReturn(newUser);
+      when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
+      when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
+          .thenReturn(50.0);
+      SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
+      when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
+      when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
+      accountChangeHandler.handleEvent(event);
+
+      verify(salesforceApiCheck, times(1)).isSalesForceIntegrationEnabled();
+      verify(salesforceApiCheck, times(1)).isPresentInSalesforce(any(Account.class));
+      verify(salesforceApiCheck, times(1)).getSalesforceAccountName();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void TC0_testSalesForceIntegrationEnabledWithNotPresentInSalesForce() {
+    UserThreadLocal.set(user);
+    try {
+      EventType eventType = EventType.ACCOUNT_ENTITY_CHANGE;
+      Map<String, String> properties = new HashMap<>();
+      properties.put("ACCOUNT_ID", "ACCOUNT_ID");
+      properties.put("EMAIL_ID", "admin@harness.io");
+
+      AccountEntityEvent accountEntityEvent = new AccountEntityEvent(account);
+      EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
+      Event event = Event.builder().eventData(eventData).eventType(eventType).build();
+
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
+      when(userService.getUserByEmail(anyString())).thenReturn(newUser);
+      when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
+      when(userService.update(any(User.class))).thenReturn(newUser);
+      when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
+      when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
+          .thenReturn(50.0);
+      SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
+      when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
+      when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
+      accountChangeHandler.handleEvent(event);
+
+      verify(salesforceApiCheck, times(1)).isSalesForceIntegrationEnabled();
+      verify(salesforceApiCheck, times(1)).isPresentInSalesforce(any(Account.class));
+      verify(salesforceApiCheck, times(0)).getSalesforceAccountName();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void TC0_testAccountGroupMessageToSegment() {
@@ -137,8 +249,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
-      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
@@ -176,8 +288,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
-      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
@@ -215,8 +327,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
-      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
@@ -254,8 +366,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
-      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
@@ -293,8 +405,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User user = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(user);
-      when(featureFlagService.isEnabled(FeatureName.SALESFORCE_INTEGRATION, account.getUuid())).thenReturn(false);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(user);
