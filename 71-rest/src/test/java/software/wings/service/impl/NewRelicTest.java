@@ -13,20 +13,16 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.time.Timestamp;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
-import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -34,8 +30,6 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -68,53 +62,6 @@ public class NewRelicTest extends WingsBaseTest {
   public void cvdemo() throws IOException {
     // DO NOT REMOVE CV_DEMO FEATURE FLAG
     FeatureName.valueOf("CV_DEMO");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void getAllApplications() throws IOException, CloneNotSupportedException {
-    List<NewRelicApplication> allApplications =
-        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
-    assertThat(allApplications.isEmpty()).isFalse();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void getApplicationInstances() throws IOException, CloneNotSupportedException {
-    NewRelicApplication demoApp = getDemoApp();
-    List<NewRelicApplicationInstance> applicationInstances =
-        newRelicDelegateService.getApplicationInstances(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
-    assertThat(applicationInstances.isEmpty()).isFalse();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void getMetricsNameToCollect() throws IOException, CloneNotSupportedException {
-    NewRelicApplication demoApp = getDemoApp();
-    Collection<NewRelicMetric> metricsNameToCollect =
-        newRelicDelegateService.getTxnNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
-    assertThat(metricsNameToCollect.isEmpty()).isFalse();
-  }
-
-  private NewRelicApplication getDemoApp() throws IOException, CloneNotSupportedException {
-    List<NewRelicApplication> allApplications =
-        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
-    for (NewRelicApplication application : allApplications) {
-      if (application.getName().equals("rsingh-demo-app")) {
-        return application;
-      }
-    }
-
-    throw new IllegalStateException("Could not find application rsingh-demo-app");
   }
 
   @Test
