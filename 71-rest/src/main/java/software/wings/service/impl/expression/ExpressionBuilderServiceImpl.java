@@ -3,11 +3,16 @@ package software.wings.service.impl.expression;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.service.impl.expression.ExpressionBuilder.APP_DESCRIPTION;
+import static software.wings.service.impl.expression.ExpressionBuilder.APP_NAME;
+import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_DESCRIPTION;
+import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -69,6 +74,9 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     if (defaults != null) {
       expressions.addAll(defaults.keySet().stream().map(s -> "app.defaults." + s).collect(Collectors.toSet()));
     }
+    if (forTags) {
+      expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
+    }
     Account account = accountService.getAccountWithDefaults(application.getAccountId());
     if (account != null && isNotEmpty(account.getDefaults())) {
       expressions.addAll(
@@ -93,6 +101,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
     } else if (entityType == PIPELINE && forTags) {
       expressions.addAll(pipelineExpressionBuilder.getExpressions(appId, entityId));
+      expressions.addAll(asList(PIPELINE_NAME, PIPELINE_DESCRIPTION));
     }
     return expressions;
   }

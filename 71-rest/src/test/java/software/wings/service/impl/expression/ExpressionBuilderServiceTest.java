@@ -599,9 +599,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, null, null, null, true);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.size()).isEqualTo(2);
+    assertThat(expressions.size()).isEqualTo(6);
     assertThat(expressions).contains("app.defaults.Param1");
     assertThat(expressions.contains("workflow.variables.name1")).isTrue();
+    assertThat(expressions).contains("workflow.name");
+    assertThat(expressions).contains("workflow.description");
+    assertThat(expressions).contains("app.name");
+    assertThat(expressions).contains("app.description");
   }
 
   @Test
@@ -631,10 +635,14 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                         .build());
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, null, null, null, true);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.size()).isEqualTo(3);
+    assertThat(expressions.size()).isEqualTo(7);
     assertThat(expressions).contains("workflow.variables.name1");
     assertThat(expressions).contains("app.defaults.Param1");
     assertThat(expressions).contains("account.defaults.MyActDefaultVar");
+    assertThat(expressions).contains("workflow.name");
+    assertThat(expressions).contains("workflow.description");
+    assertThat(expressions).contains("app.name");
+    assertThat(expressions).contains("app.description");
   }
 
   @Test
@@ -689,9 +697,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(pipeline2);
     Set<String> expressions = builderService.listExpressions(APP_ID, PIPELINE_ID, PIPELINE, null, null, null, true);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.size()).isEqualTo(2);
+    assertThat(expressions.size()).isEqualTo(6);
     assertThat(expressions).contains("app.defaults.Param1");
     assertThat(expressions).contains("workflow.variables.MyVar");
+    assertThat(expressions).contains("app.name");
+    assertThat(expressions).contains("app.description");
+    assertThat(expressions).contains("pipeline.name");
+    assertThat(expressions).contains("pipeline.description");
   }
 
   private Workflow buildCanaryWorkflow(List<Variable> userVariables) {
