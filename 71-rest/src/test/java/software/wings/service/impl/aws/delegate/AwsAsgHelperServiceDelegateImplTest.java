@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -15,6 +16,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,6 +44,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import org.junit.Test;
@@ -227,6 +230,34 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testAllInstanceInReadyStateWithRetryIfFirstCallSuccess() {
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    awsAsgHelperServiceDelegate.allInstanceInReadyStateWithRetry(
+        awsConfig, emptyList(), "us-east-1", asList("abc"), mockCallBack);
+    verify(awsAsgHelperServiceDelegate, times(1))
+        .allInstanceInReadyState(awsConfig, emptyList(), "us-east-1", asList("abc"), mockCallBack);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testAllInstanceInReadyStateWithRetryIfFirstCallThrows() {
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doThrow(new UnexpectedException())
+        .doReturn(true)
+        .when(awsAsgHelperServiceDelegate)
+        .allInstanceInReadyState(awsConfig, emptyList(), "us-east-1", asList("abc"), mockCallBack);
+    awsAsgHelperServiceDelegate.allInstanceInReadyStateWithRetry(
+        awsConfig, emptyList(), "us-east-1", asList("abc"), mockCallBack);
+    verify(awsAsgHelperServiceDelegate, times(2))
+        .allInstanceInReadyState(awsConfig, emptyList(), "us-east-1", asList("abc"), mockCallBack);
   }
 
   @Builder

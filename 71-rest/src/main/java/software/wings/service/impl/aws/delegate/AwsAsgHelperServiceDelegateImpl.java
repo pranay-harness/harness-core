@@ -60,6 +60,7 @@ import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InterruptedRuntimeException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -520,7 +521,7 @@ public class AwsAsgHelperServiceDelegateImpl
           describeAutoScalingGroupActivities(
               amazonAutoScalingClient, autoScalingGroupName, completedActivities, logCallback, false);
           if (instanceIds.size() == desiredCount
-              && allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, logCallback)) {
+              && allInstanceInReadyStateWithRetry(awsConfig, encryptionDetails, region, instanceIds, logCallback)) {
             return true;
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
@@ -536,6 +537,18 @@ public class AwsAsgHelperServiceDelegateImpl
       throw new InvalidRequestException("Error while waiting for all instances to be in running state", e);
     }
     logCallback.saveExecutionLog("AutoScaling group reached steady state");
+  }
+
+  @VisibleForTesting
+  boolean allInstanceInReadyStateWithRetry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<String> instanceIds, ExecutionLogCallback logCallback) throws InterruptedRuntimeException {
+    try {
+      return allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, logCallback);
+    } catch (Exception ex) {
+      logger.warn("Aws List Ec2 instance call failed. Retrying once after 15 seconds");
+    }
+    sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+    return allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, logCallback);
   }
 
   @VisibleForTesting
