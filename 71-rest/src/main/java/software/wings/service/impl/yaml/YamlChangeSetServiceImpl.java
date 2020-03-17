@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
+import static java.lang.Boolean.TRUE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -86,25 +87,85 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         return null;
       }
 
-      Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                           .filter(YamlChangeSetKeys.accountId, accountId)
-                                           .filter(YamlChangeSetKeys.status, Status.QUEUED)
-                                           .order(YamlChangeSet.CREATED_AT_KEY);
-      UpdateOperations<YamlChangeSet> updateOperations =
-          wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
-      YamlChangeSet modifiedChangeSet = wingsPersistence.findAndModify(findQuery, updateOperations, returnNewOptions);
+      final YamlChangeSet selectedChangeSet = selectQueuedChangeSetWithPriority(accountId);
 
-      if (modifiedChangeSet == null) {
+      if (selectedChangeSet == null) {
         logger.info("No change set found in queued state");
       }
 
-      return modifiedChangeSet;
+      return selectedChangeSet;
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
     return null;
+  }
+
+  private YamlChangeSet selectHeadOfQueue(String accountId) {
+    Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
+                                         .filter(YamlChangeSetKeys.accountId, accountId)
+                                         .filter(YamlChangeSetKeys.status, Status.QUEUED)
+                                         .order(YamlChangeSet.CREATED_AT_KEY);
+
+    UpdateOperations<YamlChangeSet> updateOperations =
+        wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
+    return wingsPersistence.findAndModify(findQuery, updateOperations, returnNewOptions);
+  }
+
+  private YamlChangeSet selectQueuedChangeSetWithPriority(String accountId) {
+    //      find the head of the queue
+    YamlChangeSet selectedYamlChangeSet = null;
+
+    final YamlChangeSet headChangeSet = peekQueueHead(accountId);
+    if (headChangeSet != null && isFullSync(headChangeSet)) {
+      selectedYamlChangeSet = headChangeSet;
+    }
+
+    if (selectedYamlChangeSet == null) {
+      final YamlChangeSet oldestGitToHarnessChangeSet = getOldestGitToHarnessChangeSet(accountId);
+      if (oldestGitToHarnessChangeSet != null) {
+        selectedYamlChangeSet = oldestGitToHarnessChangeSet;
+      }
+    }
+
+    if (selectedYamlChangeSet == null) {
+      selectedYamlChangeSet = headChangeSet;
+    }
+
+    if (selectedYamlChangeSet != null) {
+      final boolean updateStatus = updateStatus(accountId, selectedYamlChangeSet.getUuid(), Status.RUNNING);
+      if (updateStatus) {
+        return get(accountId, selectedYamlChangeSet.getUuid());
+      } else {
+        logger.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
+            selectedYamlChangeSet.getUuid());
+      }
+    }
+    return null;
+  }
+
+  private boolean isFullSync(YamlChangeSet yamlChangeSet) {
+    return yamlChangeSet.isFullSync();
+  }
+
+  private YamlChangeSet peekQueueHead(String accountId) {
+    return wingsPersistence.createQuery(YamlChangeSet.class)
+        .filter(YamlChangeSetKeys.accountId, accountId)
+        .filter(YamlChangeSetKeys.status, Status.QUEUED)
+        .project(YamlChangeSetKeys.gitFileChanges, false)
+        .order(YamlChangeSet.CREATED_AT_KEY)
+        .get();
+  }
+
+  private YamlChangeSet getOldestGitToHarnessChangeSet(String accountId) {
+    return wingsPersistence.createQuery(YamlChangeSet.class)
+        .filter(YamlChangeSetKeys.accountId, accountId)
+        .filter(YamlChangeSetKeys.status, Status.QUEUED)
+        .filter(YamlChangeSetKeys.gitToHarness, TRUE)
+        .project(YamlChangeSetKeys.gitFileChanges, false)
+        .order(YamlChangeSet.CREATED_AT_KEY)
+        .get();
   }
 
   private boolean anyChangeSetRunningForAccount(String accountId) {
