@@ -1,7 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,8 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
-import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.EXTERNAL_CALLS;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -28,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -54,10 +50,8 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -151,55 +145,6 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         appdynamicsResource.getAllTiers(accountId, savedAttributeId, random.nextLong());
     assertThat(allTiers.getResponseMessages().isEmpty()).isTrue();
     assertThat(allTiers.getResource()).isEqualTo(tiers);
-  }
-
-  @Test
-  @Owner(developers = PARNIAN)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void testGetTierDependencies() throws IOException {
-    int numOfTiers = 5;
-    Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
-    Set<AppdynamicsTier> tiers = new HashSet<>();
-    for (int i = 0; i < numOfTiers; i++) {
-      tiers.add(AppdynamicsTier.builder().name("tier" + i).id(i).build());
-    }
-
-    when(restCall.execute()).thenReturn(Response.success(tiers));
-    when(appdynamicsRestClient.listTiers(anyString(), anyLong())).thenReturn(restCall);
-
-    for (int i = 0; i < numOfTiers; i++) {
-      Call<List<AppdynamicsMetric>> appTxnCall = mock(Call.class);
-      List<AppdynamicsMetric> appdynamicsTxns = new ArrayList<>();
-      for (int j = i; j < numOfTiers; j++) {
-        AppdynamicsMetric appdynamicsTxn =
-            AppdynamicsMetric.builder().name("txn" + j).type(AppdynamicsMetricType.folder).build();
-        appdynamicsTxns.add(appdynamicsTxn);
-      }
-      when(appTxnCall.execute()).thenReturn(Response.success(appdynamicsTxns));
-      when(appdynamicsRestClient.listMetrices(anyString(), anyLong(), eq(BT_PERFORMANCE_PATH_PREFIX + "tier" + i)))
-          .thenReturn(appTxnCall);
-      Call<List<AppdynamicsMetric>> externalMetricsCall = mock(Call.class);
-      AppdynamicsMetric externalCallMetric =
-          AppdynamicsMetric.builder().name("txn-" + i + "-" + EXTERNAL_CALLS + i).build();
-      when(externalMetricsCall.execute()).thenReturn(Response.success(Lists.newArrayList(externalCallMetric)));
-
-      when(appdynamicsRestClient.listMetrices(anyString(), anyLong(),
-               eq(BT_PERFORMANCE_PATH_PREFIX + "tier" + i + "|"
-                   + "txn" + i + "|")))
-          .thenReturn(externalMetricsCall);
-    }
-
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
-                                              .password(UUID.randomUUID().toString().toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
-                                              .build();
-
-    Set<AppdynamicsTier> tierDependencies = delegateService.getTierDependencies(
-        appDynamicsConfig, 100, Collections.emptyList(), ThirdPartyApiCallLog.builder().build());
   }
 
   @Test
