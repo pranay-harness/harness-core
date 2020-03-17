@@ -24,6 +24,9 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_RESUME_NOTIFICATION;
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
@@ -206,7 +209,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
     try {
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, context, approvalStateType);
+          app.getAccountId(), WORKFLOW_PAUSE_NOTIFICATION, placeholderValues, context, approvalStateType);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
       logger.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
@@ -689,7 +692,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       approvalStateType = USER_GROUP;
     }
     workflowNotificationHelper.sendApprovalNotification(
-        app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context, approvalStateType);
+        app.getAccountId(), WORKFLOW_RESUME_NOTIFICATION, placeholderValues, context, approvalStateType);
 
     executionData.setVariables(approvalNotifyResponse.getVariables());
 
@@ -889,7 +892,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         errorMsg = "Workflow or Pipeline was aborted";
       }
 
-      notificationMessageType = APPROVAL_STATE_CHANGE_NOTIFICATION;
+      notificationMessageType = WORKFLOW_ABORT_NOTIFICATION;
       User user = UserThreadLocal.get();
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       placeholderValues = getPlaceholderValues(context, userName, ABORTED);
@@ -899,6 +902,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
 
+    notificationMessageType = APPROVAL_STATE_CHANGE_NOTIFICATION;
     switch (approvalStateType) {
       case JIRA:
         handleAbortEventJira(context);

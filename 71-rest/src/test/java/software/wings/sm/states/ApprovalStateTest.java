@@ -29,8 +29,8 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -234,7 +234,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(),
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
@@ -256,7 +256,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(),
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
@@ -362,8 +362,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was aborted");
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION),
-            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_ABORT_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
@@ -386,8 +386,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was aborted");
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION),
-            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_ABORT_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test

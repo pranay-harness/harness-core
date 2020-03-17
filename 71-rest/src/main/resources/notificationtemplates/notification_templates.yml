@@ -118,6 +118,42 @@ APPROVAL_STATE_CHANGE_NOTIFICATION:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
+WORKFLOW_PAUSE_NOTIFICATION:
+      web: Workflow Execution Paused - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
+      slack: Workflow Execution Paused - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
+      email:
+        subject: Workflow Execution Paused for ${WORKFLOW_NAME}
+        body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>  ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
+      pagerDuty:
+        summary: Workflow Execution Paused - ${WORKFLOW_NAME}> triggered by ${USER_NAME} is waiting for approval in ${APP_NAME} application|| ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
+WORKFLOW_RESUME_NOTIFICATION:
+      web: Workflow Execution Resumed - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
+      slack: Workflow Execution Resumed - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _paused for approval<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and resumed at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      email:
+        subject: Workflow Execution Resumed for ${WORKFLOW_NAME}
+        body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> ${APPROVAL_TYPE} paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+      pagerDuty:
+        summary: Workflow Execution Resumed - ${WORKFLOW_NAME}> is ${STATUS} by ${USER_NAME} in ${APP_NAME} application
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
+WORKFLOW_ABORT_NOTIFICATION:
+      web: Workflow Execution Aborted - ${WORKFLOW_NAME} in ${APP_NAME} is ${STATUS}
+      slack: Workflow Execution Aborted - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* is ${STATUS} by \*${USER_NAME}\* in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _paused for approval<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and aborted at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      email:
+        subject: Workflow Execution Aborted for ${WORKFLOW_NAME}
+        body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is ${STATUS} by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> ${APPROVAL_TYPE} paused ${START_DATE} and ${STATUS} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+      pagerDuty:
+        summary: Workflow Execution Aborted - ${WORKFLOW_NAME}> is ${STATUS} by ${USER_NAME} in ${APP_NAME} application
+        link:
+          href: ${WORKFLOW_URL}
+          text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
 APPROVAL_EXPIRED_NOTIFICATION:
       web: Approval ${STATUS_CAMELCASE} - ${WORKFLOW_NAME} in ${APP_NAME} ${VERB}
       slack: Approval ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${VERB} in \*${APP_NAME}\* application ||${TIMEOUT} ||||${VERB}
