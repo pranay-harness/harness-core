@@ -1,4 +1,4 @@
-input ApplicationPermissionsInput {
+input ApplicationPermissionInput {
   permissionType: AppPermissionType!
   applications: AppFilterInput!
   services: ServicePermissionFilterInput
@@ -10,7 +10,7 @@ input ApplicationPermissionsInput {
   actions: [Actions]!
 }
 
-type ApplicationPermissions {
+type ApplicationPermission {
   permissionType: AppPermissionType
   applications: AppFilter
   actions: [Actions]

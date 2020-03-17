@@ -1,11 +1,11 @@
 input Permissions {
   accountPermissions: AccountPermissionInput
-  appPermissions: [ApplicationPermissionsInput]
+  appPermissions: [ApplicationPermissionInput]
 }
 
 type UserGroupPermissions {
   accountPermissions: AccountPermissions
-  appPermissions: [ApplicationPermissions]
+  appPermissions: [ApplicationPermission]
 }
 
 enum Actions {

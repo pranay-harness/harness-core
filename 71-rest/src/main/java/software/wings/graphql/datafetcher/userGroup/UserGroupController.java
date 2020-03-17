@@ -26,7 +26,9 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.graphql.schema.mutation.userGroup.input.QLCreateUserGroupInput;
+import software.wings.graphql.schema.mutation.userGroup.payload.QLAddUserToUserGroupPayload;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLCreateUserGroupPayload;
+import software.wings.graphql.schema.mutation.userGroup.payload.QLRemoveUserFromUserGroupPayload;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLUpdateUserGroupPayload;
 import software.wings.graphql.schema.type.permissions.QLGroupPermissions;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
@@ -59,6 +61,14 @@ public class UserGroupController {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AccountService accountService;
   @Inject private UserGroupPermissionsController userGroupPermissionsController;
+
+  public UserGroup validateAndGetUserGroup(String accountId, String userGroupId) {
+    UserGroup userGroup = userGroupService.get(accountId, userGroupId);
+    if (userGroup == null) {
+      throw new InvalidRequestException(String.format("No user group exists with the id %s", userGroupId));
+    }
+    return userGroup;
+  }
 
   private QLLinkedSSOSetting populateLDAPSettings(UserGroup userGroup) {
     return QLLDAPSettings.builder()
@@ -107,6 +117,19 @@ public class UserGroupController {
     QLUserGroupBuilder builder = QLUserGroup.builder();
     QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
     return QLUpdateUserGroupPayload.builder().clientMutationId(requestId).userGroup(userGroupOutput).build();
+  }
+
+  public QLAddUserToUserGroupPayload populateAddUserToUserGroupPayload(UserGroup userGroup, String requestId) {
+    QLUserGroupBuilder builder = QLUserGroup.builder();
+    QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
+    return QLAddUserToUserGroupPayload.builder().clientMutationId(requestId).userGroup(userGroupOutput).build();
+  }
+
+  public QLRemoveUserFromUserGroupPayload populateRemoveUserFromUserGroupPayload(
+      UserGroup userGroup, String requestId) {
+    QLUserGroupBuilder builder = QLUserGroup.builder();
+    QLUserGroup userGroupOutput = populateUserGroupOutput(userGroup, builder).build();
+    return QLRemoveUserFromUserGroupPayload.builder().clientMutationId(requestId).userGroup(userGroupOutput).build();
   }
 
   private QLNotificationSettings populateNotificationSettings(UserGroup userGroup) {

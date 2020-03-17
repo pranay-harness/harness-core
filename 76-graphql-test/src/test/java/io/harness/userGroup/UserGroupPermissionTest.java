@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.userGroup;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -23,6 +23,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 import com.google.inject.Inject;
 
 import graphql.ExecutionResult;
+import io.harness.GraphQLTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -73,20 +74,10 @@ public class UserGroupPermissionTest extends GraphQLTest {
   @Inject UserGroupService userGroupService;
   private InfrastructureProvisioner infrastructureProvisioner;
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
+  @Inject UserGroupHelper userGroupHelper;
   private String accountId;
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   private String GenericErrorString = "Exception while fetching data (/updateUserGroupPermissions) : Invalid request: ";
-
-  private UserGroup createUserGroup(AccountPermissions accountPermissions, Set<AppPermission> appPermissions) {
-    UserGroup userGroup = UserGroup.builder()
-                              .accountId(accountId)
-                              .description("Test UserGroup")
-                              .name("AccountPermission-UserGroup-" + System.currentTimeMillis())
-                              .accountPermissions(accountPermissions)
-                              .appPermissions(appPermissions)
-                              .build();
-    return userGroupService.save(userGroup);
-  }
 
   @Before
   public void setup() {
@@ -173,7 +164,7 @@ mutation {
     Set<PermissionType> allPermissions = createAccountPermissions();
     AccountPermissions accountPermissions = AccountPermissions.builder().permissions(allPermissions).build();
     // Add Permission to userGroup
-    UserGroup userGroup = createUserGroup(accountPermissions, null);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, accountPermissions, null);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String accountPermissionsString = createAccountPermissionGQL(userGroupId);
@@ -260,7 +251,7 @@ mutation {
     AppPermission allApplications = createAllEntityAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(allApplications);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createAllEntityAllAppsPermissionGQL(userGroupId);
@@ -301,7 +292,7 @@ mutation {
     AppPermission selectedApplications = createAllEntitySelectedAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(selectedApplications);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createAllEntitySelectedAppsPermissionGQL(userGroupId);
@@ -353,7 +344,7 @@ mutation {
     AppPermission appPermission = createServiceAllAppPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createServiceAllAppsPermissionGQL(userGroupId);
@@ -408,7 +399,7 @@ mutation {
     AppPermission appPermission = createServiceWithIdPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createServiceWithIdPermissionGQL(userGroupId);
@@ -463,7 +454,7 @@ mutation {
     AppPermission appPermission = createEnvAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createEnvAllAppsPermissionGQL(userGroupId);
@@ -521,7 +512,7 @@ mutation {
     AppPermission appPermission = createEnvWithIdsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createEnvWithIdsPermissionGQL(userGroupId);
@@ -576,7 +567,7 @@ mutation {
     AppPermission appPermission = createWorkflowAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createWorkflowAllAppsPermissionGQL(userGroupId);
@@ -631,7 +622,7 @@ mutation {
     AppPermission appPermission = createDeploymentAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createDeploymentAllAppsPermissionGQL(userGroupId);
@@ -685,7 +676,7 @@ mutation {
     AppPermission appPermission = createPipelineAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createPiplelineAllAppsPermissionGQL(userGroupId);
@@ -736,7 +727,7 @@ mutation {
     AppPermission appPermission = createProvisonersAllAppsPermission();
     Set<AppPermission> appPermissions = new HashSet<>();
     appPermissions.add(appPermission);
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createProvisionerseAllAppsPermissionGQL(userGroupId);
@@ -834,7 +825,7 @@ mutation {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testUpdatingMultipleAppPermissions() {
     Set<AppPermission> appPermissions = createListOfAppPermissions();
-    UserGroup userGroup = createUserGroup(null, appPermissions);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, null, appPermissions);
     String userGroupId = userGroup.getUuid();
     // Add Permission to userGroup using gql
     String appPermissionString = createListOfAppPermissionsGQL(userGroupId);
@@ -879,7 +870,7 @@ mutation {
   private UserGroup createUserGroup() {
     Set<PermissionType> allPermissions = createAccountPermissions();
     AccountPermissions accountPermissions = AccountPermissions.builder().permissions(allPermissions).build();
-    UserGroup userGroup = createUserGroup(accountPermissions, null);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, accountPermissions, null);
     return userGroup;
   }
 

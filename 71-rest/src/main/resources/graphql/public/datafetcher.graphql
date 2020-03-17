@@ -63,6 +63,10 @@ enum DataFetcherEnum {
   deleteUserGroup
   createUserGroup
   updateUserGroup
+  addUserToUserGroup
+  removeUserFromUserGroup
+  addAccountPermission
+  addAppPermission
   user
   userConnection
   updateApplicationGitSyncConfig

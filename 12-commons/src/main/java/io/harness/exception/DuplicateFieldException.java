@@ -18,12 +18,12 @@ public class DuplicateFieldException extends WingsException {
   }
 
   public DuplicateFieldException(String message) {
-    super(null, null, DUPLICATE_FIELD, Level.ERROR, null, null);
+    super(message, null, DUPLICATE_FIELD, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
 
   public DuplicateFieldException(String message, EnumSet<ReportTarget> reportTarget, Throwable e) {
-    super(null, e, DUPLICATE_FIELD, Level.ERROR, reportTarget, null);
+    super(message, e, DUPLICATE_FIELD, Level.ERROR, reportTarget, null);
     super.param(MESSAGE_ARG, message);
   }
 }

@@ -4,6 +4,12 @@ extend type Mutation {
   updateUserGroupPermissions(input: UpdateUserGroupPermissionsInput): UpdateUserGroupPermissionsPayload
     @dataFetcher(name: updateUserGroupPermissions)
   deleteUserGroup(input: DeleteUserGroupInput!): DeleteUserGroupPayload @dataFetcher(name: deleteUserGroup)
+  addUserToUserGroup(input: AddUserToUserGroupInput!): AddUserToUserGroupPayload @dataFetcher(name: addUserToUserGroup)
+  removeUserFromUserGroup(input: RemoveUserFromUserGroupInput!): RemoveUserFromUserGroupPayload
+    @dataFetcher(name: removeUserFromUserGroup)
+  addAccountPermission(input: AddAccountPermissionInput!): AddAccountPermissionPayload
+    @dataFetcher(name: addAccountPermission)
+  addAppPermission(input: AddAppPermissionInput!): AddAppPermissionPayload @dataFetcher(name: addAppPermission)
 }
 
 extend type Query {
@@ -58,6 +64,50 @@ input UpdateUserGroupPermissionsInput {
 input DeleteUserGroupInput {
   clientMutationId: String
   userGroupId: String!
+}
+
+input AddUserToUserGroupInput {
+  clientMutationId: String
+  userGroupId: String!
+  userId: String!
+}
+
+type AddUserToUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input RemoveUserFromUserGroupInput {
+  clientMutationId: String
+  userGroupId: String!
+  userId: String!
+}
+
+type RemoveUserFromUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input AddAccountPermissionInput {
+  clientMutationId: String
+  userGroupId: String!
+  accountPermission: AccountPermissionType
+}
+
+type AddAccountPermissionPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input AddAppPermissionInput {
+  clientMutationId: String
+  userGroupId: String!
+  appPermission: ApplicationPermissionInput
+}
+
+type AddAppPermissionPayload {
+  clientMutationId: String
+  userGroup: UserGroup
 }
 
 type UserGroup {

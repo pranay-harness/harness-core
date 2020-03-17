@@ -10,7 +10,7 @@ import java.util.Set;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLAppPermissionsKeys")
-public class QLAppPermissions {
+public class QLAppPermission {
   QLPermissionType permissionType;
   QLAppFilter applications;
   QLServicePermissions services;

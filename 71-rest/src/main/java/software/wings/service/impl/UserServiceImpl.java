@@ -2005,7 +2005,7 @@ public class UserServiceImpl implements UserService {
   public User get(String accountId, String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
+      throw new InvalidRequestException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
 
     loadSupportAccounts(user);
