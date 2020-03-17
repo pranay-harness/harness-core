@@ -2556,6 +2556,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
 
@@ -2611,6 +2612,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
 
