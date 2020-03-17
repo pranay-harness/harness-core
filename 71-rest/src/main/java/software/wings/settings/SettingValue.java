@@ -141,6 +141,8 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
     DYNA_TRACE("Dynatrace"),
 
     INSTANA("Instana"),
+
+    DATA_DOG_LOG("Datadog log"),
     /**
      * Dyna trace variable types.
      */

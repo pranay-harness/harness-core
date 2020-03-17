@@ -34,6 +34,7 @@ import migrations.all.ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAcco
 import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
+import migrations.all.DataDogLogCvConfigMigration;
 import migrations.all.DatadogCVServiceConfigurationMigration;
 import migrations.all.DatadogCustomMetricMigration;
 import migrations.all.DeleteCVAlertsMigration;
@@ -315,6 +316,7 @@ public class MigrationList {
         .add(Pair.of(296, GitSyncErrorGitDetailsMigration.class))
         .add(Pair.of(297, BaseMigration.class))
         .add(Pair.of(298, GitCommitStatusMigration.class))
+        .add(Pair.of(299, DataDogLogCvConfigMigration.class))
         .build();
   }
 }

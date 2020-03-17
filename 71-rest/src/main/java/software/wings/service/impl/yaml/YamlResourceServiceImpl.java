@@ -623,6 +623,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case APP_DYNAMICS:
       case SPLUNK:
       case ELK:
+      case INSTANA:
+      case DATA_DOG_LOG:
       case LOGZ:
       case SUMO:
       case NEW_RELIC:

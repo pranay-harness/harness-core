@@ -685,6 +685,7 @@ import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogLogCVConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.instana.InstanaCVConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
@@ -797,6 +798,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(EcsServiceSpecification.class);
     set.add(ElasticsearchBulkMigrationJob.class);
     set.add(ElkCVConfiguration.class);
+    set.add(DatadogLogCVConfiguration.class);
     set.add(EmailData.class);
     set.add(EmailVerificationToken.class);
     set.add(EncryptableSetting.class);
@@ -1441,6 +1443,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("verification.log.BugsnagCVConfiguration", BugsnagCVConfiguration.class);
     w.put("verification.log.CustomLogCVServiceConfiguration", CustomLogCVServiceConfiguration.class);
     w.put("verification.log.ElkCVConfiguration", ElkCVConfiguration.class);
+    w.put("verification.datadog.DatadogLogCVConfiguration", DatadogLogCVConfiguration.class);
     w.put("verification.log.LogsCVConfiguration", LogsCVConfiguration.class);
     w.put("verification.log.SplunkCVConfiguration", SplunkCVConfiguration.class);
     w.put("verification.log.StackdriverCVConfiguration", StackdriverCVConfiguration.class);

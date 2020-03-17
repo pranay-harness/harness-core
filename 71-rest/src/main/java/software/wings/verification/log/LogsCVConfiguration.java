@@ -69,6 +69,11 @@ public class LogsCVConfiguration extends CVConfiguration {
     return clonedConfig;
   }
 
+  protected void copy(LogsCVConfiguration cvConfiguration) {
+    super.copy(cvConfiguration);
+    cvConfiguration.setQuery(this.getQuery());
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
