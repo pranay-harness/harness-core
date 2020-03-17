@@ -65,6 +65,39 @@ public class GitSyncResource {
   }
 
   /**
+   * List git to harness errors
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/gitToHarness")
+  public RestResponse<PageResponse<GitCommit>> listGitToHarnessErrors(
+      @BeanParam PageRequest<GitCommit> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    pageRequest.addFilter(GitSyncErrorKeys.accountId, SearchFilter.Operator.EQ, accountId);
+    PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitToHarnessErrors(pageRequest, accountId);
+    return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * List harness to git errors
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/harnessToGit")
+  public RestResponse<PageResponse<GitSyncError>> listHarnessToGitErrors(
+      @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    pageRequest.addFilter(GitSyncErrorKeys.accountId, SearchFilter.Operator.EQ, accountId);
+    pageRequest.addFilter(GitSyncErrorKeys.gitCommitId, SearchFilter.Operator.EQ, "");
+    PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrors(pageRequest);
+    return new RestResponse<>(pageResponse);
+  }
+
+  /**
    * List activity
    *
    * @param pageRequest the page request

@@ -69,5 +69,6 @@ public class GitCommit extends Base {
   public static final class GitCommitKeys {
     // Temporary
     public static final String lastUpdatedAt = "lastUpdatedAt";
+    public static final String createdAt = "createdAt";
   }
 }

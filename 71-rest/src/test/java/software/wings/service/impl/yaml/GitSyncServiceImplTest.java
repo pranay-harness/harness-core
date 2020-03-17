@@ -1,13 +1,14 @@
-package software.wings.service.impl;
+package software.wings.service.impl.yaml;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,7 +24,6 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
-import software.wings.service.impl.yaml.GitSyncServiceImpl;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
@@ -33,6 +33,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
@@ -60,7 +61,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.save(Arrays.asList(gitSyncError1, gitSyncError2));
 
-    final PageRequest pageRequest = PageRequestBuilder.aPageRequest().withOffset("0").withLimit("2").build();
+    final PageRequest pageRequest = aPageRequest().withOffset("0").withLimit("2").build();
 
     final PageResponse<GitSyncError> errorList = gitSyncService.fetchErrors(pageRequest);
     assertThat(errorList.size()).isEqualTo(2);
@@ -130,8 +131,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
             .build();
 
     wingsPersistence.save(gitCommit);
-    final PageResponse pageResponse =
-        gitSyncService.fetchGitCommits(PageRequestBuilder.aPageRequest().withLimit("1").build(), accountId);
+    final PageResponse pageResponse = gitSyncService.fetchGitCommits(aPageRequest().withLimit("1").build(), accountId);
     assertThat(pageResponse).isNotNull();
     final List<GitCommit> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
@@ -176,11 +176,47 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                              .build();
 
     wingsPersistence.save(fileActivity);
-    final PageResponse pageResponse =
-        gitSyncService.fetchGitSyncActivity(PageRequestBuilder.aPageRequest().withLimit("1").build());
+    final PageResponse pageResponse = gitSyncService.fetchGitSyncActivity(aPageRequest().withLimit("1").build());
     assertThat(pageResponse).isNotNull();
     final List<GitFileActivity> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
     assertThat(responseList.get(0).getAccountId()).isEqualTo(accountId);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_getCommitIdsOfErrors() {
+    // Case when no git commits exists
+    Set<String> commitIds = gitSyncService.getCommitIdsOfErrors(accountId, 10, 0);
+    assertThat(commitIds.size()).isEqualTo(0);
+
+    // Case when we have git commits
+    final GitSyncError gitSyncError = GitSyncError.builder().accountId(accountId).fullSyncPath(false).build();
+
+    wingsPersistence.save(gitSyncError);
+    Set<String> newCommitIds = gitSyncService.getCommitIdsOfErrors(accountId, 10, 0);
+    assertThat(newCommitIds.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_fetchGitToHarnessErrors() {
+    final String commitId = "gitCommitId";
+    // Saving GitSyncError
+    final GitSyncError gitSyncError =
+        GitSyncError.builder().accountId(accountId).fullSyncPath(false).gitCommitId(commitId).build();
+    wingsPersistence.save(gitSyncError);
+
+    // Saving GitCommit
+    final GitCommit gitCommit =
+        GitCommit.builder().commitId(commitId).accountId(accountId).status(GitCommit.Status.COMPLETED).build();
+    wingsPersistence.save(gitCommit);
+
+    PageRequest<GitCommit> req = aPageRequest().withLimit("10").withOffset("0").build();
+    List<GitCommit> commitList = gitSyncService.fetchGitToHarnessErrors(req, accountId).getResponse();
+    assertThat(commitList.size()).isEqualTo(1);
+    assertThat(commitList.get(0).equals(gitCommit)).isTrue();
   }
 }
