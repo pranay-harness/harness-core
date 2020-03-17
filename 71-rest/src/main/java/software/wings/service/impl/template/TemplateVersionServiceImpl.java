@@ -1,6 +1,8 @@
 package software.wings.service.impl.template;
 
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.template.TemplateVersion.ChangeType.IMPORTED;
 import static software.wings.beans.template.TemplateVersion.INITIAL_VERSION;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 
@@ -9,6 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.template.TemplateVersion;
@@ -33,6 +36,36 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         .filter(TEMPLATE_UUID_KEY, templateUuid)
         .order(Sort.descending(TemplateVersionKeys.version))
         .get();
+  }
+
+  @Override
+  public TemplateVersion newReferencedTemplateVersion(String accountId, String galleryId, String templateUuid,
+      String templateType, String templateName, Long version, String versionDetails) {
+    TemplateVersion templateVersion = TemplateVersion.builder()
+                                          .accountId(accountId)
+                                          .galleryId(galleryId)
+                                          .templateUuid(templateUuid)
+                                          .templateName(templateName)
+                                          .templateType(templateType)
+                                          .changeType(IMPORTED.name())
+                                          .version(version)
+                                          .versionDetails(versionDetails)
+                                          .build();
+
+    if (!checkIfAlreadyExists(accountId, templateUuid, version)) {
+      String templateVersionUuid = wingsPersistence.save(templateVersion);
+      return wingsPersistence.get(TemplateVersion.class, templateVersionUuid);
+    }
+    throw new InvalidRequestException("Template already exists.", USER);
+  }
+
+  private boolean checkIfAlreadyExists(String accountId, String templateUuid, Long version) {
+    TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
+                                          .filter(TemplateVersionKeys.accountId, accountId)
+                                          .filter(TemplateVersionKeys.templateUuid, templateUuid)
+                                          .filter(TemplateVersionKeys.version, version)
+                                          .get();
+    return templateVersion != null;
   }
 
   @Override

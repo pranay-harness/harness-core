@@ -64,6 +64,7 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.VersionedTemplate.VersionedTemplateBuilder;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
@@ -117,9 +118,28 @@ public class TemplateServiceImpl implements TemplateService {
   public PageResponse<Template> list(PageRequest<Template> pageRequest) {
     PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
     for (Template template : pageResponse.getResponse()) {
-      setTemplateDetails(template, null);
+      setDetailsOfTemplate(template, null);
     }
     return pageResponse;
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public Template saveReferenceTemplate(Template template) {
+    setTemplateFolder(template);
+    saveOrUpdate(template);
+
+    // Client side keyword generation.
+    template.setKeywords(getKeywords(template));
+
+    String templateUuid =
+        PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
+    getReferencedTemplateVersion(template, templateUuid);
+    Template savedTemplate = get(templateUuid);
+
+    auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
+
+    return savedTemplate;
   }
 
   @Override
@@ -194,6 +214,9 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Update.class)
   public Template update(Template template) {
+    if (template.isImported()) {
+      throw new InvalidRequestException("Imported template cannot be updated.", USER);
+    }
     saveOrUpdate(template);
     processTemplate(template);
     Template oldTemplate;
@@ -285,17 +308,35 @@ public class TemplateServiceImpl implements TemplateService {
     template.setVersion(newVersionedTemplate.getVersion());
   }
 
+  private void setTemplateFolder(Template template) {
+    String galleryId = template.getGalleryId();
+    if (isEmpty(galleryId)) {
+      TemplateGallery templateGallery = templateGalleryService.getByAccount(template.getAccountId());
+      notNullCheck("Template gallery does not exist", templateGallery, USER);
+      galleryId = templateGallery.getUuid();
+    }
+    String folderId =
+        templateFolderService.getImportedTemplateFolder(template.getAccountId(), galleryId, template.getAppId())
+            .getUuid();
+    template.setFolderId(folderId);
+  }
+
   private TemplateVersion getTemplateVersion(
       Template template, String uuid, String templateType, String templateName, TemplateVersion.ChangeType updated) {
     return templateVersionService.newTemplateVersion(
         template.getAccountId(), template.getGalleryId(), uuid, templateType, templateName, updated);
   }
 
+  private TemplateVersion getReferencedTemplateVersion(Template template, String uuid) {
+    return templateVersionService.newReferencedTemplateVersion(template.getAccountId(), template.getGalleryId(), uuid,
+        template.getType(), template.getName(), template.getVersion(), template.getVersionDetails());
+  }
+
   @Override
   public Template get(String templateUuid) {
     Template template = wingsPersistence.get(Template.class, templateUuid);
     notNullCheck("Template was deleted", template);
-    setTemplateDetails(template, null);
+    setDetailsOfTemplate(template, null);
     return template;
   }
 
@@ -310,7 +351,7 @@ public class TemplateServiceImpl implements TemplateService {
   private Template getTemplate(String version, Query<Template> templateQuery) {
     Template template = templateQuery.get();
     notNullCheck("Template does not exist", template);
-    setTemplateDetails(template, version);
+    setDetailsOfTemplate(template, version);
     return template;
   }
 
@@ -328,6 +369,27 @@ public class TemplateServiceImpl implements TemplateService {
         "Template [" + template.getName() + "] with version [" + version + "] does not exist", versionedTemplate);
     template.setTemplateObject(versionedTemplate.getTemplateObject());
     template.setVersion(templateVersion);
+    template.setVariables(versionedTemplate.getVariables());
+  }
+
+  private void setReferencedTemplateDetails(Template template, String version) {
+    Long versionValue = version == null || version.equals("latest") ? template.getVersion() : Long.valueOf(version);
+
+    String referencedTemplateId = template.getReferencedTemplateId();
+    TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
+                                          .filter(TemplateVersionKeys.templateUuid, template.getUuid())
+                                          .filter(TemplateVersionKeys.version, versionValue)
+                                          .get();
+    // TODO: This is done to get account ID. Once we fix a static constant for account ID for command library that can
+    // be used everywhere.
+    Template referencedTemplate = get(referencedTemplateId, String.valueOf(templateVersion.getVersion()));
+    VersionedTemplate versionedTemplate = getVersionedTemplate(
+        referencedTemplate.getAccountId(), referencedTemplate.getUuid(), templateVersion.getVersion());
+    notNullCheck("Template [" + template.getName() + "] with version [" + templateVersion + "] does not exist",
+        versionedTemplate);
+    template.setTemplateObject(versionedTemplate.getTemplateObject());
+    template.setVersion(templateVersion.getVersion());
+    template.setVersionDetails(templateVersion.getVersionDetails());
     template.setVariables(versionedTemplate.getVariables());
   }
 
@@ -691,6 +753,14 @@ public class TemplateServiceImpl implements TemplateService {
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 
+  private void setDetailsOfTemplate(Template template, String version) {
+    if (template.isImported()) {
+      setReferencedTemplateDetails(template, version);
+    } else {
+      setTemplateDetails(template, version);
+    }
+  }
+
   @Override
   public Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword) {
     Template template = null;
@@ -705,7 +775,7 @@ public class TemplateServiceImpl implements TemplateService {
         template = templates.get(0);
       }
       if (template != null) {
-        setTemplateDetails(template, null);
+        setDetailsOfTemplate(template, null);
       }
     }
     return template;
@@ -725,7 +795,7 @@ public class TemplateServiceImpl implements TemplateService {
         template = templates.get(0);
       }
       if (template != null) {
-        setTemplateDetails(template, null);
+        setDetailsOfTemplate(template, null);
       }
     }
     return template;
@@ -746,7 +816,7 @@ public class TemplateServiceImpl implements TemplateService {
         template = templates.get(0);
       }
       if (template != null) {
-        setTemplateDetails(template, null);
+        setDetailsOfTemplate(template, null);
       }
     }
     return template;
@@ -760,7 +830,7 @@ public class TemplateServiceImpl implements TemplateService {
     List<Template> templates = templateQuery.asList();
     if (isNotEmpty(templates)) {
       for (Template template : templates) {
-        setTemplateDetails(template, null);
+        setDetailsOfTemplate(template, null);
       }
     }
     return templates;

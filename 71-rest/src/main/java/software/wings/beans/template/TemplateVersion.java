@@ -41,9 +41,11 @@ public class TemplateVersion extends Base {
   private String templateUuid;
   private String templateName;
   private String templateType;
+
   private Long version;
+  private String versionDetails;
   @NotEmpty private String accountId;
   private String galleryId;
 
-  public enum ChangeType { CREATED, UPDATED }
+  public enum ChangeType { CREATED, UPDATED, IMPORTED }
 }

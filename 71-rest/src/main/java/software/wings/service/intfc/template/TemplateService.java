@@ -2,7 +2,9 @@ package software.wings.service.intfc.template;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.template.Template;
@@ -20,6 +22,8 @@ import javax.validation.constraints.NotNull;
 
 public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Template> list(PageRequest<Template> pageRequest);
+
+  @ValidationGroups(Create.class) Template saveReferenceTemplate(Template template);
 
   Template save(@Valid @NotNull Template template);
 
