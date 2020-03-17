@@ -1,0 +1,7 @@
+metrics:
+  - perpetualtask_count:
+      check_interval:   120      # seconds
+      query:            "db.perpetualTask.find({}).count()"
+  - perpetualtask_unassigned_count:
+      check_interval:   120      # seconds
+      query:            "db.perpetualTask.find({delegateId:''}).count()"
