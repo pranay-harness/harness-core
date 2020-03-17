@@ -181,12 +181,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     MockitoAnnotations.initMocks(this);
 
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId))
         .thenReturn(managerCall);
 
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(managerCallFeedbacks);
@@ -1583,6 +1585,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testSaveDuplicate() throws IOException {
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     setInternalState(analysisService, "managerClient", verificationManagerClient);
@@ -1617,6 +1620,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogAnalysisAlert_featureFlagDisabled() throws Exception {
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     setInternalState(analysisService, "managerClient", verificationManagerClient);
@@ -1646,6 +1650,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogAnalysisAlert_featureFlagEnabled() throws Exception {
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     setInternalState(analysisService, "managerClient", verificationManagerClient);

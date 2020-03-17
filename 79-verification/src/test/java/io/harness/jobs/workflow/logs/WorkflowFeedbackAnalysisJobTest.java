@@ -2,11 +2,14 @@ package io.harness.jobs.workflow.logs;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -34,8 +37,10 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.io.IOException;
+import java.util.List;
 
 public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
   @Mock private JobExecutionContext jobExecutionContext;
@@ -55,6 +60,7 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
     MockitoAnnotations.initMocks(this);
     workflowFeedbackAnalysisJob = Mockito.spy(new WorkflowFeedbackAnalysisJob());
     managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
 
     analysisContext = AnalysisContext.builder().build();
     JobDataMap jobDataMap = new JobDataMap();
@@ -64,6 +70,7 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
     feedbackAnalysisTask = Mockito.mock(FeedbackAnalysisTask.class);
 
     FieldUtils.writeField(workflowFeedbackAnalysisJob, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeField(managerClientHelper, "managerClient", verificationManagerClient, true);
     FieldUtils.writeField(workflowFeedbackAnalysisJob, "managerClientHelper", managerClientHelper, true);
     FieldUtils.writeField(workflowFeedbackAnalysisJob, "analysisService", analysisService, true);
     FieldUtils.writeField(workflowFeedbackAnalysisJob, "learningEngineService", learningEngineService, true);
@@ -76,6 +83,18 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     when(learningEngineService.isStateValid(any(), any())).thenReturn(true);
+
+    Call<RestResponse<Boolean>> notifyState = mock(Call.class);
+    when(notifyState.clone()).thenReturn(notifyState);
+    when(notifyState.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.sendNotifyForVerificationState(
+             anyMap(), anyString(), any(VerificationDataAnalysisResponse.class)))
+        .thenReturn(notifyState);
+
+    Call<RestResponse<List<String>>> versionsCall = mock(Call.class);
+    when(versionsCall.clone()).thenReturn(versionsCall);
+    when(versionsCall.execute()).thenReturn(Response.success(new RestResponse<>(Lists.newArrayList())));
+    when(verificationManagerClient.getListOfPublishedVersions(anyString())).thenReturn(versionsCall);
   }
 
   @Test
