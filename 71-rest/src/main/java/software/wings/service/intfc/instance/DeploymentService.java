@@ -7,6 +7,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentSummary;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
@@ -36,4 +38,6 @@ public interface DeploymentService extends OwnedByApplication {
   // DeploymentSummary saveOrUpdate(@Valid DeploymentSummary deploymentSummary);
 
   Optional<DeploymentSummary> getWithAccountId(DeploymentSummary deploymentSummary);
+
+  List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 }

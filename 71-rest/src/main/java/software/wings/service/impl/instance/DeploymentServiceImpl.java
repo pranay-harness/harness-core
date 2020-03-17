@@ -1,7 +1,14 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.GE;
+import static io.harness.beans.SearchFilter.Operator.LT;
+import static io.harness.beans.SortOrder.Builder.aSortOrder;
+import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeValidate;
+import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,6 +34,8 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.instance.DeploymentService;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
@@ -77,6 +86,19 @@ public class DeploymentServiceImpl implements DeploymentService {
     query.order(Sort.descending(DeploymentSummary.CREATED_AT_KEY));
     DeploymentSummary summary = query.get();
     return Optional.ofNullable(summary);
+  }
+
+  @Override
+  public List<DeploymentSummary> getDeploymentSummary(
+      String accountId, String offset, Instant startTime, Instant endTime) {
+    PageRequest<DeploymentSummary> pageRequest =
+        aPageRequest().withOffset(offset).withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE)).build();
+    pageRequest.addFilter(DeploymentSummaryKeys.accountId, EQ, accountId);
+    pageRequest.addFilter(DeploymentSummaryKeys.CREATED_AT, GE, startTime.toEpochMilli());
+    pageRequest.addFilter(DeploymentSummaryKeys.CREATED_AT, LT, endTime.toEpochMilli());
+    pageRequest.setOrders(asList(aSortOrder().withField(DeploymentSummaryKeys.accountId, ASC).build(),
+        aSortOrder().withField(DeploymentSummaryKeys.CREATED_AT, ASC).build()));
+    return wingsPersistence.query(DeploymentSummary.class, pageRequest).getResponse();
   }
 
   private void addDeploymentInfoFilterToQuery(Query<DeploymentSummary> query, DeploymentSummary deploymentSummary) {

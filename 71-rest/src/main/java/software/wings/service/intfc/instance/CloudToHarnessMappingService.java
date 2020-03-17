@@ -6,6 +6,7 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,6 @@ public interface CloudToHarnessMappingService {
   List<Account> getCCMEnabledAccounts();
 
   List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds);
+
+  List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 }
