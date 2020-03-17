@@ -76,7 +76,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class WorkflowUtils {
   private static final long TEST_TIMEOUT_IN_MINUTES = 8;
-
   static final String SETUP_CONTAINER_CONSTANT = "Setup Container";
   static final String PRE_DEPLOYMENT_CONSTANT = "Pre-Deployment";
   static final String ECS_DAEMON_SERVICE_SETUP_NAME = "ECS Daemon Service Setup";

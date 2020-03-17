@@ -3,10 +3,13 @@ package software.wings.sm.states;
 import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.delegate.task.shell.ScriptType.BASH;
+import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.PRABU;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -24,6 +27,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.states.ShellScriptState.ConnectionType.SSH;
+import static software.wings.sm.states.ShellScriptState.ConnectionType.WINRM;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -61,10 +65,14 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.template.TemplateUtils;
+import software.wings.common.TemplateExpressionProcessor;
+import software.wings.exception.ShellScriptException;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
@@ -79,6 +87,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +112,8 @@ public class ShellScriptStateTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private WorkflowStandardParams workflowStandardParams;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock private TemplateExpression templateExpression;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks private ShellScriptState shellScriptState = new ShellScriptState("ShellScript");
 
@@ -211,7 +222,7 @@ public class ShellScriptStateTest extends CategoryTest {
   public void shouldExecuteOnDelegate() throws IllegalAccessException {
     Map<String, Object> variableMap = new HashMap<>();
     variableMap.put("var1", "John Doe");
-    setFieldsInShellScriptState();
+    setFieldsInShellScriptState(true);
     FieldUtils.writeField(shellScriptState, "executeOnDelegate", true, true);
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
@@ -257,30 +268,13 @@ public class ShellScriptStateTest extends CategoryTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteOnTargetHostSSh() throws IllegalAccessException {
-    on(shellScriptState).set("settingsService", settingsService);
-    on(shellScriptState).set("secretManager", secretManager);
     Map<String, Object> variableMap = new HashMap<>();
     variableMap.put("var1", "John Doe");
-    setFieldsInShellScriptState();
-    FieldUtils.writeField(shellScriptState, "executeOnDelegate", false, true);
-    FieldUtils.writeField(shellScriptState, "host", "localhost", true);
+    setFieldsForSSH();
     FieldUtils.writeField(shellScriptState, "sshKeyRef", "SSH_KEY_REF", true);
 
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
-        .thenReturn(emptyList());
-
     when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
-    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-    when(executionContext.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
-    when(executionContext.renderExpression(eq("echo ${var1}"), any(StateExecutionContext.class)))
-        .thenReturn("echo \"John Doe\"");
-    when(executionContext.renderExpression(eq("localhost"), any(StateExecutionContext.class))).thenReturn("localhost");
-    when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
-    when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
-    when(workflowStandardParams.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
-    when(workflowStandardParams.getEnv())
-        .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(NON_PROD).build());
+    shellScriptConditions("echo ${var1}", "echo \"John Doe\"");
 
     doReturn("TASKID").when(delegateService).queueTask(any());
     HostConnectionAttributes hostConnectionAttributes = HostConnectionAttributes.Builder.aHostConnectionAttributes()
@@ -309,6 +303,244 @@ public class ShellScriptStateTest extends CategoryTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
+
+    assertSSH(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteOnTemplateTargetHostSSh() throws IllegalAccessException {
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("var1", "John Doe");
+    setFieldsForSSH();
+
+    List<TemplateExpression> templateExpressions = new ArrayList<>();
+    templateExpression.setFieldName("sshKeyRef");
+    templateExpression.setExpression("${SSH_ConnectionAttribute}");
+    templateExpressions.add(templateExpression);
+    on(shellScriptState).set("templateExpressions", templateExpressions);
+
+    shellScriptConditions("echo ${var1}", "echo \"John Doe\"");
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+    when(templateExpressionProcessor.getTemplateExpression(any(), eq("sshKeyRef"))).thenReturn(templateExpression);
+
+    doReturn("TASKID").when(delegateService).queueTask(any());
+    HostConnectionAttributes hostConnectionAttributes = HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                            .withUserName("TestUser")
+                                                            .withKeyPath("KEY_PATH")
+                                                            .withAccessType(KEY)
+                                                            .withAccountId(ACCOUNT_ID)
+                                                            .build();
+    when(templateExpressionProcessor.resolveSettingAttribute(any(), any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(hostConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+
+    when(templateExpressionProcessor.resolveTemplateExpression(any(), any())).thenReturn("sshKey");
+    when(settingsService.get(any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(hostConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(asList());
+    ExecutionResponse response = shellScriptState.execute(executionContext);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(ScriptStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(
+            ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build(), "activityId");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getDelegateTaskId()).isEqualTo("TASKID");
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertSSH(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteOnTargetWinrm() throws IllegalAccessException {
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("var1", "John Doe");
+    setFieldsForWinRm();
+    FieldUtils.writeField(shellScriptState, "connectionAttributes", "CONNECTION_ATTRIBUTE", true);
+
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+    shellScriptConditions("Write-Host ${var1}", "Write-Host \"John Doe\"");
+
+    doReturn("TASKID").when(delegateService).queueTask(any());
+    WinRmConnectionAttributes winRmConnectionAttributes =
+        new WinRmConnectionAttributes(null, "", "TestUser", new char[10], true, 80, true, ACCOUNT_ID, "");
+
+    when(settingsService.get(any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(winRmConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(asList());
+    ExecutionResponse response = shellScriptState.execute(executionContext);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(ScriptStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(
+            ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build(), "activityId");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getDelegateTaskId()).isEqualTo("TASKID");
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertWinRm(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteOnTemplateTargetWinrm() throws IllegalAccessException {
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("var1", "John Doe");
+    setFieldsInShellScriptState(false);
+    setFieldsForWinRm();
+
+    List<TemplateExpression> templateExpressions = new ArrayList<>();
+    templateExpression.setFieldName("connectionAttributes");
+    templateExpression.setExpression("${WinRM_ConnectionAttribute}");
+    templateExpressions.add(templateExpression);
+    on(shellScriptState).set("templateExpressions", templateExpressions);
+
+    shellScriptConditions("Write-Host ${var1}", "Write-Host \"John Doe\"");
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+
+    when(templateExpressionProcessor.getTemplateExpression(any(), eq("connectionAttributes")))
+        .thenReturn(templateExpression);
+
+    doReturn("TASKID").when(delegateService).queueTask(any());
+    WinRmConnectionAttributes winRmConnectionAttributes =
+        new WinRmConnectionAttributes(null, "", "TestUser", new char[10], true, 80, true, ACCOUNT_ID, "");
+    when(templateExpressionProcessor.resolveSettingAttribute(any(), any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(winRmConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(templateExpressionProcessor.resolveTemplateExpression(any(), any())).thenReturn("winrmKey");
+    when(settingsService.get(any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(winRmConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(asList());
+    ExecutionResponse response = shellScriptState.execute(executionContext);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(ScriptStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(
+            ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build(), "activityId");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getDelegateTaskId()).isEqualTo("TASKID");
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertWinRm(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldRaiseErrorOnWinRm() throws IllegalAccessException {
+    setFieldsForWinRm();
+
+    shellScriptConditions("Write-Host ${var1}", "Write-Host \"John Doe\"");
+
+    when(templateExpressionProcessor.getTemplateExpression(any(), eq("connectionAttributes")))
+        .thenReturn(templateExpression);
+
+    doReturn("TASKID").when(delegateService).queueTask(any());
+    WinRmConnectionAttributes winRmConnectionAttributes =
+        new WinRmConnectionAttributes(null, "", "TestUser", new char[10], true, 80, true, ACCOUNT_ID, "");
+    when(templateExpressionProcessor.resolveSettingAttribute(any(), any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(winRmConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(settingsService.get(any()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withName("SETTING")
+                        .withValue(winRmConnectionAttributes)
+                        .withUuid("UUID")
+                        .build());
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(asList());
+    assertThatThrownBy(() -> shellScriptState.execute(executionContext))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("WinRM Connection Attribute not provided in Shell Script Step");
+  }
+
+  private void setFieldsInShellScriptState(boolean ssh) throws IllegalAccessException {
+    on(shellScriptState).set("templateUtils", templateUtils);
+    on(shellScriptState).set("activityHelperService", activityHelperService);
+    on(shellScriptState).set("infrastructureMappingService", infrastructureMappingService);
+    on(shellScriptState).set("serviceTemplateService", serviceTemplateService);
+    on(shellScriptState).set("delegateService", delegateService);
+    if (ssh) {
+      FieldUtils.writeField(shellScriptState, "scriptString", "echo ${var1}", true);
+    } else {
+      FieldUtils.writeField(shellScriptState, "scriptString", "Write-Host ${var1}", true);
+    }
+    FieldUtils.writeField(shellScriptState, "sweepingOutputName", "out1", true);
+    FieldUtils.writeField(shellScriptState, "outputVars", "var1", true);
+    FieldUtils.writeField(shellScriptState, "sweepingOutputScope", WORKFLOW, true);
+    FieldUtils.writeField(shellScriptState, "tags", asList("T1", "T2"), true);
+  }
+
+  private void setFieldsForWinRm() throws IllegalAccessException {
+    on(shellScriptState).set("settingsService", settingsService);
+    on(shellScriptState).set("secretManager", secretManager);
+    on(shellScriptState).set("connectionType", WINRM);
+    on(shellScriptState).set("scriptType", POWERSHELL);
+    setFieldsInShellScriptState(false);
+    FieldUtils.writeField(shellScriptState, "executeOnDelegate", false, true);
+    FieldUtils.writeField(shellScriptState, "host", "localhost", true);
+  }
+
+  private void assertWinRm(DelegateTask delegateTask) {
+    ShellScriptParameters shellScriptParameters = (ShellScriptParameters) delegateTask.getData().getParameters()[0];
+    assertThat(shellScriptParameters.getScript()).isEqualTo("Write-Host \"John Doe\"");
+    assertThat(shellScriptParameters.getOutputVars()).isEqualTo("var1");
+    assertThat(shellScriptParameters.getHost()).isEqualTo("localhost");
+    assertThat(shellScriptParameters.getConnectionType()).isEqualTo(WINRM);
+    assertThat(shellScriptParameters.getScriptType()).isEqualTo(POWERSHELL);
+    assertThat(shellScriptParameters.isExecuteOnDelegate()).isFalse();
+    assertThat(shellScriptParameters.getWinrmConnectionAttributes().getUsername()).isEqualTo("TestUser");
+    assertThat(shellScriptParameters.getWinrmConnectionAttributes().getPort()).isEqualTo(80);
+    assertThat(delegateTask.getTags()).contains("T1", "T2");
+    verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
+  }
+
+  private void setFieldsForSSH() throws IllegalAccessException {
+    on(shellScriptState).set("settingsService", settingsService);
+    on(shellScriptState).set("secretManager", secretManager);
+    setFieldsInShellScriptState(true);
+    FieldUtils.writeField(shellScriptState, "executeOnDelegate", false, true);
+    FieldUtils.writeField(shellScriptState, "host", "localhost", true);
+  }
+
+  private void assertSSH(DelegateTask delegateTask) {
     ShellScriptParameters shellScriptParameters = (ShellScriptParameters) delegateTask.getData().getParameters()[0];
     assertThat(shellScriptParameters.getScript()).isEqualTo("echo \"John Doe\"");
     assertThat(shellScriptParameters.getOutputVars()).isEqualTo("var1");
@@ -324,16 +556,19 @@ public class ShellScriptStateTest extends CategoryTest {
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
   }
 
-  private void setFieldsInShellScriptState() throws IllegalAccessException {
-    on(shellScriptState).set("templateUtils", templateUtils);
-    on(shellScriptState).set("activityHelperService", activityHelperService);
-    on(shellScriptState).set("infrastructureMappingService", infrastructureMappingService);
-    on(shellScriptState).set("serviceTemplateService", serviceTemplateService);
-    on(shellScriptState).set("delegateService", delegateService);
-    FieldUtils.writeField(shellScriptState, "scriptString", "echo ${var1}", true);
-    FieldUtils.writeField(shellScriptState, "sweepingOutputName", "out1", true);
-    FieldUtils.writeField(shellScriptState, "outputVars", "var1", true);
-    FieldUtils.writeField(shellScriptState, "sweepingOutputScope", WORKFLOW, true);
-    FieldUtils.writeField(shellScriptState, "tags", asList("T1", "T2"), true);
+  private void shellScriptConditions(String script, String output) {
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
+        .thenReturn(emptyList());
+
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(executionContext.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(executionContext.renderExpression(eq(script), any(StateExecutionContext.class))).thenReturn(output);
+    when(executionContext.renderExpression(eq("localhost"), any(StateExecutionContext.class))).thenReturn("localhost");
+    when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
+    when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
+    when(workflowStandardParams.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
+    when(workflowStandardParams.getEnv())
+        .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(NON_PROD).build());
   }
 }

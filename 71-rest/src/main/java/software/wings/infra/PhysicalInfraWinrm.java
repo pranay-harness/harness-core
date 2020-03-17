@@ -56,6 +56,10 @@ public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMapping
     return CloudProviderType.PHYSICAL_DATA_CENTER;
   }
 
+  public String getWinRmConnectionAttributes() {
+    return winRmConnectionAttributes;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName(PHYSICAL_INFRA_WINRM)

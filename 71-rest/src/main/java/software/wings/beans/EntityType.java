@@ -146,6 +146,14 @@ public enum EntityType {
    * NewRelic AppId
    */
   NEWRELIC_APPID,
+  /**
+   * SSH Connection attribute Id
+   */
+  SS_SSH_CONNECTION_ATTRIBUTE,
+  /**
+   * WINRM Connection attribute Id
+   */
+  SS_WINRM_CONNECTION_ATTRIBUTE,
   /***
    * SUMO ConfigId
    */
