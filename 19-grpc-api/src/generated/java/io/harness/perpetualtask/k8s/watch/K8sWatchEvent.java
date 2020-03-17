@@ -25,6 +25,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     newResourceVersion_ = "";
     newResourceYaml_ = "";
     description_ = "";
+    kubeSystemUid_ = "";
   }
 
   @java.
@@ -115,6 +116,12 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
             java.lang.String s = input.readStringRequireUtf8();
 
             description_ = s;
+            break;
+          }
+          case 90: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            kubeSystemUid_ = s;
             break;
           }
           default: {
@@ -591,6 +598,36 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
 
+  public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 11;
+  private volatile java.lang.Object kubeSystemUid_;
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  public java.lang.String getKubeSystemUid() {
+    java.lang.Object ref = kubeSystemUid_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      kubeSystemUid_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  public com.google.protobuf.ByteString getKubeSystemUidBytes() {
+    java.lang.Object ref = kubeSystemUid_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      kubeSystemUid_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -636,6 +673,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     if (!getDescriptionBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 10, description_);
     }
+    if (!getKubeSystemUidBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 11, kubeSystemUid_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -676,6 +716,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     if (!getDescriptionBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, description_);
     }
+    if (!getKubeSystemUidBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(11, kubeSystemUid_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -715,6 +758,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return false;
     if (!getDescription().equals(other.getDescription()))
       return false;
+    if (!getKubeSystemUid().equals(other.getKubeSystemUid()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -749,6 +794,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     hash = (53 * hash) + getNewResourceYaml().hashCode();
     hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
     hash = (53 * hash) + getDescription().hashCode();
+    hash = (37 * hash) + KUBE_SYSTEM_UID_FIELD_NUMBER;
+    hash = (53 * hash) + getKubeSystemUid().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -886,6 +933,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
       description_ = "";
 
+      kubeSystemUid_ = "";
+
       return this;
     }
 
@@ -931,6 +980,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       result.newResourceVersion_ = newResourceVersion_;
       result.newResourceYaml_ = newResourceYaml_;
       result.description_ = description_;
+      result.kubeSystemUid_ = kubeSystemUid_;
       onBuilt();
       return result;
     }
@@ -1009,6 +1059,10 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
       if (!other.getDescription().isEmpty()) {
         description_ = other.description_;
+        onChanged();
+      }
+      if (!other.getKubeSystemUid().isEmpty()) {
+        kubeSystemUid_ = other.kubeSystemUid_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1820,6 +1874,68 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       checkByteStringIsUtf8(value);
 
       description_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object kubeSystemUid_ = "";
+    /**
+     * <code>string kube_system_uid = 11;</code>
+     */
+    public java.lang.String getKubeSystemUid() {
+      java.lang.Object ref = kubeSystemUid_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        kubeSystemUid_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string kube_system_uid = 11;</code>
+     */
+    public com.google.protobuf.ByteString getKubeSystemUidBytes() {
+      java.lang.Object ref = kubeSystemUid_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        kubeSystemUid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string kube_system_uid = 11;</code>
+     */
+    public Builder setKubeSystemUid(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      kubeSystemUid_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string kube_system_uid = 11;</code>
+     */
+    public Builder clearKubeSystemUid() {
+      kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string kube_system_uid = 11;</code>
+     */
+    public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      kubeSystemUid_ = value;
       onChanged();
       return this;
     }

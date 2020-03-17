@@ -11,7 +11,10 @@ import static org.mockito.Mockito.when;
 
 import com.google.protobuf.ByteString;
 
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.internal.NamespaceOperationsImpl;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
@@ -19,6 +22,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,6 +57,23 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     when(watcherFactory.createClusterEventWatcher(any(), any())).thenReturn(clusterEventWatcher);
     SharedInformerFactory sharedInformerFactory = mock(SharedInformerFactory.class);
     when(sharedInformerFactoryFactory.createSharedInformerFactory(any(), any())).thenReturn(sharedInformerFactory);
+
+    // all of the below just to mock the kube-system uid call
+    KubernetesClient client = mock(KubernetesClient.class);
+    when(kubernetesClientFactory.newKubernetesClient(any())).thenReturn(client);
+    val namespaceOperations = mock(NamespaceOperationsImpl.class);
+    when(client.namespaces()).thenReturn(namespaceOperations);
+    val namespaceResource = mock(Resource.class);
+    when(namespaceOperations.withName("kube-system")).thenReturn(namespaceResource);
+    when(namespaceResource.get())
+        .thenReturn(new NamespaceBuilder()
+                        .withKind("Namespace")
+                        .withApiVersion("v1")
+                        .withNewMetadata()
+                        .withName("kube-system")
+                        .withUid("ed044e6a-8b7f-456c-b035-f05e9ce56a60")
+                        .endMetadata()
+                        .build());
   }
 
   @Test

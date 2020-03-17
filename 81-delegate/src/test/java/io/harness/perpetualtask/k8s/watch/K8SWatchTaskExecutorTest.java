@@ -13,6 +13,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -70,6 +71,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
   @Captor ArgumentCaptor<Message> messageArgumentCaptor;
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
+  private static final String KUBE_SYSTEM_ID = "aa4062a7-d214-4642-8bb5-dfc32e750ed0";
   private final String WATCH_ID = "watch-id";
   private final String CLUSTER_ID = "cluster-id";
   private final String POD_ONE_UID = "pod-1-uid";
@@ -88,6 +90,19 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     client = server.getClient();
 
     server.expect()
+        .withPath("/api/v1/namespaces/kube-system")
+        .andReturn(200,
+            new NamespaceBuilder()
+                .withApiVersion("v1")
+                .withKind("Namespace")
+                .withNewMetadata()
+                .withName("kube-system")
+                .withUid(KUBE_SYSTEM_ID)
+                .endMetadata()
+                .build())
+        .always();
+
+    server.expect()
         .withPath("/apis/metrics.k8s.io/v1beta1/nodes")
         .andReturn(200,
             NodeMetricsList.builder()
@@ -104,10 +119,10 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                         .usage(Usage.builder().cpu("2938773795n").memory("18281752Ki").build())
                         .build()))
                 .build())
-        .once();
+        .always();
 
-    server.expect().withPath("/api/v1/nodes").andReturn(200, getNodeList()).once();
-    server.expect().withPath("/api/v1/pods").andReturn(200, getPodList()).once();
+    server.expect().withPath("/api/v1/nodes").andReturn(200, getNodeList()).always();
+    server.expect().withPath("/api/v1/pods").andReturn(200, getPodList()).always();
 
     server.expect()
         .withPath("/apis/metrics.k8s.io/v1beta1/pods")
@@ -138,7 +153,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                                          .build())
                           .build())
                 .build())
-        .once();
+        .always();
   }
 
   @Test
@@ -174,6 +189,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
         .containsExactlyInAnyOrder(NodeMetric.newBuilder()
                                        .setCloudProviderId(CLOUD_PROVIDER_ID)
                                        .setClusterId(CLUSTER_ID)
+                                       .setKubeSystemUid(KUBE_SYSTEM_ID)
                                        .setName("node1-name")
                                        .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
                                        .setWindow(HDurations.parse("30s"))
@@ -185,6 +201,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
             NodeMetric.newBuilder()
                 .setCloudProviderId(CLOUD_PROVIDER_ID)
                 .setClusterId(CLUSTER_ID)
+                .setKubeSystemUid(KUBE_SYSTEM_ID)
                 .setName("node2-name")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
                 .setWindow(HDurations.parse("30s"))
@@ -225,6 +242,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                       .setClusterId(CLUSTER_ID)
                       .setClusterName(CLUSTER_NAME)
                       .setCloudProviderId(CLOUD_PROVIDER_ID)
+                      .setKubeSystemUid(KUBE_SYSTEM_ID)
                       .addAllActivePodUids(ImmutableList.of(POD_ONE_UID, POD_TWO_UID))
                       .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
@@ -277,6 +295,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
         .containsExactlyInAnyOrder(PodMetric.newBuilder()
                                        .setCloudProviderId(CLOUD_PROVIDER_ID)
                                        .setClusterId(CLUSTER_ID)
+                                       .setKubeSystemUid(KUBE_SYSTEM_ID)
                                        .setName("pod1")
                                        .setNamespace("ns1")
                                        .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
@@ -292,6 +311,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
             PodMetric.newBuilder()
                 .setCloudProviderId(CLOUD_PROVIDER_ID)
                 .setClusterId(CLUSTER_ID)
+                .setKubeSystemUid(KUBE_SYSTEM_ID)
                 .setName("pod2")
                 .setNamespace("ns1")
                 .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))

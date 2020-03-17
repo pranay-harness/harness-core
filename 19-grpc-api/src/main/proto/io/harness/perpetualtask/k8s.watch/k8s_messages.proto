@@ -42,6 +42,7 @@ message PodInfo {
   repeated Container containers = 12;
   string cluster_id = 13;
   string cluster_name = 14;
+  string kube_system_uid = 15;
 }
 
 message PodEvent {
@@ -55,6 +56,7 @@ message PodEvent {
   EventType type = 4;
   google.protobuf.Timestamp timestamp = 5;
   string cluster_id = 6;
+  string kube_system_uid = 7;
 }
 
 message NodeInfo {
@@ -67,6 +69,7 @@ message NodeInfo {
   string cluster_id = 8;
   string cluster_name = 9;
   string provider_id = 10;
+  string kube_system_uid = 11;
 }
 
 message NodeEvent {
@@ -81,6 +84,7 @@ message NodeEvent {
   google.protobuf.Timestamp timestamp = 5;
   string node_name = 6;
   string cluster_id = 7;
+  string kube_system_uid = 8;
 }
 
 message K8SClusterSyncEvent {
@@ -90,6 +94,7 @@ message K8SClusterSyncEvent {
   repeated string active_pod_uids = 4;
   repeated string active_node_uids = 5;
   google.protobuf.Timestamp last_processed_timestamp = 6;
+  string kube_system_uid = 7;
 }
 
 // uniquely identify a k8s resource within a cluster
@@ -113,6 +118,7 @@ message K8sClusterEvent {
   string message = 5;
   string source_component = 6;
   K8sObjectReference involved_object = 7;
+  string kube_system_uid = 8;
 }
 
 message K8sWatchEvent {
@@ -143,4 +149,5 @@ message K8sWatchEvent {
 
   // description of the change
   string description = 10;
+  string kube_system_uid = 11;
 }

@@ -80,4 +80,13 @@ public interface K8SClusterSyncEventOrBuilder extends
    * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
    */
   com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder();
+
+  /**
+   * <code>string kube_system_uid = 7;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 7;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

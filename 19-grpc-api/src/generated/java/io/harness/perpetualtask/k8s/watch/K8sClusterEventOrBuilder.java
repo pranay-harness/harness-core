@@ -89,4 +89,13 @@ public interface K8sClusterEventOrBuilder extends
    * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getInvolvedObjectOrBuilder();
+
+  /**
+   * <code>string kube_system_uid = 8;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 8;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

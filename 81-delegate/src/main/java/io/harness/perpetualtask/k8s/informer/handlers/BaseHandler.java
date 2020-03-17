@@ -49,6 +49,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
                                    .setClusterId(clusterDetails.getClusterId())
                                    .setCloudProviderId(clusterDetails.getCloudProviderId())
                                    .setClusterName(clusterDetails.getClusterName())
+                                   .setKubeSystemUid(clusterDetails.getKubeSystemUid())
                                    .build();
   }
 

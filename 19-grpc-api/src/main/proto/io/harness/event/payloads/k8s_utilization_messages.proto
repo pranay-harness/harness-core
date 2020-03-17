@@ -19,6 +19,7 @@ message NodeMetric {
   google.protobuf.Duration window = 4;
   Usage usage = 5;
   string cluster_id = 6;
+  string kube_system_uid = 7;
 }
 
 message PodMetric {
@@ -33,4 +34,5 @@ message PodMetric {
     Usage usage = 2;
   }
   string cluster_id = 7;
+  string kube_system_uid = 8;
 }

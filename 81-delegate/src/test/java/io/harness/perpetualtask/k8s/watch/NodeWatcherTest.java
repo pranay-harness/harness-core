@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,10 +70,11 @@ public class NodeWatcherTest extends CategoryTest {
     when(kubernetesClient.nodes()).thenReturn(nodeOps);
     when(nodeOps.watch(any())).thenReturn(watch);
     nodeWatcher = new NodeWatcher(kubernetesClient,
-        K8sWatchTaskParams.newBuilder()
-            .setClusterName("clusterName")
-            .setClusterId("clusterId")
-            .setCloudProviderId("cloud-provider-id")
+        ClusterDetails.builder()
+            .clusterName("clusterName")
+            .clusterId("clusterId")
+            .cloudProviderId("cloud-provider-id")
+            .kubeSystemUid("cluster-uid")
             .build(),
         eventPublisher);
     MockitoAnnotations.initMocks(this);

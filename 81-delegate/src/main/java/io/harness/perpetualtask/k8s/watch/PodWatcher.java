@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -35,25 +36,34 @@ public class PodWatcher implements Watcher<Pod> {
       TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
 
   private final Watch watch;
-  private final String cloudProviderId;
   private final String clusterId;
-  private final String clusterName;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
   private final KubernetesClient client;
 
+  private final PodInfo podInfoPrototype;
+  private final PodEvent podEventPrototype;
+
   @Inject
-  public PodWatcher(
-      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+  public PodWatcher(@Assisted KubernetesClient client, @Assisted ClusterDetails params, EventPublisher eventPublisher) {
     logger.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.client = client;
     this.watch = client.pods().inAnyNamespace().watch(this);
-    this.cloudProviderId = params.getCloudProviderId();
     this.clusterId = params.getClusterId();
-    this.clusterName = params.getClusterName();
     this.publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
+    podInfoPrototype = PodInfo.newBuilder()
+                           .setCloudProviderId(params.getCloudProviderId())
+                           .setClusterId(clusterId)
+                           .setClusterName(params.getClusterName())
+                           .setKubeSystemUid(params.getKubeSystemUid())
+                           .build();
+    podEventPrototype = PodEvent.newBuilder()
+                            .setCloudProviderId(params.getCloudProviderId())
+                            .setClusterId(clusterId)
+                            .setKubeSystemUid(params.getKubeSystemUid())
+                            .build();
   }
 
   @Override
@@ -64,10 +74,7 @@ public class PodWatcher implements Watcher<Pod> {
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
 
-      PodInfo podInfo = PodInfo.newBuilder()
-                            .setCloudProviderId(cloudProviderId)
-                            .setClusterId(clusterId)
-                            .setClusterName(clusterName)
+      PodInfo podInfo = PodInfo.newBuilder(podInfoPrototype)
                             .setPodUid(uid)
                             .setPodName(pod.getMetadata().getName())
                             .setNamespace(pod.getMetadata().getNamespace())
@@ -85,9 +92,7 @@ public class PodWatcher implements Watcher<Pod> {
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
-      PodEvent podEvent = PodEvent.newBuilder()
-                              .setCloudProviderId(cloudProviderId)
-                              .setClusterId(clusterId)
+      PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_SCHEDULED)
                               .setTimestamp(timestamp)
@@ -100,9 +105,7 @@ public class PodWatcher implements Watcher<Pod> {
     if (isPodDeleted(pod)) {
       String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
       Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
-      PodEvent podEvent = PodEvent.newBuilder()
-                              .setCloudProviderId(cloudProviderId)
-                              .setClusterId(clusterId)
+      PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_DELETED)
                               .setTimestamp(timestamp)

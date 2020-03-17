@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -73,7 +74,7 @@ public class ClusterEventWatcher implements Watcher<Event> {
 
   @Inject
   public ClusterEventWatcher(
-      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+      @Assisted KubernetesClient client, @Assisted ClusterDetails params, EventPublisher eventPublisher) {
     logger.info("Creating new ClusterEventWatcher for cluster with id: {} name: {} ", params.getClusterId(),
         params.getClusterName());
     this.client = client;
@@ -83,6 +84,7 @@ public class ClusterEventWatcher implements Watcher<Event> {
                                 .setClusterId(params.getClusterId())
                                 .setClusterName(params.getClusterName())
                                 .setCloudProviderId(params.getCloudProviderId())
+                                .setKubeSystemUid(params.getKubeSystemUid())
                                 .build();
   }
 
