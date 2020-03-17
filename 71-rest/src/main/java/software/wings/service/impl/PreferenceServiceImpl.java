@@ -20,6 +20,8 @@ import software.wings.beans.AuditPreference.AuditPreferenceKeys;
 import software.wings.beans.AuditPreferenceResponse;
 import software.wings.beans.AuditPreferenceResponse.AuditPreferenceResponseBuilder;
 import software.wings.beans.DeploymentPreference;
+import software.wings.beans.HarnessTagFilter;
+import software.wings.beans.HarnessTagFilter.TagFilterCondition;
 import software.wings.beans.Preference;
 import software.wings.beans.Preference.PreferenceKeys;
 import software.wings.beans.PreferenceType;
@@ -64,17 +66,33 @@ public class PreferenceServiceImpl implements PreferenceService {
 
   @Override
   public Preference get(String accountId, String userId, String preferenceId) {
-    return wingsPersistence.createQuery(Preference.class)
-        .filter(PreferenceKeys.accountId, accountId)
-        .filter(USER_ID_KEY, userId)
-        .filter(PreferenceKeys.uuid, preferenceId)
-        .get();
+    Preference preference = wingsPersistence.createQuery(Preference.class)
+                                .filter(PreferenceKeys.accountId, accountId)
+                                .filter(USER_ID_KEY, userId)
+                                .filter(PreferenceKeys.uuid, preferenceId)
+                                .get();
+    if (preference instanceof DeploymentPreference) {
+      ((DeploymentPreference) preference)
+          .setUiDisplayTagString(
+              constructUiDisplayTagString(((DeploymentPreference) preference).getHarnessTagFilter()));
+    }
+    return preference;
   }
 
   @Override
   public PageResponse<Preference> list(PageRequest<Preference> pageRequest, String userId) {
     pageRequest.addFilter(USER_ID_KEY, EQ, userId);
-    return wingsPersistence.query(Preference.class, pageRequest);
+    PageResponse<Preference> preferences = wingsPersistence.query(Preference.class, pageRequest);
+    if (preferences != null && isNotEmpty(preferences.getResponse())) {
+      for (Preference preference : preferences.getResponse()) {
+        if (preference instanceof DeploymentPreference) {
+          ((DeploymentPreference) preference)
+              .setUiDisplayTagString(
+                  constructUiDisplayTagString(((DeploymentPreference) preference).getHarnessTagFilter()));
+        }
+      }
+    }
+    return preferences;
   }
 
   @Override
@@ -158,6 +176,8 @@ public class PreferenceServiceImpl implements PreferenceService {
       setUnset(updateOperations, "startTime", deployPref.getStartTime());
       setUnset(updateOperations, "endTime", deployPref.getEndTime());
       setUnset(updateOperations, "keywords", deployPref.getKeywords());
+      setUnset(updateOperations, "includeIndirectExecutions", deployPref.isIncludeIndirectExecutions());
+      setUnset(updateOperations, "harnessTagFilter", deployPref.getHarnessTagFilter());
 
       update(accountId, userId, preferenceId, updateOperations);
     } else if (preference instanceof AuditPreference) {
@@ -201,5 +221,22 @@ public class PreferenceServiceImpl implements PreferenceService {
                                 .filter(PreferenceKeys.accountId, accountId)
                                 .filter(USER_ID_KEY, userId)
                                 .filter(PreferenceKeys.uuid, preferenceId));
+  }
+
+  // this will return a Tag in the format "label" or "key:value" based on the filter
+  private String constructUiDisplayTagString(HarnessTagFilter harnessTagFilter) {
+    if (harnessTagFilter != null) {
+      List<TagFilterCondition> conditions = harnessTagFilter.getConditions();
+      StringBuilder stringBuilder = new StringBuilder();
+      if (isNotEmpty(conditions)) {
+        stringBuilder.append(conditions.get(0).getName());
+        if (isNotEmpty(conditions.get(0).getValues())) {
+          stringBuilder.append(':');
+          stringBuilder.append(conditions.get(0).getValues().get(0));
+        }
+        return stringBuilder.toString();
+      }
+    }
+    return null;
   }
 }

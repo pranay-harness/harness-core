@@ -27,6 +27,9 @@ public class DeploymentPreference extends Preference {
   List<String> status;
   String startTime;
   String endTime;
+  boolean includeIndirectExecutions;
+  HarnessTagFilter harnessTagFilter;
+  private transient String uiDisplayTagString;
 
   @SchemaIgnore @Indexed private List<String> keywords;
 
