@@ -141,6 +141,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     workflowLogClusterJob = new WorkflowLogClusterJob();
 
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.clone()).thenReturn(featureFlagRestMock);
     when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagRestMock);
@@ -148,10 +149,12 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagRestMock);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
+    when(managerVersionsCall.clone()).thenReturn(managerVersionsCall);
     when(managerVersionsCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
     when(verificationManagerClient.getListOfPublishedVersions(accountId)).thenReturn(managerVersionsCall);
 
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
+    when(stateValidRestMock.clone()).thenReturn(stateValidRestMock);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(stateValidRestMock);
     FieldUtils.writeField(learningEngineService, "managerClient", verificationManagerClient, true);
@@ -284,6 +287,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     FieldUtils.writeField(managerClientHelper, "managerClient", verificationManagerClient, true);
 
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.clone()).thenReturn(featureFlagRestMock);
     when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     // save an analysis record with the fail fast as true
     TimeSeriesMLAnalysisRecord mlAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -326,6 +330,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobSuccess() throws IOException {
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
+    when(stateValidRestMock.clone()).thenReturn(stateValidRestMock);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(stateValidRestMock);
 
@@ -369,6 +374,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogAnalysisJobSuccess() throws IOException {
     final Call<RestResponse<Boolean>> stateValidRestMock = mock(Call.class);
+    when(stateValidRestMock.clone()).thenReturn(stateValidRestMock);
     when(stateValidRestMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(stateValidRestMock);
 

@@ -300,6 +300,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           managerVerificationService.collect247Data(
               (String) args[0], (StateType) args[1], (long) args[2], (Long) args[3]);
           Call<Boolean> restCall = mock(Call.class);
+          when(restCall.clone()).thenReturn(restCall);
           when(restCall.execute()).thenReturn(Response.success(true));
           return restCall;
         });
@@ -308,6 +309,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       Object[] args = invocation.getArguments();
       managerVerificationService.collectCVDataForWorkflow((String) args[0], (long) args[1]);
       Call<Boolean> restCall = mock(Call.class);
+      when(restCall.clone()).thenReturn(restCall);
       when(restCall.execute()).thenReturn(Response.success(true));
       return restCall;
     });
@@ -319,6 +321,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           Object[] args = invocation.getArguments();
           managerVerificationService.openAlert((String) args[0], (ContinuousVerificationAlertData) args[1]);
           Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.clone()).thenReturn(restCall);
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
         });
@@ -328,6 +331,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           Object[] args = invocation.getArguments();
           managerVerificationService.closeAlert((String) args[0], (ContinuousVerificationAlertData) args[1]);
           Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.clone()).thenReturn(restCall);
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
         });
@@ -339,6 +343,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           managerVerificationService.openAlert(
               (String) args[0], (ContinuousVerificationAlertData) args[2], (long) args[1]);
           Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.clone()).thenReturn(restCall);
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
         });
@@ -715,6 +720,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
 
@@ -742,6 +748,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     AnalysisContext context =
@@ -768,6 +775,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     AnalysisContext context = createAnalysisContext(
@@ -782,6 +790,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     AnalysisContext context = createAnalysisContext(null,
@@ -796,6 +805,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -814,6 +824,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -833,6 +844,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -852,6 +864,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -1396,6 +1409,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   private void setupFeedbacks(boolean withFeedbackData) throws Exception {
     LogAnalysisService logAnalysisService = injector.getInstance(LogAnalysisService.class);
     Call<RestResponse<List<CVFeedbackRecord>>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
     if (withFeedbackData) {
       when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(getFeedbacks())));
     } else {
@@ -1407,6 +1421,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(continuousVerificationService, "logAnalysisService", logAnalysisService, true);
 
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -1893,6 +1908,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testFeedbackEngineTaskRestartAfter2HoursNoNewLogTask() throws Exception {
     // mock setup
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -1937,6 +1953,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testFeedbackEngineTaskRestartAfter2HoursNewLogTask() throws Exception {
     // mock setup
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2233,6 +2250,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2281,6 +2299,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2362,6 +2381,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2409,6 +2429,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2464,6 +2485,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2513,6 +2535,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2558,6 +2581,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2630,6 +2654,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.collectCVData(anyString(), anyObject())).then(invocation -> {
       Object[] args = invocation.getArguments();
       Call<Boolean> restCall = mock(Call.class);
+      when(restCall.clone()).thenReturn(restCall);
       when(restCall.execute()).thenReturn(Response.success(true));
       return restCall;
     });
@@ -2893,6 +2918,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateFeedbackTask_featureFlagDisabled() throws Exception {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2933,6 +2959,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
@@ -2990,6 +3017,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);

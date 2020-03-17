@@ -110,9 +110,11 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
     workflowLogClusterJob = new WorkflowLogClusterJob();
 
     final Call<RestResponse<Boolean>> featureFlagTrueMock = mock(Call.class);
+    when(featureFlagTrueMock.clone()).thenReturn(featureFlagTrueMock);
     when(featureFlagTrueMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
 
     final Call<RestResponse<Boolean>> featureFlagFalseMock = mock(Call.class);
+    when(featureFlagFalseMock.clone()).thenReturn(featureFlagFalseMock);
     when(featureFlagFalseMock.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
         .thenReturn(featureFlagFalseMock);
@@ -120,6 +122,7 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagFalseMock);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
+    when(managerVersionsCall.clone()).thenReturn(managerVersionsCall);
     when(managerVersionsCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
     when(verificationManagerClient.getListOfPublishedVersions(accountId)).thenReturn(managerVersionsCall);
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(featureFlagTrueMock);
@@ -135,6 +138,7 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
     workflowLogClusterJob = new WorkflowLogClusterJob();
 
     FieldUtils.writeField(learningEngineService, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeField(logAnalysisService, "learningEngineService", learningEngineService, true);
     FieldUtils.writeField(workflowTimeSeriesAnalysisJob, "learningEngineService", learningEngineService, true);
     FieldUtils.writeField(workflowTimeSeriesAnalysisJob, "managerClientHelper", managerClientHelper, true);
     FieldUtils.writeField(workflowTimeSeriesAnalysisJob, "verificationManagerClient", verificationManagerClient, true);

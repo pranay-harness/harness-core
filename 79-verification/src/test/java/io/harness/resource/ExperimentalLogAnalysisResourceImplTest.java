@@ -75,6 +75,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecords_shouldSuccess() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
+    when(restCall.clone()).thenReturn(restCall);
     when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(WorkflowExecution.builder().build())));
     when(verificationManagerClient.getWorkflowExecution(anyString(), anyString())).thenReturn(restCall);
     when(logAnalysisService.saveExperimentalLogAnalysisRecords(
@@ -91,6 +92,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecordsNoWorkflow() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
+    when(restCall.clone()).thenReturn(restCall);
     when(restCall.execute()).thenReturn(Response.success(new RestResponse<>()));
     when(verificationManagerClient.getWorkflowExecution(anyString(), anyString())).thenReturn(restCall);
     when(logAnalysisService.saveExperimentalLogAnalysisRecords(
