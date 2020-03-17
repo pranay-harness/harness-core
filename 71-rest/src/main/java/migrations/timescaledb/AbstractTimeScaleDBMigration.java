@@ -9,15 +9,20 @@ import org.apache.ibatis.jdbc.ScriptRunner;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 
 @Slf4j
-public abstract class AbstractTimeSaleDBMigration implements TimeScaleDBMigration {
+public abstract class AbstractTimeScaleDBMigration implements TimeScaleDBMigration {
   @Inject TimeScaleDBService timeScaleDBService;
 
-  protected void runMigration(Connection connection, String name) {
+  private void runMigration(Connection connection, String name) {
     InputStream inputstream = getClass().getClassLoader().getResourceAsStream(name);
-    InputStreamReader inputStreamReader = new InputStreamReader(inputstream);
+    if (inputstream == null) {
+      logger.warn("Skipping migration {} as script not found", name);
+      return;
+    }
+    InputStreamReader inputStreamReader = new InputStreamReader(inputstream, StandardCharsets.UTF_8);
     ScriptRunner scriptRunner = new ScriptRunner(connection);
     scriptRunner.setStopOnError(true);
     scriptRunner.runScript(inputStreamReader);
