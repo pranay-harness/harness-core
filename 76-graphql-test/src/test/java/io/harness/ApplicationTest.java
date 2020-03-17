@@ -231,7 +231,7 @@ public class ApplicationTest extends GraphQLTest {
     id
   }
 }
-*/ UserGroupTest.class);
+*/ ApplicationTest.class);
     String query = String.format(applicationQueryPattern, "Test App");
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();

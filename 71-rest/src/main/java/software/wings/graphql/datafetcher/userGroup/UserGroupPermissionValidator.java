@@ -19,7 +19,7 @@ import software.wings.graphql.datafetcher.application.AppFilterController;
 import software.wings.graphql.datafetcher.environment.EnvFilterController;
 import software.wings.graphql.schema.type.QLAppFilter;
 import software.wings.graphql.schema.type.permissions.QLActions;
-import software.wings.graphql.schema.type.permissions.QLAppPermissions;
+import software.wings.graphql.schema.type.permissions.QLAppPermission;
 import software.wings.graphql.schema.type.permissions.QLPermissionType;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -84,7 +84,7 @@ public class UserGroupPermissionValidator {
     checkForInvalidIds(ids, idsPresent);
   }
 
-  private void checkWhetherIdsAreCorrect(QLAppPermissions appPermissions, String accountId) {
+  private void checkWhetherIdsAreCorrect(QLAppPermission appPermissions, String accountId) {
     appFilterController.checkApplicationsExists(appPermissions.getApplications().getAppIds(), accountId);
     switch (appPermissions.getPermissionType()) {
       case SERVICE:
@@ -140,7 +140,7 @@ public class UserGroupPermissionValidator {
     }
   }
 
-  private void checkThePermissionFilterisNotNull(QLAppPermissions appPermission) {
+  private void checkThePermissionFilterisNotNull(QLAppPermission appPermission) {
     switch (appPermission.getPermissionType()) {
       case ALL:
         return;
@@ -199,7 +199,7 @@ public class UserGroupPermissionValidator {
         appPermission.getPermissionType(), appPermission.getPermissionType().getStringValue()));
   }
 
-  private void checkWhetherPermissionIsValid(QLAppPermissions appPermission, String accountId) {
+  private void checkWhetherPermissionIsValid(QLAppPermission appPermission, String accountId) {
     // Check that the appFilter should not be NULL
     QLAppFilter application = appPermission.getApplications();
     if (appPermission.getPermissionType() == null) {
@@ -209,7 +209,7 @@ public class UserGroupPermissionValidator {
     checkThePermissionFilterisNotNull(appPermission);
   }
 
-  private void checkAllAppPermissionFilter(QLAppPermissions appPermission) {
+  private void checkAllAppPermissionFilter(QLAppPermission appPermission) {
     // If the user has given the ids, then we won't consider the filterType thus no need to check for filterType All
     QLAppFilter application = appPermission.getApplications();
     if (isNotEmpty(application.getAppIds())) {
@@ -257,13 +257,11 @@ public class UserGroupPermissionValidator {
             appPermission.getPermissionType(), appPermission.getPermissionType()));
   }
 
-  // it is clear form where the error is happening
-  public void validatePermission(QLUserGroupPermissions permissions, String accountId) {
-    // check if the userGroup Exists
-    if (permissions == null || permissions.getAppPermissions() == null) {
+  public void validateAppPermission(String accountId, List<QLAppPermission> appPermissions) {
+    if (isEmpty(appPermissions)) {
       return;
     }
-    for (QLAppPermissions appPermission : permissions.getAppPermissions()) {
+    for (QLAppPermission appPermission : appPermissions) {
       // Check that for a particular permissionType their filterType should also be given
       checkWhetherPermissionIsValid(appPermission, accountId);
       // Check that the action is valid for that permissionType
@@ -273,5 +271,13 @@ public class UserGroupPermissionValidator {
       // Check that the user supplied the correct id
       checkWhetherIdsAreCorrect(appPermission, accountId);
     }
+  }
+
+  // it is clear form where the error is happening
+  public void validatePermission(QLUserGroupPermissions permissions, String accountId) {
+    if (permissions == null) {
+      return;
+    }
+    validateAppPermission(accountId, permissions.getAppPermissions());
   }
 }

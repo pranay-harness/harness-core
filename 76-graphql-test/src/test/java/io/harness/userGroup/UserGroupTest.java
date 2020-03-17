@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.userGroup;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import graphql.ExecutionResult;
+import io.harness.GraphQLTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -27,7 +28,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.User;
-import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapGroupSettings;
@@ -61,6 +61,7 @@ public class UserGroupTest extends GraphQLTest {
   private SamlSettings samlSettings;
   private LdapSettings ldapSettings;
   @Inject SSOSettingService ssoSettingService;
+  @Inject UserGroupHelper userGroupHelper;
 
   @Before
   public void setup() {
@@ -68,35 +69,6 @@ public class UserGroupTest extends GraphQLTest {
     final OwnerManager.Owners owners = ownerManager.create();
     account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-  }
-
-  private NotificationSettings getNotificationSettings() {
-    return new NotificationSettings(false, true, Arrays.asList("abc@example.com"), null, null);
-  }
-
-  private UserGroup createUserGroup(String name, String description) {
-    UserGroup userGroup = UserGroup.builder()
-                              .accountId(accountId)
-                              .name(name)
-                              .description(description)
-                              .isSsoLinked(false)
-                              .importedByScim(false)
-                              .notificationSettings(getNotificationSettings())
-                              .build();
-    return userGroupService.save(userGroup);
-  }
-
-  private UserGroup createUserGroup(String name, String description, List<String> userIds) {
-    UserGroup userGroup = UserGroup.builder()
-                              .accountId(accountId)
-                              .isSsoLinked(false)
-                              .name(name)
-                              .description(description)
-                              .notificationSettings(getNotificationSettings())
-                              .memberIds(userIds)
-                              .importedByScim(false)
-                              .build();
-    return userGroupService.save(userGroup);
   }
 
   @Test
@@ -110,7 +82,8 @@ public class UserGroupTest extends GraphQLTest {
     String description = "\"Test UserGroup\"";
     final User user = accountGenerator.ensureUser(
         "userId", random(String.class), random(String.class), random(String.class).toCharArray(), account);
-    UserGroup userGroup = createUserGroup(name, description, Collections.singletonList(user.getUuid()));
+    UserGroup userGroup = userGroupHelper.createUserGroupWithUsers(
+        accountId, name, description, Collections.singletonList(user.getUuid()));
 
     {
       String query = $GQL(/*
@@ -291,7 +264,7 @@ public class UserGroupTest extends GraphQLTest {
   @Category({GraphQLTests.class, UnitTests.class})
   public void testCreatingUserGroupWithDuplicateName() {
     ldapSettings = createLdapSettings();
-    UserGroup userGroup = createUserGroup("UserGroupUpdate", "description");
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, "UserGroupUpdate", "description");
     final User user = accountGenerator.ensureUser(
         "userId", random(String.class), random(String.class), random(String.class).toCharArray(), account);
     {
@@ -349,7 +322,7 @@ public class UserGroupTest extends GraphQLTest {
     owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
     String name = "AccountPermission-UserGroup-" + System.currentTimeMillis();
     String description = "\"Test UserGroup\"";
-    UserGroup userGroup = createUserGroup(name, description);
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, name, description);
 
     {
       String query = $GQL(/*
@@ -376,8 +349,8 @@ mutation{
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testUpdatingUserGroupWithDuplicateName() {
-    UserGroup userGroup = createUserGroup("GroupNameWhichAlreadyExists", "description");
-    UserGroup userGroup1 = createUserGroup("someUserGroup", "description");
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, "GroupNameWhichAlreadyExists", "description");
+    UserGroup userGroup1 = userGroupHelper.createUserGroup(accountId, "someUserGroup", "description");
     {
       String query = $GQL(/*
       mutation{
@@ -437,7 +410,7 @@ mutation{
                        .build();
 
     samlSettings = ssoSettingService.saveSamlSettings(samlSettings);
-    UserGroup userGroup = createUserGroup(name, description);
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, name, description);
 
     {
       String query = $GQL(/*
@@ -488,9 +461,9 @@ mutation{
     String userGroup2Name = "AccountPermission-UserGroup2-" + System.currentTimeMillis();
     String userGroup3Name = "AccountPermission-UserGroup3-" + System.currentTimeMillis();
     String description = "\"Test UserGroup\"";
-    final UserGroup userGroup1 = createUserGroup(userGroup1Name, description);
-    final UserGroup userGroup2 = createUserGroup(userGroup2Name, description);
-    final UserGroup userGroup3 = createUserGroup(userGroup3Name, description);
+    final UserGroup userGroup1 = userGroupHelper.createUserGroup(accountId, userGroup1Name, description);
+    final UserGroup userGroup2 = userGroupHelper.createUserGroup(accountId, userGroup2Name, description);
+    final UserGroup userGroup3 = userGroupHelper.createUserGroup(accountId, userGroup3Name, description);
 
     {
       String query = $GQL(
@@ -533,7 +506,7 @@ mutation{
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testDeleteUserGroup() {
-    final UserGroup userGroup1 = createUserGroup("userGroup1Name", "description");
+    final UserGroup userGroup1 = userGroupHelper.createUserGroup(accountId, "userGroup1Name", "description");
     String query = $GQL(/*
                  mutation {
                     deleteUserGroup(input:{
@@ -566,10 +539,64 @@ mutation{
     String query = String.format(userGroupQueryPattern, "harnessUserGroup");
     final Account account =
         accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
-    UserGroup userGroup = createUserGroup("harnessUserGroup", "sample user group");
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, "harnessUserGroup", "sample user group");
 
     final QLTestObject qlUserGroupObject = qlExecute(query, account.getUuid());
     assertThat(qlUserGroupObject.get(QLUserGroupKeys.name)).isEqualTo(userGroup.getName());
     assertThat(qlUserGroupObject.get(QLUserGroupKeys.description)).isEqualTo(userGroup.getDescription());
+  }
+
+  private String generateUserGroupUserInput(String userGroupId, String userId) {
+    return $GQL(/*{
+          userGroupId: "%s",
+          userId: "%s"
+    }
+    */ userGroupId, userId);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testAddUserToUserGroup() {
+    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, "testingAddUser", "desc");
+    String userId = "userId";
+    String description = "\"Test UserGroup\"";
+    final User user = accountGenerator.ensureUser(
+        userId, random(String.class), random(String.class), random(String.class).toCharArray(), account);
+    String query = $GQL(/*
+    mutation{
+      addUserToUserGroup(input:%s){
+        clientMutationId
+      }
+    }
+    */ generateUserGroupUserInput(userGroup.getUuid(), user.getUuid()));
+
+    final QLTestObject qlUserGroupObject = qlExecute(query, account.getUuid());
+    UserGroup savedUserGroup = userGroupService.get(accountId, userGroup.getUuid());
+    assertThat(savedUserGroup.getMemberIds()).isNotNull();
+    assertThat(savedUserGroup.getMemberIds()).contains(userId);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testRemoveUserFromUserGroup() {
+    String userId = "userId";
+    String description = "\"Test UserGroup\"";
+    final User user = accountGenerator.ensureUser(
+        userId, random(String.class), random(String.class), random(String.class).toCharArray(), account);
+    UserGroup userGroup = userGroupHelper.createUserGroupWithUsers(
+        accountId, "userGroupName", description, Collections.singletonList(user.getUuid()));
+    String query = $GQL(/*
+    mutation{
+      removeUserFromUserGroup(input:%s){
+        clientMutationId
+      }
+    }
+    */ generateUserGroupUserInput(userGroup.getUuid(), user.getUuid()));
+
+    final QLTestObject qlUserGroupObject = qlExecute(query, account.getUuid());
+    UserGroup savedUserGroup = userGroupService.get(accountId, userGroup.getUuid());
+    assertThat(savedUserGroup.getMemberIds()).isNull();
   }
 }

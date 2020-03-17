@@ -11,5 +11,5 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "QLUserGroupPermissionsKeys")
 public class QLUserGroupPermissions {
   QLAccountPermissions accountPermissions;
-  List<QLAppPermissions> appPermissions;
+  List<QLAppPermission> appPermissions;
 }

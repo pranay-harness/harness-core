@@ -14,5 +14,5 @@ import java.util.List;
 @Scope(PermissionAttribute.ResourceType.USER) // Change the scope
 public class QLGroupPermissions {
   QLAccountPermissions accountPermissions;
-  List<QLAppPermissions> appPermissions; // Can have this as a set too
+  List<QLAppPermission> appPermissions; // Can have this as a set too
 }

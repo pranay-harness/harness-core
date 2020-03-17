@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.CREATE_AND_DELETE_APPLICATION;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_TAGS;
@@ -32,6 +33,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.security.AccountPermissions;
@@ -43,8 +45,8 @@ import software.wings.graphql.schema.type.QLEnvFilterType;
 import software.wings.graphql.schema.type.permissions.QLAccountPermissionType;
 import software.wings.graphql.schema.type.permissions.QLAccountPermissions;
 import software.wings.graphql.schema.type.permissions.QLActions;
-import software.wings.graphql.schema.type.permissions.QLAppPermissions;
-import software.wings.graphql.schema.type.permissions.QLAppPermissions.QLAppPermissionsBuilder;
+import software.wings.graphql.schema.type.permissions.QLAppPermission;
+import software.wings.graphql.schema.type.permissions.QLAppPermission.QLAppPermissionBuilder;
 import software.wings.graphql.schema.type.permissions.QLDeploymentFilterType;
 import software.wings.graphql.schema.type.permissions.QLDeploymentPermissions;
 import software.wings.graphql.schema.type.permissions.QLEnvPermissions;
@@ -82,11 +84,39 @@ public class UserGroupPermissionsController {
   final String ALL = "ALL";
   final String TEMPLATES = "TEMPLATES";
 
+  public UserGroup addAppPermissionToUserGroupObject(UserGroup userGroup, QLAppPermission appPermissions) {
+    AppPermission appPermissionEntity = convertToAppPermissionEntity(appPermissions);
+    // Adding this app Permission to the set
+    Set<AppPermission> appPermissionSet =
+        userGroup.getAppPermissions() != null ? userGroup.getAppPermissions() : newHashSet();
+    if (appPermissionSet.contains(appPermissionEntity)) {
+      throw new DuplicateFieldException("The application permission already exists in the user group");
+    }
+    appPermissionSet.add(appPermissionEntity);
+    userGroup.setAppPermissions(appPermissionSet);
+    return userGroup;
+  }
+
+  public UserGroup addAccountPermissionToUserGroupObject(
+      UserGroup userGroup, QLAccountPermissionType accountPermissionType) {
+    // Adding the account Permissions
+    PermissionType newAccountPermission = mapAccountPermissions(accountPermissionType);
+    Set<PermissionType> permissions =
+        userGroup.getAccountPermissions() != null ? userGroup.getAccountPermissions().getPermissions() : newHashSet();
+    // Adding new permission to this set
+    if (permissions.contains(newAccountPermission)) {
+      throw new DuplicateFieldException("The account permission already exists in the user group");
+    }
+    permissions.add(newAccountPermission);
+    userGroup.setAccountPermissions(AccountPermissions.builder().permissions(permissions).build());
+    return userGroup;
+  }
+
   /*
    *   Utility functions to convert GraphQL InputTypes to the userGroup Types of portal
    */
   // user Given Account Permissions to the portal permissionType
-  private PermissionType mapAccountPermissions(QLAccountPermissionType permissionType) {
+  public PermissionType mapAccountPermissions(QLAccountPermissionType permissionType) {
     switch (permissionType) {
       case CREATE_AND_DELETE_APPLICATION:
         return APPLICATION_CREATE_DELETE;
@@ -234,7 +264,7 @@ public class UserGroupPermissionsController {
     return WorkflowFilter.builder().ids(pipelinePermissions.getEnvIds()).filterTypes(filterTypes).build();
   }
 
-  private AppPermission convertToAppPermissionEntity(QLAppPermissions permission) {
+  public AppPermission convertToAppPermissionEntity(QLAppPermission permission) {
     // Converting the GraphQL actions to portal actions
     Set<QLActions> actionsList = permission.getActions();
     Set<Action> actions = actionsList.stream().map(this ::mapAppActions).collect(Collectors.toSet());
@@ -297,7 +327,7 @@ public class UserGroupPermissionsController {
     if (permissions == null) {
       return Collections.emptySet();
     }
-    List<QLAppPermissions> appPermissions = permissions.getAppPermissions();
+    List<QLAppPermission> appPermissions = permissions.getAppPermissions();
     Set<AppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
       userGroupAppPermissions =
@@ -454,8 +484,8 @@ public class UserGroupPermissionsController {
     return QLPipelinePermissions.builder().envIds(envPermissions.getIds()).build();
   }
 
-  public List<QLAppPermissions> populateUserGroupAppPermissionOutput(Set<AppPermission> appPermissions) {
-    List<QLAppPermissions> userGroupAppPermissions = null;
+  public List<QLAppPermission> populateUserGroupAppPermissionOutput(Set<AppPermission> appPermissions) {
+    List<QLAppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
       userGroupAppPermissions =
           appPermissions.stream().map(this ::convertToAppPermissionOutput).collect(Collectors.toList());
@@ -463,7 +493,7 @@ public class UserGroupPermissionsController {
     return userGroupAppPermissions;
   }
 
-  private QLAppPermissions convertToAppPermissionOutput(AppPermission permission) {
+  private QLAppPermission convertToAppPermissionOutput(AppPermission permission) {
     // Convert portal actions to graphQL output
     Set<Action> actionsList = permission.getActions();
     Set<QLActions> actions = actionsList.stream().map(this ::mapAppActionsToOutput).collect(Collectors.toSet());
@@ -472,7 +502,7 @@ public class UserGroupPermissionsController {
     QLPermissionType appPermissionType = mapToApplicationPermissionOutput(permissionType);
     // Convert the appFilter to the graphQLOutputType
     QLAppFilter appFilter = appFilterController.createAppFilterOutput(permission.getAppFilter());
-    QLAppPermissionsBuilder builder = QLAppPermissions.builder().applications(appFilter).actions(actions);
+    QLAppPermissionBuilder builder = QLAppPermission.builder().applications(appFilter).actions(actions);
     switch (permissionType) {
       case ALL_APP_ENTITIES:
         return builder.permissionType(appPermissionType).build();
@@ -533,7 +563,7 @@ public class UserGroupPermissionsController {
 
   public QLGroupPermissions populateUserGroupPermissions(UserGroup userGroup) {
     QLAccountPermissions accountPermissions = populateUserGroupAccountPermission(userGroup.getAccountPermissions());
-    List<QLAppPermissions> appPermissions = populateUserGroupAppPermissionOutput(userGroup.getAppPermissions());
+    List<QLAppPermission> appPermissions = populateUserGroupAppPermissionOutput(userGroup.getAppPermissions());
     return QLGroupPermissions.builder().appPermissions(appPermissions).accountPermissions(accountPermissions).build();
   }
 }
