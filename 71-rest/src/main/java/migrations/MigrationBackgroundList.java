@@ -47,6 +47,7 @@ import migrations.all.TemplateLibraryYamlMigration;
 import migrations.all.TerraformIsTemplatizedMigration;
 import migrations.all.TimeSeriesThresholdsMigration;
 import migrations.all.UpdateAccountEncryptionClassNames;
+import migrations.all.UpdateInstanceInfoWithLastArtifactIdMigration;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
@@ -154,6 +155,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(89, HelmStateTimeoutMigration.class))
         .add(Pair.of(90, BaseMigration.class))
         .add(Pair.of(91, BaseMigration.class))
+        .add(Pair.of(92, UpdateInstanceInfoWithLastArtifactIdMigration.class))
         .build();
   }
 }
