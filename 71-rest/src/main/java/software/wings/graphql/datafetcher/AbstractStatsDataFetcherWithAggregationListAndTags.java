@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, LA
                                                                              extends LabelAggregation, EA>
-    extends AbstractStatsDataFetcherWithAggregationList<A, F, G, S> {
+    extends AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S> {
   @Inject protected HarnessTagService tagService;
   @Inject protected K8sLabelHelper k8sLabelHelper;
   @Inject protected BillingDataHelper billingDataHelper;
@@ -53,8 +53,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
   protected abstract EntityType getEntityType(E entityType);
 
   @Override
-  public QLData postFetch(
-      String accountId, List<G> groupByList, List<A> aggregateFunctions, List<S> sortCriteria, QLData qlData) {
+  public QLData postFetch(String accountId, List<G> groupByList, List<A> aggregateFunctions, List<S> sortCriteria,
+      QLData qlData, Integer limit) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
     List<LA> groupByLabelList = getGroupByLabel(groupByList);
     if (!groupByTagList.isEmpty()) {

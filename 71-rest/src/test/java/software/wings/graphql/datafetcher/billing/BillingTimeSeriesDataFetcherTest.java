@@ -93,6 +93,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private static double AVGCPUUTILIZATION_VALUE = 0.5;
   private static double AVGMEMORYTILIZATION_VALUE = 0.5;
 
+  private static Integer LIMIT = Integer.MAX_VALUE - 1;
+
   @Before
   public void setup() throws SQLException {
     User user = testUtils.createUser(testUtils.createAccount());
@@ -503,7 +505,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -511,7 +513,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
     // checking post fetch in case of no tag group by
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, Collections.emptyList(), aggregationFunction, sortCriteria, data);
+        ACCOUNT1_ID, Collections.emptyList(), aggregationFunction, sortCriteria, data, LIMIT);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -521,7 +523,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     QLBillingStackedTimeSeriesData emptyData =
         QLBillingStackedTimeSeriesData.builder().data(Collections.emptyList()).build();
     emptyData = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, emptyData);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, emptyData, LIMIT);
     assertThat(emptyData).isNotNull();
     assertThat(emptyData.getData()).hasSize(0);
   }
@@ -548,7 +550,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues()).hasSize(1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getName())
@@ -585,7 +587,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
