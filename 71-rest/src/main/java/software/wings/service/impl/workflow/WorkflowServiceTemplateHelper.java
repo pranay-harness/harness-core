@@ -57,6 +57,8 @@ public class WorkflowServiceTemplateHelper {
   private static final String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
   private static final String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
   private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
+  private static final String SSH_CONNECTION_ATTRIBUTE_DESC = "Variable for SSH Connection Attribute entity";
+  private static final String WINRM_CONNECTION_ATTRIBUTE_DESC = "Variable for WINRM Connection Attribute entity";
 
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
@@ -596,6 +598,10 @@ public class WorkflowServiceTemplateHelper {
           return CF_AWSCONFIG_VAR_DESC + " in " + stateName;
         case HELM_GIT_CONFIG_ID:
           return HELM_GITCONFIG_VAR_DESC + " in " + stateName;
+        case SS_SSH_CONNECTION_ATTRIBUTE:
+          return SSH_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
+        case SS_WINRM_CONNECTION_ATTRIBUTE:
+          return WINRM_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
         default:
           return "";
       }

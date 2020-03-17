@@ -29,6 +29,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -55,6 +57,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -82,7 +85,9 @@ import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
+import software.wings.exception.ShellScriptException;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -151,6 +156,7 @@ public class CommandState extends State {
   @Inject @Transient private transient TemplateService templateService;
   @Inject @Transient private transient TemplateUtils templateUtils;
   @Inject @Transient private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
 
@@ -747,18 +753,28 @@ public class CommandState extends State {
           .withAppId(appId);
     } else {
       if (this.getHost() == null) {
-        throw new WingsException("Host cannot be empty");
+        throw new ShellScriptException("Host cannot be empty", null, null, null);
       } else { // host can contain either ${instance.hostName} or some hostname/ip
         // take user provided value for host
         if (connectionType == null || connectionType == ConnectionType.SSH) {
           deploymentType = DeploymentType.SSH;
+          if (!isEmpty(getTemplateExpressions())) {
+            TemplateExpression sshConfigExp =
+                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
+            if (sshConfigExp != null) {
+              sshKeyRef = templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp);
+            }
+          }
           if (isEmpty(sshKeyRef)) {
-            throw new WingsException("SSH Connection Attribute not provided in Command Step", USER);
+            throw new ShellScriptException("SSH Connection Attribute not provided in Command Step",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
           SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
           if (keySettingAttribute == null) {
-            throw new WingsException("SSH Connection Attribute provided in Command Step not found", USER);
+            throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
+
           String hostName = context.renderExpression(this.getHost());
           host = Host.Builder.aHost()
                      .withHostName(hostName)
@@ -774,14 +790,24 @@ public class CommandState extends State {
               .withAppId(appId);
         } else if (connectionType == ConnectionType.WINRM) {
           deploymentType = DeploymentType.WINRM;
+          if (!isEmpty(getTemplateExpressions())) {
+            TemplateExpression winRmConfigExp =
+                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
+            if (winRmConfigExp != null) {
+              connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
+            }
+          }
           if (isEmpty(connectionAttributes)) {
-            throw new WingsException("WinRM Connection Attribute not provided in Command Step", USER);
+            throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
           WinRmConnectionAttributes winRmConnectionAttributes =
               (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
           if (winRmConnectionAttributes == null) {
-            throw new WingsException("WinRM Connection Attribute provided in Command Step not found", USER);
+            throw new ShellScriptException("Winrm Connection Attribute provided in Shell Script Step not found",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
+
           String hostName = context.renderExpression(this.getHost());
           host = Host.Builder.aHost()
                      .withHostName(hostName)

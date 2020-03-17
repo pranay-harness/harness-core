@@ -83,6 +83,8 @@ public class WorkflowYAMLHelper {
         return infrastructureDefinitionService.get(appId, entryValue);
       case CF_AWS_CONFIG_ID:
       case HELM_GIT_CONFIG_ID:
+      case SS_SSH_CONNECTION_ATTRIBUTE:
+      case SS_WINRM_CONNECTION_ATTRIBUTE:
         return settingsService.get(entryValue);
       default:
         return null;
@@ -118,6 +120,20 @@ public class WorkflowYAMLHelper {
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GIT);
         notNullCheck(
             "Git Connector [" + variableValue + "] associated to the Helm State does not exist", uuidAccess, USER);
+        break;
+      case SS_SSH_CONNECTION_ATTRIBUTE:
+        uuidAccess = settingsService.fetchSettingAttributeByName(
+            accountId, variableValue, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
+        notNullCheck(
+            "Ssh connection attribute [" + variableValue + "] associated to the Shell Script State does not exist",
+            uuidAccess, USER);
+        break;
+      case SS_WINRM_CONNECTION_ATTRIBUTE:
+        uuidAccess = settingsService.fetchSettingAttributeByName(
+            accountId, variableValue, SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES);
+        notNullCheck(
+            "Winrm connection attribute [" + variableValue + "] associated to the Shell Script State does not exist",
+            uuidAccess, USER);
         break;
       default:
         return null;

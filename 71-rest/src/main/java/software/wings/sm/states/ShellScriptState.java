@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -27,6 +26,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -49,6 +50,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -57,6 +59,8 @@ import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
 import software.wings.beans.template.TemplateUtils;
+import software.wings.common.TemplateExpressionProcessor;
+import software.wings.exception.ShellScriptException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
@@ -98,6 +102,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private TemplateUtils templateUtils;
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
   @Inject @Transient private ServiceTemplateHelper serviceTemplateHelper;
+  @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
   @Inject @Transient private DelegateService delegateService;
   @Inject @Transient private FeatureFlagService featureFlagService;
 
@@ -196,8 +201,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           executionResponseBuilder.executionStatus(ExecutionStatus.QUEUED);
           break;
         default:
-          throw new WingsException(
-              "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name());
+          throw new ShellScriptException(
+              "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name(),
+              ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
       }
       executionResponseBuilder.errorMessage(commandExecutionResult.getErrorMessage());
 
@@ -277,12 +283,23 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     if (!executeOnDelegate) {
       if (connectionType == ConnectionType.SSH) {
+        if (!isEmpty(getTemplateExpressions())) {
+          TemplateExpression sshConfigExp =
+              templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
+          if (sshConfigExp != null) {
+            sshKeyRef = templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp);
+          }
+        }
+
         if (isEmpty(sshKeyRef)) {
-          throw new WingsException("SSH Connection Attribute not provided in Shell Script Step", USER);
+          throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
+              ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
         }
         SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+
         if (keySettingAttribute == null) {
-          throw new WingsException("SSH Connection Attribute provided in Shell Script Step not found", USER);
+          throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
+              ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
         }
         hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
         username = ((HostConnectionAttributes) keySettingAttribute.getValue()).getUserName();
@@ -300,13 +317,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
       } else if (connectionType == ConnectionType.WINRM) {
-        if (isEmpty(connectionAttributes)) {
-          throw new WingsException("WinRM Connection Attribute not provided in Shell Script Step", USER);
-        }
-        winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
-        if (winRmConnectionAttributes == null) {
-          throw new WingsException("WinRM Connection Attribute provided in Shell Script Step not found", USER);
-        }
+        winRmConnectionAttributes = setupWinrmCredentials(connectionAttributes, context);
         username = winRmConnectionAttributes.getUsername();
         winrmEdd = secretManager.getEncryptionDetails(
             winRmConnectionAttributes, context.getAppId(), context.getWorkflowExecutionId());
@@ -449,5 +460,28 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
     return asList(scriptString, host);
+  }
+
+  public WinRmConnectionAttributes setupWinrmCredentials(String connectionAttributes, ExecutionContext context) {
+    WinRmConnectionAttributes winRmConnectionAttributes = null;
+
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression winRmConfigExp =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
+      if (winRmConfigExp != null) {
+        connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
+      }
+    }
+    if (isEmpty(connectionAttributes)) {
+      throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
+          ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+    }
+
+    winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+    if (winRmConnectionAttributes == null) {
+      throw new ShellScriptException("WinRM Connection Attribute provided in Shell Script Step not found",
+          ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+    }
+    return winRmConnectionAttributes;
   }
 }

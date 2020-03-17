@@ -25,6 +25,8 @@ import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
+import static software.wings.beans.EntityType.SS_SSH_CONNECTION_ATTRIBUTE;
+import static software.wings.beans.EntityType.SS_WINRM_CONNECTION_ATTRIBUTE;
 import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
@@ -481,12 +483,32 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addSumoLogicUserVariables(reorderVariables, entityVariables);
         // Add Splunk variables
         addSplunkUserVariables(reorderVariables, entityVariables);
+
+        addSSHConnectionUserVariables(reorderVariables, entityVariables);
+
+        addWINRMConnnectionUserVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
       }
     }
     userVariables = reorderVariables;
+  }
+
+  private void addSSHConnectionUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (SS_SSH_CONNECTION_ATTRIBUTE == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
+  private void addWINRMConnnectionUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (SS_WINRM_CONNECTION_ATTRIBUTE == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
   }
 
   private List<Variable> getNonEntityVariables() {
