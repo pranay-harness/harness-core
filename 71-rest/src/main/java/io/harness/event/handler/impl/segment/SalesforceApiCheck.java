@@ -57,6 +57,7 @@ public class SalesforceApiCheck {
   public boolean isSalesForceIntegrationEnabled() {
     return this.salesforceConfig.isEnabled();
   }
+
   private String getLoginUrl() {
     String requestBodyText = "?grant_type=password";
     requestBodyText += "&client_id=";

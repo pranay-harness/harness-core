@@ -290,9 +290,7 @@ public class ScimUserServiceImpl implements ScimUserService {
         }
       }
 
-      boolean userEnabled = !user.isDisabled();
-
-      if (userResource.getActive() != null && userResource.getActive() != userEnabled) {
+      if (userResource.getActive() != null && userResource.getActive() == user.isDisabled()) {
         userUpdate = true;
         logger.info("SCIM: Updated user's {}, enabled: {}", userId, userResource.getActive());
         updateOperations.set(UserKeys.disabled, !userResource.getActive());
