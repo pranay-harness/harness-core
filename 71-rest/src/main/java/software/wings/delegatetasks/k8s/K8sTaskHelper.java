@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.kubectl.GetJobCommand.getPrintableCommand;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static io.harness.k8s.manifest.ManifestHelper.getFirstLoadBalancerService;
@@ -69,7 +70,7 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.GetCommand;
-import io.harness.k8s.kubectl.GetPodCommand;
+import io.harness.k8s.kubectl.GetJobCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
@@ -361,7 +362,7 @@ public class K8sTaskHelper {
         .replace("{NAMESPACE}", namespace);
   }
 
-  private boolean doStatusCheckForJob(Kubectl client, KubernetesResourceId resourceId,
+  boolean doStatusCheckForJob(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, ExecutionLogCallback executionLogCallback)
       throws Exception {
     try (LogOutputStream statusInfoStream =
@@ -380,36 +381,66 @@ public class K8sTaskHelper {
                      format(statusFormat, "Status", resourceId.getName(), line), ERROR);
                }
              }) {
-      GetPodCommand getPodCommand =
-          client.getPod().selector("job-name=" + resourceId.getName()).output("jsonpath='{.items[*].status.phase}'");
+      GetJobCommand jobCompleteCommand = client.getJobCommand(resourceId.getName(), resourceId.getNamespace())
+                                             .output("jsonpath='{.status.conditions[?(@.type==\"Complete\")].status}'");
+      GetJobCommand jobFailedCommand = client.getJobCommand(resourceId.getName(), resourceId.getNamespace())
+                                           .output("jsonpath='{.status.conditions[?(@.type==\"Failed\")].status}'");
+      GetJobCommand jobStatusCommand =
+          client.getJobCommand(resourceId.getName(), resourceId.getNamespace()).output("jsonpath='{.status}'");
+      GetJobCommand jobCompletionTimeCommand = client.getJobCommand(resourceId.getName(), resourceId.getNamespace())
+                                                   .output("jsonpath='{.status.completionTime}'");
 
-      executionLogCallback.saveExecutionLog(GetPodCommand.getPrintableCommand(getPodCommand.command()) + "\n");
+      executionLogCallback.saveExecutionLog(getPrintableCommand(jobStatusCommand.command()) + "\n");
 
-      while (true) {
-        ProcessResult result = getPodCommand.execute(
-            k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+      return getJobStatus(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, jobCompleteCommand,
+          jobFailedCommand, jobStatusCommand, jobCompletionTimeCommand);
+    }
+  }
 
-        boolean success = 0 == result.getExitValue();
+  boolean getJobStatus(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,
+      LogOutputStream statusErrorStream, GetJobCommand jobCompleteCommand, GetJobCommand jobFailedCommand,
+      GetJobCommand jobStatusCommand, GetJobCommand jobCompletionTimeCommand) throws Exception {
+    while (true) {
+      jobStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+
+      ProcessResult result = jobCompleteCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+
+      boolean success = 0 == result.getExitValue();
+      if (!success) {
+        logger.warn(result.outputString());
+        return false;
+      }
+
+      // cli command outputs with single quotes
+      String jobStatus = result.outputString().replace("'", "");
+      if ("True".equals(jobStatus)) {
+        result = jobCompletionTimeCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+        success = 0 == result.getExitValue();
         if (!success) {
           logger.warn(result.outputString());
           return false;
         }
 
-        // cli command outputs with single quotes
-        String jobStatus = result.outputString().replace("'", "");
-        if ("Failed".equals(jobStatus) || "Unknown".equals(jobStatus)) {
-          logger.warn(result.outputString());
-          return false;
+        String completionTime = result.outputString().replace("'", "");
+        if (isNotBlank(completionTime)) {
+          return true;
         }
-
-        if ("Succeeded".equals(jobStatus)) {
-          break;
-        }
-
-        sleep(ofSeconds(5));
       }
 
-      return true;
+      result = jobFailedCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+
+      success = 0 == result.getExitValue();
+      if (!success) {
+        logger.warn(result.outputString());
+        return false;
+      }
+
+      jobStatus = result.outputString().replace("'", "");
+      if ("True".equals(jobStatus)) {
+        return false;
+      }
+
+      sleep(ofSeconds(5));
     }
   }
 

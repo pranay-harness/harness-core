@@ -11,6 +11,7 @@ import static io.harness.k8s.model.Kind.Service;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
@@ -37,6 +39,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
+import io.harness.k8s.kubectl.GetJobCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.KubernetesResource;
@@ -523,5 +526,93 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void doStatusCheckForJob() throws Exception {
+    String RANDOM = "RANDOM";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(RANDOM).build();
+    GetJobCommand jobStatusCommand = spy(new GetJobCommand(null, null, null));
+    doReturn(null).when(jobStatusCommand).execute(RANDOM, null, null, false);
+
+    shouldReturnFalseWhenCompletedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+    shouldReturnFalseWhenCompletedTimeCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+    shouldReturnTrueWhenCompletedTimeReached(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+    shouldReturnFalseWhenFailedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+    shouldReturnFalseWhenJobStatusIsFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+  }
+
+  private void shouldReturnFalseWhenFailedJobCommandFailed(
+      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    GetJobCommand jobFailedCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobFailedResult = new ProcessResult(1, new ProcessOutput("True".getBytes()));
+
+    doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+    doReturn(jobFailedResult).when(jobFailedCommand).execute(RANDOM, null, null, false);
+
+    assertThat(helper.getJobStatus(
+                   k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
+        .isFalse();
+  }
+
+  private void shouldReturnFalseWhenCompletedTimeCommandFailed(
+      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
+    GetJobCommand jobCompletionCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobCompletionTimeResult = new ProcessResult(1, new ProcessOutput("time".getBytes()));
+
+    doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+    doReturn(jobCompletionTimeResult).when(jobCompletionCommand).execute(RANDOM, null, null, false);
+
+    assertThat(helper.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null, jobStatusCommand,
+                   jobCompletionCommand))
+        .isFalse();
+  }
+
+  private void shouldReturnFalseWhenJobStatusIsFailed(
+      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    GetJobCommand jobFailedCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobFailedResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
+
+    doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+    doReturn(jobFailedResult).when(jobFailedCommand).execute(RANDOM, null, null, false);
+
+    assertThat(helper.getJobStatus(
+                   k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
+        .isFalse();
+  }
+
+  private void shouldReturnTrueWhenCompletedTimeReached(
+      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
+    GetJobCommand jobCompletionCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobCompletionTimeResult = new ProcessResult(0, new ProcessOutput("time".getBytes()));
+
+    doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+    doReturn(jobCompletionTimeResult).when(jobCompletionCommand).execute(RANDOM, null, null, false);
+
+    assertThat(helper.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null, jobStatusCommand,
+                   jobCompletionCommand))
+        .isTrue();
+  }
+
+  private void shouldReturnFalseWhenCompletedJobCommandFailed(
+      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(1, new ProcessOutput("FAILURE".getBytes()));
+
+    doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+
+    assertThat(
+        helper.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null, jobStatusCommand, null))
+        .isFalse();
   }
 }
