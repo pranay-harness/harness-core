@@ -14,6 +14,8 @@ import io.harness.delegate.task.executioncapability.IgnoreValidationCapabilityCh
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
@@ -34,6 +36,8 @@ public class CapabilityCheckFactory {
   @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
   @Inject SSHHostValidationCapabilityCheck sshHostValidationCapabilityCheck;
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
+  @Inject PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
+  @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -63,6 +67,10 @@ public class CapabilityCheckFactory {
         return sshHostValidationCapabilityCheck;
       case SFTP:
         return sftpCapabilityCheck;
+      case PCF_CONNECTIVITY:
+        return pcfConnectivityCapabilityCheck;
+      case PCF_AUTO_SCALAR:
+        return pcfAutoScalarCapabilityCheck;
       default:
         return null;
     }

@@ -46,6 +46,7 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHA
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
+import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -163,6 +164,10 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
+import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters.PcfCommandTaskParametersBuilder;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
@@ -1690,7 +1695,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Object[] params = task.getData().getParameters();
     if (type == HOST_VALIDATION) {
       // the host is in params[2] and port in params[3]
-
       HostValidationTaskParameters hostValidationTaskParameters =
           HostValidationTaskParameters.builder()
               .hostNames((List<String>) params[2])
@@ -1700,6 +1704,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .build();
       List<Object> newParams = new ArrayList<>(Arrays.asList(hostValidationTaskParameters));
       task.getData().setParameters(newParams.toArray());
+    } else if (type == PCF_COMMAND_TASK) {
+      PcfCommandRequest commandRequest = (PcfCommandRequest) params[0];
+      if (!(commandRequest instanceof PcfRunPluginCommandRequest)) {
+        PcfCommandTaskParametersBuilder parametersBuilder =
+            PcfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
+        if (params.length > 1) {
+          parametersBuilder.encryptedDataDetails((List<EncryptedDataDetail>) params[1]);
+        }
+        List<Object> newParams = new ArrayList<>(Arrays.asList(parametersBuilder.build()));
+        task.getData().setParameters(newParams.toArray());
+      }
     }
   }
 

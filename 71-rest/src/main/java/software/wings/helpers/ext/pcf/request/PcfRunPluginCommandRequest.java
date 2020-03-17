@@ -1,19 +1,25 @@
 package software.wings.helpers.ext.pcf.request;
 
 import io.harness.beans.FileData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.PcfConfig;
+import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class PcfRunPluginCommandRequest extends PcfCommandRequest implements TaskParameters {
+public class PcfRunPluginCommandRequest
+    extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander {
   @Expression private String renderedScriptString;
   private List<String> filePathsInScript;
   private List<FileData> fileDataList;
@@ -33,5 +39,13 @@ public class PcfRunPluginCommandRequest extends PcfCommandRequest implements Tas
     this.fileDataList = fileDataList;
     this.encryptedDataDetails = encryptedDataDetails;
     this.repoRoot = repoRoot;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        PcfConnectivityCapability.builder().pcfConfig(getPcfConfig()).encryptionDetails(encryptedDataDetails).build(),
+        ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+            "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
   }
 }

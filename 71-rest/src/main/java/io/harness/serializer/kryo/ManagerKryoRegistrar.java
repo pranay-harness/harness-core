@@ -365,6 +365,8 @@ import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
+import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
+import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
@@ -451,6 +453,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
@@ -1519,5 +1522,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BasicValidationInfo.class, 7325);
     kryo.register(SSHHostValidationCapability.class, 7326);
     kryo.register(WinrmHostValidationCapability.class, 7327);
+    kryo.register(PcfCommandTaskParameters.class, 7328);
+    kryo.register(PcfConnectivityCapability.class, 7329);
+    kryo.register(PcfAutoScalarCapability.class, 7330);
   }
 }

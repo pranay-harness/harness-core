@@ -1,19 +1,13 @@
 package software.wings.helpers.ext.pcf.request;
 
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.PcfConfig;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Data
 @AllArgsConstructor
-public class PcfCommandRequest implements ExecutionCapabilityDemander {
+public class PcfCommandRequest {
   private String accountId;
   private String appId;
   private String commandName;
@@ -38,11 +32,5 @@ public class PcfCommandRequest implements ExecutionCapabilityDemander {
     APP_DETAILS,
     CREATE_ROUTE,
     RUN_PLUGIN
-  }
-
-  @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
-        "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
   }
 }

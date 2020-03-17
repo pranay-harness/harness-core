@@ -20,6 +20,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -43,9 +44,18 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   @SuppressWarnings("unchecked")
   public List<DelegateConnectionResult> validate() {
     boolean validated = false;
-    PcfCommandRequest commandRequest = (PcfCommandRequest) getParameters()[0];
+    PcfCommandRequest commandRequest;
+    final List<EncryptedDataDetail> encryptionDetails;
+    if (getParameters()[0] instanceof PcfCommandTaskParameters) {
+      PcfCommandTaskParameters pcfCommandTaskParameters = (PcfCommandTaskParameters) getParameters()[0];
+      commandRequest = pcfCommandTaskParameters.getPcfCommandRequest();
+      encryptionDetails = pcfCommandTaskParameters.getEncryptedDataDetails();
+    } else {
+      commandRequest = (PcfCommandRequest) getParameters()[0];
+      encryptionDetails = getEncryptedDataDetails(commandRequest);
+    }
+
     PcfConfig pcfConfig = commandRequest.getPcfConfig();
-    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(commandRequest);
     logger.info("Running validation for task {} ", delegateTaskId);
 
     try {
@@ -124,6 +134,9 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
+    if (getParameters()[0] instanceof PcfCommandTaskParameters) {
+      return singletonList(getCriteria(((PcfCommandTaskParameters) getParameters()[0]).getPcfCommandRequest()));
+    }
     return singletonList(getCriteria((PcfCommandRequest) getParameters()[0]));
   }
 
