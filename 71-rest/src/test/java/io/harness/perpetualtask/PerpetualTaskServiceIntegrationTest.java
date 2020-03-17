@@ -84,7 +84,8 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
-    boolean heartbeatUpdated = perpetualTaskService.updateHeartbeat(taskId, HEARTBEAT_MILLIS);
+    PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder().build();
+    boolean heartbeatUpdated = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse);
     assertThat(heartbeatUpdated).isTrue();
 
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);

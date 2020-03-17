@@ -17,7 +17,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -104,17 +103,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         errorsMessages.add(String.format(CEError.DELEGATE_NOT_AVAILABLE.getMessage(), clusterRecord.getUuid()));
         continue;
       }
-
-      if (!hasRecentHeartbeat(perpetualTaskRecord.getLastHeartbeat())) {
-        errorsMessages.add(
-            String.format(CEError.PERPETUAL_TASK_MISSING_HEARTBEAT.getMessage(), clusterRecord.getUuid()));
-        continue;
-      }
     }
     return errorsMessages;
-  }
-
-  private boolean hasRecentHeartbeat(long lastHeartbeat) {
-    return (Instant.now().toEpochMilli() - lastHeartbeat) < PERPETUAL_TASK_RECENCY_THRESHOLD;
   }
 }

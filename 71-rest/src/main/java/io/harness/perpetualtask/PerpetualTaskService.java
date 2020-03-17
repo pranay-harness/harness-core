@@ -20,5 +20,7 @@ public interface PerpetualTaskService {
 
   PerpetualTaskContext getTaskContext(String taskId);
 
-  boolean updateHeartbeat(String taskId, long heartbeatMillis);
+  boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse);
+
+  void setDelegateId(String taskId, String delegateId);
 }

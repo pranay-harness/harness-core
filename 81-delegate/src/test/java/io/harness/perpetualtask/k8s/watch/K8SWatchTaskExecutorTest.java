@@ -29,6 +29,8 @@ import io.harness.grpc.utils.HDurations;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.PerpetualTaskResponse;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsExtensionAdapter;
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
@@ -153,8 +155,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     PerpetualTaskParams params =
         PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
-    boolean runOnce = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
-    assertThat(runOnce).isTrue();
+    PerpetualTaskResponse perpetualTaskResponse = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+    assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
   @Test

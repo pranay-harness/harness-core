@@ -11,7 +11,9 @@ import io.harness.perpetualtask.HeartbeatResponse;
 import io.harness.perpetualtask.PerpetualTaskContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskIdList;
+import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskState;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,8 +42,15 @@ public class PerpetualTaskServiceGrpc
   @Override
   public void publishHeartbeat(HeartbeatRequest request, StreamObserver<HeartbeatResponse> responseObserver) {
     String taskId = request.getId();
+
+    PerpetualTaskResponse perpetualTaskResponse =
+        PerpetualTaskResponse.builder()
+            .responseMessage(request.getResponseMessage())
+            .responseCode(request.getResponseCode())
+            .perpetualTaskState(PerpetualTaskState.valueOf(request.getTaskState()))
+            .build();
     long heartbeatMillis = HTimestamps.toInstant(request.getHeartbeatTimestamp()).toEpochMilli();
-    perpetualTaskService.updateHeartbeat(taskId, heartbeatMillis);
+    perpetualTaskService.triggerCallback(taskId, heartbeatMillis, perpetualTaskResponse);
     responseObserver.onNext(HeartbeatResponse.newBuilder().build());
     responseObserver.onCompleted();
   }

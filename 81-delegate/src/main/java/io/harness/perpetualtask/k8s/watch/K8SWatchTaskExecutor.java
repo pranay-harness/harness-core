@@ -24,6 +24,8 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.PerpetualTaskResponse;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +58,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
     logger.info("Created a watch with id {}.", watchId);
@@ -71,7 +73,11 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     }
     publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
     publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
-    return true;
+    return PerpetualTaskResponse.builder()
+        .responseCode(200)
+        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
+        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+        .build();
   }
 
   @VisibleForTesting

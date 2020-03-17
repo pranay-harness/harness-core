@@ -12,6 +12,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -25,7 +26,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject DelegateService delegateService;
-  @Inject PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Inject PerpetualTaskService perpetualTaskService;
   @Inject PerpetualTaskServiceClientRegistry clientRegistry;
 
   public void registerIterators() {
@@ -59,7 +60,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
       String delegateId = response.getDelegateMetaInfo().getId();
       logger.info(
           "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
-      perpetualTaskRecordDao.setDelegateId(taskId, delegateId);
+      perpetualTaskService.setDelegateId(taskId, delegateId);
     } catch (Exception e) {
       // TODO: add more granular exception handling
       // TODO: add exponential backoff retries
