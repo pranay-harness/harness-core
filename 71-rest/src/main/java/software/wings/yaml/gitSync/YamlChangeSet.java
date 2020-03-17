@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 
@@ -24,8 +25,13 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Indexes({ @Index(fields = { @Field("accountId")
-                             , @Field("status") }, options = @IndexOptions(name = "searchIdx")) })
+@Indexes({
+  @Index(fields = { @Field("accountId")
+                    , @Field("status") }, options = @IndexOptions(name = "searchIdx"))
+  , @Index(fields = {
+    @Field("accountId"), @Field(value = "createdAt", type = IndexType.DESC)
+  }, options = @IndexOptions(name = "accountId_createdAt_index", background = true))
+})
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")
 @HarnessEntity(exportable = false)
