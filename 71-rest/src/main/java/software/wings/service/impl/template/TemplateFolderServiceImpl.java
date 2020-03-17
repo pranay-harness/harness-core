@@ -69,6 +69,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class TemplateFolderServiceImpl implements TemplateFolderService {
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
+  private static final String IMPORTED_TEMPLATE_FOLDER = "Imported Templates";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGalleryService templateGalleryService;
@@ -541,5 +542,33 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     destinationFolder.setGalleryId(galleryId);
     destinationFolder = wingsPersistence.saveAndGet(TemplateFolder.class, destinationFolder);
     return destinationFolder;
+  }
+
+  @Override
+  public TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId) {
+    TemplateFolder rootLevelFolder = getRootLevelFolder(accountId, galleryId);
+    List<TemplateFolder> childFolders = wingsPersistence.createQuery(TemplateFolder.class)
+                                            .filter(TemplateFolderKeys.accountId, accountId)
+                                            .filter(TemplateFolderKeys.parentId, rootLevelFolder.getUuid())
+                                            .filter(TemplateFolderKeys.appId, appId)
+                                            .asList();
+    // Expecting imported template folder to be directly under root folder.
+    for (TemplateFolder childFolder : childFolders) {
+      if (childFolder.getName().equals(IMPORTED_TEMPLATE_FOLDER)) {
+        return childFolder;
+      }
+    }
+    return saveAndGetImportedFolder(galleryId, accountId, rootLevelFolder, appId);
+  }
+
+  private TemplateFolder saveAndGetImportedFolder(
+      String galleryId, String accountId, TemplateFolder rootFolder, String appId) {
+    TemplateFolder templateFolder = TemplateFolder.builder()
+                                        .accountId(accountId)
+                                        .appId(appId)
+                                        .name(IMPORTED_TEMPLATE_FOLDER)
+                                        .parentId(rootFolder.getUuid())
+                                        .build();
+    return saveSafelyAndGet(templateFolder);
   }
 }

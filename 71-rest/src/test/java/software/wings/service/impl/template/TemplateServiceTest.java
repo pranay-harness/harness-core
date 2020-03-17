@@ -51,6 +51,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
@@ -81,6 +82,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String ANOTHER_MY_START_COMMAND_APP = "Another My Start Command App";
   private static final String ANOTHER_MY_START_COMMAND_ANOTHER_APP = "Another My Start Command Another App";
   private static final String ANOTHER_APP_ID = "ANOTHER_APP_ID";
+  private static final String REF_TEMPLATE_NAME = "Ref Template";
+
   @Inject private TemplateVersionService templateVersionService;
 
   @Test
@@ -985,5 +988,42 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(returnedTemplate.getAccountId()).isNotNull();
     assertThat(returnedTemplate.getAppId()).isNotNull();
     assertThat(returnedTemplate.getFolderId()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldSaveAndGetReferencedTemplate() {
+    Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
+
+    Template refTemplate = saveReferencedTemplate(savedTemplate);
+
+    assertThat(refTemplate.getName()).isEqualTo(REF_TEMPLATE_NAME);
+    assertThat(refTemplate.isImported()).isEqualTo(true);
+    assertThat(refTemplate.getReferencedTemplateId()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateImportedTemplate() {
+    Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
+    Template refTemplate = saveReferencedTemplate(savedTemplate);
+    refTemplate.setName("new name");
+    Assertions.assertThatThrownBy(() -> templateService.update(refTemplate))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  private Template saveReferencedTemplate(Template savedImportedTemplate) {
+    Template refTemplate = Template.builder()
+                               .name(REF_TEMPLATE_NAME)
+                               .isImported(true)
+                               .referencedTemplateId(savedImportedTemplate.getUuid())
+                               .appId(savedImportedTemplate.getAppId())
+                               .version(Long.valueOf(1))
+                               .referencedTemplateVersion(savedImportedTemplate.getVersion())
+                               .accountId(savedImportedTemplate.getAccountId())
+                               .build();
+    return templateService.saveReferenceTemplate(refTemplate);
   }
 }

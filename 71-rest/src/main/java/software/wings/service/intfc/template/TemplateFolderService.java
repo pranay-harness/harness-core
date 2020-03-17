@@ -38,4 +38,6 @@ public interface TemplateFolderService {
   TemplateFolder getByFolderPath(@NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String folderPath);
 
   Map<String, String> fetchTemplateFolderNames(@NotEmpty String accountId, List<String> folderUuids);
+
+  TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId);
 }
