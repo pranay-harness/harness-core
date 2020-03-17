@@ -402,7 +402,9 @@ public enum ErrorCode {
 
   FILE_CREATE_ERROR,
 
-  ILLEGAL_STATE;
+  ILLEGAL_STATE,
+
+  GIT_DIFF_COMMIT_NOT_IN_ORDER;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -34,6 +34,7 @@ import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
@@ -114,6 +115,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -181,7 +183,9 @@ public class GitClientImpl implements GitClient {
   public synchronized GitDiffResult diff(
       GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
-    String startCommitId = gitOperationContext.getGitDiffRequest().getLastProcessedCommitId();
+    String startCommitIdStr = gitOperationContext.getGitDiffRequest().getLastProcessedCommitId();
+    final String endCommitIdStr =
+        StringUtils.defaultIfEmpty(gitOperationContext.getGitDiffRequest().getEndCommitId(), "HEAD");
 
     ensureRepoLocallyClonedAndUpdated(gitOperationContext);
 
@@ -194,37 +198,56 @@ public class GitClientImpl implements GitClient {
       git.checkout().setName(gitConfig.getBranch()).call();
       ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
-      ObjectId headCommitId = requireNonNull(repository.resolve("HEAD"));
-      diffResult.setCommitId(headCommitId.getName());
+
+      ObjectId endCommitId = requireNonNull(repository.resolve(endCommitIdStr));
+      diffResult.setCommitId(endCommitId.getName());
 
       // Find oldest commit
-      if (startCommitId == null) {
+      if (startCommitIdStr == null) {
         try (RevWalk revWalk = new RevWalk(repository)) {
-          RevCommit headRevCommit = revWalk.parseCommit(headCommitId);
+          RevCommit headRevCommit = revWalk.parseCommit(endCommitId);
           revWalk.sort(RevSort.REVERSE);
           revWalk.markStart(headRevCommit);
           RevCommit firstCommit = revWalk.next();
-          startCommitId = firstCommit.getName();
+          startCommitIdStr = firstCommit.getName();
         }
       }
+      logger.info(GIT_YAML_LOG_PREFIX + "startCommitIdStr =[{}], endCommitIdStr=[{}], endCommitId.name=[{}]",
+          startCommitIdStr, endCommitIdStr, endCommitId.name());
 
-      ObjectId head = repository.resolve("HEAD^{tree}");
-      ObjectId oldHead = repository.resolve(startCommitId + "^{tree}");
+      ObjectId endCommitTreeId = repository.resolve(endCommitIdStr + "^{tree}");
+      ObjectId startCommitTreeId = repository.resolve(startCommitIdStr + "^{tree}");
+
+      // ensure endCommitTreeId is after start commit
+      final boolean commitsInOrder = ensureCommitOrdering(startCommitIdStr, endCommitIdStr, repository);
+      if (!commitsInOrder) {
+        throw new YamlException(String.format("Git diff failed. End Commit [%s] should be after start commit [%s]",
+                                    endCommitIdStr, startCommitIdStr),
+            ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER, ADMIN_SRE);
+      }
 
       try (ObjectReader reader = repository.newObjectReader()) {
-        CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-        oldTreeIter.reset(reader, oldHead);
-        CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-        newTreeIter.reset(reader, head);
+        CanonicalTreeParser startTreeIter = new CanonicalTreeParser();
+        startTreeIter.reset(reader, startCommitTreeId);
+        CanonicalTreeParser endTreeIter = new CanonicalTreeParser();
+        endTreeIter.reset(reader, endCommitTreeId);
 
-        List<DiffEntry> diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-        addToGitDiffResult(diffs, diffResult, headCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder);
+        List<DiffEntry> diffs = git.diff().setNewTree(endTreeIter).setOldTree(startTreeIter).call();
+        addToGitDiffResult(diffs, diffResult, endCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder);
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
     return diffResult;
+  }
+  private boolean ensureCommitOrdering(String startCommitIdStr, String endCommitIdStr, Repository repository)
+      throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit startCommit = revWalk.parseCommit(repository.resolve(startCommitIdStr));
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit.getCommitTime() >= startCommit.getCommitTime();
+    }
   }
 
   private List<GitFile> getGitFilesFromDiff(
@@ -254,7 +277,7 @@ public class GitClientImpl implements GitClient {
   @VisibleForTesting
   void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
       Repository repository, boolean excludeFilesOutsideSetupFolder) throws IOException {
-    logger.info(GIT_YAML_LOG_PREFIX + "Total diff entries found : " + diffs.size());
+    logger.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
     for (DiffEntry entry : diffs) {
       String content = null;
       String filePath;
@@ -268,12 +291,14 @@ public class GitClientImpl implements GitClient {
         filePath = entry.getNewPath();
         objectId = entry.getNewId().toObjectId();
       }
+
       if (excludeFilesOutsideSetupFolder && filePath != null && !filePath.startsWith(SETUP_FOLDER)) {
-        return;
+        logger.info("Excluding file [{}] ", filePath);
+        continue;
       }
 
       ObjectLoader loader = repository.open(objectId);
-      content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      content = new String(loader.getBytes(), StandardCharsets.UTF_8);
       GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                         .withCommitId(headCommitId.getName())
                                         .withChangeType(gitClientHelper.getChangeType(entry.getChangeType()))

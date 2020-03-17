@@ -55,7 +55,7 @@ public class GitCommit extends Base {
   private List<String> yamlGitConfigIds;
   private GitFileProcessingSummary fileProcessingSummary;
 
-  public enum Status { QUEUED, RUNNING, COMPLETED, FAILED }
+  public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
 
   public enum FailureReason {
     GIT_CONNECTION_FAILED,
