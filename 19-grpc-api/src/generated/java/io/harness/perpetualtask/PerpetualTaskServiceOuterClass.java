@@ -67,18 +67,20 @@ public final class PerpetualTaskServiceOuterClass {
         + "uf.Timestamp\"\030\n\nDelegateId\022\n\n\002id\030\001 \001(\t\"R"
         + "\n\023PerpetualTaskIdList\022;\n\010task_ids\030\001 \003(\0132"
         + ").io.harness.perpetualtask.PerpetualTask"
-        + "Id\"W\n\020HeartbeatRequest\022\n\n\002id\030\001 \001(\t\0227\n\023he"
-        + "artbeat_timestamp\030\002 \001(\0132\032.google.protobu"
-        + "f.Timestamp\"\023\n\021HeartbeatResponse2\324\002\n\024Per"
-        + "petualTaskService\022b\n\013ListTaskIds\022$.io.ha"
-        + "rness.perpetualtask.DelegateId\032-.io.harn"
-        + "ess.perpetualtask.PerpetualTaskIdList\022k\n"
-        + "\016GetTaskContext\022).io.harness.perpetualta"
-        + "sk.PerpetualTaskId\032..io.harness.perpetua"
-        + "ltask.PerpetualTaskContext\022k\n\020PublishHea"
-        + "rtbeat\022*.io.harness.perpetualtask.Heartb"
-        + "eatRequest\032+.io.harness.perpetualtask.He"
-        + "artbeatResponseB\002P\001b\006proto3"};
+        + "Id\"\234\001\n\020HeartbeatRequest\022\n\n\002id\030\001 \001(\t\0227\n\023h"
+        + "eartbeat_timestamp\030\002 \001(\0132\032.google.protob"
+        + "uf.Timestamp\022\022\n\ntask_state\030\003 \001(\t\022\025\n\rresp"
+        + "onse_code\030\004 \001(\005\022\030\n\020response_message\030\005 \001("
+        + "\t\"\023\n\021HeartbeatResponse2\324\002\n\024PerpetualTask"
+        + "Service\022b\n\013ListTaskIds\022$.io.harness.perp"
+        + "etualtask.DelegateId\032-.io.harness.perpet"
+        + "ualtask.PerpetualTaskIdList\022k\n\016GetTaskCo"
+        + "ntext\022).io.harness.perpetualtask.Perpetu"
+        + "alTaskId\032..io.harness.perpetualtask.Perp"
+        + "etualTaskContext\022k\n\020PublishHeartbeat\022*.i"
+        + "o.harness.perpetualtask.HeartbeatRequest"
+        + "\032+.io.harness.perpetualtask.HeartbeatRes"
+        + "ponseB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -147,6 +149,9 @@ public final class PerpetualTaskServiceOuterClass {
             new java.lang.String[] {
                 "Id",
                 "HeartbeatTimestamp",
+                "TaskState",
+                "ResponseCode",
+                "ResponseMessage",
             });
     internal_static_io_harness_perpetualtask_HeartbeatResponse_descriptor = getDescriptor().getMessageTypes().get(7);
     internal_static_io_harness_perpetualtask_HeartbeatResponse_fieldAccessorTable =

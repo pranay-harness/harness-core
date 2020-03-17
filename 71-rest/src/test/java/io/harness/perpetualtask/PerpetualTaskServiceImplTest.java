@@ -50,8 +50,12 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   public void testUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
-    boolean updateHeartbeat = perpetualTaskService.updateHeartbeat(taskId, HEARTBEAT_MILLIS);
+    boolean updateHeartbeat = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
     assertThat(updateHeartbeat).isTrue();
+  }
+
+  private PerpetualTaskResponse perpetualTaskResponse() {
+    return PerpetualTaskResponse.builder().build();
   }
 
   @Test
@@ -60,8 +64,9 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   public void shouldNotUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
-    perpetualTaskService.updateHeartbeat(taskId, HEARTBEAT_MILLIS);
-    boolean updateHeartbeat = perpetualTaskService.updateHeartbeat(taskId, OLD_HEARTBEAT_MILLIS);
+    perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
+    boolean updateHeartbeat =
+        perpetualTaskService.triggerCallback(taskId, OLD_HEARTBEAT_MILLIS, perpetualTaskResponse());
     assertThat(updateHeartbeat).isFalse();
   }
 

@@ -6,6 +6,8 @@ import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.PerpetualTaskResponse;
+import io.harness.perpetualtask.PerpetualTaskState;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -14,11 +16,15 @@ import java.time.Instant;
 @Slf4j
 public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     SamplePerpetualTaskParams sampleParams =
         AnyUtils.unpack(params.getCustomizedParams(), SamplePerpetualTaskParams.class);
     logger.info("Hello there !! {} ", sampleParams.getCountry());
-    return true;
+    return PerpetualTaskResponse.builder()
+        .responseCode(200)
+        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
+        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+        .build();
   }
 
   @Override

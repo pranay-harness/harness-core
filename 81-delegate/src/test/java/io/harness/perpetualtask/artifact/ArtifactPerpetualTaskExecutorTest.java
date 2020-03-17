@@ -15,6 +15,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -67,7 +68,8 @@ public class ArtifactPerpetualTaskExecutorTest extends CategoryTest {
 
     PerpetualTaskParams params =
         PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(artifactCollectionTaskParams)).build();
-    assertThat(artifactPerpetualTaskExecutor.runOnce(perpetualTaskId, params, Instant.now())).isTrue();
+    assertThat(artifactPerpetualTaskExecutor.runOnce(perpetualTaskId, params, Instant.now()).getPerpetualTaskState())
+        .isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
     verify(artifactRepositoryService).publishCollectedArtifacts(any(BuildSourceParameters.class));
     verify(managerClient)
         .publishArtifactCollectionResult(anyString(), anyString(), any(BuildSourceExecutionResponse.class));

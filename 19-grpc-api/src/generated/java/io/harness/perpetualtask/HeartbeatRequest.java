@@ -17,6 +17,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   }
   private HeartbeatRequest() {
     id_ = "";
+    taskState_ = "";
+    responseMessage_ = "";
   }
 
   @java.
@@ -58,6 +60,22 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
               heartbeatTimestamp_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            taskState_ = s;
+            break;
+          }
+          case 32: {
+            responseCode_ = input.readInt32();
+            break;
+          }
+          case 42: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            responseMessage_ = s;
             break;
           }
           default: {
@@ -141,6 +159,75 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     return getHeartbeatTimestamp();
   }
 
+  public static final int TASK_STATE_FIELD_NUMBER = 3;
+  private volatile java.lang.Object taskState_;
+  /**
+   * <code>string task_state = 3;</code>
+   */
+  public java.lang.String getTaskState() {
+    java.lang.Object ref = taskState_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      taskState_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string task_state = 3;</code>
+   */
+  public com.google.protobuf.ByteString getTaskStateBytes() {
+    java.lang.Object ref = taskState_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      taskState_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int RESPONSE_CODE_FIELD_NUMBER = 4;
+  private int responseCode_;
+  /**
+   * <code>int32 response_code = 4;</code>
+   */
+  public int getResponseCode() {
+    return responseCode_;
+  }
+
+  public static final int RESPONSE_MESSAGE_FIELD_NUMBER = 5;
+  private volatile java.lang.Object responseMessage_;
+  /**
+   * <code>string response_message = 5;</code>
+   */
+  public java.lang.String getResponseMessage() {
+    java.lang.Object ref = responseMessage_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      responseMessage_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string response_message = 5;</code>
+   */
+  public com.google.protobuf.ByteString getResponseMessageBytes() {
+    java.lang.Object ref = responseMessage_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      responseMessage_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -162,6 +249,15 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     if (heartbeatTimestamp_ != null) {
       output.writeMessage(2, getHeartbeatTimestamp());
     }
+    if (!getTaskStateBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, taskState_);
+    }
+    if (responseCode_ != 0) {
+      output.writeInt32(4, responseCode_);
+    }
+    if (!getResponseMessageBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, responseMessage_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -177,6 +273,15 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     }
     if (heartbeatTimestamp_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getHeartbeatTimestamp());
+    }
+    if (!getTaskStateBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, taskState_);
+    }
+    if (responseCode_ != 0) {
+      size += com.google.protobuf.CodedOutputStream.computeInt32Size(4, responseCode_);
+    }
+    if (!getResponseMessageBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, responseMessage_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -201,6 +306,12 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       if (!getHeartbeatTimestamp().equals(other.getHeartbeatTimestamp()))
         return false;
     }
+    if (!getTaskState().equals(other.getTaskState()))
+      return false;
+    if (getResponseCode() != other.getResponseCode())
+      return false;
+    if (!getResponseMessage().equals(other.getResponseMessage()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -219,6 +330,12 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       hash = (37 * hash) + HEARTBEAT_TIMESTAMP_FIELD_NUMBER;
       hash = (53 * hash) + getHeartbeatTimestamp().hashCode();
     }
+    hash = (37 * hash) + TASK_STATE_FIELD_NUMBER;
+    hash = (53 * hash) + getTaskState().hashCode();
+    hash = (37 * hash) + RESPONSE_CODE_FIELD_NUMBER;
+    hash = (53 * hash) + getResponseCode();
+    hash = (37 * hash) + RESPONSE_MESSAGE_FIELD_NUMBER;
+    hash = (53 * hash) + getResponseMessage().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -339,6 +456,12 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
         heartbeatTimestamp_ = null;
         heartbeatTimestampBuilder_ = null;
       }
+      taskState_ = "";
+
+      responseCode_ = 0;
+
+      responseMessage_ = "";
+
       return this;
     }
 
@@ -375,6 +498,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       } else {
         result.heartbeatTimestamp_ = heartbeatTimestampBuilder_.build();
       }
+      result.taskState_ = taskState_;
+      result.responseCode_ = responseCode_;
+      result.responseMessage_ = responseMessage_;
       onBuilt();
       return result;
     }
@@ -423,6 +549,17 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
       if (other.hasHeartbeatTimestamp()) {
         mergeHeartbeatTimestamp(other.getHeartbeatTimestamp());
+      }
+      if (!other.getTaskState().isEmpty()) {
+        taskState_ = other.taskState_;
+        onChanged();
+      }
+      if (other.getResponseCode() != 0) {
+        setResponseCode(other.getResponseCode());
+      }
+      if (!other.getResponseMessage().isEmpty()) {
+        responseMessage_ = other.responseMessage_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -623,6 +760,154 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
         heartbeatTimestamp_ = null;
       }
       return heartbeatTimestampBuilder_;
+    }
+
+    private java.lang.Object taskState_ = "";
+    /**
+     * <code>string task_state = 3;</code>
+     */
+    public java.lang.String getTaskState() {
+      java.lang.Object ref = taskState_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        taskState_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string task_state = 3;</code>
+     */
+    public com.google.protobuf.ByteString getTaskStateBytes() {
+      java.lang.Object ref = taskState_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        taskState_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string task_state = 3;</code>
+     */
+    public Builder setTaskState(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      taskState_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string task_state = 3;</code>
+     */
+    public Builder clearTaskState() {
+      taskState_ = getDefaultInstance().getTaskState();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string task_state = 3;</code>
+     */
+    public Builder setTaskStateBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      taskState_ = value;
+      onChanged();
+      return this;
+    }
+
+    private int responseCode_;
+    /**
+     * <code>int32 response_code = 4;</code>
+     */
+    public int getResponseCode() {
+      return responseCode_;
+    }
+    /**
+     * <code>int32 response_code = 4;</code>
+     */
+    public Builder setResponseCode(int value) {
+      responseCode_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int32 response_code = 4;</code>
+     */
+    public Builder clearResponseCode() {
+      responseCode_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object responseMessage_ = "";
+    /**
+     * <code>string response_message = 5;</code>
+     */
+    public java.lang.String getResponseMessage() {
+      java.lang.Object ref = responseMessage_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        responseMessage_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string response_message = 5;</code>
+     */
+    public com.google.protobuf.ByteString getResponseMessageBytes() {
+      java.lang.Object ref = responseMessage_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        responseMessage_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string response_message = 5;</code>
+     */
+    public Builder setResponseMessage(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      responseMessage_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string response_message = 5;</code>
+     */
+    public Builder clearResponseMessage() {
+      responseMessage_ = getDefaultInstance().getResponseMessage();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string response_message = 5;</code>
+     */
+    public Builder setResponseMessageBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      responseMessage_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

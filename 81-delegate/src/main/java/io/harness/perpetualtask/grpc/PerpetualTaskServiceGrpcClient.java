@@ -9,6 +9,7 @@ import io.harness.perpetualtask.HeartbeatRequest;
 import io.harness.perpetualtask.PerpetualTaskContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskIdList;
+import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,11 +37,15 @@ public class PerpetualTaskServiceGrpcClient {
     return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).getTaskContext(taskId);
   }
 
-  public void publishHeartbeat(PerpetualTaskId taskId, Instant taskStartTime) {
+  public void publishHeartbeat(
+      PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
     serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
         .publishHeartbeat(HeartbeatRequest.newBuilder()
                               .setId(taskId.getId())
                               .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
+                              .setResponseCode(perpetualTaskResponse.getResponseCode())
+                              .setTaskState(perpetualTaskResponse.getPerpetualTaskState().name())
+                              .setResponseMessage(perpetualTaskResponse.getResponseMessage())
                               .build());
   }
 }

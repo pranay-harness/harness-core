@@ -17,5 +17,8 @@ public interface PerpetualTaskServiceClient<T extends PerpetualTaskClientParams>
 
   Message getTaskParams(PerpetualTaskClientContext clientContext);
 
+  void onTaskStateChange(
+      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse);
+
   DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId);
 }

@@ -14,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
@@ -41,7 +42,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
-  @Mock PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Mock PerpetualTaskService perpetualTaskService;
   @InjectMocks PerpetualTaskRecordHandler perpetualTaskRecordHandler;
 
   @Before
@@ -59,7 +60,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                    .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
                    .build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
-    doNothing().when(perpetualTaskRecordDao).setDelegateId(anyString(), eq(delegateId));
+    doNothing().when(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
   }
 
   @Test
@@ -67,6 +68,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandle() {
     perpetualTaskRecordHandler.handle(record);
-    verify(perpetualTaskRecordDao).setDelegateId(anyString(), eq(delegateId));
+    verify(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
   }
 }

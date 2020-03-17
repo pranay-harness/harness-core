@@ -28,4 +28,27 @@ public interface HeartbeatRequestOrBuilder extends
    * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
    */
   com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder();
+
+  /**
+   * <code>string task_state = 3;</code>
+   */
+  java.lang.String getTaskState();
+  /**
+   * <code>string task_state = 3;</code>
+   */
+  com.google.protobuf.ByteString getTaskStateBytes();
+
+  /**
+   * <code>int32 response_code = 4;</code>
+   */
+  int getResponseCode();
+
+  /**
+   * <code>string response_message = 5;</code>
+   */
+  java.lang.String getResponseMessage();
+  /**
+   * <code>string response_message = 5;</code>
+   */
+  com.google.protobuf.ByteString getResponseMessageBytes();
 }

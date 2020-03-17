@@ -124,16 +124,6 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldReturnUnHealthyForCloudProvidersWithoutHeatbeat() {
-    when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
-    taskRecord.setLastHeartbeat(0);
-    CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
-    assertThat(status.isHealthy()).isFalse();
-  }
-
-  @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
   public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);

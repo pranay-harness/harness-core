@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.util.Durations;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
@@ -23,6 +25,9 @@ public class PerpetualTaskLifecycleManager {
   private final PerpetualTaskContext context;
   private final PerpetualTaskExecutor perpetualTaskExecutor;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
+
+  private Cache<String, PerpetualTaskResponse> perpetualTaskResponseCache =
+      Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
 
   PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
@@ -54,12 +59,32 @@ public class PerpetualTaskLifecycleManager {
     }
   }
 
-  private Void call() throws Exception {
+  Void call() {
     Instant taskStartTime = Instant.now();
-    boolean taskStarted =
-        perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
-    if (taskStarted) {
-      perpetualTaskServiceGrpcClient.publishHeartbeat(taskId, taskStartTime);
+    PerpetualTaskResponse perpetualTaskResponse;
+    try {
+      perpetualTaskResponse =
+          perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
+    } catch (UncheckedTimeoutException tex) {
+      perpetualTaskResponse = PerpetualTaskResponse.builder()
+                                  .responseCode(408)
+                                  .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
+                                  .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
+                                  .build();
+      logger.warn("Timed out starting task", tex);
+    } catch (Exception ex) {
+      perpetualTaskResponse = PerpetualTaskResponse.builder()
+                                  .responseCode(500)
+                                  .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
+                                  .responseMessage(PerpetualTaskState.TASK_RUN_FAILED.name())
+                                  .build();
+      logger.error("Exception is ", ex);
+    }
+    String perpetualTaskId = taskId.getId();
+    PerpetualTaskResponse cachedPerpetualTaskResponse = perpetualTaskResponseCache.getIfPresent(perpetualTaskId);
+    if (null == cachedPerpetualTaskResponse || !cachedPerpetualTaskResponse.equals(perpetualTaskResponse)) {
+      perpetualTaskServiceGrpcClient.publishHeartbeat(taskId, taskStartTime, perpetualTaskResponse);
+      perpetualTaskResponseCache.put(perpetualTaskId, perpetualTaskResponse);
     }
     return null;
   }

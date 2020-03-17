@@ -48,6 +48,10 @@ message PerpetualTaskIdList {
 message HeartbeatRequest {
   string id = 1;
   google.protobuf.Timestamp heartbeat_timestamp = 2;
+  string task_state = 3;
+  int32 response_code = 4;
+  string response_message = 5;
 }
 
-message HeartbeatResponse {}
+message HeartbeatResponse {
+}

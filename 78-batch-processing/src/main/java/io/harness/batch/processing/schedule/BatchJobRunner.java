@@ -66,6 +66,8 @@ public class BatchJobRunner {
           batchJobScheduledDataService.create(batchJobScheduledData);
           startInstant = endInstant;
         } else {
+          logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
+              batchJobType, status, startInstant, endInstant);
           break;
         }
       } else {

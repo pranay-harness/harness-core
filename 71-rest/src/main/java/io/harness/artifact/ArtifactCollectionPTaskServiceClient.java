@@ -9,18 +9,21 @@ import com.google.protobuf.util.Durations;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class ArtifactCollectionPTaskServiceClient
     implements PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> {
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
@@ -67,6 +70,12 @@ public class ArtifactCollectionPTaskServiceClient
         .setArtifactStreamId(artifactStreamId)
         .setBuildSourceParams(bytes)
         .build();
+  }
+
+  @Override
+  public void onTaskStateChange(
+      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
+    logger.debug("Nothing to do !!");
   }
 
   @Override

@@ -65,10 +65,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public boolean resetTask(String accountId, String taskId) {
-    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
-      return perpetualTaskRecordDao.resetDelegateId(accountId, taskId);
-    }
+    // TODO(Hitesh) -> make a callback
+    return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId);
   }
 
   @Override
@@ -126,11 +124,24 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public boolean updateHeartbeat(String taskId, long heartbeatMillis) {
+  public boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse) {
     PerpetualTaskRecord taskRecord = perpetualTaskRecordDao.getTask(taskId);
     if (null == taskRecord || taskRecord.getLastHeartbeat() > heartbeatMillis) {
       return false;
     }
-    return perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
+    boolean heartbeatUpdated = perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
+    stateChangeCallback(taskId, perpetualTaskResponse);
+    return heartbeatUpdated;
+  }
+
+  @Override
+  public void setDelegateId(String taskId, String delegateId) {
+    perpetualTaskRecordDao.setDelegateId(taskId, delegateId);
+  }
+
+  private void stateChangeCallback(String taskId, PerpetualTaskResponse perpetualTaskResponse) {
+    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
+    PerpetualTaskServiceClient client = clientRegistry.getClient(task.getPerpetualTaskType());
+    client.onTaskStateChange(task.getUuid(), perpetualTaskResponse, perpetualTaskResponse);
   }
 }

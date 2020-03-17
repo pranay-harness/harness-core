@@ -10,6 +10,8 @@ import io.harness.managerclient.ManagerClientV2;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.PerpetualTaskResponse;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -30,7 +32,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     logger.info("In ArtifactPerpetualTask artifact collection");
     ArtifactCollectionTaskParams artifactCollectionTaskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ArtifactCollectionTaskParams.class);
@@ -50,7 +52,11 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
           taskId.getId(), ex);
     }
     logger.info("Published artifact successfully");
-    return true;
+    return PerpetualTaskResponse.builder()
+        .responseCode(200)
+        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
+        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+        .build();
   }
 
   @Override
