@@ -19,6 +19,7 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +43,30 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
   }
 
   @Override
-  public void write(List<? extends List<String>> list) throws Exception {
+  public void write(List<? extends List<String>> list) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    List<DeploymentSummary> deploymentSummaries = new ArrayList<>();
+    int offset = 0;
+    Instant startTime = CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
+    Instant endTime = CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
 
+    List<DeploymentSummary> deploymentSummaries =
+        cloudToHarnessMappingService.getDeploymentSummary(accountId, String.valueOf(offset), startTime, endTime);
+
+    do {
+      logger.info("deploymentSummaries data size {}", deploymentSummaries.size());
+      offset = offset + deploymentSummaries.size();
+      createCostEvent(accountId, deploymentSummaries);
+      deploymentSummaries =
+          cloudToHarnessMappingService.getDeploymentSummary(accountId, String.valueOf(offset), startTime, endTime);
+    } while (!deploymentSummaries.isEmpty());
+  }
+
+  private void createCostEvent(String accountId, List<DeploymentSummary> deploymentSummaries) {
     List<HarnessServiceInfo> harnessServiceInfoList =
         cloudToHarnessMappingService.getHarnessServiceInfoList((List<DeploymentSummary>) deploymentSummaries);
-    Map<String, HarnessServiceInfo> infraMappingHarnessServiceInfo = harnessServiceInfoList.stream().collect(
-        Collectors.toMap(HarnessServiceInfo::getInfraMappingId, Function.identity()));
+    Map<String, HarnessServiceInfo> infraMappingHarnessServiceInfo =
+        harnessServiceInfoList.stream().collect(Collectors.toMap(
+            HarnessServiceInfo::getInfraMappingId, Function.identity(), (existing, replacement) -> existing));
 
     List<String> resourceIdList =
         harnessServiceInfoList.stream().map(HarnessServiceInfo::getServiceId).collect(Collectors.toList());
@@ -84,6 +101,9 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
       logger.debug("cloud event data {}", cloudEventData.toString());
       cloudEventDataList.add(cloudEventData);
     });
-    costEventService.create(cloudEventDataList);
+
+    if (!cloudEventDataList.isEmpty()) {
+      costEventService.create(cloudEventDataList);
+    }
   }
 }

@@ -17,6 +17,9 @@ import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 public class DeploymentServiceImplTest extends WingsBaseTest {
@@ -26,45 +29,73 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   private final String RELEASE_NAME = "release_name";
   private final String ECS_SERVICE_NAME = "ecs_service_name";
   private final String ECS_CLUSTER_NAME = "ecs_cluster_name";
-  private final String INFRA_MAPPING_ID = "infra_mapping_id";
+  private final String INFRA_MAPPING_ID_ECS = "infra_mapping_id_ecs";
+  private final String INFRA_MAPPING_ID_K8S = "infra_mapping_id_k8s";
+
+  private final Instant NOW = Instant.now();
+  private final Instant START_TIME = NOW.minus(1, ChronoUnit.DAYS);
+  private final Instant END_TIME = NOW.plus(1, ChronoUnit.DAYS);
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetDeploymentSummaryForEcs() {
-    ContainerDeploymentKey containerDeploymentKey =
-        ContainerDeploymentKey.builder().containerServiceName(ECS_SERVICE_NAME).build();
-    ContainerDeploymentInfoWithNames containerDeploymentInfoWithNames = ContainerDeploymentInfoWithNames.builder()
-                                                                            .clusterName(ECS_CLUSTER_NAME)
-                                                                            .containerSvcName(ECS_SERVICE_NAME)
-                                                                            .build();
-    DeploymentSummary deploymentSummary = DeploymentSummary.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .containerDeploymentKey(containerDeploymentKey)
-                                              .deploymentInfo(containerDeploymentInfoWithNames)
-                                              .infraMappingId(INFRA_MAPPING_ID)
-                                              .build();
-    deploymentService.save(deploymentSummary);
-    Optional<DeploymentSummary> savedDeploymentSummary = deploymentService.getWithAccountId(deploymentSummary);
+    DeploymentSummary ecsDeploymentSummary = getEcsDeploymentSummary();
+    deploymentService.save(ecsDeploymentSummary);
+    Optional<DeploymentSummary> savedDeploymentSummary = deploymentService.getWithAccountId(ecsDeploymentSummary);
     assertThat(savedDeploymentSummary).isPresent();
-    assertThat(savedDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID);
+    assertThat(savedDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_ECS);
   }
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetDeploymentSummaryForK8s() {
-    K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(RELEASE_NAME).build();
-    K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(RELEASE_NAME).build();
-    DeploymentSummary deploymentSummary = DeploymentSummary.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .k8sDeploymentKey(k8sDeploymentKey)
-                                              .deploymentInfo(k8sDeploymentInfo)
-                                              .infraMappingId(INFRA_MAPPING_ID)
-                                              .build();
+    DeploymentSummary deploymentSummary = getK8sDeploymentSummary();
     deploymentService.save(deploymentSummary);
     Optional<DeploymentSummary> savedK8sDeploymentSummary = deploymentService.getWithAccountId(deploymentSummary);
     assertThat(savedK8sDeploymentSummary).isPresent();
-    assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID);
+    assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_K8S);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetDeploymentSummaryPaginated() {
+    DeploymentSummary deploymentSummary = getK8sDeploymentSummary();
+    deploymentService.save(deploymentSummary);
+    DeploymentSummary ecsDeploymentSummary = getEcsDeploymentSummary();
+    deploymentService.save(ecsDeploymentSummary);
+    List<DeploymentSummary> deploymentSummaries =
+        deploymentService.getDeploymentSummary(ACCOUNT_ID, String.valueOf(0), START_TIME, END_TIME);
+    assertThat(deploymentSummaries).hasSize(2);
+    assertThat(deploymentSummaries.get(0).getInfraMappingId()).isEqualTo(INFRA_MAPPING_ID_K8S);
+    assertThat(deploymentSummaries.get(1).getInfraMappingId()).isEqualTo(INFRA_MAPPING_ID_ECS);
+  }
+
+  private DeploymentSummary getK8sDeploymentSummary() {
+    K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(RELEASE_NAME).build();
+    K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().releaseName(RELEASE_NAME).build();
+    return DeploymentSummary.builder()
+        .accountId(ACCOUNT_ID)
+        .k8sDeploymentKey(k8sDeploymentKey)
+        .deploymentInfo(k8sDeploymentInfo)
+        .infraMappingId(INFRA_MAPPING_ID_K8S)
+        .build();
+  }
+
+  private DeploymentSummary getEcsDeploymentSummary() {
+    ContainerDeploymentKey containerDeploymentKey =
+        ContainerDeploymentKey.builder().containerServiceName(ECS_SERVICE_NAME).build();
+    ContainerDeploymentInfoWithNames containerDeploymentInfoWithNames = ContainerDeploymentInfoWithNames.builder()
+                                                                            .clusterName(ECS_CLUSTER_NAME)
+                                                                            .containerSvcName(ECS_SERVICE_NAME)
+                                                                            .build();
+    return DeploymentSummary.builder()
+        .accountId(ACCOUNT_ID)
+        .containerDeploymentKey(containerDeploymentKey)
+        .deploymentInfo(containerDeploymentInfoWithNames)
+        .infraMappingId(INFRA_MAPPING_ID_ECS)
+        .build();
   }
 }

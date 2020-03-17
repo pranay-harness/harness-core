@@ -21,6 +21,7 @@ import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,5 +102,11 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         .field(ResourceLookupKeys.resourceId)
         .in(resourceIds)
         .asList();
+  }
+
+  @Override
+  public List<DeploymentSummary> getDeploymentSummary(
+      String accountId, String offset, Instant startTime, Instant endTime) {
+    return deploymentService.getDeploymentSummary(accountId, offset, startTime, endTime);
   }
 }
