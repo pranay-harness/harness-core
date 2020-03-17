@@ -38,20 +38,22 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S>
     implements DataFetcher, BaseStatsDataFetcher {
-  private static final Integer DEFAULT_LIMIT = 5;
+  private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
+  private static final Integer DEFAULT_OFFSET = 0;
   private static final String GROUP_BY = "groupBy";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String FILTERS = "filters";
   private static final String LIMIT = "limit";
+  private static final String OFFSET = "offset";
   protected static final String EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DataFetcherUtils utils;
 
-  protected abstract QLData fetch(
-      String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy, List<S> sort);
+  protected abstract QLData fetch(String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy,
+      List<S> sort, Integer limit, Integer offset);
 
   protected abstract QLData postFetch(
       String accountId, List<G> groupByList, List<A> aggregations, List<S> sort, QLData qlData, Integer limit);
@@ -75,6 +77,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       final List<F> filters = fetchObject(dataFetchingEnvironment, FILTERS, filterClass);
 
       final Integer limit = fetchLimit(dataFetchingEnvironment, LIMIT);
+      final Integer offset = fetchOffset(dataFetchingEnvironment, OFFSET);
       String accountId = utils.getAccountId(dataFetchingEnvironment);
 
       try (AutoLogContext ignore1 =
@@ -83,7 +86,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
 
            AutoLogContext ignore3 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR)) {
-        QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort);
+        QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort, limit, offset);
         QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData, limit);
         result = qlData;
         if (postFetchResult != null) {
@@ -141,6 +144,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
     Object object = dataFetchingEnvironment.getArguments().get(fieldName);
     if (object == null) {
       return DEFAULT_LIMIT;
+    }
+    return (Integer) object;
+  }
+
+  private Integer fetchOffset(DataFetchingEnvironment dataFetchingEnvironment, String fieldName) {
+    Object object = dataFetchingEnvironment.getArguments().get(fieldName);
+    if (object == null) {
+      return DEFAULT_OFFSET;
     }
     return (Integer) object;
   }

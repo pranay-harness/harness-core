@@ -94,6 +94,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private static double AVGMEMORYTILIZATION_VALUE = 0.5;
 
   private static Integer LIMIT = Integer.MAX_VALUE - 1;
+  private static Integer OFFSET = 0;
 
   @Before
   public void setup() throws SQLException {
@@ -125,7 +126,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> billingStatsTimeSeriesDataFetcher.fetch(ACCOUNT1_ID, aggregationFunction,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
+                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -140,8 +141,8 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
 
-    QLData data = billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    QLData data = billingStatsTimeSeriesDataFetcher.fetch(ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST,
+        Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET);
     assertThat(data).isNull();
   }
 
@@ -156,7 +157,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -184,7 +185,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList();
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, multiAggregationFunctionForIdleCost, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, multiAggregationFunctionForIdleCost, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(multiAggregationFunctionForIdleCost.get(0).getColumnName()).isEqualTo("idlecost");
     assertThat(multiAggregationFunctionForIdleCost.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -208,7 +209,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -232,7 +233,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -256,7 +257,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -283,7 +284,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -306,7 +307,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
@@ -323,7 +324,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -348,7 +349,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -372,7 +373,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -396,7 +397,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -420,7 +421,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -445,7 +446,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -470,7 +471,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -492,7 +493,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -537,7 +538,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -574,7 +575,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
@@ -632,7 +633,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
     assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);

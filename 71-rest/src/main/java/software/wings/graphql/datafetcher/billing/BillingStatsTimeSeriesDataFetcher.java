@@ -60,7 +60,8 @@ public class BillingStatsTimeSeriesDataFetcher
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
+      Integer limit, Integer offset) {
     boolean timeScaleDBServiceValid = timeScaleDBService.isValid();
     logger.info("Timescale db service status {}", timeScaleDBServiceValid);
     if (!timeScaleDBServiceValid) {
@@ -273,13 +274,13 @@ public class BillingStatsTimeSeriesDataFetcher
       }
       if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
         long timeOfFirstEntry = resultSet.getTimestamp(timeFieldName, utils.getDefaultCalendar()).getTime();
-        AddPrecedingZeroValuedData(
+        addPrecedingZeroValuedData(
             queryData, qlTimeDataPointMap, entityId, idWithInfo, timeOfFirstEntry, startTimeFromFilters);
       }
     }
   }
 
-  private void AddPrecedingZeroValuedData(BillingDataQueryMetadata queryData,
+  private void addPrecedingZeroValuedData(BillingDataQueryMetadata queryData,
       Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, String entityId, String idWithInfo,
       long timeOfFirstEntry, long startTimeFromFilters) {
     int missingDays = (int) ((timeOfFirstEntry - startTimeFromFilters) / ONE_DAY_MILLIS);
@@ -362,6 +363,9 @@ public class BillingStatsTimeSeriesDataFetcher
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
       Integer limit) {
     qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit);
+    if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT)) {
+      return qlData;
+    }
     Map<String, Double> aggregatedData = new HashMap<>();
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) qlData;
     data.getData().forEach(dataPoint -> {

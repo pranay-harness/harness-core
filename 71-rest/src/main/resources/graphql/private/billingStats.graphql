@@ -1,5 +1,6 @@
 extend type Query {
   billingStatsTimeSeries(
+    limit: Int
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -25,6 +26,8 @@ extend type Query {
   ): IdleCostStatsData @dataFetcher(name: idleCostTrendStats)
 
   billingStatsEntity(
+    limit: Int
+    offset: Int
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]

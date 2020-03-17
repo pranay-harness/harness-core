@@ -37,4 +37,5 @@ public class BillingStatsDefaultKeys {
   public static final String OTHERS = "Others";
   public static final String DEFAULT_LABEL = "Label not present";
   public static final String DEFAULT_TAG = "Tag not present";
+  public static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
 }

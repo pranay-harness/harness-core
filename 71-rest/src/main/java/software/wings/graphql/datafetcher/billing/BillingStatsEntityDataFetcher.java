@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -43,14 +45,16 @@ public class BillingStatsEntityDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
+  private static String OFFSET_AND_LIMIT_QUERY = " OFFSET %s LIMIT %s";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
+      Integer limit, Integer offset) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getEntityData(accountId, filters, aggregateFunction, groupBy, sortCriteria);
+        return getEntityData(accountId, filters, aggregateFunction, groupBy, sortCriteria, limit, offset);
       } else {
         throw new InvalidRequestException("Cannot process request in BillingStatsEntityDataFetcher");
       }
@@ -61,7 +65,7 @@ public class BillingStatsEntityDataFetcher
 
   protected QLEntityTableListData getEntityData(@NotNull String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMGroupBy> groupByList,
-      List<QLBillingSortCriteria> sortCriteria) {
+      List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
@@ -77,7 +81,10 @@ public class BillingStatsEntityDataFetcher
 
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true, true);
-
+    // Not adding limit in case of group by labels/tags
+    if (groupByTagList.isEmpty() && groupByLabelList.isEmpty()) {
+      queryData.setQuery(queryData.getQuery() + format(OFFSET_AND_LIMIT_QUERY, offset, limit));
+    }
     logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
 
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
