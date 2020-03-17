@@ -126,7 +126,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private static final String HARNESS_TAG_PREFIX = "harness.io/";
 
   private static final Pattern workflowVariablesPattern = Pattern.compile("\\$\\{workflow\\.variables\\.([^.{}]+)[}]");
+  private static final Pattern workflowDefaultsPattern = Pattern.compile("\\$\\{workflow\\.([^.{}]+)[}]");
+  private static final Pattern pipelineDefaultsPattern = Pattern.compile("\\$\\{pipeline\\.([^.{}]+)[}]");
   private static final Pattern appDefaultsPattern = Pattern.compile("\\$\\{app\\.defaults\\.([^.{}]+)[}]");
+  private static final Pattern appPropertiesDefaultsPattern = Pattern.compile("\\$\\{app\\.([^.{}]+)[}]");
   private static final Pattern accountDefaultsPattern = Pattern.compile("\\$\\{account\\.defaults\\.([^.{}]+)[}]");
 
   private static int MAX_TAG_KEY_LENGTH = 128;
@@ -503,9 +506,14 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void validateExpression(String expression) {
     if (expression.startsWith("${")) {
       Matcher workflowVariableMatcher = workflowVariablesPattern.matcher(expression);
+      Matcher workflowDefaultsMatcher = workflowDefaultsPattern.matcher(expression);
+      Matcher pipelineDefaultsMatcher = pipelineDefaultsPattern.matcher(expression);
       Matcher appDefaultsMatcher = appDefaultsPattern.matcher(expression);
+      Matcher appPropertiesDefaultsMatcher = appPropertiesDefaultsPattern.matcher(expression);
       Matcher accountDefaultsMatcher = accountDefaultsPattern.matcher(expression);
-      if (!workflowVariableMatcher.matches() && !appDefaultsMatcher.matches() && !accountDefaultsMatcher.matches()) {
+      if (!workflowVariableMatcher.matches() && !workflowDefaultsMatcher.matches() && !pipelineDefaultsMatcher.matches()
+          && !appDefaultsMatcher.matches() && !appPropertiesDefaultsMatcher.matches()
+          && !accountDefaultsMatcher.matches()) {
         throw new InvalidRequestException(
             "Only workflow variables, app defaults and account defaults can be added as expressions");
       }
@@ -531,9 +539,22 @@ public class HarnessTagServiceImpl implements HarnessTagService {
           throw new InvalidRequestException("Tag value should be empty as key contains expression");
         }
       }
+      // extra check to validate pipeline defaults are not used in workflow tags
+      validateNoPipelineDefaultsAsWorkflowTag(tagLink);
     }
     tagLink.setKey(validateTagKey(tagLink.getKey(), allowExpressions));
     tagLink.setValue(validateTagValue(tagLink.getValue(), allowExpressions));
+  }
+
+  private void validateNoPipelineDefaultsAsWorkflowTag(HarnessTagLink tagLink) {
+    if (tagLink.getEntityType() == WORKFLOW) {
+      if (tagLink.getKey().startsWith("${pipeline.")) {
+        throw new InvalidRequestException("Pipeline defaults cannot be used as tags in workflow");
+      }
+      if (tagLink.getValue().startsWith("${pipeline.")) {
+        throw new InvalidRequestException("Pipeline defaults cannot be used as tags in workflow");
+      }
+    }
   }
 
   private void validateAndCreateTagIfNeeded(String accountId, String key, String value, boolean allowExpressions) {

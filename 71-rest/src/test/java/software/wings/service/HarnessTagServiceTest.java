@@ -641,7 +641,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
                                       .appId(APP_ID)
                                       .entityId("id")
                                       .entityType(WORKFLOW)
-                                      .key("${app.name}")
+                                      .key("${app1.name}")
                                       .value("")
                                       .build());
       fail("Expected an InvalidRequestException to be thrown");
@@ -693,6 +693,23 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  public void attachTagWithAppNameAsKey() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("${app.name}")
+                                    .value("")
+                                    .build());
+    HarnessTag tag = harnessTagService.getTagWithInUseValues(TEST_ACCOUNT_ID, "${app.name}");
+    assertThat(tag.getKey()).isEqualTo("${app.name}");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
   public void attachTagWithInvalidCharacterInKey() {
     when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
@@ -708,6 +725,48 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       assertThat(exception.getParams().get("message"))
           .isEqualTo(
               "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /$ {}");
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachPipelineDefaultsAsTagKeyToWorkflow() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    try {
+      harnessTagService.attachTag(HarnessTagLink.builder()
+                                      .accountId(TEST_ACCOUNT_ID)
+                                      .appId(APP_ID)
+                                      .entityId("id")
+                                      .entityType(WORKFLOW)
+                                      .key("${pipeline.name}")
+                                      .value("")
+                                      .build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo("Pipeline defaults cannot be used as tags in workflow");
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void attachPipelineDefaultsAsTagValueToWorkflow() {
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
+    try {
+      harnessTagService.attachTag(HarnessTagLink.builder()
+                                      .accountId(TEST_ACCOUNT_ID)
+                                      .appId(APP_ID)
+                                      .entityId("id")
+                                      .entityType(WORKFLOW)
+                                      .key("env")
+                                      .value("${pipeline.name}")
+                                      .build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo("Pipeline defaults cannot be used as tags in workflow");
     }
   }
 }

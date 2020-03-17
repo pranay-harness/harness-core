@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -83,6 +84,10 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
               environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
         }
       }
+    }
+
+    if (forTags) {
+      expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION));
     }
 
     if (isBuildWorkflow) {
