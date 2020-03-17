@@ -49,11 +49,9 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Nullable
   public ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
     ConfiguredLimit limit = get(accountId, actionType);
-
     if (null == limit) {
       limit = getDefaultLimit(actionType, accountId);
     }
-
     return limit;
   }
 

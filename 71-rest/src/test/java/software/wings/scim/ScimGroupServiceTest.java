@@ -1,5 +1,6 @@
 package software.wings.scim;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -26,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -191,6 +193,28 @@ public class ScimGroupServiceTest extends WingsBaseTest {
 
     scimGroupService.updateGroup(GROUP_ID, ACCOUNT_ID, patchRequest);
     verify(wingsPersistence, times(1)).update(userGroup, updateOperations);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testDeleteGroup() {
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("ACCOUNT_NAME");
+
+    UserGroup userGroup = UserGroup.builder()
+                              .uuid(generateUuid())
+                              .name("group_name")
+                              .accountId(account.getUuid())
+                              .memberIds(Collections.emptyList())
+                              .build();
+
+    when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
+    when(wingsPersistence.createUpdateOperations(UserGroup.class)).thenReturn(updateOperations);
+
+    scimGroupService.deleteGroup(userGroup.getUuid(), account.getUuid());
+    verify(wingsPersistence, times(1)).delete(account.getUuid(), UserGroup.class, userGroup.getUuid());
   }
 
   private PatchRequest getOktaReplaceOperation() {

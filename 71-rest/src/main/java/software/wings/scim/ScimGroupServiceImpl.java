@@ -127,7 +127,9 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   @Override
   public void deleteGroup(String groupId, String accountId) {
+    logger.info("SCIM: Deleting group {} from account {}", groupId, accountId);
     wingsPersistence.delete(accountId, UserGroup.class, groupId);
+    logger.info("SCIM: Deleted group {} from account {}", groupId, accountId);
   }
 
   private String processReplaceOperationOnGroup(String groupId, String accountId, PatchOperation patchOperation) {
