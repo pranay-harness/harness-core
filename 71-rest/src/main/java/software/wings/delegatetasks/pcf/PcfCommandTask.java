@@ -14,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 
@@ -41,8 +42,16 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public PcfCommandExecutionResponse run(Object[] parameters) {
-    final PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) parameters[0];
-    final List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) parameters[1];
+    final PcfCommandRequest pcfCommandRequest;
+    final List<EncryptedDataDetail> encryptedDataDetails;
+    if (parameters[0] instanceof PcfCommandTaskParameters) {
+      PcfCommandTaskParameters pcfCommandTaskParameters = (PcfCommandTaskParameters) parameters[0];
+      pcfCommandRequest = pcfCommandTaskParameters.getPcfCommandRequest();
+      encryptedDataDetails = pcfCommandTaskParameters.getEncryptedDataDetails();
+    } else {
+      pcfCommandRequest = (PcfCommandRequest) parameters[0];
+      encryptedDataDetails = (List<EncryptedDataDetail>) parameters[1];
+    }
     return getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails);
   }
 
