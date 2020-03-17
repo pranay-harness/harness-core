@@ -283,7 +283,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     sanitizeApplicationManifestConfigs(applicationManifest);
 
     if (isCreate && exists(applicationManifest)) {
-      throw new InvalidRequestException("App Manifest already exists with given parameters");
+      StringBuilder builder = new StringBuilder();
+      builder.append("App Manifest already exists for app ")
+          .append(applicationManifest.getAppId())
+          .append(" with kind ")
+          .append(applicationManifest.getKind());
+
+      if (isNotBlank(applicationManifest.getServiceId())) {
+        builder.append(", serviceId ").append(applicationManifest.getServiceId());
+      }
+
+      if (isNotBlank(applicationManifest.getEnvId())) {
+        builder.append(", envId ").append(applicationManifest.getEnvId());
+      }
+
+      throw new InvalidRequestException(builder.toString(), USER);
     }
     if (!isCreate) {
       resetReadOnlyProperties(applicationManifest);
@@ -306,6 +320,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   boolean exists(ApplicationManifest applicationManifest) {
     ApplicationManifest appManifest = getAppManifest(applicationManifest.getAppId(), applicationManifest.getEnvId(),
         applicationManifest.getServiceId(), applicationManifest.getKind());
+
     return appManifest != null;
   }
 

@@ -574,7 +574,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void cloneServiceSpecifications(String appId, Service originalService, String clonedServiceId) {
     String originalServiceId = originalService.getUuid();
 
-    clonePcfSpecification(appId, clonedServiceId, originalServiceId);
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, originalService.getAccountId())) {
+      clonePcfSpecification(appId, clonedServiceId, originalServiceId);
+    }
 
     if (ArtifactType.DOCKER == originalService.getArtifactType()) {
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
