@@ -49,6 +49,10 @@ public class Kubectl {
     return new GetPodCommand(new GetCommand(this));
   }
 
+  public GetJobCommand getJobCommand(String jobName, String namespace) {
+    return new GetJobCommand(new GetCommand(this), jobName, namespace);
+  }
+
   public ScaleCommand scale() {
     return new ScaleCommand(this);
   }
