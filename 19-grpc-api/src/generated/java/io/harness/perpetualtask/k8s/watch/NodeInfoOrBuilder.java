@@ -129,4 +129,13 @@ public interface NodeInfoOrBuilder extends
    * <code>string provider_id = 10;</code>
    */
   com.google.protobuf.ByteString getProviderIdBytes();
+
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

@@ -176,4 +176,13 @@ public interface PodInfoOrBuilder extends
    * <code>string cluster_name = 14;</code>
    */
   com.google.protobuf.ByteString getClusterNameBytes();
+
+  /**
+   * <code>string kube_system_uid = 15;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 15;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

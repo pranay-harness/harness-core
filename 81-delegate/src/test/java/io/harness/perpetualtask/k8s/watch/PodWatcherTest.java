@@ -34,6 +34,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -69,10 +70,11 @@ public class PodWatcherTest extends CategoryTest {
     when(podeOps.inAnyNamespace()).thenReturn(ks);
     when(ks.watch(any())).thenReturn(watch);
     podWatcher = new PodWatcher(kubernetesClient,
-        K8sWatchTaskParams.newBuilder()
-            .setClusterName("clusterName")
-            .setClusterId("clusterId")
-            .setCloudProviderId("cloud-provider-id")
+        ClusterDetails.builder()
+            .clusterName("clusterName")
+            .clusterId("clusterId")
+            .cloudProviderId("cloud-provider-id")
+            .kubeSystemUid("cluster-uid")
             .build(),
         eventPublisher);
   }

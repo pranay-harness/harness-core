@@ -32,8 +32,12 @@ public class SharedInformerFactoryFactoryTest extends CategoryTest {
   @Category(UnitTests.class)
   public void createSharedInformerFactory() throws Exception {
     ApiClient apiClient = mock(ApiClient.class);
-    ClusterDetails clusterDetails =
-        ClusterDetails.builder().clusterName("my-k8s-cluster").cloudProviderId("123454").clusterId("423t123").build();
+    ClusterDetails clusterDetails = ClusterDetails.builder()
+                                        .clusterName("my-k8s-cluster")
+                                        .cloudProviderId("123454")
+                                        .clusterId("423t123")
+                                        .kubeSystemUid("8823a382-37b8-459d-a522-4444b3dbb159")
+                                        .build();
     assertThat(sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails))
         .isNotNull()
         .satisfies(sharedInformerFactory -> {

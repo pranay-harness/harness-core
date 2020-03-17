@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -25,23 +26,33 @@ import java.util.concurrent.ConcurrentSkipListSet;
 @Slf4j
 public class NodeWatcher implements Watcher<Node> {
   private final Watch watch;
-  private final String cloudProviderId;
-  private final String clusterId;
-  private final String clusterName;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedNodes;
 
+  private final String clusterId;
+  private final NodeInfo nodeInfoPrototype;
+  private final NodeEvent nodeEventPrototype;
+
   @Inject
   public NodeWatcher(
-      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
+      @Assisted KubernetesClient client, @Assisted ClusterDetails params, EventPublisher eventPublisher) {
     logger.info(
         "Creating new NodeWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.watch = client.nodes().watch(this);
-    this.cloudProviderId = params.getCloudProviderId();
     this.clusterId = params.getClusterId();
-    this.clusterName = params.getClusterName();
     this.eventPublisher = eventPublisher;
     this.publishedNodes = new ConcurrentSkipListSet<>();
+    this.nodeInfoPrototype = NodeInfo.newBuilder()
+                                 .setCloudProviderId(params.getCloudProviderId())
+                                 .setClusterId(clusterId)
+                                 .setClusterName(params.getClusterName())
+                                 .setKubeSystemUid(params.getKubeSystemUid())
+                                 .build();
+    this.nodeEventPrototype = NodeEvent.newBuilder()
+                                  .setCloudProviderId(params.getCloudProviderId())
+                                  .setClusterId(clusterId)
+                                  .setKubeSystemUid(params.getKubeSystemUid())
+                                  .build();
   }
 
   @Override
@@ -57,9 +68,7 @@ public class NodeWatcher implements Watcher<Node> {
 
   private void publishNodeStartedEvent(Node node) {
     final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
-    NodeEvent nodeStartedEvent = NodeEvent.newBuilder()
-                                     .setCloudProviderId(cloudProviderId)
-                                     .setClusterId(clusterId)
+    NodeEvent nodeStartedEvent = NodeEvent.newBuilder(nodeEventPrototype)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_START)
@@ -71,9 +80,7 @@ public class NodeWatcher implements Watcher<Node> {
 
   private void publishNodeStoppedEvent(Node node) {
     final Timestamp timestamp = HTimestamps.fromInstant(Instant.now());
-    NodeEvent nodeStoppedEvent = NodeEvent.newBuilder()
-                                     .setCloudProviderId(cloudProviderId)
-                                     .setClusterId(clusterId)
+    NodeEvent nodeStoppedEvent = NodeEvent.newBuilder(nodeEventPrototype)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_STOP)
@@ -88,10 +95,7 @@ public class NodeWatcher implements Watcher<Node> {
     if (!publishedNodes.contains(node.getMetadata().getUid())) {
       final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
       NodeInfo nodeInfo =
-          NodeInfo.newBuilder()
-              .setCloudProviderId(cloudProviderId)
-              .setClusterId(clusterId)
-              .setClusterName(clusterName)
+          NodeInfo.newBuilder(nodeInfoPrototype)
               .setNodeUid(node.getMetadata().getUid())
               .setNodeName(node.getMetadata().getName())
               .setCreationTime(timestamp)

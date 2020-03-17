@@ -55,4 +55,13 @@ public interface PodEventOrBuilder extends
    * <code>string cluster_id = 6;</code>
    */
   com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string kube_system_uid = 7;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 7;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

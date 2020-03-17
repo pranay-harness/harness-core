@@ -64,4 +64,13 @@ public interface NodeEventOrBuilder extends
    * <code>string cluster_id = 7;</code>
    */
   com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string kube_system_uid = 8;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 8;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

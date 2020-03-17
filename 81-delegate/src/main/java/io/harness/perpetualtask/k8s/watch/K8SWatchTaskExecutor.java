@@ -103,6 +103,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .setClusterId(watchTaskParams.getClusterId())
                                                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
                                                   .setClusterName(watchTaskParams.getClusterName())
+                                                  .setKubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(client))
                                                   .addAllActiveNodeUids(nodeUidList)
                                                   .addAllActivePodUids(podUidList)
                                                   .setLastProcessedTimestamp(timestamp)
@@ -114,22 +115,24 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishNodeMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
+    String kubeSystemUid = K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient);
     k8sMetricsClient.nodeMetrics()
         .list()
         .getItems()
         .stream()
-        .map(nodeMetric
-            -> NodeMetric.newBuilder()
-                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
-                   .setClusterId(watchTaskParams.getClusterId())
-                   .setName(nodeMetric.getMetadata().getName())
-                   .setTimestamp(HTimestamps.parse(nodeMetric.getTimestamp()))
-                   .setWindow(HDurations.parse(nodeMetric.getWindow()))
-                   .setUsage(
-                       Usage.newBuilder()
-                           .setCpuNano(K8sResourceStandardizer.getCpuNano(nodeMetric.getUsage().getCpu()))
-                           .setMemoryByte(K8sResourceStandardizer.getMemoryByte(nodeMetric.getUsage().getMemory())))
-                   .build())
+        .map(nodeMetric -> {
+          return NodeMetric.newBuilder()
+              .setCloudProviderId(watchTaskParams.getCloudProviderId())
+              .setClusterId(watchTaskParams.getClusterId())
+              .setKubeSystemUid(kubeSystemUid)
+              .setName(nodeMetric.getMetadata().getName())
+              .setTimestamp(HTimestamps.parse(nodeMetric.getTimestamp()))
+              .setWindow(HDurations.parse(nodeMetric.getWindow()))
+              .setUsage(Usage.newBuilder()
+                            .setCpuNano(K8sResourceStandardizer.getCpuNano(nodeMetric.getUsage().getCpu()))
+                            .setMemoryByte(K8sResourceStandardizer.getMemoryByte(nodeMetric.getUsage().getMemory())))
+              .build();
+        })
         .forEach(nodeMetric
             -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime),
                 ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId())));
@@ -138,6 +141,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishPodMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
+    String kubeSystemUid = K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient);
     k8sMetricsClient.podMetrics()
         .inAnyNamespace()
         .list()
@@ -148,6 +152,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
             -> PodMetric.newBuilder()
                    .setCloudProviderId(watchTaskParams.getCloudProviderId())
                    .setClusterId(watchTaskParams.getClusterId())
+                   .setKubeSystemUid(kubeSystemUid)
                    .setNamespace(podMetric.getMetadata().getNamespace())
                    .setName(podMetric.getMetadata().getName())
                    .setTimestamp(HTimestamps.parse(podMetric.getTimestamp()))

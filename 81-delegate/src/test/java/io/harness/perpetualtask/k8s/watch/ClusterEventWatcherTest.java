@@ -19,6 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,6 +41,7 @@ public class ClusterEventWatcherTest extends CategoryTest {
                                                        .setCloudProviderId("cloud-provider-id")
                                                        .setClusterId("cluster-id")
                                                        .setClusterName("cluster-name")
+                                                       .setKubeSystemUid("cluster-uid")
                                                        .build();
 
   @Before
@@ -50,10 +52,11 @@ public class ClusterEventWatcherTest extends CategoryTest {
     when(client.events()).thenReturn(op);
     when(op.inAnyNamespace()).thenReturn(op1);
     watcher = new ClusterEventWatcher(client,
-        K8sWatchTaskParams.newBuilder()
-            .setCloudProviderId("cloud-provider-id")
-            .setClusterName("cluster-name")
-            .setClusterId("cluster-id")
+        ClusterDetails.builder()
+            .clusterName("cluster-name")
+            .clusterId("cluster-id")
+            .cloudProviderId("cloud-provider-id")
+            .kubeSystemUid("cluster-uid")
             .build(),
         eventPublisher);
 

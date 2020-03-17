@@ -148,4 +148,13 @@ public interface K8sWatchEventOrBuilder extends
    * <code>string description = 10;</code>
    */
   com.google.protobuf.ByteString getDescriptionBytes();
+
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  java.lang.String getKubeSystemUid();
+  /**
+   * <code>string kube_system_uid = 11;</code>
+   */
+  com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

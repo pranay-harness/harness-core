@@ -109,7 +109,7 @@ public final class K8SMessages {
         + "\022\014\n\004name\030\003 \001(\t\022E\n\006labels\030\004 \003(\01325.io.harn"
         + "ess.perpetualtask.k8s.watch.Owner.Labels"
         + "Entry\032-\n\013LabelsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005val"
-        + "ue\030\002 \001(\t:\0028\001\"\224\004\n\007PodInfo\022\031\n\021cloud_provid"
+        + "ue\030\002 \001(\t:\0028\001\"\255\004\n\007PodInfo\022\031\n\021cloud_provid"
         + "er_id\030\002 \001(\t\022\017\n\007pod_uid\030\003 \001(\t\022\020\n\010pod_name"
         + "\030\004 \001(\t\022\021\n\tnamespace\030\005 \001(\t\022\021\n\tnode_name\030\006"
         + " \001(\t\022D\n\016total_resource\030\007 \001(\0132,.io.harnes"
@@ -121,61 +121,65 @@ public final class K8SMessages {
         + "s.perpetualtask.k8s.watch.Owner\022A\n\nconta"
         + "iners\030\014 \003(\0132-.io.harness.perpetualtask.k"
         + "8s.watch.Container\022\022\n\ncluster_id\030\r \001(\t\022\024"
-        + "\n\014cluster_name\030\016 \001(\t\032-\n\013LabelsEntry\022\013\n\003k"
-        + "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\226\002\n\010PodEvent"
-        + "\022\031\n\021cloud_provider_id\030\002 \001(\t\022\017\n\007pod_uid\030\003"
-        + " \001(\t\022D\n\004type\030\004 \001(\01626.io.harness.perpetua"
-        + "ltask.k8s.watch.PodEvent.EventType\022-\n\tti"
-        + "mestamp\030\005 \001(\0132\032.google.protobuf.Timestam"
-        + "p\022\022\n\ncluster_id\030\006 \001(\t\"U\n\tEventType\022\026\n\022EV"
-        + "ENT_TYPE_INVALID\020\000\022\030\n\024EVENT_TYPE_SCHEDUL"
-        + "ED\020\001\022\026\n\022EVENT_TYPE_DELETED\020\002\"\215\004\n\010NodeInf"
-        + "o\022\031\n\021cloud_provider_id\030\002 \001(\t\022\020\n\010node_uid"
-        + "\030\003 \001(\t\022\021\n\tnode_name\030\004 \001(\t\0221\n\rcreation_ti"
-        + "me\030\005 \001(\0132\032.google.protobuf.Timestamp\022H\n\006"
-        + "labels\030\006 \003(\01328.io.harness.perpetualtask."
-        + "k8s.watch.NodeInfo.LabelsEntry\022c\n\024alloca"
-        + "table_resource\030\007 \003(\0132E.io.harness.perpet"
-        + "ualtask.k8s.watch.NodeInfo.AllocatableRe"
-        + "sourceEntry\022\022\n\ncluster_id\030\010 \001(\t\022\024\n\014clust"
-        + "er_name\030\t \001(\t\022\023\n\013provider_id\030\n \001(\t\032-\n\013La"
-        + "belsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028"
-        + "\001\032q\n\030AllocatableResourceEntry\022\013\n\003key\030\001 \001"
-        + "(\t\022D\n\005value\030\002 \001(\01325.io.harness.perpetual"
-        + "task.k8s.watch.Resource.Quantity:\0028\001\"\245\002\n"
-        + "\tNodeEvent\022\031\n\021cloud_provider_id\030\002 \001(\t\022\020\n"
-        + "\010node_uid\030\003 \001(\t\022E\n\004type\030\004 \001(\01627.io.harne"
-        + "ss.perpetualtask.k8s.watch.NodeEvent.Eve"
-        + "ntType\022-\n\ttimestamp\030\005 \001(\0132\032.google.proto"
-        + "buf.Timestamp\022\021\n\tnode_name\030\006 \001(\t\022\022\n\nclus"
-        + "ter_id\030\007 \001(\t\"N\n\tEventType\022\026\n\022EVENT_TYPE_"
-        + "INVALID\020\000\022\024\n\020EVENT_TYPE_START\020\001\022\023\n\017EVENT"
-        + "_TYPE_STOP\020\002\"\313\001\n\023K8SClusterSyncEvent\022\022\n\n"
-        + "cluster_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031"
-        + "\n\021cloud_provider_id\030\003 \001(\t\022\027\n\017active_pod_"
-        + "uids\030\004 \003(\t\022\030\n\020active_node_uids\030\005 \003(\t\022<\n\030"
-        + "last_processed_timestamp\030\006 \001(\0132\032.google."
-        + "protobuf.Timestamp\"j\n\022K8sObjectReference"
-        + "\022\014\n\004kind\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnamespac"
-        + "e\030\003 \001(\t\022\013\n\003uid\030\004 \001(\t\022\030\n\020resource_version"
-        + "\030\005 \001(\t\"\342\001\n\017K8sClusterEvent\022\022\n\ncluster_id"
-        + "\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021cloud_pr"
-        + "ovider_id\030\003 \001(\t\022\016\n\006reason\030\004 \001(\t\022\017\n\007messa"
-        + "ge\030\005 \001(\t\022\030\n\020source_component\030\006 \001(\t\022O\n\017in"
-        + "volved_object\030\007 \001(\01326.io.harness.perpetu"
-        + "altask.k8s.watch.K8sObjectReference\"\275\003\n\r"
-        + "K8sWatchEvent\022\022\n\ncluster_id\030\001 \001(\t\022\024\n\014clu"
-        + "ster_name\030\002 \001(\t\022\031\n\021cloud_provider_id\030\003 \001"
-        + "(\t\022D\n\004type\030\004 \001(\01626.io.harness.perpetualt"
-        + "ask.k8s.watch.K8sWatchEvent.Type\022L\n\014reso"
-        + "urce_ref\030\005 \001(\01326.io.harness.perpetualtas"
-        + "k.k8s.watch.K8sObjectReference\022\034\n\024old_re"
-        + "source_version\030\006 \001(\t\022\031\n\021old_resource_yam"
-        + "l\030\007 \001(\t\022\034\n\024new_resource_version\030\010 \001(\t\022\031\n"
-        + "\021new_resource_yaml\030\t \001(\t\022\023\n\013description\030"
-        + "\n \001(\t\"L\n\004Type\022\020\n\014TYPE_INVALID\020\000\022\016\n\nTYPE_"
-        + "ADDED\020\001\022\020\n\014TYPE_UPDATED\020\002\022\020\n\014TYPE_DELETE"
-        + "D\020\003B\002P\001b\006proto3"};
+        + "\n\014cluster_name\030\016 \001(\t\022\027\n\017kube_system_uid\030"
+        + "\017 \001(\t\032-\n\013LabelsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005val"
+        + "ue\030\002 \001(\t:\0028\001\"\257\002\n\010PodEvent\022\031\n\021cloud_provi"
+        + "der_id\030\002 \001(\t\022\017\n\007pod_uid\030\003 \001(\t\022D\n\004type\030\004 "
+        + "\001(\01626.io.harness.perpetualtask.k8s.watch"
+        + ".PodEvent.EventType\022-\n\ttimestamp\030\005 \001(\0132\032"
+        + ".google.protobuf.Timestamp\022\022\n\ncluster_id"
+        + "\030\006 \001(\t\022\027\n\017kube_system_uid\030\007 \001(\t\"U\n\tEvent"
+        + "Type\022\026\n\022EVENT_TYPE_INVALID\020\000\022\030\n\024EVENT_TY"
+        + "PE_SCHEDULED\020\001\022\026\n\022EVENT_TYPE_DELETED\020\002\"\246"
+        + "\004\n\010NodeInfo\022\031\n\021cloud_provider_id\030\002 \001(\t\022\020"
+        + "\n\010node_uid\030\003 \001(\t\022\021\n\tnode_name\030\004 \001(\t\0221\n\rc"
+        + "reation_time\030\005 \001(\0132\032.google.protobuf.Tim"
+        + "estamp\022H\n\006labels\030\006 \003(\01328.io.harness.perp"
+        + "etualtask.k8s.watch.NodeInfo.LabelsEntry"
+        + "\022c\n\024allocatable_resource\030\007 \003(\0132E.io.harn"
+        + "ess.perpetualtask.k8s.watch.NodeInfo.All"
+        + "ocatableResourceEntry\022\022\n\ncluster_id\030\010 \001("
+        + "\t\022\024\n\014cluster_name\030\t \001(\t\022\023\n\013provider_id\030\n"
+        + " \001(\t\022\027\n\017kube_system_uid\030\013 \001(\t\032-\n\013LabelsE"
+        + "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032q\n\030"
+        + "AllocatableResourceEntry\022\013\n\003key\030\001 \001(\t\022D\n"
+        + "\005value\030\002 \001(\01325.io.harness.perpetualtask."
+        + "k8s.watch.Resource.Quantity:\0028\001\"\276\002\n\tNode"
+        + "Event\022\031\n\021cloud_provider_id\030\002 \001(\t\022\020\n\010node"
+        + "_uid\030\003 \001(\t\022E\n\004type\030\004 \001(\01627.io.harness.pe"
+        + "rpetualtask.k8s.watch.NodeEvent.EventTyp"
+        + "e\022-\n\ttimestamp\030\005 \001(\0132\032.google.protobuf.T"
+        + "imestamp\022\021\n\tnode_name\030\006 \001(\t\022\022\n\ncluster_i"
+        + "d\030\007 \001(\t\022\027\n\017kube_system_uid\030\010 \001(\t\"N\n\tEven"
+        + "tType\022\026\n\022EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_T"
+        + "YPE_START\020\001\022\023\n\017EVENT_TYPE_STOP\020\002\"\344\001\n\023K8S"
+        + "ClusterSyncEvent\022\022\n\ncluster_id\030\001 \001(\t\022\024\n\014"
+        + "cluster_name\030\002 \001(\t\022\031\n\021cloud_provider_id\030"
+        + "\003 \001(\t\022\027\n\017active_pod_uids\030\004 \003(\t\022\030\n\020active"
+        + "_node_uids\030\005 \003(\t\022<\n\030last_processed_times"
+        + "tamp\030\006 \001(\0132\032.google.protobuf.Timestamp\022\027"
+        + "\n\017kube_system_uid\030\007 \001(\t\"j\n\022K8sObjectRefe"
+        + "rence\022\014\n\004kind\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnam"
+        + "espace\030\003 \001(\t\022\013\n\003uid\030\004 \001(\t\022\030\n\020resource_ve"
+        + "rsion\030\005 \001(\t\"\373\001\n\017K8sClusterEvent\022\022\n\nclust"
+        + "er_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021clo"
+        + "ud_provider_id\030\003 \001(\t\022\016\n\006reason\030\004 \001(\t\022\017\n\007"
+        + "message\030\005 \001(\t\022\030\n\020source_component\030\006 \001(\t\022"
+        + "O\n\017involved_object\030\007 \001(\01326.io.harness.pe"
+        + "rpetualtask.k8s.watch.K8sObjectReference"
+        + "\022\027\n\017kube_system_uid\030\010 \001(\t\"\326\003\n\rK8sWatchEv"
+        + "ent\022\022\n\ncluster_id\030\001 \001(\t\022\024\n\014cluster_name\030"
+        + "\002 \001(\t\022\031\n\021cloud_provider_id\030\003 \001(\t\022D\n\004type"
+        + "\030\004 \001(\01626.io.harness.perpetualtask.k8s.wa"
+        + "tch.K8sWatchEvent.Type\022L\n\014resource_ref\030\005"
+        + " \001(\01326.io.harness.perpetualtask.k8s.watc"
+        + "h.K8sObjectReference\022\034\n\024old_resource_ver"
+        + "sion\030\006 \001(\t\022\031\n\021old_resource_yaml\030\007 \001(\t\022\034\n"
+        + "\024new_resource_version\030\010 \001(\t\022\031\n\021new_resou"
+        + "rce_yaml\030\t \001(\t\022\023\n\013description\030\n \001(\t\022\027\n\017k"
+        + "ube_system_uid\030\013 \001(\t\"L\n\004Type\022\020\n\014TYPE_INV"
+        + "ALID\020\000\022\016\n\nTYPE_ADDED\020\001\022\020\n\014TYPE_UPDATED\020\002"
+        + "\022\020\n\014TYPE_DELETED\020\003B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -269,6 +273,7 @@ public final class K8SMessages {
                 "Containers",
                 "ClusterId",
                 "ClusterName",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_PodInfo_LabelsEntry_descriptor =
         internal_static_io_harness_perpetualtask_k8s_watch_PodInfo_descriptor.getNestedTypes().get(0);
@@ -289,6 +294,7 @@ public final class K8SMessages {
                 "Type",
                 "Timestamp",
                 "ClusterId",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_descriptor = getDescriptor().getMessageTypes().get(5);
     internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_fieldAccessorTable =
@@ -304,6 +310,7 @@ public final class K8SMessages {
                 "ClusterId",
                 "ClusterName",
                 "ProviderId",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_LabelsEntry_descriptor =
         internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_descriptor.getNestedTypes().get(0);
@@ -334,6 +341,7 @@ public final class K8SMessages {
                 "Timestamp",
                 "NodeName",
                 "ClusterId",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_descriptor =
         getDescriptor().getMessageTypes().get(7);
@@ -347,6 +355,7 @@ public final class K8SMessages {
                 "ActivePodUids",
                 "ActiveNodeUids",
                 "LastProcessedTimestamp",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_K8sObjectReference_descriptor =
         getDescriptor().getMessageTypes().get(8);
@@ -373,6 +382,7 @@ public final class K8SMessages {
                 "Message",
                 "SourceComponent",
                 "InvolvedObject",
+                "KubeSystemUid",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_descriptor =
         getDescriptor().getMessageTypes().get(10);
@@ -390,6 +400,7 @@ public final class K8SMessages {
                 "NewResourceVersion",
                 "NewResourceYaml",
                 "Description",
+                "KubeSystemUid",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }

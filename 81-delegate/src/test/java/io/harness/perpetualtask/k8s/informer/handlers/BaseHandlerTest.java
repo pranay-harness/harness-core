@@ -35,11 +35,13 @@ public class BaseHandlerTest extends CategoryTest {
                          .clusterId("test-cluster-id")
                          .cloudProviderId("test-cloud-provider-id")
                          .clusterName("test-cluster-name")
+                         .kubeSystemUid("test-cluster-uid")
                          .build();
     expectedClusterDetailsProto = K8sWatchEvent.newBuilder()
                                       .setClusterId("test-cluster-id")
                                       .setCloudProviderId("test-cloud-provider-id")
                                       .setClusterName("test-cluster-name")
+                                      .setKubeSystemUid("test-cluster-uid")
                                       .build();
   }
 

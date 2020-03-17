@@ -70,16 +70,19 @@ public class K8sWatchServiceDelegate {
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(params.getK8SClusterConfig().toByteArray());
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
+      String kubeSystemUid = getKubeSystemUid(client);
+      ClusterDetails clusterDetails = ClusterDetails.builder()
+                                          .cloudProviderId(params.getCloudProviderId())
+                                          .clusterId(params.getClusterId())
+                                          .clusterName(params.getClusterName())
+                                          .kubeSystemUid(kubeSystemUid)
+                                          .build();
       ApiClient apiClient = apiClientFactory.getClient(k8sClusterConfig);
-      Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, params);
-      Watcher<Node> nodeWatcher = watcherFactory.createNodeWatcher(client, params);
-      Watcher<Event> eventWatcher = watcherFactory.createClusterEventWatcher(client, params);
-      SharedInformerFactory sharedInformerFactory = sharedInformerFactoryFactory.createSharedInformerFactory(apiClient,
-          ClusterDetails.builder()
-              .cloudProviderId(params.getCloudProviderId())
-              .clusterId(params.getClusterId())
-              .clusterName(params.getClusterName())
-              .build());
+      Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, clusterDetails);
+      Watcher<Node> nodeWatcher = watcherFactory.createNodeWatcher(client, clusterDetails);
+      Watcher<Event> eventWatcher = watcherFactory.createClusterEventWatcher(client, clusterDetails);
+      SharedInformerFactory sharedInformerFactory =
+          sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
       sharedInformerFactory.startAllRegisteredInformers();
       return WatcherGroup.builder()
           .nodeWatcher(nodeWatcher)
@@ -90,6 +93,15 @@ public class K8sWatchServiceDelegate {
     });
 
     return watchId;
+  }
+
+  public static String getKubeSystemUid(KubernetesClient client) {
+    try {
+      return client.namespaces().withName("kube-system").get().getMetadata().getUid();
+    } catch (Exception e) {
+      logger.warn("Error getting kube-system namespace uid", e);
+      return "kube-system";
+    }
   }
 
   public void delete(String watchId) {

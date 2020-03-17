@@ -17,6 +17,7 @@ public class HandlersTest extends CategoryTest {
                                               .clusterId("cluster-id")
                                               .cloudProviderId("cloud-provider-id")
                                               .clusterName("cluster-name")
+                                              .kubeSystemUid("cluster-uid")
                                               .build();
   private EventPublisher eventPublisher = mock(EventPublisher.class);
 
