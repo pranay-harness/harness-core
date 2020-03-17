@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.eraro.ErrorCode;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.waiter.NotifyCallback;
@@ -46,6 +47,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Utils;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -98,8 +100,10 @@ public class GitCommandCallback implements NotifyCallback {
             logger.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
           }
-          // raise alert if GitConnectionErrorAlert is not already open (changeSetId will be null for webhook request,
-          // so putting outside if)
+          if (gitCommandType == DIFF) {
+            handleDiffCommandFailure(gitCommandExecutionResponse.getErrorCode(), accountId);
+          }
+          // raise alert if GitConnectionErrorAlert is not already open
           yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
               gitCommandExecutionResponse.getErrorMessage());
 
@@ -145,6 +149,7 @@ public class GitCommandCallback implements NotifyCallback {
           } catch (Exception e) {
             logger.error("error while processing diff request", e);
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+            handleDiffCommandFailure(null, accountId);
           }
 
         } else {
@@ -236,6 +241,7 @@ public class GitCommandCallback implements NotifyCallback {
     logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
         changeSetId, accountId, response);
     updateChangeSetFailureStatusSafely();
+    updateGitCommitFailureSafely();
   }
 
   protected void updateChangeSetFailureStatusSafely() {
@@ -244,7 +250,14 @@ public class GitCommandCallback implements NotifyCallback {
     }
   }
 
-  private List<String> obtainYamlGitConfigIds(String accountId, String branchName, String gitConnectorId) {
+  protected void updateGitCommitFailureSafely() {
+    if (DIFF == gitCommandType) {
+      handleDiffCommandFailure(null, accountId);
+    }
+  }
+
+  @VisibleForTesting
+  List<String> obtainYamlGitConfigIds(String accountId, String branchName, String gitConnectorId) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
         .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
@@ -265,5 +278,51 @@ public class GitCommandCallback implements NotifyCallback {
     }
 
     return context.build();
+  }
+
+  private void handleDiffCommandFailure(ErrorCode errorCode, String accountId) {
+    if (isNotEmpty(changeSetId)) {
+      final YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
+      if (yamlChangeSet == null) {
+        logger.error("no changeset found with id =[{}]", changeSetId);
+        return;
+      }
+      final GitWebhookRequestAttributes gitWebhookRequestAttributes = yamlChangeSet.getGitWebhookRequestAttributes();
+      if (isValid(gitWebhookRequestAttributes)) {
+        final String headCommitId = gitWebhookRequestAttributes.getHeadCommitId();
+        final List<String> yamlConfigIds = obtainYamlGitConfigIds(
+            accountId, gitWebhookRequestAttributes.getBranchName(), gitWebhookRequestAttributes.getGitConnectorId());
+
+        GitCommit.Status gitCommitStatus = GitCommit.Status.FAILED;
+        if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
+          gitCommitStatus = GitCommit.Status.SKIPPED;
+        }
+        saveFailedCommitFromGit(headCommitId, yamlConfigIds, accountId, gitCommitStatus);
+      }
+    }
+  }
+
+  private boolean isValid(GitWebhookRequestAttributes gitWebhookRequestAttributes) {
+    return gitWebhookRequestAttributes != null && isNotEmpty(gitWebhookRequestAttributes.getHeadCommitId())
+        && isNotEmpty(gitWebhookRequestAttributes.getBranchName())
+        && isNotEmpty(gitWebhookRequestAttributes.getGitConnectorId());
+  }
+  private void saveFailedCommitFromGit(
+      String commitId, List<String> yamlGitConfigIds, String accountId, GitCommit.Status gitCommitStatus) {
+    saveGitCommit(GitCommit.builder()
+                      .accountId(accountId)
+                      .yamlChangeSet(YamlChangeSet.builder()
+                                         .accountId(accountId)
+                                         .appId(GLOBAL_APP_ID)
+                                         .gitToHarness(true)
+                                         .status(Status.COMPLETED)
+                                         .gitFileChanges(null)
+                                         .build())
+                      .yamlGitConfigIds(yamlGitConfigIds)
+                      .status(gitCommitStatus)
+                      .commitId(commitId)
+                      .gitCommandResult(null)
+                      .fileProcessingSummary(null)
+                      .build());
   }
 }

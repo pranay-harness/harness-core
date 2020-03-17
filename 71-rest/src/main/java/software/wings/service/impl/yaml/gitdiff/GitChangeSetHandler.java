@@ -9,7 +9,7 @@ import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
-import static software.wings.beans.GitCommit.Status.FAILED;
+import static software.wings.beans.GitCommit.Status.COMPLETED_WITH_ERRORS;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
@@ -87,7 +87,7 @@ public class GitChangeSetHandler {
       removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, ex.getFailedYamlFileChangeMap().keySet(), accountId);
       // Add to gitCommits a failed commit.
       final int mapSize = failedYamlFileChangeMap.keySet().size();
-      saveProcessedCommit(gitDiffResult, accountId, FAILED,
+      saveProcessedCommit(gitDiffResult, accountId, COMPLETED_WITH_ERRORS,
           GitFileProcessingSummary.builder()
               .totalCount(fileCountInGitDiff)
               .failureCount(mapSize)

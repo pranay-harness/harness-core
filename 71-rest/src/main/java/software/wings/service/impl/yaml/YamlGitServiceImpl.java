@@ -160,7 +160,14 @@ public class YamlGitServiceImpl implements YamlGitService {
    * The constant SETUP_ENTITY_ID.
    */
   public static final String SETUP_ENTITY_ID = "setup";
-  public static final List<Status> GIT_COMMIT_PROCESSED_STATUS = ImmutableList.of(Status.COMPLETED, Status.FAILED);
+  public static final List<GitCommit.Status> GIT_COMMIT_PROCESSED_STATUS =
+      ImmutableList.of(GitCommit.Status.COMPLETED, GitCommit.Status.COMPLETED_WITH_ERRORS);
+
+  public static final List<GitCommit.Status> GIT_COMMIT_ALL_STATUS_LIST = ImmutableList.<GitCommit.Status>builder()
+                                                                              .addAll(GIT_COMMIT_PROCESSED_STATUS)
+                                                                              .add(GitCommit.Status.FAILED)
+                                                                              .add(GitCommit.Status.SKIPPED)
+                                                                              .build();
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -807,6 +814,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                     secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                                                     GitDiffRequest.builder()
                                                         .lastProcessedCommitId(processedCommit)
+                                                        .endCommitId(getEndCommitId(headCommitId, accountId))
                                                         .yamlGitConfig(yamlGitConfig)
                                                         .build(),
                                                     true /*excludeFilesOutsideSetupFolder */})
@@ -830,6 +838,12 @@ public class YamlGitServiceImpl implements YamlGitService {
       yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), Status.SKIPPED);
     }
   }
+  private String getEndCommitId(String headCommitId, String accountId) {
+    if (isEmpty(headCommitId)) {
+      logger.warn("headCommitId cannot be deciphered from payload. Using HEAD for taking diff");
+    }
+    return isNotEmpty(headCommitId) ? headCommitId : null;
+  }
   private YamlProcessingLogContext getYamlProcessingLogContext(
       String gitConnectorId, String branch, String webhookToken, String yamlChangeSetId) {
     return new YamlProcessingLogContext(NullSafeImmutableMap.<String, String>builder()
@@ -843,12 +857,13 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit) {
-    GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                              .filter(GitCommitKeys.accountId, accountId)
-                              .filter(GitCommitKeys.commitId, headCommit)
-                              .field(GitCommitKeys.status)
-                              .in(getProcessedGitCommitStatusList(accountId))
-                              .get();
+    final Query<GitCommit> query = wingsPersistence.createQuery(GitCommit.class)
+                                       .filter(GitCommitKeys.accountId, accountId)
+                                       .filter(GitCommitKeys.commitId, headCommit)
+                                       .field(GitCommitKeys.status)
+                                       .in(GIT_COMMIT_ALL_STATUS_LIST);
+
+    final GitCommit gitCommit = query.get();
     if (gitCommit != null) {
       logger.info(GIT_YAML_LOG_PREFIX + "Commit [id:{}] already processed [status:{}] on [date:{}] mode:[{}]",
           gitCommit.getCommitId(), gitCommit.getStatus(), gitCommit.getLastUpdatedAt(),
@@ -857,7 +872,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
     return false;
   }
-  private List<Status> getProcessedGitCommitStatusList(String accountId) {
+  private List<GitCommit.Status> getProcessedGitCommitStatusList(String accountId) {
     return GIT_COMMIT_PROCESSED_STATUS;
   }
 
@@ -896,6 +911,9 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String errorMessage) {
+    if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
+      return;
+    }
     if (ErrorCode.GIT_CONNECTION_ERROR == errorCode) {
       alertService.openAlert(
           accountId, appId, AlertType.GitConnectionError, getGitConnectionErrorAlert(accountId, errorMessage));

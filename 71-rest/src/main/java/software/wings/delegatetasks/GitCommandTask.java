@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -147,14 +148,23 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
       GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
                                                        .gitCommandStatus(GitCommandStatus.FAILURE)
-                                                       .errorMessage(ex.getMessage());
+                                                       .errorMessage(ex.getMessage())
+                                                       .errorCode(getErrorCode(ex));
 
-      if (ex instanceof WingsException
-          && ((WingsException) ex).getParams().containsKey(ErrorCode.GIT_CONNECTION_ERROR.name())) {
-        builder.errorCode(ErrorCode.GIT_CONNECTION_ERROR);
-      }
       return builder.build();
     }
+  }
+
+  private ErrorCode getErrorCode(Exception ex) {
+    if (ex instanceof WingsException) {
+      final WingsException we = (WingsException) ex;
+      if (we.getParams().containsKey(ErrorCode.GIT_CONNECTION_ERROR.name())) {
+        return ErrorCode.GIT_CONNECTION_ERROR;
+      } else if (GIT_DIFF_COMMIT_NOT_IN_ORDER == we.getCode()) {
+        return GIT_DIFF_COMMIT_NOT_IN_ORDER;
+      }
+    }
+    return null;
   }
 
   private GitCommandExecutionResponse getFilesFromGitUsingPath(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {

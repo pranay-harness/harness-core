@@ -14,14 +14,16 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 public class GitDiffRequest extends GitCommandRequest {
   private String lastProcessedCommitId;
   private YamlGitConfig yamlGitConfig;
+  private String endCommitId;
 
   public GitDiffRequest() {
     super(GitCommandType.DIFF);
   }
 
-  public GitDiffRequest(String lastProcessedCommitId, YamlGitConfig yamlGitConfig) {
+  public GitDiffRequest(String lastProcessedCommitId, YamlGitConfig yamlGitConfig, String endCommitId) {
     super(GitCommandType.DIFF);
     this.lastProcessedCommitId = lastProcessedCommitId;
     this.yamlGitConfig = yamlGitConfig;
+    this.endCommitId = endCommitId;
   }
 }

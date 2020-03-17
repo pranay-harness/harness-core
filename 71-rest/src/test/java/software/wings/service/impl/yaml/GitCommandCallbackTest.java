@@ -18,6 +18,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
@@ -32,6 +33,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -44,6 +47,8 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
+import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -62,6 +67,7 @@ public class GitCommandCallbackTest extends CategoryTest {
       new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH);
 
   @InjectMocks
+  @Spy
   private GitCommandCallback diffCommandCallback =
       new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF);
 
@@ -212,5 +218,36 @@ public class GitCommandCallbackTest extends CategoryTest {
             .get();
     assertThat(gitFileChange3.getFilePath().equals(gitSyncError1.getYamlFilePath())).isTrue();
     assertThat(gitFileChange3.getFileContent().equals(gitSyncError1.getYamlContent())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void testCallbackForGitDiffFailure() throws Exception {
+    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                          .errorCode(ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER)
+                                          .gitCommandStatus(GitCommandStatus.FAILURE)
+                                          .errorMessage("cant connect ot git")
+                                          .build();
+
+    doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
+    final GitWebhookRequestAttributes webhookRequestAttributes = GitWebhookRequestAttributes.builder()
+                                                                     .headCommitId("head")
+                                                                     .branchName("master")
+                                                                     .gitConnectorId("gitconnector")
+                                                                     .build();
+    final YamlChangeSet yamlChangeSet =
+        YamlChangeSet.builder().gitWebhookRequestAttributes(webhookRequestAttributes).build();
+
+    doReturn(yamlChangeSet).when(yamlChangeSetService).get(ACCOUNT_ID, CHANGESET_ID);
+    doReturn(ImmutableList.of("yamlgitconfig1", "yamlgitconfig2"))
+        .when(diffCommandCallback)
+        .obtainYamlGitConfigIds(ACCOUNT_ID, "master", "gitconnector");
+    doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
+    Map<String, ResponseData> map = new HashMap<>();
+    map.put("key", notifyResponseData);
+
+    diffCommandCallback.notify(map);
+    verify(yamlGitService, times(1)).saveCommit(any(GitCommit.class));
   }
 }
