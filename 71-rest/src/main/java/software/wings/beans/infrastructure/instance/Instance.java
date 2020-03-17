@@ -147,5 +147,6 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     public static final String appId = "appId";
     public static final String uuid = "uuid";
     public static final String createdAt = "createdAt";
+    public static final String isDeleted = "isDeleted";
   }
 }
