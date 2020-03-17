@@ -509,7 +509,8 @@ public class SunburstChartStatsDataFetcher
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregateFunction, QLData qlData, Integer limit) {
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sort, QLData qlData,
+      Integer limit) {
     QLSunburstChartData data = (QLSunburstChartData) qlData;
     ValueComparator valueComparator = new ValueComparator();
     List<QLSunburstChartDataPoint> limitProcessedDataPoints = new ArrayList<>();

@@ -34,6 +34,7 @@ public class BillingStatsDefaultKeys {
   public static final Double UNALLOCATEDCOST = 0.0;
   public static final String TOKEN = ":";
   public static final String LABEL = "Total";
+  public static final String OTHERS = "Others";
   public static final String DEFAULT_LABEL = "Label not present";
   public static final String DEFAULT_TAG = "Tag not present";
 }

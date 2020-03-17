@@ -36,7 +36,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -353,6 +355,74 @@ public class BillingStatsTimeSeriesDataFetcher
       }
     }
     return filterMap;
+  }
+
+  @Override
+  public QLData postFetch(String accountId, List<QLCCMGroupBy> groupBy,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
+      Integer limit) {
+    qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit);
+    Map<String, Double> aggregatedData = new HashMap<>();
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) qlData;
+    data.getData().forEach(dataPoint -> {
+      for (QLBillingDataPoint entry : dataPoint.getValues()) {
+        String key = entry.getKey().getId();
+        if (aggregatedData.containsKey(key)) {
+          aggregatedData.put(key, entry.getValue().doubleValue() + aggregatedData.get(key));
+        } else {
+          aggregatedData.put(key, entry.getValue().doubleValue());
+        }
+      }
+    });
+    List<String> selectedIdsAfterLimit = getElementIdsAfterLimit(aggregatedData, limit);
+
+    return QLBillingStackedTimeSeriesData.builder()
+        .data(getDataAfterLimit(data, selectedIdsAfterLimit))
+        .cpuIdleCost(data.getCpuIdleCost())
+        .memoryIdleCost(data.getMemoryIdleCost())
+        .cpuUtilMetrics(data.getCpuUtilMetrics())
+        .memoryUtilMetrics(data.getMemoryUtilMetrics())
+        .build();
+  }
+
+  private List<QLBillingStackedTimeSeriesDataPoint> getDataAfterLimit(
+      QLBillingStackedTimeSeriesData data, List<String> selectedIdsAfterLimit) {
+    List<QLBillingStackedTimeSeriesDataPoint> limitProcessedData = new ArrayList<>();
+    data.getData().forEach(dataPoint -> {
+      List<QLBillingDataPoint> limitProcessedValues = new ArrayList<>();
+      QLBillingDataPoint others =
+          QLBillingDataPoint.builder()
+              .key(
+                  QLReference.builder().id(BillingStatsDefaultKeys.OTHERS).name(BillingStatsDefaultKeys.OTHERS).build())
+              .value(0)
+              .build();
+      for (QLBillingDataPoint entry : dataPoint.getValues()) {
+        String key = entry.getKey().getId();
+        if (selectedIdsAfterLimit.contains(key)) {
+          limitProcessedValues.add(entry);
+        } else {
+          others.setValue(others.getValue().doubleValue() + entry.getValue().doubleValue());
+        }
+      }
+
+      if (others.getValue().doubleValue() > 0) {
+        others.setValue(billingDataHelper.getRoundedDoubleValue(others.getValue().doubleValue()));
+        limitProcessedValues.add(others);
+      }
+
+      limitProcessedData.add(
+          QLBillingStackedTimeSeriesDataPoint.builder().time(dataPoint.getTime()).values(limitProcessedValues).build());
+    });
+    return limitProcessedData;
+  }
+
+  private List<String> getElementIdsAfterLimit(Map<String, Double> aggregatedData, int limit) {
+    List<Map.Entry<String, Double>> list = new ArrayList<>(aggregatedData.entrySet());
+    list.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+    list = list.stream().limit(limit).collect(Collectors.toList());
+    List<String> topNElementIds = new ArrayList<>();
+    list.forEach(entry -> topNElementIds.add(entry.getKey()));
+    return topNElementIds;
   }
 
   @Override
