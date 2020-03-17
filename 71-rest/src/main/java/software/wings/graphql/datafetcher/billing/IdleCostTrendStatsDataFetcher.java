@@ -68,12 +68,20 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   protected QLIdleCostTrendStats getData(
       @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     QLIdleCostData idleCostData = getIdleCostData(accountId, aggregateFunction, filters);
+    BigDecimal unallocatedCost = getUnallocatedCostData(accountId, aggregateFunction, filters).getUnallocatedCost();
+    if (isUnallocatedCostPresentInIdleCost(filters)) {
+      idleCostData.setIdleCost(
+          BigDecimal.valueOf(idleCostData.getIdleCost().doubleValue() - unallocatedCost.doubleValue()));
+      if (idleCostData.getIdleCost().doubleValue() < 0) {
+        idleCostData.setIdleCost(BigDecimal.ZERO);
+        logger.info("Idle cost updated to 0.0 as (idleCost - unallocatedCost) < 0 in IdleCostTrendStats");
+      }
+    }
     return QLIdleCostTrendStats.builder()
         .totalIdleCost(getTotalIdleCostStats(idleCostData, filters))
         .cpuIdleCost(getCpuIdleCostStats(idleCostData))
         .memoryIdleCost(getMemoryIdleCostStats(idleCostData))
-        .unallocatedCost(getUnallocatedCostStats(
-            getUnallocatedCostData(accountId, aggregateFunction, filters).getUnallocatedCost(), idleCostData))
+        .unallocatedCost(getUnallocatedCostStats(unallocatedCost, idleCostData))
         .build();
   }
 
@@ -274,6 +282,20 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
 
   private String getTotalIdleCostFormattedDate(Instant instant) {
     return billingDataHelper.getFormattedDate(instant, TOTAL_IDLE_COST_DATE_PATTERN);
+  }
+
+  private boolean isUnallocatedCostPresentInIdleCost(List<QLBillingDataFilter> filters) {
+    boolean isClusterFilterPresent = false;
+    boolean isWorkloadNameFilterPresent = false;
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getCluster() != null) {
+        isClusterFilterPresent = true;
+      }
+      if (filter.getWorkloadName() != null) {
+        isWorkloadNameFilterPresent = true;
+      }
+    }
+    return isClusterFilterPresent && !isWorkloadNameFilterPresent;
   }
 
   @Override

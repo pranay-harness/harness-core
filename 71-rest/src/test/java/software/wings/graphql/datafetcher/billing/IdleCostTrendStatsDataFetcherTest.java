@@ -51,6 +51,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
+  @Mock ResultSet resultSetForUnallocatedCost;
 
   private final BigDecimal TOTAL_COST = new BigDecimal("100.0");
   private final BigDecimal IDLE_COST = new BigDecimal("50.0");
@@ -60,6 +61,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private final BigDecimal AVG_MEMORY_UTILIZATION = new BigDecimal("0.4");
   private final BigDecimal CPU_BILLING_AMOUNT = new BigDecimal("20.0");
   private final BigDecimal MEM_BILLING_AMOUNT = new BigDecimal("30.0");
+  private final String WORKLOAD_NAME = "WORKLOAD_NAME";
   private Instant END_TIME = Instant.ofEpochMilli(1571509800000l);
   private Instant START_TIME = Instant.ofEpochMilli(1570645800000l);
   final int[] count = {0};
@@ -121,10 +123,10 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
-    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$50.0");
+    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$0.0");
     assertThat(data.getTotalIdleCost().getStatsLabel())
         .isEqualTo("Total Idle Cost of 09 October, 2019 - 19 October, 2019");
-    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("50.0% of total cost $100.0");
+    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("0.0% of total cost $100.0");
     assertThat(data.getCpuIdleCost().getStatsValue()).isEqualTo("-");
     assertThat(data.getCpuIdleCost().getStatsLabel()).isEqualTo("CPU idle Cost");
     assertThat(data.getCpuIdleCost().getStatsDescription()).isEqualTo("-");
@@ -140,6 +142,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCCMAggregationFunction> aggregationFunction =
         Arrays.asList(makeCpuIdleCostAggregation(), makeAvgCpuUtilizationAggregation());
     List<QLBillingDataFilter> filters = createFilter();
+    filters.add(makeWorkloadNameFilter(new String[] {WORKLOAD_NAME}));
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
@@ -162,6 +165,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCCMAggregationFunction> aggregationFunction =
         Arrays.asList(makeMemoryIdleCostAggregation(), makeAvgMemoryUtilizationAggregation());
     List<QLBillingDataFilter> filters = createFilter();
+    filters.add(makeWorkloadNameFilter(new String[] {WORKLOAD_NAME}));
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
@@ -188,10 +192,10 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
-    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$50.0");
+    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$0.0");
     assertThat(data.getTotalIdleCost().getStatsLabel())
         .isEqualTo("Total Idle Cost of 09 October, 2019 - 19 October, 2019");
-    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("50.0% of total cost $100.0");
+    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("0.0% of total cost $100.0");
     assertThat(data.getCpuIdleCost().getStatsValue()).isEqualTo("$20.0");
     assertThat(data.getCpuIdleCost().getStatsLabel()).isEqualTo("CPU idle Cost");
     assertThat(data.getCpuIdleCost().getStatsDescription()).isEqualTo("60.0% avg. utilization");
@@ -286,6 +290,11 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
   }
 
+  private QLBillingDataFilter makeWorkloadNameFilter(String[] values) {
+    QLIdFilter workloadNameFilter = QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(values).build();
+    return QLBillingDataFilter.builder().workloadName(workloadNameFilter).build();
+  }
+
   public QLBillingDataFilter startTimeFilter(Instant instant) {
     QLTimeFilter timeFilter =
         QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(instant.toEpochMilli()).build();
@@ -304,7 +313,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     resultSet = mock(ResultSet.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
-    when(statement.executeQuery(anyString())).thenReturn(resultSet);
+    when(statement.executeQuery(anyString())).thenReturn(resetCountAndReturnResultSet());
 
     when(resultSet.getBigDecimal("COST")).thenReturn(TOTAL_COST);
     when(resultSet.getBigDecimal("IDLECOST")).thenReturn(IDLE_COST);
@@ -329,7 +338,13 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
         count[0]++;
         return true;
       }
+      count[0] = 0;
       return false;
     });
+  }
+
+  private ResultSet resetCountAndReturnResultSet() {
+    count[0] = 0;
+    return resultSet;
   }
 }

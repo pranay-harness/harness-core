@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.billing;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Value
+@Data
 @Builder
 public class QLIdleCostData {
   private BigDecimal totalCost;
