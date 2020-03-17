@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
@@ -12,14 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
@@ -32,18 +26,7 @@ import java.util.Set;
 public class DatadogLogState extends AbstractLogAnalysisState {
   public static final String HOST_NAME_SEPARATOR = " OR ";
 
-  @Attributes(required = true, title = "Datadog Log Server") protected String analysisServerConfigId;
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
-  @Attributes(required = true, title = "Algorithm Sensitivity")
-  @DefaultValue("MEDIUM")
-  public AnalysisTolerance getAnalysisTolerance() {
-    if (isBlank(tolerance)) {
-      return AnalysisTolerance.LOW;
-    }
-    return AnalysisTolerance.valueOf(tolerance);
-  }
+  protected String analysisServerConfigId;
 
   @Override
   public Logger getLogger() {
@@ -85,27 +68,6 @@ public class DatadogLogState extends AbstractLogAnalysisState {
   @Override
   public void setQuery(String query) {
     this.query = query;
-  }
-
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  @Override
-  public String getTimeDuration() {
-    if (isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  @Override
-  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
-  @Attributes(required = true, title = "Baseline for Risk Analysis")
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
   public void setHostnameField(String hostnameField) {
@@ -154,11 +116,13 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     responseMappers.put("logMessage",
         CustomLogVerificationState.ResponseMapper.builder().fieldName("logMessage").jsonPath(pathList2).build());
 
-    if (!is24x7) {
-      List<String> pathList3 = Collections.singletonList("logs[*].content.tags[*]." + hostnameField);
-      responseMappers.put(
-          "host", CustomLogVerificationState.ResponseMapper.builder().fieldName("host").jsonPath(pathList3).build());
-    }
+    List<String> pathList3 = Collections.singletonList("logs[*].content.tags.[*]");
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("host")
+            .regexs(Collections.singletonList("((?<=" + hostnameField + ":)(.*))"))
+            .jsonPath(pathList3)
+            .build());
 
     String eventsUrl = datadogConfig.getUrl() + DatadogConfig.LOG_API_PATH_SUFFIX;
     logDefinition.put(replaceDotWithUnicode(eventsUrl), responseMappers);

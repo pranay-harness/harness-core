@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
+import software.wings.verification.datadog.DatadogLogCVConfiguration.DatadogLogCVConfigurationYaml;
 import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigurationYaml;
 import software.wings.verification.log.CustomLogCVServiceConfiguration.CustomLogsCVConfigurationYaml;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
@@ -23,8 +24,10 @@ public class LogsCVConfigurationYamlHandler
     LogsCVConfigurationYaml yaml;
     switch (bean.getStateType()) {
       case SUMO:
-      case DATA_DOG_LOG:
         yaml = new LogsCVConfigurationYaml();
+        break;
+      case DATA_DOG_LOG:
+        yaml = new DatadogLogCVConfigurationYaml();
         break;
       case ELK:
         yaml = new ElkCVConfigurationYaml();

@@ -70,6 +70,7 @@ import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogLogCVConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.instana.InstanaCVConfiguration;
 import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationKeys;
@@ -192,8 +193,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
       case SUMO:
-      case DATA_DOG_LOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
+        break;
+      case DATA_DOG_LOG:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DatadogLogCVConfiguration.class);
         break;
 
       case ELK:
@@ -437,8 +440,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
       case SUMO:
-      case DATA_DOG_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
+        break;
+      case DATA_DOG_LOG:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogLogCVConfiguration.class);
         break;
       case STACK_DRIVER_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
@@ -732,12 +737,19 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             stackDriverMetricCVConfiguration.getMetricDefinitions());
         break;
       case SUMO:
-      case DATA_DOG_LOG:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         updateOperations.set("query", logsCVConfiguration.getQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
         resetBaselineIfNecessary(logsCVConfiguration, (LogsCVConfiguration) savedConfiguration);
+        break;
+      case DATA_DOG_LOG:
+        DatadogLogCVConfiguration datadogLogCVConfiguration = (DatadogLogCVConfiguration) cvConfiguration;
+        updateOperations.set("query", datadogLogCVConfiguration.getQuery())
+            .set("baselineStartMinute", datadogLogCVConfiguration.getBaselineStartMinute())
+            .set("baselineEndMinute", datadogLogCVConfiguration.getBaselineEndMinute())
+            .set("hostnameField", datadogLogCVConfiguration.getHostnameField());
+        resetBaselineIfNecessary(datadogLogCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;

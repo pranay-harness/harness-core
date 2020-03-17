@@ -246,6 +246,7 @@ import software.wings.verification.CVConfigurationYamlHandler;
 import software.wings.verification.CloudWatchCVConfigurationYamlHandler;
 import software.wings.verification.CustomLogCVConfigurationYamlHandler;
 import software.wings.verification.DatadogCvConfigurationYamlHandler;
+import software.wings.verification.DatadogLogCVConfigurationYamlHandler;
 import software.wings.verification.DynatraceCVConfigurationYamlHandler;
 import software.wings.verification.ElkCVConfigurationYamlHandler;
 import software.wings.verification.InstanaCVConfigurationYamlHandler;
@@ -425,7 +426,8 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.BUG_SNAG.name()).to(BugsnagCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.PROMETHEUS.name()).to(PrometheusCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
-    cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name()).to(LogsCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name())
+        .to(DatadogLogCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.APM_VERIFICATION.name()).to(APMCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER_LOG.name())
         .to(StackdriverCVConfigurationYamlHandler.class);

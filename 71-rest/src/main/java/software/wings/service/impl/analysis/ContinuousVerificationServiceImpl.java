@@ -179,6 +179,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogLogCVConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
@@ -2192,6 +2193,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             dataCollectionInfo.getStateExecutionId(), config.getStateType());
 
       case DATA_DOG_LOG:
+        DatadogLogCVConfiguration datadogLogCVConfiguration = (DatadogLogCVConfiguration) config;
         DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
         final CustomLogDataCollectionInfo datadogLogCollectionInfo =
             CustomLogDataCollectionInfo.builder()
@@ -2213,7 +2215,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .endTime(endTime)
                 .accountId(config.getAccountId())
                 .cvConfidId(config.getUuid())
-                .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, null, true))
+                .responseDefinition(DatadogLogState.constructLogDefinitions(
+                    datadogConfig, datadogLogCVConfiguration.getHostnameField(), true))
                 .build();
         return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
             waitId, new Object[] {datadogLogCollectionInfo}, config.getEnvId(), config.getUuid(),
@@ -2376,8 +2379,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case SUMO:
       case DATA_DOG_LOG:
         LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
-        startTime = logDataCollectionInfo.getStartTime();
-        endTime = logDataCollectionInfo.getEndTime();
+        startTime = logDataCollectionInfo.getStartMinute();
+        endTime = startTime + logDataCollectionInfo.getCollectionTime();
         break;
       case STACK_DRIVER_LOG:
         // unfortunately we have inconsistency in the way we set startTime and endTime between providers for per minute

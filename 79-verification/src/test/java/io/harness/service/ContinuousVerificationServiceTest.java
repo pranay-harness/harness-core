@@ -136,6 +136,7 @@ import software.wings.sm.states.DatadogLogState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogLogCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -241,7 +242,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
 
-    LogsCVConfiguration datadogCVConfiguration = new LogsCVConfiguration();
+    LogsCVConfiguration datadogCVConfiguration = new DatadogLogCVConfiguration();
     datadogCVConfiguration.setName(generateUuid());
     datadogCVConfiguration.setAccountId(accountId);
     datadogCVConfiguration.setAppId(appId);

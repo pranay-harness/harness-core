@@ -607,9 +607,9 @@ public class YamlHandlerFactory {
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
         "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner",
-        "DeploymentTrigger", "Template");
+        "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
+        "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
+        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "DeploymentTrigger", "Template");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -626,8 +626,8 @@ public class YamlHandlerFactory {
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "ServiceCommand", "ManifestFile",
         "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner",
-        "DeploymentTrigger", "Template");
+        "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
+        "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
+        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "DeploymentTrigger", "Template");
   }
 }

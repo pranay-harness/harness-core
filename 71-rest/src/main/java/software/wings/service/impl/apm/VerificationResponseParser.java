@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -138,12 +138,17 @@ public class VerificationResponseParser {
     if (!iterator.hasNext()) {
       for (int i = 0; i < node.value.size(); ++i) {
         Object evaluatedBody = body;
-        if (!isEmpty(node.regex)) {
+        if (isNotEmpty(node.regex) && isNotEmpty(node.regex.get(i))) {
           for (String expr : node.regex.get(i)) {
-            evaluatedBody = regexFunctor.extract(expr, (String) evaluatedBody);
+            String extractedValue = regexFunctor.extract(expr, (String) evaluatedBody);
+            if (isNotEmpty(extractedValue)) {
+              evaluatedBody = extractedValue;
+              result.put(node.value.get(i), evaluatedBody);
+            }
           }
+        } else {
+          result.put(node.value.get(i), evaluatedBody);
         }
-        result.put(node.value.get(i), evaluatedBody);
       }
     } else {
       while (iterator.hasNext()) {
@@ -191,20 +196,7 @@ public class VerificationResponseParser {
         return array.get(Integer.parseInt(group));
       }
     } else {
-      try {
-        return ((JSONObject) jsonObject).get(field);
-      } catch (ClassCastException e) {
-        if (jsonObject instanceof String) {
-          String[] arr = ((String) jsonObject).split(":");
-          if (arr[0].equals(field)) {
-            return arr[1];
-          } else {
-            return null;
-          }
-        } else {
-          throw e;
-        }
-      }
+      return ((JSONObject) jsonObject).get(field);
     }
   }
 }
