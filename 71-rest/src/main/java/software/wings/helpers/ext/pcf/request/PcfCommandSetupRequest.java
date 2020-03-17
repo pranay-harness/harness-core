@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private String releaseNamePrefix;
   private String manifestYaml;
   private List<ArtifactFile> artifactFiles;
+  private ArtifactStreamAttributes artifactStreamAttributes;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
   private Map<String, String> serviceVariables;
@@ -38,8 +40,9 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   @Builder
   public PcfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, List<String> tempRouteMap,
-      List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles,
+      ArtifactStreamAttributes artifactStreamAttributes, List<String> tempRouteMap, List<String> routeMaps,
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation) {
@@ -48,6 +51,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;
+    this.artifactStreamAttributes = artifactStreamAttributes;
     this.tempRouteMap = tempRouteMap;
     this.routeMaps = routeMaps;
     this.serviceVariables = serviceVariables;

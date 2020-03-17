@@ -61,8 +61,6 @@ import static software.wings.utils.WingsTestConstants.URL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -223,7 +221,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
                                 .build();
   private Artifact artifact = anArtifact()
                                   .withArtifactSourceName("source")
-                                  .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "bn"))
+                                  .withMetadata(new HashMap<String, String>() {
+                                    { put(ArtifactMetadataKeys.buildNo, "bn"); }
+                                  })
                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
   private ArtifactStream artifactStream =
@@ -342,6 +342,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+
+    doReturn("artifact-name").when(pcfSetupState).artifactFileNameForSource(any(), any());
+    doReturn("artifact-path").when(pcfSetupState).artifactPathForSource(any(), any());
   }
 
   @Test

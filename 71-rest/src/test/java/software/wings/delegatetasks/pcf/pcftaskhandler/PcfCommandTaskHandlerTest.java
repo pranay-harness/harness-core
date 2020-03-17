@@ -43,6 +43,7 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
@@ -115,10 +116,13 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPerformSetup() throws Exception {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
+
     PcfCommandRequest pcfCommandRequest = PcfCommandSetupRequest.builder()
                                               .pcfCommandType(PcfCommandType.SETUP)
                                               .pcfConfig(getPcfConfig())
                                               .artifactFiles(Collections.EMPTY_LIST)
+                                              .artifactStreamAttributes(artifactStreamAttributes)
                                               .manifestYaml(MANIFEST_YAML)
                                               .organization(ORG)
                                               .space(SPACE)

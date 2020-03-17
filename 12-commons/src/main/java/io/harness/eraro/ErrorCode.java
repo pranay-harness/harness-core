@@ -400,6 +400,8 @@ public enum ErrorCode {
 
   GRAPHQL_ERROR,
 
+  FILE_CREATE_ERROR,
+
   ILLEGAL_STATE;
 
   private Status status = BAD_REQUEST;

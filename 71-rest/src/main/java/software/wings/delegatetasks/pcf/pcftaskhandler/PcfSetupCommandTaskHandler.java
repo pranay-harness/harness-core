@@ -77,6 +77,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) pcfCommandRequest;
     File artifactFile = null;
     File workingDirectory = null;
+
     try {
       // This path represents location where artifact will be downloaded, manifest file will be created and
       // config.json file will be generated with login details by cf cli, for current task.
@@ -143,9 +144,15 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       String newReleaseName =
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
 
-      // Download artifact on delegate from manager
-      artifactFile = pcfCommandTaskHelper.downloadArtifact(
-          pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
+      if (pcfCommandSetupRequest.getArtifactStreamAttributes().isMetadataOnly()) {
+        executionLogCallback.saveExecutionLog(
+            color("--------- artifact will be downloaded for only-meta feature", White));
+        artifactFile = pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory);
+      } else {
+        // Download artifact on delegate from manager
+        artifactFile = pcfCommandTaskHelper.downloadArtifact(
+            pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
+      }
 
       boolean varsYmlPresent = checkIfVarsFilePresent(pcfCommandSetupRequest);
       PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()

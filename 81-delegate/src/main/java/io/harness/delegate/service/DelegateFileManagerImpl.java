@@ -120,7 +120,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
     String artifactFileSize = metadata.get(ArtifactMetadataKeys.artifactFileSize);
-    if (Long.parseLong(artifactFileSize) > ARTIFACT_FILE_SIZE_LIMIT) {
+    if (null != artifactFileSize && Long.parseLong(artifactFileSize) > ARTIFACT_FILE_SIZE_LIMIT) {
       throw new InvalidRequestException("Artifact file size exceeds 4GB. Not downloading file.");
     }
     String buildNo = metadata.get(ArtifactMetadataKeys.buildNo);
