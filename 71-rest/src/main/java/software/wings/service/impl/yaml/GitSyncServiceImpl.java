@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.function.Function.identity;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -7,10 +9,13 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import graphql.VisibleForTesting;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
@@ -32,9 +37,11 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -177,6 +184,46 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req) {
     return wingsPersistence.query(GitSyncError.class, req);
+  }
+
+  @VisibleForTesting
+  Set<String> getCommitIdsOfErrors(String accountId, Integer limit, Integer offset) {
+    Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter("gitCommitId != ", "").filter("accountId", accountId);
+    Set<String> commitIds = new HashSet<>();
+    Integer offsetCount = 0;
+    try (HIterator<GitSyncError> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        if (offsetCount < offset) {
+          offsetCount++;
+          iterator.next();
+          continue;
+        }
+        if (commitIds.size() >= limit) {
+          break;
+        }
+        commitIds.add(iterator.next().getGitCommitId());
+      }
+    }
+    return commitIds;
+  }
+
+  @Override
+  public PageResponse<GitCommit> fetchGitToHarnessErrors(PageRequest<GitCommit> req, String accountId) {
+    // Creating a page request to get the commits
+
+    Set<String> commitIds =
+        getCommitIdsOfErrors(accountId, Integer.valueOf(req.getLimit()), Integer.valueOf(req.getOffset()));
+    // Getting the commit info
+    PageRequest<GitCommit> gitCommitRequest =
+        aPageRequest()
+            .withLimit(req.getLimit())
+            .withOffset(req.getOffset())
+            .addFilter(GitCommitKeys.accountId, EQ, accountId)
+            .addFilter(GitCommitKeys.commitId, SearchFilter.Operator.IN, commitIds.toArray())
+            .addOrder(GitCommitKeys.createdAt, SortOrder.OrderType.DESC)
+            .build();
+    return wingsPersistence.query(GitCommit.class, gitCommitRequest);
   }
 
   @Override
