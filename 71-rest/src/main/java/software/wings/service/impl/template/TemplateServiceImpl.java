@@ -455,6 +455,16 @@ public class TemplateServiceImpl implements TemplateService {
     // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
     // yamlPushService.
     if (templateDeleted) {
+      wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class)
+                                  .filter(VersionedTemplate.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                  .field(TEMPLATE_ID_KEY)
+                                  .in(templateUuids));
+
+      wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class)
+                                  .filter(TemplateVersion.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                  .field(TEMPLATE_UUID_KEY)
+                                  .in(templateUuids));
+
       if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, templateFolder.getAccountId())) {
         for (Template template : templates) {
           Future<?> future = yamlPushService.pushYamlChangeSet(
