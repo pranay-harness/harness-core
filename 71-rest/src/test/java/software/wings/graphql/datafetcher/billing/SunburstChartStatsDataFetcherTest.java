@@ -63,6 +63,9 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static String IDLE_COST_COLUMN = "idlecost";
   private static String TOTAL_COST_COLUMN = "billingamount";
 
+  private static Integer LIMIT = Integer.MAX_VALUE - 1;
+  private static Integer OFFSET = 0;
+
   List<QLCCMAggregationFunction> aggregateFunction;
   List<QLBillingSortCriteria> sort;
 
@@ -91,7 +94,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> sunburstChartStatsDataFetcher.fetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
+                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -128,7 +131,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         Arrays.asList(makeClusterEntityGroupBy(), makeNamespaceEntityGroupBy(), makeWorkloadNameEntityGroupBy(),
             makeCloudServiceNameEntityGroupBy(), makeTaskIdEntityGroupBy(), makeClusterTypeEntityGroupBy());
     QLSunburstChartData sunburstChartData = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort);
+        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, LIMIT, OFFSET);
     List<QLSunburstChartDataPoint> sunburstChartDataPoints = sunburstChartData.getData();
     assertThat(sunburstChartDataPoints.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartDataPoints.get(0).getParent()).isEqualTo(ROOT_PARENT);
@@ -146,7 +149,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeApplicationGroupBy(), makeEnvironmentGroupBy(), makeServiceGroupBy());
     QLSunburstChartData sunburstChartDataValue = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort);
+        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, LIMIT, OFFSET);
     List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartDataValue.getData();
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
