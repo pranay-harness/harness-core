@@ -550,7 +550,12 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
         ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getValues()).hasSize(0);
+    assertThat(data.getData().get(0).getValues()).hasSize(1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getName())
+        .isEqualTo(BillingStatsDefaultKeys.DEFAULT_TAG);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
+        .isEqualTo(BillingStatsDefaultKeys.DEFAULT_TAG);
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(95.0);
   }
 
   @Test

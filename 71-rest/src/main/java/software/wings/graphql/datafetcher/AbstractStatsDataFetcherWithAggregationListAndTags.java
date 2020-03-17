@@ -257,11 +257,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     dataPoints.removeIf(dataPoint -> {
       String entityId = dataPoint.getKey().getId();
       HarnessTagLink tagLink = entityIdTagLinkMap.get(entityId);
+      String tagName;
       if (tagLink == null) {
-        return true;
+        tagName = BillingStatsDefaultKeys.DEFAULT_TAG;
+      } else {
+        tagName = tagLink.getKey() + ":" + tagLink.getValue();
       }
-
-      String tagName = tagLink.getKey() + ":" + tagLink.getValue();
       QLBillingDataPoint existingDataPoint = tagNameDataPointMap.get(tagName);
       if (existingDataPoint != null) {
         existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
@@ -297,11 +298,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         return false;
       }
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
+      String label;
       if (workload == null) {
-        return true;
+        label = BillingStatsDefaultKeys.DEFAULT_LABEL;
+      } else {
+        label = labelName + ":" + workload.getLabels().get(labelName);
       }
-
-      String label = labelName + ":" + workload.getLabels().get(labelName);
       return updateDataPointsForLabelAggregation(
           dataPoint, labelNameDataPointMap, numberOfDataPoints, label, operation);
     });
@@ -373,11 +375,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     dataPoints.removeIf(dataPoint -> {
       String entityId = dataPoint.getId();
       HarnessTagLink tagLink = entityIdTagLinkMap.get(entityId);
+      String tagName;
       if (tagLink == null) {
-        return true;
+        tagName = BillingStatsDefaultKeys.DEFAULT_TAG;
+      } else {
+        tagName = tagLink.getKey() + ":" + tagLink.getValue();
       }
-
-      String tagName = tagLink.getKey() + ":" + tagLink.getValue();
       QLEntityTableData existingDataPoint = tagNameDataPointMap.get(tagName);
       if (existingDataPoint != null) {
         existingDataPoint.setTotalCost(
@@ -427,11 +430,13 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     dataPoints.removeIf(dataPoint -> {
       String entityId = dataPoint.getWorkloadName() + BillingStatsDefaultKeys.TOKEN + dataPoint.getNamespace();
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
+      String label;
       if (workload == null) {
-        return true;
+        label = BillingStatsDefaultKeys.DEFAULT_LABEL;
+      } else {
+        label = labelName + ":" + workload.getLabels().get(labelName);
       }
 
-      String label = labelName + ":" + workload.getLabels().get(labelName);
       QLEntityTableData existingDataPoint = labelNameDataPointMap.get(label);
       if (existingDataPoint != null) {
         existingDataPoint.setTotalCost(
