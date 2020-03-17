@@ -2,11 +2,17 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.EXISTS;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import com.google.inject.Inject;
 
@@ -19,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DeploymentPreference;
+import software.wings.beans.HarnessTagFilter;
 import software.wings.beans.Preference;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PreferenceService;
@@ -27,6 +34,7 @@ import software.wings.utils.WingsTestConstants;
 public class PreferenceServiceTest extends WingsBaseTest {
   private static final String TEST_USER_ID = "123";
   private static final String TEST_PREFERENCE_ID = "AEtq6ZDIQMyH2JInYeifWQ";
+  private static final String PREFERENCE_ID = "PREFERENCE_ID";
 
   private static Preference preference = new DeploymentPreference();
 
@@ -98,5 +106,52 @@ public class PreferenceServiceTest extends WingsBaseTest {
                    .filter(Mapper.ID_KEY, TEST_PREFERENCE_ID)
                    .get())
         .isNull();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldCRUDPreferenceWithTagFilterAndIncludeIndirectExecutions() {
+    // create preference
+    DeploymentPreference deploymentPreferenceWithTagFilters = new DeploymentPreference();
+    deploymentPreferenceWithTagFilters.setAccountId(ACCOUNT_ID);
+    deploymentPreferenceWithTagFilters.setUserId(USER_ID);
+    deploymentPreferenceWithTagFilters.setUuid(PREFERENCE_ID);
+    deploymentPreferenceWithTagFilters.setIncludeIndirectExecutions(true);
+    deploymentPreferenceWithTagFilters.setHarnessTagFilter(
+        HarnessTagFilter.builder()
+            .matchAll(true)
+            .conditions(asList(HarnessTagFilter.TagFilterCondition.builder().name("key").operator(EXISTS).build()))
+            .build());
+    preferenceService.save(ACCOUNT_ID, USER_ID, deploymentPreferenceWithTagFilters);
+    DeploymentPreference createdDeploymentPreference =
+        (DeploymentPreference) preferenceService.get(ACCOUNT_ID, USER_ID, PREFERENCE_ID);
+    assertThat(createdDeploymentPreference.isIncludeIndirectExecutions()).isTrue();
+    assertThat(createdDeploymentPreference.getHarnessTagFilter().isMatchAll()).isTrue();
+    assertThat(createdDeploymentPreference.getHarnessTagFilter().getConditions().get(0).getName()).isEqualTo("key");
+    assertThat(createdDeploymentPreference.getUiDisplayTagString()).isEqualTo("key");
+
+    // update preference
+    createdDeploymentPreference.setIncludeIndirectExecutions(false);
+    createdDeploymentPreference.setHarnessTagFilter(HarnessTagFilter.builder()
+                                                        .matchAll(true)
+                                                        .conditions(asList(HarnessTagFilter.TagFilterCondition.builder()
+                                                                               .name("key")
+                                                                               .operator(IN)
+                                                                               .values(asList("value1"))
+                                                                               .build()))
+                                                        .build());
+    preferenceService.update(ACCOUNT_ID, USER_ID, PREFERENCE_ID, createdDeploymentPreference);
+    DeploymentPreference updatedDeploymentPreference =
+        (DeploymentPreference) preferenceService.get(ACCOUNT_ID, USER_ID, PREFERENCE_ID);
+    assertThat(updatedDeploymentPreference.isIncludeIndirectExecutions()).isFalse();
+    assertThat(updatedDeploymentPreference.getHarnessTagFilter().isMatchAll()).isTrue();
+    assertThat(updatedDeploymentPreference.getHarnessTagFilter().getConditions().get(0).getName()).isEqualTo("key");
+    assertThat(updatedDeploymentPreference.getHarnessTagFilter().getConditions().get(0).getValues()).contains("value1");
+    assertThat(updatedDeploymentPreference.getUiDisplayTagString()).isEqualTo("key:value1");
+
+    // delete preference
+    preferenceService.delete(ACCOUNT_ID, USER_ID, PREFERENCE_ID);
+    assertThat(preferenceService.get(ACCOUNT_ID, USER_ID, PREFERENCE_ID)).isNull();
   }
 }
