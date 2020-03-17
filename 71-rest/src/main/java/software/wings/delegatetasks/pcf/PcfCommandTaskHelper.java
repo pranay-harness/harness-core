@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACKS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACK_MANIFEST_YML_ELEMENT;
@@ -37,6 +38,7 @@ import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
+import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -50,12 +52,15 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.FileCreationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -316,6 +321,28 @@ public class PcfCommandTaskHelper {
                .append(instance.getMemoryUsage())
                .append("\n"));
     executionLogCallback.saveExecutionLog(builder.toString());
+  }
+
+  @VisibleForTesting
+  public File downloadArtifact(PcfCommandSetupRequest pcfCommandSetupRequest, File workingDirectory)
+      throws IOException, ExecutionException {
+    InputStream artifactFileStream =
+        delegateFileManager.downloadArtifactAtRuntime(pcfCommandSetupRequest.getArtifactStreamAttributes(),
+            pcfCommandSetupRequest.getAccountId(), pcfCommandSetupRequest.getAppId(),
+            pcfCommandSetupRequest.getActivityId(), pcfCommandSetupRequest.getCommandName(),
+            pcfCommandSetupRequest.getArtifactStreamAttributes().getRegistryHostName());
+    String fileName =
+        System.currentTimeMillis() + pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactName();
+
+    File artifactFile = new File(workingDirectory.getAbsolutePath() + PATH_DELIMITER + FilenameUtils.getName(fileName));
+
+    if (!artifactFile.createNewFile()) {
+      throw new FileCreationException("Failed to create file " + artifactFile.getCanonicalPath(), null,
+          ErrorCode.FILE_CREATE_ERROR, Level.ERROR, USER, null);
+    }
+    IOUtils.copy(artifactFileStream, new FileOutputStream(artifactFile));
+
+    return artifactFile;
   }
 
   public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId, File workingDirecotry)

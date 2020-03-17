@@ -36,7 +36,6 @@ import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -58,7 +57,9 @@ import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.PcfDummyCommandUnit;
@@ -77,7 +78,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -115,9 +115,14 @@ public class PcfSetupState extends State {
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient SweepingOutputService sweepingOutputService;
 
-  @Inject @Transient protected transient LogService logService;
-
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
+  public static final String URL = "url";
+  private static final String ARTIFACT_STRING = "artifact/";
+  private static final String JENKINS = "JENKINS";
+  private static final String BAMBOO = "BAMBOO";
+  private static final String ARTIFACTORY = "ARTIFACTORY";
+  private static final String NEXUS = "NEXUS";
+  private static final String S3 = "AMAZON_S3";
 
   @Getter
   @Setter
@@ -261,6 +266,20 @@ public class PcfSetupState extends State {
           "USE_PCF_CLI flag is needed for using Autoscalar. Please check with Harness Support");
     }
 
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setMetadata(artifact.getMetadata());
+    artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+    artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+    artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
+        secretManager.getEncryptionDetails((EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(),
+            context.getAppId(), context.getWorkflowExecutionId()));
+    artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
+    artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactaType(artifactStream));
+    artifactStreamAttributes.getMetadata().put(
+        ArtifactMetadataKeys.artifactFileName, artifactFileNameForSource(artifact, artifactStreamAttributes));
+    artifactStreamAttributes.getMetadata().put(
+        ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
+
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
             .activityId(activity.getUuid())
@@ -272,6 +291,7 @@ public class PcfSetupState extends State {
             .space(context.renderExpression(pcfInfrastructureMapping.getSpace()))
             .pcfConfig(pcfConfig)
             .pcfCommandType(PcfCommandType.SETUP)
+            .artifactStreamAttributes(artifactStreamAttributes)
             .manifestYaml(applicationManifestYmlContent)
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
@@ -370,6 +390,65 @@ public class PcfSetupState extends State {
                                            : maxInstances;
 
     return maxCount;
+  }
+
+  /*
+   * returns Artifactpath for source
+   * */
+  public String artifactPathForSource(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    switch (artifactStreamAttributes.getArtifactStreamType()) {
+      case JENKINS:
+        if (artifactStreamAttributes.getArtifactPaths().isEmpty()) {
+          throw new InvalidRequestException("ArtifactPath missing, reqired for only-meta feature!");
+        }
+        return ARTIFACT_STRING + artifactStreamAttributes.getArtifactPaths().get(0);
+      case BAMBOO:
+        if (artifact.getArtifactFileMetadata().isEmpty()) {
+          throw new InvalidRequestException("artifact url is required");
+        }
+        return artifact.getArtifactFileMetadata().get(0).getUrl();
+      case ARTIFACTORY:
+        String artifactUrl = artifactStreamAttributes.getMetadata().get(URL);
+        return "."
+            + artifactUrl.substring(artifactUrl.lastIndexOf(artifactStreamAttributes.getJobName())
+                  + artifactStreamAttributes.getJobName().length());
+      default:
+        return artifactStreamAttributes.getMetadata().get(URL);
+    }
+  }
+
+  /*
+   * returns ArtifactFileName for source
+   * */
+  public String artifactFileNameForSource(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    switch (artifactStreamAttributes.getArtifactStreamType()) {
+      case JENKINS:
+        return artifact.getDisplayName();
+      case BAMBOO:
+        if (artifactStreamAttributes.getArtifactPaths().isEmpty()) {
+          throw new InvalidRequestException("ArtifactPath is missing!");
+        }
+        return artifactStreamAttributes.getArtifactPaths().get(0);
+      case ARTIFACTORY:
+        return artifactStreamAttributes.getMetadata().get("buildNo");
+      case NEXUS:
+        return artifact.getDisplayName().substring(artifact.getArtifactSourceName().length());
+      default:
+        return artifact.getDisplayName();
+    }
+  }
+
+  private boolean onlyMetaForArtifactaType(ArtifactStream artifactStream) {
+    switch (artifactStream.getArtifactStreamType()) {
+      case JENKINS:
+      case BAMBOO:
+      case ARTIFACTORY:
+      case NEXUS:
+      case S3:
+        return artifactStream.isMetadataOnly();
+      default:
+        return false;
+    }
   }
 
   @VisibleForTesting

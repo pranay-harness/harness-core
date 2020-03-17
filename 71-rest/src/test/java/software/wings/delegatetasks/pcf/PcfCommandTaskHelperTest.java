@@ -4,6 +4,7 @@ import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,12 +17,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.cxf.helpers.FileUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
@@ -34,12 +38,14 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -48,7 +54,10 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -58,6 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public static final String MANIFEST_YAML = "  applications:\n"
@@ -155,9 +165,10 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String RUNNING = "RUNNING";
-  private static final String RELEASE_NAME = "name"
-      + "_pcfCommandHelperTest";
-
+  public static final String APP_ID = "APP_ID";
+  public static final String ACTIVITY_ID = "ACTIVITY_ID";
+  public static final String REGISTRY_HOST_NAME = "REGISTRY_HOST_NAME";
+  public static final String TEST_PATH_NAME = "./test";
   public static final String MANIFEST_YAML_EXTENDED_SUPPORT_REMOTE = "  applications:\n"
       + "  - name : anyName\n"
       + "    memory: 350M\n"
@@ -170,7 +181,6 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "    path: /users/location\n"
       + "    routes:\n"
       + "      - route: qa.harness.io\n";
-
   public static final String MANIFEST_YAML_EXTENDED_SUPPORT_REMOTE_RESOLVED = "---\n"
       + "applications:\n"
       + "- name: app1__1\n"
@@ -183,7 +193,8 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "  routes:\n"
       + "  - route: app.harness.io\n"
       + "  - route: stage.harness.io\n";
-
+  private static final String RELEASE_NAME = "name"
+      + "_pcfCommandHelperTest";
   @Mock PcfDeploymentManager pcfDeploymentManager;
   @Mock EncryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
@@ -705,5 +716,37 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     verify(executionLogCallback).saveExecutionLog(captor.capture());
     String val = captor.getValue();
     assertThat(output).isEqualTo(val);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testDownloadArtifact() throws FileNotFoundException, IOException, ExecutionException {
+    ArtifactStreamAttributes artifactStreamAttributes =
+        ArtifactStreamAttributes.builder().artifactName("test-artifact").registryHostName(REGISTRY_HOST_NAME).build();
+    PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder()
+                                                        .artifactStreamAttributes(artifactStreamAttributes)
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(APP_ID)
+                                                        .activityId(ACTIVITY_ID)
+                                                        .commandName(PcfCommandRequest.PcfCommandType.SETUP.name())
+                                                        .build();
+
+    String randomToken = Long.toString(System.currentTimeMillis());
+
+    String testFileName = randomToken + pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactName();
+
+    File workingDirectory = FileUtils.createTmpDir();
+    File testArtifactFile = FileUtils.createTempFile(FilenameUtils.getName(testFileName), randomToken);
+
+    when(delegateFileManager.downloadArtifactAtRuntime(pcfCommandSetupRequest.getArtifactStreamAttributes(),
+             pcfCommandSetupRequest.getAccountId(), pcfCommandSetupRequest.getAppId(),
+             pcfCommandSetupRequest.getActivityId(), pcfCommandSetupRequest.getCommandName(),
+             pcfCommandSetupRequest.getArtifactStreamAttributes().getRegistryHostName()))
+        .thenReturn(new FileInputStream(testArtifactFile));
+
+    File artifactFile = pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory);
+
+    assertThat(artifactFile.exists()).isTrue();
   }
 }
