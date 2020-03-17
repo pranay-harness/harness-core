@@ -17,7 +17,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 
@@ -37,12 +36,11 @@ public class CostEventServiceImplTest extends CategoryTest {
 
   @Before
   public void setup() throws SQLException {
-    MockitoAnnotations.initMocks(this);
     Connection mockConnection = mock(Connection.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(mockConnection.prepareStatement(costEventService.INSERT_STATEMENT)).thenReturn(statement);
-    when(mockConnection.prepareStatement(costEventService.UPDATE_DEPLOYMENT_STATEMENT)).thenReturn(statement);
+    when(mockConnection.prepareStatement(CostEventServiceImpl.INSERT_STATEMENT)).thenReturn(statement);
+    when(mockConnection.prepareStatement(CostEventServiceImpl.UPDATE_DEPLOYMENT_STATEMENT)).thenReturn(statement);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
   }
 

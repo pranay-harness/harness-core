@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.timescaledb.AddCostEvents;
 import migrations.timescaledb.AddFieldsToServiceGuardStats;
 import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
@@ -51,6 +52,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(18, AlterCEUtilizationDataTables.class))
         .add(Pair.of(19, UniqueIndexCEUtilizationDataTables.class))
         .add(Pair.of(20, AddSystemCostBillingData.class))
+        .add(Pair.of(21, AddCostEvents.class))
         .build();
   }
 }
