@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -14,6 +15,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -125,17 +127,20 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -183,6 +188,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private LogService logService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -688,5 +694,57 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void testGetTimeout() {
     assertThat(helmDeployState.getTimeout(100)).isEqualTo(6000000);
     assertThat(helmDeployState.getTimeout(60000 + 1)).isEqualTo(60001);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testIsRollBackNotNeeded() {
+    assertThat(isInitialRollback()).isTrue();
+    assertThat(isNotInitialRollback()).isFalse();
+  }
+
+  private boolean isInitialRollback() {
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance()
+            .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(0).build())
+            .build();
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+
+    helmDeployState.setStateType(StateType.HELM_ROLLBACK.name());
+
+    return helmDeployState.isRollBackNotNeeded(context);
+  }
+
+  private boolean isNotInitialRollback() {
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance()
+            .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(1).build())
+            .build();
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+
+    helmDeployState.setStateType(StateType.HELM_ROLLBACK.name());
+
+    return helmDeployState.isRollBackNotNeeded(context);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testInitialRollbackNeeded() {
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance()
+            .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(0).build())
+            .build();
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder().build();
+
+    doReturn(true).when(logService).batchedSaveCommandUnitLogs(any(), any(), any());
+
+    ExecutionResponse executionResponse =
+        helmDeployState.initialRollbackNotNeeded(context, ACTIVITY_ID, stateExecutionData);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
   }
 }
