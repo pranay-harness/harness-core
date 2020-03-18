@@ -1,11 +1,24 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.SweepingOutput;
@@ -13,6 +26,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
@@ -22,14 +36,27 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
+import software.wings.beans.Environment;
+import software.wings.common.VariableProcessor;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.pcf.PcfStateHelper;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private static final String SWEEPING_OUTPUT_NAME = "SWEEPING_OUTPUT_NAME";
@@ -44,6 +71,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private final String phaseName = "Phase 1";
 
   @InjectMocks @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private PcfStateHelper pcfStateHelper;
 
   private SweepingOutputInstance sweepingOutputInstance;
   private StateExecutionInstance stateExecutionInstance;
@@ -201,5 +229,143 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
                                                      .stateExecutionId(stateExecutionInstanceId)
                                                      .build());
     assertThat(sweepingOutput).isNull();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testInstanceDetailsFetchFromSweepingOutput() {
+    sweepingOutputService.cleanForStateExecutionInstance(stateExecutionInstance);
+
+    List<PcfInstanceElement> pcfInstanceElements = Arrays.asList(PcfInstanceElement.builder()
+                                                                     .isUpsize(false)
+                                                                     .displayName("pcf_0")
+                                                                     .instanceIndex("0")
+                                                                     .applicationId("id0")
+                                                                     .build(),
+        PcfInstanceElement.builder()
+            .isUpsize(true)
+            .displayName("pcf_1")
+            .instanceIndex("1")
+            .applicationId("id1")
+            .build(),
+        PcfInstanceElement.builder()
+            .isUpsize(true)
+            .displayName("pcf_1")
+            .instanceIndex("2")
+            .applicationId("id1")
+            .build());
+
+    VariableProcessor variableProcessor = mock(VariableProcessor.class);
+    doReturn(Collections.emptyMap()).when(variableProcessor).getVariables(any(), anyString());
+    ExecutionContext context = generateExecutionContext();
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", new ManagerExpressionEvaluator());
+    on(context).set("sweepingOutputService", sweepingOutputService);
+
+    SweepingOutputInstance saved = sweepingOutputService.save(
+        SweepingOutputInstance.builder()
+            .phaseExecutionId(phaseElementId)
+            .stateExecutionId(stateExecutionInstanceId)
+            .workflowExecutionId(workflowExecutionUuid)
+            .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+            .appId(appId)
+            .value(InstanceInfoVariables.builder()
+                       .instanceElements(pcfStateHelper.generateInstanceElement(pcfInstanceElements))
+                       .instanceDetails(pcfStateHelper.generateInstanceDetails(pcfInstanceElements))
+                       .build())
+            .build());
+
+    SweepingOutputInquiry sweepingOutputInquiry = SweepingOutputInquiry.builder()
+                                                      .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                                      .appId(appId)
+                                                      .phaseExecutionId(phaseElementId)
+                                                      .workflowExecutionId(workflowExecutionUuid)
+                                                      .stateExecutionId(stateExecutionInstanceId)
+                                                      .build();
+
+    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
+
+    // All (New + Existing) Instances
+    assertThat(sweepingOutput instanceof InstanceInfoVariables).isTrue();
+    List<InstanceDetails> instanceDetails =
+        sweepingOutputService.fetchInstanceDetailsFromSweepingOutput(sweepingOutputInquiry, false);
+    assertThat(instanceDetails.size()).isEqualTo(3);
+    List<InstanceElement> instanceElements =
+        sweepingOutputService.fetchInstanceElementsFromSweepingOutput(sweepingOutputInquiry, false);
+    assertThat(instanceElements.size()).isEqualTo(3);
+
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", false))
+        .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}"
+                       + "-"
+                       + "${instanceDetails.pcf.instanceIndex}",
+                   false))
+        .containsExactly("pcf_0:0-0", "pcf_1:1-1", "pcf_1:2-2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", false))
+        .containsExactly("false", "true", "true");
+    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", false))
+        .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", false))
+        .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", false))
+        .containsExactly("false", "true", "true");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", false))
+        .containsExactly("pcf_0", "pcf_1", "pcf_1");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", false))
+        .containsExactly("id0", "id1", "id1");
+    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", false))
+        .containsExactly("id0", "id1", "id1");
+
+    // Only New Instances
+    instanceDetails = sweepingOutputService.fetchInstanceDetailsFromSweepingOutput(sweepingOutputInquiry, true);
+    assertThat(instanceDetails.size()).isEqualTo(2);
+    instanceElements = sweepingOutputService.fetchInstanceElementsFromSweepingOutput(sweepingOutputInquiry, true);
+    assertThat(instanceElements.size()).isEqualTo(2);
+
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", true))
+        .containsExactly("pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", true))
+        .containsExactly("true", "true");
+    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", true))
+        .containsExactly("pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", true))
+        .containsExactly("pcf_1:1", "pcf_1:2");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", true))
+        .containsExactly("true", "true");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", true))
+        .containsExactly("pcf_1", "pcf_1");
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", true))
+        .containsExactly("id1", "id1");
+
+    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", true))
+        .containsExactly("id1", "id1");
+  }
+
+  private ExecutionContext generateExecutionContext() {
+    WorkflowStandardParams workflowStandardParams = spy(WorkflowStandardParams.class);
+    doReturn(ImmutableMap.<String, Object>builder()
+                 .put(ContextElement.APP,
+                     anApplication().uuid(appId).appId(appId).accountId(ACCOUNT_ID).name(APP_NAME).build())
+                 .put(ContextElement.ENV,
+                     Environment.Builder.anEnvironment()
+                         .uuid(ENV_ID)
+                         .appId(appId)
+                         .accountId(ACCOUNT_ID)
+                         .name(ENV_NAME)
+                         .build())
+                 .build())
+        .when(workflowStandardParams)
+        .paramMap(any());
+    doReturn(appId).when(workflowStandardParams).getAppId();
+
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setDisplayName("name");
+    stateExecutionInstance.setUuid(stateExecutionInstanceId);
+    stateExecutionInstance.setExecutionUuid(workflowExecutionUuid);
+    stateExecutionInstance.getContextElements().add(workflowStandardParams);
+    stateExecutionInstance.getContextElements().add(
+        PhaseElement.builder().appId(appId).uuid(phaseElementId).phaseName(phaseName).build());
+    return new ExecutionContextImpl(stateExecutionInstance);
   }
 }

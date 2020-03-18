@@ -21,15 +21,18 @@ import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappin
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
@@ -51,10 +54,12 @@ import software.wings.api.InfraMappingElement.Helm;
 import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
 import software.wings.api.InfraMappingElement.Kubernetes;
 import software.wings.api.InfraMappingElement.Pcf;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -1239,5 +1244,45 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return sweepingOutputInstance == null
         ? null
         : ((InfraMappingSweepingOutput) sweepingOutputInstance.getValue()).getInfraMappingId();
+  }
+
+  public List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly) {
+    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(
+        prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build());
+    final List<String> list = new ArrayList<>();
+    final Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
+    final Map<String, InstanceElement> hostNameToInstanceElementMap = new HashMap<>();
+    if (sweepingOutput != null) {
+      InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
+
+      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+        instanceInfoVariables.getInstanceElements().forEach(
+            instanceElement -> hostNameToInstanceElementMap.put(instanceElement.getHostName(), instanceElement));
+        instanceInfoVariables.getInstanceDetails().forEach(
+            details -> hostNameToDetailMap.put(details.getHostName(), details));
+        list.addAll(instanceInfoVariables.getInstanceElements()
+                        .stream()
+                        .filter(instanceElement -> isEligible(instanceElement.isNewInstance(), newInstancesOnly))
+                        .map(instanceElement -> {
+                          StateExecutionData stateExecutionData = new StateExecutionData();
+                          stateExecutionData.setTemplateVariable(
+                              ImmutableMap.<String, Object>builder()
+                                  .put("instanceDetails", hostNameToDetailMap.get(instanceElement.getHostName()))
+                                  .build());
+                          return renderExpression(expression,
+                              StateExecutionContext.builder()
+                                  .contextElements(Lists.newArrayList(instanceElement))
+                                  .stateExecutionData(stateExecutionData)
+                                  .build());
+                        })
+                        .collect(toList()));
+      }
+    }
+
+    return list;
+  }
+
+  private boolean isEligible(boolean instanceFromNewDeployment, boolean newInstancesOnly) {
+    return !newInstancesOnly || instanceFromNewDeployment;
   }
 }

@@ -47,6 +47,9 @@ public class HostElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(ContextElement.HOST, this);
+    if (pcfElement != null) {
+      map.putAll(pcfElement.paramMap(context));
+    }
     return map;
   }
 

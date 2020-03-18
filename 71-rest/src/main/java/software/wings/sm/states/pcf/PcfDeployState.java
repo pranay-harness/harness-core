@@ -4,6 +4,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PcfInstanceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -64,7 +66,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfDeployState extends State {
@@ -328,6 +329,21 @@ public class PcfDeployState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setInstanceData(pcfDeployCommandResponse.getInstanceDataUpdated());
 
+    // For now, only use newInstances. Do not use existing instances. It will be done as a part of separate story
+    List<PcfInstanceElement> pcfInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+        ? emptyList()
+        : pcfDeployCommandResponse.getPcfInstanceElements()
+              .stream()
+              .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
+              .collect(toList());
+
+    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+        ? emptyList()
+        : pcfDeployCommandResponse.getPcfInstanceElements()
+              .stream()
+              .filter(pcfInstanceElement -> !pcfInstanceElement.isNewInstance())
+              .collect(toList());
+
     if (!isRollback()) {
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                      .name(pcfStateHelper.obtainDeploySweepingOutputName(context, false))
@@ -336,22 +352,18 @@ public class PcfDeployState extends State {
                                                 .name(stateExecutionData.getReleaseName())
                                                 .build())
                                      .build());
+
+      // This sweeping element will be used by verification or other consumers.
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.STATE)
+                                     .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                     .value(InstanceInfoVariables.builder()
+                                                .instanceElements(pcfStateHelper.generateInstanceElement(
+                                                    pcfDeployCommandResponse.getPcfInstanceElements()))
+                                                .instanceDetails(pcfStateHelper.generateInstanceDetails(
+                                                    pcfDeployCommandResponse.getPcfInstanceElements()))
+                                                .build())
+                                     .build());
     }
-
-    // For now, only use newInstances. Do not use existing instances. It will be done as a part of separate story
-    List<PcfInstanceElement> pcfInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
-        ? emptyList()
-        : pcfDeployCommandResponse.getPcfInstanceElements()
-              .stream()
-              .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
-              .collect(Collectors.toList());
-
-    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
-        ? emptyList()
-        : pcfDeployCommandResponse.getPcfInstanceElements()
-              .stream()
-              .filter(pcfInstanceElement -> !pcfInstanceElement.isNewInstance())
-              .collect(Collectors.toList());
 
     InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder()
                                                             .instanceElements(emptyList())

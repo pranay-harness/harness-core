@@ -1,6 +1,7 @@
 package io.harness.expression;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -466,6 +467,30 @@ public class ExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("thrower", new ExceptionThrowFunctor());
     expressionEvaluator.substitute("${thrower.throwException()}", new HashMap<>());
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testVariableResolverTracker() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    VariableResolverTracker resolverTracker = new VariableResolverTracker();
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("BA1BA", "${AC1AC}${AC1AC}")
+                                      .put("AC1AC", "${AB1AB}${AB1AB}")
+                                      .put("AB1AB", "final")
+                                      .build();
+    assertThat(expressionEvaluator.substitute("${BA1BA}", context, resolverTracker)).isEqualTo("finalfinalfinalfinal");
+
+    assertThat(resolverTracker.getUsage())
+        .isEqualTo(ImmutableMap.<String, Map<Object, Integer>>builder()
+                       .put("AB1AB", ImmutableMap.<Object, Integer>builder().put("final", Integer.valueOf(4)).build())
+                       .put("AC1AC",
+                           ImmutableMap.<Object, Integer>builder().put("${AB1AB}${AB1AB}", Integer.valueOf(2)).build())
+                       .put("BA1BA",
+                           ImmutableMap.<Object, Integer>builder().put("${AC1AC}${AC1AC}", Integer.valueOf(1)).build())
+                       .build());
   }
 
   @Test(expected = InvalidRequestException.class)

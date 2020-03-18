@@ -44,6 +44,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.deployment.InstanceDetails;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.K8sContainer;
@@ -117,5 +118,9 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(HibernationOptions.class, 1403);
     kryo.register(InstanceMetadataOptionsResponse.class, 1404);
     kryo.register(LicenseConfiguration.class, 1405);
+    kryo.register(InstanceDetails.class, 1406);
+    kryo.register(InstanceDetails.PCF.class, 1407);
+    kryo.register(InstanceDetails.AWS.class, 1408);
+    kryo.register(InstanceDetails.InstanceType.class, 1409);
   }
 }

@@ -104,4 +104,6 @@ public interface ExecutionContext {
   ServiceElement fetchServiceElement();
 
   AutoLogContext autoLogContext();
+
+  List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly);
 }
