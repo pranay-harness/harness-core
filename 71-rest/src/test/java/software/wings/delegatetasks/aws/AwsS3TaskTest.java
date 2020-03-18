@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -11,6 +12,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,9 +40,17 @@ public class AwsS3TaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
+  public void testRunWithTaskParameters() {
+    AwsS3Request request = AwsS3ListBucketNamesRequest.builder().build();
+    task.run(request);
+    verify(mockS3HelperServiceDelegate).listBucketNames(any(), anyList());
+  }
+
+  @Test(expected = NotImplementedException.class)
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
   public void testRun() {
     AwsS3Request request = AwsS3ListBucketNamesRequest.builder().build();
     task.run(new Object[] {request});
-    verify(mockS3HelperServiceDelegate).listBucketNames(any(), anyList());
   }
 }

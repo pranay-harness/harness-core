@@ -32,12 +32,7 @@ public class AwsS3Task extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsS3Request request = (AwsS3Request) parameters[0];
+    AwsS3Request request = (AwsS3Request) parameters;
     try {
       AwsS3RequestType requestType = request.getRequestType();
       if (LIST_BUCKET_NAMES == requestType) {
@@ -52,5 +47,10 @@ public class AwsS3Task extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }
