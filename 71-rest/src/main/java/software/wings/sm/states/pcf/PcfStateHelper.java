@@ -41,6 +41,7 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -50,6 +51,9 @@ import io.harness.pcf.model.PcfConstants;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
+import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
@@ -105,6 +109,7 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -724,5 +729,44 @@ public class PcfStateHelper {
           .replace(RollbackStateMachineGenerator.STAGING_PHASE_NAME + RollbackStateMachineGenerator.WHITE_SPACE, "")
           .trim();
     }
+  }
+
+  public List<InstanceElement> generateInstanceElement(List<PcfInstanceElement> pcfInstanceElements) {
+    if (isEmpty(pcfInstanceElements)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    return pcfInstanceElements.stream()
+        .map(pcfInstanceElement
+            -> InstanceElement.Builder.anInstanceElement()
+                   .hostName(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
+                   .newInstance(pcfInstanceElement.isNewInstance())
+                   .host(
+                       HostElement.builder()
+                           .hostName(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
+                           .pcfElement(pcfInstanceElement)
+                           .build())
+                   .build())
+        .collect(toList());
+  }
+
+  public List<InstanceDetails> generateInstanceDetails(List<PcfInstanceElement> pcfInstanceElements) {
+    if (isEmpty(pcfInstanceElements)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    return pcfInstanceElements.stream()
+        .map(pcfInstanceElement
+            -> InstanceDetails.builder()
+                   .hostName(pcfInstanceElement.getName() + ":" + pcfInstanceElement.getInstanceIndex())
+                   .newInstance(pcfInstanceElement.isNewInstance())
+                   .instanceType(InstanceDetails.InstanceType.PCF)
+                   .pcf(InstanceDetails.PCF.builder()
+                            .applicationId(pcfInstanceElement.getApplicationId())
+                            .instanceIndex(pcfInstanceElement.getInstanceIndex())
+                            .applicationName(pcfInstanceElement.getDisplayName())
+                            .build())
+                   .build())
+        .collect(toList());
   }
 }

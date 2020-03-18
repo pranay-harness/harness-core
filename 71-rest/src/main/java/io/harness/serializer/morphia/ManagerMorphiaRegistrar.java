@@ -98,6 +98,7 @@ import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
@@ -1065,6 +1066,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ecs.EcsListenerUpdateExecutionSummary", EcsListenerUpdateExecutionSummary.class);
     w.put("api.ecs.EcsListenerUpdateStateExecutionData", EcsListenerUpdateStateExecutionData.class);
     w.put("api.ecs.EcsRoute53WeightUpdateStateExecutionData", EcsRoute53WeightUpdateStateExecutionData.class);
+    w.put("api.instancedetails.InstanceInfoVariables", InstanceInfoVariables.class);
     w.put("api.jira.JiraExecutionData", JiraExecutionData.class);
     w.put("api.k8s.K8sContextElement", K8sContextElement.class);
     w.put("api.k8s.K8sExecutionSummary", K8sExecutionSummary.class);

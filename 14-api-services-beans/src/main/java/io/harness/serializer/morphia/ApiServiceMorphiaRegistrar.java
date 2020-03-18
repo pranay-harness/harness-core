@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.deployment.InstanceDetails;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.morphia.MorphiaRegistrar;
@@ -24,5 +25,6 @@ public class ApiServiceMorphiaRegistrar implements MorphiaRegistrar {
 
     h.put("globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
     h.put("globalcontex.PurgeGlobalContextData", PurgeGlobalContextData.class);
+    h.put("deployment.InstanceDetails", InstanceDetails.class);
   }
 }

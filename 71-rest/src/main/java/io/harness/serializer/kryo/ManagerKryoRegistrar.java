@@ -106,6 +106,7 @@ import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
@@ -1525,5 +1526,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PcfCommandTaskParameters.class, 7328);
     kryo.register(PcfConnectivityCapability.class, 7329);
     kryo.register(PcfAutoScalarCapability.class, 7330);
+    kryo.register(InstanceInfoVariables.class, 7331);
   }
 }

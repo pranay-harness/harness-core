@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
@@ -12,18 +13,24 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.api.InstanceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiryController;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.StateExecutionInstance;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -83,6 +90,45 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
       return null;
     }
     return (T) sweepingOutputInstance.getValue();
+  }
+
+  @Override
+  public List<InstanceDetails> fetchInstanceDetailsFromSweepingOutput(
+      SweepingOutputInquiry inquiry, boolean newInstancesOnly) {
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+    SweepingOutput sweepingOutput = findSweepingOutput(inquiry);
+    if (sweepingOutput instanceof InstanceInfoVariables) {
+      InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
+      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+        instanceDetails.addAll(instanceInfoVariables.getInstanceDetails());
+        if (newInstancesOnly) {
+          instanceDetails = instanceDetails.stream()
+                                .filter(instanceDetail -> instanceDetail.isNewInstance())
+                                .collect(Collectors.toList());
+        }
+      }
+    }
+
+    return instanceDetails;
+  }
+
+  @Override
+  public List<InstanceElement> fetchInstanceElementsFromSweepingOutput(
+      SweepingOutputInquiry inquiry, boolean newInstancesOnly) {
+    List<InstanceElement> elements = new ArrayList<>();
+    SweepingOutput sweepingOutput = findSweepingOutput(inquiry);
+    if (sweepingOutput instanceof InstanceInfoVariables) {
+      InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
+      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+        elements.addAll(instanceInfoVariables.getInstanceElements());
+        if (newInstancesOnly) {
+          elements =
+              elements.stream().filter(instanceElement -> instanceElement.isNewInstance()).collect(Collectors.toList());
+        }
+      }
+    }
+
+    return elements;
   }
 
   @Override
