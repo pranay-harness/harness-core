@@ -94,8 +94,10 @@ public class ScimUserServiceTest extends WingsBaseTest {
 
     User user = new User();
     user.setEmail("username@harness.io");
+    user.setName("display_name");
 
     UserInvite userInvite = new UserInvite();
+    userInvite.setEmail("username@harness.io");
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
     when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);

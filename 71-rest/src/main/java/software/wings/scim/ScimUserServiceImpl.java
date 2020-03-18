@@ -42,6 +42,8 @@ public class ScimUserServiceImpl implements ScimUserService {
   private static final Integer MAX_RESULT_COUNT = 20;
   private static final String GIVEN_NAME = "givenName";
   private static final String FAMILY_NAME = "familyName";
+  private static final String VALUE = "value";
+  private static final String PRIMARY = "primary";
 
   @Override
   public Response createUser(ScimUser userQuery, String accountId) {
@@ -54,7 +56,8 @@ public class ScimUserServiceImpl implements ScimUserService {
       userQuery.setId(user.getUuid());
       userQuery.setActive(true);
       // if the user already exists with with that email and is disabled, activate him.
-      if (user.isDisabled()) {
+      if (user.isDisabled() || !StringUtils.equals(user.getName(), userQuery.getDisplayName())
+          || !StringUtils.equals(user.getEmail(), userQuery.getUserName())) {
         updateUser(user.getUuid(), accountId, userQuery);
         return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
       } else {
@@ -95,10 +98,7 @@ public class ScimUserServiceImpl implements ScimUserService {
   }
 
   private String getName(ScimUser userQuery) {
-    if (userQuery.getName() != null && userQuery.getName().get(GIVEN_NAME) != null) {
-      return userQuery.getName().get(GIVEN_NAME).textValue();
-    }
-    return null;
+    return userQuery.getDisplayName();
   }
 
   @Override
@@ -126,7 +126,10 @@ public class ScimUserServiceImpl implements ScimUserService {
     };
 
     Map<String, String> emailMap = new HashMap<String, String>() {
-      { put("value", user.getEmail()); }
+      {
+        put(VALUE, user.getEmail());
+        put(PRIMARY, Boolean.toString(true));
+      }
     };
 
     userResource.setEmails(JsonUtils.asTree(Collections.singletonList(emailMap)));
