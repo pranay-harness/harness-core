@@ -10,6 +10,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
 import static software.wings.utils.Misc.isLong;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -27,6 +28,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -39,8 +41,10 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
@@ -62,6 +66,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -183,6 +188,83 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     logger.info("AppDynamics State Validated");
     return results;
+  }
+
+  @Override
+  protected DataCollectionInfoV2 createDataCollectionInfo(
+      ExecutionContext context, Map<String, String> hostsToCollect) {
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
+        context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
+
+    final String resolvedConnectorId =
+        getResolvedConnectorId(context, AppDynamicsStateKeys.analysisServerConfigId, analysisServerConfigId);
+    String resolvedApplicationId = getResolvedFieldValue(context, AppDynamicsStateKeys.applicationId, applicationId);
+    String resolvedTierId = getResolvedFieldValue(context, AppDynamicsStateKeys.tierId, tierId);
+
+    boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
+    if (isTriggerBased) {
+      // Resolve application using name / id
+      NewRelicApplication appDynamicsApplication =
+          appdynamicsService.getAppDynamicsApplication(resolvedConnectorId, resolvedApplicationId);
+      if (appDynamicsApplication == null) {
+        resolvedApplicationId =
+            appdynamicsService.getAppDynamicsApplicationByName(resolvedConnectorId, resolvedApplicationId);
+      }
+
+      Preconditions.checkNotNull(resolvedApplicationId, "AppDynamics application is not valid");
+
+      // Resolve tier using name/id
+      final AppdynamicsTier tier =
+          appdynamicsService.getTier(resolvedConnectorId, Long.parseLong(resolvedApplicationId), resolvedTierId,
+              ThirdPartyApiCallLog.createApiCallLog(
+                  appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+      if (tier == null) {
+        resolvedTierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, resolvedTierId,
+            ThirdPartyApiCallLog.createApiCallLog(
+                appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+      }
+
+      Preconditions.checkNotNull(resolvedTierId, "AppDynamics tier is not null");
+    }
+
+    updateHostToGroupNameMap(resolvedConnectorId, resolvedApplicationId, tierId, hostsToCollect, context.getAppId(),
+        context.getStateExecutionInstanceId());
+
+    return AppDynamicsDataCollectionInfoV2.builder()
+        .connectorId(resolvedConnectorId)
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .workflowId(getWorkflowId(context))
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .accountId(context.getAccountId())
+        .envId(getEnvId(context))
+        .applicationId(context.getAppId())
+        .serviceId(getPhaseServiceId(context))
+        .hosts(hostsToCollect.keySet())
+        .appDynamicsApplicationId(Long.parseLong(resolvedApplicationId))
+        .appDynamicsTierId(Long.parseLong(resolvedTierId))
+        .hostsToGroupNameMap(hostsToCollect)
+        .build();
+  }
+
+  @VisibleForTesting
+  void updateHostToGroupNameMap(String connectorId, String appDApplicationId, String tierId,
+      Map<String, String> hostsToGroupName, String appId, String stateExecutionId) {
+    ThirdPartyApiCallLog apiCallLog =
+        ThirdPartyApiCallLog.createApiCallLog(appService.getAccountIdByAppId(appId), stateExecutionId);
+
+    // Update host to group name map with corresponding tier name
+    final AppdynamicsTier tier =
+        appdynamicsService.getTier(connectorId, Long.parseLong(appDApplicationId), tierId, apiCallLog);
+    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
+    hostsToGroupName.keySet().forEach(key -> hostsToGroupName.put(key, tier.getName()));
+
+    TimeSeriesMlAnalysisType analysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
+        ? PREDICTIVE
+        : TimeSeriesMlAnalysisType.COMPARATIVE;
+    metricGroups.put(tier.getName(),
+        TimeSeriesMlAnalysisGroupInfo.builder().groupName(tier.getName()).mlAnalysisType(analysisType).build());
+
+    metricAnalysisService.saveMetricGroups(appId, StateType.APP_DYNAMICS, stateExecutionId, metricGroups);
   }
 
   @Override
@@ -484,5 +566,10 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     }
     logger.error("Invalid metricName in AppDynamics {}", metricName);
     return null;
+  }
+
+  @Override
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.of(FeatureName.APPD_CV_TASK);
   }
 }

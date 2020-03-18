@@ -500,6 +500,7 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
+import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -1527,5 +1528,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PcfConnectivityCapability.class, 7329);
     kryo.register(PcfAutoScalarCapability.class, 7330);
     kryo.register(InstanceInfoVariables.class, 7331);
+    kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
   }
 }
