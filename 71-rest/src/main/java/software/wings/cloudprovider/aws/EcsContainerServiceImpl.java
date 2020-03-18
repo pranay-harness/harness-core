@@ -1128,8 +1128,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           + "so there is no way to fetch dockerContainerId. Verification steps using containerId may not work");
 
       tasks.forEach(ecsTask -> ecsTask.getContainers().forEach(container -> {
-        EcsContainerDetailsBuilder ecsContainerDetailsBuilder =
-            EcsContainerDetails.builder().taskArn(ecsTask.getTaskArn());
+        EcsContainerDetailsBuilder ecsContainerDetailsBuilder = getEcsContainerDetailsBuilder(ecsTask, container);
 
         // Read private Ip of ENI (all container will have same private IP as all containers within task use same ENI)
         String privateIpv4AddressForENI = container.getNetworkInterfaces()
@@ -1140,7 +1139,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
         ContainerInfo containerInfo = ContainerInfo.builder()
                                           .status(Status.SUCCESS)
-                                          .containerId(container.getContainerArn())
+                                          .containerId(StringUtils.substring(container.getRuntimeId(), 0, 12))
                                           .hostName(privateIpv4AddressForENI)
                                           .ecsContainerDetails(ecsContainerDetailsBuilder.build())
                                           .ip(privateIpv4AddressForENI)
@@ -1307,6 +1306,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
 
     return containerInfos;
+  }
+
+  EcsContainerDetailsBuilder getEcsContainerDetailsBuilder(
+      Task ecsTask, com.amazonaws.services.ecs.model.Container container) {
+    return EcsContainerDetails.builder()
+        .taskArn(ecsTask.getTaskArn())
+        .taskId(getIdFromArn(ecsTask.getTaskArn()))
+        .dockerId(StringUtils.substring(container.getRuntimeId(), 0, 12));
   }
 
   @VisibleForTesting

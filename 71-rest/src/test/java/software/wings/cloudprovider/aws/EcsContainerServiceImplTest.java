@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -30,6 +32,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.Instance;
 import com.amazonaws.services.ecs.model.Cluster;
+import com.amazonaws.services.ecs.model.Container;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
@@ -41,6 +44,7 @@ import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
+import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -248,5 +252,23 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     EcsContainerServiceImpl serviceImpl = new EcsContainerServiceImpl();
     assertThat(serviceImpl.getIp("ip", task.getContainers().get(0))).isEqualTo("172.31.21.197");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testgetEcsContainerDetailsBuilder() {
+    Task task = mock(Task.class);
+    doReturn("abc/taskId").when(task).getTaskArn();
+    Container container = mock(Container.class);
+    doReturn("abcdefghijkl123456").when(container).getRuntimeId();
+
+    EcsContainerDetails ecsContainerDetails =
+        ((EcsContainerServiceImpl) ecsContainerService).getEcsContainerDetailsBuilder(task, container).build();
+    assertThat(ecsContainerDetails).isNotNull();
+
+    assertThat(ecsContainerDetails.getDockerId()).isEqualTo("abcdefghijkl");
+    assertThat(ecsContainerDetails.getTaskArn()).isEqualTo("abc/taskId");
+    assertThat(ecsContainerDetails.getTaskId()).isEqualTo("taskId");
   }
 }
