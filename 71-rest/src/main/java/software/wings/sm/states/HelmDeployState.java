@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -21,6 +22,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACE
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -57,6 +59,8 @@ import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -105,6 +109,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -124,6 +129,7 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,6 +167,7 @@ public class HelmDeployState extends State {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private HelmHelper helmHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private LogService logService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -172,6 +179,7 @@ public class HelmDeployState extends State {
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  private static final String NO_PREV_DEPLOYMENT = "No previous version available for rollback";
 
   // Workaround for CDP-10845
   private static final int minTimeoutInMs = 60000;
@@ -665,6 +673,17 @@ public class HelmDeployState extends State {
     ContainerServiceParams containerServiceParams =
         containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
 
+    if (isRollBackNotNeeded(context)) {
+      return initialRollbackNotNeeded(context, activityId,
+          HelmDeployStateExecutionData.builder()
+              .activityId(activityId)
+              .releaseName(releaseName)
+              .namespace(containerServiceParams.getNamespace())
+              .commandFlags(cmdFlags)
+              .currentTaskType(HELM_COMMAND_TASK)
+              .build());
+    }
+
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
 
@@ -788,6 +807,35 @@ public class HelmDeployState extends State {
         .correlationIds(singletonList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)
+        .build();
+  }
+
+  @VisibleForTesting
+  boolean isRollBackNotNeeded(ExecutionContext context) {
+    return StateType.HELM_ROLLBACK.name().equalsIgnoreCase(getStateType())
+        && ((HelmDeployContextElement) context.getContextElement(ContextElementType.HELM_DEPLOY))
+               .getPreviousReleaseRevision()
+        == 0;
+  }
+
+  @VisibleForTesting
+  ExecutionResponse initialRollbackNotNeeded(
+      ExecutionContext context, String activityId, HelmDeployStateExecutionData stateExecutionData) {
+    Log.Builder logBuilder = aLog()
+                                 .withAppId(context.getAppId())
+                                 .withActivityId(activityId)
+                                 .withCommandUnitName(HelmDummyCommandUnit.Rollback)
+                                 .withLogLevel(LogLevel.INFO)
+                                 .withExecutionResult(CommandExecutionStatus.SUCCESS);
+    ManagerExecutionLogCallback executionLogCallback =
+        new ManagerExecutionLogCallback(logService, logBuilder, activityId);
+
+    executionLogCallback.saveExecutionLog(NO_PREV_DEPLOYMENT, LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+    Misc.logAllMessages(null, executionLogCallback, CommandExecutionStatus.SUCCESS);
+
+    return ExecutionResponse.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .stateExecutionData(stateExecutionData)
         .build();
   }
 
