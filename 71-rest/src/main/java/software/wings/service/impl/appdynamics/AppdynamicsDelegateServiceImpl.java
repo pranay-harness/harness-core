@@ -195,7 +195,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         "End time was null while getting data from Appdynamics. StateExecutionId: ", apiCallLog.getStateExecutionId());
 
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|"
-        + (isEmpty(hostName) ? "*" : "Individual Nodes|") + hostName + "|*";
+        + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
     logger.info("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
