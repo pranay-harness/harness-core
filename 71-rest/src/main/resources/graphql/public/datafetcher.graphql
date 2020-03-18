@@ -7,6 +7,7 @@ enum DataFetcherEnum {
   billingStatsFilterValues
   billingStatsTimeSeries
   billingTrendStats
+  gcpBillingEntityStats
   gcpBillingTimeSeriesStats
   budget
   budgetList

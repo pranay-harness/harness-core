@@ -41,6 +41,7 @@ import software.wings.graphql.datafetcher.billing.BillingStatsFilterValuesDataFe
 import software.wings.graphql.datafetcher.billing.BillingStatsTimeSeriesDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.EfficiencyStatsDataFetcher;
+import software.wings.graphql.datafetcher.billing.GcpBillingEntityStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.GcpBillingTimeSeriesStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.IdleCostTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.SunburstChartStatsDataFetcher;
@@ -191,6 +192,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(BillingStatsTimeSeriesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(GcpBillingTimeSeriesStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(GcpBillingEntityStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetListDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetTrendStatsDataFetcher.class);

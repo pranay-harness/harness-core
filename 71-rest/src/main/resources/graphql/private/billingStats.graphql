@@ -34,6 +34,12 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): BillingEntityData @dataFetcher(name: billingStatsEntity)
 
+  gcpBillingEntityData(
+    filters: [GcpBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [GcpBillingGroupBy]
+  ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
+
   billingStatsFilterValues(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
@@ -56,11 +62,6 @@ extend type Query {
   ): SunburstChartData @dataFetcher(name: sunburstChartStats)
 }
 
-input CEAggregate {
-  operationType: CCMAggregateOperation
-  entity: String
-}
-
 input CCMAggregationFunction {
   operationType: CCMAggregateOperation
   columnName: String
@@ -78,6 +79,33 @@ input CCMGroupBy {
   timeAggregation: CCMTimeSeriesAggregation
   tagAggregation: BillingDataTagAggregation
   labelAggregation: BillingDataLabelAggregation
+}
+
+input GcpBillingFilter {
+  startTime: TimeFilter
+  endTime: TimeFilter
+  billingAccountId: IdFilter
+  project: IdFilter
+  product: IdFilter
+  sku: IdFilter
+}
+
+input GcpBillingGroupBy {
+  entityGroupBy: GcpBillingEntityGroupBy
+  timeTruncGroupby: CETimeTruncGroupby
+}
+
+enum GcpBillingEntityGroupBy {
+  billingAccountId
+  project
+  projectId
+  projectNumber
+  product
+  sku
+  skuId
+  region
+  usageAmount
+  usageUnit
 }
 
 enum CCMEntityGroupBy {
@@ -159,6 +187,22 @@ type BillingEntityDataPoint {
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
   unallocatedCost: Number
+}
+
+type GcpBillingEntityDataPoint {
+  id: String
+  name: String
+  projectNumber: String
+  totalCost: Number
+  discounts: Number
+  subTotal: Number
+  productType: String
+  usage: String
+  region: String
+}
+
+type GcpBillingEntityData {
+  data: [GcpBillingEntityDataPoint]
 }
 
 type SunburstChartData {

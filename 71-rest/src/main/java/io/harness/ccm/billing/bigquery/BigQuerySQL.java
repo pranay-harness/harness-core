@@ -31,7 +31,7 @@ public class BigQuerySQL {
       Preconditions.checkNotNull(selectColumns);
       this.selectColumns = selectColumns;
       for (Object selectColumn : selectColumns) {
-        query.addCustomGroupings(selectColumn);
+        query.addCustomColumns(selectColumn);
       }
       return this;
     }
