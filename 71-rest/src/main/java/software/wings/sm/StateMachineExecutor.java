@@ -32,6 +32,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -94,6 +95,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.StateMachineIssueException;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
@@ -171,8 +173,8 @@ public class StateMachineExecutor implements StateInspectionListener {
    */
   public StateExecutionInstance execute(String appId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
-    final StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
+    StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
     return execute(stateMachine, executionUuid, executionName, contextParams, callback, null);
   }
 
@@ -190,8 +192,8 @@ public class StateMachineExecutor implements StateInspectionListener {
   public StateExecutionInstance execute(String appId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
-    final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
-    final StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
+    StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
     return execute(stateMachine, executionUuid, executionName, contextParams, callback, executionEventAdvisor);
   }
 
@@ -507,16 +509,20 @@ public class StateMachineExecutor implements StateInspectionListener {
         executionResponse = currentState.execute(context);
       }
 
-      final Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
+      Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
+      ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
       if (isNotEmpty(usage)) {
         List<ExpressionVariableUsage.Item> items = new ArrayList<>();
-        usage.forEach((expression, values)
-                          -> values.forEach((expressionValue, count)
-                                                -> items.add(ExpressionVariableUsage.Item.builder()
-                                                                 .expression(expression)
-                                                                 .value(expressionValue.toString())
-                                                                 .count(count)
-                                                                 .build())));
+        usage.forEach(
+            (expression, values)
+                -> values.forEach(
+                    (expressionValue, count)
+                        -> items.add(ExpressionVariableUsage.Item.builder()
+                                         .expression(expression)
+                                         .value(expressionEvaluator.substitute(expressionValue.toString(), emptyMap()))
+                                         .count(count)
+                                         .build())));
 
         stateInspectionService.append(
             context.getStateExecutionInstance().getUuid(), ExpressionVariableUsage.builder().variables(items).build());
@@ -604,7 +610,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       if (!updated) {
         // Currently, it is by design that handle execute response can be in race with some other ways to update the
         // state. Say it can be aborted.
-        final StateExecutionInstance dbStateExecutionInstance =
+        StateExecutionInstance dbStateExecutionInstance =
             wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
         if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
           throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
@@ -859,7 +865,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       addContext(context, exception);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException ex) {
-      final WingsException wingsException = new WingsException(ex);
+      WingsException wingsException = new WingsException(ex);
       addContext(context, wingsException);
       logger.error("Error when processing exception", wingsException);
     }
@@ -966,7 +972,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void discontinueExecution(ExecutionContextImpl context, ExecutionInterruptType interruptType) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
-    final List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
+    List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
 
     boolean updated = updateStatus(stateExecutionInstance, DISCONTINUING, executionStatuses, null);
     if (!updated) {
@@ -1352,7 +1358,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
         WorkflowExecution.class, workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
 
-    final ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
+    ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
     switch (type) {
       case IGNORE: {
         StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
@@ -1514,9 +1520,9 @@ public class StateMachineExecutor implements StateInspectionListener {
     ops.set("stateExecutionMap", stateExecutionMap);
 
     List<ContextElement> notifyElements = new ArrayList<>();
-    final String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
+    String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
     if (prevInstanceId != null) {
-      final StateExecutionInstance prevStateExecutionInstance =
+      StateExecutionInstance prevStateExecutionInstance =
           wingsPersistence.get(StateExecutionInstance.class, prevInstanceId);
       Preconditions.checkNotNull(prevStateExecutionInstance);
       if (prevStateExecutionInstance.getNotifyElements() != null) {
@@ -1674,7 +1680,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         exception.addContext(Environment.class, context.getEnv().getUuid());
       }
       if (context.getAppId() != null) {
-        final String accountId = appService.getAccountIdByAppId(context.getAppId());
+        String accountId = appService.getAccountIdByAppId(context.getAppId());
         exception.addContext(Account.class, accountId);
         exception.addContext(Application.class, context.getAppId());
       }
@@ -1685,10 +1691,10 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   @Override
   public void appendedDataFor(String stateExecutionInstanceId) {
-    final Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                    .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstanceId);
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstanceId);
 
-    final UpdateOperations<StateExecutionInstance> updateOperations =
+    UpdateOperations<StateExecutionInstance> updateOperations =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
             .set(StateExecutionInstanceKeys.hasInspection, true);
 

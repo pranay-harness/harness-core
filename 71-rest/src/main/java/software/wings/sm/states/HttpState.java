@@ -50,6 +50,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -268,8 +269,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String resolvedHeader = header;
     String resolvedAssertion = assertion;
     List<Variable> variables = new ArrayList<>();
-    if (isNotEmpty(this.getTemplateVariables())) {
-      for (Variable variable : this.getTemplateVariables()) {
+    if (isNotEmpty(getTemplateVariables())) {
+      for (Variable variable : getTemplateVariables()) {
         if (VariableType.ARTIFACT != variable.getType()) {
           variables.add(variable);
         }
@@ -336,37 +337,39 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       taskSocketTimeout = stateTimeout - 1000;
     }
 
-    final HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
-                                                      .header(finalHeader)
-                                                      .method(finalMethod)
-                                                      .body(finalBody)
-                                                      .url(finalUrl)
-                                                      .socketTimeoutMillis(taskSocketTimeout)
-                                                      .build();
+    HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
+                                                .header(finalHeader)
+                                                .method(finalMethod)
+                                                .body(finalBody)
+                                                .url(finalUrl)
+                                                .socketTimeoutMillis(taskSocketTimeout)
+                                                .build();
     HttpStateExecutionDataBuilder executionDataBuilder = HttpStateExecutionData.builder().templateVariables(
         templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters, expressionFunctorToken);
 
-    executionDataBuilder.httpUrl(httpTaskParameters.getUrl())
-        .httpMethod(httpTaskParameters.getMethod())
-        .header(httpTaskParameters.getHeader());
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
-    final DelegateTask delegateTask = DelegateTask.builder()
-                                          .async(true)
-                                          .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
-                                          .waitId(activityId)
-                                          .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
-                                          .data(TaskData.builder()
-                                                    .taskType(getTaskType().name())
-                                                    .parameters(new Object[] {httpTaskParameters})
-                                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                                    .expressionFunctorToken(expressionFunctorToken)
-                                                    .build())
-                                          .envId(envId)
-                                          .infrastructureMappingId(infrastructureMappingId)
-                                          .build();
+    executionDataBuilder.httpUrl(expressionEvaluator.substitute(httpTaskParameters.getUrl(), Collections.emptyMap()))
+        .httpMethod(expressionEvaluator.substitute(httpTaskParameters.getMethod(), Collections.emptyMap()))
+        .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()));
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
+                                    .waitId(activityId)
+                                    .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
+                                    .data(TaskData.builder()
+                                              .taskType(getTaskType().name())
+                                              .parameters(new Object[] {httpTaskParameters})
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .expressionFunctorToken(expressionFunctorToken)
+                                              .build())
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 
@@ -434,7 +437,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       activityId = key;
     }
 
-    final ExecutionResponse executionResponse = executionResponseBuilder.build();
+    ExecutionResponse executionResponse = executionResponseBuilder.build();
 
     updateActivityStatus(activityId, ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(),
         executionResponse.getExecutionStatus());

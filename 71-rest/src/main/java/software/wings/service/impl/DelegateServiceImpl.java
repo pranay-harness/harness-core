@@ -1819,7 +1819,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                 && assignDelegateService.isWhitelisted(delegateTask, delegateId))
             || assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
-          return DelegateTaskPackage.builder().delegateTask(delegateTask).build();
+          return resolvePreAssignmentExpressions(delegateTask);
         } else if (!featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
             && assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
           // Directly assign task only when FF is off and task is already whitelisted.
@@ -1985,8 +1985,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtils,
-              delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
-              delegateTask.getWorkflowExecutionId(), delegateTask.getData().getExpressionFunctorToken());
+              delegateTask.getArtifactStreamId(), featureFlagService, managerDecryptionService, secretManager,
+              delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
+              delegateTask.getData().getExpressionFunctorToken());
 
       if (delegateTask.getData().getParameters().length == 1
           && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
