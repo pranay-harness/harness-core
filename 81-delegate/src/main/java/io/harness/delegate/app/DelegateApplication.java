@@ -21,9 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
@@ -59,7 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -189,9 +186,6 @@ public class DelegateApplication {
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
       logger.info("Message service has been closed.");
-
-      // This should run in case of upgrade flow otherwise never called
-      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor"))).shutdownNow();
 
       injector.getInstance(ExecutorService.class).shutdown();
       injector.getInstance(EventPublisher.class).shutdown();

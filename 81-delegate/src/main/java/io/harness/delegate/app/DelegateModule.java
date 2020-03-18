@@ -8,7 +8,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -324,6 +323,16 @@ public class DelegateModule extends DependencyModule {
 
   @Provides
   @Singleton
+  @Named("rescheduleExecutor")
+  public ScheduledExecutorService rescheduleExecutor() {
+    ScheduledExecutorService rescheduleExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("reschedule-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { rescheduleExecutor.shutdown(); }));
+    return rescheduleExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("verificationExecutor")
   public ScheduledExecutorService verificationExecutor() {
     ScheduledExecutorService verificationExecutor = new ScheduledThreadPoolExecutor(
@@ -395,17 +404,19 @@ public class DelegateModule extends DependencyModule {
     return timeoutExecutor;
   }
 
+  @Provides
+  @Singleton
+  @Named("taskPollExecutor")
+  public ExecutorService taskPollExecutor() {
+    ExecutorService taskPollExecutorService = ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
+    return taskPollExecutorService;
+  }
+
   @Override
   protected void configure() {
     bind(DelegateService.class).to(DelegateServiceImpl.class);
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("taskPollExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("taskPollExecutorService"))
-        .toInstance(ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("task-poll-exec-%d").setPriority(Thread.MAX_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);

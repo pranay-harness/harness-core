@@ -108,6 +108,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
+import io.harness.threading.Schedulable;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -231,15 +232,15 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
-  @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
+  @Inject @Named("rescheduleExecutor") private ScheduledExecutorService rescheduleExecutor;
   @Inject @Named("installCheckExecutor") private ScheduledExecutorService profileExecutor;
-  @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
-  @Inject @Named("taskPollExecutorService") private ExecutorService taskPollExecutorService;
-  @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
-  @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
-  @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcementService;
-  @Inject @Named("alternativeExecutor") private ExecutorService alternativeExecutorService;
-  @Inject private ExecutorService syncExecutorService;
+  @Inject @Named("systemExecutor") private ExecutorService systemExecutor;
+  @Inject @Named("taskPollExecutor") private ExecutorService taskPollExecutor;
+  @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
+  @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
+  @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
+  @Inject @Named("alternativeExecutor") private ExecutorService alternativeExecutor;
+  @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -476,7 +477,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
           || !tfConfigInspectInstalled) {
-        systemExecutorService.submit(() -> {
+        systemExecutor.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
           boolean helm = helmInstalled;
@@ -645,7 +646,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleMessageSubmit(String message) {
     logger.info("^^MSG: " + message);
-    systemExecutorService.submit(() -> handleMessage(message));
+    systemExecutor.submit(() -> handleMessage(message));
   }
 
   private void handleMessage(String message) {
@@ -943,7 +944,7 @@ public class DelegateServiceImpl implements DelegateService {
       shutdownData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       messageService.putAllData(DELEGATE_DASH + getProcessId(), shutdownData);
 
-      systemExecutorService.submit(() -> {
+      systemExecutor.submit(() -> {
         long started = clock.millis();
         long now = started;
         while (!currentlyExecutingTasks.isEmpty() && now - started < UPGRADE_TIMEOUT) {
@@ -1009,8 +1010,9 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startTaskPolling() {
-    taskPollExecutor.scheduleAtFixedRate(
-        () -> taskPollExecutorService.submit(this ::pollForTask), 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    rescheduleExecutor.scheduleAtFixedRate(
+        new Schedulable("Failed to schedule a task", () -> taskPollExecutor.submit(this ::pollForTask)), 0,
+        POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.startAsync();
     }
@@ -1047,7 +1049,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        systemExecutor.submit(() -> {
           try {
             sendHeartbeat(builder, socket);
           } catch (Exception ex) {
@@ -1069,7 +1071,7 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Starting KeepAlive Packet at interval {} ms", KEEP_ALIVE_INTERVAL);
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        systemExecutor.submit(() -> {
           try {
             sendKeepAlivePacket(builder, socket);
           } catch (Exception ex) {
@@ -1087,7 +1089,7 @@ public class DelegateServiceImpl implements DelegateService {
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get()) {
         try {
-          systemExecutorService.submit(() -> {
+          systemExecutor.submit(() -> {
             try {
               sendHeartbeatWhenPollingEnabled(builder);
             } catch (Exception ex) {
@@ -1106,7 +1108,7 @@ public class DelegateServiceImpl implements DelegateService {
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get() && isEcsDelegate()) {
         try {
-          systemExecutorService.submit(() -> {
+          systemExecutor.submit(() -> {
             try {
               sendKeepAliveRequestWhenPollingEnabled(builder);
             } catch (Exception ex) {
@@ -1123,7 +1125,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void startLocalHeartbeat() {
     localHeartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutorService.submit(() -> {
+        systemExecutor.submit(() -> {
           Map<String, Object> statusData = new HashMap<>();
           if (selfDestruct.get()) {
             statusData.put(DELEGATE_SELF_DESTRUCT, true);
@@ -1184,7 +1186,7 @@ public class DelegateServiceImpl implements DelegateService {
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       logger.warn("Watcher process {} needs restart", watcherProcess);
-      systemExecutorService.submit(() -> {
+      systemExecutor.submit(() -> {
         try {
           logger.info("Send kill -9 to watcherProcess {}", watcherProcess);
           new ProcessExecutor().command("kill", "-9", watcherProcess).start();
@@ -1363,25 +1365,25 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("CPU Load percentage - Process: {}, System: {}", Precision.round(osBean.getProcessCpuLoad() * 100, 2),
         Precision.round(osBean.getSystemCpuLoad() * 100, 2));
 
-    if (systemExecutorService instanceof ThreadPoolExecutor) {
-      logger.info("systemExecutorService active thread count: {}",
-          ((ThreadPoolExecutor) systemExecutorService).getActiveCount());
-    }
-    if (asyncExecutorService instanceof ThreadPoolExecutor) {
+    if (systemExecutor instanceof ThreadPoolExecutor) {
       logger.info(
-          "asyncExecutorService active thread count: {}", ((ThreadPoolExecutor) asyncExecutorService).getActiveCount());
+          "systemExecutorService active thread count: {}", ((ThreadPoolExecutor) systemExecutor).getActiveCount());
     }
-    if (artifactExecutorService instanceof ThreadPoolExecutor) {
-      logger.info("artifactExecutorService active thread count: {}",
-          ((ThreadPoolExecutor) artifactExecutorService).getActiveCount());
+    if (asyncExecutor instanceof ThreadPoolExecutor) {
+      logger.info(
+          "asyncExecutorService active thread count: {}", ((ThreadPoolExecutor) asyncExecutor).getActiveCount());
     }
-    if (timeoutEnforcementService instanceof ThreadPoolExecutor) {
+    if (artifactExecutor instanceof ThreadPoolExecutor) {
+      logger.info(
+          "artifactExecutorService active thread count: {}", ((ThreadPoolExecutor) artifactExecutor).getActiveCount());
+    }
+    if (timeoutEnforcement instanceof ThreadPoolExecutor) {
       logger.info("timeoutEnforcementService active thread count: {}",
-          ((ThreadPoolExecutor) timeoutEnforcementService).getActiveCount());
+          ((ThreadPoolExecutor) timeoutEnforcement).getActiveCount());
     }
-    if (taskPollExecutorService instanceof ThreadPoolExecutor) {
-      logger.info("taskPollExecutorService active thread count: {}",
-          ((ThreadPoolExecutor) taskPollExecutorService).getActiveCount());
+    if (taskPollExecutor instanceof ThreadPoolExecutor) {
+      logger.info(
+          "taskPollExecutorService active thread count: {}", ((ThreadPoolExecutor) taskPollExecutor).getActiveCount());
     }
   }
 
@@ -1452,9 +1454,7 @@ public class DelegateServiceImpl implements DelegateService {
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
-        ExecutorService executorService = delegateTask.isAsync()
-            ? asyncExecutorService
-            : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
+        ExecutorService executorService = selectExecutorService(delegateTask);
 
         Future<List<DelegateConnectionResult>> future =
             executorService.submit(() -> delegateValidateTask.validationResults());
@@ -1464,7 +1464,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (delegateAlternativeValidateTask != null) {
           injector.injectMembers(delegateAlternativeValidateTask);
 
-          alternativeExecutorService.submit(() -> {
+          alternativeExecutor.submit(() -> {
             try (TaskLogContext ignore = new TaskLogContext(delegateTask.getUuid(),
                      delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTask), OVERRIDE_ERROR)) {
               logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
@@ -1501,6 +1501,17 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
     }
+  }
+
+  private ExecutorService selectExecutorService(DelegateTask delegateTask) {
+    if (delegateTask.isAsync()) {
+      return asyncExecutor;
+    }
+    if (delegateTask.getData().getTaskType().contains("BUILD")) {
+      return artifactExecutor;
+    }
+
+    return syncExecutor;
   }
 
   @NotNull
@@ -1608,16 +1619,14 @@ public class DelegateServiceImpl implements DelegateService {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
     injector.injectMembers(delegateRunnableTask);
-    ExecutorService executorService = delegateTask.isAsync()
-        ? asyncExecutorService
-        : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
+    ExecutorService executorService = selectExecutorService(delegateTask);
     Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
         taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
-    timeoutEnforcementService.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
+    timeoutEnforcement.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
