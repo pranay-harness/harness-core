@@ -68,6 +68,38 @@ public class TemplateResource {
   }
 
   /**
+   * Saves template softlink.
+   *
+   * @param templateUrl the url where template is present
+   * @return the rest response
+   */
+  @POST
+  @Path("/import")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
+  public RestResponse<Template> importTemplate(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, String templateUrl) {
+    return new RestResponse<>(templateService.getAndSaveImportedTemplate(templateUrl, accountId, appId));
+  }
+
+  /**
+   * Saves template softlink.
+   *
+   * @param templateUrl the url where template is present
+   * @return the rest response
+   */
+  @POST
+  @Path("/copy")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
+  public RestResponse<Template> copyTemplateFromRemote(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, String templateUrl) {
+    return new RestResponse<>(templateService.getAndSaveAsCopiedTemplate(templateUrl, accountId, appId));
+  }
+
+  /**
    * Updates template.
    *
    * @param template the template

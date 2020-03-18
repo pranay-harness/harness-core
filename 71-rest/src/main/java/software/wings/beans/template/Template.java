@@ -79,7 +79,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
       long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String accountId, String type,
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
-      String referencedTemplateId, Long referencedTemplateVersion, boolean isImported) {
+      String referencedTemplateId, Long referencedTemplateVersion, boolean isImported, String versionDetails) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;

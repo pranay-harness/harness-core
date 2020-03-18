@@ -27,6 +27,10 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   Template save(@Valid @NotNull Template template);
 
+  Template getAndSaveImportedTemplate(String templateUrl, String accountId, String appId);
+
+  Template getAndSaveAsCopiedTemplate(String templateUrl, String accountId, String appId);
+
   Template update(@Valid Template template);
 
   Template get(String templateId);

@@ -33,6 +33,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -126,15 +127,21 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Create.class)
   public Template saveReferenceTemplate(Template template) {
+    validateTemplateVariables(template.getVariables());
     setTemplateFolder(template);
     saveOrUpdate(template);
+    processTemplate(template);
 
+    template.setImported(true);
     // Client side keyword generation.
     template.setKeywords(getKeywords(template));
 
     String templateUuid =
         PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
     getReferencedTemplateVersion(template, templateUuid);
+
+    wingsPersistence.save(buildTemplateDetails(template, templateUuid));
+
     Template savedTemplate = get(templateUuid);
 
     auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
@@ -173,6 +180,61 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     return savedTemplate;
+  }
+
+  @Override
+  public Template getAndSaveImportedTemplate(String templateUrl, String accountId, String appId) {
+    Template downloadedTemplate = downloadTemplateFromUrl(templateUrl);
+    Template template = createLocalTemplateObject(downloadedTemplate, accountId, appId);
+    return saveReferenceTemplate(template);
+  }
+
+  @Override
+  public Template getAndSaveAsCopiedTemplate(String templateUrl, String accountId, String appId) {
+    Template downloadedTemplate = downloadTemplateFromUrl(templateUrl);
+    Template template = createLocalTemplateObject(downloadedTemplate, accountId, appId);
+    populateTemplateFolderInCopiedTemplate(template);
+    return save(template);
+  }
+
+  @VisibleForTesting
+  Template createLocalTemplateObject(Template downloadedTemplate, String accountId, String appId) {
+    return Template.builder()
+        .type(downloadedTemplate.getType())
+        .name(downloadedTemplate.getName())
+        .accountId(accountId)
+        .appId(appId)
+        .variables(downloadedTemplate.getVariables())
+        .templateObject(downloadedTemplate.getTemplateObject())
+        .referencedTemplateId(downloadedTemplate.getUuid())
+        .referencedTemplateVersion(downloadedTemplate.getVersion())
+        .versionDetails(downloadedTemplate.getVersionDetails())
+        .version(downloadedTemplate.getVersion())
+        .description(downloadedTemplate.getDescription())
+        .build();
+  }
+
+  private Template downloadTemplateFromUrl(String templateUrl) {
+    // Stub code. May move to other service later.
+    /*
+    get template by making request to url and throw error if not found.
+     */
+    return Template.builder()
+        .name("abc")
+        .version(1)
+        .templateObject(HttpTemplate.builder().build())
+        .uuid("testuuid")
+        .build();
+  }
+
+  private void populateTemplateFolderInCopiedTemplate(Template template) {
+    // Stub Code.
+    // value of folder may depend on design later.
+    // For now saving it at root level.
+    template.setFolderId(templateFolderService
+                             .getRootLevelFolder(template.getAccountId(),
+                                 templateGalleryService.getByAccount(template.getAccountId()).getUuid())
+                             .getUuid());
   }
 
   private VersionedTemplate buildTemplateDetails(Template template, String templateUuid) {
@@ -373,24 +435,9 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private void setReferencedTemplateDetails(Template template, String version) {
-    Long versionValue = version == null || version.equals("latest") ? template.getVersion() : Long.valueOf(version);
-
-    String referencedTemplateId = template.getReferencedTemplateId();
-    TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
-                                          .filter(TemplateVersionKeys.templateUuid, template.getUuid())
-                                          .filter(TemplateVersionKeys.version, versionValue)
-                                          .get();
-    // TODO: This is done to get account ID. Once we fix a static constant for account ID for command library that can
-    // be used everywhere.
-    Template referencedTemplate = get(referencedTemplateId, String.valueOf(templateVersion.getVersion()));
-    VersionedTemplate versionedTemplate = getVersionedTemplate(
-        referencedTemplate.getAccountId(), referencedTemplate.getUuid(), templateVersion.getVersion());
-    notNullCheck("Template [" + template.getName() + "] with version [" + templateVersion + "] does not exist",
-        versionedTemplate);
-    template.setTemplateObject(versionedTemplate.getTemplateObject());
-    template.setVersion(templateVersion.getVersion());
+    setTemplateDetails(template, version);
+    TemplateVersion templateVersion = getTemplateVersionObject(template.getUuid(), template.getVersion());
     template.setVersionDetails(templateVersion.getVersionDetails());
-    template.setVariables(versionedTemplate.getVariables());
   }
 
   @Override
@@ -399,6 +446,13 @@ public class TemplateServiceImpl implements TemplateService {
         .filter(VersionedTemplate.ACCOUNT_ID_KEY, accountId)
         .filter(TEMPLATE_ID_KEY, templateUuid)
         .filter(VERSION_KEY, templateVersion)
+        .get();
+  }
+
+  private TemplateVersion getTemplateVersionObject(String templateId, Long version) {
+    return wingsPersistence.createQuery(TemplateVersion.class)
+        .filter(TemplateVersionKeys.templateUuid, templateId)
+        .filter(TemplateVersionKeys.version, version)
         .get();
   }
 
