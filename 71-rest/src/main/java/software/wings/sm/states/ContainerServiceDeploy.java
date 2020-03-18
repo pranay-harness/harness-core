@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -8,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -151,6 +153,15 @@ public abstract class ContainerServiceDeploy extends State {
                 + "so nothing to rollback.");
           }
         }
+
+        if (contextData.rollbackElement == null) {
+          return ExecutionResponse.builder()
+              .executionStatus(SKIPPED)
+              .stateExecutionData(
+                  aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+              .build();
+        }
+
         executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
         executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
       }
