@@ -128,7 +128,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Timed
   public boolean triggerAPMDataCollection(String accountId) {
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
-    long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS;
+    long endMinute = getFlooredTimeForTimeSeries(
+        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS, 0);
+
     AtomicLong totalDataCollectionTasks = new AtomicLong(0);
     cvConfigurations.stream()
         .filter(cvConfiguration
@@ -171,6 +173,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       // All is well. Happy case.
       startTime = TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
     }
+    logger.info("For {} MaxCollectionMinute: {}, Starttime is {}, endTime is {}", cvConfiguration.getUuid(),
+        maxCVCollectionMinute > 0 ? Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(maxCVCollectionMinute)) : -1,
+        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMinute)));
     return startTime;
   }
 
@@ -639,10 +644,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return expectedStart;
   }
 
-  private long getFlooredEndTime(long currentTime, long delta) {
+  private long getFlooredTimeForTimeSeries(long currentTime, long delta) {
     long expectedStart = currentTime - delta;
-    if (Math.floorMod(expectedStart, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
-      expectedStart -= Math.floorMod(expectedStart, CRON_POLL_INTERVAL_IN_MINUTES);
+    if (Math.floorMod(expectedStart, CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) != 0) {
+      expectedStart -= Math.floorMod(expectedStart, CV_DATA_COLLECTION_INTERVAL_IN_MINUTE);
     }
     return expectedStart;
   }

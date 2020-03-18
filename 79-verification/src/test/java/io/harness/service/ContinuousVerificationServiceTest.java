@@ -1017,7 +1017,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logDataRecord.setStateType(StateType.SUMO);
     logDataRecord.setClusterLevel(ClusterLevel.H1);
 
-    long startMin = getFlooredTime(currentMinute - 100, 0);
+    long startMin = getFlooredTime(currentMinute - 100, 0, true);
     for (int i = 0; i < numOfMinutes; i++) {
       for (int j = 0; j < numOfHosts; j++) {
         logDataRecord.setUuid(null);
@@ -1085,7 +1085,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logDataRecordInRetry.setCvConfigId(cvConfigId);
     logDataRecordInRetry.setStateType(StateType.SUMO);
     logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
-    long startMin = getFlooredTime(currentMinute - 100, 0);
+    long startMin = getFlooredTime(currentMinute - 100, 0, true);
     for (int i = 0; i < numOfMinutes; i++) {
       for (int j = 0; j < numOfHosts; j++) {
         logDataRecordInRetry.setUuid(null);
@@ -1151,7 +1151,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logDataRecord.setStateType(StateType.SUMO);
     logDataRecord.setClusterLevel(ClusterLevel.H1);
     int numOfMinutes = CRON_POLL_INTERVAL_IN_MINUTES - 5;
-    long startMin = getFlooredTime(currentMinute - 100, 0);
+    long startMin = getFlooredTime(currentMinute - 100, 0, true);
     for (int i = 0; i < CRON_POLL_INTERVAL_IN_MINUTES; i++) {
       for (int j = 0; j < numOfHosts; j++) {
         logDataRecord.setUuid(null);
@@ -1184,7 +1184,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logDataRecord.setStateType(StateType.SUMO);
     logDataRecord.setClusterLevel(ClusterLevel.H1);
     int numOfMinutes = CRON_POLL_INTERVAL_IN_MINUTES - 5;
-    long startMin = getFlooredTime(currentMinute - 100, 0);
+    long startMin = getFlooredTime(currentMinute - 100, 0, true);
     for (int i = 0; i < CRON_POLL_INTERVAL_IN_MINUTES; i++) {
       for (int j = 0; j < numOfHosts; j++) {
         logDataRecord.setUuid(null);
@@ -1203,7 +1203,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   private void validateL2Clustering(
       LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute, long currentMin) {
-    long startMin = getFlooredTime(currentMin - 100, 0);
+    long startMin = getFlooredTime(currentMin - 100, 0, true);
     assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
     assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
     assertThat(learningEngineAnalysisTask.getState_execution_id())
@@ -1732,7 +1732,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     dataRecords.forEach(record -> record.compress());
     wingsPersistence.save(dataRecords);
 
-    long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
+    long expectedEndMin = getFlooredTime(TimeUnit.MILLISECONDS.toMinutes(currentTime), TIME_DELAY_QUERY_MINS, false);
+    long expectedEnd = TimeUnit.MINUTES.toMillis(expectedEndMin);
     long expectedStart = expectedEnd - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES * 2);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
@@ -1782,7 +1783,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(nrConfig);
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
 
-    long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(TIME_DELAY_QUERY_MINS + 135);
+    long expectedStartMin =
+        getFlooredTime(TimeUnit.MILLISECONDS.toMinutes(currentTime), TIME_DELAY_QUERY_MINS + 135, false);
+    long expectedStart = TimeUnit.MINUTES.toMillis(expectedStartMin);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1790,10 +1793,16 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(info.getStartTime()).isEqualTo(expectedStart);
   }
 
-  private long getFlooredTime(long currentTime, long delta) {
+  private long getFlooredTime(long currentTime, long delta, boolean isLogs) {
     long expectedStart = currentTime - delta;
-    if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
-      expectedStart -= Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+    if (isLogs) {
+      if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
+        expectedStart -= Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+      }
+    } else {
+      if (Math.floorMod(expectedStart, CV_DATA_COLLECTION_INTERVAL_IN_MINUTE) != 0) {
+        expectedStart -= Math.floorMod(expectedStart, CV_DATA_COLLECTION_INTERVAL_IN_MINUTE);
+      }
     }
     return expectedStart;
   }
@@ -1836,7 +1845,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogsL1Clustering_duringBaselineWindow() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    long startMin = getFlooredTime(currentMinute, 180);
+    long startMin = getFlooredTime(currentMinute, 180, true);
     LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
     sumoConfig.setBaselineStartMinute(startMin);
     sumoConfig.setBaselineEndMinute(startMin + 60);
@@ -1986,7 +1995,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     long currentTime = Timestamp.currentMinuteBoundary();
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(currentTime);
-    int lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 - PREDECTIVE_HISTORY_MINUTES;
+    int lastLogTime =
+        (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 - PREDECTIVE_HISTORY_MINUTES;
     LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
                                      .cvConfigId(cvConfigId)
                                      .logCollectionMinute(lastLogTime)
@@ -2031,7 +2041,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     long currentTime = Timestamp.currentMinuteBoundary();
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(currentTime);
-    int lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 - PREDECTIVE_HISTORY_MINUTES;
+    int lastLogTime =
+        (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 - PREDECTIVE_HISTORY_MINUTES;
 
     LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
                                       .cvConfigId(cvConfigId)
@@ -2042,7 +2053,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                       .build();
     record2.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
 
-    lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 + CRON_POLL_INTERVAL_IN_MINUTES;
+    lastLogTime =
+        (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 + CRON_POLL_INTERVAL_IN_MINUTES;
     LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
                                      .cvConfigId(cvConfigId)
                                      .logCollectionMinute(lastLogTime)
@@ -2446,8 +2458,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 130, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 100, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 130, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 100, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -2495,8 +2507,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 190, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 160, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 190, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 160, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -2550,8 +2562,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 190, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 160, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 190, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 160, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -2606,8 +2618,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 300, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 270, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 300, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 270, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -3137,8 +3149,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 29, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 15, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 29, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 15, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -3195,8 +3207,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                      .get();
 
     LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
-    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 29, 0));
-    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 15, 0));
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 29, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 15, 0, true));
 
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
