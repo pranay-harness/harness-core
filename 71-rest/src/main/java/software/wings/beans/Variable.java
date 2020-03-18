@@ -33,6 +33,7 @@ public class Variable {
   public static final String ENV_ID = "envId";
   public static final String INFRA_ID = "infraDefinitionId";
   public static final String SERVICE_ID = "serviceId";
+  public static final String DEPLOYMENT_TYPE = "deploymentType";
 
   private Map<String, Object> metadata = new HashMap<>();
 
@@ -85,6 +86,12 @@ public class Variable {
     return metadata.get(RELATED_FIELD) != null ? (String) metadata.get(RELATED_FIELD) : "";
   }
 
+  public String obtainDeploymentTypeField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(DEPLOYMENT_TYPE) != null ? (String) metadata.get(DEPLOYMENT_TYPE) : "";
+  }
   public String obtainArtifactTypeField() {
     if (metadata == null) {
       return "";

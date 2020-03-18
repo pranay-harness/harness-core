@@ -1580,7 +1580,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
           infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
           notNullCheck("InfraDefinition", infrastructureDefinition, USER);
-          if (service.getDeploymentType() != null) {
+          if (service != null && service.getDeploymentType() != null) {
             if (service.getDeploymentType() != infrastructureDefinition.getDeploymentType()) {
               throw new InvalidRequestException("Infrastructure Definition[" + infrastructureDefinition.getName()
                       + "] not compatible with Service [" + service.getName() + "]",

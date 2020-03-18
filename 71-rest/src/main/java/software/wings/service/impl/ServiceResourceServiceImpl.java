@@ -204,7 +204,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -351,7 +350,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
     List<Set<String>> scopedServicesList = new ArrayList<>();
     List<String> infraNames = new ArrayList<>();
     for (String infraId : infraIds) {
@@ -360,7 +358,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         continue;
       }
       InfrastructureDefinition infra = infrastructureDefinitionService.get(appId, infraId);
-      deploymentType.add(infra.getDeploymentType());
       if (isNotEmpty(infra.getScopedToServices())) {
         scopedServicesList.add(Sets.newHashSet(infra.getScopedToServices()));
         infraNames.add(infra.getName());
@@ -381,6 +378,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     // else filtering by deployment type. Artifact type filter is already be present in the API call.
+    List<String> deploymentType = request.getUriInfo().getQueryParameters().get("deploymentType");
     if (isNotEmpty(deploymentType)) {
       // if only one deployment type, load services with null deployment type or this one.
       if (deploymentType.size() == 1) {
