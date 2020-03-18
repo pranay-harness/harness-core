@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -2292,6 +2293,29 @@ public class WorkflowServiceTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldUpdateNotificationRulesAsUserGroupExpression() {
+    Workflow workflow1 = createCanaryWorkflow();
+    List<NotificationRule> notificationRules =
+        newArrayList(aNotificationRule()
+                         .withUserGroupAsExpression(true)
+                         .withUserGroupExpression("${serviceVariable.slack_user_group}")
+                         .build());
+
+    List<NotificationRule> updatedNotificationRules =
+        workflowService.updateNotificationRules(workflow1.getAppId(), workflow1.getUuid(), notificationRules);
+
+    assertThat(updatedNotificationRules).isNotEmpty();
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
+    wingsPersistence.save(workflow2);
   }
 
   @Test

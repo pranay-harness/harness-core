@@ -171,7 +171,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
     List<String> existingMemberIds =
         existingGroup.getMemberIds() != null ? existingGroup.getMemberIds() : new ArrayList<>();
-    List<String> newMemberIds = new ArrayList<>(existingMemberIds);
+    Set<String> newMemberIds = new HashSet<>(existingMemberIds);
     String newGroupName = null;
 
     for (software.wings.scim.PatchOperation patchOperation : patchRequest.getOperations()) {
@@ -202,14 +202,15 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       }
     }
 
+    List<String> finalMemberIds = new ArrayList<>(newMemberIds);
     UpdateOperations<UserGroup> updateOperations = wingsPersistence.createUpdateOperations(UserGroup.class);
     boolean updateGroup = false;
     if (StringUtils.isNotEmpty(newGroupName)) {
       updateOperations.set(UserGroupKeys.name, newGroupName);
       updateGroup = true;
     }
-    if (!existingMemberIds.equals(newMemberIds)) {
-      updateOperations.set(UserGroupKeys.memberIds, newMemberIds);
+    if (!existingMemberIds.equals(finalMemberIds)) {
+      updateOperations.set(UserGroupKeys.memberIds, finalMemberIds);
       updateGroup = true;
     }
     if (updateGroup) {
@@ -218,7 +219,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     return Response.status(Status.NO_CONTENT).build();
   }
 
-  private void updateNewMemberIds(Set<String> userIdsFromOperation, List<String> newMemberIds) {
+  private void updateNewMemberIds(Set<String> userIdsFromOperation, Set<String> newMemberIds) {
     for (String userId : userIdsFromOperation) {
       User user = wingsPersistence.get(User.class, userId);
       if (user != null) {
