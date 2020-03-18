@@ -9,8 +9,10 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+
 import static software.wings.service.impl.expression.ExpressionBuilder.APP_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.APP_NAME;
+import static software.wings.service.impl.expression.ExpressionBuilder.INFRA_PREFIX;
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_NAME;
 
@@ -86,6 +88,12 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId, stateType));
     } else if (entityType == ENVIRONMENT) {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
+      if (SubEntityType.INFRA_DEFINITION == subEntityType) {
+        // Filter all infra variables
+        final Set<String> filteredExpressions =
+            expressions.stream().filter(s -> !(s.startsWith(INFRA_PREFIX))).collect(Collectors.toSet());
+        expressions = new TreeSet<>(filteredExpressions);
+      }
     } else if (entityType == WORKFLOW) {
       expressions.addAll(
           workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType, subEntityType, forTags));
