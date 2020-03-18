@@ -60,6 +60,11 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     }
   }
 
+  @Override
+  public TimeScaleDBConfig getTimeScaleDBConfig() {
+    return timeScaleDBConfig;
+  }
+
   private boolean isValid(TimeScaleDBConfig timeScaleDBConfig) {
     if (timeScaleDBConfig == null || Strings.isNullOrEmpty(timeScaleDBConfig.getTimescaledbUrl())) {
       return false;

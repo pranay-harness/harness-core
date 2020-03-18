@@ -16,6 +16,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import software.wings.graphql.datafetcher.instance.InstanceTimeSeriesDataHelper;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
@@ -37,6 +38,7 @@ public class InstancesPurgeJob implements Job {
   @Inject private BackgroundExecutorService executorService;
   @Inject private InstanceService instanceService;
   @Inject private InstanceStatService instanceStatsService;
+  @Inject InstanceTimeSeriesDataHelper instanceTimeSeriesDataHelper;
 
   public static void add(PersistentScheduler jobScheduler) {
     JobDetail job = JobBuilder.newJob(InstancesPurgeJob.class)
@@ -65,6 +67,7 @@ public class InstancesPurgeJob implements Job {
 
     purgeOldStats();
     purgeOldDeletedInstances();
+    purgeOldInstancesFromTimeScaleDB();
 
     logger.info("Execution of instances and instance stats purge job completed. Time taken: {} millis",
         sw.elapsed(TimeUnit.MILLISECONDS));
@@ -94,6 +97,12 @@ public class InstancesPurgeJob implements Job {
     } else {
       logger.info("Purge of instances failed. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
     }
+  }
+
+  private void purgeOldInstancesFromTimeScaleDB() {
+    logger.info("Starting purge of instances from timescaledb");
+    instanceTimeSeriesDataHelper.purgeOldInstances();
+    logger.info("Completed purge of instances from timescaledb");
   }
 
   public Instant getStartingInstantOfRetentionOfInstances() {
