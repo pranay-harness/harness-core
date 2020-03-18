@@ -17,4 +17,5 @@ public class TimeScaleDBConfig {
   int socketTimeout;
   boolean logUnclosedConnections;
   private String loggerLevel;
+  private int instanceDataRetentionDays;
 }
