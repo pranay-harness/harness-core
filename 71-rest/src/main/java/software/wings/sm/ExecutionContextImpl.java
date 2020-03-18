@@ -293,7 +293,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (stateExecutionInstance.getContextElements() == null) {
       throw new InvalidRequestException("State Execution Context Elements can not be null");
     }
-    final WorkflowStandardParams workflowStandardParams =
+    WorkflowStandardParams workflowStandardParams =
         (WorkflowStandardParams) stateExecutionInstance.getContextElements()
             .stream()
             .filter(contextElement -> contextElement.getElementType() == ContextElementType.STANDARD)
@@ -661,14 +661,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     @Override
     public Object bind() {
       if (adoptDelegateDecryption
-          && featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())) {
+          && (featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())
+                 || featureFlagService.isEnabled(
+                        FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId()))) {
         return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\", " + expressionFunctorToken
             + ")}";
       }
       executionContext.managerDecryptionService.decrypt(serviceVariable,
           executionContext.secretManager.getEncryptionDetails(
               serviceVariable, executionContext.getAppId(), executionContext.getWorkflowExecutionId()));
-      final SecretString value = SecretString.builder().value(new String(serviceVariable.getValue())).build();
+      SecretString value = SecretString.builder().value(new String(serviceVariable.getValue())).build();
 
       // Cache the secret as service variable if they are available.
       if (executionContext.contextMap.containsKey(SERVICE_VARIABLE)) {
@@ -680,7 +682,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   private void prepareVariables(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable,
       Map<String, Object> variables, boolean adoptDelegateDecryption, int expressionFunctorToken) {
-    final String variableName = renderExpression(serviceVariable.getName());
+    String variableName = renderExpression(serviceVariable.getName());
 
     if (!variables.containsKey(variableName) && Type.ARTIFACT != serviceVariable.getType()) {
       if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
@@ -723,7 +725,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           ? new HashMap<>()
           : phaseOverrides.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
 
-      final List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
+      List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
           encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
 
       if (isNotEmpty(serviceVariables)) {
@@ -750,7 +752,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     public Object bind() {
       Map<String, Object> variables = new HashMap<>();
 
-      final Environment environment = executionContext.getEnv();
+      Environment environment = executionContext.getEnv();
 
       if (environment == null) {
         executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
@@ -759,7 +761,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
       executionContext.contextMap.remove(ENVIRONMENT_VARIABLE);
 
-      final List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
+      List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
           executionContext.getAppId(), environment.getUuid(), OBTAIN_VALUE);
 
       executionContext.prepareServiceVariables(EncryptedFieldComputeMode.OBTAIN_META);
@@ -808,7 +810,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       evaluator.addFunctor("shell", shellScriptFunctor);
     }
 
-    final ServiceVariablesBuilder serviceVariablesBuilder =
+    ServiceVariablesBuilder serviceVariablesBuilder =
         ServiceVariables.builder()
             .phaseOverrides(phaseElement == null ? null : phaseElement.getVariableOverrides())
             .executionContext(this)
@@ -823,7 +825,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       contextMap.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
     }
 
-    final EnvironmentVariables environmentVariables =
+    EnvironmentVariables environmentVariables =
         EnvironmentVariables.builder()
             .executionContext(this)
             .serviceVariableService(serviceVariableService)
@@ -853,11 +855,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       Environment env = getEnv();
       contextMap.put("secrets",
           SecretFunctor.builder()
+              .featureFlagService(featureFlagService)
               .managerDecryptionService(managerDecryptionService)
               .secretManager(secretManager)
               .accountId(app.getAccountId())
               .appId(app.getUuid())
               .envId(env != null ? env.getUuid() : null)
+              .adoptDelegateDecryption(adoptDelegateDecryption)
+              .expressionFunctorToken(
+                  stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken())
               .build());
     }
     return contextMap;
@@ -950,7 +956,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String getAppId() {
-    final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
+    ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
     if (!(contextElement instanceof WorkflowStandardParams)) {
       return null;
     }
@@ -959,7 +965,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String getAccountId() {
-    final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
+    ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
     if (!(contextElement instanceof WorkflowStandardParams)) {
       return null;
     }
@@ -1063,7 +1069,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     String stateExecutionId = stateExecutionInstance.getUuid();
 
-    final SweepingOutputInstanceBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
+    SweepingOutputInstanceBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
         getAppId(), pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId, sweepingOutputScope);
     return sweepingOutputBuilder.uuid(generateUuid());
   }
@@ -1205,7 +1211,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public AutoLogContext autoLogContext() {
-    final ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
     if (getAccountId() != null) {
       context.put(AccountLogContext.ID, getAccountId());
     }

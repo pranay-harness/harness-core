@@ -9,8 +9,10 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -18,13 +20,23 @@ import java.util.List;
 
 @Builder
 public class SecretFunctor extends LateBindingMap {
+  private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
   private String accountId;
   private String appId;
   private String envId;
+  private boolean adoptDelegateDecryption;
+  private int expressionFunctorToken;
 
   public Object getValue(String secretName) {
+    if (adoptDelegateDecryption && featureFlagService != null) {
+      if (featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, accountId)
+          || featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId)) {
+        return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
+      }
+    }
+
     EncryptedData encryptedData = appId == null || GLOBAL_APP_ID.equals(appId)
         ? secretManager.getSecretMappedToAccountByName(accountId, secretName)
         : secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);

@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -45,12 +47,12 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   public void shouldDecryptLocalEncryptedServiceVariables() {
     final String secretName = "MySecretName";
 
-    final int token = HashGenerator.generateIntegerHash();
+    int token = HashGenerator.generateIntegerHash();
 
-    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token, featureFlagService);
     assertFunctor(secretManagerFunctor);
 
-    final EncryptedData encryptedData =
+    EncryptedData encryptedData =
         EncryptedData.builder().encryptionType(EncryptionType.LOCAL).accountId(ACCOUNT_ID).build();
     encryptedData.setUuid(UUIDGenerator.generateUuid());
 
@@ -101,8 +103,9 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
         .build();
   }
 
-  private SecretManagerFunctor buildFunctor(int token) {
+  private SecretManagerFunctor buildFunctor(int token, FeatureFlagService featureFlagService) {
     return SecretManagerFunctor.builder()
+        .featureFlagService(featureFlagService)
         .secretManager(secretManager)
         .managerDecryptionService(managerDecryptionService)
         .accountId(ACCOUNT_ID)
@@ -118,18 +121,20 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDecryptKMSEncryptedServiceVariables() {
     final String secretName = "MySecretName";
-    final int token = HashGenerator.generateIntegerHash();
-    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
+    int token = HashGenerator.generateIntegerHash();
+    FeatureFlagService featureFlagServiceMock = mock(FeatureFlagService.class);
+    when(featureFlagServiceMock.isEnabled(any(), any())).thenReturn(true);
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token, featureFlagServiceMock);
 
     assertFunctor(secretManagerFunctor);
 
-    final EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
+    EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
     encryptedData.setUuid(UUIDGenerator.generateUuid());
 
     when(secretManager.getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName)).thenReturn(encryptedData);
 
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
-    final KmsConfig kmsConfig = KmsConfig.builder().build();
+    KmsConfig kmsConfig = KmsConfig.builder().build();
     kmsConfig.setUuid(UUIDGenerator.generateUuid());
     List<EncryptedDataDetail> nonLocalEncryptedVariables =
         Arrays.asList(EncryptedDataDetail.builder()
@@ -156,9 +161,9 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRejectInternalFunctor() {
     final String secretName = "MySecretName";
-    final int token = HashGenerator.generateIntegerHash();
+    int token = HashGenerator.generateIntegerHash();
 
-    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token, featureFlagService);
     assertFunctor(secretManagerFunctor);
 
     secretManagerFunctor.obtain(secretName, HashGenerator.generateIntegerHash());

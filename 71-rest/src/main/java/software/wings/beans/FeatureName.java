@@ -16,7 +16,6 @@ public enum FeatureName {
   COPY_ARTIFACT,
   INLINE_SSH_COMMAND,
   CV_DATA_COLLECTION_JOB,
-  THREE_PHASE_SECRET_DECRYPTION,
   DELEGATE_CAPABILITY_FRAMEWORK,
   DELEGATE_CAPABILITY_FRAMEWORK_PHASE1_ENABLE,
   DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE,
@@ -78,7 +77,26 @@ public enum FeatureName {
   USE_CDN_FOR_STORAGE_FILES,
   LOCAL_DELEGATE_CONFIG_OVERRIDE,
   REVALIDATE_WHITELISTED_DELEGATE,
-  APPD_CV_TASK;
+  APPD_CV_TASK,
+
+  /*
+  We have 3 phases for expression decryption. We using the two feature flags on controlling the behavior of enabling
+  decryption.
+  Phase 1 is when the task is about to be queued:
+      no feature - "${myvariable.that.is.secret"}                   -> "my secret"
+      two || three                                                  -> "${secretManager.obtain("secret key", token)}"
+
+  2. pre execution of task
+          no feature - "my secret"                                  -> "my secret"
+          two - "${secretManager.obtain("secret key", token)}"      -> "my secret"
+          three - "${secretManager.obtain("secret key", token)}"    -> "${secretDelegate.obtain("secret key", token)}"
+
+  3. Run on delegate
+          no feature & two - "my secret"                            -> "my secret"
+          three - "${secretDelegate.obtain("secret key", token)}"   -> "my secret"
+  */
+  TWO_PHASE_SECRET_DECRYPTION,
+  THREE_PHASE_SECRET_DECRYPTION;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

@@ -15,8 +15,10 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Value;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -27,7 +29,8 @@ import java.util.stream.Collectors;
 
 @Value
 @Builder
-public class SecretManagerFunctor implements ExpressionFunctor {
+public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
+  private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
   private String accountId;
@@ -41,6 +44,7 @@ public class SecretManagerFunctor implements ExpressionFunctor {
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();
 
+  @Override
   public Object obtain(String secretName, int token) {
     if (token != expressionFunctorToken) {
       throw new FunctorException("Inappropriate usage of internal functor");
@@ -74,10 +78,12 @@ public class SecretManagerFunctor implements ExpressionFunctor {
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
 
-    final List<EncryptedDataDetail> localEncryptedDetails =
+    boolean enabled = featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId);
+
+    List<EncryptedDataDetail> localEncryptedDetails =
         encryptedDataDetails.stream()
             .filter(encryptedDataDetail
-                -> encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
+                -> !enabled || encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
     if (isNotEmpty(localEncryptedDetails)) {
@@ -99,7 +105,7 @@ public class SecretManagerFunctor implements ExpressionFunctor {
 
     EncryptedDataDetail encryptedDataDetail = nonLocalEncryptedDetails.get(0);
 
-    final String encryptionConfigUuid = encryptedDataDetail.getEncryptionConfig().getUuid();
+    String encryptionConfigUuid = encryptedDataDetail.getEncryptionConfig().getUuid();
     encryptionConfigs.put(encryptionConfigUuid, encryptedDataDetail.getEncryptionConfig());
 
     SecretDetail secretDetail =

@@ -5,6 +5,7 @@ import io.harness.expression.ExpressionFunctor;
 import lombok.Value;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -15,7 +16,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
 
   public ManagerPreExecutionExpressionEvaluator(ServiceTemplateService serviceTemplateService,
       ConfigService configService, String appId, String envId, String serviceTemplateId,
-      ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId,
+      ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId, FeatureFlagService featureFlagService,
       ManagerDecryptionService managerDecryptionService, SecretManager secretManager, String accountId,
       String workflowExecutionId, int expressionFunctorToken) {
     addFunctor("configFile",
@@ -35,6 +36,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
             .build());
 
     secretManagerFunctor = SecretManagerFunctor.builder()
+                               .featureFlagService(featureFlagService)
                                .managerDecryptionService(managerDecryptionService)
                                .secretManager(secretManager)
                                .accountId(accountId)
@@ -43,6 +45,6 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
                                .workflowExecutionId(workflowExecutionId)
                                .expressionFunctorToken(expressionFunctorToken)
                                .build();
-    addFunctor("secretManager", secretManagerFunctor);
+    addFunctor(SecretManagerFunctorInterface.FUNCTOR_NAME, secretManagerFunctor);
   }
 }
