@@ -11,8 +11,9 @@ import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 @Data
 @Builder
 public class BillingAggregate {
-  public static final String BILLING_GCP_COST =
-      "cost"; // ideally, gcp specific constants should be organized in a constant class.
+  // ideally, gcp specific constants should be organized in a constant class.
+  public static final String BILLING_GCP_COST = "cost";
+  public static final String BILLING_GCP_CREDITS = "discount";
   QLCCMAggregateOperation operationType;
   String columnName;
   String alias;
@@ -43,8 +44,15 @@ public class BillingAggregate {
     }
 
     // map columnName to db columns
-    if (columnName.equals(BILLING_GCP_COST)) {
-      functionCall.addColumnParams(GcpBillingTableSchema.cost);
+    switch (columnName) {
+      case BILLING_GCP_COST:
+        functionCall.addColumnParams(GcpBillingTableSchema.cost);
+        break;
+      case BILLING_GCP_CREDITS:
+        functionCall.addColumnParams(GcpBillingTableSchema.creditsAmount);
+        break;
+      default:
+        break;
     }
     alias = String.join("_", operationType.name().toLowerCase(), columnName);
     return AliasedObject.toAliasedObject(functionCall, alias);
