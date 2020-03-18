@@ -3,9 +3,12 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndTags;
@@ -56,6 +59,15 @@ public class BillingStatsTimeSeriesDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
 
   private static final long ONE_DAY_MILLIS = 86400000;
+  private LoadingCache<CacheKey, String> entityIdToNameCache =
+      Caffeine.newBuilder().build(key -> statsHelper.getEntityName(key.field, key.entityId));
+
+  @Value
+  private static class CacheKey {
+    private String entityId;
+    private String uuid;
+    private BillingDataMetaDataFields field;
+  }
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -310,7 +322,8 @@ public class BillingStatsTimeSeriesDataFetcher
   }
 
   private QLReference buildQLReference(BillingDataMetaDataFields field, String key, String id) {
-    return QLReference.builder().type(field.getFieldName()).id(id).name(statsHelper.getEntityName(field, key)).build();
+    CacheKey cacheKey = new CacheKey(key, id, field);
+    return QLReference.builder().type(field.getFieldName()).id(id).name(entityIdToNameCache.get(cacheKey)).build();
   }
 
   private QLReference buildQLReferenceForUtilization(String name, String id) {

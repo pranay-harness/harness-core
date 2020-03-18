@@ -123,10 +123,10 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
-    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$0.0");
+    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$50.0");
     assertThat(data.getTotalIdleCost().getStatsLabel())
         .isEqualTo("Total Idle Cost of 09 October, 2019 - 19 October, 2019");
-    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("0.0% of total cost $100.0");
+    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("50.0% of total cost $100.0");
     assertThat(data.getCpuIdleCost().getStatsValue()).isEqualTo("-");
     assertThat(data.getCpuIdleCost().getStatsLabel()).isEqualTo("CPU idle Cost");
     assertThat(data.getCpuIdleCost().getStatsDescription()).isEqualTo("-");
@@ -192,10 +192,10 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     QLIdleCostTrendStats data = (QLIdleCostTrendStats) idleCostTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data).isNotNull();
-    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$0.0");
+    assertThat(data.getTotalIdleCost().getStatsValue()).isEqualTo("$50.0");
     assertThat(data.getTotalIdleCost().getStatsLabel())
         .isEqualTo("Total Idle Cost of 09 October, 2019 - 19 October, 2019");
-    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("0.0% of total cost $100.0");
+    assertThat(data.getTotalIdleCost().getStatsDescription()).isEqualTo("50.0% of total cost $100.0");
     assertThat(data.getCpuIdleCost().getStatsValue()).isEqualTo("$20.0");
     assertThat(data.getCpuIdleCost().getStatsLabel()).isEqualTo("CPU idle Cost");
     assertThat(data.getCpuIdleCost().getStatsDescription()).isEqualTo("60.0% avg. utilization");
