@@ -85,6 +85,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String REF_TEMPLATE_NAME = "Ref Template";
 
   @Inject private TemplateVersionService templateVersionService;
+  @Inject private TemplateServiceImpl templateServiceImpl;
 
   @Test
   @Owner(developers = SRINIVAS)
@@ -995,12 +996,12 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void shouldSaveAndGetReferencedTemplate() {
     Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
-
     Template refTemplate = saveReferencedTemplate(savedTemplate);
 
-    assertThat(refTemplate.getName()).isEqualTo(REF_TEMPLATE_NAME);
     assertThat(refTemplate.isImported()).isEqualTo(true);
-    assertThat(refTemplate.getReferencedTemplateId()).isNotNull();
+    assertThat(refTemplate.getReferencedTemplateId()).isEqualTo(savedTemplate.getUuid());
+    assertThat(refTemplate.getReferencedTemplateVersion()).isEqualTo(savedTemplate.getVersion());
+    getTemplateAndValidate(savedTemplate, APP_ID);
   }
 
   @Test
@@ -1015,15 +1016,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   private Template saveReferencedTemplate(Template savedImportedTemplate) {
-    Template refTemplate = Template.builder()
-                               .name(REF_TEMPLATE_NAME)
-                               .isImported(true)
-                               .referencedTemplateId(savedImportedTemplate.getUuid())
-                               .appId(savedImportedTemplate.getAppId())
-                               .version(Long.valueOf(1))
-                               .referencedTemplateVersion(savedImportedTemplate.getVersion())
-                               .accountId(savedImportedTemplate.getAccountId())
-                               .build();
+    Template refTemplate = templateServiceImpl.createLocalTemplateObject(
+        savedImportedTemplate, savedImportedTemplate.getAccountId(), savedImportedTemplate.getAppId());
     return templateService.saveReferenceTemplate(refTemplate);
   }
 }
