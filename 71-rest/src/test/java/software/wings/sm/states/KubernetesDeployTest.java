@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -157,6 +158,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                                   .withInstanceCount("1")
                                                   .withInstanceUnitType(COUNT)
                                                   .build();
+  @InjectMocks KubernetesDeployRollback kubernetesDeployRollback = new KubernetesDeployRollback(STATE_NAME);
 
   @Mock private ContainerService containerService;
 
@@ -273,6 +275,9 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+
+    kubernetesDeployRollback.setCommandName(COMMAND_NAME);
+    kubernetesDeployRollback.setRollback(true);
   }
 
   @Test
@@ -341,5 +346,25 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("async", false)
         .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testKubernetesRollbackDeployTest() {
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("featureFlagService", featureFlagService);
+    on(context).set("evaluator", evaluator);
+
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+
+    ExecutionResponse response = kubernetesDeployRollback.execute(context);
+    assertThat(response).isNotNull();
+    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("No context found for rollback. Skipping.");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
   }
 }
