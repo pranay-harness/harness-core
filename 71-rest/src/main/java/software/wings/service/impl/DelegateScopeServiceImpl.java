@@ -6,7 +6,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -52,8 +51,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public DelegateScope get(String accountId, String delegateScopeId) {
     return wingsPersistence.createQuery(DelegateScope.class)
-        .filter(DelegateScope.ACCOUNT_ID_KEY, accountId)
-        .filter(DelegateScope.ID_KEY, delegateScopeId)
+        .filter(DelegateScopeKeys.uuid, delegateScopeId)
+        .filter(DelegateScopeKeys.accountId, accountId)
         .get();
   }
 
@@ -124,13 +123,12 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       logger.warn("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
-    delegateScope.setAppId(GLOBAL_APP_ID);
-    DelegateScope persistedScope = wingsPersistence.saveAndGet(DelegateScope.class, delegateScope);
-    logger.info("Added delegate scope: {}", persistedScope.getUuid());
+    wingsPersistence.save(delegateScope);
+    logger.info("Added delegate scope: {}", delegateScope.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateScope.getAccountId(), null, delegateScope, Event.Type.CREATE);
     logger.info("Auditing adding of DelegateScope for accountId={}", delegateScope.getAccountId());
-    return persistedScope;
+    return delegateScope;
   }
 
   @Override
