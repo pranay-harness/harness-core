@@ -33,13 +33,16 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.jre.JreConfig;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +53,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Mock Query query;
   @Mock UpdateOperations updateOperations;
   @Mock FeatureFlagService featureFlagService;
+  @Mock MainConfiguration mainConfiguration;
 
   /**
    * Test keepAlivePath is taken when delegate.KeepAlivePacket = true
@@ -79,9 +83,15 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     doReturn(aDelegateSequenceBuilder().withHostName("delegate").withSequenceNum(1).withDelegateToken("token").build())
         .when(delegateService)
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
-
     on(delegateService).set("featureFlagService", featureFlagService);
+    on(delegateService).set("mainConfiguration", mainConfiguration);
     when(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(false);
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
+    JreConfig oracleJreConfig = JreConfig.builder().version("1.8.0_191").build();
+    HashMap<String, JreConfig> jreConfigMap = new HashMap<>();
+    jreConfigMap.put("oracle8u191", oracleJreConfig);
+    doReturn("oracle8u191").when(mainConfiguration).getCurrentJre();
+    doReturn(jreConfigMap).when(mainConfiguration).getJreConfigs();
 
     delegateService.handleEcsDelegateRequest(Delegate.builder().keepAlivePacket(false).build());
 

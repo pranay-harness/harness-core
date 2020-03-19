@@ -7,7 +7,7 @@ if [ ! -e start.sh ]; then
   exit 1
 fi
 
-JRE_DIR=jre1.8.0_191
+JRE_DIR=jdk8u242-b08-jre
 JRE_BINARY=$JRE_DIR/bin/java
 case "$OSTYPE" in
   solaris*)
@@ -15,7 +15,7 @@ case "$OSTYPE" in
     ;;
   darwin*)
     OS=macosx
-    JRE_DIR=jre1.8.0_191.jre
+    JRE_DIR=jdk8u242-b08-jre
     JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
     ;;
   linux*)
@@ -38,7 +38,7 @@ case "$OSTYPE" in
     ;;
 esac
 
-JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-${OS}-x64.tar.gz
+JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink

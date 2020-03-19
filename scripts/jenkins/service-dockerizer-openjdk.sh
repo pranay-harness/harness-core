@@ -11,7 +11,7 @@ fi
 
 docker login -u _json_key --password-stdin https://us.gcr.io < $GCR_CREDENTIALS
 
-export IMAGE_TAG="us.gcr.io/platform-205701/harness${PURPOSE}/${SNAPSHOT_PREFIX}${SERVICE}:23200${VERSION}"
+export IMAGE_TAG="us.gcr.io/platform-205701/harness${PURPOSE}/${SNAPSHOT_PREFIX}${SERVICE}:24200${VERSION}"
 docker build -t ${IMAGE_TAG} destination/dist/${SERVICE} -f destination/dist/${SERVICE}/Dockerfile-gcr
 docker push ${IMAGE_TAG}
 

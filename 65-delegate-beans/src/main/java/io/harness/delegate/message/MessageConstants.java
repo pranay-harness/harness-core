@@ -33,6 +33,8 @@ public interface MessageConstants {
   String DELEGATE_SELF_DESTRUCT = "selfDestruct";
   String DELEGATE_MIGRATE = "migrate";
   String DELEGATE_SWITCH_STORAGE = "switchStorage";
+  String DELEGATE_JRE_VERSION = "delegateJreVersion";
+  String MIGRATE_TO_JRE_VERSION = "migrateToJreVersion";
 
   // Messages sent from watcher to delegate processes
   String UPGRADING_DELEGATE = "upgrading";

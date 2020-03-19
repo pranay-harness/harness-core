@@ -10,6 +10,7 @@ import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
@@ -44,6 +45,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE1_ENABLE;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE;
+import static software.wings.beans.FeatureName.UPGRADE_JRE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
@@ -249,6 +251,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String README = "README";
   private static final String README_TXT = "/README.txt";
   private static final String EMPTY_VERSION = "0.0.0";
+  private static final String JRE_DIRECTORY = "jreDirectory";
+  private static final String JRE_MAC_DIRECTORY = "jreMacDirectory";
+  private static final String JRE_TAR_PATH = "jreTarPath";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -536,7 +541,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     existingDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
-
+    existingDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
     return existingDelegate;
   }
 
@@ -816,17 +821,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
 
-      JreConfig jreConfig = useCDN && mainConfiguration.getCdnConfig() != null
-          ? mainConfiguration.getCdnConfig().getJreConfig()
-          : mainConfiguration.getJreConfig();
+      JreConfig jreConfig = getJreConfig(inquiry.getAccountId());
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
 
-      params.put("jre_dir", jreConfig.getJreDir());
-      params.put("jre_dir_macos", jreConfig.getJreDirMacOs());
-      params.put("jre_tar_path_solaris", jreConfig.getJreTarPathSolaris());
-      params.put("jre_tar_path_macos", jreConfig.getJreTarPathMacOs());
-      params.put("jre_tar_path_linux", jreConfig.getJreTarPathLinux());
+      params.put(JRE_DIRECTORY, jreConfig.getJreDirectory());
+      params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
+      params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());
 
       return params.build();
     }
@@ -835,6 +836,40 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         + ", jarFileExists: " + jarFileExists;
     logger.warn(msg);
     return null;
+  }
+
+  /**
+   * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE and USE_CDN_FOR_STORAGE_FILES FeatureFlags.
+   * @param accountId
+   * @return
+   */
+  private JreConfig getJreConfig(String accountId) {
+    final boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
+    final boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
+
+    String jreVersion = upgradeJre ? mainConfiguration.getMigrateToJre() : mainConfiguration.getCurrentJre();
+    JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
+    CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
+
+    if (useCDN && cdnConfig != null) {
+      String tarPath = cdnConfig.getCdnJreTarPaths().get(jreVersion);
+      jreConfig = JreConfig.builder()
+                      .version(jreConfig.getVersion())
+                      .jreDirectory(jreConfig.getJreDirectory())
+                      .jreMacDirectory(jreConfig.getJreMacDirectory())
+                      .jreTarPath(tarPath)
+                      .build();
+    }
+    return jreConfig;
+  }
+
+  /**
+   * Returns delegate's JRE version for a given account Id
+   * @param accountId
+   * @return
+   */
+  private String getTargetJreVersion(String accountId) {
+    return getJreConfig(accountId).getVersion();
   }
 
   private Integer getMinorVersion(String delegateVersion) {
@@ -1299,6 +1334,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
     broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
         .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
+
+    String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
+    StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
+    logger.info("Sending message to delegate: {}", jreMessage);
 
     if (accountService.isAccountMigrated(delegate.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
@@ -2340,6 +2380,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
     updateExistingDelegateWithSequenceConfigData(registeredDelegate);
     registeredDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
+    registeredDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
 
     return registeredDelegate;
   }

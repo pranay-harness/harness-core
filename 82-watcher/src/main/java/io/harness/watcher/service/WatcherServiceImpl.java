@@ -7,6 +7,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_IS_NEW;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_JRE_VERSION;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
@@ -22,6 +23,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PEND
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_VERSION;
 import static io.harness.delegate.message.MessageConstants.EXTRA_WATCHER;
+import static io.harness.delegate.message.MessageConstants.MIGRATE_TO_JRE_VERSION;
 import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.NEW_WATCHER;
 import static io.harness.delegate.message.MessageConstants.NEXT_WATCHER;
@@ -135,9 +137,14 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
+  private static final long DELEGATE_RESTART_TO_UPGRADE_JRE_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
   private static final String USER_DIR = "user.dir";
+  private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
+  private final String watcherJreVersion = System.getProperty("java.version");
+  private long delegateRestartedToUpgradeJreAt;
+  private boolean watcherRestartedToUpgradeJre;
 
   private static final boolean multiVersion;
 
@@ -174,6 +181,7 @@ public class WatcherServiceImpl implements WatcherService {
   public void run(boolean upgrade) {
     WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
     WatcherStackdriverLogAppender.setManagerClient(managerClient);
+    logger.info("Watcher will start running on JRE {}", watcherJreVersion);
 
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
@@ -401,6 +409,11 @@ public class WatcherServiceImpl implements WatcherService {
                 && (Boolean) delegateData.get(DELEGATE_SWITCH_STORAGE)) {
               switchStorage();
             } else {
+              if (delegateData.containsKey(DELEGATE_JRE_VERSION) && delegateData.containsKey(MIGRATE_TO_JRE_VERSION)) {
+                String delegateJreVersion = (String) delegateData.get(DELEGATE_JRE_VERSION);
+                String migrateToJreVersion = (String) delegateData.get(MIGRATE_TO_JRE_VERSION);
+                upgradeJre(delegateJreVersion, migrateToJreVersion);
+              }
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
               int delegateMinorVersion = getMinorVersion(delegateVersion);
@@ -516,7 +529,7 @@ public class WatcherServiceImpl implements WatcherService {
           } else if (drainingRestartNeededList.containsAll(runningDelegates) && working.compareAndSet(false, true)) {
             logger.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
-            startDelegateProcess(null, ".", drainingRestartNeededList, "DelegateRestartScript", getProcessId());
+            startDelegateProcess(null, ".", drainingRestartNeededList, DELEGATE_RESTART_SCRIPT, getProcessId());
           }
         }
         if (!multiVersion && isNotEmpty(upgradeNeededList)) {
@@ -570,6 +583,12 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void switchStorage() throws Exception {
     logger.info("Switching Storage");
+    downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+    restartDelegate();
+    restartWatcher();
+  }
+
+  private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() throws Exception {
     if (multiVersion) {
       for (String expectedVersion : findExpectedDelegateVersions()) {
         downloadRunScripts(expectedVersion, true);
@@ -577,16 +596,49 @@ public class WatcherServiceImpl implements WatcherService {
     } else {
       downloadRunScripts(".", true);
     }
-
-    restartDelegate();
-    restartWatcher();
   }
 
   private void restartDelegate() {
     if (multiVersion) {
       runningDelegates.forEach(this ::drainDelegateProcess);
     } else if (working.compareAndSet(false, true)) {
-      startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), "DelegateRestartScript", getProcessId());
+      startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), DELEGATE_RESTART_SCRIPT, getProcessId());
+    }
+  }
+
+  private void upgradeJre(String delegateJreVersion, String migrateToJreVersion) throws Exception {
+    logger.info("Delegate JRE: {} Watcher JRE: {} MigrateTo JRE: {} ", delegateJreVersion, watcherJreVersion,
+        migrateToJreVersion);
+    restartDelegateToUpgradeJre(delegateJreVersion, migrateToJreVersion);
+    restartWatcherToUpgradeJre(migrateToJreVersion);
+  }
+
+  /**
+   * Restart delegate only when there is a mismatch between delegate's JRE and migrate to JRE version. A timeout of
+   * 10mins is kept as a buffer to avoid repetitive restarting of delegates.
+   * @param delegateJreVersion
+   * @param migrateToJreVersion
+   * @throws Exception
+   */
+  private void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) throws Exception {
+    if (!delegateJreVersion.equals(migrateToJreVersion)
+        && clock.millis() - delegateRestartedToUpgradeJreAt > DELEGATE_RESTART_TO_UPGRADE_JRE_TIMEOUT) {
+      downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+      delegateRestartedToUpgradeJreAt = clock.millis();
+      restartDelegate();
+    }
+  }
+
+  /**
+   * Restart watcher only when there is a mismatch between watcher's JRE and migrate to JRE version.
+   * @param migrateToJreVersion
+   * @throws Exception
+   */
+  private void restartWatcherToUpgradeJre(String migrateToJreVersion) throws Exception {
+    if (!migrateToJreVersion.equals(watcherJreVersion) && !watcherRestartedToUpgradeJre) {
+      downloadRunScriptsBeforeRestartingDelegateAndWatcher();
+      watcherRestartedToUpgradeJre = true;
+      restartWatcher();
     }
   }
 
@@ -953,9 +1005,11 @@ public class WatcherServiceImpl implements WatcherService {
         logger.error("[Old] Failed to upgrade watcher");
         process.getProcess().destroy();
         process.getProcess().waitFor();
+        watcherRestartedToUpgradeJre = false;
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      watcherRestartedToUpgradeJre = false;
     } catch (IOException | RuntimeException e) {
       logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
@@ -976,6 +1030,7 @@ public class WatcherServiceImpl implements WatcherService {
           logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
+      watcherRestartedToUpgradeJre = false;
     } finally {
       working.set(false);
     }

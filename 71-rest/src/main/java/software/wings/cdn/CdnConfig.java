@@ -3,7 +3,8 @@ package software.wings.cdn;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import software.wings.jre.JreConfig;
+
+import java.util.Map;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -14,5 +15,5 @@ public class CdnConfig {
   String delegateJarPath;
   String watcherJarPath;
   String watcherMetaDataFilePath;
-  JreConfig jreConfig;
+  Map<String, String> cdnJreTarPaths;
 }

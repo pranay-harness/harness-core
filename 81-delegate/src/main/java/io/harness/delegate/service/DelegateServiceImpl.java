@@ -11,6 +11,7 @@ import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
+import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
@@ -19,6 +20,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_IS_NEW;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_JRE_VERSION;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
@@ -33,6 +35,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEED
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_VERSION;
+import static io.harness.delegate.message.MessageConstants.MIGRATE_TO_JRE_VERSION;
 import static io.harness.delegate.message.MessageConstants.UPGRADING_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
 import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
@@ -212,6 +215,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
+  private static final long DELEGATE_JRE_VERSION_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
   private static final int KEEP_ALIVE_INTERVAL = 23000;
   private static final int CLIENT_TOOL_RETRIES = 10;
@@ -222,6 +226,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
   private static final String START_SH = "start.sh";
+  public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
 
@@ -289,10 +294,13 @@ public class DelegateServiceImpl implements DelegateService {
   private long stoppedAcquiringAt;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
+  private long delegateJreVersionChangedAt;
 
   private final String delegateConnectionId = generateUuid();
   private volatile boolean switchStorageMsgSent;
   private DelegateConnectionHeartbeat connectionHeartbeat;
+  private String migrateToJreVersion = System.getProperty(JAVA_VERSION);
+  private boolean sendJreInformationToWatcher;
 
   private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
@@ -310,6 +318,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void run(boolean watched) {
     try {
       accountId = delegateConfiguration.getAccountId();
+      logger.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(managerClient);
@@ -680,6 +689,8 @@ public class DelegateServiceImpl implements DelegateService {
       setSwitchStorage(false);
     } else if (StringUtils.startsWith(message, MIGRATE)) {
       migrate(StringUtils.substringAfter(message, MIGRATE));
+    } else if (StringUtils.startsWith(message, JRE_VERSION)) {
+      updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -696,6 +707,19 @@ public class DelegateServiceImpl implements DelegateService {
         logger.error("Exception while decoding task", e);
       }
     }
+  }
+
+  private void updateJreVersion(String targetJreVersion) {
+    if (!targetJreVersion.equals(migrateToJreVersion)) {
+      logger.info("JRE version different");
+      delegateJreVersionChangedAt = clock.millis();
+      migrateToJreVersion = targetJreVersion;
+      sendJreInformationToWatcher = false;
+    } else {
+      sendJreInformationToWatcher = clock.millis() - delegateJreVersionChangedAt > DELEGATE_JRE_VERSION_TIMEOUT;
+    }
+
+    logger.info("Send info to watcher {}", sendJreInformationToWatcher);
   }
 
   @Override
@@ -1141,6 +1165,12 @@ public class DelegateServiceImpl implements DelegateService {
               statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
               switchStorageMsgSent = true;
             }
+            if (sendJreInformationToWatcher) {
+              logger.info("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+                  migrateToJreVersion);
+              statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
+              statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
+            }
             if (upgradePending.get()) {
               statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
             }
@@ -1312,6 +1342,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       setSwitchStorage(delegateReceived.isUseCdn());
+      updateJreVersion(delegateReceived.getUseJreVersion());
 
       timeLimiter.callWithTimeout(
           ()
