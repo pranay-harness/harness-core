@@ -1948,7 +1948,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         capabilities, delegates);
   }
 
-  private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
+  @VisibleForTesting
+  void setValidationStarted(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate to validate {} task", delegateTask.isAsync() ? ASYNC : SYNC);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
@@ -1994,7 +1995,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     wingsPersistence.update(updateQuery, updateOperations);
   }
 
-  private DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
+  @VisibleForTesting
+  DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, accountId)
                                     .filter(ID_KEY, taskId)
@@ -2114,7 +2116,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+  @VisibleForTesting
+  DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 

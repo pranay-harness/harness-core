@@ -6,14 +6,19 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.FeatureName.REVALIDATE_WHITELISTED_DELEGATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -35,11 +40,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
+import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.util.ArrayList;
@@ -51,6 +60,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
+  @Mock private AssignDelegateService assignDelegateService;
+  @Mock private FeatureFlagService featureFlagService;
+  @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
 
   @Before
   public void setUp() {
@@ -71,6 +83,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
+    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
       DelegateTask task =
@@ -134,6 +147,77 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     delegateService.add(delegateBuilder.delegateName("delegateName").build());
     assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo("delegateName");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldAcquireDelegateTaskWhitelistedDelegateAndFFisOFF() {
+    doReturn(false).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
+
+    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+
+    doReturn(getDelegateTaskPackage())
+        .when(spydelegateService)
+        .assignTask(anyString(), anyString(), any(DelegateTask.class));
+
+    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
+    when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
+
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+
+    verify(spydelegateService, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldstartTaskValidationForWhitelistedDelegateAndFFisOn() {
+    doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
+
+    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+
+    doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
+
+    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
+    when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
+
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+
+    verify(spydelegateService, times(1)).setValidationStarted(anyString(), any(DelegateTask.class));
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldstartTaskValidationNotWhitelistedAndFFisOff() {
+    doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
+
+    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+
+    doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
+
+    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(false);
+    when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(true);
+
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+
+    verify(spydelegateService, times(1)).setValidationStarted(anyString(), any(DelegateTask.class));
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldNotAcquireDelegateTaskIfTaskIsNull() {
+    doReturn(null).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+    assertThat(spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ")).isNull();
+  }
+
+  private DelegateTaskPackage getDelegateTaskPackage() {
+    return DelegateTaskPackage.builder().delegateTask(getDelegateTask()).build();
   }
 
   private DelegateTask getDelegateTask() {
