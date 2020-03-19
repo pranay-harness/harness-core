@@ -28,6 +28,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
@@ -126,6 +127,19 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
     when(appService.get(eq(appId))).thenReturn(application);
     ClusterRecord actualClusterRecord = clusterRecordService.from(infrastructureDefinition);
     assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldGetNonFromInfrastructureDefinitionWithoutClusterName() {
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .appId(appId)
+            .infrastructure(AwsEcsInfrastructure.builder().cloudProviderId(cloudProviderId).build())
+            .build();
+    ClusterRecord actualClusterRecord = clusterRecordService.from(infrastructureDefinition);
+    assertThat(actualClusterRecord).isEqualTo(null);
   }
 
   @Test

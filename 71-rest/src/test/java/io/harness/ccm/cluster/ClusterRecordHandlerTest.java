@@ -2,7 +2,9 @@ package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
@@ -23,18 +25,25 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.util.Arrays;
 
 public class ClusterRecordHandlerTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;
   @Mock ClusterRecordService clusterRecordService;
   @Mock CCMPerpetualTaskManager ccmPerpetualTaskManager;
+  @Mock InfrastructureDefinitionDao infrastructureDefinitionDao;
+  @Mock InfrastructureMappingDao infrastructureMappingDao;
   @InjectMocks @Spy private ClusterRecordHandler handler;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -43,8 +52,13 @@ public class ClusterRecordHandlerTest extends CategoryTest {
 
   private SettingAttribute prevSettingAttribute;
   private SettingAttribute settingAttribute;
+  private SettingAttribute awsSettingAttribute;
+
   private InfrastructureDefinition infrastructureDefinition;
   private InfrastructureMapping infrastructureMapping;
+
+  private InfrastructureDefinition ecsInfrastructureDefinition;
+  private InfrastructureMapping ecsInfrastructureMapping;
 
   @Before
   public void setUp() {
@@ -64,6 +78,13 @@ public class ClusterRecordHandlerTest extends CategoryTest {
                            .withName("CURR_NAME")
                            .withValue(kubernetesClusterConfig)
                            .build();
+
+    awsSettingAttribute = aSettingAttribute()
+                              .withUuid(cloudProviderId)
+                              .withAccountId(accountId)
+                              .withName("CURR_NAME")
+                              .withValue(AwsConfig.builder().build())
+                              .build();
 
     infrastructureDefinition =
         InfrastructureDefinition.builder().infrastructure(DirectKubernetesInfrastructure.builder().build()).build();
@@ -89,7 +110,7 @@ public class ClusterRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldUpsertOnSavedCloudProvider() {
+  public void shouldUpsertOnSavedK8SCloudProvider() {
     handler.onSaved(settingAttribute);
     verify(clusterRecordService).upsert(isA(ClusterRecord.class));
   }
@@ -97,7 +118,34 @@ public class ClusterRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
+  public void shouldUpsertOnSavedAWSCloudProvider() {
+    ecsInfrastructureDefinition =
+        InfrastructureDefinition.builder().infrastructure(AwsEcsInfrastructure.builder().build()).build();
+    ecsInfrastructureMapping =
+        EcsInfrastructureMapping.builder().accountId(accountId).region("REGION").clusterName("CLUSTER_NAME").build();
+    when(infrastructureDefinitionDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureDefinition));
+    when(infrastructureMappingDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureMapping));
 
+    handler.onSaved(awsSettingAttribute);
+    verify(clusterRecordService, times(2)).upsert(isA(ClusterRecord.class));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotUpsertOnSavedNonConvertibleCloudProvider() {
+    when(infrastructureDefinitionDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureDefinition));
+    when(infrastructureMappingDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureMapping));
+    when(clusterRecordService.from(isA(InfrastructureDefinition.class))).thenReturn(null);
+    when(clusterRecordService.from(isA(InfrastructureMapping.class))).thenReturn(null);
+
+    handler.onSaved(awsSettingAttribute);
+    verify(clusterRecordService, times(0)).upsert(isA(ClusterRecord.class));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
   public void shouldUpsertOnUpdatedCloudProvider() {
     handler.onUpdated(prevSettingAttribute, settingAttribute);
     verify(clusterRecordService).upsert(isA(ClusterRecord.class));

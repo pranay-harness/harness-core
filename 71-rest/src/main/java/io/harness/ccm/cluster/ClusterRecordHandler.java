@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +16,14 @@ import software.wings.service.impl.SettingAttributeObserver;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Slf4j
 @Singleton
 public class ClusterRecordHandler
@@ -23,20 +31,23 @@ public class ClusterRecordHandler
   private CCMSettingService ccmSettingService;
   private ClusterRecordService clusterRecordService;
   private CCMPerpetualTaskManager ccmPerpetualTaskManager;
+  private InfrastructureDefinitionDao infrastructureDefinitionDao;
+  private InfrastructureMappingDao infrastructureMappingDao;
 
   @Inject
   public ClusterRecordHandler(CCMSettingService ccmSettingService, ClusterRecordService clusterRecordService,
-      CCMPerpetualTaskManager ccmPerpetualTaskManager) {
+      CCMPerpetualTaskManager ccmPerpetualTaskManager, InfrastructureDefinitionDao infrastructureDefinitionDao,
+      InfrastructureMappingDao infrastructureMappingDao) {
     this.ccmSettingService = ccmSettingService;
     this.clusterRecordService = clusterRecordService;
     this.ccmPerpetualTaskManager = ccmPerpetualTaskManager;
+    this.infrastructureDefinitionDao = infrastructureDefinitionDao;
+    this.infrastructureMappingDao = infrastructureMappingDao;
   }
 
   @Override
   public void onSaved(SettingAttribute cloudProvider) {
-    if (KUBERNETES_CLUSTER.name().equals(cloudProvider.getValue().getType())) {
-      upsertClusterRecord(cloudProvider);
-    }
+    upsertClusterRecord(cloudProvider);
   }
 
   @Override
@@ -60,9 +71,35 @@ public class ClusterRecordHandler
   }
 
   private void upsertClusterRecord(SettingAttribute cloudProvider) {
-    ClusterRecord clusterRecord = clusterRecordService.from(cloudProvider);
-    if (clusterRecord != null) {
-      clusterRecordService.upsert(clusterRecord);
+    List<ClusterRecord> clusterRecords = new ArrayList<>();
+
+    switch (cloudProvider.getValue().getType()) {
+      case "AWS":
+        List<InfrastructureDefinition> infrastructureDefinitions =
+            infrastructureDefinitionDao.list(cloudProvider.getUuid());
+        clusterRecords.addAll(Optional.ofNullable(infrastructureDefinitions)
+                                  .map(Collection::stream)
+                                  .orElseGet(Stream::empty)
+                                  .map(id -> clusterRecordService.from(id))
+                                  .collect(Collectors.toList()));
+        List<InfrastructureMapping> infrastructureMappings = infrastructureMappingDao.list(cloudProvider.getUuid());
+        clusterRecords.addAll(Optional.ofNullable(infrastructureMappings)
+                                  .map(Collection::stream)
+                                  .orElseGet(Stream::empty)
+                                  .map(im -> clusterRecordService.from(im))
+                                  .collect(Collectors.toList()));
+        break;
+      case "KUBERNETES_CLUSTER":
+        clusterRecords = Arrays.asList(clusterRecordService.from(cloudProvider));
+        break;
+      default:
+        break;
+    }
+
+    if (isNotEmpty(clusterRecords)) {
+      for (ClusterRecord clusterRecord : clusterRecords) {
+        clusterRecordService.upsert(clusterRecord);
+      }
     }
   }
 
