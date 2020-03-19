@@ -58,11 +58,15 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public void updateGitSyncErrorStatus(List<GitSyncError> gitSyncErrors, Status status, String accountId) {
-    if (Arrays.asList(Status.EXPIRED, Status.DISCARDED).contains(status)) {
-      deleteExpiredGitSyncErrors(
-          gitSyncErrors.stream().map(error -> error.getUuid()).collect(Collectors.toList()), accountId);
+    try {
+      if (Arrays.asList(Status.EXPIRED, Status.DISCARDED).contains(status)) {
+        deleteExpiredGitSyncErrors(
+            gitSyncErrors.stream().map(error -> error.getUuid()).collect(Collectors.toList()), accountId);
+      }
+      wingsPersistence.save(getActivitiesForGitSyncErrors(gitSyncErrors, status));
+    } catch (Exception ex) {
+      logger.error("Error while discarding git sync error", ex);
     }
-    wingsPersistence.save(getActivitiesForGitSyncErrors(gitSyncErrors, status));
   }
 
   private List<GitFileActivity> getActivitiesForGitSyncErrors(final List<GitSyncError> errors, Status status) {
@@ -133,43 +137,48 @@ public class GitSyncServiceImpl implements GitSyncService {
   public GitFileProcessingSummary logFileActivityAndGenerateProcessingSummary(List<Change> changeList,
       Map<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap, Status status,
       String errorMessage) {
-    List<Change> changeListCopy = new ArrayList<>(changeList);
-    List<GitFileActivity> activities = new LinkedList<>();
-    if (EmptyPredicate.isEmpty(failedYamlFileChangeMap)) {
-      // if files got skipped before git processing, mark them as FAILURE
-      if (status == Status.SKIPPED) {
-        activities =
-            changeListCopy.stream()
-                .map(
-                    change -> buildBaseGitFileActivity(change).status(Status.FAILED).errorMessage(errorMessage).build())
-                .collect(Collectors.toList());
-      }
-    } else {
-      // mark all files in failedYamlFileChangeMap as FAILURE
-      activities.addAll(failedYamlFileChangeMap.entrySet()
-                            .stream()
-                            .map(e -> {
-                              final Change change = e.getValue().getChange();
-                              // keep removing FAILURE files from original list of files, to obtain remaining COMPLETED
-                              // ones
-                              changeListCopy.remove(change);
-                              return buildBaseGitFileActivity(change)
-                                  .status(Status.FAILED)
-                                  .errorMessage(e.getValue().getErrorMsg())
-                                  .build();
-                            })
-                            .collect(Collectors.toList()));
-      // files successfully processed
-      if (EmptyPredicate.isNotEmpty(changeListCopy)) {
-        activities.addAll(changeListCopy.stream()
-                              .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
+    try {
+      List<Change> changeListCopy = new ArrayList<>(changeList);
+      List<GitFileActivity> activities = new LinkedList<>();
+      if (EmptyPredicate.isEmpty(failedYamlFileChangeMap)) {
+        // if files got skipped before git processing, mark them as FAILURE
+        if (status == Status.SKIPPED) {
+          activities =
+              changeListCopy.stream()
+                  .map(change
+                      -> buildBaseGitFileActivity(change).status(Status.FAILED).errorMessage(errorMessage).build())
+                  .collect(Collectors.toList());
+        }
+      } else {
+        // mark all files in failedYamlFileChangeMap as FAILURE
+        activities.addAll(failedYamlFileChangeMap.entrySet()
+                              .stream()
+                              .map(e -> {
+                                final Change change = e.getValue().getChange();
+                                // keep removing FAILURE files from original list of files, to obtain remaining
+                                // COMPLETED ones
+                                changeListCopy.remove(change);
+                                return buildBaseGitFileActivity(change)
+                                    .status(Status.FAILED)
+                                    .errorMessage(e.getValue().getErrorMsg())
+                                    .build();
+                              })
                               .collect(Collectors.toList()));
+        // files successfully processed
+        if (EmptyPredicate.isNotEmpty(changeListCopy)) {
+          activities.addAll(changeListCopy.stream()
+                                .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
+                                .collect(Collectors.toList()));
+        }
       }
+      if (EmptyPredicate.isNotEmpty(activities)) {
+        wingsPersistence.save(activities);
+      }
+      return getFileProcessingSummary(activities);
+    } catch (Exception ex) {
+      logger.error("Error while logging activities", ex);
     }
-    if (EmptyPredicate.isNotEmpty(activities)) {
-      wingsPersistence.save(activities);
-    }
-    return getFileProcessingSummary(activities);
+    return null;
   }
 
   private GitFileActivityBuilder buildBaseGitFileActivity(Change change) {
