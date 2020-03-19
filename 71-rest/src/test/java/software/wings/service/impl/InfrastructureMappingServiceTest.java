@@ -102,6 +102,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
@@ -1222,6 +1223,25 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException ex) {
       Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Namespace");
     }
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testValidateAwsInfraMapping() {
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    AwsInfrastructureMapping awsInfrastructureMapping = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping()
+                                                            .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
+                                                            .build();
+
+    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateAwsInfraMapping(awsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Host Connection Type can't be empty");
+
+    // happy case when right values
+    awsInfrastructureMapping.setHostConnectionType(HostConnectionType.PRIVATE_DNS.name());
+    infrastructureMappingService.validateAwsInfraMapping(awsInfrastructureMapping);
   }
 
   @Test

@@ -102,6 +102,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfraMappingSweepingOutput;
@@ -310,6 +311,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         PhysicalInfrastructureMappingWinRm physicalInfraMappingWinRm =
             (PhysicalInfrastructureMappingWinRm) infraMapping;
         physicalInfraMappingWinRm.setHostNames(getUniqueHostNames(physicalInfraMappingWinRm));
+        break;
+      case InfrastructureType.AWS_INSTANCE:
+        AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
+        if (isEmpty(awsInfrastructureMapping.getHostConnectionType())) {
+          awsInfrastructureMapping.setHostConnectionType(awsInfrastructureMapping.isUsePublicDns()
+                  ? HostConnectionType.PUBLIC_DNS.name()
+                  : HostConnectionType.PRIVATE_DNS.name());
+        }
         break;
       default:
     }
@@ -933,6 +942,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (infraMapping.getAwsInstanceFilter() == null) {
         throw new InvalidRequestException("Instance filter must not be null when provision instances is false.", USER);
       }
+    }
+
+    if (isEmpty(infraMapping.getHostConnectionType())) {
+      throw new InvalidRequestException("Host Connection Type can't be empty", USER);
     }
   }
 
