@@ -67,6 +67,14 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     super(InfrastructureMappingType.AWS_ECS.name());
   }
 
+  @lombok.Builder
+  public EcsInfrastructureMapping(String accountId, String region, String clusterName) {
+    this();
+    this.accountId = accountId;
+    this.region = region;
+    super.setClusterName(clusterName);
+  }
+
   private boolean applyCommonVariable(String key, Object value) {
     switch (key) {
       case "region": {

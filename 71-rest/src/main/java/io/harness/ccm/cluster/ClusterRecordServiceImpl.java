@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Objects.isNull;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
@@ -164,11 +165,13 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     switch (infraMappingInfrastructureProvider.getInfrastructureType()) {
       case AWS_ECS:
         AwsEcsInfrastructure ecsInfrastructure = (AwsEcsInfrastructure) infraMappingInfrastructureProvider;
-        cluster = EcsCluster.builder()
-                      .cloudProviderId(ecsInfrastructure.getCloudProviderId())
-                      .region(ecsInfrastructure.getRegion())
-                      .clusterName(ecsInfrastructure.getClusterName())
-                      .build();
+        if (isNotEmpty(ecsInfrastructure.getClusterName())) {
+          cluster = EcsCluster.builder()
+                        .cloudProviderId(ecsInfrastructure.getCloudProviderId())
+                        .region(ecsInfrastructure.getRegion())
+                        .clusterName(ecsInfrastructure.getClusterName())
+                        .build();
+        }
         break;
       case DIRECT_KUBERNETES:
         DirectKubernetesInfrastructure k8sInfrastructure =
@@ -227,11 +230,13 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
         break;
       case AWS_ECS:
         EcsInfrastructureMapping ecsInfraMapping = (EcsInfrastructureMapping) infraMapping;
-        cluster = EcsCluster.builder()
-                      .cloudProviderId(ecsInfraMapping.getComputeProviderSettingId())
-                      .region(ecsInfraMapping.getRegion())
-                      .clusterName(ecsInfraMapping.getClusterName())
-                      .build();
+        if (isNotEmpty(ecsInfraMapping.getClusterName())) {
+          cluster = EcsCluster.builder()
+                        .cloudProviderId(ecsInfraMapping.getComputeProviderSettingId())
+                        .region(ecsInfraMapping.getRegion())
+                        .clusterName(ecsInfraMapping.getClusterName())
+                        .build();
+        }
         break;
       case GCP_KUBERNETES:
         GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =

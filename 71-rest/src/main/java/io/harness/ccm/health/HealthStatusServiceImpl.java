@@ -22,12 +22,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
-  public static final Long PERPETUAL_TASK_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-
   @Inject SettingsService settingsService;
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
