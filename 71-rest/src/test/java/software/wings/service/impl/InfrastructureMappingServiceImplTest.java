@@ -22,9 +22,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -82,6 +84,33 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
 
     assertThat(physicalInfraMappingWinRm.getHostNames().size()).isEqualTo(2);
     assertThat(physicalInfraMappingWinRm.getHostNames().get(0)).isEqualTo("ABC");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testHostConnectionTypeDefaultSetting() {
+    // default for private dns
+    AwsInfrastructureMapping awsInfrastructureMapping = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping()
+                                                            .withInfraMappingType(InfrastructureType.AWS_INSTANCE)
+                                                            .build();
+    infrastructureMappingService.setDefaults(awsInfrastructureMapping);
+    assertThat(awsInfrastructureMapping.getHostConnectionType()).isEqualTo(HostConnectionType.PRIVATE_DNS.name());
+
+    // default for public dns
+    awsInfrastructureMapping.setUsePublicDns(true);
+    awsInfrastructureMapping.setHostConnectionType(null);
+    infrastructureMappingService.setDefaults(awsInfrastructureMapping);
+    assertThat(awsInfrastructureMapping.getHostConnectionType()).isEqualTo(HostConnectionType.PUBLIC_DNS.name());
+
+    // not modify existing values
+    awsInfrastructureMapping.setHostConnectionType(HostConnectionType.PRIVATE_DNS.name());
+    infrastructureMappingService.setDefaults(awsInfrastructureMapping);
+    assertThat(awsInfrastructureMapping.getHostConnectionType()).isEqualTo(HostConnectionType.PRIVATE_DNS.name());
+
+    awsInfrastructureMapping.setHostConnectionType(HostConnectionType.PUBLIC_DNS.name());
+    infrastructureMappingService.setDefaults(awsInfrastructureMapping);
+    assertThat(awsInfrastructureMapping.getHostConnectionType()).isEqualTo(HostConnectionType.PUBLIC_DNS.name());
   }
 
   @Test

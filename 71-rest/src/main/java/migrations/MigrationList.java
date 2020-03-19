@@ -317,6 +317,7 @@ public class MigrationList {
         .add(Pair.of(297, BaseMigration.class))
         .add(Pair.of(298, GitCommitStatusMigration.class))
         .add(Pair.of(299, DataDogLogCvConfigMigration.class))
+        .add(Pair.of(300, HostConnectionTypeMigration.class))
         .build();
   }
 }
