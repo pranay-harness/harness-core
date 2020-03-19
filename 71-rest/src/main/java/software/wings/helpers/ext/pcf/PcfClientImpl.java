@@ -39,6 +39,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.kubectl.Utils;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -794,7 +795,9 @@ public class PcfClientImpl implements PcfClient {
     }
 
     if (exitValue == 0) {
-      command = format("cf target -o %s -s %s", pcfRequestConfig.getOrgName(), pcfRequestConfig.getSpaceName());
+      command = format("cf target -o %s -s %s", Utils.encloseWithQuotesIfNeeded(pcfRequestConfig.getOrgName()),
+          Utils.encloseWithQuotesIfNeeded(pcfRequestConfig.getSpaceName()));
+
       exitValue = executeCommand(command, env, executionLogCallback);
     }
 
