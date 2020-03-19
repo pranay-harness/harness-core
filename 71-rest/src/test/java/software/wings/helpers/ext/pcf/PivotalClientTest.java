@@ -1081,8 +1081,13 @@ public class PivotalClientTest extends WingsBaseTest {
     Map<String, String> env = new HashMap<>();
     env.put("CF_HOME", "CF_HOME");
     doReturn(env).when(client).getEnvironmentMapForPcfExecutor(anyString());
-    PcfRequestConfig config =
-        PcfRequestConfig.builder().endpointUrl("api.pivotal.io").userName("user").password("passwd").build();
+    PcfRequestConfig config = PcfRequestConfig.builder()
+                                  .endpointUrl("api.pivotal.io")
+                                  .userName("user")
+                                  .password("passwd")
+                                  .orgName("org with space")
+                                  .spaceName("space with name")
+                                  .build();
     client.doLogin(config, mockCallback, "conf");
     verify(client, times(3)).executeCommand(anyString(), anyMap(), any());
   }
