@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -105,6 +106,7 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
@@ -129,6 +131,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -147,6 +150,7 @@ import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -161,6 +165,18 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                      .version(VERSION)
                                                      .status(Status.ENABLED)
                                                      .lastHeartBeat(System.currentTimeMillis());
+  private static final JreConfig ORACLE_JRE_CONFIG = JreConfig.builder()
+                                                         .version("1.8.0_191")
+                                                         .jreDirectory("jre1.8.0_191")
+                                                         .jreMacDirectory("jre1.8.0_191.jre")
+                                                         .jreTarPath("jre/8u191/jre-8u191-${OS}-x64.tar.gz")
+                                                         .build();
+  private static final JreConfig OPENJDK_JRE_CONFIG = JreConfig.builder()
+                                                          .version("1.8.0_242")
+                                                          .jreDirectory("jdk8u242-b08-jre")
+                                                          .jreMacDirectory("jdk8u242-b08-jre")
+                                                          .jreTarPath("jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz")
+                                                          .build();
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
   @Mock private LicenseService licenseService;
@@ -177,6 +193,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AlertService alertService;
   @Mock private VersionInfoManager versionInfoManager;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -192,14 +209,17 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
-    JreConfig jreConfig = new JreConfig("jre1.8.0_191", "jre1.8.0_191.jre", "jre/8u191/jre-8u191-solaris-x64.tar.gz",
-        "jre/8u191/jre-8u191-macosx-x64.tar.gz", "jre/8u191/jre-8u191-linux-x64.tar.gz");
     when(subdomainUrlHelper.getDelegateMetadataUrl(any())).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
     when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
-    when(mainConfiguration.getJreConfig()).thenReturn(jreConfig);
+    HashMap<String, JreConfig> jreConfigMap = new HashMap<>();
+    jreConfigMap.put("oracle8u191", ORACLE_JRE_CONFIG);
+    jreConfigMap.put("openjdk8u242", OPENJDK_JRE_CONFIG);
+    when(mainConfiguration.getCurrentJre()).thenReturn("oracle8u191");
+    when(mainConfiguration.getMigrateToJre()).thenReturn("openjdk8u242");
+    when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
@@ -548,6 +568,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File gzipFile = delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -580,6 +601,62 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void shouldDownloadScriptsForOpenJdk() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(true);
+    File gzipFile = delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(DELEGATE_DIR + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/start.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStartOpenJdk.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(
+              new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateOpenJdk.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");

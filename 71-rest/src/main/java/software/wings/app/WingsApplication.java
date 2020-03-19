@@ -476,6 +476,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
+    logger.info("Manager is running on JRE: {}", System.getProperty("java.version"));
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {

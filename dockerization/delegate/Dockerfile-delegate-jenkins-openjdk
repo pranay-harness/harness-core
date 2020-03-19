@@ -9,27 +9,13 @@ COPY dockerization/delegate/apt-source-list /etc/apt/sources.list.d/kubernetes.l
 
 RUN apt-get update && apt-get install -y kubectl
 
-RUN groupadd -r harness -g 1000560000 && useradd --no-log-init -r -u 1000560000 -g harness harness
-
 COPY dockerization/delegate/scripts /opt/harness-delegate/
 
 RUN chmod +x /opt/harness-delegate/*.sh
 
-RUN chown harness /opt/harness-delegate /opt/harness-delegate/*.sh
-
-RUN chgrp harness /opt/harness-delegate /opt/harness-delegate/*.sh
-
-RUN mkdir -p /home/harness
-
-RUN chown harness /home/harness
-
-RUN chgrp harness /home/harness
-
-USER harness
-
 WORKDIR /opt/harness-delegate
 
-RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u232/OpenJDK8U-jre_x64_linux_8u232b09.tar.gz | tar -xz
+RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
 
 CMD ./start.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \

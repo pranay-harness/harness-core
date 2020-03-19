@@ -134,7 +134,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
-  @JsonProperty("jreConfig") private JreConfig jreConfig;
+  @JsonProperty("currentJre") private String currentJre;
+  @JsonProperty("migrateToJre") private String migrateToJre;
+  @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
   @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
 
   private int applicationPort;

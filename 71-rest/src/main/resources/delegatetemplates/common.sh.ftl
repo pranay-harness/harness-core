@@ -7,19 +7,19 @@ if [ ! -e start.sh ]; then
   exit 1
 fi
 
-JRE_DIR=${jre_dir}
+JRE_DIR=${jreDirectory}
 JRE_BINARY=$JRE_DIR/bin/java
 case "$OSTYPE" in
   solaris*)
-    JVM_URL=${delegateStorageUrl}/${jre_tar_path_solaris}
+    OS=solaris
     ;;
   darwin*)
-    JVM_URL=${delegateStorageUrl}/${jre_tar_path_macos}
-    JRE_DIR=${jre_dir_macos}
+    OS=macosx
+    JRE_DIR=${jreMacDirectory}
     JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=${delegateStorageUrl}/${jre_tar_path_linux}
+    OS=linux
     ;;
   bsd*)
     echo "freebsd not supported."
@@ -37,6 +37,8 @@ case "$OSTYPE" in
     echo "unknown: $OSTYPE"
     ;;
 esac
+
+JVM_URL=${delegateStorageUrl}/${jreTarPath}
 
 <#noparse>
 SOURCE="${BASH_SOURCE[0]}"

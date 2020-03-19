@@ -6,4 +6,5 @@ public interface ManagerMessageConstants {
   String MIGRATE = "[MIGRATE]";
   String USE_CDN = "[USE_CDN]";
   String USE_STORAGE_PROXY = "[USE_STORAGE_PROXY]";
+  String JRE_VERSION = "[JRE_VERSION]";
 }

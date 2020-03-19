@@ -12,7 +12,7 @@ cd dist/migrator ;
 cp ../../51-migrator/target/migrator-capsule.jar .
 cp ../../keystore.jks .
 
-cp ../../dockerization/migrator/Dockerfile-migrator-jenkins-k8-gcr-openJDK232 ./Dockerfile-gcr
+cp ../../dockerization/migrator/Dockerfile-migrator-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
@@ -36,8 +36,8 @@ cp ../../71-rest/config.yml .
 cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../tools/monitoring/datadog/dd-java-agent.jar .
 
-cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openJDK232 ./Dockerfile
-cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openJDK232 ./Dockerfile-gcr
+cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/manager/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
@@ -57,8 +57,8 @@ cp ../../79-verification/keystore.jks .
 cp ../../79-verification/verification-config.yml .
 cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
-cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-openJDK232 ./Dockerfile
-cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr-openJDK232 ./Dockerfile-gcr
+cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -R ../../dockerization/verification/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
@@ -75,8 +75,8 @@ cp ../../72-event-server/target/event-server-capsule.jar .
 cp ../../72-event-server/key.pem .
 cp ../../72-event-server/cert.pem .
 cp ../../72-event-server/event-service-config.yml .
-cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openJDK232 Dockerfile
-cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openJDK232 Dockerfile-gcr
+cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openjdk Dockerfile
+cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/event-server/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
@@ -90,8 +90,8 @@ mkdir -p dist/batch-processing ;
 cd dist/batch-processing
 cp ../../78-batch-processing/target/batch-processing-capsule.jar .
 cp ../../78-batch-processing/batch-processing-config.yml .
-cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openJDK232 Dockerfile
-cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openJDK232 Dockerfile-gcr
+cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
+cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/batch-processing/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
@@ -101,19 +101,19 @@ then
 fi
 cd ../..
 
-echo "System-Properties: version=1.0.23200${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
-echo "Application-Version: version=1.0.23200${VERSION}" >> app.mf
+echo "System-Properties: version=1.0.24200${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
+echo "Application-Version: version=1.0.24200${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
 cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
 cp 81-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jar ufm dist/delegate/delegate-capsule.jar app.mf
-cp dist/delegate/delegate-capsule.jar delegate-23200${VERSION}.jar
+cp dist/delegate/delegate-capsule.jar delegate-24200${VERSION}.jar
 
 mkdir -p dist/watcher
 cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
 jar ufm dist/watcher/watcher-capsule.jar app.mf
-cp dist/watcher/watcher-capsule.jar watcher-23200${VERSION}.jar
+cp dist/watcher/watcher-capsule.jar watcher-24200${VERSION}.jar
 
 rm -rf app.mf
 

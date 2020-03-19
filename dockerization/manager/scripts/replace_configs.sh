@@ -491,26 +491,20 @@ if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
     yq write -i $CONFIG_FILE redisConfig.envNamespace "$REDIS_ENV_NAMESPACE"
 fi
 
-if [[ "" != "$JRE_DIR" ]]; then
-  yq write -i $CONFIG_FILE jreConfig.jreDir "$JRE_DIR"
-  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreDir "$JRE_DIR"
+if [[ "" != "$CURRENT_JRE" ]]; then
+  yq write -i $CONFIG_FILE currentJre "$CURRENT_JRE"
 fi
 
-if [[ "" != "$JRE_DIR_MACOS" ]]; then
-  yq write -i $CONFIG_FILE jreConfig.jreDirMacOs "$JRE_DIR_MACOS"
-  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreDirMacOs "$JRE_DIR_MACOS"
+if [[ "" != "$MIGRATE_TO_JRE" ]]; then
+  yq write -i $CONFIG_FILE migrateToJre "$MIGRATE_TO_JRE"
 fi
 
-if [[ "" != "$JRE_TAR_PATH_SOLARIS" ]]; then
-  yq write -i $CONFIG_FILE jreConfig.jreTarPathSolaris "$JRE_TAR_PATH_SOLARIS"
+if [[ "" != "$ORACLE_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE jreConfigs.oracle8u191.jreTarPath "$ORACLE_JRE_TAR_PATH"
 fi
 
-if [[ "" != "$JRE_TAR_PATH_MACOS" ]]; then
-  yq write -i $CONFIG_FILE jreConfig.jreTarPathMacOs "$JRE_TAR_PATH_MACOS"
-fi
-
-if [[ "" != "$JRE_TAR_PATH_LINUX" ]]; then
-  yq write -i $CONFIG_FILE jreConfig.jreTarPathLinux "$JRE_TAR_PATH_LINUX"
+if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
 fi
 
 if [[ "" != "$CDN_URL" ]]; then
@@ -537,14 +531,10 @@ if [[ "" != "$CDN_WATCHER_METADATA_FILE_PATH" ]]; then
   yq write -i $CONFIG_FILE cdnConfig.watcherMetaDataFilePath "$CDN_WATCHER_METADATA_FILE_PATH"
 fi
 
-if [[ "" != "$CDN_JRE_TAR_PATH_SOLARIS" ]]; then
-  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathSolaris "$CDN_JRE_TAR_PATH_SOLARIS"
+if [[ "" != "$CDN_ORACLE_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.oracle8u191 "$CDN_ORACLE_JRE_TAR_PATH"
 fi
 
-if [[ "" != "$CDN_JRE_TAR_PATH_MACOS" ]]; then
-  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathMacOs "$CDN_JRE_TAR_PATH_MACOS"
-fi
-
-if [[ "" != "$CDN_JRE_TAR_PATH_LINUX" ]]; then
-  yq write -i $CONFIG_FILE cdnConfig.jreConfig.jreTarPathLinux "$CDN_JRE_TAR_PATH_LINUX"
+if [[ "" != "$CDN_OPENJDK_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.openjdk8u242 "$CDN_OPENJDK_JRE_TAR_PATH"
 fi
