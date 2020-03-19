@@ -135,7 +135,8 @@ public class CapabilityUtils {
     return taskTypesMigratedToCapabilityFrameworkPhase1.contains(taskType);
   }
 
-  private static Set<String> taskTypesMigratedToCapabilityFrameworkPhase2 = new HashSet<>(Arrays.asList("AWS_S3_TASK"));
+  private static Set<String> taskTypesMigratedToCapabilityFrameworkPhase2 =
+      new HashSet<>(Arrays.asList("AWS_S3_TASK", "FETCH_MASTER_URL"));
 
   public static boolean isTaskTypeMigratedToCapabilityFrameworkPhase2(String taskType) {
     return taskTypesMigratedToCapabilityFrameworkPhase2.contains(taskType);
