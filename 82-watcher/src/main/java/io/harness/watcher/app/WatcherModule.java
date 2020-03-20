@@ -2,7 +2,9 @@ package io.harness.watcher.app;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.name.Names;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
@@ -17,34 +19,60 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-/**
- * Created by brett on 10/26/17
- */
 public class WatcherModule extends DependencyModule {
+  @Provides
+  @Singleton
+  @Named("inputExecutor")
+  public ScheduledExecutorService inputExecutor() {
+    ScheduledExecutorService inputExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("input-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { inputExecutor.shutdownNow(); }));
+    return inputExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("heartbeatExecutor")
+  public ScheduledExecutorService heartbeatExecutor() {
+    ScheduledExecutorService heartbeatExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("heartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { heartbeatExecutor.shutdownNow(); }));
+    return heartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("watchExecutor")
+  public ScheduledExecutorService watchExecutor() {
+    ScheduledExecutorService watchExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("watcher-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { watchExecutor.shutdownNow(); }));
+    return watchExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("upgradeExecutor")
+  public ScheduledExecutorService upgradeExecutor() {
+    ScheduledExecutorService upgradeExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("upgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { upgradeExecutor.shutdownNow(); }));
+    return upgradeExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("commandCheckExecutor")
+  public ScheduledExecutorService commandCheckExecutor() {
+    ScheduledExecutorService commandCheckExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("commandCheck-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { commandCheckExecutor.shutdownNow(); }));
+    return commandCheckExecutor;
+  }
+
   @Override
   protected void configure() {
     bind(WatcherService.class).to(WatcherServiceImpl.class);
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("inputExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("heartbeatExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("Heartbeat-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("watchExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("Watch-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("upgradeExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setNameFormat("Upgrade-Thread").setPriority(Thread.MAX_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("commandCheckExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("CommandCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
-
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl("", Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
