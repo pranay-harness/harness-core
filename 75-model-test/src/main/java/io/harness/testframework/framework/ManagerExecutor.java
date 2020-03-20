@@ -48,7 +48,7 @@ public class ManagerExecutor {
 
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
-    final File lockfile = new File(directoryPath, "man  ager");
+    final File lockfile = new File(directoryPath, "manager");
 
     if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
       try {
