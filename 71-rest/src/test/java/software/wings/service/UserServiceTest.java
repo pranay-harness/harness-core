@@ -1244,6 +1244,7 @@ public class UserServiceTest extends WingsBaseTest {
                     .appId(generateUuid())
                     .defaultAccountId(account.getUuid())
                     .token(token)
+                    .accounts(Arrays.asList(account))
                     .email("emailId")
                     .emailVerified(true)
                     .uuid("userId")

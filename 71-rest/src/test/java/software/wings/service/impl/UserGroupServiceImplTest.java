@@ -68,6 +68,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.Event.Type;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
@@ -110,7 +111,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuditServiceHelper auditServiceHelper;
 
-  private Account account = Account.Builder.anAccount()
+  private Account account = anAccount()
                                 .withAccountName(ACCOUNT_NAME)
                                 .withCompanyName(COMPANY_NAME)
                                 .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
@@ -163,6 +164,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   private Account createAndSaveAccount(String id) {
     Account account = new Account();
     account.setUuid(id);
+    account.setLicenseInfo(LicenseInfo.builder().accountType("PAID").build());
     String accountId = wingsPersistence.save(account);
     return wingsPersistence.get(Account.class, accountId);
   }
@@ -365,8 +367,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void shouldUpdateUserGroup() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(anUser().uuid(generateUuid()).build())) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
-      when(accountService.get(ACCOUNT_ID)).thenReturn(account);
-
+      Account accountForUser = createAndSaveAccount(ACCOUNT_ID);
+      User savedUser = createUserAndSave(
+          "USER_ID_DUMMY", "USER_NAME", UserGroup.builder().uuid("USERGROUP_TEST").build(), accountForUser);
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
@@ -397,8 +400,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       userGroup3 = userGroupService.save(userGroup3);
 
       // Update operation 1
-      User userAfterUpdate =
-          userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
+      User userAfterUpdate = userService.updateUserGroupsOfUser(
+          savedUser.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
       userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
       userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
       assertThat(userAfterUpdate.getUserGroups()).size().isEqualTo(2);
@@ -417,13 +420,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
       userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
       userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
-      assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
-      assertThat(userGroup2.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup1.getMemberIds()).containsExactly(savedUser.getUuid());
+      assertThat(userGroup2.getMemberIds()).containsExactly(savedUser.getUuid());
       assertThat(userGroup3.getMemberIds()).isNullOrEmpty();
 
-      user.setName("John Doe");
-      userAfterUpdate =
-          userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID, true);
+      savedUser.setName("John Doe");
+      userAfterUpdate = userService.updateUserGroupsOfUser(
+          savedUser.getUuid(), Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID, true);
       assertThat(userAfterUpdate.getUserGroups().size()).isEqualTo(2);
       assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
           .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup3.getUuid());
@@ -431,9 +434,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
       userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
       userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
-      assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup1.getMemberIds()).containsExactly(savedUser.getUuid());
       assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
-      assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup3.getMemberIds()).containsExactly(savedUser.getUuid());
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       emailsData = emailDataArgumentCaptor.getAllValues();
       assertThat(emailsData.stream()
