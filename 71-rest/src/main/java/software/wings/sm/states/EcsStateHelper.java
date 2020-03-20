@@ -571,59 +571,63 @@ public class EcsStateHelper {
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
 
-    if (SUCCESS == executionStatus) {
-      EcsServiceDeployResponse deployResponse = (EcsServiceDeployResponse) executionResponse.getEcsCommandResponse();
-      List<InstanceStatusSummary> instanceStatusSummaries =
-          containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
-      executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+    EcsServiceDeployResponse deployResponse = (EcsServiceDeployResponse) executionResponse.getEcsCommandResponse();
+    InstanceElementListParam listParam = InstanceElementListParam.builder().build();
 
-      if (!rollback) {
-        updateContainerElementAfterSuccessfulResize(context);
+    if (deployResponse != null) {
+      if (isNotEmpty(deployResponse.getContainerInfos())) {
+        List<InstanceStatusSummary> instanceStatusSummaries =
+            containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
+        executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+
+        List<InstanceElement> finalInstanceElements = new ArrayList<>();
+        List<InstanceElement> instanceElements =
+            instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+        setNewInstanceFlag(instanceElements, true, finalInstanceElements);
+
+        listParam = InstanceElementListParam.builder().instanceElements(finalInstanceElements).build();
       }
-
-      List<InstanceElement> finalInstanceElements = new ArrayList<>();
-      List<InstanceElement> instanceElements =
-          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-      setNewInstanceFlag(instanceElements, true, finalInstanceElements);
-
-      InstanceElementListParam listParam =
-          InstanceElementListParam.builder().instanceElements(finalInstanceElements).build();
 
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());
       executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-
-      return ExecutionResponse.builder()
-          .stateExecutionData(executionData)
-          .executionStatus(executionStatus)
-          .contextElement(listParam)
-          .notifyElement(listParam)
-          .build();
     }
 
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+    if (!rollback && SUCCESS == executionStatus) {
+      updateContainerElementAfterSuccessfulResize(context);
+    }
+
+    return ExecutionResponse.builder()
+        .stateExecutionData(executionData)
+        .executionStatus(executionStatus)
+        .contextElement(listParam)
+        .notifyElement(listParam)
+        .build();
   }
 
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
       EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
-    DelegateTask task =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(deployDataBag.getApp().getAccountId())
-            .appId(deployDataBag.getApp().getUuid())
-            .waitId(activity.getUuid())
-            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
-                    ? singletonList(deployDataBag.getAwsConfig().getTag())
-                    : null)
-            .data(TaskData.builder()
-                      .taskType(TaskType.ECS_COMMAND_TASK.name())
-                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
-                      .timeout(MINUTES.toMillis(deployDataBag.getContainerElement().getServiceSteadyStateTimeout()))
-                      .build())
-            .envId(deployDataBag.getEnv().getUuid())
-            .infrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
-            .build();
+    DelegateTask task = DelegateTask.builder()
+                            .async(true)
+                            .accountId(deployDataBag.getApp().getAccountId())
+                            .appId(deployDataBag.getApp().getUuid())
+                            .waitId(activity.getUuid())
+                            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
+                                    ? singletonList(deployDataBag.getAwsConfig().getTag())
+                                    : null)
+                            .data(TaskData.builder()
+                                      .taskType(TaskType.ECS_COMMAND_TASK.name())
+                                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+                                      .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))
+                                      .build())
+                            .envId(deployDataBag.getEnv().getUuid())
+                            .infrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
+                            .build();
     return delegateService.queueTask(task);
+  }
+
+  long getTimeout(EcsDeployDataBag deployDataBag) {
+    return deployDataBag.getContainerElement().getServiceSteadyStateTimeout() + 30l;
   }
 
   public EcsDeployDataBag prepareBagForEcsDeploy(ExecutionContext context,
