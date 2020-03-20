@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -536,6 +537,18 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
     assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetTimeout() {
+    long timeout =
+        helper.getTimeout(EcsDeployDataBag.builder()
+                              .containerElement(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
+                              .build());
+
+    assertThat(timeout).isEqualTo(40l);
   }
 
   @Test
