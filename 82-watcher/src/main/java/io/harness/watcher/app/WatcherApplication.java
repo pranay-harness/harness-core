@@ -14,9 +14,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.EventPublisherConstants;
@@ -39,7 +37,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -174,11 +171,6 @@ public class WatcherApplication {
     watcherService.run(upgrade);
 
     // This should run in case of upgrade flow otherwise never called
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("watchExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("commandCheckExecutor"))).shutdownNow();
     injector.getInstance(ExecutorService.class).shutdown();
     injector.getInstance(ExecutorService.class).awaitTermination(5, TimeUnit.MINUTES);
     logger.info("Flushing logs");
