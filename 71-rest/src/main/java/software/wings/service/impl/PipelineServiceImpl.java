@@ -871,7 +871,7 @@ public class PipelineServiceImpl implements PipelineService {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
-        handleNonEntityVariables(pipelineVariables, variable, value);
+        handleNonEntityVariables(pipelineVariables, variable, value, templatedPipeline);
       } else {
         // Entity variables.
         handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
@@ -924,19 +924,24 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables, templatedPipeline);
   }
 
-  private void handleNonEntityVariables(List<Variable> pipelineVariables, Variable variable, String value) {
+  private void handleNonEntityVariables(
+      List<Variable> pipelineVariables, Variable variable, String value, boolean templatedPipeline) {
     // Non-entity variables. Here we can handle values like ${myTeam} for non entity variables
     if (!variable.isFixed()) {
       if (isEmpty(value)) {
         if (!contains(pipelineVariables, variable.getName())) {
           pipelineVariables.add(variable.cloneInternal());
         }
-      } else if (matchesVariablePattern(value)) {
-        String variableName = getName(value);
-        if (!contains(pipelineVariables, variableName)) {
-          Variable newVar = variable.cloneInternal();
-          newVar.setName(variableName);
-          pipelineVariables.add(newVar);
+      } else {
+        if (templatedPipeline) {
+          if (matchesVariablePattern(value) && !value.contains(".")) {
+            String variableName = getName(value);
+            if (!contains(pipelineVariables, variableName)) {
+              Variable newVar = variable.cloneInternal();
+              newVar.setName(variableName);
+              pipelineVariables.add(newVar);
+            }
+          }
         }
       }
     }
