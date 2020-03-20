@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
@@ -33,10 +34,24 @@ import java.util.Map;
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_clusterId_instanceId_instanceState"), fields = {
-    @Field(InstanceDataKeys.accountId)
-    , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
-  })
+  @Index(options = @IndexOptions(name = "accountId_clusterId_instanceId_instanceState"),
+      fields =
+      {
+        @Field(InstanceDataKeys.accountId)
+        , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId),
+            @Field(InstanceDataKeys.instanceState)
+      })
+  ,
+      @Index(options = @IndexOptions(name = "accountId_clusterId_instanceName_usageStartTime", background = true),
+          fields =
+          {
+            @Field(InstanceDataKeys.accountId)
+            , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
+                @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
+          }),
+      @Index(options = @IndexOptions(name = "accountId_usageStartTime", background = true), fields = {
+        @Field(InstanceDataKeys.accountId), @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC)
+      })
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)

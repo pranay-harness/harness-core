@@ -40,8 +40,7 @@ public class EventJobScheduler {
 
   private void runJob(String accountId, Job job) {
     try {
-      if (ImmutableSet.of(DEPLOYMENT_EVENT, K8S_WATCH_EVENT).contains(BatchJobType.fromJob(job))
-          || accountId.equals("wFHXHD0RRQWoO8tIZT5YVw")) {
+      if (ImmutableSet.of(DEPLOYMENT_EVENT, K8S_WATCH_EVENT).contains(BatchJobType.fromJob(job))) {
         return;
       }
       batchJobRunner.runJob(accountId, job);
