@@ -45,4 +45,4 @@ else
   echo "Delegate not running"
   rm -rf msg
   exit 0
-fi
+fi ) 2>&1 | tee -a logs/stopscript.log

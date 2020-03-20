@@ -1,4 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -e -x
+
+(
+mkdir -p logs
+echo
+echo "` date +%d/%m/%Y%t%H:%M:%S `    ###########################"
 
 if [ ! -e start.sh ]; then
   echo
@@ -227,4 +232,4 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
 else
   echo "Failed to start Delegate."
   echo "$(tail -n 30 delegate.log)"
-fi
+fi ) 2>&1 | tee -a logs/delegatescript.log

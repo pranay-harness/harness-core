@@ -181,4 +181,4 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
 else
   echo "Failed to start Delegate."
   echo "$(tail -n 30 delegate.log)"
-fi
+fi ) 2>&1 | tee -a logs/delegatescript.log

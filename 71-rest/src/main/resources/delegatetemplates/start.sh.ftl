@@ -156,9 +156,11 @@ if [ ! -e config-watcher.yml ]; then
   echo "accountId: ${accountId}" > config-watcher.yml
 fi
 test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
+set +x
 if ! `grep accountSecret config-watcher.yml > /dev/null`; then
   echo "accountSecret: ${accountSecret}" >> config-watcher.yml
 fi
+set -x
 if ! `grep managerUrl config-watcher.yml > /dev/null`; then
   echo "managerUrl: ${managerHostAndPort}/api/" >> config-watcher.yml
 fi
@@ -211,4 +213,5 @@ else
       fi
     fi
   fi
-fi
+fi ) 2>&1 | tee -a logs/log_clean.log && sed '/######################################################################## 100.0%/d' logs/log_clean.log >> logs/startscript.log
+rm logs/log_clean.log
