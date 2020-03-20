@@ -36,7 +36,7 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
 
     assertThat(executionCapabilities.size()).isEqualTo(1);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHostName()).isEqualTo("foo.bar");
+    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHost()).isEqualTo("foo.bar");
 
     Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap = new HashMap<>();
     gitFetchFilesConfigMap.put("Service",
@@ -56,10 +56,9 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
 
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHostName()).isEqualTo("abc.xyz");
+    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHost()).isEqualTo("abc.xyz");
 
     assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(1)).getHostName())
-        .isEqualTo("hello.world");
+    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(1)).getHost()).isEqualTo("hello.world");
   }
 }
