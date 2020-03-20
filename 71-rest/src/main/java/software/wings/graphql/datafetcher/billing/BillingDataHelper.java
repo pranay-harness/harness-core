@@ -40,7 +40,7 @@ public class BillingDataHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
   private static final String TOTAL_COST_DATE_PATTERN = "dd MMMM, yyyy";
-  private static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
+  private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
@@ -94,9 +94,10 @@ public class BillingDataHelper {
 
   protected List<QLBillingDataFilter> getTrendFilter(
       List<QLBillingDataFilter> filters, Instant startInstant, Instant endInstant) {
-    long diffMillis = endInstant.toEpochMilli() - startInstant.toEpochMilli();
-    long trendStartTime = startInstant.toEpochMilli() - diffMillis - ONE_DAY_MILLIS;
+    long diffMillis = endInstant.truncatedTo(ChronoUnit.DAYS).toEpochMilli()
+        - startInstant.truncatedTo(ChronoUnit.DAYS).toEpochMilli();
     long trendEndTime = startInstant.toEpochMilli() - ONE_DAY_MILLIS;
+    long trendStartTime = trendEndTime - diffMillis;
     return updateTimeFilter(filters, trendStartTime, trendEndTime);
   }
 

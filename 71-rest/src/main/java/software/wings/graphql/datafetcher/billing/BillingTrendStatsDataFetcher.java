@@ -35,6 +35,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
 
+  private static final long ONE_DAY_MILLIS = 86400000;
   private static final String TOTAL_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String TREND_COST_LABEL = "Cost Trend";
@@ -72,8 +73,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
       return QLBillingTrendStats.builder()
           .totalCost(getTotalBillingStats(billingAmountData, filters))
           .costTrend(getBillingTrend(accountId, totalBillingAmount, forecastCost, aggregateFunction, filters))
-          .forecastCost(getForecastBillingStats(
-              forecastCost, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
+          .forecastCost(getForecastBillingStats(forecastCost, billingAmountData,
+              billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
@@ -81,10 +82,11 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   }
 
   private QLBillingStatsInfo getForecastBillingStats(
-      BigDecimal forecastCost, Instant startInstant, Instant endInstant) {
+      BigDecimal forecastCost, QLBillingAmountData billingAmountData, Instant startInstant, Instant endInstant) {
     String forecastCostDescription = EMPTY_VALUE;
     String forecastCostValue = EMPTY_VALUE;
-    if (forecastCost != null) {
+    long timeDiff = billingAmountData.getMaxStartTime() - startInstant.toEpochMilli();
+    if (forecastCost != null && timeDiff > 4 * ONE_DAY_MILLIS) {
       String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
       String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
       forecastCostDescription = String.format(FORECAST_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
