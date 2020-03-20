@@ -16,7 +16,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -75,7 +74,6 @@ winRMCredential: {
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
-  @Ignore("Will fix the test, it is failing intermittently")
   public void testUpdatingWinRMCredentialWithScope() {
     String query = $GQL(/*
 mutation{

@@ -22,7 +22,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -125,7 +124,6 @@ public class CreateEncryptedTextTest extends GraphQLTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category({GraphQLTests.class, UnitTests.class})
-  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void testCreatingEncryptedTextWithIdScope() {
     String query = $GQL(/*
 mutation{

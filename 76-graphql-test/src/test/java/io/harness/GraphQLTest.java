@@ -8,6 +8,8 @@ import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +39,8 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.Arrays;
@@ -53,6 +57,8 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
   @Inject BigQueryService bigQueryService;
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
+  @Inject UserService userService;
+  @Inject UsageRestrictionsService usageRestrictionsService;
 
   @Override
   public GraphQL getGraphQL() {
@@ -97,6 +103,10 @@ public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMix
         authHandler.evaluateUserPermissionInfo(accountId, Arrays.asList(userGroup), user);
     UserRestrictionInfo userRestrictionInfo =
         authService.getUserRestrictionInfo(accountId, user, userPermissionInfo, false);
+    userRestrictionInfo.setAppEnvMapForUpdateAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, UPDATE));
+    userRestrictionInfo.setAppEnvMapForReadAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, READ));
     userRestrictionInfo.setUsageRestrictionsForUpdateAction(getAllAppAllEnvRestriction());
     userRestrictionInfo.setUsageRestrictionsForReadAction(getAllAppAllEnvRestriction());
     return ExecutionInput.newExecutionInput()
