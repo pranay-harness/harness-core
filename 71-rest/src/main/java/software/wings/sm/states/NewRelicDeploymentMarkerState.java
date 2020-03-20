@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
+import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 import static software.wings.utils.Misc.isLong;
 
@@ -14,26 +14,20 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
-import io.harness.waiter.WaitNotifyEngine;
-import org.mongodb.morphia.annotations.Transient;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
-import software.wings.common.TemplateExpressionProcessor;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -42,15 +36,9 @@ import java.util.Map;
 import java.util.UUID;
 
 @Attributes
-public class NewRelicDeploymentMarkerState extends State {
-  @Inject private DelegateService delegateService;
-  @Inject private SettingsService settingsService;
-
-  @Inject @Transient protected SecretManager secretManager;
-
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private TemplateExpressionProcessor templateExpressionProcessor;
-  @Inject private WorkflowExecutionService workflowExecutionService;
+@Slf4j
+@FieldNameConstants(innerTypeName = "NewRelicDeploymentMarkerStateKeys")
+public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
   @Inject private NewRelicService newRelicService;
 
   @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
@@ -76,45 +64,15 @@ public class NewRelicDeploymentMarkerState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    SettingAttribute settingAttribute = null;
-    String finalServerConfigId = analysisServerConfigId;
-    String finalNewRelicApplicationId = applicationId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalServerConfigId = settingAttribute.getUuid();
-      }
-      TemplateExpression appIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
-      if (appIdExpression != null) {
-        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
-
-        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
-        if (triggerBasedDeployment) {
-          try {
-            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
-          } catch (WingsException e) {
-            // see if we can resolve the marker by name
-            final NewRelicApplication newRelicApplication =
-                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
-            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
-          }
-        }
-      }
-    }
+    String finalServerConfigId = getResolvedConnectorId(
+        context, NewRelicDeploymentMarkerStateKeys.analysisServerConfigId, analysisServerConfigId);
+    String finalNewRelicApplicationId =
+        getResolvedFieldValue(context, NewRelicDeploymentMarkerStateKeys.applicationId, applicationId);
 
     if (!isLong(finalNewRelicApplicationId)) {
-      finalNewRelicApplicationId =
-          renderApplicationExpression(finalNewRelicApplicationId, finalServerConfigId, context);
+      finalNewRelicApplicationId = renderApplicationExpression(finalNewRelicApplicationId, finalServerConfigId);
     }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(analysisServerConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
-      }
-    }
+    SettingAttribute settingAttribute = getSettingAttribute(finalServerConfigId);
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
 
@@ -220,23 +178,28 @@ public class NewRelicDeploymentMarkerState extends State {
   @Override
   public Map<String, String> parentTemplateFields(String fieldName) {
     Map<String, String> parentTemplateFields = new LinkedHashMap<>();
-    if (fieldName.equals("applicationId")) {
-      if (!configIdTemplatized()) {
-        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+    if (fieldName.equals(NewRelicDeploymentMarkerStateKeys.applicationId)) {
+      if (!checkFieldTemplatized(NewRelicDeploymentMarkerStateKeys.analysisServerConfigId, getTemplateExpressions())) {
+        parentTemplateFields.put(NewRelicDeploymentMarkerStateKeys.analysisServerConfigId, analysisServerConfigId);
       }
     }
     return parentTemplateFields;
   }
 
-  private boolean configIdTemplatized() {
-    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
-  }
-
-  private String renderApplicationExpression(
-      String applicationNameExpression, String finalServerConfigId, ExecutionContext context) {
-    String applicationName = context.renderExpression(applicationNameExpression);
+  private String renderApplicationExpression(String applicationName, String finalServerConfigId) {
     final NewRelicApplication newRelicApplication =
         newRelicService.resolveApplicationName(finalServerConfigId, applicationName);
     return String.valueOf(newRelicApplication.getId());
+  }
+
+  @Override
+  public Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  protected ExecutionResponse generateAnalysisResponse(
+      AnalysisContext context, ExecutionStatus status, String message) {
+    throw new UnsupportedOperationException();
   }
 }
