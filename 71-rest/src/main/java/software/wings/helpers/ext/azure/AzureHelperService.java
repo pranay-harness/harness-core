@@ -43,6 +43,7 @@ import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -225,9 +226,7 @@ public class AzureHelperService {
 
     // Filter VMs by OS type
     if (osType != null && (OSType.WINDOWS.equals(osType) || OSType.LINUX.equals(osType))) {
-      listVms = listVms.stream()
-                    .filter(vm -> getVmOSType(vm) != null && getVmOSType(vm).equals(osType))
-                    .collect(Collectors.toList());
+      listVms = listVms.stream().filter(vm -> osType.equals(getVmOSType(vm))).collect(Collectors.toList());
     }
 
     // Filter by tags if present, tags are optional.
@@ -692,7 +691,7 @@ public class AzureHelperService {
       }
     }
 
-    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", ExceptionUtils.getMessage(e));
+    throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), e, USER);
   }
 
   public List<Vault> listVaults(String accountId, AzureVaultConfig azureVaultConfig) {
