@@ -1,4 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -e -x
+
+(
+mkdir -p logs
+echo
+echo "` date +%d/%m/%Y%t%H:%M:%S `    ###########################"
 
 if [ ! -e start.sh ]; then
   echo
