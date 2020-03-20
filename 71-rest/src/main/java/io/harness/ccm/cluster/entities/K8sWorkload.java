@@ -33,9 +33,18 @@ import java.util.stream.Collectors;
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup_cluster", unique = true), fields = {
-    @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
-  })
+  @Index(options = @IndexOptions(name = "no_dup_cluster", unique = true),
+      fields = { @Field(K8sWorkloadKeys.clusterId)
+                 , @Field(K8sWorkloadKeys.uid) })
+  ,
+      @Index(options = @IndexOptions(name = "accountId_labels", background = true), fields = {
+        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.labels)
+      }), @Index(options = @IndexOptions(name = "accountId_name_clusterId_namespace", background = true), fields = {
+        @Field(K8sWorkloadKeys.accountId)
+        , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
+      }), @Index(options = @IndexOptions(name = "accountId_name_labels", background = true), fields = {
+        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels)
+      })
 })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
 public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
