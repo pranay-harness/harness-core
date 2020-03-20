@@ -2004,7 +2004,11 @@ public class UserServiceImpl implements UserService {
   @Override
   public User get(String accountId, String userId) {
     User user = wingsPersistence.get(User.class, userId);
-    if (user == null) {
+    boolean userBelongsToAccount = true;
+    if (user != null) {
+      userBelongsToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
+    }
+    if (user == null || !userBelongsToAccount) {
       throw new InvalidRequestException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
 
