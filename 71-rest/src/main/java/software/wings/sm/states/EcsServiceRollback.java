@@ -1,23 +1,27 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_SERVICE_DEPLOY;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.beans.Activity;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
@@ -30,6 +34,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -71,6 +76,15 @@ public class EcsServiceRollback extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    ContextElement rollbackElement = context.getContextElement(
+        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    if (rollbackElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+          .build();
+    }
+
     EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
         context, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
