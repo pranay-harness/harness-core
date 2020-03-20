@@ -2617,7 +2617,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       demoStatExecutionData.setEndTs(Timestamp.currentMinuteBoundary());
       return demoStatExecutionData;
     }
-    if (isEmpty(stateExecutionMap)) {
+    if (isEmpty(stateExecutionMap) || !stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
       return VerificationStateAnalysisExecutionData.builder().build();
     }
     Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),

@@ -32,7 +32,6 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -276,45 +275,10 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     analysisServerConfigId =
         getResolvedConnectorId(context, AppDynamicsStateKeys.analysisServerConfigId, analysisServerConfigId);
-    if (!isEmpty(getTemplateExpressions())) {
-      boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
-      TemplateExpression appIdExpression = templateExpressionProcessor.getTemplateExpression(
-          getTemplateExpressions(), AppDynamicsStateKeys.applicationId);
-      if (appIdExpression != null) {
-        applicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
-        if (isTriggerBased) {
-          // if its an appId we should be able to get application with that id
-          NewRelicApplication appDynamicsApplication =
-              appdynamicsService.getAppDynamicsApplication(analysisServerConfigId, applicationId);
+    applicationId = getResolvedFieldValue(context, AppDynamicsStateKeys.applicationId, applicationId);
+    tierId = getResolvedFieldValue(context, AppDynamicsStateKeys.tierId, tierId);
 
-          // if no application with this id then try to resolve the name
-          if (appDynamicsApplication == null) {
-            // applicationId will actually contain App Name
-            applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationId);
-          }
-        }
-      }
-      TemplateExpression tierIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), AppDynamicsStateKeys.tierId);
-      if (tierIdExpression != null) {
-        tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
-        if (isTriggerBased) {
-          final AppdynamicsTier tier =
-              appdynamicsService.getTier(analysisServerConfigId, Long.parseLong(applicationId), tierId,
-                  ThirdPartyApiCallLog.createApiCallLog(
-                      appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
-          if (tier == null) {
-            // tierId will actually contain tier Name
-            tierId = getTierByName(context, tierId);
-          }
-        }
-      }
-    }
-
-    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");
-    }
+    SettingAttribute settingAttribute = getSettingAttribute(analysisServerConfigId);
 
     if (!validateFields().isEmpty()) {
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)

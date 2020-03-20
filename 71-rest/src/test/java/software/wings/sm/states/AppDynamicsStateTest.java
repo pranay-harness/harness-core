@@ -173,8 +173,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo(
-            "IllegalStateException: Not able to resolve applicationId for application name ${workflow.variables.applicationId}. Please check your expression or application name");
+        .isEqualTo("DataCollectionException: Expression ${workflow.variables.applicationId} could not be resolved");
   }
 
   @Test
@@ -192,8 +191,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo(
-            "IllegalStateException: Not able to resolve  tier ID for tier name ${workflow.variables.appd_tier_name}. Please check your expression or tier name");
+        .isEqualTo("DataCollectionException: Expression ${workflow.variables.appd_tier_name} could not be resolved");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -211,8 +209,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo(
-            "IllegalStateException: Not able to resolve applicationId for application name tierName. Please check your expression or application name");
+        .isEqualTo("DataCollectionException: Expression ${workflow.variables.appd_tier_name} could not be resolved");
   }
 
   @Test
@@ -621,8 +618,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(workflowExecutionId);
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
         .thenReturn(settingAttribute.getUuid());
-    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
-    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("test_app");
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("test_tier");
     doReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build())
         .when(workflowStandardParams)
         .getEnv();
@@ -632,12 +629,18 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find application by name");
 
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("7689");
+
     doReturn(NewRelicApplication.builder().build())
         .when(appdynamicsService)
         .getAppDynamicsApplication(anyString(), anyString());
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find tier by name");
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "IllegalStateException: Not able to resolve  tier ID for tier name test_tier. Please check your expression or tier name");
+
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
 
     long tierId = 30889;
     doReturn(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build())
@@ -649,6 +652,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("test_tier");
+
     when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), any())).thenReturn(null);
     doThrow(new WingsException("No tier found"))
         .when(appdynamicsService)
@@ -658,6 +663,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("No tier found");
 
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("test_app");
     when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
     doThrow(new WingsException("No app found"))
         .when(appdynamicsService)

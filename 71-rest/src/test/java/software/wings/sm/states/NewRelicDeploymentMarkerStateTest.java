@@ -110,7 +110,6 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
         .resolveApplicationName(anyString(), anyString());
 
     when(executionContext.renderExpression("${workflow.variables.NewRelic_Server}")).thenReturn(settingId);
-    when(executionContext.renderExpression("${workflow.variables.NewRelic_App}")).thenReturn("30444");
 
     final NewRelicDeploymentMarkerState spyRelicDeploymentMarkerState = spy(this.newRelicDeploymentMarkerState);
     spyRelicDeploymentMarkerState.setAnalysisServerConfigId(settingId);
@@ -139,17 +138,6 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
         .resolveApplicationName(anyString(), anyString());
     ExecutionResponse executionResponse = spyRelicDeploymentMarkerState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-
-    doThrow(new RuntimeException("Can not find application by id"))
-        .when(newRelicService)
-        .resolveApplicationId(anyString(), anyString());
-
-    try {
-      spyRelicDeploymentMarkerState.execute(executionContext);
-      fail("Passed with wrong app id");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage()).isEqualTo("Can not find application by id");
-    }
   }
 
   @Test

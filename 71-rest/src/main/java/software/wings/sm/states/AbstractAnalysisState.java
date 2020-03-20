@@ -473,8 +473,7 @@ public abstract class AbstractAnalysisState extends State {
     String clusterName = containerInfrastructureMapping.getClusterName();
     String region = containerInfrastructureMapping.getRegion();
     SettingAttribute settingAttribute =
-        settingsService.get(containerInfrastructureMapping.getComputeProviderSettingId());
-    Preconditions.checkNotNull(settingAttribute, "Could not find config for " + containerInfrastructureMapping);
+        getSettingAttribute(containerInfrastructureMapping.getComputeProviderSettingId());
     Preconditions.checkNotNull(settingAttribute.getValue(), "Cloud provider setting not found for " + settingAttribute);
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
@@ -703,12 +702,7 @@ public abstract class AbstractAnalysisState extends State {
       ExecutionContext context, AwsAmiInfrastructureMapping infrastructureMapping) {
     Map<String, String> hosts = new HashMap<>();
     final String providerSettingId = infrastructureMapping.getComputeProviderSettingId();
-    final SettingAttribute settingAttribute = settingsService.get(providerSettingId);
-    if (settingAttribute == null) {
-      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
-          "Could not find cloud provider setting with id " + providerSettingId + " for infra "
-              + infrastructureMapping.getUuid());
-    }
+    final SettingAttribute settingAttribute = getSettingAttribute(providerSettingId);
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     Preconditions.checkNotNull(awsConfig, "No aws config set for " + providerSettingId);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
@@ -812,12 +806,6 @@ public abstract class AbstractAnalysisState extends State {
 
   public abstract void setAnalysisServerConfigId(String analysisServerConfigId);
 
-  protected boolean isDemoPath(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId)
-        && (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-               || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
-  }
-
   protected void generateDemoActivityLogs(CVActivityLogService.Logger activityLogger, boolean failedState) {
     logDataCollectionTriggeredMessage(activityLogger);
     long startTime = dataCollectionStartTimestampMillis();
@@ -848,8 +836,8 @@ public abstract class AbstractAnalysisState extends State {
 
   protected boolean isDemoPath(AnalysisContext analysisContext) {
     return featureFlagService.isEnabled(FeatureName.CV_DEMO, analysisContext.getAccountId())
-        && (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-               || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
+        && (getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+               || getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
   }
 
   protected void generateDemoThirdPartyApiCallLogs(
@@ -1062,7 +1050,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected ExecutionResponse getDemoExecutionResponse(AnalysisContext analysisContext) {
-    boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+    boolean failedState = getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
     if (failedState) {
       return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
     } else {
@@ -1202,5 +1190,11 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return fieldValue;
+  }
+
+  protected SettingAttribute getSettingAttribute(String configId) {
+    SettingAttribute settingAttribute = settingsService.get(configId);
+    Preconditions.checkNotNull(settingAttribute, "No connector found with id " + configId);
+    return settingAttribute;
   }
 }
