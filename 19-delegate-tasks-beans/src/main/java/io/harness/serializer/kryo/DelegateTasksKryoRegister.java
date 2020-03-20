@@ -18,7 +18,6 @@ import io.harness.delegate.beans.executioncapability.IgnoreValidationCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.beans.executioncapability.TcpBasedExecutionCapability;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -72,7 +71,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(ProcessExecutorCapability.class, 19007);
     kryo.register(AwsRegionCapability.class, 19008);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
-    kryo.register(TcpBasedExecutionCapability.class, 19010);
     kryo.register(SpotInstTaskParameters.class, 19011);
     kryo.register(SpotInstSetupTaskParameters.class, 19012);
     kryo.register(SpotInstTaskType.class, 19013);
