@@ -28,7 +28,7 @@ import java.util.List;
 public class BuildSourceParametersTest extends WingsBaseTest {
   private static final String DOCKER_URL = "https://registry.hub.docker.com/v2/";
   private static final String JENKINS_URL = "https://jenkins.wings.software";
-  private static final String BAMBOO_URL = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/";
+  private static final String BAMBOO_URL = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085";
   private static final String ARTIFACTORY_URL = "https://harness.jfrog.io/harness";
   private static final String NEXUS_URL = "https://nexus2.harness.io";
 
@@ -57,7 +57,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo(DOCKER_URL);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo(DOCKER_URL);
   }
 
   @Test
@@ -77,7 +77,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo(JENKINS_URL);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo(JENKINS_URL);
   }
 
   @Test
@@ -97,7 +97,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo(BAMBOO_URL);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo(BAMBOO_URL);
   }
 
   @Test
@@ -117,7 +117,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo(ARTIFACTORY_URL);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo(ARTIFACTORY_URL);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo(NEXUS_URL);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo(NEXUS_URL);
   }
 
   @Test
@@ -154,7 +154,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo("https://gcr.io/");
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo("https://gcr.io");
   }
 
   @Test
@@ -172,7 +172,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo("https://harnessprod.azurecr.io/");
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo("https://harnessprod.azurecr.io");
   }
 
   @Test
@@ -189,7 +189,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
-    assertThat(connectionExecutionCapability.getUrl()).isEqualTo("https://azure.microsoft.com/");
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo("https://azure.microsoft.com");
   }
 
   @Test

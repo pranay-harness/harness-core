@@ -14,7 +14,7 @@ public class DummySubstitutorTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSubstitute() {
-    assertThat(DummySubstitutor.substitute("http://user:${password}@host.com/index.php?var=${variable}"))
-        .isEqualTo("http://user:dummy@host.com/index.php?var=dummy");
+    assertThat(DummySubstitutor.substitute("http://user:${password}@host.com/index?var=${variable}"))
+        .isEqualTo("http://user:CD36671D4E034D3E8732217BD43F9AFA@host.com/index?var=CD36671D4E034D3E8732217BD43F9AFA");
   }
 }

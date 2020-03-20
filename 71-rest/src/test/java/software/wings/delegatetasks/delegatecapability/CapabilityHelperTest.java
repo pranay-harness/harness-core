@@ -2,11 +2,13 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
@@ -24,10 +26,8 @@ import software.wings.beans.VaultConfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class CapabilityHelperTest extends WingsBaseTest {
   public static final String HTTP_PORT = "80";
@@ -53,12 +53,9 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
-    Set<String> criteriaSet = new HashSet<>();
-    criteriaSet.add(HTTP_VAUTL_URL + ":" + HTTP_PORT);
-    criteriaSet.add(GOOGLE_COM + ":" + HTTP_PORT);
-
-    task.getExecutionCapabilities().forEach(
-        executionCapability -> assertThat(criteriaSet.contains(executionCapability.fetchCapabilityBasis())).isTrue());
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder(HTTP_VAUTL_URL, GOOGLE_COM);
   }
 
   @Test
@@ -77,12 +74,9 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
-    Set<String> criterias = new HashSet<>();
-    criterias.add(AWS_KMS_URL + ":" + HTTPS_PORT);
-    criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
-
-    task.getExecutionCapabilities().forEach(
-        executionCapability -> assertThat(criterias.contains(executionCapability.fetchCapabilityBasis())).isTrue());
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder(AWS_KMS_URL, GOOGLE_COM);
   }
 
   @Test
@@ -156,7 +150,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat(HTTP_VAUTL_URL + ":" + HTTP_PORT).isEqualTo(capability.fetchCapabilityBasis());
+    assertThat(HTTP_VAUTL_URL).isEqualTo(capability.fetchCapabilityBasis());
   }
 
   @Test
@@ -165,7 +159,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat(AWS_KMS_URL + ":" + HTTPS_PORT).isEqualTo(capability.fetchCapabilityBasis());
+    assertThat(AWS_KMS_URL).isEqualTo(capability.fetchCapabilityBasis());
   }
 
   @Test
@@ -174,8 +168,6 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
     EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat("https://harness.cyberark.com"
-        + ":" + HTTPS_PORT)
-        .isEqualTo(capability.fetchCapabilityBasis());
+    assertThat("https://harness.cyberark.com").isEqualTo(capability.fetchCapabilityBasis());
   }
 }

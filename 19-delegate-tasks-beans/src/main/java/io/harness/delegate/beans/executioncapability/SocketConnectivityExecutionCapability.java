@@ -1,23 +1,42 @@
 package io.harness.delegate.beans.executioncapability;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
-@EqualsAndHashCode(callSuper = false)
-public class SocketConnectivityExecutionCapability extends TcpBasedExecutionCapability {
+@Builder
+public class SocketConnectivityExecutionCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.SOCKET;
 
+  protected String hostName;
+  protected String scheme;
+  protected String port;
+  protected String url;
+
   @Override
-  public CapabilityType getCapabilityType() {
-    return capabilityType;
+  public String fetchCapabilityBasis() {
+    // maintaining backward compatibility for now
+    if (shouldUseOriginalUrl()) {
+      return url;
+    }
+
+    StringBuilder builder = new StringBuilder(128);
+    if (isNotBlank(scheme)) {
+      builder.append(scheme).append("://");
+    }
+
+    builder.append(hostName);
+
+    if (isNotBlank(port)) {
+      builder.append(':').append(port);
+    }
+    return builder.toString();
   }
 
-  @Builder
-  public SocketConnectivityExecutionCapability(String hostName, String scheme, String port, String url) {
-    super(hostName, scheme, isNotBlank(port) ? port : "22", url);
+  private boolean shouldUseOriginalUrl() {
+    return isBlank(scheme) && isBlank(hostName);
   }
 }

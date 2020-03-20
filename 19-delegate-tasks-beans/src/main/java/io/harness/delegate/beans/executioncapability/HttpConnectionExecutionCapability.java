@@ -3,18 +3,37 @@ package io.harness.delegate.beans.executioncapability;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.Value;
 
 @Value
-@EqualsAndHashCode(callSuper = false)
-public class HttpConnectionExecutionCapability extends TcpBasedExecutionCapability {
+@Builder
+public class HttpConnectionExecutionCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.HTTP;
 
-  @Builder
-  public HttpConnectionExecutionCapability(String hostName, String scheme, String port, @NonNull String url) {
-    super(hostName, scheme,
-        isNotBlank(port) ? port : (isNotBlank(scheme) && scheme.equalsIgnoreCase("HTTPS")) ? "443" : "80", url);
+  private String url;
+
+  private String host;
+  private String scheme;
+  private int port;
+  private String path;
+
+  @Override
+  public String fetchCapabilityBasis() {
+    if (url != null) {
+      return url;
+    }
+
+    StringBuilder builder = new StringBuilder(128);
+    if (isNotBlank(scheme)) {
+      builder.append(scheme).append("://");
+    }
+    builder.append(host);
+    if (port != -1) {
+      builder.append(':').append(port);
+    }
+    if (isNotBlank(path)) {
+      builder.append('/').append(path);
+    }
+    return builder.toString();
   }
 }
