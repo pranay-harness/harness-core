@@ -10,7 +10,7 @@ public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck {
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =
         (HttpConnectionExecutionCapability) delegateCapability;
-    boolean valid = Http.isHttpServerConnectable(httpConnectionExecutionCapability.fetchCapabilityBasis());
+    boolean valid = Http.connectableHttpUrl(httpConnectionExecutionCapability.fetchCapabilityBasis());
     return CapabilityResponse.builder().delegateCapability(httpConnectionExecutionCapability).validated(valid).build();
   }
 }

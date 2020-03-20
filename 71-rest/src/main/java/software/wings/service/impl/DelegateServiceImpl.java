@@ -18,6 +18,7 @@ import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PR
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -47,8 +48,6 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHA
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE;
 import static software.wings.beans.FeatureName.UPGRADE_JRE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
-import static software.wings.beans.TaskType.HOST_VALIDATION;
-import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -1731,30 +1730,35 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   // params. So none of the params can provide the execution capability by itself. To work around this,
   // we're adding extra params that combines these split params.
   private void addMergedParamsForCapabilityCheck(DelegateTask task) {
+    List<Object> newParams;
     TaskType type = TaskType.valueOf(task.getData().getTaskType());
     Object[] params = task.getData().getParameters();
-    if (type == HOST_VALIDATION) {
-      // the host is in params[2] and port in params[3]
-      HostValidationTaskParameters hostValidationTaskParameters =
-          HostValidationTaskParameters.builder()
-              .hostNames((List<String>) params[2])
-              .connectionSetting((SettingAttribute) params[3])
-              .encryptionDetails((List<EncryptedDataDetail>) params[4])
-              .executionCredential((ExecutionCredential) params[5])
-              .build();
-      List<Object> newParams = new ArrayList<>(Arrays.asList(hostValidationTaskParameters));
-      task.getData().setParameters(newParams.toArray());
-    } else if (type == PCF_COMMAND_TASK) {
-      PcfCommandRequest commandRequest = (PcfCommandRequest) params[0];
-      if (!(commandRequest instanceof PcfRunPluginCommandRequest)) {
-        PcfCommandTaskParametersBuilder parametersBuilder =
-            PcfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
-        if (params.length > 1) {
-          parametersBuilder.encryptedDataDetails((List<EncryptedDataDetail>) params[1]);
-        }
-        List<Object> newParams = new ArrayList<>(Arrays.asList(parametersBuilder.build()));
+    switch (type) {
+      case HOST_VALIDATION:
+        HostValidationTaskParameters hostValidationTaskParameters =
+            HostValidationTaskParameters.builder()
+                .hostNames((List<String>) params[2])
+                .connectionSetting((SettingAttribute) params[3])
+                .encryptionDetails((List<EncryptedDataDetail>) params[4])
+                .executionCredential((ExecutionCredential) params[5])
+                .build();
+        newParams = new ArrayList<>(Arrays.asList(hostValidationTaskParameters));
         task.getData().setParameters(newParams.toArray());
-      }
+        return;
+      case PCF_COMMAND_TASK:
+        PcfCommandRequest commandRequest = (PcfCommandRequest) params[0];
+        if (!(commandRequest instanceof PcfRunPluginCommandRequest)) {
+          PcfCommandTaskParametersBuilder parametersBuilder =
+              PcfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
+          if (params.length > 1) {
+            parametersBuilder.encryptedDataDetails((List<EncryptedDataDetail>) params[1]);
+          }
+          newParams = new ArrayList<>(Collections.singletonList(parametersBuilder.build()));
+          task.getData().setParameters(newParams.toArray());
+        }
+        return;
+      default:
+        noop();
     }
   }
 
