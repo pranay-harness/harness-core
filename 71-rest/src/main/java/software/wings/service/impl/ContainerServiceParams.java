@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.settings.SettingValue;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +52,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     if (settingAttribute == null) {
-      return CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails);
+      return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
     }
     SettingValue value = settingAttribute.getValue();
 
