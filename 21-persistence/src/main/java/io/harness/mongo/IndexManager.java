@@ -24,6 +24,7 @@ import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -58,7 +60,13 @@ public class IndexManager {
   public static final String EXPIRE_AFTER_SECONDS = "expireAfterSeconds";
   public static final String PARTIAL_FILTER_EXPRESSION = "partialFilterExpression";
 
-  public interface IndexCreator { void create(); }
+  @Value
+  @Builder
+  public static class IndexCreator {
+    private DBCollection collection;
+    private DBObject keys;
+    private DBObject options;
+  }
 
   @Value
   @AllArgsConstructor
@@ -73,8 +81,8 @@ public class IndexManager {
     while (cursor.hasNext()) {
       BasicDBObject object = (BasicDBObject) cursor.next();
 
-      final String name = (String) object.get(NAME);
-      final BasicDBObject accessesObject = (BasicDBObject) object.get("accesses");
+      String name = (String) object.get(NAME);
+      BasicDBObject accessesObject = (BasicDBObject) object.get("accesses");
 
       Accesses accesses =
           new Accesses(((Long) accessesObject.get("ops")).intValue(), (Date) accessesObject.get("since"));
@@ -89,9 +97,9 @@ public class IndexManager {
     Map<String, Accesses> accessesMap = new HashMap<>();
 
     for (Entry<String, Accesses> entry : accessesPrimary.entrySet()) {
-      final String index = entry.getKey();
-      final Accesses primary = entry.getValue();
-      final Accesses secondary = accessesSecondary.get(entry.getKey());
+      String index = entry.getKey();
+      Accesses primary = entry.getValue();
+      Accesses secondary = accessesSecondary.get(entry.getKey());
       if (secondary == null) {
         accessesMap.put(index, primary);
       } else {
@@ -113,17 +121,17 @@ public class IndexManager {
   // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
   // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
   private static void checkForUnusedIndexes(DBCollection collection, Map<String, Accesses> accesses) {
-    final long now = System.currentTimeMillis();
-    final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
+    long now = System.currentTimeMillis();
+    Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
 
-    final List<DBObject> indexInfo = collection.getIndexInfo();
-    final Set<String> uniqueIndexes = indexInfo.stream()
-                                          .filter(obj -> {
-                                            final Object unique = obj.get(UNIQUE);
-                                            return unique != null && unique.toString().equals("true");
-                                          })
-                                          .map(obj -> obj.get(NAME).toString())
-                                          .collect(toSet());
+    List<DBObject> indexInfo = collection.getIndexInfo();
+    Set<String> uniqueIndexes = indexInfo.stream()
+                                    .filter(obj -> {
+                                      Object unique = obj.get(UNIQUE);
+                                      return unique != null && unique.toString().equals("true");
+                                    })
+                                    .map(obj -> obj.get(NAME).toString())
+                                    .collect(toSet());
 
     accesses.entrySet()
         .stream()
@@ -149,10 +157,10 @@ public class IndexManager {
   }
 
   static Map<String, Accesses> fetchIndexAccesses(DBCollection collection) {
-    final Map<String, Accesses> accessesPrimary = extractAccesses(
+    Map<String, Accesses> accessesPrimary = extractAccesses(
         collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
             AggregationOptions.builder().build(), ReadPreference.primary()));
-    final Map<String, Accesses> accessesSecondary = extractAccesses(
+    Map<String, Accesses> accessesSecondary = extractAccesses(
         collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
             AggregationOptions.builder().build(), ReadPreference.secondary()));
 
@@ -165,7 +173,7 @@ public class IndexManager {
 
     movements.forEach((source, target) -> {
       Query<MorphiaMove> query = primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
-      final UpdateOperations<MorphiaMove> updateOperations =
+      UpdateOperations<MorphiaMove> updateOperations =
           primaryDatastore.createUpdateOperations(MorphiaMove.class).addToSet(MorphiaMoveKeys.sources, source);
       primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
     });
@@ -177,7 +185,7 @@ public class IndexManager {
       if (entry.getValue() == MorphiaRegistrar.NotFoundClass.class) {
         continue;
       }
-      final String target = entry.getValue().getName();
+      String target = entry.getValue().getName();
       if (entry.getKey().equals(target)) {
         continue;
       }
@@ -187,67 +195,82 @@ public class IndexManager {
     return movements;
   }
 
-  public static void ensureIndex(AdvancedDatastore datastore, Morphia morphia) {
-    // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-    // There is no way to override this behavior.
-    // https://github.com/mongodb/morphia/issues/706
+  interface IndexesProcessor {
+    void process(MappedClass mc, DBCollection collection);
+  }
 
+  public static Set<String> processIndexes(AdvancedDatastore datastore, Morphia morphia, IndexesProcessor processor) {
     Set<String> processedCollections = new HashSet<>();
-
-    final Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
     mappedClasses.forEach(mc -> {
       if (mc.getEntityAnnotation() == null) {
         return;
       }
 
-      final DBCollection collection = datastore.getCollection(mc.getClazz());
+      DBCollection collection = datastore.getCollection(mc.getClazz());
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
         if (processedCollections.contains(collection.getName())) {
           return;
         }
         processedCollections.add(collection.getName());
 
-        Map<String, IndexCreator> creators = indexCreators(mc, collection);
+        processor.process(mc, collection);
+      }
+    });
+    return processedCollections;
+  }
 
-        // We should be attempting to drop indexes only if we successfully created all new ones
-        boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
+  public static List<IndexCreator> allIndexes(AdvancedDatastore datastore, Morphia morphia) {
+    List<IndexCreator> result = new ArrayList<>();
+    processIndexes(datastore, morphia, (mc, collection) -> result.addAll(indexCreators(mc, collection).values()));
+    return result;
+  }
 
-        final Map<String, Accesses> accesses = fetchIndexAccesses(collection);
+  public static void ensureIndex(AdvancedDatastore datastore, Morphia morphia) {
+    // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+    // There is no way to override this behavior.
+    // https://github.com/mongodb/morphia/issues/706
 
-        if (okToDropIndexes) {
-          final List<DBObject> indexInfo = collection.getIndexInfo();
-          final List<String> obsoleteIndexes = indexInfo.stream()
-                                                   .map(obj -> obj.get(NAME).toString())
-                                                   .filter(name -> !"_id_".equals(name))
-                                                   .filter(name -> !creators.keySet().contains(name))
-                                                   .collect(toList());
+    Set<String> processedCollections = processIndexes(datastore, morphia, (mc, collection) -> {
+      Map<String, IndexCreator> creators = indexCreators(mc, collection);
+      // We should be attempting to drop indexes only if we successfully created all new ones
+      boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
 
-          if (isNotEmpty(obsoleteIndexes)) {
-            // Make sure that all indexes that we have are operational, we check that they have being seen since
-            // at least a day
-            final Date tooNew = tooNew();
-            okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
+      Map<String, Accesses> accesses = fetchIndexAccesses(collection);
 
-            if (okToDropIndexes) {
-              obsoleteIndexes.forEach(name -> {
-                try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
-                  logger.info("Remove obsolete index");
-                  collection.dropIndex(name);
-                } catch (RuntimeException ex) {
-                  logger.error("Failed to drop index", ex);
-                }
-              });
-            }
+      if (okToDropIndexes) {
+        List<DBObject> indexInfo = collection.getIndexInfo();
+        List<String> obsoleteIndexes = indexInfo.stream()
+                                           .map(obj -> obj.get(NAME).toString())
+                                           .filter(name -> !"_id_".equals(name))
+                                           .filter(name -> !creators.keySet().contains(name))
+                                           .collect(toList());
+
+        if (isNotEmpty(obsoleteIndexes)) {
+          // Make sure that all indexes that we have are operational, we check that they have being seen since
+          // at least a day
+          Date tooNew = tooNew();
+          okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
+
+          if (okToDropIndexes) {
+            obsoleteIndexes.forEach(name -> {
+              try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
+                logger.info("Remove obsolete index");
+                collection.dropIndex(name);
+              } catch (RuntimeException ex) {
+                logger.error("Failed to drop index", ex);
+              }
+            });
           }
         }
+      }
 
-        try {
-          if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
-            checkForUnusedIndexes(collection, accesses);
-          }
-        } catch (Exception exception) {
-          logger.warn("", exception);
+      try {
+        if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
+          checkForUnusedIndexes(collection, accesses);
         }
+      } catch (Exception exception) {
+        logger.warn("", exception);
       }
     });
 
@@ -266,13 +289,13 @@ public class IndexManager {
         // verification service
         "timeSeriesAnomaliesRecords", "timeSeriesCumulativeSums");
 
-    final List<String> obsoleteCollections = datastore.getDB()
-                                                 .getCollectionNames()
-                                                 .stream()
-                                                 .filter(name -> !processedCollections.contains(name))
-                                                 .filter(name -> !whitelistCollections.contains(name))
-                                                 .filter(name -> !name.startsWith("!!!test"))
-                                                 .collect(toList());
+    List<String> obsoleteCollections = datastore.getDB()
+                                           .getCollectionNames()
+                                           .stream()
+                                           .filter(name -> !processedCollections.contains(name))
+                                           .filter(name -> !whitelistCollections.contains(name))
+                                           .filter(name -> !name.startsWith("!!!test"))
+                                           .collect(toList());
 
     if (isNotEmpty(obsoleteCollections)) {
       logger.error("Unknown mongo collections detected: {}\n"
@@ -287,9 +310,9 @@ public class IndexManager {
 
   static boolean isOkToDropIndexes(Date tooNew, Map<String, Accesses> accesses, List<DBObject> indexInfo) {
     for (DBObject info : indexInfo) {
-      final String name = info.get(NAME).toString();
+      String name = info.get(NAME).toString();
       // Note that we are aware that we checking the obsolete indexes as well. This is to play on the safe side.
-      final Accesses access = accesses.get(name);
+      Accesses access = accesses.get(name);
       if (access == null || access.getSince().compareTo(tooNew) > 0) {
         return false;
       }
@@ -302,8 +325,8 @@ public class IndexManager {
     for (Entry<String, IndexCreator> creator : creators.entrySet()) {
       String name = creator.getKey();
       try (AutoLogContext ignore = new IndexLogContext(name, OVERRIDE_ERROR)) {
-        final IndexCreator indexCreator = creator.getValue();
-        indexCreator.create();
+        IndexCreator indexCreator = creator.getValue();
+        indexCreator.collection.createIndex(indexCreator.getKeys(), indexCreator.getOptions());
         created++;
       } catch (MongoCommandException mex) {
         // 86 - Index must have unique name.
@@ -336,7 +359,7 @@ public class IndexManager {
           keys.append(field.value(), field.type().toIndexValue());
         }
 
-        final String indexName = index.options().name();
+        String indexName = index.options().name();
         if (isEmpty(indexName)) {
           logger.error("Do not use default index name. WARNING: this index will not be created!!!");
         } else {
@@ -347,20 +370,20 @@ public class IndexManager {
           } else {
             options.put(BACKGROUND, Boolean.TRUE);
           }
-          creators.put(indexName, () -> collection.createIndex(keys, options));
+          creators.put(indexName, IndexCreator.builder().collection(collection).keys(keys).options(options).build());
         }
       });
     }
 
     // Read field level "Indexed" annotation
-    for (final MappedField mf : mc.getPersistenceFields()) {
+    for (MappedField mf : mc.getPersistenceFields()) {
       if (mf.hasAnnotation(Indexed.class)) {
-        final Indexed indexed = mf.getAnnotation(Indexed.class);
+        Indexed indexed = mf.getAnnotation(Indexed.class);
 
         int direction = 1;
-        final String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
+        String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
 
-        final String indexName = name + "_" + direction;
+        String indexName = name + "_" + direction;
         BasicDBObject dbObject = new BasicDBObject(name, direction);
 
         DBObject options = new BasicDBObject();
@@ -377,7 +400,7 @@ public class IndexManager {
           options.put(PARTIAL_FILTER_EXPRESSION, indexed.options().partialFilter());
         }
 
-        creators.put(indexName, () -> collection.createIndex(dbObject, options));
+        creators.put(indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
       }
     }
 

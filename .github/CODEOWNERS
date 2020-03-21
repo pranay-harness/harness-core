@@ -1,8 +1,11 @@
 # pom files are essential for the build process and they can open security concerns with introducing new dependencies
-pom.xml                     @wings-software/portal_pom-maintainers
+pom.xml                                         @wings-software/portal_pom-maintainers
 
 # analytics configurations should be made carefully to avoid false positives
-/tools                      @george-harness
+/tools                                          @george-harness
 
 # gitignores changes are ot frequent and can have tricky impact. Let have a second pair of eyes before we commit changes there.
-**/.gitignore               @george-harness
+**/.gitignore                                   @george-harness
+
+# make sure that any controlled mongo resource is double reviewed
+71-rest/src/test/resource/mongo/*               @george-harness

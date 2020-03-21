@@ -1,4 +1,4 @@
-package io.harness.serializer.morphia;
+package io.harness.serializer.kryo;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class ManagerKrioRegistrarTest extends WingsBaseTest {
+public class ManagerKryoRegistrarTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -26,7 +26,7 @@ public class ManagerKrioRegistrarTest extends WingsBaseTest {
 
     Set<Class> result = new HashSet<>();
 
-    final Set<Class<? extends ResponseData>> types = reflections.getSubTypesOf(ResponseData.class);
+    Set<Class<? extends ResponseData>> types = reflections.getSubTypesOf(ResponseData.class);
     for (Class type : types) {
       assertThat(KryoUtils.isRegistered(type)).as(type.getName()).isTrue();
     }
