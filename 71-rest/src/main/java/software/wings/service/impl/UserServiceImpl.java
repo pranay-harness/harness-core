@@ -339,7 +339,7 @@ public class UserServiceImpl implements UserService {
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url, params);
       eventPublishHelper.publishTrialUserSignupEvent(
-          userInvite.getUtmInfo(), emailAddress, userInvite.getName(), inviteId);
+          userInvite.getUtmInfo(), emailAddress, userInvite.getName(), inviteId, userInvite.getCompanyName());
     } else if (userInviteInDB.isCompleted()) {
       if (spamChecker.isSpam(userInviteInDB)) {
         return false;
@@ -393,7 +393,8 @@ public class UserServiceImpl implements UserService {
 
     params.put("msg", msg);
     boolean emailSent = sendEmail(to, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
-    eventPublishHelper.publishJoinAccountEvent(emailAddress, accountJoinRequest.getName());
+    eventPublishHelper.publishJoinAccountEvent(
+        emailAddress, accountJoinRequest.getName(), accountJoinRequest.getCompanyName());
     return emailSent;
   }
 
@@ -427,7 +428,7 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, null, inviteId);
+      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, null, inviteId, userInvite.getCompanyName());
     } else if (userInvite.isCompleted()) {
       if (spamChecker.isSpam(userInvite)) {
         return false;

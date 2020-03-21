@@ -79,22 +79,23 @@ public class MarketoHelper {
     if (existingLeadId > 0) {
       try {
         createOrUpdateResponse = updateLead(retrofit, existingLeadId, email, userName, account, userInviteUrl,
-            accessToken, oauthProvider, userInvite.getUtmInfo());
+            accessToken, oauthProvider, userInvite.getUtmInfo(), userInvite);
       } catch (Exception ex) {
         // Retrying with email if id was invalid, we have cases where the lead was manually deleted from marketo
-        createOrUpdateResponse =
-            createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo);
+        createOrUpdateResponse = createLead(
+            retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo, userInvite);
       }
     } else {
-      createOrUpdateResponse =
-          createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo);
+      createOrUpdateResponse = createLead(
+          retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo, userInvite);
     }
 
     return processLeadResponse(createOrUpdateResponse);
   }
 
   private retrofit2.Response<Response> createLead(Retrofit retrofit, String email, String userName, Account account,
-      String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo) throws IOException {
+      String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo, UserInvite userInvite)
+      throws IOException {
     logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
     LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
     leadBuilderWithEmail.email(email)
@@ -113,6 +114,8 @@ public class MarketoHelper {
         leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
             .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
+    } else if (userInvite != null) {
+      leadBuilderWithEmail.company(userInvite.getCompanyName());
     }
 
     if (isNotEmpty(userInviteUrl)) {
@@ -144,8 +147,8 @@ public class MarketoHelper {
   }
 
   private retrofit2.Response<Response> updateLead(Retrofit retrofit, int existingLeadId, String email, String userName,
-      Account account, String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo)
-      throws IOException {
+      Account account, String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo,
+      UserInvite userInvite) throws IOException {
     logger.info("Updating lead {} to marketo", existingLeadId);
 
     LeadBuilder leadBuilderWithId = Lead.builder();
@@ -166,6 +169,8 @@ public class MarketoHelper {
         leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
             .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
+    } else if (userInvite != null) {
+      leadBuilderWithId.company(userInvite.getCompanyName());
     }
 
     if (isNotEmpty(userInviteUrl)) {

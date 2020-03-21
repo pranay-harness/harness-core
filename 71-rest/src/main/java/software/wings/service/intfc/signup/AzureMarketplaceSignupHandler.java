@@ -68,7 +68,8 @@ public class AzureMarketplaceSignupHandler implements SignupHandler {
 
       // Send an email invitation for the trial user to finish up the sign-up with asking password.
       userService.sendVerificationEmail(userInvite, url, params);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, userInvite.getName(), inviteId);
+      eventPublishHelper.publishTrialUserSignupEvent(
+          emailAddress, userInvite.getName(), inviteId, userInvite.getCompanyName());
     } else if (userInviteInDB.isCompleted()) {
       if (spamChecker.isSpam(userInviteInDB)) {
         return false;
