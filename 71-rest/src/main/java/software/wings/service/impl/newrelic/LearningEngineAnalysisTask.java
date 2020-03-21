@@ -44,7 +44,16 @@ import java.util.concurrent.TimeUnit;
       },
       options = @IndexOptions(name = "task_fetch_idx"))
   ,
-      @Index(fields = {
+      @Index(fields =
+          {
+            @Field("state_execution_id")
+            , @Field(value = "priority", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
+                @Field("cluster_level"), @Field("group_name"), @Field("version"),
+                @Field(value = "createdAt", type = IndexType.DESC)
+          },
+          options = @IndexOptions(name = "task_fetch_priority_idx"))
+
+      , @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
       }, options = @IndexOptions(name = "cvConfigStatusIdx")), @Index(fields = {
         @Field("executionStatus")
@@ -108,6 +117,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String tag = "default";
   private int service_guard_backoff_count;
   private Double alertThreshold;
+  @Builder.Default private int priority = 1;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
