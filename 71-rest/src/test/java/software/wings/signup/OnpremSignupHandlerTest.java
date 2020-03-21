@@ -63,7 +63,9 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
 
     when(userService.saveUserInvite(Mockito.any(UserInvite.class))).thenReturn(UUID);
     when(configuration.getDeployMode()).thenReturn(DeployMode.ONPREM);
-    doNothing().when(eventPublishHelper).publishTrialUserSignupEvent(anyString(), anyString(), anyString());
+    doNothing()
+        .when(eventPublishHelper)
+        .publishTrialUserSignupEvent(anyString(), anyString(), anyString(), anyString());
   }
 
   @Test

@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import io.harness.event.handler.impl.EventPublishHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource;
@@ -23,7 +22,6 @@ public class MarketoSignupHandler implements SignupHandler {
   @Inject private SignupSpamChecker spamChecker;
   @Inject private SignupService signupService;
   @Inject private UserService userService;
-  @Inject private MainConfiguration mainConfiguration;
 
   @Override
   public boolean handle(UserInvite userInvite) {
@@ -41,7 +39,8 @@ public class MarketoSignupHandler implements SignupHandler {
 
       // Send an email invitation for the trial user to finish up the sign-up with asking password.
       signupService.sendPasswordSetupMailForSignup(userInvite);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, userInvite.getName(), inviteId);
+      eventPublishHelper.publishTrialUserSignupEvent(
+          emailAddress, userInvite.getName(), inviteId, userInvite.getCompanyName());
     } else if (userInviteInDB.isCompleted()) {
       if (spamChecker.isSpam(userInviteInDB)) {
         return false;

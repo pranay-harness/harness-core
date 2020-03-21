@@ -14,6 +14,7 @@ public interface Constants {
   String CATEGORY = "category";
   String USER_NAME = "user_name";
   String USER_INVITE_ID = "user_invite_id";
+  String COMPANY_NAME = "company_name";
   String TECH_NAME = "tech_name";
   String ACCOUNT_EVENT = "account_event";
   String TECH_CATEGORY_NAME = "tech_category";

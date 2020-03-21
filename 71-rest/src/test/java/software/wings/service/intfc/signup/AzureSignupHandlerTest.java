@@ -69,7 +69,9 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
     doNothing().when(userService).sendVerificationEmail(Mockito.any(UserInvite.class), anyString(), Mockito.anyMap());
 
     when(userService.saveUserInvite(Mockito.any(UserInvite.class))).thenReturn(UUID);
-    doNothing().when(eventPublishHelper).publishTrialUserSignupEvent(anyString(), anyString(), anyString());
+    doNothing()
+        .when(eventPublishHelper)
+        .publishTrialUserSignupEvent(anyString(), anyString(), anyString(), anyString());
   }
 
   @Test
@@ -82,7 +84,8 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
     assertThat(azureMarketplaceSignupHandler.handle(createUserInvite())).isTrue();
     verify(userService, Mockito.times(1)).saveUserInvite(Mockito.any(UserInvite.class));
     verify(userService, Mockito.times(1)).sendVerificationEmail(Mockito.any(UserInvite.class), anyString(), anyMap());
-    verify(eventPublishHelper, Mockito.times(1)).publishTrialUserSignupEvent(anyString(), anyString(), anyString());
+    verify(eventPublishHelper, Mockito.times(1))
+        .publishTrialUserSignupEvent(anyString(), anyString(), anyString(), anyString());
   }
 
   @Test

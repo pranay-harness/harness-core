@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CATEGORY;
+import static io.harness.event.handler.impl.Constants.COMPANY_NAME;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
@@ -526,12 +527,13 @@ public class EventPublishHelper {
     publishEvent(EventType.COMPLETE_USER_REGISTRATION, properties);
   }
 
-  public void publishTrialUserSignupEvent(UtmInfo utmInfo, String email, String userName, String inviteId) {
+  public void publishTrialUserSignupEvent(
+      UtmInfo utmInfo, String email, String userName, String inviteId, String companyName) {
     if (isEmpty(email)) {
       return;
     }
 
-    Map<String, String> properties = getProperties(null, email, userName, inviteId);
+    Map<String, String> properties = getProperties(null, email, userName, inviteId, companyName);
 
     setUTMDataToProperties(properties, utmInfo);
     publishEvent(EventType.NEW_TRIAL_SIGNUP, properties);
@@ -547,20 +549,20 @@ public class EventPublishHelper {
     }
   }
 
-  public void publishTrialUserSignupEvent(String email, String userName, String inviteId) {
+  public void publishTrialUserSignupEvent(String email, String userName, String inviteId, String companyName) {
     if (isEmpty(email)) {
       return;
     }
 
-    publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId));
+    publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId, companyName));
   }
 
-  public void publishJoinAccountEvent(String email, String name) {
+  public void publishJoinAccountEvent(String email, String name, String companyName) {
     if (isEmpty(email)) {
       return;
     }
 
-    publishEvent(EventType.JOIN_ACCOUNT_REQUEST, getProperties(null, email, name, null));
+    publishEvent(EventType.JOIN_ACCOUNT_REQUEST, getProperties(null, email, name, null, companyName));
   }
 
   public void publishTechStackEvent(String accountId, Set<TechStack> techStacks) {
@@ -867,12 +869,14 @@ public class EventPublishHelper {
     return properties;
   }
 
-  private Map<String, String> getProperties(String accountId, String userEmail, String userName, String userInviteId) {
+  private Map<String, String> getProperties(
+      String accountId, String userEmail, String userName, String userInviteId, String companyName) {
     Map<String, String> properties = new HashMap<>();
     properties.put(ACCOUNT_ID, accountId);
     properties.put(EMAIL_ID, userEmail);
     properties.put(USER_NAME, userName);
     properties.put(USER_INVITE_ID, userInviteId);
+    properties.put(COMPANY_NAME, companyName);
     return properties;
   }
 
