@@ -13,6 +13,7 @@ import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -31,11 +32,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   private static final int BATCH_SIZE = 500;
+  private static final int SKIP_BATCH_SIZE = 50;
+  private static final int RETRY_LIMIT = 1;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
   @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
   @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private SkipListener ecsStepSkipListener;
 
   @Bean
   @StepScope
@@ -140,6 +144,12 @@ public class K8sBatchConfiguration {
         .reader(k8sPodInfoMessageReader(null, null, null))
         .processor(k8sPodInfoProcessor())
         .writer(instanceInfoWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
         .build();
   }
 
@@ -150,6 +160,12 @@ public class K8sBatchConfiguration {
         .reader(k8sPodEventMessageReader(null, null, null))
         .processor(k8sPodEventProcessor())
         .writer(instanceEventWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
         .build();
   }
 
