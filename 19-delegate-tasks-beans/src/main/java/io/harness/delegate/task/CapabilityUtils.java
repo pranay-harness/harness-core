@@ -138,7 +138,7 @@ public class CapabilityUtils {
   private static Set<String> taskTypesMigratedToCapabilityFrameworkPhase2 = new HashSet<>(
       Arrays.asList("AWS_S3_TASK", "FETCH_MASTER_URL", "SPLUNK_COLLECT_LOG_DATAV2", "NEWRELIC_COLLECT_METRIC_DATAV2",
           "INSTANA_COLLECT_METRIC_DATA", "ELK_COLLECT_LOG_DATAV2", "APPDYNAMICS_COLLECT_METRIC_DATA_V2",
-          "GIT_FETCH_FILES_TASK", "SPOTINST_COMMAND_TASK", "INSTANA_VALIDATE_CONFIGURATION_TASK"));
+          "GIT_FETCH_FILES_TASK", "SPOTINST_COMMAND_TASK", "INSTANA_VALIDATE_CONFIGURATION_TASK", "K8S_WATCH_TASK"));
 
   public static boolean isTaskTypeMigratedToCapabilityFrameworkPhase2(String taskType) {
     return taskTypesMigratedToCapabilityFrameworkPhase2.contains(taskType);
