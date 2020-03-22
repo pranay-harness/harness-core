@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -37,6 +38,7 @@ import java.util.Map;
   })
 })
 @FieldNameConstants(innerTypeName = "PublishedMessageKeys")
+@Slf4j
 public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware {
   @Id private String uuid;
   private long createdAt;
@@ -75,6 +77,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
       @SuppressWarnings("unchecked") Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(type);
       this.message = any.unpack(clazz);
     } catch (ClassNotFoundException | InvalidProtocolBufferException e) {
+      logger.error("message type is {} createdAt {} occuredAt {} attr {}", type, createdAt, occurredAt, attributes);
       throw new DataFormatException("Unable to parse message for type: " + type, e);
     }
   }

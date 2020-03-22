@@ -20,6 +20,6 @@ public class EcsStepSkipListener implements SkipListener<PublishedMessage, Publi
 
   @Override
   public void onSkipInProcess(PublishedMessage publishedMessage, Throwable throwable) {
-    logger.error("EcsStepSkipListener onSkipInProcess");
+    logger.error("EcsStepSkipListener onSkipInProcess {}", publishedMessage);
   }
 }
