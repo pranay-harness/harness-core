@@ -136,6 +136,20 @@ function setupDelegateJars(){
 
       done
 
+      for version in v3.5.4; do
+
+        echo "Copying kustomize ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-kustomize/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o kustomize https://app.harness.io/storage/harness-download/harness-kustomize/release/${version}/bin/${platform}/amd64/kustomize
+
+        echo $(ls -sh kustomize  | cut -d ' ' -f1)
+
+        sudo cp kustomize ${STORAGE_DIR}/harness-download/harness-kustomize/release/${version}/bin/${platform}/amd64/
+
+      done
+
       for version in v1.0; do
 
         echo "Copying terraform-config-inspect v${version} binaries for ${platform}"
