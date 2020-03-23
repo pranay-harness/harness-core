@@ -75,12 +75,19 @@ public class DeploymentEventProcessorTest extends WingsBaseTest {
     listData.put(EventProcessor.ARTIFACT_LIST, asList(ARTIFACT_ID));
     listData.put(EventProcessor.ENVTYPES, asList(EnvironmentType.PROD.name()));
 
+    Map<String, Object> objectData = new HashMap<>();
+    Map<String, String> tags = new HashMap<>();
+    tags.put("env", "QA");
+    tags.put("description", "this is a really really long description");
+    objectData.put(EventProcessor.TAGS, tags);
+
     TimeSeriesEventInfo timeSeriesEventInfo = TimeSeriesEventInfo.builder()
                                                   .accountId(ACCOUNT_ID)
                                                   .longData(longData)
                                                   .integerData(integerData)
                                                   .stringData(stringData)
                                                   .listData(listData)
+                                                  .data(objectData)
                                                   .build();
 
     when(timeScaleService.isValid()).thenReturn(true);

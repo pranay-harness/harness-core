@@ -62,6 +62,7 @@ public class UsageMetricsEventPublisher {
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();
     Map<String, Integer> integerData = new HashMap<>();
+    Map<String, Object> objectData = new HashMap<>();
     stringData.put(EventProcessor.EXECUTIONID, workflowExecution.getUuid());
     stringData.put(EventProcessor.STATUS, workflowExecution.getStatus().name());
     if (workflowExecution.getPipelineExecution() != null) {
@@ -120,12 +121,16 @@ public class UsageMetricsEventPublisher {
     int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(workflowExecution);
     integerData.put(EventProcessor.INSTANCES_DEPLOYED, instancesDeployed);
 
+    objectData.put(
+        EventProcessor.TAGS, workflowExecutionService.getDeploymentTags(accountId, workflowExecution.getTags()));
+
     TimeSeriesEventInfo eventInfo = TimeSeriesEventInfo.builder()
                                         .accountId(accountId)
                                         .stringData(stringData)
                                         .listData(listData)
                                         .longData(longData)
                                         .integerData(integerData)
+                                        .data(objectData)
                                         .build();
     if (isEmpty(eventInfo.getListData())) {
       logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);

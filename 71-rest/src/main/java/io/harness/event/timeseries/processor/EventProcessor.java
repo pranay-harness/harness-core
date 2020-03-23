@@ -50,6 +50,7 @@ public interface EventProcessor<T extends EventInfo> {
   String INSTANCECOUNT = "INSTANCECOUNT";
   String INSTANCES_DEPLOYED = "INSTANCES_DEPLOYED";
   String INSTANCETYPE = "INSTANCETYPE";
+  String TAGS = "TAGS";
 
   void processEvent(T eventInfo);
 }
