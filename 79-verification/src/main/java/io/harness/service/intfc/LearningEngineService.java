@@ -3,7 +3,6 @@ package io.harness.service.intfc;
 import io.harness.beans.ExecutionStatus;
 import io.harness.service.LearningEngineError;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
-import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -41,9 +40,6 @@ public interface LearningEngineService {
       String workflowExecutionId, String stateExecutionId, long analysisMinute, ExecutionStatus executionStatus);
   void markCompleted(String workflowExecutionId, String stateExecutionId, long analysisMinute, MLAnalysisType type,
       ClusterLevel level);
-  void initializeServiceSecretKeys();
-
-  String getServiceSecretKey(ServiceType serviceType);
 
   AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion);
 

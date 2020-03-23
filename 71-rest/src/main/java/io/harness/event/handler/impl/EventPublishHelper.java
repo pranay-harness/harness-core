@@ -66,11 +66,11 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -109,7 +109,7 @@ public class EventPublishHelper {
   @Inject @Nullable private SegmentConfig segmentConfig;
 
   @Inject private ContinuousVerificationService continuousVerificationService;
-  @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationService learningEngineService;
 
   public void publishLicenseChangeEvent(String accountId, String oldAccountType, String newAccountType) {
     if (!checkIfMarketoOrSegmentIsEnabled()) {

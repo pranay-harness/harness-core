@@ -163,6 +163,7 @@ public class VerificationConstants {
       "learning_engine_exp_task_queued_time_in_seconds";
   public static final String CV_META_DATA = "cv_meta_data";
   public static final int RATE_LIMIT_STATUS = 429;
+  public static final String VERIFICATION_SERVICE_SECRET = "VERIFICATION_SERVICE_SECRET";
 
   public static final Set<String> VERIFICATION_SERVICE_METRICS = Sets.newHashSet(
       LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS,

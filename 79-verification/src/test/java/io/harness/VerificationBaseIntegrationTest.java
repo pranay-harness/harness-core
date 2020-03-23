@@ -46,6 +46,7 @@ import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.VerificationService;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.io.UnsupportedEncodingException;
@@ -81,6 +82,7 @@ public abstract class VerificationBaseIntegrationTest
   protected String userToken = "INVALID_TOKEN";
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected LearningEngineService learningEngineService;
+  @Inject private VerificationService verificationService;
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
@@ -117,8 +119,7 @@ public abstract class VerificationBaseIntegrationTest
 
   @Before
   public void setUp() throws Exception {
-    ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET.set(
-        learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE));
+    ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET.set(verificationService.getVerificationServiceSecretKey());
   }
 
   protected String loginUser(final String userName, final String password) {

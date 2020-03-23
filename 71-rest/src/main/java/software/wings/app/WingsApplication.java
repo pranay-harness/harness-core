@@ -173,9 +173,9 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -757,7 +757,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
-    injector.getInstance(LearningEngineService.class).initializeServiceSecretKeys();
+    injector.getInstance(VerificationService.class).initializeServiceSecretKeys();
   }
 
   private void runMigrations(Injector injector) {

@@ -106,10 +106,10 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheManager;
 
@@ -141,7 +141,7 @@ public class AuthServiceImpl implements AuthService {
   private EnvironmentService environmentService;
   private CacheManager cacheManager;
   private MainConfiguration configuration;
-  private LearningEngineService learningEngineService;
+  private VerificationService learningEngineService;
   private FeatureFlagService featureFlagService;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
@@ -157,7 +157,7 @@ public class AuthServiceImpl implements AuthService {
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence persistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       WorkflowService workflowService, EnvironmentService environmentService, CacheManager cacheManager,
-      MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
+      MainConfiguration configuration, VerificationService learningEngineService, AuthHandler authHandler,
       FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
       SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher, AppService appService,
       DashboardAuthHandler dashboardAuthHandler) {
@@ -425,7 +425,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateLearningEngineServiceToken(String learningEngineServiceToken) {
-    String jwtLearningEngineServiceSecret = learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE);
+    String jwtLearningEngineServiceSecret = learningEngineService.getVerificationServiceSecretKey();
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
       throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
     }

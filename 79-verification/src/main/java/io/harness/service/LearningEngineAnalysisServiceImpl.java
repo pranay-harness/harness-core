@@ -7,7 +7,6 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
-import static software.wings.utils.Misc.generateSecretKey;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -29,9 +28,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.PhaseElement;
-import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
-import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -390,23 +387,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set(LearningEngineAnalysisTaskKeys.executionStatus, executionStatus);
 
     wingsPersistence.update(query, updateOperations);
-  }
-
-  @Override
-  public void initializeServiceSecretKeys() {
-    for (ServiceType serviceType : ServiceType.values()) {
-      wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(
-          ServiceSecretKey.builder().serviceType(serviceType).serviceSecret(generateSecretKey()).build()));
-    }
-  }
-
-  @Override
-  public String getServiceSecretKey(ServiceType serviceType) {
-    Preconditions.checkNotNull(serviceType);
-    return wingsPersistence.createQuery(ServiceSecretKey.class)
-        .filter(ServiceSecretKeyKeys.serviceType, serviceType)
-        .get()
-        .getServiceSecret();
   }
 
   @Override
