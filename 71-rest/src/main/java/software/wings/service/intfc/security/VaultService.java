@@ -27,7 +27,7 @@ public interface VaultService {
 
   char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig);
 
-  String saveVaultConfig(String accountId, VaultConfig vaultConfig);
+  String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 

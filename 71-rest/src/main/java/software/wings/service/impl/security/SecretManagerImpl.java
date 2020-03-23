@@ -1332,7 +1332,7 @@ public class SecretManagerImpl implements SecretManager {
         case VAULT:
           VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, config.getUuid());
           vaultConfig.setDefault(false);
-          vaultService.saveVaultConfig(accountId, vaultConfig);
+          vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
           break;
         case LOCAL:
           break;
