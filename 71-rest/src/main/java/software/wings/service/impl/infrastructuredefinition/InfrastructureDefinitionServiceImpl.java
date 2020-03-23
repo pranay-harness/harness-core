@@ -1123,6 +1123,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public String getContainerRunningInstances(
       String appId, String infraDefinitionId, String serviceId, String serviceNameExpression) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infra Definition not found", infrastructureDefinition);
+    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+      return "0";
+    }
     InfrastructureMapping infrastructureMapping = getInfraMapping(appId, serviceId, infraDefinitionId, null);
     return infrastructureMappingService.getContainerRunningInstances(
         appId, infrastructureMapping.getUuid(), serviceNameExpression);
