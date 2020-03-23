@@ -253,6 +253,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String JRE_DIRECTORY = "jreDirectory";
   private static final String JRE_MAC_DIRECTORY = "jreMacDirectory";
   private static final String JRE_TAR_PATH = "jreTarPath";
+  public static final String JRE_VERSION_KEY = "jreVersion";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -824,6 +825,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
 
+      params.put(JRE_VERSION_KEY, jreConfig.getVersion());
       params.put(JRE_DIRECTORY, jreConfig.getJreDirectory());
       params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
       params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());

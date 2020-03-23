@@ -24,4 +24,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e CF_PLUGIN_HOME= \
 -e USE_CDN=${useCdn} \
 -e CDN_URL=${cdnUrl} \
+-e JRE_VERSION=${jreVersion} \
 ${delegateDockerImage}

@@ -136,4 +136,6 @@ spec:
           value: "${useCdn}"
         - name: CDN_URL
           value: ${cdnUrl}
+        - name: JRE_VERSION
+          value: ${jreVersion}
       restartPolicy: Always
