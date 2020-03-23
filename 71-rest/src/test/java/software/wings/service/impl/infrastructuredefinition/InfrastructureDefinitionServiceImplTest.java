@@ -38,6 +38,8 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableList;
@@ -936,5 +938,22 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
         infrastructureDefinition, "appId", "workflowId");
 
     assertThat(hostNames).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnZeroContainerInstancesWhenDynamicInfra() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .provisionerId(PROVISIONER_ID)
+            .infrastructure(AwsInstanceInfrastructure.builder().build())
+            .build();
+    doReturn(infrastructureDefinition).when(infrastructureDefinitionService).get(APP_ID, INFRA_DEFINITION_ID);
+
+    String count = infrastructureDefinitionService.getContainerRunningInstances(
+        APP_ID, INFRA_DEFINITION_ID, SERVICE_ID, "EXPRESSION");
+
+    assertThat(count).isEqualTo("0");
   }
 }
