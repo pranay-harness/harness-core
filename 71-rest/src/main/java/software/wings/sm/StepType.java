@@ -415,7 +415,7 @@ public enum StepType {
   // todo @rk: verify
   PCF_PLUGIN(PcfPluginState.class, WorkflowServiceHelper.PCF_PLUGIN, asList(PCF),
       asList(PhaseStepType.PCF_SETUP, PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF),
-      asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
 
   // Infra Provisioners
   CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, CF_CREATE_STACK,
