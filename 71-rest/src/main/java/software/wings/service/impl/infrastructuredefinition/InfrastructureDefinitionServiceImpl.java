@@ -1482,11 +1482,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       String appId, String infraDefinitionId, String serviceId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("InfraStructure Definition", infrastructureDefinition);
-    AwsAmiInfrastructure awsAmiInfrastructure = (AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure();
-    SettingAttribute computeProviderSetting = settingsService.get(awsAmiInfrastructure.getCloudProviderId());
-    notNullCheck("Compute Provider", computeProviderSetting);
-    String region = awsAmiInfrastructure.getRegion();
-    if (isEmpty(region)) {
+    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
       // case that could happen since we support dynamic infra for Ami Asg
       return AwsAsgGetRunningCountData.builder()
           .asgName(DEFAULT_AMI_ASG_NAME)
@@ -1495,6 +1491,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           .asgDesired(DEFAULT_AMI_ASG_DESIRED_INSTANCES)
           .build();
     }
+    AwsAmiInfrastructure awsAmiInfrastructure = (AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure();
+    SettingAttribute computeProviderSetting = settingsService.get(awsAmiInfrastructure.getCloudProviderId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+    String region = awsAmiInfrastructure.getRegion();
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
 
