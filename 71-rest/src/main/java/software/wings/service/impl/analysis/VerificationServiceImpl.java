@@ -12,7 +12,6 @@ import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
 import static software.wings.utils.Misc.generateSecretKey;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,11 +22,9 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.ServiceSecretKey;
-import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.common.VerificationConstants;
@@ -38,41 +35,19 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.VerificationService;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Created by rsingh on 1/9/18.
  */
 @Singleton
 @Slf4j
-public class LearningEngineAnalysisServiceImpl implements LearningEngineService {
-  private static final String SERVICE_VERSION_FILE = "/service_version.properties";
-
+public class VerificationServiceImpl implements VerificationService {
   @Inject private WingsPersistence wingsPersistence;
-  private final ServiceApiVersion learningEngineApiVersion;
   @Inject private DataStoreService dataStoreService;
-
-  public LearningEngineAnalysisServiceImpl() throws IOException {
-    Properties messages = new Properties();
-    InputStream in = null;
-    try {
-      in = getClass().getResourceAsStream(SERVICE_VERSION_FILE);
-      messages.load(in);
-    } finally {
-      if (in != null) {
-        in.close();
-      }
-    }
-    String apiVersion = messages.getProperty(ServiceType.LEARNING_ENGINE.name());
-    Preconditions.checkState(!StringUtils.isEmpty(apiVersion));
-    learningEngineApiVersion = ServiceApiVersion.valueOf(apiVersion.toUpperCase());
-  }
 
   @Override
   public void initializeServiceSecretKeys() {
@@ -83,10 +58,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public String getServiceSecretKey(ServiceType serviceType) {
-    Preconditions.checkNotNull(serviceType);
+  public String getVerificationServiceSecretKey() {
+    final String verificationServiceSecret = System.getenv(VerificationConstants.VERIFICATION_SERVICE_SECRET);
+    if (isNotEmpty(verificationServiceSecret)) {
+      return verificationServiceSecret;
+    }
     return wingsPersistence.createQuery(ServiceSecretKey.class)
-        .filter(ServiceSecretKeyKeys.serviceType, serviceType)
+        .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
         .get()
         .getServiceSecret();
   }

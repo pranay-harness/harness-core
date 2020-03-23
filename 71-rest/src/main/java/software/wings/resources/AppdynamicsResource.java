@@ -15,7 +15,6 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
@@ -40,8 +39,6 @@ import javax.ws.rs.QueryParam;
 @Scope(SETTING)
 public class AppdynamicsResource {
   @Inject private AppdynamicsService appdynamicsService;
-
-  @Inject private LearningEngineService learningEngineService;
 
   @GET
   @Path("/applications")

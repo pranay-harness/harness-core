@@ -65,10 +65,10 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -100,7 +100,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   @Mock private WhitelistService whitelistService;
   @Inject private TestUtils eventTestHelper;
   @Mock private ContinuousVerificationService continuousVerificationService;
-  @Mock private LearningEngineService learningEngineService;
+  @Mock private VerificationService learningEngineService;
 
   private User user;
   private Account account;

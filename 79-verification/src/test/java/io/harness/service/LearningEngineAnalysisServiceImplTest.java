@@ -26,7 +26,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -590,29 +589,6 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     assertThat(savedTask).isNotNull();
     assertThat(savedTask.getExecutionStatus()).isEqualByComparingTo(ExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testInitializeServiceSecretKeys() {
-    learningEngineService.initializeServiceSecretKeys();
-
-    List<ServiceSecretKey> serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class).asList();
-
-    assertThat(serviceSecretKeys.size()).isEqualTo(1);
-    assertThat(serviceSecretKeys.get(0).getServiceType())
-        .isEqualByComparingTo(ServiceSecretKey.ServiceType.LEARNING_ENGINE);
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testGetServiceSecretKey() {
-    learningEngineService.initializeServiceSecretKeys();
-
-    String secret = learningEngineService.getServiceSecretKey(ServiceSecretKey.ServiceType.LEARNING_ENGINE);
-    assertThat(secret).isNotNull();
   }
 
   @Test

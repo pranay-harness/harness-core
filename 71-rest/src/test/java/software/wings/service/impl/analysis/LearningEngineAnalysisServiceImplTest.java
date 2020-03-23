@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,20 +15,30 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ServiceSecretKey;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({System.class, VerificationServiceImpl.class})
+@PowerMockIgnore({"javax.net.*", "javax.crypto.*"})
 public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
-  @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
 
   private String cvConfigId;
@@ -36,6 +47,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     cvConfigId = generateUUID();
+    PowerMockito.mockStatic(System.class);
   }
 
   @Test
@@ -233,5 +245,26 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.FEEDBACK_ANALYSIS, minute))
         .isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_getVerificationServiceSecretKey_whenEnvVariableDefined() {
+    String verificationServiceSecret = generateUUID();
+    PowerMockito.when(System.getenv(VerificationConstants.VERIFICATION_SERVICE_SECRET))
+        .thenReturn(verificationServiceSecret);
+    assertThat(learningEngineService.getVerificationServiceSecretKey()).isEqualTo(verificationServiceSecret);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_getVerificationServiceSecretKey_whenEnvVariableNotDefined() {
+    ServiceSecretKey serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
+    assertThat(serviceSecretKey).isNull();
+    learningEngineService.initializeServiceSecretKeys();
+    serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
+    assertThat(learningEngineService.getVerificationServiceSecretKey()).isEqualTo(serviceSecretKey.getServiceSecret());
   }
 }

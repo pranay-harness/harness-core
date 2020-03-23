@@ -28,7 +28,6 @@ import com.nimbusds.jwt.EncryptedJWT;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
-import io.harness.service.intfc.LearningEngineService;
 import io.harness.utils.AccountCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
@@ -42,6 +41,7 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.VerificationService;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -62,7 +62,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class VerificationServiceAuthenticationFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Inject private AccountCache accountCache;
-  @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private VerificationManagerClient verificationManagerClient;
 
@@ -182,7 +182,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   }
 
   private void validateLearningEngineServiceToken(String learningEngineServiceToken) {
-    String jwtLearningEngineServiceSecret = learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE);
+    String jwtLearningEngineServiceSecret = learningEngineService.getVerificationServiceSecretKey();
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
       throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
     }

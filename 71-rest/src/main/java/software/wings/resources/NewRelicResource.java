@@ -18,7 +18,6 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState;
@@ -66,8 +65,6 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class NewRelicResource {
   @Inject private NewRelicService newRelicService;
-
-  @Inject private LearningEngineService learningEngineService;
 
   @Produces({"application/json", "application/v2+json"})
   @GET

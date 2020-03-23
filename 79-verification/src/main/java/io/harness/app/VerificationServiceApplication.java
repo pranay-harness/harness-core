@@ -7,7 +7,6 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.alert.Alert.AlertKeys;
 import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
@@ -82,7 +81,6 @@ import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
-import io.harness.service.intfc.LearningEngineService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -107,6 +105,7 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.intfc.VerificationService;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -447,9 +446,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
-    injector.getInstance(LearningEngineService.class).initializeServiceSecretKeys();
-    VERIFICATION_SERVICE_SECRET.set(
-        injector.getInstance(LearningEngineService.class).getServiceSecretKey(LEARNING_ENGINE));
+    injector.getInstance(VerificationService.class).initializeServiceSecretKeys();
+    VERIFICATION_SERVICE_SECRET.set(injector.getInstance(VerificationService.class).getVerificationServiceSecretKey());
   }
 
   private void initializeServiceTaskPoll(Injector injector) {
