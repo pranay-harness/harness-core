@@ -42,7 +42,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
    * 	ROLLBACK_DURATION BIGINT
    */
   String insert_prepared_statement_sql =
-      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED, TAGS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject DataFetcherUtils utils;
@@ -128,6 +128,8 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
             instancesDeployed = 0;
           }
           insertPreparedStatement.setInt(20, instancesDeployed);
+
+          insertPreparedStatement.setObject(21, eventInfo.getData().get(EventProcessor.TAGS));
 
           insertPreparedStatement.execute();
           successfulInsert = true;

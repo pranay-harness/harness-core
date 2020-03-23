@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -22,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -33,6 +35,7 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+import static software.wings.beans.FeatureName.DEPLOYMENT_TAGS;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
@@ -122,6 +125,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -2474,5 +2478,31 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionData = workflowExecutionService.getStateExecutionData(app.getUuid(), executionUuid, serviceId, null,
         Optional.of(infraDefinitionId), StateType.PHASE_STEP, displayName);
     assertThat(stateExecutionData.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void getDeploymentTags() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .tags(asList(NameValuePair.builder().name("key1").value("value1").build(),
+                                                  NameValuePair.builder().name("label").value("").build()))
+                                              .build();
+    when(featureFlagService.isEnabled(eq(DEPLOYMENT_TAGS), eq(ACCOUNT_ID))).thenReturn(true, true);
+    Map<String, String> deploymentTags =
+        workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
+    assertThat(deploymentTags).isNotEmpty();
+    assertThat(deploymentTags.entrySet())
+        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+        .contains(tuple("key1", "value1"), tuple("label", ""));
+
+    workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    deploymentTags = workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
+    assertThat(deploymentTags).isNull();
+
+    when(featureFlagService.isEnabled(eq(DEPLOYMENT_TAGS), eq(ACCOUNT_ID))).thenReturn(false);
+    deploymentTags = workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
+    assertThat(deploymentTags).isNull();
   }
 }

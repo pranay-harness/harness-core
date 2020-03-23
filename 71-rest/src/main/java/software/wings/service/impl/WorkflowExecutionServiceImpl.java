@@ -157,6 +157,7 @@ import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineExecution;
@@ -4014,5 +4015,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   public void addTagFilterToPageRequest(PageRequest<WorkflowExecution> pageRequest, String tagFilter) {
     resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, tagFilter);
+  }
+
+  public Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags) {
+    if (!featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, accountId)) {
+      return null;
+    }
+    if (isEmpty(tags)) {
+      return null;
+    }
+    Map<String, String> deploymentTags = new HashMap<>();
+    for (NameValuePair nameValuePair : tags) {
+      deploymentTags.put(nameValuePair.getName(), nameValuePair.getValue());
+    }
+    return deploymentTags;
   }
 }

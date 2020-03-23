@@ -21,6 +21,7 @@ import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
@@ -242,4 +243,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   boolean isMultiService(String appId, String workflowExecutionId);
 
   void addTagFilterToPageRequest(PageRequest<WorkflowExecution> pageRequest, String tagFilter);
+
+  Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags);
 }

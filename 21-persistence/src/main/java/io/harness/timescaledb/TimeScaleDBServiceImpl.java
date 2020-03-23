@@ -96,6 +96,8 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) {
       statement.execute("CREATE EXTENSION IF NOT EXISTS TIMESCALEDB CASCADE;");
       logger.info("Completed initializing TimeScaleDB extension");
+      statement.execute("CREATE EXTENSION IF NOT EXISTS hstore;");
+      logger.info("Completed initializing hstore extension");
     }
   }
 
