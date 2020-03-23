@@ -97,7 +97,8 @@ public enum FeatureName {
           three - "${secretDelegate.obtain("secret key", token)}"   -> "my secret"
   */
   TWO_PHASE_SECRET_DECRYPTION,
-  THREE_PHASE_SECRET_DECRYPTION;
+  THREE_PHASE_SECRET_DECRYPTION,
+  GLOBAL_COMMAND_LIBRARY;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
