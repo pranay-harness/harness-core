@@ -319,7 +319,7 @@ public class YamlResource {
   @Path("/manifest-files/{manifestFileId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ManifestFile> updateManifestFile(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
