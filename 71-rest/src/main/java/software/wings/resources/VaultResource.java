@@ -41,11 +41,11 @@ public class VaultResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> saveVaultConfig(
+  public RestResponse<String> saveOrUpdateVaultConfig(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Adding a vault config");
-      return new RestResponse<>(vaultService.saveVaultConfig(accountId, vaultConfig));
+      return new RestResponse<>(vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig));
     }
   }
 

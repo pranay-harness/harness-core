@@ -15,21 +15,24 @@ import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
+import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
@@ -192,17 +195,64 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
+  private String saveSecretField(String accountId, String vaultConfigId, String secretValue, String secretNameSuffix) {
+    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
+    // Get by auth token encrypted record by Id or name.
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .field(ACCOUNT_ID_KEY)
+                                     .equal(accountId)
+                                     .field(EncryptedDataKeys.name)
+                                     .equal(vaultConfigId + secretNameSuffix);
+
+    EncryptedData savedEncryptedData = query.get();
+    if (savedEncryptedData != null) {
+      savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+      savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      encryptedData = savedEncryptedData;
+    }
+
+    encryptedData.setAccountId(accountId);
+    encryptedData.addParent(vaultConfigId);
+    encryptedData.setType(SettingVariableTypes.VAULT);
+    encryptedData.setName(vaultConfigId + secretNameSuffix);
+    return wingsPersistence.save(encryptedData);
+  }
+
+  private String updateSecretField(
+      String secretFieldUuid, String accountId, String vaultConfigId, String secretValue, String secretNameSuffix) {
+    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
+    // Get by auth token encrypted record by Id or name.
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .field(ACCOUNT_ID_KEY)
+                                     .equal(accountId)
+                                     .field(ID_KEY)
+                                     .equal(secretFieldUuid);
+
+    EncryptedData savedEncryptedData = query.get();
+    if (savedEncryptedData == null) {
+      throw new UnexpectedException("The vault config is in a bad state. Please contact Harness Support");
+    }
+    savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+    savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+    savedEncryptedData.setAccountId(accountId);
+    savedEncryptedData.addParent(vaultConfigId);
+    savedEncryptedData.setType(SettingVariableTypes.VAULT);
+    savedEncryptedData.setName(vaultConfigId + secretNameSuffix);
+    return wingsPersistence.save(savedEncryptedData);
+  }
+
   @Override
   public void renewAppRoleClientToken(VaultConfig vaultConfig) {
     logger.info("Renewing Vault AppRole client token for vault id {}", vaultConfig.getUuid());
+    Preconditions.checkNotNull(vaultConfig.getAuthToken());
     if (isNotEmpty(vaultConfig.getAppRoleId())) {
       VaultConfig decryptedVaultConfig = getVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
       try {
         VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
         if (loginResult != null && isNotEmpty(loginResult.getClientToken())) {
           logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
-          saveSecretField(
-              vaultConfig, vaultConfig, vaultConfig.getUuid(), loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
+          updateSecretField(vaultConfig.getAuthToken(), vaultConfig.getAccountId(), vaultConfig.getUuid(),
+              loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
           wingsPersistence.updateField(
               SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewedAt, System.currentTimeMillis());
         }
@@ -214,118 +264,138 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  @Override
-  public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
-    checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
+  private void updateVaultCredentials(VaultConfig savedVaultConfig, String authToken, String secretId) {
+    String vaultConfigId = savedVaultConfig.getUuid();
+    String accountId = savedVaultConfig.getAccountId();
+    String authTokenEncryptedDataId = savedVaultConfig.getAuthToken();
+    String secretIdEncryptedDataId = savedVaultConfig.getSecretId();
 
+    // Create a LOCAL encrypted record for Vault authToken
+    Preconditions.checkNotNull(authToken);
+    Preconditions.checkNotNull(authTokenEncryptedDataId);
+    authTokenEncryptedDataId =
+        updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
+    savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+
+    // Create a LOCAL encrypted record for Vault secretId
+    if (isNotEmpty(secretId)) {
+      if (isNotEmpty(secretIdEncryptedDataId)) {
+        secretIdEncryptedDataId = updateSecretField(
+            secretIdEncryptedDataId, accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+      } else {
+        secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+      }
+      savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+    }
+  }
+
+  private void saveVaultCredentials(VaultConfig savedVaultConfig, String authToken, String secretId) {
+    String vaultConfigId = savedVaultConfig.getUuid();
+    String accountId = savedVaultConfig.getAccountId();
+
+    // Create a LOCAL encrypted record for Vault authToken
+    Preconditions.checkNotNull(authToken);
+    String authTokenEncryptedDataId = saveSecretField(accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
+    savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+
+    // Create a LOCAL encrypted record for Vault secretId
+    if (isNotEmpty(secretId)) {
+      String secretIdEncryptedDataId =
+          saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+      savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+    }
+  }
+
+  private String updateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    VaultConfig savedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+    // Replaced masked secrets with the real secret value.
+    if (SECRET_MASK.equals(vaultConfig.getAuthToken())) {
+      vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
+    }
+    if (SECRET_MASK.equals(vaultConfig.getSecretId())) {
+      vaultConfig.setSecretId(savedVaultConfig.getSecretId());
+    }
+
+    boolean credentialChanged = !Objects.equals(savedVaultConfig.getAuthToken(), vaultConfig.getAuthToken())
+        || !Objects.equals(savedVaultConfig.getSecretId(), vaultConfig.getSecretId());
+
+    // secret field un-decrypted version of saved KMS config
+    savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+
+    // Validate every time when secret manager config change submitted
+    validateVaultConfig(accountId, vaultConfig);
+
+    VaultConfig oldConfigForAudit = KryoUtils.clone(savedVaultConfig);
+    if (credentialChanged) {
+      updateVaultCredentials(savedVaultConfig, vaultConfig.getAuthToken(), vaultConfig.getSecretId());
+    }
+
+    savedVaultConfig.setName(vaultConfig.getName());
+    savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
+    savedVaultConfig.setDefault(vaultConfig.isDefault());
+    savedVaultConfig.setReadOnly(vaultConfig.isReadOnly());
+    savedVaultConfig.setBasePath(vaultConfig.getBasePath());
+    savedVaultConfig.setSecretEngineName(vaultConfig.getSecretEngineName());
+    savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
+    savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
+    savedVaultConfig.setVaultUrl(vaultConfig.getVaultUrl());
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
+    return secretManagerConfigService.save(savedVaultConfig);
+  }
+
+  private String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+    // Validate every time when secret manager config change submitted
+    validateVaultConfig(accountId, vaultConfig);
+
+    String authToken = vaultConfig.getAuthToken();
+    String secretId = vaultConfig.getSecretId();
+
+    try {
+      vaultConfig.setAuthToken(null);
+      vaultConfig.setSecretId(null);
+      String vaultConfigId = secretManagerConfigService.save(vaultConfig);
+      vaultConfig.setUuid(vaultConfigId);
+    } catch (DuplicateKeyException e) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", USER_SRE);
+    }
+
+    saveVaultCredentials(vaultConfig, authToken, secretId);
+
+    Query<SecretManagerConfig> query =
+        wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(vaultConfig.getUuid());
+
+    UpdateOperations<SecretManagerConfig> updateOperations =
+        wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
+            .set(VaultConfigKeys.authToken, vaultConfig.getAuthToken());
+
+    if (isNotEmpty(vaultConfig.getSecretId())) {
+      updateOperations.set(VaultConfigKeys.secretId, vaultConfig.getSecretId());
+    }
+
+    vaultConfig = (VaultConfig) wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, null, vaultConfig);
+    return vaultConfig.getUuid();
+  }
+
+  @Override
+  public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
     vaultConfig.setAccountId(accountId);
-
-    VaultConfig oldConfigForAudit = null;
-    VaultConfig savedVaultConfig = null;
-    boolean credentialChanged = true;
-    if (!isEmpty(vaultConfig.getUuid())) {
-      savedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
-      // Replaced masked secrets with the real secret value.
-      if (SECRET_MASK.equals(vaultConfig.getAuthToken())) {
-        vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
-      }
-      if (SECRET_MASK.equals(vaultConfig.getSecretId())) {
-        vaultConfig.setSecretId(savedVaultConfig.getSecretId());
-      }
-      credentialChanged = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
-          || !Objects.equals(savedVaultConfig.getAppRoleId(), vaultConfig.getAppRoleId())
-          || !Objects.equals(savedVaultConfig.getAuthToken(), vaultConfig.getAuthToken())
-          || !Objects.equals(savedVaultConfig.getSecretId(), vaultConfig.getSecretId());
-
-      // secret field un-decrypted version of saved KMS config
-      savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-      oldConfigForAudit = KryoUtils.clone(savedVaultConfig);
-    }
 
     if (vaultConfig.isReadOnly() && vaultConfig.isDefault()) {
       throw new SecretManagementException(
           SECRET_MANAGEMENT_ERROR, "A read only vault cannot be the default secret manager", USER);
     }
 
-    // Validate every time when secret manager config change submitted
-    validateVaultConfig(accountId, vaultConfig);
-
-    if (!credentialChanged) {
-      // update without token/secretId or url changes
-      savedVaultConfig.setName(vaultConfig.getName());
-      savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
-      savedVaultConfig.setDefault(vaultConfig.isDefault());
-      savedVaultConfig.setReadOnly(vaultConfig.isReadOnly());
-      savedVaultConfig.setBasePath(vaultConfig.getBasePath());
-      savedVaultConfig.setSecretEngineName(vaultConfig.getSecretEngineName());
-      savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
-      savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
-      // PL-3237: Audit secret manager config changes.
-      generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
-
-      return secretManagerConfigService.save(savedVaultConfig);
-    }
-
-    String authToken = vaultConfig.getAuthToken();
-    String secretId = vaultConfig.getSecretId();
-
-    String vaultConfigId;
-    try {
-      vaultConfig.setAuthToken(null);
-      vaultConfig.setSecretId(null);
-      vaultConfigId = secretManagerConfigService.save(vaultConfig);
-    } catch (DuplicateKeyException e) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", USER_SRE);
-    }
-
-    // Create a LOCAL encrypted record for Vault authToken
-    if (isNotEmpty(authToken) && !SECRET_MASK.equals(authToken)) {
-      String authTokenEncryptedDataId =
-          saveSecretField(savedVaultConfig, vaultConfig, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
-      vaultConfig.setAuthToken(authTokenEncryptedDataId);
-    }
-
-    // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId) && !SECRET_MASK.equals(secretId)) {
-      String secretIdEncryptedDataId =
-          saveSecretField(savedVaultConfig, vaultConfig, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
-      vaultConfig.setSecretId(secretIdEncryptedDataId);
-    }
-
-    // PL-3237: Audit secret manager config changes.
-    generateAuditForSecretManager(accountId, oldConfigForAudit, vaultConfig);
-
-    secretManagerConfigService.save(vaultConfig);
-    return vaultConfigId;
-  }
-
-  private String saveSecretField(VaultConfig savedVaultConfig, VaultConfig vaultConfig, String vaultConfigId,
-      String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
-    if (savedVaultConfig != null) {
-      // Get by auth token encrypted record by Id or name.
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-      query.criteria(ACCOUNT_ID_KEY)
-          .equal(vaultConfig.getAccountId())
-          .or(query.criteria(ID_KEY).equal(savedVaultConfig.getAuthToken()),
-              query.criteria(SECRET_NAME_KEY).equal(savedVaultConfig.getName() + secretNameSuffix));
-      EncryptedData savedEncryptedData = query.get();
-      if (savedEncryptedData != null) {
-        savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
-        savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
-        encryptedData = savedEncryptedData;
-      }
-    }
-
-    encryptedData.setAccountId(vaultConfig.getAccountId());
-    encryptedData.addParent(vaultConfigId);
-    encryptedData.setType(SettingVariableTypes.VAULT);
-    encryptedData.setName(vaultConfig.getName() + secretNameSuffix);
-    return wingsPersistence.save(encryptedData);
+    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig)
+                                          : updateVaultConfig(accountId, vaultConfig);
   }
 
   @Override
@@ -359,26 +429,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return deleteSecretManagerAndGenerateAudit(accountId, vaultConfig);
   }
 
-  @Override
-  public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
-    if (isNotEmpty(vaultConfig.getUuid())) {
-      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-      decryptVaultConfigSecrets(vaultConfig.getAccountId(), savedVaultConfig, false);
-      if (SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())) {
-        vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
-      }
-      if (SecretString.SECRET_MASK.equals(vaultConfig.getSecretId())) {
-        vaultConfig.setSecretId(savedVaultConfig.getSecretId());
-      }
-    }
-
+  private List<SecretEngineSummary> listSecretEnginesInternal(VaultConfig vaultConfig) {
     // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
     int failedAttempts = 0;
     while (true) {
       try {
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                               .accountId(vaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(5).toMillis())
+                                              .timeout(Duration.ofSeconds(10).toMillis())
                                               .appId(GLOBAL_APP_ID)
                                               .correlationId(vaultConfig.getUuid())
                                               .build();
@@ -394,6 +452,21 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         sleep(ofMillis(1000));
       }
     }
+  }
+
+  @Override
+  public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
+    if (isNotEmpty(vaultConfig.getUuid())) {
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      decryptVaultConfigSecrets(vaultConfig.getAccountId(), savedVaultConfig, false);
+      if (SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())) {
+        vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
+      }
+      if (SecretString.SECRET_MASK.equals(vaultConfig.getSecretId())) {
+        vaultConfig.setSecretId(savedVaultConfig.getSecretId());
+      }
+    }
+    return listSecretEnginesInternal(vaultConfig);
   }
 
   @Override
@@ -530,7 +603,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
             VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
       } catch (WingsException e) {
         String message =
-            "Was not able to reach vault using given credentials. Please check your credentials and try again";
+            "Was not able to encrypt a secret in vault using given credentials. Please check your credentials and try again";
         throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
       }
     }
@@ -561,7 +634,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   private SecretEngineSummary getVaultSecretEngine(VaultConfig vaultConfig) {
-    List<SecretEngineSummary> secretEngineSummaries = listSecretEngines(vaultConfig);
+    List<SecretEngineSummary> secretEngineSummaries = listSecretEnginesInternal(vaultConfig);
 
     return getSecretEngineWithFallback(vaultConfig, secretEngineSummaries);
   }

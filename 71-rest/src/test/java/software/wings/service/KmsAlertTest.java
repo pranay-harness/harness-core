@@ -95,7 +95,7 @@ public class KmsAlertTest extends WingsBaseTest {
     vaultConfig.setRenewedAt(0);
     vaultConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    vaultService.saveVaultConfig(accountId, vaultConfig);
+    vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     vaultService.renewTokens(vaultConfig);
 
