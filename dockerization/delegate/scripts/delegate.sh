@@ -1,8 +1,14 @@
 #!/bin/bash -e
 
-JRE_DIR=jre1.8.0_191
+JRE_VERSION="${JRE_VERSION:-"1.8.0_191"}"
+if [ "$JRE_VERSION" = "1.8.0_242" ]; then
+  JRE_DIR=jdk8u242-b08-jre
+  JVM_URL=$DELEGATE_STORAGE_URL/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz
+else
+  JRE_DIR=jre1.8.0_191
+  JVM_URL=$DELEGATE_STORAGE_URL/jre/8u191/jre-8u191-linux-x64.tar.gz
+fi
 JRE_BINARY=$JRE_DIR/bin/java
-JVM_URL=$DELEGATE_STORAGE_URL/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink

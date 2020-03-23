@@ -43,3 +43,4 @@ delegateStorageUrl: ${delegateStorageUrl}
 delegateCheckLocation: ${delegateCheckLocation}
 useCdn: ${useCdn}
 cdnUrl: ${cdnUrl}
+jreVersion: ${jreVersion}

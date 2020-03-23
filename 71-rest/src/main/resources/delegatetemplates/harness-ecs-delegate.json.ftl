@@ -73,6 +73,10 @@
         {
           "name": "CDN_URL",
           "value": "${cdnUrl}"
+        },
+        {
+          "name": "JRE_VERSION",
+          "value": "${jreVersion}"
         }
       ],
       "memory": 6144,
