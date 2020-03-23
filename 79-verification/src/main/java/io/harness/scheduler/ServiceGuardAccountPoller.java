@@ -79,7 +79,7 @@ public class ServiceGuardAccountPoller {
   void recordQueuedTaskMetric() {
     String env = System.getenv("ENV");
     if (isNotEmpty(env)) {
-      env = env.replaceAll("-", "_");
+      env = env.replaceAll("-", "_").toLowerCase();
     }
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
