@@ -19,17 +19,22 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SumoConfig;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
+import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.SettingsService;
 
 public class AbstractLogAnalysisStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   private StackDriverLogState stackDriverLogState;
+  private SumoLogicAnalysisState sumoLogicAnalysisState;
   private GcpConfig gcpConfig;
+  private SumoConfig sumoConfig;
   private AnalysisContext analysisContext;
-  private SettingAttribute settingAttribute;
+  private SettingAttribute gcpSetting;
+  private SettingAttribute sumoSetting;
   private String accountId;
   private String appId;
   private String configId;
@@ -42,17 +47,25 @@ public class AbstractLogAnalysisStateTest extends WingsBaseTest {
     appId = generateUuid();
     configId = generateUuid();
     stackDriverLogState = Mockito.spy(new StackDriverLogState("stackDriverLog"));
+    sumoLogicAnalysisState = Mockito.spy(new SumoLogicAnalysisState("sumoState"));
     analysisContext = AnalysisContext.builder().appId(appId).accountId(accountId).query("query").build();
     gcpConfig = GcpConfig.builder().accountId(accountId).build();
-    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                           .withAccountId(accountId)
-                           .withAppId(appId)
-                           .withValue(gcpConfig)
-                           .build();
+    sumoConfig = SumoConfig.builder().accountId(accountId).build();
+    gcpSetting = SettingAttribute.Builder.aSettingAttribute()
+                     .withAccountId(accountId)
+                     .withAppId(appId)
+                     .withValue(gcpConfig)
+                     .build();
+    sumoSetting = SettingAttribute.Builder.aSettingAttribute()
+                      .withAccountId(accountId)
+                      .withAppId(appId)
+                      .withValue(sumoConfig)
+                      .build();
 
     FieldUtils.writeField(stackDriverLogState, "settingsService", settingsService, true);
+    FieldUtils.writeField(sumoLogicAnalysisState, "settingsService", settingsService, true);
 
-    when(settingsService.get(configId)).thenReturn(settingAttribute);
+    when(settingsService.get(configId)).thenReturn(gcpSetting);
   }
 
   @Test
@@ -68,5 +81,21 @@ public class AbstractLogAnalysisStateTest extends WingsBaseTest {
     assertThat(stackDriverLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
     assertThat(stackDriverLogDataCollectionInfo.getQuery()).isEqualTo(analysisContext.getQuery());
     assertThat(stackDriverLogDataCollectionInfo.getGcpConfig()).isEqualTo(gcpConfig);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_sumoLogic() {
+    when(settingsService.get(configId)).thenReturn(sumoSetting);
+    doReturn(configId).when(sumoLogicAnalysisState).getResolvedConnectorId(any(), any(), any());
+    doReturn("query").when(sumoLogicAnalysisState).getRenderedQuery();
+    SumoDataCollectionInfo sumoDataCollectionInfo =
+        (SumoDataCollectionInfo) sumoLogicAnalysisState.createDataCollectionInfo(analysisContext, null);
+
+    assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(sumoDataCollectionInfo.getQuery()).isEqualTo(analysisContext.getQuery());
+    assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
   }
 }

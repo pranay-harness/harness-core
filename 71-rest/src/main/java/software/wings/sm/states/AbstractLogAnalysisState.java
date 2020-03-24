@@ -472,7 +472,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     switch (stateType) {
       case SUMO:
         SumoLogicAnalysisState sumoLogicAnalysisState = (SumoLogicAnalysisState) this;
-        SumoConfig sumoConfig = (SumoConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        String resolvedConfigId = getResolvedConnectorId(
+            executionContext, AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId());
+        SumoConfig sumoConfig = (SumoConfig) getSettingAttribute(resolvedConfigId).getValue();
         return SumoDataCollectionInfo.builder()
             .sumoConfig(sumoConfig)
             .accountId(analysisContext.getAccountId())
@@ -483,7 +485,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .serviceId(analysisContext.getServiceId())
             .query(sumoLogicAnalysisState.getRenderedQuery())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .hostnameField(sumoLogicAnalysisState.getHostnameField().getHostNameField())
+            .hostnameField(getResolvedFieldValue(executionContext, AbstractAnalysisStateKeys.hostnameField,
+                sumoLogicAnalysisState.getHostnameField().getHostNameField()))
             .build();
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;
