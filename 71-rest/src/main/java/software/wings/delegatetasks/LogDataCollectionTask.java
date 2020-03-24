@@ -10,6 +10,7 @@ import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -66,6 +67,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private DelegateLogService delegateLogService;
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
+  private static final String DATADOG_API_MASK = "api_key=([^&]*)&application_key=([^&]*)";
 
   public LogDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
@@ -213,13 +215,16 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         } else {
           request = getRestClient(dataCollectionInfo.getBaseUrl()).collect(resolvedUrl, headersBiMap, optionsBiMap);
         }
+
+        // mask sensitive information from urls
+        String urlToLog = request.request().url().toString();
+        urlToLog = CustomDataCollectionUtils.getMaskedString(
+            urlToLog, DATADOG_API_MASK, Lists.newArrayList("<apiKey>", "<appKey>"));
+
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-        apiCallLog.setTitle("Fetch request to " + resolvedUrl);
-        apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                         .name(URL_STRING)
-                                         .value(request.request().url().toString())
-                                         .type(FieldType.URL)
-                                         .build());
+        apiCallLog.setTitle("Fetch request to " + urlToLog);
+        apiCallLog.addFieldToRequest(
+            ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
         if (isNotEmpty(bodyToLog)) {

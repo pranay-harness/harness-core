@@ -9,9 +9,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @UtilityClass
 @Slf4j
@@ -70,6 +73,18 @@ public class CustomDataCollectionUtils {
       resolvedMap.put(key, resolvedObject);
     });
     return resolvedMap;
+  }
+
+  public static String getMaskedString(String stringToMask, String matcherPattern, List<String> stringsToReplace) {
+    Pattern batchPattern = Pattern.compile(matcherPattern);
+    Matcher matcher = batchPattern.matcher(stringToMask);
+    while (matcher.find()) {
+      for (int i = 0; i < stringsToReplace.size() && i < matcher.groupCount(); i++) {
+        final String subStringToReplace = matcher.group(i + 1);
+        stringToMask = stringToMask.replace(subStringToReplace, stringsToReplace.get(i));
+      }
+    }
+    return stringToMask;
   }
 
   public static String getConcatenatedQuery(Set<String> queries, String separator) {
