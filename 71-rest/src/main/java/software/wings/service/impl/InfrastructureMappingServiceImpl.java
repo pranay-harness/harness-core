@@ -989,6 +989,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .encryptionDetails(encryptionDetails)
         .clusterName(infraMapping.getClusterName())
         .namespace(infraMapping.getNamespace())
+        .masterUrl(infraMapping.getMasterUrl())
         .build();
   }
 
@@ -1043,6 +1044,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .subscriptionId(infraMapping.getSubscriptionId())
         .resourceGroup(infraMapping.getResourceGroup())
         .namespace(infraMapping.getNamespace())
+        .masterUrl(infraMapping.getMasterUrl())
         .build();
   }
 
@@ -2094,6 +2096,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String region = null;
     String subscriptionId = null;
     String resourceGroup = null;
+    String masterUrl = null;
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
     boolean isStatefulSet = false;
 
@@ -2121,7 +2124,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
       settingAttribute = settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
-
       containerServiceName = kubernetesName;
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -2129,11 +2131,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
         namespace = containerInfraMapping.getNamespace();
         containerServiceName = kubernetesName;
+        masterUrl = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         namespace = containerInfraMapping.getNamespace();
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
         resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
         containerServiceName = kubernetesName;
+        masterUrl = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
 
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
@@ -2166,6 +2170,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .subscriptionId(subscriptionId)
                                                         .resourceGroup(resourceGroup)
                                                         .region(region)
+                                                        .masterUrl(masterUrl)
                                                         .build();
     try {
       Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
