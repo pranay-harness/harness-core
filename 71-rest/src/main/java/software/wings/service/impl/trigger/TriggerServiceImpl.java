@@ -477,6 +477,10 @@ public class TriggerServiceImpl implements TriggerService {
     triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
       logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
           artifactStreamId);
+      if (trigger.isDisabled()) {
+        logger.info("Trigger rejected due to slowness in the product");
+        return;
+      }
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
       if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
@@ -530,6 +534,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void triggerExecutionPostPipelineCompletion(String appId, String sourcePipelineId) {
     triggerServiceHelper.getTriggersMatchesWorkflow(appId, sourcePipelineId).forEach(trigger -> {
+      if (trigger.isDisabled()) {
+        logger.info("Trigger rejected due to slowness in the product.");
+        return;
+      }
       List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
       if (isEmpty(artifactSelections)) {
         logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
@@ -569,6 +577,10 @@ public class TriggerServiceImpl implements TriggerService {
     try (IdempotentLock<TriggerIdempotentResult> idempotent =
              idempotentRegistry.create(idempotentid, ofSeconds(10), ofSeconds(1), ofHours(1))) {
       if (idempotent.alreadyExecuted()) {
+        return;
+      }
+      if (trigger.isDisabled()) {
+        logger.info("Trigger rejected due to slowness in the product");
         return;
       }
       logger.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",

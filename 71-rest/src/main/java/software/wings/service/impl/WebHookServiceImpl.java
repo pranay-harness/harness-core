@@ -161,6 +161,9 @@ public class WebHookServiceImpl implements WebHookService {
 
           return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
         }
+        if (trigger.isDisabled()) {
+          return prepareRejectedResponse();
+        }
         Application app = appService.get(trigger.getAppId());
         if (app == null) {
           WebHookResponse webHookResponse =
@@ -383,6 +386,10 @@ public class WebHookServiceImpl implements WebHookService {
       return prepareResponse(WebHookResponse.builder().message("Received ping event").build(), Response.Status.OK);
     }
 
+    if (trigger.isDisabled()) {
+      return prepareRejectedResponse();
+    }
+
     triggerExecution.setAppId(trigger.getAppId());
     triggerExecution.setWebhookToken(trigger.getWebHookToken());
     triggerExecution.setTriggerId(trigger.getUuid());
@@ -427,6 +434,14 @@ public class WebHookServiceImpl implements WebHookService {
       return prepareResponse(webHookResponse, Response.Status.OK);
     }
   }
+
+  private Response prepareRejectedResponse() {
+    WebHookResponse webHookResponse =
+        WebHookResponse.builder().error("Trigger rejected due to slowness in the product. Please try again").build();
+
+    return prepareResponse(webHookResponse, Response.Status.SERVICE_UNAVAILABLE);
+  }
+
   private Response resolveServiceBuildNumbers(
       String appId, WebHookRequest webHookRequest, Map<String, ArtifactSummary> serviceArtifactMapping) {
     List<Map<String, String>> artifacts = webHookRequest.getArtifacts();

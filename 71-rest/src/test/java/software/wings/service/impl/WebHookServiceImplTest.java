@@ -42,6 +42,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -95,6 +96,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 
 public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
@@ -232,6 +234,21 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteDisabledTrigger() {
+    trigger.setDisabled(true);
+
+    Response response = webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_SERVICE_UNAVAILABLE);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError().contains("Trigger rejected")).isTrue();
+    assertThat(webHookResponse.getStatus()).isNullOrEmpty();
   }
 
   @Test
@@ -652,6 +669,24 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteDisabledGitTrigger() {
+    Trigger trigger = constructWebhookPushTrigger();
+    trigger.setDisabled(true);
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+    doReturn("push").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+
+    Response response = webHookService.executeByEvent(token, "some payload", httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_SERVICE_UNAVAILABLE);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError().contains("Trigger rejected")).isTrue();
+    assertThat(webHookResponse.getStatus()).isNullOrEmpty();
   }
 
   @Test

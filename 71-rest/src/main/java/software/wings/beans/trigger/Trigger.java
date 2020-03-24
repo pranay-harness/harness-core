@@ -76,6 +76,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   private List<ServiceInfraWorkflow> serviceInfraWorkflows;
   private boolean excludeHostsWithSameArtifact;
   private transient List<HarnessTagLink> tagLinks;
+  private boolean disabled;
 
   @Builder
   public Trigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
