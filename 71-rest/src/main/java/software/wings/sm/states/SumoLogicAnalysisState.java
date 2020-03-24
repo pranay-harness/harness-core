@@ -9,16 +9,15 @@ import static software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField.
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -27,7 +26,6 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -41,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  * Created by sriram_parthasarathy on 9/11/17.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "SumoLogicAnalysisStateKeys")
 public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Sumo Logic Server") protected String analysisServerConfigId;
 
@@ -101,22 +100,11 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    SettingAttribute settingAttribute = null;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(analysisServerConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No sumo setting with id: " + analysisServerConfigId + " found");
-      }
-    }
+    String envId = getEnvId(context);
+
+    String finalServerConfigId =
+        getResolvedConnectorId(context, SumoLogicAnalysisStateKeys.analysisServerConfigId, analysisServerConfigId);
+    SettingAttribute settingAttribute = getSettingAttribute(finalServerConfigId);
 
     final SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();
     final long logCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
@@ -139,11 +127,12 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .query(getRenderedQuery())
               .startTime(logCollectionStartTimeStamp)
               .startMinute((int) (logCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
-              .collectionTime(Integer.parseInt(getTimeDuration()))
+              .collectionTime(Integer.parseInt(getTimeDuration(context)))
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
-              .hostnameField(getHostnameField().getHostNameField())
+              .hostnameField(getResolvedFieldValue(
+                  context, AbstractAnalysisStateKeys.hostnameField, getHostnameField().getHostNameField()))
               .initialDelayMinutes(DELAY_MINUTES)
               .build();
 
