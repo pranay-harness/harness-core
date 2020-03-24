@@ -1,6 +1,8 @@
 package io.harness.delegate.service;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,16 +56,15 @@ public class DelegateServiceImplTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() {
-    final String delegateTaskId = UUIDGenerator.generateUuid();
+    String delegateTaskId = UUIDGenerator.generateUuid();
 
-    final DelegateTaskPackage delegateTaskPackage =
-        DelegateTaskPackage.builder()
-            .delegateTask(DelegateTask.builder()
-                              .async(true)
-                              .uuid(delegateTaskId)
-                              .data(TaskData.builder().taskType("HTTP").build())
-                              .build())
-            .build();
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .delegateTask(DelegateTask.builder()
+                                                                    .async(true)
+                                                                    .uuid(delegateTaskId)
+                                                                    .data(TaskData.builder().taskType("HTTP").build())
+                                                                    .build())
+                                                  .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(0)).decrypt(anyMap());
@@ -73,7 +74,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() {
-    final String delegateTaskId = UUIDGenerator.generateUuid();
+    String delegateTaskId = UUIDGenerator.generateUuid();
 
     Map<String, EncryptionConfig> encryptionConfigMap = new HashMap<>();
     KmsConfig kmsConfig = KmsConfig.builder().build();
@@ -88,18 +89,24 @@ public class DelegateServiceImplTest extends CategoryTest {
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
-    final DelegateTaskPackage delegateTaskPackage =
-        DelegateTaskPackage.builder()
-            .delegateTask(DelegateTask.builder()
-                              .async(true)
-                              .uuid(delegateTaskId)
-                              .data(TaskData.builder().taskType("HTTP").build())
-                              .build())
-            .encryptionConfigs(encryptionConfigMap)
-            .secretDetails(secretDetails)
-            .build();
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .delegateTask(DelegateTask.builder()
+                                                                    .async(true)
+                                                                    .uuid(delegateTaskId)
+                                                                    .data(TaskData.builder().taskType("HTTP").build())
+                                                                    .build())
+                                                  .encryptionConfigs(encryptionConfigMap)
+                                                  .secretDetails(secretDetails)
+                                                  .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testPerformanceLog() {
+    assertThatCode(() -> delegateService.obtainPerformance()).doesNotThrowAnyException();
   }
 }
