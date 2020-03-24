@@ -96,6 +96,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.KmsService;
@@ -1711,7 +1712,79 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  public void updateVaultConfig_fromToken_ToAppRole_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    String authToken = "authToken";
+    VaultConfig vaultConfig = getVaultConfigWithAuthToken(authToken);
+    String vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    assertThat(vaultConfig.getAuthToken()).isEqualTo(authToken);
+
+    String updatedToken = "updatedToken";
+    String appRoleId = "appRoleId";
+    String secretId = "secretId";
+
+    vaultConfig.setAppRoleId(appRoleId);
+    vaultConfig.setSecretId(secretId);
+    vaultConfig.setAuthToken(SECRET_MASK);
+
+    VaultAppRoleLoginResult vaultAppRoleLoginResult = mock(VaultAppRoleLoginResult.class);
+    when(secretManagementDelegateService.appRoleLogin(any())).thenReturn(vaultAppRoleLoginResult);
+    when(vaultAppRoleLoginResult.getClientToken()).thenReturn(updatedToken);
+
+    vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    assertThat(vaultConfig.getAuthToken()).isEqualTo(updatedToken);
+    assertThat(vaultConfig.getAppRoleId()).isEqualTo(appRoleId);
+    assertThat(vaultConfig.getSecretId()).isEqualTo(secretId);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void updateVaultConfig_withAppRole_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    VaultAppRoleLoginResult vaultAppRoleLoginResult = mock(VaultAppRoleLoginResult.class);
+    when(secretManagementDelegateService.appRoleLogin(any())).thenReturn(vaultAppRoleLoginResult);
+    String appRoleId = "appRoleId";
+    String secretId = "secretId";
+    String authToken = "authToken";
+
+    VaultConfig vaultConfig = getVaultConfigWithAppRole(appRoleId, secretId);
+    when(vaultAppRoleLoginResult.getClientToken()).thenReturn(authToken);
+    String vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    assertThat(vaultConfig.getAuthToken()).isEqualTo(authToken);
+    assertThat(vaultConfig.getAppRoleId()).isEqualTo(appRoleId);
+    assertThat(vaultConfig.getSecretId()).isEqualTo(secretId);
+
+    String updatedSecretId = "updatedSecretId";
+    String updatedToken = "updatedToken";
+
+    vaultConfig.setSecretId(updatedSecretId);
+    vaultConfig.setAuthToken(SECRET_MASK);
+    when(vaultAppRoleLoginResult.getClientToken()).thenReturn(updatedToken);
+    vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    assertThat(vaultConfig.getAuthToken()).isEqualTo(updatedToken);
+    assertThat(vaultConfig.getAppRoleId()).isEqualTo(appRoleId);
+    assertThat(vaultConfig.getSecretId()).isEqualTo(updatedSecretId);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void appRoleLoginRenewal_shouldBeSuccessful() {
+    if (isKmsEnabled) {
+      return;
+    }
+
     VaultConfig vaultConfig = getVaultConfigWithAppRole("appRoleId", "secretId");
     vaultConfig.setAccountId(accountId);
     String initialToken = "initialToken";
@@ -1728,6 +1801,36 @@ public class VaultTest extends WingsBaseTest {
     vaultService.renewAppRoleClientToken(encryptedVaultConfig);
     vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     assertThat(vaultConfig.getAuthToken()).isEqualTo(renewedToken);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void listSecretEngines_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    List<SecretEngineSummary> expectedSecretEngines = new ArrayList<>();
+    SecretEngineSummary secretEngineSummary1 = SecretEngineSummary.builder().name("secret").version(2).build();
+    SecretEngineSummary secretEngineSummary2 = SecretEngineSummary.builder().name("harness-test").version(1).build();
+    expectedSecretEngines.add(secretEngineSummary1);
+    expectedSecretEngines.add(secretEngineSummary2);
+    when(secretManagementDelegateService.listSecretEngines(any())).thenReturn(expectedSecretEngines);
+
+    String authToken = "authToken";
+    VaultConfig vaultConfig = getVaultConfigWithAuthToken(authToken);
+    String vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+    vaultConfig.setAuthToken(SECRET_MASK);
+    vaultConfig.setSecretId(SECRET_MASK);
+    List<SecretEngineSummary> secretEngines = vaultService.listSecretEngines(vaultConfig);
+    assertThat(secretEngines).isNotNull();
+    assertThat(secretEngines.size()).isEqualTo(2);
+    assertThat(secretEngines.get(0).getName()).isEqualTo(secretEngineSummary1.getName());
+    assertThat(secretEngines.get(0).getVersion()).isEqualTo(secretEngineSummary1.getVersion());
+    assertThat(secretEngines.get(1).getName()).isEqualTo(secretEngineSummary2.getName());
+    assertThat(secretEngines.get(1).getVersion()).isEqualTo(secretEngineSummary2.getVersion());
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {
