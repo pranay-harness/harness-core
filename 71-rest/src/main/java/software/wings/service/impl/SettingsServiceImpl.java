@@ -43,6 +43,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -192,6 +193,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AlertService alertService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
+
+  private static final String OPEN_SSH = "OPENSSH";
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -452,6 +455,8 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute save(SettingAttribute settingAttribute) {
     if (settingAttribute.getValue().getType().equals(SettingVariableTypes.GIT.name())) {
       checkGitConnectorsUsageWithinLimit(settingAttribute);
+    } else if (isOpenSSHKeyUsed(settingAttribute)) {
+      restrictOpenSSHKey(settingAttribute);
     }
     return save(settingAttribute, true);
   }
@@ -733,6 +738,10 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity, boolean pushToGit) {
+    if (isOpenSSHKeyUsed(settingAttribute)) {
+      restrictOpenSSHKey(settingAttribute);
+    }
+
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
 
@@ -1384,5 +1393,24 @@ public class SettingsServiceImpl implements SettingsService {
   public void closeConnectivityErrorAlert(String accountId, String settingId) {
     AlertData alertData = SettingAttributeValidationFailedAlert.builder().settingId(settingId).build();
     alertService.closeAllAlerts(accountId, null, AlertType.SETTING_ATTRIBUTE_VALIDATION_FAILED, alertData);
+  }
+
+  @Override
+  @VisibleForTesting
+  public boolean isOpenSSHKeyUsed(SettingAttribute settingAttribute) {
+    return SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name().equals(settingAttribute.getValue().getType())
+        && HostConnectionAttributes.ConnectionType.SSH.name().equals(
+               ((HostConnectionAttributes) settingAttribute.getValue()).getConnectionType().name())
+        && null != ((HostConnectionAttributes) settingAttribute.getValue()).getKey();
+  }
+
+  @VisibleForTesting
+  @Override
+  public void restrictOpenSSHKey(SettingAttribute settingAttribute) {
+    String openSSHkey = new String(((HostConnectionAttributes) settingAttribute.getValue()).getKey());
+    if (openSSHkey.contains(OPEN_SSH)) {
+      throw new InvalidRequestException(
+          "An OpenSSH key might not work with Harness. Please use an RSA key. See Harness documentation for help.");
+    }
   }
 }
