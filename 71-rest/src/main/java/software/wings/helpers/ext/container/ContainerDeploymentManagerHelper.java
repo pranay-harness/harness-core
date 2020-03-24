@@ -87,6 +87,7 @@ public class ContainerDeploymentManagerHelper {
                                               .podName(containerInfo.getPodName())
                                               .workloadName(containerInfo.getWorkloadName())
                                               .ecsContainerDetails(containerInfo.getEcsContainerDetails())
+                                              .newInstance(containerInfo.isNewContainer())
                                               .build();
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;

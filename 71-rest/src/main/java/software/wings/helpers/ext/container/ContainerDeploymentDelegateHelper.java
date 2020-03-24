@@ -2,6 +2,7 @@ package software.wings.helpers.ext.container;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -36,6 +37,7 @@ import com.google.inject.Singleton;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -64,11 +66,12 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/20/18.
@@ -305,6 +308,13 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
+  @NotNull
+  public List<Pod> getExistingPodsByLabels(
+      ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig, Map<String, String> labels) {
+    return emptyIfNull(
+        kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels));
+  }
+
   public int getControllerCountByLabels(
       ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
@@ -314,7 +324,8 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   public List<ContainerInfo> getContainerInfosWhenReadyByLabels(ContainerServiceParams containerServiceParams,
-      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback, Map<String, String> labels) {
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback, Map<String, String> labels,
+      List<Pod> existingPods) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
         kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
 
@@ -323,32 +334,35 @@ public class ContainerDeploymentDelegateHelper {
         -> executionLogCallback.saveExecutionLog(format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
             controller.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(controller))));
 
-    List<ContainerInfo> containerInfoList = new ArrayList<>();
-    if (controllers.size() > 0) {
-      containerInfoList =
-          controllers.stream()
-              .filter(controller
-                  -> !(controller.getKind().equals("ReplicaSet")
-                      && controller.getMetadata().getOwnerReferences() != null))
-              .flatMap(controller -> {
-                boolean isNotVersioned =
-                    controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");
-                return kubernetesContainerService
-                    .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
-                        controller.getMetadata().getName(), 0, -1, (int) TimeUnit.MINUTES.toMinutes(30),
-                        new ArrayList<>(), isNotVersioned, executionLogCallback, true, 0,
-                        kubernetesConfig.getNamespace())
-                    .stream();
-              })
-              .collect(Collectors.toList());
+    return fetchContainersUsingControllersWhenReady(
+        containerServiceParams, kubernetesConfig, executionLogCallback, controllers, existingPods);
+  }
+
+  private List<ContainerInfo> fetchContainersUsingControllersWhenReady(ContainerServiceParams containerServiceParams,
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback,
+      List<? extends HasMetadata> controllers, List<Pod> existingPods) {
+    if (isNotEmpty(controllers)) {
+      return controllers.stream()
+          .filter(controller
+              -> !(controller.getKind().equals("ReplicaSet") && controller.getMetadata().getOwnerReferences() != null))
+          .flatMap(controller -> {
+            boolean isNotVersioned =
+                controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");
+            return kubernetesContainerService
+                .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
+                    controller.getMetadata().getName(), 0, -1, (int) TimeUnit.MINUTES.toMinutes(30), existingPods,
+                    isNotVersioned, executionLogCallback, true, 0, kubernetesConfig.getNamespace())
+                .stream();
+          })
+          .collect(Collectors.toList());
     }
-    return containerInfoList;
+    return Collections.emptyList();
   }
 
   public List<ContainerInfo> getContainerInfosWhenReadyByLabel(String labelName, String labelValue,
       ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig,
-      LogCallback executionLogCallback) {
+      LogCallback executionLogCallback, List<Pod> existingPods) {
     return getContainerInfosWhenReadyByLabels(containerServiceParams, kubernetesConfig,
-        (ExecutionLogCallback) executionLogCallback, ImmutableMap.of(labelName, labelValue));
+        (ExecutionLogCallback) executionLogCallback, ImmutableMap.of(labelName, labelValue), existingPods);
   }
 }

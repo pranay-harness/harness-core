@@ -14,7 +14,7 @@ import java.util.List;
 public class PcfDeployCommandResponse extends PcfCommandResponse {
   /**
    * This list represents apps updated by deploy state,
-   * AppName : previousCount : DesiredCount (one updated by deply)
+   * AppName : previousCount : DesiredCount (one updated by deploy)
    * Rollback will use this data but will reverse counts
    */
   private List<PcfServiceData> instanceDataUpdated;

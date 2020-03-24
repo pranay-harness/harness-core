@@ -22,6 +22,7 @@ import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -101,6 +102,6 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
 
     return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
         kubernetesSteadyStateCheckParams.getContainerServiceParams(), kubernetesConfig, executionLogCallback,
-        kubernetesSteadyStateCheckParams.getLabels());
+        kubernetesSteadyStateCheckParams.getLabels(), Collections.emptyList());
   }
 }
