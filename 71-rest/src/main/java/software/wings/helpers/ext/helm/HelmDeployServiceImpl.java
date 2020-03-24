@@ -11,11 +11,13 @@ import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNE
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -126,6 +128,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       helmChartInfo = getHelmChartDetails(commandRequest);
 
+      List<Pod> existingPods = getExistingPods(commandRequest);
+
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = helmClient.install(commandRequest);
@@ -147,7 +151,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       LogCallback finalExecutionLogCallback = executionLogCallback;
       timeLimiter.callWithTimeout(
           ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback)),
+              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, existingPods)),
           commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
 
@@ -183,6 +187,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       }
       FileIo.deleteDirectoryAndItsContentIfExists(getWorkingDirectory(commandRequest));
     }
+  }
+
+  private List<Pod> getExistingPods(HelmCommandRequest commandRequest) {
+    final ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
+    final KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
+    return containerDeploymentDelegateHelper.getExistingPodsByLabels(
+        containerServiceParams, kubernetesConfig, ImmutableMap.of("release", commandRequest.getReleaseName()));
   }
 
   private void prepareRepoAndCharts(HelmInstallCommandRequest commandRequest) throws Exception {
@@ -265,13 +277,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     return executionLogCallback;
   }
 
-  private List<ContainerInfo> fetchContainerInfo(HelmCommandRequest commandRequest, LogCallback executionLogCallback) {
+  private List<ContainerInfo> fetchContainerInfo(
+      HelmCommandRequest commandRequest, LogCallback executionLogCallback, List<Pod> existingPods) {
     ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
 
-    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-        "release", commandRequest.getReleaseName(), containerServiceParams, kubernetesConfig, executionLogCallback);
+    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel("release",
+        commandRequest.getReleaseName(), containerServiceParams, kubernetesConfig, executionLogCallback, existingPods);
   }
 
   @Override
@@ -288,11 +301,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
+      List<Pod> existingPods = getExistingPods(commandRequest);
       List<ContainerInfo> containerInfos = new ArrayList<>();
       LogCallback finalExecutionLogCallback = executionLogCallback;
       timeLimiter.callWithTimeout(
           ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback)),
+              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, existingPods)),
           commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
 

@@ -13,6 +13,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -75,6 +76,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -650,8 +653,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRollback() throws InterruptedException, IOException, TimeoutException {
     setFakeTimeLimiter();
-    HelmRollbackCommandRequest request =
-        HelmRollbackCommandRequest.builder().containerServiceParams(ContainerServiceParams.builder().build()).build();
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder()
+                                             .containerServiceParams(ContainerServiceParams.builder().build())
+                                             .releaseName("first-release")
+                                             .build();
+    KubernetesConfig kubernetesConfig = new KubernetesConfig();
 
     when(helmClient.rollback(request))
         .thenReturn(HelmInstallCommandResponse.builder()
@@ -660,9 +666,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(new KubernetesConfig());
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class)))
+        .thenReturn(new KubernetesConfig());
     when(containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-             anyString(), anyString(), any(), any(), any()))
+             anyString(), anyString(), any(), any(), any(), eq(Collections.emptyList())))
         .thenReturn(asList(new ContainerInfo()));
+    when(containerDeploymentDelegateHelper.getExistingPodsByLabels(
+             any(ContainerServiceParams.class), any(KubernetesConfig.class), any(Map.class)))
+        .thenReturn(Collections.emptyList());
 
     HelmInstallCommandResponse response = (HelmInstallCommandResponse) helmDeployService.rollback(request);
     assertThat(response.getContainerInfoList()).isNotEmpty();

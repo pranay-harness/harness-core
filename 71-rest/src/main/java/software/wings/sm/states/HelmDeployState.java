@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.beans.SweepingOutputInstance.Scope.PHASE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -32,6 +33,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -46,6 +48,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -115,12 +118,14 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+import software.wings.sm.HelmStateHelper;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -168,6 +173,7 @@ public class HelmDeployState extends State {
   @Inject private HelmHelper helmHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private LogService logService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -932,6 +938,10 @@ public class HelmDeployState extends State {
       InstanceElementListParam instanceElementListParam =
           InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
+      List<InstanceDetails> instanceDetails =
+          HelmStateHelper.generateInstanceDetails(helmInstallCommandResponse.getContainerInfoList());
+      saveInstanceInfoToSweepingOutput(context, instanceElements, instanceDetails);
+
       executionResponseBuilder.contextElement(instanceElementListParam);
       executionResponseBuilder.notifyElement(instanceElementListParam);
     } else {
@@ -941,6 +951,18 @@ public class HelmDeployState extends State {
     }
 
     return executionResponseBuilder.build();
+  }
+
+  @VisibleForTesting
+  void saveInstanceInfoToSweepingOutput(
+      ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(PHASE)
+                                   .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(instanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .build())
+                                   .build());
   }
 
   private ExecutionResponse handleAsyncResponseForGitFetchFilesTask(
