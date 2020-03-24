@@ -13,13 +13,13 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@FieldNameConstants(innerTypeName = "BugsnagStateKeys")
 public class BugsnagState extends AbstractLogAnalysisState {
   @SchemaIgnore
   @Transient
@@ -170,22 +171,9 @@ public class BugsnagState extends AbstractLogAnalysisState {
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     String envId = getEnvId(context);
 
-    SettingAttribute settingAttribute = null;
-    String serverConfigId = analysisServerConfigId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        serverConfigId = settingAttribute.getUuid();
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(serverConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No bugsnag setting with id: " + analysisServerConfigId + " found");
-      }
-    }
+    String serverConfigId =
+        getResolvedConnectorId(context, BugsnagStateKeys.analysisServerConfigId, analysisServerConfigId);
+    SettingAttribute settingAttribute = getSettingAttribute(serverConfigId);
 
     final BugsnagConfig config = (BugsnagConfig) settingAttribute.getValue();
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
@@ -210,10 +198,12 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .startMinute(0)
-            .responseDefinition(constructLogDefinitions(projectId, releaseStage))
+            .responseDefinition(
+                constructLogDefinitions(getResolvedFieldValue(context, BugsnagStateKeys.projectId, projectId),
+                    getResolvedFieldValue(context, BugsnagStateKeys.releaseStage, releaseStage)))
             .shouldDoHostBasedFiltering(!isBrowserApplication())
             .collectionFrequency(1)
-            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .collectionTime(Integer.parseInt(getTimeDuration(context)))
             .accountId(accountId)
             .build();
 
