@@ -65,7 +65,6 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -96,7 +95,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -170,8 +168,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
-  private static final List<YamlType> templateYamlTypes =
-      ImmutableList.of(GLOBAL_TEMPLATE_LIBRARY, APPLICATION_TEMPLATE_LIBRARY);
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -341,7 +337,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   @Override
   public void syncYamlTemplate(String accountId) {
-    featureFlagService.enableAccount(FeatureName.TEMPLATE_YAML_SUPPORT, accountId);
     executorService.submit(() -> {
       try {
         syncYamlForTemplates(accountId);
@@ -569,13 +564,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   @VisibleForTesting
   boolean isProcessingAllowed(Change change, YamlType yamlType) {
-    switch (yamlType) {
-      case GLOBAL_TEMPLATE_LIBRARY:
-      case APPLICATION_TEMPLATE_LIBRARY:
-        return featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, change.getAccountId());
-      default:
-        return true;
-    }
+    // If any yaml is to go behind feature flag it can be added here.
+    return true;
   }
 
   private void addToFailedYamlMap(
@@ -824,9 +814,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private List<YamlType> getYamlProcessingOrder(String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
-      return ListUtils.removeAll(yamlProcessingOrder, templateYamlTypes);
-    }
+    // If anything is to be hidden behind feature flag it cab=n bre removed from the list.
     return yamlProcessingOrder;
   }
 

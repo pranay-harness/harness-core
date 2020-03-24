@@ -6,9 +6,6 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
@@ -35,7 +32,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -113,21 +109,8 @@ public class YamlServiceImplTest extends WingsBaseTest {
   public void testIsProcessingAllowed() {
     YamlType[] types = YamlType.values();
     Change change = new Change();
-    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.TEMPLATE_YAML_SUPPORT), any());
     for (YamlType type : types) {
       assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(true);
-    }
-    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.TEMPLATE_YAML_SUPPORT), any());
-    for (YamlType type : types) {
-      switch (type) {
-        case GLOBAL_TEMPLATE_LIBRARY:
-        case APPLICATION_TEMPLATE_LIBRARY:
-          assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(false);
-          break;
-        default:
-          assertThat(yamlService.isProcessingAllowed(change, type)).isEqualTo(true);
-          break;
-      }
     }
   }
 

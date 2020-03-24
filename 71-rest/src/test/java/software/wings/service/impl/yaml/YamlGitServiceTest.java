@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
+import static software.wings.common.TemplateConstants.SSH;
 
 import com.google.inject.Inject;
 
@@ -22,9 +22,12 @@ import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
-import software.wings.beans.template.VersionedTemplate;
-import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
+import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.template.TemplateFolderService;
+import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -33,26 +36,33 @@ import java.util.List;
 
 public class YamlGitServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
-
+  @Inject private TemplateService templateService;
   @InjectMocks @Inject private YamlGitServiceImpl yamlGitService;
+  @Inject protected TemplateGalleryService templateGalleryService;
+  @Inject private TemplateFolderService templateFolderService;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    templateGalleryService.loadHarnessGallery();
   }
 
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testSyncForTemplates() {
+    TemplateFolder rootLevelFolder = templateFolderService.getRootLevelFolder(
+        GLOBAL_ACCOUNT_ID, templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID).getUuid());
+
     TemplateFolder templateFolder = TemplateFolder.builder()
                                         .appId(GLOBAL_APP_ID)
                                         .accountId(GLOBAL_ACCOUNT_ID)
+                                        .parentId(rootLevelFolder.getUuid())
                                         .name("test folder")
-                                        .uuid("uuid")
                                         .build();
-    wingsPersistence.save(templateFolder);
-    BaseTemplate baseTemplate = ArtifactSourceTemplate.builder().build();
+    templateFolder = templateFolderService.save(templateFolder);
+
+    BaseTemplate baseTemplate = SshCommandTemplate.builder().build();
     Template template = Template.builder()
                             .appId(GLOBAL_APP_ID)
                             .name("test template")
@@ -60,18 +70,11 @@ public class YamlGitServiceTest extends WingsBaseTest {
                             .version(1)
                             .accountId(GLOBAL_ACCOUNT_ID)
                             .folderId(templateFolder.getUuid())
-                            .folderPathId(templateFolder.getUuid())
-                            .type(ARTIFACT_SOURCE)
+                            .type(SSH)
                             .templateObject(baseTemplate)
                             .build();
-    wingsPersistence.save(template);
-    VersionedTemplate versionedTemplate = VersionedTemplate.builder()
-                                              .accountId(GLOBAL_ACCOUNT_ID)
-                                              .templateId(template.getUuid())
-                                              .version(Long.valueOf(1))
-                                              .templateObject(baseTemplate)
-                                              .build();
-    wingsPersistence.save(versionedTemplate);
+    templateService.save(template);
+
     YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
                                       .accountId(GLOBAL_ACCOUNT_ID)
                                       .entityId(GLOBAL_ACCOUNT_ID)
@@ -83,8 +86,15 @@ public class YamlGitServiceTest extends WingsBaseTest {
     yamlGitService.syncForTemplates(GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
     YamlChangeSet yamlChangeSet = wingsPersistence.createQuery(YamlChangeSet.class).get();
     assertThat(yamlChangeSet).isNotNull();
-    assertThat(yamlChangeSet.getGitFileChanges().get(0).getFilePath())
-        .isEqualTo("Setup/Template Library/test folder/test template.yaml");
+    boolean isPresent = false;
+    String filePath = "Setup/Template Library/" + rootLevelFolder.getName() + "/test folder/test template.yaml";
+    for (GitFileChange gitFileChange : yamlChangeSet.getGitFileChanges()) {
+      if (gitFileChange.getFilePath().equals(filePath)) {
+        isPresent = true;
+        break;
+      }
+    }
+    assertThat(isPresent).isEqualTo(true);
   }
 
   @Test
