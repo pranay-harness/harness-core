@@ -109,7 +109,7 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
+  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE_FOLDER.name(),
       EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
       ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
       EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(),
@@ -128,10 +128,7 @@ public class AuditServiceImpl implements AuditService {
    * check for nonYamlEntites.
    */
   public boolean isNonYamlEntity(EntityAuditRecord record, String accountId) {
-    if (checkIfYamlEntityIsBehindFeatureFlag(
-            FeatureName.TEMPLATE_YAML_SUPPORT, EntityType.TEMPLATE.name(), record, accountId)) {
-      return false;
-    }
+    // If any entity is to be hidden behind feature flag it can be hidden here.
     return nonYamlEntities.contains(record.getEntityType())
         || nonYamlEntities.contains(record.getAffectedResourceType());
   }

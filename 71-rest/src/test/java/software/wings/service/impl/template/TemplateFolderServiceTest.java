@@ -35,7 +35,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -634,7 +633,6 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
                                       .syncMode(YamlGitConfig.SyncMode.BOTH)
                                       .build();
     wingsPersistence.save(yamlGitConfig);
-    featureFlagService.enableAccount(FeatureName.TEMPLATE_YAML_SUPPORT, GLOBAL_ACCOUNT_ID);
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
     TemplateFolder childFolder = templateFolderService.save(

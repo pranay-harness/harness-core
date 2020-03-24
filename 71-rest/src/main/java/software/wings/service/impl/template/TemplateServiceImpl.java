@@ -54,7 +54,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -169,16 +168,8 @@ public class TemplateServiceImpl implements TemplateService {
 
     Template savedTemplate = get(templateUuid);
 
-    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
-    // yamlPushService once feature flag is enabled for all.
-    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, savedTemplate.getAccountId())) {
-      yamlPushService.pushYamlChangeSet(
-          template.getAccountId(), null, template, Type.CREATE, template.isSyncFromGit(), false);
-    } else {
-      auditServiceHelper.reportForAuditingUsingAccountId(
-          savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
-    }
-
+    yamlPushService.pushYamlChangeSet(
+        template.getAccountId(), null, template, Type.CREATE, template.isSyncFromGit(), false);
     return savedTemplate;
   }
 
@@ -325,16 +316,10 @@ public class TemplateServiceImpl implements TemplateService {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
 
-    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
-    // yamlPushService once feature flag is enabled for all.
-    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, savedTemplate.getAccountId())) {
-      boolean isRename = !template.getName().equals(oldTemplate.getName());
-      yamlPushService.pushYamlChangeSet(
-          template.getAccountId(), oldTemplate, template, Type.UPDATE, template.isSyncFromGit(), isRename);
-    } else {
-      auditServiceHelper.reportForAuditingUsingAccountId(
-          savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
-    }
+    boolean isRename = !template.getName().equals(oldTemplate.getName());
+    yamlPushService.pushYamlChangeSet(
+        template.getAccountId(), oldTemplate, template, Type.UPDATE, template.isSyncFromGit(), isRename);
+
     return savedTemplate;
   }
 
@@ -481,14 +466,8 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     if (templateDeleted) {
-      // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
-      // yamlPushService once feature flag is enabled for all.
-      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
-        yamlPushService.pushYamlChangeSet(
-            template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
-      } else {
-        auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
-      }
+      yamlPushService.pushYamlChangeSet(
+          template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
     }
     return templateDeleted;
   }
@@ -568,8 +547,6 @@ public class TemplateServiceImpl implements TemplateService {
                                     .field(Template.ID_KEY)
                                     .in(templateUuids));
 
-    // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
-    // yamlPushService.
     if (templateDeleted) {
       wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class)
                                   .filter(VersionedTemplate.ACCOUNT_ID_KEY, templateFolder.getAccountId())
@@ -581,23 +558,17 @@ public class TemplateServiceImpl implements TemplateService {
                                   .field(TEMPLATE_UUID_KEY)
                                   .in(templateUuids));
 
-      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, templateFolder.getAccountId())) {
-        for (Template template : templates) {
-          Future<?> future = yamlPushService.pushYamlChangeSet(
-              template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
-          try {
-            future.get();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-          } catch (ExecutionException e) {
-            logger.error("Couldn't delete templates.", e);
-            return false;
-          }
-        }
-      } else {
-        for (Template template : templates) {
-          auditServiceHelper.reportDeleteForAuditingUsingAccountId(template.getAccountId(), template);
+      for (Template template : templates) {
+        Future<?> future = yamlPushService.pushYamlChangeSet(
+            template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return false;
+        } catch (ExecutionException e) {
+          logger.error("Couldn't delete templates.", e);
+          return false;
         }
       }
     }
@@ -959,14 +930,8 @@ public class TemplateServiceImpl implements TemplateService {
     List<Template> templates = wingsPersistence.createQuery(Template.class).filter(TemplateKeys.appId, appId).asList();
     for (Template template : templates) {
       deleteTemplate(template);
-      // TODO: AUDIT: Once the feature flag is on for all, this can be removed. All audit will be sent through
-      // yamlPushService once feature flag is enabled for all.
-      if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, template.getAccountId())) {
-        yamlPushService.pushYamlChangeSet(
-            template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
-      } else {
-        auditServiceHelper.reportDeleteForAuditing(appId, template);
-      }
+      yamlPushService.pushYamlChangeSet(
+          template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
     }
     // delete all template folders with appId
     List<TemplateFolder> templateFolders =

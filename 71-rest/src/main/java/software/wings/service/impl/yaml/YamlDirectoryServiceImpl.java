@@ -249,12 +249,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       boolean gitSyncPath) {
     logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
-    if (dn.getShortClassName().equals("Template")) {
-      if (!featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
-        dn.setShortClassName("undefined");
-      }
-    }
-
     boolean addToFileChangeList = true;
     if (dn instanceof YamlNode) {
       String entityId = ((YamlNode) dn).getUuid();
@@ -527,11 +521,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureList.add(executorService.submit(() -> doNotificationGroups(accountId, directoryPath.clone())));
 
-    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
-      futureList.add(executorService.submit(()
-                                                -> doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
-                                                    GLOBAL_TEMPLATE_LIBRARY_FOLDER, Type.GLOBAL_TEMPLATE_LIBRARY)));
-    }
+    futureList.add(executorService.submit(()
+                                              -> doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
+                                                  GLOBAL_TEMPLATE_LIBRARY_FOLDER, Type.GLOBAL_TEMPLATE_LIBRARY)));
+
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
 
@@ -754,9 +747,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
-    if (featureFlagService.isEnabled(FeatureName.TEMPLATE_YAML_SUPPORT, accountId)) {
-      futureResponseList.add(executorService.submit(() -> doTemplateLibraryForApp(app, appPath.clone())));
-    }
+    futureResponseList.add(executorService.submit(() -> doTemplateLibraryForApp(app, appPath.clone())));
 
     if (isTriggerRefactored(accountId)) {
       futureResponseList.add(executorService.submit(() -> doDeploymentTriggers(app, appPath.clone())));
