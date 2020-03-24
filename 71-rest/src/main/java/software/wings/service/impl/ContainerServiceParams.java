@@ -3,21 +3,23 @@ package software.wings.service.impl;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +27,7 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
+@Slf4j
 public class ContainerServiceParams implements ExecutionCapabilityDemander {
   private SettingAttribute settingAttribute;
   private List<EncryptedDataDetail> encryptionDetails;
@@ -56,16 +59,24 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
     }
     SettingValue value = settingAttribute.getValue();
 
-    List<ExecutionCapability> executionCapabilities = CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails);
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (value instanceof AwsConfig) {
       executionCapabilities.add(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
-    } else if (value instanceof KubernetesClusterConfig) {
-      executionCapabilities = CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
+    } else if (value instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
+      executionCapabilities.add(SystemEnvCheckerCapability.builder()
+                                    .systemPropertyName("DELEGATE_NAME")
+                                    .comparate(((KubernetesClusterConfig) value).getDelegateName())
+                                    .build());
     } else {
       if ("None".equals(clusterName)) {
         executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             "https://container.googleapis.com/"));
       } else {
+        if (masterUrl == null) {
+          logger.warn(
+              "[DelegateCapability] This should Not happen. Master URL is null for Setting Value: {}", value.getType());
+        }
         executionCapabilities.add(
             HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
       }

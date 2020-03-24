@@ -66,12 +66,14 @@ public class ContainerSyncImpl implements ContainerSync {
         String region = null;
         String subscriptionId = null;
         String resourceGroup = null;
+        String masterUrl = null;
         ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
         settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
         clusterName = containerInfraMapping.getClusterName();
         if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
           subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
           resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+          masterUrl = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
         } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
           region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
         }
@@ -102,6 +104,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .region(region)
                 .subscriptionId(subscriptionId)
                 .resourceGroup(resourceGroup)
+                .masterUrl(masterUrl)
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
@@ -197,11 +200,13 @@ public class ContainerSyncImpl implements ContainerSync {
     String region = null;
     String resourceGroup = null;
     String subscriptionId = null;
+    String masterUrl = null;
     settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
     clusterName = containerInfraMapping.getClusterName();
     if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
       subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
       resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+      masterUrl = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
     } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
       region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
@@ -219,6 +224,7 @@ public class ContainerSyncImpl implements ContainerSync {
         .region(region)
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
+        .masterUrl(masterUrl)
         .build();
   }
 }
