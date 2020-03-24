@@ -15,6 +15,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -760,6 +761,28 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  public void shouldNotRunArtifactCollectionForDisabledTrigger() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
+    when(workflowExecutionService.triggerEnvExecution(
+             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
+        .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
+
+    artifactConditionTrigger.setDisabled(true);
+    triggerService.save(artifactConditionTrigger);
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+    verify(workflowExecutionService, never())
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileNotMatchesArtifactFilter() {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
@@ -1371,6 +1394,30 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(idempotentRegistry).create(any(), any(), any(), any());
     verify(workflowExecutionService, times(1))
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotRunnDisabledTrigger() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+    Artifact artifact2 = prepareArtifact(UUIDGenerator.generateUuid());
+
+    scheduledTriggerMocks();
+
+    when(workflowExecutionService.obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID))
+        .thenReturn(asList(artifact, artifact2));
+
+    scheduledConditionTrigger.setDisabled(true);
+    triggerService.save(scheduledConditionTrigger);
+
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(Pipeline.builder().appId(APP_ID).build());
+
+    triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
+
+    verify(idempotentRegistry).create(any(), any(), any(), any());
+    verify(workflowExecutionService, never())
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
