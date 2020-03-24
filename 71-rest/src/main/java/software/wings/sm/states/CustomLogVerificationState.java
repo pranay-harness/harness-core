@@ -12,17 +12,16 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -46,6 +45,7 @@ import java.util.concurrent.TimeUnit;
  * @author Praveen
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "CustomLogVerificationStateKeys")
 public class CustomLogVerificationState extends AbstractLogAnalysisState {
   public CustomLogVerificationState(String name) {
     super(name, StateType.LOG_VERIFICATION.getType());
@@ -78,7 +78,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   @Attributes(required = false, title = "Log DataCollection Rate (mins)") private int dataCollectionRate;
 
-  public int getDataCollectionRate() {
+  private int getDataCollectionRate() {
     return dataCollectionRate < 1 ? 1 : dataCollectionRate;
   }
 
@@ -137,22 +137,10 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
       ExecutionContext context, VerificationStateAnalysisExecutionData data, Set<String> hosts) {
     String envId = getEnvId(context);
 
-    SettingAttribute settingAttribute = null;
-    String serverConfigId = analysisServerConfigId;
-    if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        serverConfigId = settingAttribute.getUuid();
-      }
-    }
-    if (settingAttribute == null) {
-      settingAttribute = settingsService.get(serverConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No custom log setting with id: " + analysisServerConfigId + " found");
-      }
-    }
+    String serverConfigId =
+        getResolvedConnectorId(context, CustomLogVerificationStateKeys.analysisServerConfigId, analysisServerConfigId);
+
+    SettingAttribute settingAttribute = getSettingAttribute(serverConfigId);
 
     final APMVerificationConfig logConfig = (APMVerificationConfig) settingAttribute.getValue();
     boolean shouldDoHostbasedFiltering = shouldInspectHostsForLogAnalysis();
@@ -179,7 +167,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .startMinute(0)
             .responseDefinition(logDefinitions)
             .collectionFrequency(getDataCollectionRate())
-            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .collectionTime(Integer.parseInt(getTimeDuration(context)))
             .accountId(accountId)
             .shouldDoHostBasedFiltering(shouldDoHostbasedFiltering)
             .build();
