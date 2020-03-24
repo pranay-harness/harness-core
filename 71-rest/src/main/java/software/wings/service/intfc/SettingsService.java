@@ -138,4 +138,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   void openConnectivityErrorAlert(String accountId, String settingId, String settingCategory, String connectivityError);
 
   void closeConnectivityErrorAlert(String accountId, String settingId);
+
+  boolean isOpenSSHKeyUsed(SettingAttribute settingAttribute);
+
+  void restrictOpenSSHKey(SettingAttribute settingAttribute);
 }

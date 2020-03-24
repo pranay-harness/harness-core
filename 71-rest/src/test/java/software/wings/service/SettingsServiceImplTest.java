@@ -9,12 +9,14 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -69,6 +71,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.CCMSettingService;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -893,5 +896,73 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(mockWingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
     verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testIsOpenSSHKeyUsed() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName("NAME")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                           .withKey("----OPENSSH----".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withConnectionType(SSH)
+                                                           .build())
+                                            .build();
+
+    assertThat(settingsService.isOpenSSHKeyUsed(settingAttribute)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testIsOpenSSHKeyNotUsed() {
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName("NAME")
+            .withAccountId("ACCOUNT_ID")
+            .withValue(StringValue.Builder.aStringValue().withValue("not Open SSH").build())
+            .build();
+
+    assertThat(settingsService.isOpenSSHKeyUsed(settingAttribute)).isFalse();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testRestrictOpenSSHKey() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName("NAME")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                           .withKey("----OPENSSH----".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withConnectionType(SSH)
+                                                           .build())
+                                            .build();
+    settingsService.restrictOpenSSHKey(settingAttribute);
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testDoesntRestrictOpenSSHKey() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName("NAME")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                           .withKey("----".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withConnectionType(SSH)
+                                                           .build())
+                                            .build();
+
+    try {
+      settingsService.restrictOpenSSHKey(settingAttribute);
+    } catch (Exception e) {
+      fail("should not throw exception");
+    }
   }
 }
