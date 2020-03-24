@@ -1271,12 +1271,13 @@ public class YamlGitServiceImpl implements YamlGitService {
     final List<GitSyncError> gitSyncErrorList = emptyIfNull(query.asList());
 
     return gitSyncErrorList.stream()
-        .filter(gitSyncError -> isNewAppError(gitSyncError) || errorOfAllowedApp(gitSyncError, allowedAppIdSet))
+        .filter(gitSyncError -> errorOfAllowedApp(gitSyncError, allowedAppIdSet) || isNewAppError(gitSyncError))
         .collect(toList());
   }
 
   private boolean isNewAppError(GitSyncError error) {
-    return isEmpty(error.getAppId());
+    return GLOBAL_APP_ID.equals(error.getAppId())
+        && error.getYamlFilePath().startsWith(SETUP_FOLDER + PATH_DELIMITER + APPLICATIONS_FOLDER);
   }
   private boolean errorOfAllowedApp(GitSyncError error, Set<String> allowedAppIdSet) {
     return allowedAppIdSet.contains(error.getAppId());

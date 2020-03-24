@@ -59,6 +59,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -309,7 +310,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
                                            .branchName("branchName")
                                            .gitConnectorId(SETTING_ID)
                                            .build();
-
+    gitSyncError3.setAppId(Application.GLOBAL_APP_ID);
     final String savedGitSyncError3 = wingsPersistence.save(gitSyncError3);
 
     final GitSyncError gitSyncError4 = GitSyncError.builder()
@@ -338,9 +339,10 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
                                            .build();
     gitSyncError5.setStatus(GitSyncErrorStatus.EXPIRED);
     wingsPersistence.save(gitSyncError5);
+    final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
 
-    final List<GitSyncError> activeGitToHarnessSyncErrors = yamlGitService.getActiveGitToHarnessSyncErrors(
-        ACCOUNT_ID, SETTING_ID, "branchName", GitCommandCallback._30_days_millis);
+    final List<GitSyncError> activeGitToHarnessSyncErrors =
+        yamlGitService.getActiveGitToHarnessSyncErrors(ACCOUNT_ID, SETTING_ID, "branchName", _30_days_millis);
 
     assertThat(activeGitToHarnessSyncErrors.stream().map(GitSyncError::getUuid))
         .contains(savedGitSyncError1, savedGitSyncError2, savedGitSyncError3);

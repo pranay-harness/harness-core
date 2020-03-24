@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -202,8 +203,7 @@ public class GitCommandCallbackTest extends CategoryTest {
                                            .build();
     doReturn(Arrays.asList(gitSyncError1, gitSyncError2))
         .when(yamlGitService)
-        .getActiveGitToHarnessSyncErrors(
-            eq(ACCOUNT_ID), eq("gitconnectorid"), eq("branchname"), eq(GitCommandCallback._30_days_millis));
+        .getActiveGitToHarnessSyncErrors(eq(ACCOUNT_ID), eq("gitconnectorid"), eq("branchname"), anyLong());
 
     diffCommandCallback.addActiveGitSyncErrorsToProcessAgain(gitDiffResult, ACCOUNT_ID);
     final List<GitFileChange> modifiedGitFileChangeSetList = gitDiffResult.getGitFileChanges();
