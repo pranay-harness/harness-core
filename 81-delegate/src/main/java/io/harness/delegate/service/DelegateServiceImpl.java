@@ -85,6 +85,7 @@ import com.sun.management.OperatingSystemMXBean;
 import io.harness.beans.DelegateTask;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -1393,15 +1394,15 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Getter(lazy = true)
   private final Map<String, ThreadPoolExecutor> logExecutors =
-      ImmutableMap.<String, ThreadPoolExecutor>builder()
-          .put("systemExecutor", (ThreadPoolExecutor) systemExecutor)
-          .put("asyncExecutor", (ThreadPoolExecutor) asyncExecutor)
-          .put("artifactExecutor", (ThreadPoolExecutor) artifactExecutor)
-          .put("timeoutEnforcement", (ThreadPoolExecutor) timeoutEnforcement)
-          .put("taskPollExecutor", (ThreadPoolExecutor) taskPollExecutor)
+      NullSafeImmutableMap.builder()
+          .putIfNotNull("systemExecutor", (ThreadPoolExecutor) systemExecutor)
+          .putIfNotNull("asyncExecutor", (ThreadPoolExecutor) asyncExecutor)
+          .putIfNotNull("artifactExecutor", (ThreadPoolExecutor) artifactExecutor)
+          .putIfNotNull("timeoutEnforcement", (ThreadPoolExecutor) timeoutEnforcement)
+          .putIfNotNull("taskPollExecutor", (ThreadPoolExecutor) taskPollExecutor)
           .build();
 
-  private void logCurrentTasks() {
+  public Map<String, String> obtainPerformance() {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     builder.put("maxValidatingTasksCount", Integer.toString(maxValidatingTasksCount.getAndSet(0)));
     builder.put("maxValidatingFuturesCount", Integer.toString(maxValidatingFuturesCount.getAndSet(0)));
@@ -1412,19 +1413,20 @@ public class DelegateServiceImpl implements DelegateService {
     builder.put("cpu-process", Double.toString(Precision.round(osBean.getProcessCpuLoad() * 100, 2)));
     builder.put("cpu-system", Double.toString(Precision.round(osBean.getSystemCpuLoad() * 100, 2)));
 
-    try {
-      for (Entry<String, ThreadPoolExecutor> executorEntry : getLogExecutors().entrySet()) {
-        builder.put(executorEntry.getKey(), Integer.toString(executorEntry.getValue().getActiveCount()));
-      }
-    } catch (Exception e) {
-      logger.error("", e);
+    for (Entry<String, ThreadPoolExecutor> executorEntry : getLogExecutors().entrySet()) {
+      builder.put(executorEntry.getKey(), Integer.toString(executorEntry.getValue().getActiveCount()));
     }
-
     MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+
     memoryUsage(builder, "heap-", memoryMXBean.getHeapMemoryUsage());
+
     memoryUsage(builder, "non-heap-", memoryMXBean.getNonHeapMemoryUsage());
 
-    try (AutoLogContext ignore = new AutoLogContext(builder.build(), OVERRIDE_NESTS)) {
+    return builder.build();
+  }
+
+  private void logCurrentTasks() {
+    try (AutoLogContext ignore = new AutoLogContext(obtainPerformance(), OVERRIDE_NESTS)) {
       logger.info("Current performance");
     }
   }
