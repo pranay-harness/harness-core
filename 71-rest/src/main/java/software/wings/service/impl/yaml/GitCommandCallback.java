@@ -60,8 +60,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class GitCommandCallback implements NotifyCallback {
-  public static final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
-
   private String accountId;
   private String changeSetId;
   private GitCommandType gitCommandType;
@@ -164,6 +162,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private List<GitFileChange> getActiveGitSyncErrorFiles(String accountId, String branchName, String gitConnectorId) {
+    final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
     return yamlGitService.getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, _30_days_millis)
         .stream()
         .map(this ::convertToGitFileChange)
