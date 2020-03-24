@@ -48,6 +48,7 @@ import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
 import static io.harness.filesystem.FileIo.releaseLock;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
@@ -70,6 +71,7 @@ import static software.wings.delegatetasks.LogSanitizer.GENERIC_ACTIVITY_ID;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -99,6 +101,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
+import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.network.FibonacciBackOff;
@@ -113,6 +116,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
 import io.harness.threading.Schedulable;
 import io.harness.version.VersionInfoManager;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
@@ -167,6 +171,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -1385,37 +1391,49 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void logCurrentTasks() {
-    logger.info("Max validating tasks since last checkpoint: {}", maxValidatingTasksCount.getAndSet(0));
-    logger.info("Max validating futures since last checkpoint: {}", maxValidatingFuturesCount.getAndSet(0));
-    logger.info("Max executing tasks since last checkpoint: {}", maxExecutingTasksCount.getAndSet(0));
-    logger.info("Max executing futures since last checkpoint: {}", maxExecutingFuturesCount.getAndSet(0));
-    logger.info("Memory Usage -  Heap: {}, Non-Heap: {}", ManagementFactory.getMemoryMXBean().getHeapMemoryUsage(),
-        ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage());
-    OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
-    logger.info("CPU Load percentage - Process: {}, System: {}", Precision.round(osBean.getProcessCpuLoad() * 100, 2),
-        Precision.round(osBean.getSystemCpuLoad() * 100, 2));
+  @Getter(lazy = true)
+  private final Map<String, ThreadPoolExecutor> logExecutors =
+      ImmutableMap.<String, ThreadPoolExecutor>builder()
+          .put("systemExecutor", (ThreadPoolExecutor) systemExecutor)
+          .put("asyncExecutor", (ThreadPoolExecutor) asyncExecutor)
+          .put("artifactExecutor", (ThreadPoolExecutor) artifactExecutor)
+          .put("timeoutEnforcement", (ThreadPoolExecutor) timeoutEnforcement)
+          .put("taskPollExecutor", (ThreadPoolExecutor) taskPollExecutor)
+          .build();
 
-    if (systemExecutor instanceof ThreadPoolExecutor) {
-      logger.info(
-          "systemExecutorService active thread count: {}", ((ThreadPoolExecutor) systemExecutor).getActiveCount());
+  private void logCurrentTasks() {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    builder.put("maxValidatingTasksCount", Integer.toString(maxValidatingTasksCount.getAndSet(0)));
+    builder.put("maxValidatingFuturesCount", Integer.toString(maxValidatingFuturesCount.getAndSet(0)));
+    builder.put("maxExecutingTasksCount", Integer.toString(maxExecutingTasksCount.getAndSet(0)));
+    builder.put("maxExecutingFuturesCount", Integer.toString(maxExecutingFuturesCount.getAndSet(0)));
+
+    OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+    builder.put("cpu-process", Double.toString(Precision.round(osBean.getProcessCpuLoad() * 100, 2)));
+    builder.put("cpu-system", Double.toString(Precision.round(osBean.getSystemCpuLoad() * 100, 2)));
+
+    try {
+      for (Entry<String, ThreadPoolExecutor> executorEntry : getLogExecutors().entrySet()) {
+        builder.put(executorEntry.getKey(), Integer.toString(executorEntry.getValue().getActiveCount()));
+      }
+    } catch (Exception e) {
+      logger.error("", e);
     }
-    if (asyncExecutor instanceof ThreadPoolExecutor) {
-      logger.info(
-          "asyncExecutorService active thread count: {}", ((ThreadPoolExecutor) asyncExecutor).getActiveCount());
+
+    MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+    memoryUsage(builder, "heap-", memoryMXBean.getHeapMemoryUsage());
+    memoryUsage(builder, "non-heap-", memoryMXBean.getNonHeapMemoryUsage());
+
+    try (AutoLogContext ignore = new AutoLogContext(builder.build(), OVERRIDE_NESTS)) {
+      logger.info("Current performance");
     }
-    if (artifactExecutor instanceof ThreadPoolExecutor) {
-      logger.info(
-          "artifactExecutorService active thread count: {}", ((ThreadPoolExecutor) artifactExecutor).getActiveCount());
-    }
-    if (timeoutEnforcement instanceof ThreadPoolExecutor) {
-      logger.info("timeoutEnforcementService active thread count: {}",
-          ((ThreadPoolExecutor) timeoutEnforcement).getActiveCount());
-    }
-    if (taskPollExecutor instanceof ThreadPoolExecutor) {
-      logger.info(
-          "taskPollExecutorService active thread count: {}", ((ThreadPoolExecutor) taskPollExecutor).getActiveCount());
-    }
+  }
+
+  private void memoryUsage(ImmutableMap.Builder<String, String> builder, String prefix, MemoryUsage memoryUsage) {
+    builder.put(prefix + "init", Long.toString(memoryUsage.getInit()));
+    builder.put(prefix + "used", Long.toString(memoryUsage.getUsed()));
+    builder.put(prefix + "committed", Long.toString(memoryUsage.getCommitted()));
+    builder.put(prefix + "max", Long.toString(memoryUsage.getMax()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
