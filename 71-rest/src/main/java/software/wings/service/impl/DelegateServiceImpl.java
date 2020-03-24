@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.collect.Sets.newHashSet;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.beans.DelegateTask.DEFAULT_QUEUE_ASYNC_EXPIRY;
+import static io.harness.beans.DelegateTask.DEFAULT_QUEUE_SYNC_EXPIRY;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.FINISHED;
@@ -845,8 +847,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    * @return
    */
   private JreConfig getJreConfig(String accountId) {
-    final boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
-    final boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
+    boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
+    boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
 
     String jreVersion = upgradeJre ? mainConfiguration.getMigrateToJre() : mainConfiguration.getCurrentJre();
     JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
@@ -1673,7 +1675,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     // For backward compatibility we base the queue task expiry on the execution timeout
     if (task.getExpiry() == 0) {
-      task.setExpiry(currentTimeMillis() + task.getData().getTimeout());
+      task.setExpiry(currentTimeMillis() + (task.isAsync() ? DEFAULT_QUEUE_ASYNC_EXPIRY : DEFAULT_QUEUE_SYNC_EXPIRY));
     }
 
     generateCapabilitiesForTaskIfFeatureEnabled(task);
