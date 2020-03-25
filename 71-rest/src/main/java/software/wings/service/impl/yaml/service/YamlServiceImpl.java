@@ -63,6 +63,7 @@ import static software.wings.beans.yaml.YamlType.TAG;
 import static software.wings.beans.yaml.YamlType.TRIGGER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
+import static software.wings.security.UserThreadLocal.userGuard;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -100,6 +101,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
+import software.wings.beans.User;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
@@ -109,6 +111,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.yaml.GitSyncService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -618,9 +621,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         previousChangeType = changeType;
         numOfParallelChanges = 0;
       }
-
+      User user = UserThreadLocal.get();
       futures.add(executorService.submit(() -> {
-        try {
+        try (UserThreadLocal.Guard guard = userGuard(user)) {
           logger.info("Processing file: [{}]", changeContext.getChange().getFilePath());
           processYamlChange(changeContext, changeContextList);
           if (gitSyncPath) {
