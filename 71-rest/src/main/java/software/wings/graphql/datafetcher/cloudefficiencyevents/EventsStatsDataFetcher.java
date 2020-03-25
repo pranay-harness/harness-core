@@ -87,6 +87,12 @@ public class EventsStatsDataFetcher
           case COSTEVENTSOURCE:
             eventDataBuilder.source(resultSet.getString(field.getFieldName()));
             break;
+          case OLDYAMLREF:
+            eventDataBuilder.oldYamlRef(resultSet.getString(field.getFieldName()));
+            break;
+          case NEWYAMLREF:
+            eventDataBuilder.newYamlRef(resultSet.getString(field.getFieldName()));
+            break;
           default:
             break;
         }

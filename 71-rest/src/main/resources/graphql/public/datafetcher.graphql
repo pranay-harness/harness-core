@@ -33,6 +33,7 @@ enum DataFetcherEnum {
   instanceConnection
   instanceCount
   instanceStats
+  k8sEventYamlDiff
   k8sLabelConnection
   outcomeConnection
   pipeline
