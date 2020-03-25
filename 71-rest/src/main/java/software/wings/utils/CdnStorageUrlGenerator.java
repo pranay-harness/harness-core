@@ -61,27 +61,13 @@ public class CdnStorageUrlGenerator {
     return cal.getTime();
   }
 
-  public String getWatcherJarUrl(String version) {
-    return cdnConfig.getUrl() + "/" + String.format(cdnConfig.getWatcherJarPath(), version);
-  }
-
   public String getWatcherMetaDataFileUrl(String env) {
-    String url = cdnConfig.getUrl() + "/"
-        + String.format(
-              cdnConfig.getWatcherMetaDataFilePath(), getWatcherMetaDataEnvFolderName(env), clusterTypeFolderName);
+    String url =
+        cdnConfig.getUrl() + "/" + String.format(cdnConfig.getWatcherMetaDataFilePath(), env, clusterTypeFolderName);
     return URI.create(url).normalize().toString();
   }
 
-  private String getWatcherMetaDataEnvFolderName(String env) {
-    switch (env) {
-      case "qa":
-        return "qa";
-      case "pr":
-        return "pr";
-      case "dev":
-        return "dev";
-      default:
-        return "";
-    }
+  public String getWatcherJarBaseUrl() {
+    return cdnConfig.getUrl() + "/" + cdnConfig.getWatcherJarBasePath();
   }
 }

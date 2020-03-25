@@ -6,7 +6,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.logging.v2.LoggingScopes;
@@ -18,7 +17,6 @@ import com.google.inject.Singleton;
 
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
-import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -28,8 +26,6 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +38,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR = "SERVICE_ACC";
   private static final String DELEGATE_JAR = "delegate.jar";
-  private static final String WATCHER_JAR = "watcher.jar";
   private static final String BUILDS_PATH = "/builds/";
 
   private static final String LOGGING_SERVICE_ACCOUNT_ENV_VAR = "LOGGING_SERVICE_ACC";
@@ -115,35 +110,6 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   @Override
-  public String getDownloadUrlForWatcher(String version, String envString, String accountId) {
-    if (isEmpty(envString)) {
-      envString = getEnv();
-    }
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
-      return cdnStorageUrlGenerator.getWatcherJarUrl(version);
-    } else {
-      String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
-      if (isNotBlank(serviceAccountJson)) {
-        try {
-          return getGcsUtil().getSignedUrlForServiceAccount(
-              "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR, serviceAccountJson,
-              3600L, accountId);
-
-        } catch (Exception e) {
-          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
-        }
-      }
-    }
-    return DEFAULT_ERROR_STRING;
-  }
-
-  @Override
-  public String getDownloadUrlForWatcher(String version, String accountId) {
-    String env = getEnv();
-    return getDownloadUrlForWatcher(version, env, accountId);
-  }
-
-  @Override
   public String getDownloadUrlForDelegate(String version, String accountId) {
     String env = getEnv();
     return getDownloadUrlForDelegate(version, env, accountId);
@@ -169,23 +135,8 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   @Override
-  public String getCdnWatcherUrl() {
-    String watcherLatestVersion;
-    try {
-      watcherLatestVersion = getWatcherLatestVersion();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-    return cdnStorageUrlGenerator.getWatcherJarUrl(getMinorVersion(watcherLatestVersion));
-  }
-
-  private String getMinorVersion(String fullVersion) {
-    return fullVersion.substring(fullVersion.lastIndexOf('.') + 1);
-  }
-
-  private String getWatcherLatestVersion() throws IOException {
-    String watcherMetadata = Http.getResponseStringFromUrl(getCdnWatcherMetaDataFileUrl(), 10, 10);
-    return substringBefore(watcherMetadata, " ").trim();
+  public String getCdnWatcherBaseUrl() {
+    return cdnStorageUrlGenerator.getWatcherJarBaseUrl();
   }
 
   protected String getEnv() {

@@ -90,14 +90,6 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void testInfraDownloadFailForWatcherEnvWhenNoServiceAccDefined() {
-    String url = infraDownloadService.getDownloadUrlForWatcher("4333", null);
-    assertThat(url).isEqualTo(InfraDownloadServiceImpl.DEFAULT_ERROR_STRING);
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
   public void testInfraDownloadDelegate() throws Exception {
     String path = "tmp.json";
     File serviceAccFile = new File(path);

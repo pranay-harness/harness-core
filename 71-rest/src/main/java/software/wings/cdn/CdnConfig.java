@@ -13,7 +13,7 @@ public class CdnConfig {
   String keyName;
   String keySecret;
   String delegateJarPath;
-  String watcherJarPath;
+  String watcherJarBasePath;
   String watcherMetaDataFilePath;
   Map<String, String> cdnJreTarPaths;
 }

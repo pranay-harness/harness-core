@@ -229,7 +229,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
-    when(infraDownloadService.getCdnWatcherUrl()).thenReturn("http://localhost:9500/builds/9/watcher.jar");
+    when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
