@@ -116,6 +116,7 @@ import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
 import io.harness.threading.Schedulable;
+import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -182,6 +183,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1225,8 +1227,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Watcher process {} needs restart", watcherProcess);
       systemExecutor.submit(() -> {
         try {
-          logger.info("Send kill -9 to watcherProcess {}", watcherProcess);
-          new ProcessExecutor().command("kill", "-9", watcherProcess).start();
+          ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
           messageService.closeChannel(WATCHER, watcherProcess);
           sleep(ofSeconds(2));
           // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
