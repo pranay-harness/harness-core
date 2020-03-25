@@ -50,8 +50,13 @@ public class HelmCommandRequest implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.addAll(gitConfig.fetchRequiredExecutionCapabilities());
-    executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+    if (gitConfig != null) {
+      executionCapabilities.addAll(gitConfig.fetchRequiredExecutionCapabilities());
+    }
+    if (containerServiceParams != null) {
+      executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+    }
+
     return executionCapabilities;
   }
 
