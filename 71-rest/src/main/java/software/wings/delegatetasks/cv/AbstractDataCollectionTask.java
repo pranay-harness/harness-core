@@ -113,8 +113,12 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
       Failsafe.with(retryPolicy).run(() -> {
         initializeDataCollector();
         dataCollectionExecutionContext = createDataCollectionExecutionContext();
+        logger.info("Starting init");
         dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
+        logger.info("Finished init");
+        logger.info("Starting collectAndSaveData");
         collectAndSaveData((T) dataCollectionInfo);
+        logger.info("Finished collectAndSaveData");
       });
 
       logger.info("Data collection task completed {}", dataCollectionInfo.getStateExecutionId());
