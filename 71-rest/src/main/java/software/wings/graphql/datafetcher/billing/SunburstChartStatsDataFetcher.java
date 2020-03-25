@@ -341,6 +341,7 @@ public class SunburstChartStatsDataFetcher
     Set<Pair<String, String>> parentIdAndClusterTypeSet = new HashSet<>();
     Map<String, Double> childIdCostMap = new HashMap<>();
     Map<String, String> instanceTypeMap = new HashMap<>();
+    Map<String, String> clusterTypeMap = new HashMap<>();
 
     while (resultSet != null && resultSet.next()) {
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
@@ -360,6 +361,7 @@ public class SunburstChartStatsDataFetcher
       dataPointBuilder.parent(parentFieldName + ":" + chileFieldName);
       String uniqueId = parentId + ":" + id;
       dataPointBuilder.id(uniqueId);
+      dataPointBuilder.clusterType(clusterType);
       dataPointBuilder.instanceType(instanceType);
       dataPointBuilder.metadata(sunburstGridDataPointMap.get(uniqueId));
       double value =
@@ -367,6 +369,7 @@ public class SunburstChartStatsDataFetcher
       dataPointBuilder.value(billingDataHelper.getRoundedDoubleValue(value));
       childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value);
       instanceTypeMap.putIfAbsent(parentId, instanceType);
+      clusterTypeMap.putIfAbsent(parentId, clusterType);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
 
@@ -383,6 +386,7 @@ public class SunburstChartStatsDataFetcher
       dataPointBuilder.value(
           childIdCostMap.get(id) != null ? billingDataHelper.getRoundedDoubleValue(childIdCostMap.get(id)) : null);
       dataPointBuilder.instanceType(instanceTypeMap.get(id));
+      dataPointBuilder.clusterType(clusterTypeMap.get(id));
       dataPointBuilder.parent(parentId);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
