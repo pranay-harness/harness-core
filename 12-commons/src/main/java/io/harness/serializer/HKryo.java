@@ -206,6 +206,11 @@ public class HKryo extends Kryo {
     register(SocketException.class, 1204);
     register(FailureType.class, 1205);
     register(MdcGlobalContextData.class, 1206);
+    try {
+      register(Class.forName("java.util.HashMap$KeySet"), 1207);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private Registration check(Registration registration, int id) {
