@@ -297,6 +297,7 @@ public class AwsAmiServiceSetup extends State {
       awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
                                 .activityId(activity.getUuid())
                                 .maxInstances(getNumMaxInstancesForNewAsg())
+                                .desiredInstances(getNumDesiredInstancesForNewAsg())
                                 .resizeStrategy(resizeStrategy)
                                 .build();
 

@@ -26,6 +26,7 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Dele
   private Integer newVersion;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
+  private Integer desiredInstances;
   private ResizeStrategy resizeStrategy;
   private String activityId;
   private static final String ACTIVITY_ID = "activityId";
@@ -45,7 +46,10 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Dele
     putNotNull(executionDetails, "newAutoScalingGroupName",
         ExecutionDataValue.builder().displayName("New ASG Name").value(newAutoScalingGroupName).build());
     putNotNull(executionDetails, "maxInstances",
-        ExecutionDataValue.builder().displayName("Desired Capacity").value(maxInstances).build());
+        ExecutionDataValue.builder().displayName("Max Instances").value(maxInstances).build());
+    putNotNull(executionDetails, "desiredInstances",
+        ExecutionDataValue.builder().displayName("Desired Instances").value(desiredInstances).build());
+
     putNotNull(executionDetails, "oldAutoScalingGroupName",
         ExecutionDataValue.builder().displayName("Old ASG Name").value(oldAutoScalingGroupName).build());
     putNotNull(
