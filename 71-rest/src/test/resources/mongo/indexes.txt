@@ -123,6 +123,7 @@ delegateConnectionResults { "name" : "criteria_1" , "background" : true} { "crit
 delegateConnectionResults { "name" : "delegateConnectionResultsIdx" , "unique" : true} { "accountId" : 1 , "delegateId" : 1 , "criteria" : 1}
 delegateConnectionResults { "name" : "delegateId_1" , "background" : true} { "delegateId" : 1}
 delegateConnectionResults { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+delegateConnections { "name" : "index" , "background" : true} { "accountId" : 1 , "delegateId" : 1}
 delegateConnections { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 delegateProfiles { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 delegateProfiles { "name" : "uniqueName" , "unique" : true} { "accountId" : 1 , "name" : 1}
