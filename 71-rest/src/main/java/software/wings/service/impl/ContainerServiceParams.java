@@ -76,9 +76,10 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
         if (masterUrl == null) {
           logger.warn(
               "[DelegateCapability] This should Not happen. Master URL is null for Setting Value: {}", value.getType());
+        } else {
+          executionCapabilities.add(
+              HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
         }
-        executionCapabilities.add(
-            HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
       }
     }
     return executionCapabilities;
