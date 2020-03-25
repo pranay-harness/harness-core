@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   private static final int BATCH_SIZE = 500;
-  private static final int SKIP_BATCH_SIZE = 50;
+  private static final int SKIP_LIMIT = 50;
   private static final int RETRY_LIMIT = 1;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
@@ -147,7 +147,7 @@ public class K8sBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -163,7 +163,7 @@ public class K8sBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
