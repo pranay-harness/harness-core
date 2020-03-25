@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 #This pre - commit hook checks if any versions of clang - format
 #are installed, and if so, uses the installed version to format

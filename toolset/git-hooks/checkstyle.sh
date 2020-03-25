@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 
 BUILD=`pushd tools; mvn ${MAVEN_ARGS} install; popd`
