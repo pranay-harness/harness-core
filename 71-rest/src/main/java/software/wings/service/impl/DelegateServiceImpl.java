@@ -777,7 +777,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       } else {
         watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(inquiry.getAccountId());
       }
-      remoteWatcherUrlCdn = infraDownloadService.getCdnWatcherUrl();
+      remoteWatcherUrlCdn = infraDownloadService.getCdnWatcherBaseUrl();
       watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
       watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 

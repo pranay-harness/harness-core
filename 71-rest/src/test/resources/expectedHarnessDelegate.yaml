@@ -95,7 +95,7 @@ spec:
         - name: WATCHER_CHECK_LOCATION
           value: watcherci.txt
         - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds/9/watcher.jar
+          value: http://localhost:9500/builds
         - name: DELEGATE_STORAGE_URL
           value: http://localhost:8888
         - name: DELEGATE_CHECK_LOCATION
