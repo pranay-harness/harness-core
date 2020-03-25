@@ -12,9 +12,13 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 
 import java.util.Date;
 import javax.validation.constraints.NotNull;
@@ -25,6 +29,11 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Indexes({
+  @Index(fields = {
+    @Field(DelegateConnectionKeys.accountId), @Field(DelegateConnectionKeys.delegateId)
+  }, options = @IndexOptions(name = "index"))
+})
 public class DelegateConnection implements PersistentEntity, UuidAware {
   public static final int DEFAULT_EXPIRY_TIME_IN_MINUTES = 5;
 

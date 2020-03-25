@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -28,7 +29,8 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
-    @Field("accountId"), @Field("delegateId"), @Field("criteria")
+    @Field(DelegateConnectionResultKeys.accountId)
+    , @Field(DelegateConnectionResultKeys.delegateId), @Field(DelegateConnectionResultKeys.criteria)
   }, options = @IndexOptions(unique = true, name = "delegateConnectionResultsIdx"))
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
