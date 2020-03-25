@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EcsBatchConfiguration {
   private static final int BATCH_SIZE = 500;
-  private static final int SKIP_BATCH_SIZE = 5;
+  private static final int SKIP_LIMIT = 100;
   private static final int RETRY_LIMIT = 1;
 
   @Autowired private JobBuilderFactory jobBuilderFactory;
@@ -221,7 +221,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -236,7 +236,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -251,7 +251,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -266,7 +266,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -281,7 +281,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -296,7 +296,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -311,7 +311,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
@@ -326,7 +326,7 @@ public class EcsBatchConfiguration {
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
-        .skipLimit(SKIP_BATCH_SIZE)
+        .skipLimit(SKIP_LIMIT)
         .skip(Exception.class)
         .listener(ecsStepSkipListener)
         .build();
