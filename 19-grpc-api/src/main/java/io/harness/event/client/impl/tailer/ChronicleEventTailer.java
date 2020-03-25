@@ -86,8 +86,10 @@ public class ChronicleEventTailer extends AbstractScheduledService {
   private void printStats() {
     long readIndex = readTailer.index();
     long sentIndex = fileDeletionManager.getSentIndex();
-    ExcerptTailer end = queue.createTailer().toEnd();
-    logger.info("index.read-tailer={},  index.sent-tailer={}, index.end={}", readIndex, sentIndex, end.index());
+    long endIndex = queue.createTailer().toEnd().index();
+    long excerptCount = queue.countExcerpts(readIndex, endIndex);
+    logger.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
+        endIndex, excerptCount);
   }
 
   @Override
@@ -98,9 +100,17 @@ public class ChronicleEventTailer extends AbstractScheduledService {
       sampler.sampled(() -> logger.info("Checking for messages to publish"));
       Batch batchToSend = new Batch(MAX_BATCH_BYTES, MAX_BATCH_COUNT);
       while (!batchToSend.isFull()) {
+        long endIndex = queue.createTailer().toEnd().index();
         try (DocumentContext dc = readTailer.readingDocument()) {
           if (!dc.isPresent()) {
             sampler.sampled(() -> logger.info("Reached end of queue"));
+            long readIndex = readTailer.index();
+            if (readIndex < endIndex) {
+              readTailer.moveToIndex(endIndex);
+              fileDeletionManager.setSentIndex(endIndex);
+              logger.warn(
+                  "Observed readTailer not at end with no document context. Moved from {} to {}", readIndex, endIndex);
+            }
             break;
           }
           try {

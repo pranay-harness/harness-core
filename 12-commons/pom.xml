@@ -197,6 +197,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>joor</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
             <scope>test</scope>

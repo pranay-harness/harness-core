@@ -86,6 +86,7 @@ import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Schedulable;
+import io.harness.utils.ProcessControl;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
 import io.harness.watcher.logging.WatcherStackdriverLogAppender;
@@ -110,6 +111,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -862,8 +864,7 @@ public class WatcherServiceImpl implements WatcherService {
         logger.info("Send kill -3 to delegateProcess {}", delegateProcess);
         new ProcessExecutor().command("kill", "-3", delegateProcess).start();
         sleep(ofSeconds(15));
-        logger.info("Send kill -9 to delegateProcess {}", delegateProcess);
-        new ProcessExecutor().command("kill", "-9", delegateProcess).start();
+        ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
       }
@@ -881,8 +882,7 @@ public class WatcherServiceImpl implements WatcherService {
       logger.warn("Shutting down extra watcher {}", watcherProcess);
       executorService.submit(() -> {
         try {
-          logger.info("Send kill -9 to watcherProcess {}", watcherProcess);
-          new ProcessExecutor().command("kill", "-9", watcherProcess).start();
+          ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
         } catch (Exception e) {
           logger.error("Error killing watcher {}", watcherProcess, e);
         }
@@ -1160,8 +1160,7 @@ public class WatcherServiceImpl implements WatcherService {
     messageService.shutdown();
     runningDelegates.forEach(delegateProcess -> {
       try {
-        logger.info("Sending kill -9 to delegateProcess {}", delegateProcess);
-        new ProcessExecutor().command("kill", "-9", delegateProcess).execute();
+        ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {
         // Ignore
       }

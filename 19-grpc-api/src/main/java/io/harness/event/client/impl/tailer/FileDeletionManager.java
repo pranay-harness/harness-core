@@ -58,7 +58,7 @@ class FileDeletionManager {
     boolean anyFilesDeleted = deleteOlderFilesInternal(cycle);
     // This method needs to be called to update internal caches whenever we delete any queue files.
     if (anyFilesDeleted) {
-      queue.refreshDirectlyListing();
+      queue.refreshDirectoryListing();
     }
   }
 

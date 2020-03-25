@@ -9,6 +9,8 @@ import io.harness.event.PublishMessage;
 import io.harness.event.client.EventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
+import net.openhft.chronicle.wire.DocumentContext;
+import net.openhft.chronicle.wire.Wire;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -33,6 +35,8 @@ class ChronicleEventAppender extends EventPublisher {
     queueMonitor.startAsync().awaitRunning();
   }
 
+  // catching throwable is necessary
+  @SuppressWarnings({"PMD.AvoidCatchingThrowable", "squid:S1181"})
   @Override
   protected final void publish(PublishMessage publishMessage) {
     Preconditions.checkState(!shutDown.get(), "Publisher shut-down. Cannot publish any more messages");
@@ -40,7 +44,19 @@ class ChronicleEventAppender extends EventPublisher {
       logger.warn("Dropping message as queue is not healthy");
       return;
     }
-    queue.acquireAppender().writeDocument(wire -> wire.getValueOut().bytes(publishMessage.toByteArray()));
+    byte[] bytes = publishMessage.toByteArray();
+    DocumentContext dc = queue.acquireAppender().writingDocument();
+    try {
+      Wire wire = dc.wire();
+      if (wire != null) {
+        wire.getValueOut().bytes(bytes);
+      }
+    } catch (Throwable t) {
+      dc.rollbackOnClose();
+      throw t;
+    } finally {
+      dc.close();
+    }
   }
 
   @Override
