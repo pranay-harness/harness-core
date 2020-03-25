@@ -226,7 +226,9 @@ public class PermissionAttribute {
 
     CLUSTERRECORD(ACCOUNT),
 
-    K8S_LABEL(ACCOUNT);
+    K8S_LABEL(ACCOUNT),
+
+    K8S_EVENT_YAML_DIFF(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 

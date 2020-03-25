@@ -37,4 +37,18 @@ public class K8sYamlDao {
           K8sYaml.builder().clusterId(clusterId).uid(uid).resourceVersion(resourceVersion).yaml(yaml).build());
     }
   }
+
+  public K8sYaml getYaml(String accountId, String uuid) {
+    return hPersistence.createQuery(K8sYaml.class)
+        .field(K8sYamlKeys.accountId)
+        .equal(accountId)
+        .field(K8sYamlKeys.uuid)
+        .equal(uuid)
+        .order(Sort.descending(K8sYamlKeys.resourceVersion))
+        .get();
+  }
+
+  public String save(K8sYaml yamlRecord) {
+    return hPersistence.save(yamlRecord);
+  }
 }

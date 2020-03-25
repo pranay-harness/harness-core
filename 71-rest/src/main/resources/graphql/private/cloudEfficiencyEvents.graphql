@@ -1,10 +1,20 @@
 extend type Query {
   ceEventStats(filters: [EventsFilter], sortCriteria: [EventsSortCriteria]): EventsData @dataFetcher(name: eventsStats)
+  k8sEventYamlDiff(oldYamlRef: String!, newYamlRef: String!): K8sEventYamlDiff @dataFetcher(name: k8sEventYamlDiff)
 }
 
 type EventsData {
   data: [EventsDataPoint]
   chartData: [ChartDataPoint]
+}
+
+type K8sEventYamlDiff {
+  data: K8sEventYamls
+}
+
+type K8sEventYamls {
+  oldYaml: String
+  newYaml: String
 }
 
 type ChartDataPoint {
@@ -18,6 +28,8 @@ type EventsDataPoint {
   source: String
   type: String
   details: String
+  oldYamlRef: String
+  newYamlRef: String
 }
 
 input EventsFilter {

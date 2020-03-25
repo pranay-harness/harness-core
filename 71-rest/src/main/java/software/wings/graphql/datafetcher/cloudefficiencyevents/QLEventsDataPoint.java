@@ -10,4 +10,6 @@ public class QLEventsDataPoint {
   String type;
   String details;
   long time;
+  String oldYamlRef;
+  String newYamlRef;
 }

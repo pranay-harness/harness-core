@@ -31,7 +31,9 @@ public class CEEventsQueryMetaData {
     NAMESPACE("NAMESPACE", DataType.STRING, QLFilterKind.SIMPLE),
     EVENTDESCRIPTION("EVENTDESCRIPTION", DataType.STRING, QLFilterKind.SIMPLE),
     COSTEVENTTYPE("COSTEVENTTYPE", DataType.STRING, QLFilterKind.SIMPLE),
-    COSTEVENTSOURCE("COSTEVENTSOURCE", DataType.STRING, QLFilterKind.SIMPLE);
+    COSTEVENTSOURCE("COSTEVENTSOURCE", DataType.STRING, QLFilterKind.SIMPLE),
+    OLDYAMLREF("OLDYAMLREF", DataType.STRING, QLFilterKind.SIMPLE),
+    NEWYAMLREF("NEWYAMLREF", DataType.STRING, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;
