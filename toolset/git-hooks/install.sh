@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 pushd `dirname $0` > /dev/null && BASEDIR=$(pwd -L) && popd > /dev/null
 
 echo This script will install hooks that run scripts that could be updated without notice.

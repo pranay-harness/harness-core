@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
