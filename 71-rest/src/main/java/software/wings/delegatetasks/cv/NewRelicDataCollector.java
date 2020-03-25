@@ -120,31 +120,21 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   private List<MetricElement> fetchMetricsForNode(
       NewRelicApplicationInstance node, Set<NewRelicMetric> transactionsToCollect) {
     MetricElementTable records = MetricElementTable.create();
-    List<Callable<MetricElementTable>> metricDataCallabels = new ArrayList<>();
     Iterables.partition(getTxnsWithoutSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
-            -> metricDataCallabels.add(
-                () -> getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
-    List<Optional<MetricElementTable>> results = dataCollectionService.executeParrallel(metricDataCallabels);
+            -> records.putAll(
+                getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
 
-    metricDataCallabels.clear();
-
-    Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
-        .forEach(batch
-            -> metricDataCallabels.add(
-                () -> getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     try {
-      results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
+      Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
+          .forEach(batch
+              -> records.putAll(
+                  getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     } catch (Exception e) {
       // ignoring the exception because we don't know what is causing this yet. We want to find out and fix this bug.
       logger.error("Data collection failed when special chars are present in metric name {}",
           getTxnsWithSpecialChars(transactionsToCollect), e);
     }
-    results.forEach(result -> {
-      if (result.isPresent()) {
-        records.putAll(result.get());
-      }
-    });
     return getAllMetricRecords(records);
   }
   private Set<NewRelicMetric> getTxnsWithoutSpecialChars(Collection<NewRelicMetric> transactionsToCollect) {
@@ -161,31 +151,19 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
 
   private List<MetricElement> fetchMetric(Set<NewRelicMetric> transactionsToCollect) {
     MetricElementTable records = MetricElementTable.create();
-    List<Callable<MetricElementTable>> metricDataCallabels = new ArrayList<>();
     Iterables.partition(getTxnsWithoutSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
         .forEach(batch
-            -> metricDataCallabels.add(
-                () -> getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
-    List<Optional<MetricElementTable>> results = dataCollectionService.executeParrallel(metricDataCallabels);
-
-    metricDataCallabels.clear();
-
-    Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
-        .forEach(batch
-            -> metricDataCallabels.add(
-                () -> getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
+            -> records.putAll(getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     try {
-      results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
+      Iterables.partition(getTxnsWithSpecialChars(transactionsToCollect), METRIC_DATA_QUERY_BATCH_SIZE)
+          .forEach(batch
+              -> records.putAll(
+                  getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     } catch (Exception e) {
       // ignoring the exception because we don't know what is causing this yet. We want to find out and fix this bug.
       logger.error("Data collection failed when special chars are present in metric name {}",
           getTxnsWithSpecialChars(transactionsToCollect), e);
     }
-    results.forEach(result -> {
-      if (result.isPresent()) {
-        records.putAll(result.get());
-      }
-    });
     return getAllMetricRecords(records);
   }
   private List<MetricElement> getAllMetricRecords(MetricElementTable records) {
@@ -222,7 +200,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   private MetricElementTable getMetricData(Set<String> metricNames) {
     MetricElementTable records = MetricElementTable.create();
 
-    logger.info("Fetching for {}, metrics names {}", dataCollectionInfo, metricNames);
+    logger.info("Fetching metrics names {}", metricNames);
     try {
       getWebTransactionMetrics(metricNames, records);
       getErrorMetrics(metricNames, records);
@@ -230,7 +208,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     } catch (IOException e) {
       throw new DataCollectionException(e);
     }
-    logger.info("Finished fetching for {}, metrics names {}", dataCollectionInfo, metricNames);
+    logger.info("Finished fetching. Metrics names {}", metricNames);
     logger.debug(records.toString());
     return records;
   }
@@ -353,11 +331,11 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   }
 
   private Set<NewRelicMetric> getTransactionsToCollect() {
-    logger.info("Collecting txn names for {}", dataCollectionInfo);
+    logger.info("Collecting txn names ");
     Set<NewRelicMetric> transactions = getTxnNameToCollect();
-    logger.info("new txns {} for {}", transactions.size(), dataCollectionInfo);
+    logger.info("new txns {}", transactions.size());
     Set<NewRelicMetric> txnsWithData = getTransactionsWithDataInLastHour(transactions);
-    logger.info("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo);
+    logger.info("txns with data {}", txnsWithData.size());
     return txnsWithData;
   }
 
