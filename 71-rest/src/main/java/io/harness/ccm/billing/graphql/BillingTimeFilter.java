@@ -1,7 +1,7 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_ENDTIME;
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_STARTTIME;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_ENDTIME;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_STARTTIME;
 
 import com.google.cloud.Timestamp;
 
@@ -9,6 +9,7 @@ import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.GcpBillingTableSchema;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;

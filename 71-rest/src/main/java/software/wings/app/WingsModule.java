@@ -15,6 +15,8 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CCMSettingServiceImpl;
+import io.harness.ccm.billing.GcpBillingService;
+import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.budget.BudgetService;
@@ -805,6 +807,7 @@ public class WingsModule extends DependencyModule {
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
+    bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

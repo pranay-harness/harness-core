@@ -1,9 +1,10 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import io.harness.ccm.billing.GcpBillingTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
@@ -14,6 +15,7 @@ public class BillingAggregate {
   // ideally, gcp specific constants should be organized in a constant class.
   public static final String BILLING_GCP_COST = "cost";
   public static final String BILLING_GCP_CREDITS = "discount";
+
   QLCCMAggregateOperation operationType;
   String columnName;
   String alias;

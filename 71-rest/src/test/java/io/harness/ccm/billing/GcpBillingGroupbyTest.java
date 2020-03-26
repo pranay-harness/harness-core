@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.TruncExpression;
+import io.harness.ccm.billing.graphql.GcpBillingGroupby;
+import io.harness.ccm.billing.graphql.TimeTruncGroupby;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

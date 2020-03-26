@@ -5,6 +5,7 @@ import static com.google.cloud.bigquery.StandardSQLTypeName.STRING;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Percentage.withPercentage;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.rule.Owner;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -40,43 +43,74 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-public class GcpBillingServiceTest extends CategoryTest {
-  @Mock BigQuery bigQuery;
+public class GcpBillingServiceImplTest extends CategoryTest {
+  private SimpleRegression regression;
   @Mock TableResult tableResult;
+  @Mock BigQuery bigQuery;
   @Mock BigQueryService bigQueryService;
-  @InjectMocks GcpBillingService gcpBillingService;
+  @InjectMocks GcpBillingServiceImpl gcpBillingService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   private static Calendar calendar1;
   private static Calendar calendar2;
+  List<Condition> conditions = new ArrayList<>();
 
   @Before
   public void setUp() throws InterruptedException {
     calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
+    Condition condition1 =
+        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()));
+    Condition condition2 =
+        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageEndTime, Timestamp.of(calendar2.getTime()));
+    Condition condition3 = BinaryCondition.equalTo(GcpBillingTableSchema.projectId, "projectId");
+    conditions.add(condition1);
+    conditions.add(condition2);
+    conditions.add(condition3);
+
+    regression = new SimpleRegression();
+    double[][] observations = {{10000, 1}, {10001, 2}, {10002, 3}};
+    regression.addData(observations);
+
+    when(bigQueryService.get()).thenReturn(bigQuery);
+    when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldGetTotalCost() {
+    when(gcpBillingService.getTotalCost(conditions))
+        .thenThrow(new IllegalArgumentException("Unexpected result from this query."));
+    // todo verify the query
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetGcpBillingTimeSeriesStats() throws InterruptedException {
-    tableResult = new EmptyTableResult(Schema.of(Field.newBuilder("cost", (StandardSQLTypeName) FLOAT64).build()));
-    when(bigQueryService.get()).thenReturn(bigQuery);
-    when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
+  public void shouldGetCostTrend() {
+    BigDecimal trend = gcpBillingService.getCostTrend(regression, calendar1.getTime(), calendar2.getTime());
+    assertThat(trend).isCloseTo(BigDecimal.valueOf(4), withPercentage(1));
+  }
 
-    List<Condition> conditions = new ArrayList<>();
-    Condition condition1 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()));
-    Condition condition2 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageEndTime, Timestamp.of(calendar2.getTime()));
-    conditions.add(condition1);
-    conditions.add(condition2);
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldGetCostForecast() {
+    BigDecimal forecast = gcpBillingService.getCostEstimate(regression, calendar1.getTime(), calendar2.getTime());
+    assertThat(forecast).isStrictlyBetween(BigDecimal.valueOf(200000), BigDecimal.valueOf(250000));
+  }
 
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldGetGcpBillingTimeSeriesStats() {
     List<Object> gcpBillingGroupby = Collections.EMPTY_LIST;
     FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost);
 
     GcpBillingTimeSeriesStatsDTO timeSeriesStats =
         gcpBillingService.getGcpBillingTimeSeriesStats(aggregateFunction, gcpBillingGroupby, conditions);
+    // todo add assertion on the query
     assertThat(timeSeriesStats).isNull();
   }
 
@@ -93,21 +127,7 @@ public class GcpBillingServiceTest extends CategoryTest {
             Field.newBuilder("usage_pricing_unit", (StandardSQLTypeName) STRING).build(),
             Field.newBuilder("usage_amount_in_pricing_units", (StandardSQLTypeName) STRING).build()));
 
-    when(bigQueryService.get()).thenReturn(bigQuery);
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
-
-    Calendar calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
-    Calendar calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
-
-    List<Condition> conditions = new ArrayList<>();
-    Condition condition1 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()));
-    Condition condition2 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageEndTime, Timestamp.of(calendar2.getTime()));
-    Condition condition3 = BinaryCondition.equalTo(GcpBillingTableSchema.projectId, "projectId");
-    conditions.add(condition1);
-    conditions.add(condition2);
-    conditions.add(condition3);
 
     List<Object> gcpBillingGroupby = Arrays.asList(GcpBillingTableSchema.skuId, GcpBillingTableSchema.skuDescription,
         GcpBillingTableSchema.serviceDescription, GcpBillingTableSchema.usagePricingUnit,

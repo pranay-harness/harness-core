@@ -1,4 +1,4 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.bigquery.TruncExpression;

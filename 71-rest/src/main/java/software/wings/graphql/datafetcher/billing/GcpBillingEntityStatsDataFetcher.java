@@ -2,10 +2,10 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
-import io.harness.ccm.billing.BillingAggregate;
-import io.harness.ccm.billing.GcpBillingFilter;
-import io.harness.ccm.billing.GcpBillingGroupby;
 import io.harness.ccm.billing.GcpBillingService;
+import io.harness.ccm.billing.graphql.BillingAggregate;
+import io.harness.ccm.billing.graphql.GcpBillingFilter;
+import io.harness.ccm.billing.graphql.GcpBillingGroupby;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.schema.type.aggregation.QLData;

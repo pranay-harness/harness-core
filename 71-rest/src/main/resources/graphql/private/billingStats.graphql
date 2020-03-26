@@ -19,6 +19,8 @@ extend type Query {
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingTrendStats)
 
+  gcpBillingTrendStats(filters: [CCMFilter]): BillingStatsData @dataFetcher(name: gcpBillingTrendStats)
+
   idleCostTrendStats(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]

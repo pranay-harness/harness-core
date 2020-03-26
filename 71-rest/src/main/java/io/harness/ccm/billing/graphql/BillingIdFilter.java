@@ -1,9 +1,9 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_PRODUCT;
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_PROJECT;
-import static io.harness.ccm.billing.GcpBillingFilter.BILLING_GCP_SKU;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_PRODUCT;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_PROJECT;
+import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_SKU;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -11,6 +11,7 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.GcpBillingTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.schema.type.aggregation.Filter;
