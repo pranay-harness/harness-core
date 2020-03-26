@@ -4,15 +4,19 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -20,6 +24,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -38,6 +43,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +51,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceElement;
@@ -56,14 +63,18 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.ServiceInstanceSelectionParams.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -79,6 +90,7 @@ import software.wings.utils.WingsTestConstants;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl context;
@@ -94,6 +106,8 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private StateExecutionService stateExecutionService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private InstanceExpressionProcessor instanceExpressionProcessor;
+  @Mock private HostService hostService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
 
@@ -157,6 +171,14 @@ public class NodeSelectStateTest extends WingsBaseTest {
              ContextElementType.PARAM, ServiceInstanceArtifactParam.SERVICE_INSTANCE_ARTIFACT_PARAMS))
         .thenReturn(serviceInstanceArtifactParam);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(hostService.getHostsByHostIds(anyString(), anyString(), anyList())).thenAnswer(invocationOnMock -> {
+      return invocationOnMock.getArgumentAt(2, List.class)
+          .stream()
+          .map(item -> Host.Builder.aHost().withUuid((String) item).build())
+          .collect(Collectors.toList());
+    });
+    when(context.prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class)))
+        .thenReturn(SweepingOutputInstance.builder());
   }
 
   @Test
@@ -174,6 +196,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
@@ -211,6 +234,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(context.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.ROLLING);
@@ -249,6 +273,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
@@ -290,6 +315,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
@@ -326,6 +352,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
@@ -359,6 +386,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
@@ -435,5 +463,164 @@ public class NodeSelectStateTest extends WingsBaseTest {
     assertThat(nodesOverridden).isTrue();
     assertThat(message.toString()).isEqualTo("No nodes selected as targeted nodes have already been deployed");
     assertThat(selectionParams.build().getCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceElements() {
+    testGetInstanceElementsForNoServiceInstance();
+    testGetInstanceDetailsForPartialRollout();
+  }
+
+  private void testGetInstanceDetailsForPartialRollout() {
+    List<ServiceInstance> allAvailable = asList(ServiceInstance.Builder.aServiceInstance().withUuid("id-1").build(),
+        aServiceInstance().withUuid("id-2").build(), aServiceInstance().withUuid("id-3").build());
+    List<InstanceElement> allInstanceElements =
+        allAvailable.stream()
+            .map(instance -> anInstanceElement().uuid(instance.getUuid()).build())
+            .collect(Collectors.toList());
+    List<ServiceInstance> deployed = asList(allAvailable.get(1));
+
+    when(instanceExpressionProcessor.convertToInstanceElements(allAvailable)).thenReturn(allInstanceElements);
+
+    final List<InstanceElement> instanceElements = nodeSelectState.getInstanceElements(deployed, allAvailable);
+    assertThat(instanceElements).hasSize(3);
+    assertThat(instanceElements.stream().filter(InstanceElement::isNewInstance).collect(Collectors.toList()))
+        .containsExactly(allInstanceElements.get(1));
+  }
+
+  private void testGetInstanceElementsForNoServiceInstance() {
+    when(instanceExpressionProcessor.convertToInstanceElements(emptyList())).thenReturn(emptyList());
+    List<InstanceElement> instanceElements = nodeSelectState.getInstanceElements(emptyList(), emptyList());
+    assertThat(instanceElements).isEmpty();
+
+    // if instanceExpressionProcessor returns null for some reason
+    when(instanceExpressionProcessor.convertToInstanceElements(emptyList())).thenReturn(null);
+    instanceElements = nodeSelectState.getInstanceElements(emptyList(), emptyList());
+    assertThat(instanceElements).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateSelectionParamsForAllInstances() {
+    testSelectionParamsForSpecificHosts();
+    testSelectionParamsForCountBasedHosts();
+  }
+
+  private void testSelectionParamsForCountBasedHosts() {
+    Builder builder = Builder.aServiceInstanceSelectionParams()
+                          .withSelectSpecificHosts(false)
+                          .withExcludedServiceInstanceIds(asList("host-1"))
+                          .withCount(5);
+    final ServiceInstanceSelectionParams selectionParams =
+        nodeSelectState.generateSelectionParamsForAllInstances(builder, 5);
+    assertThat(selectionParams.isSelectSpecificHosts()).isFalse();
+    assertThat(selectionParams.getHostNames()).isEmpty();
+    assertThat(selectionParams.getCount()).isEqualTo(5);
+    assertThat(selectionParams.getExcludedServiceInstanceIds()).isEmpty();
+  }
+
+  private void testSelectionParamsForSpecificHosts() {
+    Builder builder = Builder.aServiceInstanceSelectionParams()
+                          .withSelectSpecificHosts(true)
+                          .withHostNames(asList("host-1", "host-2"))
+                          .withCount(2);
+    final ServiceInstanceSelectionParams selectionParams =
+        nodeSelectState.generateSelectionParamsForAllInstances(builder, 5);
+    assertThat(selectionParams.isSelectSpecificHosts()).isTrue();
+    assertThat(selectionParams.getHostNames()).containsExactly("host-1", "host-2");
+    assertThat(selectionParams.getCount()).isEqualTo(2);
+    assertThat(selectionParams.getExcludedServiceInstanceIds()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceDetails() {
+    getInstanceDetailsForPartialRollout();
+    getInstanceDetailsForNoInstances();
+  }
+
+  private void getInstanceDetailsForNoInstances() {
+    assertThat(nodeSelectState.getInstanceDetails(APP_ID, ENV_ID, emptyList(), emptyList())).isEmpty();
+  }
+
+  private void getInstanceDetailsForPartialRollout() {
+    List<ServiceInstance> allAvailable =
+        asList(ServiceInstance.Builder.aServiceInstance().withUuid("id-1").withHostId("host-1").build(),
+            aServiceInstance().withUuid("id-2").withHostId("host-2").build(),
+            aServiceInstance().withUuid("id-3").withHostId("host-3").build());
+    List<InstanceElement> allInstanceElements =
+        allAvailable.stream()
+            .map(instance -> anInstanceElement().uuid(instance.getUuid()).build())
+            .collect(Collectors.toList());
+    List<ServiceInstance> deployed = asList(allAvailable.get(1));
+    final List<InstanceDetails> instanceDetails =
+        nodeSelectState.getInstanceDetails(APP_ID, ENV_ID, deployed, allAvailable);
+    assertThat(instanceDetails).hasSize(3);
+    assertThat(instanceDetails.stream().filter(InstanceDetails::isNewInstance).collect(Collectors.toList())).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateInstanceDetailsFromServiceInstances() {
+    assertThat(
+        nodeSelectState.generateInstanceDetailsFromServiceInstances(
+            asList(aServiceInstance().withHostId("host-1").build(), aServiceInstance().withHostId("host-2").build()),
+            APP_ID, ENV_ID, true))
+        .hasSize(2);
+
+    assertThat(nodeSelectState.generateInstanceDetailsFromServiceInstances(emptyList(), APP_ID, ENV_ID, true))
+        .isEmpty();
+
+    when(hostService.getHostsByHostIds(anyString(), anyString(), anyList())).thenReturn(null);
+
+    assertThat(nodeSelectState.generateInstanceDetailsFromServiceInstances(
+                   asList(aServiceInstance().build()), APP_ID, ENV_ID, true))
+        .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testBuildInstanceDetailFromHost() {
+    testBuildInstanceDetailFromAwsHost();
+    testBuildInstanceDetailFromPhysicalHost();
+  }
+
+  private void testBuildInstanceDetailFromAwsHost() {
+    Host host = Host.Builder.aHost()
+                    .withUuid("id-1")
+                    .withHostName("ip-42")
+                    .withEc2Instance(new com.amazonaws.services.ec2.model.Instance())
+                    .withPublicDns("ec2-000.compute-1.amazonaws.com")
+                    .build();
+    InstanceDetails instanceDetails = nodeSelectState.buildInstanceDetailFromHost(host, true);
+    assertThat(instanceDetails.isNewInstance()).isTrue();
+    assertThat(instanceDetails.getInstanceType()).isEqualTo(InstanceDetails.InstanceType.AWS);
+    assertThat(instanceDetails.getAws().getEc2Instance()).isNotNull();
+    assertThat(instanceDetails.getPhysicalHost()).isNull();
+    assertThat(instanceDetails.getAws().getPublicDns()).isEqualTo(host.getPublicDns());
+
+    assertThat(nodeSelectState.buildInstanceDetailFromHost(host, false).isNewInstance()).isFalse();
+  }
+
+  private void testBuildInstanceDetailFromPhysicalHost() {
+    Host host = Host.Builder.aHost()
+                    .withUuid("id-1")
+                    .withHostName("ip-42")
+                    .withPublicDns("harness-linux-ssh-test.westus2.cloudapp.azure.com")
+                    .build();
+
+    InstanceDetails instanceDetails = nodeSelectState.buildInstanceDetailFromHost(host, true);
+    assertThat(instanceDetails.isNewInstance()).isTrue();
+    assertThat(instanceDetails.getInstanceType()).isEqualTo(InstanceDetails.InstanceType.PHYSICAL_HOST);
+    assertThat(instanceDetails.getAws()).isNull();
+    assertThat(instanceDetails.getPhysicalHost().getPublicDns()).isEqualTo(host.getPublicDns());
+
+    assertThat(nodeSelectState.buildInstanceDetailFromHost(host, false).isNewInstance()).isFalse();
   }
 }

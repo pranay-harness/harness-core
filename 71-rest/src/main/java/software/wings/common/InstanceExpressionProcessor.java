@@ -24,6 +24,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.MapperUtils;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -62,6 +63,7 @@ import javax.validation.constraints.NotNull;
 /**
  * The Class InstanceExpressionProcessor.
  */
+@NoArgsConstructor
 public class InstanceExpressionProcessor implements ExpressionProcessor {
   public static final String DEFAULT_EXPRESSION = "${instances}";
 
@@ -249,7 +251,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return req;
   }
 
-  private List<InstanceElement> convertToInstanceElements(List<ServiceInstance> instances) {
+  public List<InstanceElement> convertToInstanceElements(List<ServiceInstance> instances) {
     if (instances == null) {
       return null;
     }

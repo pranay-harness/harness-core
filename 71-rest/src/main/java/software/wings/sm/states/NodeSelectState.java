@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Objects.requireNonNull;
@@ -14,6 +15,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -21,14 +23,18 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
+import io.harness.deployment.InstanceDetails;
+import io.harness.deployment.InstanceDetails.InstanceDetailsBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -41,12 +47,15 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.ServiceInstanceSelectionParams.Builder;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -61,9 +70,12 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 10/10/17
@@ -91,6 +103,8 @@ public abstract class NodeSelectState extends State {
   @Inject @Transient private AppService appService;
   @Inject @Transient private WorkflowExecutionService workflowExecutionService;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject @Transient private HostService hostService;
+  @Inject @Transient private InstanceExpressionProcessor instanceExpressionProcessor;
 
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
@@ -99,6 +113,7 @@ public abstract class NodeSelectState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = requireNonNull(context.getApp()).getUuid();
+    String envId = context.fetchRequiredEnvironment().getUuid();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
@@ -148,6 +163,11 @@ public abstract class NodeSelectState extends State {
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
         appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
 
+    ServiceInstanceSelectionParams selectionParamsForAllInstances =
+        generateSelectionParamsForAllInstances(selectionParams, totalAvailableInstances);
+    final List<ServiceInstance> allServiceInstances = infrastructureMappingService.selectServiceInstances(
+        appId, infraMappingId, context.getWorkflowExecutionId(), selectionParamsForAllInstances);
+
     String errorMessage = buildServiceInstancesErrorMessage(
         serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
@@ -186,11 +206,22 @@ public abstract class NodeSelectState extends State {
     ServiceInstanceIdsParam serviceIdParamElement =
         aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
 
+    final List<InstanceElement> instanceElements = getInstanceElements(serviceInstances, allServiceInstances);
+    final List<InstanceDetails> instanceDetails =
+        getInstanceDetails(appId, envId, serviceInstances, allServiceInstances);
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
             .name(ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS + phaseElement.getPhaseName().trim())
             .value(serviceIdParamElement)
             .build());
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+                                   .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(instanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .build())
+                                   .build());
 
     ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
                                                      .contextElement(serviceIdParamElement)
@@ -208,6 +239,74 @@ public abstract class NodeSelectState extends State {
     }
 
     return executionResponse.build();
+  }
+
+  @VisibleForTesting
+  List<InstanceElement> getInstanceElements(
+      List<ServiceInstance> serviceInstances, List<ServiceInstance> allServiceInstances) {
+    Set<String> newServiceInstanceIds =
+        serviceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toSet());
+    List<InstanceElement> instanceElements =
+        emptyIfNull(instanceExpressionProcessor.convertToInstanceElements(allServiceInstances));
+    instanceElements.forEach(instanceElement -> {
+      if (newServiceInstanceIds.contains(instanceElement.getUuid())) {
+        instanceElement.setNewInstance(true);
+      }
+    });
+    return instanceElements;
+  }
+
+  @VisibleForTesting
+  ServiceInstanceSelectionParams generateSelectionParamsForAllInstances(
+      Builder selectionParamsBuilder, int totalAvailableInstances) {
+    ServiceInstanceSelectionParams selectionParams = selectionParamsBuilder.build();
+    Builder builderForAllInstances = selectionParamsBuilder.but();
+    if (!selectionParams.isSelectSpecificHosts()) {
+      builderForAllInstances.withCount(totalAvailableInstances);
+    }
+    return builderForAllInstances.withExcludedServiceInstanceIds(Collections.emptyList()).build();
+  }
+
+  @VisibleForTesting
+  List<InstanceDetails> getInstanceDetails(
+      String appId, String envId, List<ServiceInstance> serviceInstances, List<ServiceInstance> allServiceInstances) {
+    Set<String> newServiceInstanceIds =
+        serviceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toSet());
+    List<ServiceInstance> oldServiceInstances =
+        allServiceInstances.stream()
+            .filter(serviceInstance -> !newServiceInstanceIds.contains(serviceInstance.getUuid()))
+            .collect(toList());
+    List<InstanceDetails> instanceDetails =
+        generateInstanceDetailsFromServiceInstances(serviceInstances, appId, envId, true);
+    instanceDetails.addAll(generateInstanceDetailsFromServiceInstances(oldServiceInstances, appId, envId, false));
+    return instanceDetails;
+  }
+
+  @VisibleForTesting
+  List<InstanceDetails> generateInstanceDetailsFromServiceInstances(
+      List<ServiceInstance> serviceInstances, String appId, String envId, boolean isNewInstance) {
+    if (isNotEmpty(serviceInstances)) {
+      List<String> hostIds = serviceInstances.stream().map(ServiceInstance::getHostId).collect(toList());
+      List<Host> hosts = emptyIfNull(hostService.getHostsByHostIds(appId, envId, hostIds));
+      return hosts.stream().map(host -> buildInstanceDetailFromHost(host, isNewInstance)).collect(toList());
+    }
+    return Collections.emptyList();
+  }
+
+  @VisibleForTesting
+  InstanceDetails buildInstanceDetailFromHost(Host host, boolean isNewInstance) {
+    final InstanceDetailsBuilder builder =
+        InstanceDetails.builder().hostName(host.getHostName()).newInstance(isNewInstance);
+    if (host.getEc2Instance() != null) {
+      builder.instanceType(InstanceDetails.InstanceType.AWS);
+      builder.aws(
+          InstanceDetails.AWS.builder().ec2Instance(host.getEc2Instance()).publicDns(host.getPublicDns()).build());
+    } else {
+      builder.instanceType(InstanceDetails.InstanceType.PHYSICAL_HOST);
+      builder.physicalHost(
+          InstanceDetails.PHYSICAL_HOST.builder().instanceId(host.getUuid()).publicDns(host.getPublicDns()).build());
+    }
+    return builder.build();
   }
 
   boolean processExecutionHosts(String appId, Builder selectionParams, WorkflowStandardParams workflowStandardParams,
