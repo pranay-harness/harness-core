@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +39,6 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
-import java.io.IOException;
-
 public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
@@ -54,7 +51,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   protected static final String token = "token";
 
   @Before
-  public void setUp() throws HarnessException, IOException {
+  public void setUp() throws Exception {
     Application app = new Application();
     app.setName(APP_NAME);
     app.setUuid(APP_ID);
@@ -73,7 +70,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
     // 1. Create jenkins verification record
@@ -87,7 +84,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGetNullRestrictions() throws HarnessException, IOException {
+  public void testCRUDAndGetNullRestrictions() throws Exception {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
     // 1. Create jenkins verification record

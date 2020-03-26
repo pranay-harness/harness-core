@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +20,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
-import java.io.IOException;
 import java.util.UUID;
 
 public class InstanaConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
@@ -36,12 +34,12 @@ public class InstanaConfigYamlHandlerTest extends BaseSettingValueConfigYamlHand
   private Class yamlClass = InstanaConfig.Yaml.class;
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String instanaProviderName = "instana-" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createInstanaProviderNameVerificationProvider(instanaProviderName);
@@ -53,7 +51,7 @@ public class InstanaConfigYamlHandlerTest extends BaseSettingValueConfigYamlHand
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String instanaProviderName = "newRelic" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createInstanaProviderNameVerificationProvider(instanaProviderName);

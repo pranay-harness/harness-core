@@ -31,7 +31,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -215,7 +214,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);
@@ -253,7 +252,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);

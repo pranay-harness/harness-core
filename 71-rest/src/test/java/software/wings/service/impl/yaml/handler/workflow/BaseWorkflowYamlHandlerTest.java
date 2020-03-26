@@ -22,7 +22,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -64,7 +63,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
-import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -223,7 +221,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
   protected <Y extends BaseYaml, H extends WorkflowYamlHandler> void testFailures(String validYamlContent,
       String validYamlFilePath, String invalidYamlContent, String invalidYamlFilePath, H yamlHandler,
-      Class<Y> yamlClass) throws HarnessException, IOException {
+      Class<Y> yamlClass) throws Exception {
     ChangeContext<Y> changeContext = getChangeContext(validYamlContent, invalidYamlFilePath, yamlHandler);
 
     Y yamlObject = (Y) getYaml(validYamlContent, yamlClass);

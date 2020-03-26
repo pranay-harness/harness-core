@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +26,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +46,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   private Class yamlClass = ElasticLoadBalancerConfig.Yaml.class;
 
   @Before
-  public void setUp() throws HarnessException, IOException {
+  public void setUp() throws Exception {
     List<InfrastructureMapping> list = new ArrayList<>();
     PageResponse<InfrastructureMapping> pageResponse = new PageResponse<>();
     pageResponse.setResponse(list);
@@ -58,7 +56,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String name = "ELB" + System.currentTimeMillis();
 
     // 1. Create ELB config
@@ -71,7 +69,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String name = "ELB" + System.currentTimeMillis();
 
     // 1. Create ELB config record

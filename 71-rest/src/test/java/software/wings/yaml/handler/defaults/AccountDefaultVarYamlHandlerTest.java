@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +104,7 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(v1_validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);
@@ -151,7 +150,7 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(invalidYamlContent);

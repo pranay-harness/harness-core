@@ -14,7 +14,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -30,8 +29,6 @@ import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
-
-import java.io.IOException;
 
 /**
  * @author rktummala on 1/10/18
@@ -50,7 +47,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
@@ -92,7 +89,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     testFailures(MULTI_SERVICE_VALID_YAML_CONTENT, MULTI_SERVICE_VALID_YAML_FILE_PATH,
         MULTI_SERVICE_INVALID_YAML_CONTENT, MULTI_SERVICE_INVALID_YAML_FILE_PATH, yamlHandler,
         MultiServiceWorkflowYaml.class);

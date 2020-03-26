@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +19,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
-
-import java.io.IOException;
 
 public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private NewRelicConfigYamlHandler yamlHandler;
@@ -35,12 +32,12 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   private Class yamlClass = NewRelicConfig.Yaml.class;
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
 
     // 1. Create newRelic verification record
@@ -53,7 +50,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
 
     // 1. Create newRelic verification provider record

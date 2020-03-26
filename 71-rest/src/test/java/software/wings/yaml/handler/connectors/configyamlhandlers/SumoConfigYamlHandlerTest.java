@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +19,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SumoConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
-
-import java.io.IOException;
 
 public class SumoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private SumoConfigYamlHandler yamlHandler;
@@ -37,12 +34,12 @@ public class SumoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   private Class yamlClass = SumoConfig.Yaml.class;
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String sumoLogicProviderName = "SumoLogic" + System.currentTimeMillis();
 
     // 1. Create sumoLogic verification record
@@ -55,7 +52,7 @@ public class SumoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String sumoLogicProviderName = "SumoLogic" + System.currentTimeMillis();
 
     // 1. Create sumoLogic verification provider record

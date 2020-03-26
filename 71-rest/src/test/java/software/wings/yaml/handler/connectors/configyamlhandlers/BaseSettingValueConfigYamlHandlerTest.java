@@ -71,7 +71,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     return changeContext;
   }
 
-  protected void testCRUD(SettingValueYamlConfig settingValueYamlConfig) throws HarnessException, IOException {
+  protected void testCRUD(SettingValueYamlConfig settingValueYamlConfig) throws Exception {
     SettingAttribute settingAttributeSaved = settingValueYamlConfig.getSettingAttributeSaved();
     SettingValueYamlHandler yamlHandler = settingValueYamlConfig.getYamlHandler();
     String yamlFilePath = getYamlFilePath(settingValueYamlConfig.getName(), settingValueYamlConfig.getYamlDirPath());
