@@ -33,7 +33,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -247,9 +246,9 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     int totalTries = 0;
     while (totalTries <= 3) {
       try (Connection connection = timeScaleDBService.getDBConnection();
-           Statement statement = connection.createStatement()) {
-        String sqlStatement = DELETE_DUPLICATE.replace("?", getExecutionListAsString(executionIDs));
-        statement.execute(sqlStatement);
+           PreparedStatement statement = connection.prepareStatement(DELETE_DUPLICATE)) {
+        statement.setString(1, getExecutionListAsString(executionIDs));
+        statement.executeQuery();
         return;
       } catch (SQLException ex) {
         totalTries++;
