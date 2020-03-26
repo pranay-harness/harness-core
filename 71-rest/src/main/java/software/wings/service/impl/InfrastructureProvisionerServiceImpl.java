@@ -238,6 +238,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     checkForDuplicate(infrastructureProvisioner);
     populateDerivedFields(infrastructureProvisioner);
 
+    infrastructureProvisioner.setAccountId(appService.getAccountIdByAppId(infrastructureProvisioner.getAppId()));
+
     removeDuplicateVariables(infrastructureProvisioner);
     validateProvisioner(infrastructureProvisioner);
 

@@ -318,6 +318,7 @@ public class MigrationList {
         .add(Pair.of(298, GitCommitStatusMigration.class))
         .add(Pair.of(299, DataDogLogCvConfigMigration.class))
         .add(Pair.of(300, HostConnectionTypeMigration.class))
+        .add(Pair.of(301, AddAccountIdToAppEntities.class))
         .build();
   }
 }
