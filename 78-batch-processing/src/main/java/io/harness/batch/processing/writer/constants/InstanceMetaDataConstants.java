@@ -23,6 +23,7 @@ public class InstanceMetaDataConstants {
   public static final String PARENT_RESOURCE_CPU = "parent_resource_cpu";
   public static final String PARENT_RESOURCE_MEMORY = "parent_resource_memory";
   public static final String CONTAINER_INSTANCE_ARN = "container_instance_arn";
+  public static final String ACTUAL_PARENT_RESOURCE_ID = "actual_parent_resource_id";
 
   private InstanceMetaDataConstants() {}
 }
