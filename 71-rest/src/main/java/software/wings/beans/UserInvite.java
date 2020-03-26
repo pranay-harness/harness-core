@@ -14,6 +14,10 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
@@ -27,8 +31,9 @@ import java.util.List;
  */
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-//@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
-// handle update with insert and then uncomment
+@Indexes(@Index(
+    fields = { @Field("accountId")
+               , @Field("email") }, options = @IndexOptions(name = "accountId", unique = true)))
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
 public class UserInvite extends Base {
   public static final String UUID_KEY = "uuid";
