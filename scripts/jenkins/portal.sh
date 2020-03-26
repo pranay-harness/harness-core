@@ -137,3 +137,16 @@ cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
 cp ../../91-model-gen-tool/config-datagen.yml .
 cd ../..
+
+mkdir -p dist/delegate-proxy
+cd dist/delegate-proxy
+cp ../../dockerization/delegate-proxy/setup.sh .
+cp ../../dockerization/delegate-proxy/Dockerfile .
+cp ../../dockerization/delegate-proxy/Dockerfile-gcr .
+cp ../../dockerization/delegate-proxy/nginx.conf .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
