@@ -125,10 +125,10 @@ public class ScimUserServiceImpl implements ScimUserService {
       }
     };
 
-    Map<String, String> emailMap = new HashMap<String, String>() {
+    Map<String, Object> emailMap = new HashMap<String, Object>() {
       {
         put(VALUE, user.getEmail());
-        put(PRIMARY, Boolean.toString(true));
+        put(PRIMARY, true);
       }
     };
 
