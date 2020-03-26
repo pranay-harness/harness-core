@@ -841,8 +841,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setAccountId(ACCOUNT_ID + "1");
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
-    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
+    assertThat(delegateService.filter(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
   @Test
@@ -870,8 +869,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = BUILDER.build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
-    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(delegateService.filter(delegate.getAccountId(), DELEGATE_ID)).isTrue();
   }
 
   @Test

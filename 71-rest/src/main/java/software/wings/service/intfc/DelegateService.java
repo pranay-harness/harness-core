@@ -96,7 +96,7 @@ public interface DelegateService extends OwnedByAccount {
   void processDelegateResponse(
       String accountId, String delegateId, String taskId, @Valid DelegateTaskResponse response);
 
-  boolean filter(String delegateId, DelegateTask task);
+  boolean filter(String accountId, String delegateId);
 
   boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
 
