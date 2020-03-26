@@ -22,6 +22,7 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -59,6 +60,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   private static final String DEPLOYMENT_SUMMARY_ID = "deployment_summary_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
+  private static final String NODE_INSTANCE_ID = "node_instance_id";
+  private static final String ACTUAL_PARENT_RESOURCE_ID = "actual_parent_resource_id";
 
   private final double CPU_UNIT_SECONDS = 400;
   private final double MEMORY_MB_SECONDS = 400;
@@ -76,6 +79,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private BillingCalculationService billingCalculationService;
   @Mock private UtilizationDataServiceImpl utilizationDataService;
   @Mock private BillingDataGenerationValidator billingDataGenerationValidator;
+  @Mock private InstanceDataService instanceDataService;
 
   @Before
   public void setup() {
@@ -112,6 +116,52 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     HarnessServiceInfo harnessServiceInfo = instanceBillingDataWriter.getHarnessServiceInfo(instanceData);
     assertThat(harnessServiceInfo).isNotNull();
     assertThat(harnessServiceInfo.getAppId()).isNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetActualParentInstanceId() {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, ACTUAL_PARENT_RESOURCE_ID);
+    InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
+    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    assertThat(parentInstanceId).isEqualTo(ACTUAL_PARENT_RESOURCE_ID);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetParentInstanceId() {
+    InstanceData nodeInstanceData = InstanceData.builder().instanceId(NODE_INSTANCE_ID).build();
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, PARENT_RESOURCE_ID);
+    when(instanceDataService.fetchInstanceDataWithName(any(), any(), any(), any())).thenReturn(nodeInstanceData);
+    InstanceData instanceData = InstanceData.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .clusterId(CLUSTER_ID)
+                                    .instanceType(InstanceType.K8S_POD)
+                                    .metaData(metaData)
+                                    .build();
+    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    assertThat(parentInstanceId).isEqualTo(NODE_INSTANCE_ID);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetParentInstanceName() {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, PARENT_RESOURCE_ID);
+    when(instanceDataService.fetchInstanceDataWithName(any(), any(), any(), any())).thenReturn(null);
+    InstanceData instanceData = InstanceData.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .clusterId(CLUSTER_ID)
+                                    .instanceType(InstanceType.K8S_POD)
+                                    .metaData(metaData)
+                                    .build();
+    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    assertThat(parentInstanceId).isEqualTo(PARENT_RESOURCE_ID);
   }
 
   @Test

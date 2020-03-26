@@ -13,6 +13,7 @@ import io.harness.batch.processing.billing.writer.support.BillingDataGenerationV
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -34,6 +35,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private UtilizationDataServiceImpl utilizationDataService;
   @Autowired private BillingDataGenerationValidator billingDataGenerationValidator;
+  @Autowired private InstanceDataService instanceDataService;
 
   private JobParameters parameters;
 
@@ -100,8 +102,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .envId(harnessServiceInfo.getEnvId())
                     .cpuUnitSeconds(billingData.getCpuUnitSeconds())
                     .memoryMbSeconds(billingData.getMemoryMbSeconds())
-                    .parentInstanceId(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData))
+                    .parentInstanceId(getParentInstanceId(instanceData))
                     .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
                     .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
                     .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
@@ -123,6 +124,25 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
             billingDataService.create(instanceBillingData);
           });
     });
+  }
+
+  String getParentInstanceId(InstanceData instanceData) {
+    String actualParentResourceId =
+        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceData);
+    if (null == actualParentResourceId && InstanceType.K8S_POD == instanceData.getInstanceType()) {
+      String parentResourceId =
+          getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
+      if (null != parentResourceId) {
+        InstanceData parentInstanceData = instanceDataService.fetchInstanceDataWithName(
+            instanceData.getAccountId(), instanceData.getClusterId(), parentResourceId, Instant.now().toEpochMilli());
+        if (null != parentInstanceData) {
+          return parentInstanceData.getInstanceId();
+        } else {
+          return parentResourceId;
+        }
+      }
+    }
+    return actualParentResourceId;
   }
 
   String getCloudServiceName(InstanceData instanceData) {

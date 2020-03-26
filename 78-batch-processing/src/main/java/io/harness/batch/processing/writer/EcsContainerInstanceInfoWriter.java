@@ -58,6 +58,7 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
             metaData.put(InstanceMetaDataConstants.REGION, ecsContainerInstanceDescription.getRegion());
             metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
             metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, ec2InstanceId);
+            metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, ec2InstanceId);
 
             Resource resource = Resource.builder()
                                     .cpuUnits(ecsContainerInstanceResource.getCpu())

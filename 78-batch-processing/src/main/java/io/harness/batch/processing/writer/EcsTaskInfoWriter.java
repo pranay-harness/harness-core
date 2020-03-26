@@ -69,6 +69,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
               metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
                   String.valueOf(containerInstantData.getTotalResource().getMemoryMb()));
               metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, containerInstanceId);
+              metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, containerInstanceId);
             }
             metaData.put(InstanceMetaDataConstants.TASK_ID, taskId);
             metaData.put(InstanceMetaDataConstants.REGION, ecsTaskDescription.getRegion());
