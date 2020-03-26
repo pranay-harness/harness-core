@@ -20,9 +20,10 @@ public class InstanceDetails {
   private PCF pcf;
   private AWS aws;
   private HELM helm;
+  private PHYSICAL_HOST physicalHost;
   private InstanceType instanceType;
 
-  public enum InstanceType { PCF, AWS, HELM }
+  public enum InstanceType { PCF, AWS, HELM, PHYSICAL_HOST }
 
   @Value
   @Builder
@@ -53,5 +54,12 @@ public class InstanceDetails {
     private String ip;
     private String podName;
     private String dockerId;
+  }
+
+  @Value
+  @Builder
+  public static class PHYSICAL_HOST {
+    private String publicDns;
+    private String instanceId;
   }
 }
