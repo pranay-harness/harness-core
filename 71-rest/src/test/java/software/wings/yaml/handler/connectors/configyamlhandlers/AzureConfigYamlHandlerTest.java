@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.CCMSettingService;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,8 +21,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.intfc.AccountService;
-
-import java.io.IOException;
 
 public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @Mock AccountService accountService;
@@ -44,7 +41,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String azureConfigName = "Azure" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAzureConfigProvider(azureConfigName);
@@ -56,7 +53,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String azureConfigName = "Azure" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAzureConfigProvider(azureConfigName);

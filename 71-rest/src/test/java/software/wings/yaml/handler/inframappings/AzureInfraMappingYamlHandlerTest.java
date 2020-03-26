@@ -1,7 +1,7 @@
 package software.wings.yaml.handler.inframappings;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,12 +16,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
-import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,8 +54,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
-import java.io.IOException;
-
 public class AzureInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
   @Mock protected ServiceResourceService serviceResourceService;
@@ -67,7 +62,6 @@ public class AzureInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected EnvironmentService environmentService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
-  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
   @InjectMocks @Inject protected YamlHelper yamlHelper;
@@ -143,7 +137,7 @@ public class AzureInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     ChangeContext<AzureInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
@@ -175,9 +169,9 @@ public class AzureInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     ChangeContext<AzureInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
