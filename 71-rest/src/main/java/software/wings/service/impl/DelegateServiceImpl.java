@@ -105,6 +105,7 @@ import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
+import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HPersistence;
@@ -845,8 +846,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    * @return
    */
   private JreConfig getJreConfig(String accountId) {
-    final boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
-    final boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
+    boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
+    boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
 
     String jreVersion = upgradeJre ? mainConfiguration.getMigrateToJre() : mainConfiguration.getCurrentJre();
     JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
@@ -2143,7 +2144,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
     if (task != null) {
-      logger.info("Task assigned to delegate");
+      try (
+          DelayLogContext ignore = new DelayLogContext(task.getLastUpdatedAt() - task.getCreatedAt(), OVERRIDE_ERROR)) {
+        logger.info("Task assigned to delegate");
+      }
       task.getData().setParameters(delegateTask.getData().getParameters());
       return resolvePreAssignmentExpressions(task);
     }
