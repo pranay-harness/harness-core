@@ -56,10 +56,7 @@ public enum FeatureName {
   SEND_SLACK_NOTIFICATION_FROM_DELEGATE,
   LOGS_V2_247,
   WEEKLY_WINDOW,
-  APM_CUSTOM_THRESHOLDS,
   SWITCH_GLOBAL_TO_GCP_KMS,
-  FAIL_FAST_THRESHOLDS_WORKFLOW,
-  FAIL_FAST_THRESHOLDS_SERVICEGUARD,
   SIDE_NAVIGATION,
   WORKFLOW_TS_RECORDS_NEW,
   /* This is marked deprecated as this feature is not used anywhere except a migration. Waiting for all the customers
