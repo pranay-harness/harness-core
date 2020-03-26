@@ -15,11 +15,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Base;
-import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.Pipeline;
-import software.wings.beans.Service;
-import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
@@ -47,11 +43,7 @@ public class AddAccountIdToAppEntities implements Migration {
         if (isNotEmpty(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());
-          bulkSetAccountId(account.getUuid(), Service.class, appIdSet);
-          bulkSetAccountId(account.getUuid(), Environment.class, appIdSet);
           bulkSetAccountId(account.getUuid(), InfrastructureProvisioner.class, appIdSet);
-          bulkSetAccountId(account.getUuid(), Workflow.class, appIdSet);
-          bulkSetAccountId(account.getUuid(), Pipeline.class, appIdSet);
         }
       }
     }
