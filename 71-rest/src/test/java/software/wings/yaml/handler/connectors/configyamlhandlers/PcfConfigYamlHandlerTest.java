@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,8 +20,6 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
-
-import java.io.IOException;
 
 public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private PcfConfigYamlHandler yamlHandler;
@@ -39,7 +36,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String pcfConfigName = "Pcf" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createPCFConfigProvider(pcfConfigName);
@@ -51,7 +48,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String pcfConfigName = "Pcf" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createPCFConfigProvider(pcfConfigName);

@@ -64,7 +64,7 @@ public class User extends Base implements Principal {
 
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
+  @Indexed @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
 
   @Transient private List<Account> supportAccounts = new ArrayList<>();
 

@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,8 +18,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsPATConfigYamlHandler;
-
-import java.io.IOException;
 
 public class AzureArtifactsPATConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private AzureArtifactsPATConfigYamlHandler yamlHandler;
@@ -32,7 +29,7 @@ public class AzureArtifactsPATConfigYamlHandlerTest extends BaseSettingValueConf
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String azureArtifactsSettingName = AZURE_ARTIFACTS_SETTING_NAME + System.currentTimeMillis();
     SettingAttribute settingAttributeSaved = createAzureArtifactsConnector(azureArtifactsSettingName);
     assertThat(settingAttributeSaved.getName()).isEqualTo(azureArtifactsSettingName);
@@ -42,7 +39,7 @@ public class AzureArtifactsPATConfigYamlHandlerTest extends BaseSettingValueConf
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String azureArtifactsSettingName = AZURE_ARTIFACTS_SETTING_NAME + System.currentTimeMillis();
     SettingAttribute settingAttributeSaved = createAzureArtifactsConnector(azureArtifactsSettingName);
     testFailureScenario(generateSettingValueYamlConfig(azureArtifactsSettingName, settingAttributeSaved));

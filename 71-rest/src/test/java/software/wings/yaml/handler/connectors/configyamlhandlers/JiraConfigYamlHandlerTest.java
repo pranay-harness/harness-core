@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +19,6 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
-
-import java.io.IOException;
 
 public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private JiraConfigYamlHandler yamlHandler;
@@ -35,12 +32,12 @@ public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
       + "type: JIRA";
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String name = "JIRA" + System.currentTimeMillis();
 
     // 1. Create JIRA record

@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +19,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
-
-import java.io.IOException;
 
 public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private SmtpConfigYamlHandler yamlHandler;
@@ -40,12 +37,12 @@ public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   private Class yamlClass = SmtpConfig.Yaml.class;
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String name = "SMTP" + System.currentTimeMillis();
 
     // 1. Create SMTP record
@@ -58,7 +55,7 @@ public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String name = "SMTP" + System.currentTimeMillis();
 
     // 1. Create SMTP record

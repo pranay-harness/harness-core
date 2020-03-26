@@ -58,7 +58,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
@@ -67,7 +67,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     testCRUDWithYamlWithMultilineUserInput();
   }
 
-  private void testCRUDWithYamlWithMultilineUserInput() throws IOException, HarnessException {
+  private void testCRUDWithYamlWithMultilineUserInput() throws Exception {
     String yamlString = BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT;
 
     for (int count = 0; count < 3; count++) {
@@ -132,7 +132,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     testFailures(BASIC_VALID_YAML_CONTENT, BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic.yaml", BASIC_INVALID_YAML_CONTENT,
         BASIC_INVALID_YAML_FILE_PATH, yamlHandler, BasicWorkflowYaml.class);
   }

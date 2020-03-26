@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,8 +18,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
-
-import java.io.IOException;
 
 public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private HttpHelmRepoConfigYamlHandler yamlHandler;
@@ -36,7 +33,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createHttpHelmRepoConnector(httpHelmRepoSettingName);
@@ -48,7 +45,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createHttpHelmRepoConnector(httpHelmRepoSettingName);

@@ -28,7 +28,6 @@ import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
-import java.io.IOException;
 import java.util.Collections;
 
 public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
@@ -40,12 +39,12 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   protected static final String token = "token";
 
   @Before
-  public void setUp() throws HarnessException, IOException {}
+  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
     // 1. Create jenkins verification record
@@ -58,7 +57,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
 
     // 1. Create jenkins verification provider record

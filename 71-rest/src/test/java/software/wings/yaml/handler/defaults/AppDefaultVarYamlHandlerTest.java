@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,7 +110,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
     when(yamlHelper.getAppName(anyString())).thenReturn(APP_NAME);
     Application app = new Application();
@@ -164,7 +163,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
 
     // Invalid yaml path

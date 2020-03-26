@@ -18,7 +18,6 @@ import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,7 +90,7 @@ public class ApplicationManifestYamlHandlerTest extends WingsBaseTest {
     reset(applicationManifestService);
   }
 
-  private void shouldNotDeleteDeleteK8sManifest() throws HarnessException {
+  private void shouldNotDeleteDeleteK8sManifest() throws Exception {
     doReturn(ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId("service").build())
         .when(yamlHandler)
         .get(anyString(), anyString());

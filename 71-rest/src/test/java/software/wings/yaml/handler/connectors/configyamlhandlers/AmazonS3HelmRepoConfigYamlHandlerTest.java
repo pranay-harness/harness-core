@@ -11,7 +11,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +22,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
-
-import java.io.IOException;
 
 public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private AmazonS3HelmRepoConfigYamlHandler yamlHandler;
@@ -62,7 +59,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAmazonS3HelmRepoConnector(amazonS3HelmRepoSettingName);
@@ -74,7 +71,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAmazonS3HelmRepoConnector(amazonS3HelmRepoSettingName);
