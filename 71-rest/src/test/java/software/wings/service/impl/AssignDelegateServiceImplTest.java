@@ -17,6 +17,7 @@ import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
@@ -300,6 +301,57 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
       assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    }
+  }
+
+  @Value
+  @Builder
+  public static class NameTestData {
+    List<String> taskTags;
+    String delegateName;
+    String hostName;
+    boolean assignable;
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void assignByNames() {
+    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+
+    List<NameTestData> tests =
+        ImmutableList.<NameTestData>builder()
+            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).assignable(false).build())
+            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).delegateName("A").assignable(true).build())
+            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).hostName("A").assignable(true).build())
+            .add(NameTestData.builder().taskTags(ImmutableList.of("a")).hostName("A").assignable(true).build())
+            .add(NameTestData.builder()
+                     .taskTags(ImmutableList.of("a", "b"))
+                     .delegateName("A")
+                     .hostName("b")
+                     .assignable(true)
+                     .build())
+            .build();
+
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .uuid(DELEGATE_ID)
+                                          .includeScopes(emptyList())
+                                          .excludeScopes(emptyList());
+
+    for (NameTestData test : tests) {
+      Delegate delegate = delegateBuilder.delegateName(test.getDelegateName()).hostName(test.getHostName()).build();
+      when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+      DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
+      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
     }
   }
 

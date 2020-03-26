@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -44,9 +45,11 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -150,14 +153,28 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   private boolean canAssignTags(Delegate delegate, List<String> tags) {
-    return isEmpty(tags)
-        || (isNotEmpty(delegate.getTags())
-               && trimmedLowercaseSet(delegate.getTags()).containsAll(trimmedLowercaseSet(tags)));
+    if (isEmpty(tags)) {
+      return true;
+    }
+
+    Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : trimmedLowercaseSet(delegate.getTags());
+
+    if (featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, delegate.getAccountId())) {
+      if (delegate.getHostName() != null) {
+        selectors.add(delegate.getHostName().trim().toLowerCase());
+      }
+
+      if (delegate.getDelegateName() != null) {
+        selectors.add(delegate.getDelegateName().trim().toLowerCase());
+      }
+    }
+
+    return isNotEmpty(selectors) && selectors.containsAll(trimmedLowercaseSet(tags));
   }
 
   private boolean scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
-    final boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
     if (!scope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
