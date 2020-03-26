@@ -15,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,7 +38,6 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
-import java.io.IOException;
 import java.util.Collections;
 
 public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
@@ -71,7 +69,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     ChangeContext<Yaml> changeContext = getChangeContext();
     Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yaml);

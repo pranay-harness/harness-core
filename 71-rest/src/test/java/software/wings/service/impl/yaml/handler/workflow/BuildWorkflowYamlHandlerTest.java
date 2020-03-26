@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -35,8 +34,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.BuildWorkflowYaml;
-
-import java.io.IOException;
 
 /**
  * @author rktummala on 1/10/18
@@ -55,7 +52,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testCRUDAndGet() throws HarnessException, IOException {
+  public void testCRUDAndGet() throws Exception {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
@@ -89,10 +86,11 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BUILD_VALID_YAML_FILE_PATH);
     assertThat(deletedWorkflow).isNull();
   }
+
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void testCRUDAndGetInfrDef() throws HarnessException, IOException {
+  public void testCRUDAndGetInfrDef() throws Exception {
     Mockito.when(featureFlagService.isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
@@ -126,7 +124,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testFailures() throws HarnessException, IOException {
+  public void testFailures() throws Exception {
     testFailures(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, BUILD_INVALID_YAML_CONTENT,
         BUILD_INVALID_YAML_FILE_PATH, yamlHandler, BuildWorkflowYaml.class);
   }
