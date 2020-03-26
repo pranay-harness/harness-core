@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.MAX_RETRIES;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
@@ -36,7 +37,7 @@ public class RequestExecutor {
   private static final String DATADOG_APP_MASK = "application_key=([^&]*)";
 
   @Inject private DelegateLogService delegateLogService;
-  private static final int MAX_RETRIES = 2;
+
   public <U> U executeRequest(Call<U> request) {
     try {
       Response<U> response = request.clone().execute();

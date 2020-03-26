@@ -23,6 +23,7 @@ public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
   public static final long CV_TASK_TTL_MONTHS = 1;
   public static final long ACTIVITY_LOG_TTL_WEEKS = 2;
+  public static final int MAX_RETRIES = 2;
   /*
     New Relic constants
      */
