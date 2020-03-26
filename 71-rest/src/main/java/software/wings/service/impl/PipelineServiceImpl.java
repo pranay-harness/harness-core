@@ -871,7 +871,7 @@ public class PipelineServiceImpl implements PipelineService {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
-        handleNonEntityVariables(pipelineVariables, variable, value);
+        handleNonEntityVariables(pipelineVariables, variable, value, templatedPipeline);
       } else {
         // Entity variables.
         handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
@@ -924,11 +924,21 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables, templatedPipeline);
   }
 
-  private void handleNonEntityVariables(List<Variable> pipelineVariables, Variable variable, String value) {
+  private void handleNonEntityVariables(
+      List<Variable> pipelineVariables, Variable variable, String value, boolean templatedPipelines) {
     // Non-entity variables. Here we can handle values like ${myTeam} for non entity variables
-    if (isEmpty(value) && !variable.isFixed()) {
-      if (!contains(pipelineVariables, variable.getName())) {
-        pipelineVariables.add(variable.cloneInternal());
+    if (!variable.isFixed()) {
+      if (isEmpty(value)) {
+        if (!contains(pipelineVariables, variable.getName())) {
+          pipelineVariables.add(variable.cloneInternal());
+        }
+      } else if (templatedPipelines && matchesVariablePattern(value) && !value.contains(".")) {
+        String variableName = getName(value);
+        if (!contains(pipelineVariables, variableName)) {
+          Variable newVar = variable.cloneInternal();
+          newVar.setName(variableName);
+          pipelineVariables.add(newVar);
+        }
       }
     }
   }
@@ -963,6 +973,14 @@ public class PipelineServiceImpl implements PipelineService {
       storedVar.getMetadata().remove(Variable.RELATED_FIELD);
     }
 
+    String newDeploymentTypedVal =
+        joinFieldValuesMetadata(storedVar.obtainDeploymentTypeField(), variable.obtainDeploymentTypeField());
+    if (isNotEmpty(newDeploymentTypedVal)) {
+      storedVar.getMetadata().put(Variable.DEPLOYMENT_TYPE, newDeploymentTypedVal);
+    } else {
+      storedVar.getMetadata().remove(Variable.DEPLOYMENT_TYPE);
+    }
+
     String mergedInfraIdVal = joinFieldValuesMetadata(storedVar.obtainInfraIdField(), variable.obtainInfraIdField());
     if (isNotEmpty(mergedInfraIdVal)) {
       storedVar.getMetadata().put(Variable.INFRA_ID, mergedInfraIdVal);
@@ -972,11 +990,12 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validateArtifactType(String storedArtifactTypeField, String newArtifactTypeField, String varName) {
-    if (isEmpty(storedArtifactTypeField) || isEmpty(newArtifactTypeField)
-        || !storedArtifactTypeField.equals(newArtifactTypeField)) {
-      throw new InvalidRequestException("The same Workflow variable name " + varName
-              + " cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.",
-          USER);
+    if (isNotEmpty(storedArtifactTypeField) && isNotEmpty(newArtifactTypeField)) {
+      if (!storedArtifactTypeField.equals(newArtifactTypeField)) {
+        throw new InvalidRequestException("The same Workflow variable name " + varName
+                + " cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.",
+            USER);
+      }
     }
   }
 
@@ -985,6 +1004,8 @@ public class PipelineServiceImpl implements PipelineService {
       throw new UnexpectedException("Infra variable" + storedVar.getName() + " stored without any Metadata");
     }
     validateEnvId(storedVar.obtainEnvIdField(), variable.obtainEnvIdField(), storedVar.getName());
+    validateDeploymentType(
+        storedVar.obtainDeploymentTypeField(), variable.obtainDeploymentTypeField(), storedVar.getName());
 
     String newRelatedFiledVal = joinFieldValuesMetadata(storedVar.obtainRelatedField(), variable.obtainRelatedField());
     if (isNotEmpty(newRelatedFiledVal)) {
@@ -999,6 +1020,17 @@ public class PipelineServiceImpl implements PipelineService {
       storedVar.getMetadata().put(Variable.SERVICE_ID, mergedServiceIdsVal);
     } else {
       storedVar.getMetadata().remove(Variable.SERVICE_ID);
+    }
+  }
+
+  private void validateDeploymentType(String storedDeploymentTypeField, String newDeploymentTypeField, String name) {
+    if (isEmpty(storedDeploymentTypeField) || isEmpty(newDeploymentTypeField)) {
+      return;
+    }
+    if (!storedDeploymentTypeField.equals(newDeploymentTypeField)) {
+      throw new InvalidRequestException("The same Workflow variable name " + name
+              + " cannot be used for InfraDefinitions using different DeploymentType. Change the name of the variable in one or more Workflow.",
+          USER);
     }
   }
 

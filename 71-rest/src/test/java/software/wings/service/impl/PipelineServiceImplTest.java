@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -48,6 +49,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -56,6 +59,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
@@ -78,6 +82,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock YamlPushService mockYamlPushService;
   @Mock WorkflowService mockWorkflowService;
   @Mock private LimitCheckerFactory mockLimitCheckerFactory;
+  @Mock protected FeatureFlagService featureFlagService;
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
@@ -728,5 +733,111 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("env");
     assertThat(pipelineVariables.get(0).getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void setPipelineVariablesNonEntityVars() {
+    Variable customeVarWorkflow = aVariable().type(VariableType.TEXT).name("customVar").build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(customeVarWorkflow);
+    Workflow workflow =
+        aWorkflow()
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .accountId("ACCOUNT_ID")
+            .build();
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("customVar");
+    assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
+
+    pseWorkflowVariables.put("customVar", "val1");
+    pipelineVariables = new ArrayList<>();
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    assertThat(pipelineVariables).isEmpty();
+
+    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
+    pseWorkflowVariables.put("customVar", "${service.name}");
+    pipelineVariables = new ArrayList<>();
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    assertThat(pipelineVariables).isEmpty();
+
+    pseWorkflowVariables.put("customVar", "${abc}");
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("abc");
+    assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
+
+    pseWorkflowVariables.remove("customVar");
+    pipelineVariables = new ArrayList<>();
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("customVar");
+    assertThat(pipelineVariables.get(0).getType()).isEqualTo(VariableType.TEXT);
+  }
+
+  // When two phase has diff env id, same service var, and diff infra id. FF on
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void setPipelineVariablesTC_2() {
+    HashMap<String, Object> metadataEnv = new HashMap<>();
+    metadataEnv.put(Variable.RELATED_FIELD, "InfraDefinition_ECS");
+    metadataEnv.put(Variable.ENTITY_TYPE, ENVIRONMENT);
+
+    Variable envVarWorkflow = aVariable().entityType(ENVIRONMENT).name("Environment").metadata(metadataEnv).build();
+
+    HashMap<String, Object> metadataInfra = new HashMap<>();
+    metadataInfra.put(Variable.RELATED_FIELD, "Service");
+    metadataInfra.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    metadataInfra.put(Variable.DEPLOYMENT_TYPE, DeploymentType.SSH.name());
+    Variable infraVarWorkflow =
+        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("InfraDefinition_ECS").metadata(metadataInfra).build();
+
+    HashMap<String, Object> metadataSrv = new HashMap<>();
+    metadataSrv.put(Variable.RELATED_FIELD, "InfraDefinition_ECS");
+    metadataSrv.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataSrv.put(Variable.DEPLOYMENT_TYPE, DeploymentType.SSH.name());
+    Variable srvVarWorkflow = aVariable().entityType(SERVICE).name("Service").metadata(metadataSrv).build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(envVarWorkflow);
+    userVariables.add(infraVarWorkflow);
+    userVariables.add(srvVarWorkflow);
+
+    Workflow workflow =
+        aWorkflow()
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .accountId("ACCOUNT_ID")
+            .build();
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("Environment", "E1");
+    pseWorkflowVariables.put("InfraDefinition_ECS", "I1");
+    pseWorkflowVariables.put("Service", "${srv}");
+
+    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+
+    Map<String, String> pse2WorkflowVariables = new HashMap<>();
+    pse2WorkflowVariables.put("Environment", "E2");
+    pse2WorkflowVariables.put("InfraDefinition_ECS", "I2");
+    pse2WorkflowVariables.put("Service", "${srv}");
+    PipelineStageElement pse2 = PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).build();
+
+    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
+
+    pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
+    pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
+
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("srv");
+    assertThat(pipelineVariables.get(0).getMetadata().get(Variable.INFRA_ID)).isEqualTo("I1,I2");
   }
 }

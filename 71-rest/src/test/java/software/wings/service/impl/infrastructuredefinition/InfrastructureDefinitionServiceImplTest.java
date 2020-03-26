@@ -1,9 +1,14 @@
 package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAUNAK;
 import static io.harness.rule.OwnerRule.RIHAZ;
@@ -47,6 +52,8 @@ import com.google.common.collect.Maps;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
@@ -955,5 +962,189 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
         APP_ID, INFRA_DEFINITION_ID, SERVICE_ID, "EXPRESSION");
 
     assertThat(count).isEqualTo("0");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListInfraDefinitionErros() {
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("ssh-id")
+                                               .name("ssh")
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition k8sInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("k8s-id")
+                                               .name("k8s")
+                                               .deploymentType(DeploymentType.KUBERNETES)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition nullInfraDef =
+        InfrastructureDefinition.builder().uuid("null-id").name("null").deploymentType(null).appId(APP_ID).build();
+    InfrastructureDefinition scopedSSHInfraDef = InfrastructureDefinition.builder()
+                                                     .uuid("ssh-id-scoped")
+                                                     .name("ssh-scoped")
+                                                     .deploymentType(DeploymentType.SSH)
+                                                     .appId(APP_ID)
+                                                     .scopedToServices(asList("service1"))
+                                                     .build();
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    PageResponse<InfrastructureDefinition> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(sshInfraDef, k8sInfraDef, nullInfraDef, scopedSSHInfraDef));
+    when(wingsPersistence.query(InfrastructureDefinition.class, pageRequest)).thenReturn(pageResponse);
+
+    PageResponse<InfrastructureDefinition> response = infrastructureDefinitionService.list(pageRequest);
+    assertThat(response).isNotNull();
+    assertThat(response.getResponse().size()).isEqualTo(4);
+
+    queryParams.put("serviceId", Collections.singletonList("s1"));
+    Service service = Service.builder().deploymentType(DeploymentType.SSH).build();
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
+
+    assertThatThrownBy(() -> infrastructureDefinitionService.list(pageRequest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("AppId is mandatory for service-based filtering");
+
+    queryParams.put("appId", asList("app1", "app2"));
+    assertThatThrownBy(() -> infrastructureDefinitionService.list(pageRequest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("More than 1 app not supported for listing infra definitions");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListInfraDefinitionByService() {
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("ssh-id")
+                                               .name("ssh")
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition k8sInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("k8s-id")
+                                               .name("k8s")
+                                               .deploymentType(DeploymentType.KUBERNETES)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition nullInfraDef =
+        InfrastructureDefinition.builder().uuid("null-id").name("null").deploymentType(null).appId(APP_ID).build();
+    InfrastructureDefinition scopedSSHInfraDef = InfrastructureDefinition.builder()
+                                                     .uuid("ssh-id-scoped")
+                                                     .name("ssh-scoped")
+                                                     .deploymentType(DeploymentType.SSH)
+                                                     .appId(APP_ID)
+                                                     .scopedToServices(asList("service1"))
+                                                     .build();
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("serviceId", Collections.singletonList("s1"));
+    Service service = Service.builder().deploymentType(DeploymentType.SSH).build();
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
+
+    queryParams.put("appId", Collections.singletonList(APP_ID));
+    PageResponse<InfrastructureDefinition> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(sshInfraDef, nullInfraDef, scopedSSHInfraDef));
+    when(wingsPersistence.query(InfrastructureDefinition.class, pageRequest)).thenReturn(pageResponse);
+
+    PageResponse<InfrastructureDefinition> response = infrastructureDefinitionService.list(pageRequest);
+    assertThat(response).isNotNull();
+    assertThat(response.getResponse().size()).isEqualTo(3);
+
+    assertThat(pageRequest.getFilters().size()).isEqualTo(2);
+    assertThat(pageRequest.getFilters().get(0).getFieldName()).isEqualTo("deploymentType");
+    assertThat(pageRequest.getFilters().get(0).getOp()).isEqualTo(EQ);
+    assertThat(pageRequest.getFilters().get(0).getFieldValues().length).isEqualTo(1);
+    assertThat(pageRequest.getFilters().get(0).getFieldValues()[0]).isEqualTo("SSH");
+
+    assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("scopedToServices");
+    assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(OR);
+    assertThat(pageRequest.getFilters().get(1).getFieldValues().length).isEqualTo(2);
+    SearchFilter searchFilter1 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[0];
+    assertThat(searchFilter1.getOp()).isEqualTo(NOT_EXISTS);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListInfraDefinitionTwoServiceDifferentDeploymentType() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("serviceId", asList("ssh", "k8s"));
+    Service sshService = Service.builder().deploymentType(DeploymentType.SSH).name("ssh").build();
+    when(serviceResourceService.get(APP_ID, "ssh")).thenReturn(sshService);
+    Service k8sService = Service.builder().deploymentType(DeploymentType.KUBERNETES).name("k8s").build();
+    when(serviceResourceService.get(APP_ID, "k8s")).thenReturn(k8sService);
+
+    queryParams.put("appId", Collections.singletonList(APP_ID));
+
+    assertThatThrownBy(() -> infrastructureDefinitionService.list(pageRequest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Cannot load infra for different deployment type services [ssh, k8s]");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListInfraDefinitionByDeploymentType() {
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("ssh-id")
+                                               .name("ssh")
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition k8sInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("k8s-id")
+                                               .name("k8s")
+                                               .deploymentType(DeploymentType.KUBERNETES)
+                                               .appId(APP_ID)
+                                               .build();
+    InfrastructureDefinition nullInfraDef =
+        InfrastructureDefinition.builder().uuid("null-id").name("null").deploymentType(null).appId(APP_ID).build();
+    InfrastructureDefinition scopedSSHInfraDef = InfrastructureDefinition.builder()
+                                                     .uuid("ssh-id-scoped")
+                                                     .name("ssh-scoped")
+                                                     .deploymentType(DeploymentType.SSH)
+                                                     .appId(APP_ID)
+                                                     .scopedToServices(asList("service1"))
+                                                     .build();
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("deploymentTypeFromMetadata", asList("SSH", "KUBERNETES"));
+    PageResponse<InfrastructureDefinition> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(sshInfraDef, nullInfraDef, scopedSSHInfraDef, k8sInfraDef));
+    when(wingsPersistence.query(InfrastructureDefinition.class, pageRequest)).thenReturn(pageResponse);
+
+    PageResponse<InfrastructureDefinition> response = infrastructureDefinitionService.list(pageRequest);
+    assertThat(response).isNotNull();
+    assertThat(response.getResponse().size()).isEqualTo(4);
+
+    assertThat(pageRequest.getFilters().size()).isEqualTo(1);
+    assertThat(pageRequest.getFilters().get(0).getFieldName()).isEqualTo("deploymentType");
+    assertThat(pageRequest.getFilters().get(0).getOp()).isEqualTo(IN);
+    assertThat(pageRequest.getFilters().get(0).getFieldValues().length).isEqualTo(2);
+    assertThat(pageRequest.getFilters().get(0).getFieldValues()[0]).isEqualTo("SSH");
+    assertThat(pageRequest.getFilters().get(0).getFieldValues()[1]).isEqualTo("KUBERNETES");
   }
 }

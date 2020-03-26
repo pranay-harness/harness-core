@@ -5,7 +5,9 @@ import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -43,14 +45,17 @@ import com.google.common.base.Joiner;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,6 +338,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       populatePhaseSteps(rollbackProvisioners, getGraph());
     }
 
+    // cleanup relatedField, infraId,serviceId,envId from metadata as they should be runtime.
+    if (templatedPipeline) {
+      cleanupMetadata(userVariables);
+    }
     // update related field for envId var.
     if (workflow.checkEnvironmentTemplatized()) {
       updateRelatedFieldEnv(infraRefactor, workflow);
@@ -345,19 +354,23 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       workflowPhase.getPhaseSteps().forEach(phaseStep -> populatePhaseSteps(phaseStep, getGraph()));
 
       // update infra Id field service
-      if (templatedPipeline) {
+      try {
         if (workflowPhase.checkServiceTemplatized()) {
-          updateMetadataService(workflow, workflowPhase);
+          updateMetadataService(workflow, workflowPhase, templatedPipeline);
         }
-      }
-      if (infraRefactor) {
-        if (workflowPhase.checkInfraDefinitionTemplatized()) {
-          updateMetadataInfraDefinition(workflow, workflowPhase, templatedPipeline);
+
+        if (infraRefactor) {
+          if (workflowPhase.checkInfraDefinitionTemplatized()) {
+            updateMetadataInfraDefinition(workflow, workflowPhase, templatedPipeline);
+          }
+        } else {
+          if (workflowPhase.checkInfraTemplatized()) {
+            updateMetadataInfraMapping(workflow, workflowPhase);
+          }
         }
-      } else {
-        if (workflowPhase.checkInfraTemplatized()) {
-          updateMetadataInfraMapping(workflow, workflowPhase);
-        }
+      } catch (InvalidRequestException e) {
+        setValid(false);
+        setValidationMessage(e.getMessage());
       }
     }
     if (rollbackWorkflowPhaseIdMap != null) {
@@ -372,14 +385,59 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     reorderUserVariables();
   }
 
-  private void updateMetadataService(Workflow workflow, WorkflowPhase workflowPhase) {
+  private void cleanupMetadata(List<Variable> userVariables) {
+    for (Variable variable : userVariables) {
+      if (variable.getType() == VariableType.ENTITY) {
+        Map<String, Object> metadata = variable.getMetadata();
+        if (isNotEmpty(metadata) && metadata.get(Variable.ENTITY_TYPE) != null) {
+          if (metadata.get(Variable.ENTITY_TYPE).equals(SERVICE.toString())
+              || metadata.get(Variable.ENTITY_TYPE).equals(ENVIRONMENT.toString())
+              || metadata.get(Variable.ENTITY_TYPE).equals(INFRASTRUCTURE_DEFINITION.toString())) {
+            metadata.remove(Variable.RELATED_FIELD);
+            metadata.remove(Variable.INFRA_ID);
+            metadata.remove(Variable.SERVICE_ID);
+            metadata.remove(Variable.ENV_ID);
+            metadata.remove(Variable.DEPLOYMENT_TYPE);
+          }
+        }
+      }
+    }
+  }
+
+  private void updateMetadataService(Workflow workflow, WorkflowPhase workflowPhase, boolean templatedPipeline) {
     String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
-    // if infra is not templatised, add infraId in metadata
     Variable variable = contains(userVariables, serviceVarName);
     if (variable != null && variable.getMetadata() != null) {
+      // add deployment type
+      if (templatedPipeline) {
+        addDeploymentTypeService(workflowPhase, variable);
+      }
+
+      // add infra ID if infra is not templatised
       if (!workflowPhase.checkInfraDefinitionTemplatized()) {
-        variable.getMetadata().put(Variable.INFRA_ID, workflowPhase.getInfraDefinitionId());
+        if (templatedPipeline) {
+          String storedInfraValue = (String) variable.getMetadata().get(Variable.INFRA_ID);
+          String currentInfraId = workflowPhase.getInfraDefinitionId();
+          if (isEmpty(storedInfraValue)) {
+            variable.getMetadata().put(Variable.INFRA_ID, currentInfraId);
+          } else if (!Arrays.asList(storedInfraValue.split(",")).contains(currentInfraId)) {
+            String joinedInfraVal = join(",", storedInfraValue, currentInfraId);
+            variable.getMetadata().put(Variable.INFRA_ID, joinedInfraVal);
+          }
+        }
       } else {
+        // add infra variable names in related field
+        String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
+        String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
+        if (isEmpty(storedRelatedField)) {
+          variable.getMetadata().put(Variable.RELATED_FIELD, infraVarName);
+        } else if (!Arrays.asList(storedRelatedField.split(",")).contains(infraVarName)) {
+          String joinedRelatedField = join(",", storedRelatedField, infraVarName);
+          variable.getMetadata().put(Variable.RELATED_FIELD, joinedRelatedField);
+        }
+      }
+
+      if (isEmpty((String) variable.getMetadata().get(Variable.INFRA_ID))) {
         variable.getMetadata().remove(Variable.INFRA_ID);
       }
     }
@@ -408,21 +466,76 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
     Variable variable = contains(userVariables, infraVarName);
     if (variable != null && variable.getMetadata() != null) {
+      // add env Id if environment is not templatised
       if (!workflow.checkEnvironmentTemplatized()) {
         variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
       } else {
         variable.getMetadata().remove(Variable.ENV_ID);
       }
+
       if (!workflowPhase.checkServiceTemplatized()) {
-        variable.getMetadata().put(Variable.SERVICE_ID, workflowPhase.getServiceId());
+        String storedServiceValue = (String) variable.getMetadata().get(Variable.SERVICE_ID);
+        String currentServiceId = workflowPhase.getServiceId();
+        if (isEmpty(storedServiceValue)) {
+          variable.getMetadata().put(Variable.SERVICE_ID, currentServiceId);
+        } else if (!Arrays.asList(storedServiceValue.split(",")).contains(currentServiceId)) {
+          String joinedServiceVal = join(",", storedServiceValue, currentServiceId);
+          variable.getMetadata().put(Variable.SERVICE_ID, joinedServiceVal);
+        }
       } else {
+        // add service variable names in related field
+        if (templatedPipeline) {
+          String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
+          String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
+          if (isEmpty(storedRelatedField)) {
+            variable.getMetadata().put(Variable.RELATED_FIELD, serviceVarName);
+          } else if (!Arrays.asList(storedRelatedField.split(",")).contains(serviceVarName)) {
+            String joinedRelatedField = join(",", storedRelatedField, serviceVarName);
+            variable.getMetadata().put(Variable.RELATED_FIELD, joinedRelatedField);
+          }
+        } else {
+          variable.getMetadata().remove(Variable.SERVICE_ID);
+        }
+      }
+
+      if (isEmpty((String) variable.getMetadata().get(Variable.SERVICE_ID))) {
         variable.getMetadata().remove(Variable.SERVICE_ID);
       }
 
-      // add related field if service is templatised
-      if (templatedPipeline && workflowPhase.checkServiceTemplatized()
-          && isNotEmpty(workflowPhase.fetchServiceTemplatizedName())) {
-        variable.getMetadata().put(Variable.RELATED_FIELD, workflowPhase.fetchServiceTemplatizedName());
+      // add deployment type
+      if (templatedPipeline) {
+        addDeploymentTypeInfra(workflowPhase, variable);
+      }
+    }
+  }
+
+  private void addDeploymentTypeInfra(WorkflowPhase workflowPhase, Variable variable) {
+    if (workflowPhase.getDeploymentType() != null) {
+      DeploymentType newDeploymentType = workflowPhase.getDeploymentType();
+      if (variable.getMetadata().get(Variable.DEPLOYMENT_TYPE) != null) {
+        DeploymentType storedDeploymentType =
+            DeploymentType.valueOf(String.valueOf(variable.getMetadata().get(Variable.DEPLOYMENT_TYPE)));
+        if (storedDeploymentType != newDeploymentType) {
+          throw new InvalidRequestException("Cannot use same variable ${" + variable.getName()
+                  + "} for different deployment Types: " + storedDeploymentType.getDisplayName() + ", "
+                  + newDeploymentType.getDisplayName(),
+              USER);
+        }
+      } else {
+        variable.getMetadata().put(Variable.DEPLOYMENT_TYPE, workflowPhase.getDeploymentType().name());
+      }
+    }
+  }
+
+  private void addDeploymentTypeService(WorkflowPhase workflowPhase, Variable variable) {
+    if (workflowPhase.getDeploymentType() != null) {
+      String newDeploymentType = workflowPhase.getDeploymentType().name();
+      String storedDeploymentType = (String) variable.getMetadata().get(Variable.DEPLOYMENT_TYPE);
+      if (isEmpty(storedDeploymentType)) {
+        variable.getMetadata().put(Variable.DEPLOYMENT_TYPE, newDeploymentType);
+      } else if (!Arrays.asList(storedDeploymentType.split(",")).contains(newDeploymentType)) {
+        String joinedDeployementType = join(",", storedDeploymentType, newDeploymentType);
+        variable.getMetadata().put(Variable.DEPLOYMENT_TYPE, joinedDeployementType);
       }
     }
   }
