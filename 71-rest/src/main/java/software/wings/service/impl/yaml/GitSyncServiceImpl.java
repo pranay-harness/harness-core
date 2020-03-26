@@ -3,9 +3,14 @@ package software.wings.service.impl.yaml;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.first;
+import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -13,15 +18,13 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import graphql.VisibleForTesting;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
-import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
@@ -36,6 +39,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.utils.AlertsUtils;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityBuilder;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
@@ -45,11 +49,9 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -173,13 +175,13 @@ public class GitSyncServiceImpl implements GitSyncService {
                               })
                               .collect(Collectors.toList()));
         // files successfully processed
-        if (EmptyPredicate.isNotEmpty(changeListCopy)) {
+        if (isNotEmpty(changeListCopy)) {
           activities.addAll(changeListCopy.stream()
                                 .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
                                 .collect(Collectors.toList()));
         }
       }
-      if (EmptyPredicate.isNotEmpty(activities)) {
+      if (isNotEmpty(activities)) {
         wingsPersistence.save(activities);
       }
       return getFileProcessingSummary(activities);
@@ -203,48 +205,42 @@ public class GitSyncServiceImpl implements GitSyncService {
     return wingsPersistence.query(GitSyncError.class, req);
   }
 
-  @VisibleForTesting
-  Set<String> getCommitIdsOfErrors(String accountId, Integer limit, Integer offset) {
-    Query<GitSyncError> query =
-        wingsPersistence.createQuery(GitSyncError.class).filter("gitCommitId != ", "").filter("accountId", accountId);
-    Set<String> commitIds = new HashSet<>();
-    Integer offsetCount = 0;
-    try (HIterator<GitSyncError> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        if (offsetCount < offset) {
-          offsetCount++;
-          iterator.next();
-          continue;
-        }
-        if (commitIds.size() >= limit) {
-          break;
-        }
-        commitIds.add(iterator.next().getGitCommitId());
-      }
+  @Override
+  public PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String yamlGitConfigId) {
+    // Creating a page request to get the commits
+    Integer limit = req.getLimit() == null ? Integer.MAX_VALUE : Integer.parseInt(req.getLimit());
+    Integer offset = req.getOffset() == null ? 0 : Integer.parseInt(req.getOffset());
+
+    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
+                                    .filter(ACCOUNT_ID_KEY, accountId)
+                                    .filter("gitCommitId != ", "");
+
+    if (isNotEmpty(yamlGitConfigId)) {
+      query.filter(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfigId);
     }
-    return commitIds;
+
+    List<GitToHarnessErrorCommitStats> commitWiseErrorMessages = new ArrayList<>();
+    wingsPersistence.getDatastore(GitSyncError.class)
+        .createAggregation(GitSyncError.class)
+        .match(query)
+        .group(GitSyncErrorKeys.gitCommitId, grouping("failedCount", accumulator("$sum", 1)),
+            grouping(GitSyncError.CREATED_AT_KEY, first(GitSyncError.CREATED_AT_KEY)))
+        .sort(Sort.descending(GitSyncError.CREATED_AT_KEY))
+        .limit(limit)
+        .skip(offset)
+        .aggregate(GitToHarnessErrorCommitStats.class)
+        .forEachRemaining(gitToHarnessErrors -> commitWiseErrorMessages.add(gitToHarnessErrors));
+    return aPageResponse().withTotal(commitWiseErrorMessages.size()).withResponse(commitWiseErrorMessages).build();
   }
 
   @Override
-  public PageResponse<GitCommit> fetchGitToHarnessErrors(PageRequest<GitCommit> req, String accountId) {
+  public PageResponse<GitSyncError> fetchErrorsInEachCommits(
+      PageRequest<GitSyncError> req, String gitCommitId, String accountId) {
     // Creating a page request to get the commits
-
-    Integer limit = req.getLimit() == null ? Integer.MAX_VALUE : Integer.valueOf(req.getLimit());
-    Integer offset = req.getOffset() == null ? 0 : Integer.valueOf(req.getOffset());
-    Set<String> commitIds = getCommitIdsOfErrors(accountId, limit, offset);
-    if (isEmpty(commitIds)) {
-      return aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build();
-    }
-    // Getting the commit info
-    PageRequest<GitCommit> gitCommitRequest =
-        aPageRequest()
-            .withLimit(limit.toString())
-            .withOffset(offset.toString())
-            .addFilter(GitCommitKeys.accountId, EQ, accountId)
-            .addFilter(GitCommitKeys.commitId, SearchFilter.Operator.IN, commitIds.toArray())
-            .addOrder(GitCommitKeys.createdAt, SortOrder.OrderType.DESC)
-            .build();
-    return wingsPersistence.query(GitCommit.class, gitCommitRequest);
+    req.addFilter("gitCommitId", EQ, gitCommitId);
+    req.addFilter(ACCOUNT_ID_KEY, EQ, accountId);
+    return wingsPersistence.query(GitSyncError.class, req);
   }
 
   private GitProcessingError getGitProcessingError(Alert alert) {
@@ -264,7 +260,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                              .addFilter(AlertKeys.accountId, EQ, accountId)
                                              .addFilter(AlertKeys.type, EQ, AlertType.GitConnectionError)
                                              .addFilter(AlertKeys.status, EQ, Open)
-                                             .addOrder(GitCommitKeys.createdAt, SortOrder.OrderType.DESC)
+                                             .addOrder(GitCommitKeys.createdAt, DESC)
                                              .build();
     List<Alert> gitProcessingAlerts = wingsPersistence.query(Alert.class, gitAlertRequest).getResponse();
     if (isEmpty(gitProcessingAlerts)) {

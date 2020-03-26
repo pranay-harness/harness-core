@@ -18,6 +18,7 @@ import software.wings.beans.Application;
 import software.wings.beans.GitCommit;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
@@ -30,6 +31,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -74,10 +76,28 @@ public class GitSyncResource {
    */
   @GET
   @Path("errors/gitToHarness")
-  public RestResponse<PageResponse<GitCommit>> listGitToHarnessErrors(
-      @BeanParam PageRequest<GitCommit> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrors(
+      @BeanParam PageRequest<GitToHarnessErrorCommitStats> pageRequest,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("yamlGitConfigId") String yamlGitConfigId) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, SearchFilter.Operator.EQ, accountId);
-    PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitToHarnessErrors(pageRequest, accountId);
+    PageResponse<GitToHarnessErrorCommitStats> pageResponse =
+        gitSyncService.fetchGitToHarnessErrors(pageRequest, accountId, yamlGitConfigId);
+    return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * List git to harness errors for a particular Commit
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/gitToHarness/{commitId}")
+  public RestResponse<PageResponse<GitSyncError>> listGitToHarnessErrorsForACommit(
+      @BeanParam PageRequest<GitSyncError> pageRequest, @PathParam("commitId") String commitId,
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrorsInEachCommits(pageRequest, commitId, accountId);
     return new RestResponse<>(pageResponse);
   }
 

@@ -28,7 +28,15 @@ public interface GitSyncService {
    * @param req
    * @return
    */
-  PageResponse<GitCommit> fetchGitToHarnessErrors(PageRequest<GitCommit> req, String accountId);
+  PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String yamlGitConfigId);
+  /**
+   *
+   * @param req
+   * @return
+   */
+  PageResponse<GitSyncError> fetchErrorsInEachCommits(
+      PageRequest<GitSyncError> req, String gitCommitId, String accountId);
 
   /**
    *
