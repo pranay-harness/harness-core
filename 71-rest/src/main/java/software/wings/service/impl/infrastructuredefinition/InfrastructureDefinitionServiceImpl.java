@@ -251,8 +251,15 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
-    if (pageRequest.getUriInfo() != null && pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
-      applyServiceFilter(pageRequest);
+    if (pageRequest.getUriInfo() != null) {
+      if (pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
+        applyServiceFilter(pageRequest);
+      }
+
+      if (pageRequest.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
+        List<String> deploymentTypes = pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata");
+        pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentType, Operator.IN, deploymentTypes.toArray());
+      }
     }
     return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
   }
@@ -268,7 +275,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     String appId = appIds.get(0);
     List<String> serviceIds = pageRequest.getUriInfo().getQueryParameters().get("serviceId");
-
+    List<String> serviceNames = new ArrayList<>();
     EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
     List<String> serviceIdsInScope = new ArrayList<>();
     for (String serviceId : serviceIds) {
@@ -280,7 +287,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
       }
       if (service.getDeploymentType() != null) {
+        // get deployment type array from filter
         deploymentType.add(service.getDeploymentType());
+        serviceNames.add(service.getName());
       }
       serviceIdsInScope.add(serviceId);
     }
@@ -288,10 +297,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (isNotEmpty(deploymentType)) {
       if (deploymentType.size() > 1) {
         throw new InvalidRequestException(
-            "Cannot load infra for different deployment type service " + serviceIds, USER);
+            "Cannot load infra for different deployment type services " + serviceNames, USER);
       }
-      pageRequest.addFilter(
-          InfrastructureDefinitionKeys.deploymentType, Operator.EQ, deploymentType.iterator().next().name());
+      if (isEmpty(pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata"))) {
+        pageRequest.addFilter(
+            InfrastructureDefinitionKeys.deploymentType, Operator.EQ, deploymentType.iterator().next().name());
+      }
     }
 
     if (isNotEmpty(serviceIdsInScope)) {

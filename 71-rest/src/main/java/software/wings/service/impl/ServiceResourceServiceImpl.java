@@ -312,8 +312,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands,
       boolean withTags, String tagFilter) {
-    if (request.getUriInfo() != null && request.getUriInfo().getQueryParameters().containsKey(INFRA_ID_FILTER)) {
-      applyInfraBasedFilters(request);
+    if (request.getUriInfo() != null) {
+      if (request.getUriInfo().getQueryParameters().containsKey(INFRA_ID_FILTER)) {
+        applyInfraBasedFilters(request);
+      }
+
+      if (request.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
+        List<String> deploymentTypes = request.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata");
+        EnumSet<DeploymentType> deploymentTypesSet = EnumSet.noneOf(DeploymentType.class);
+        deploymentTypes.forEach(t -> deploymentTypesSet.add(DeploymentType.valueOf(t)));
+        addDeploymentTypeFilter(request, deploymentTypesSet);
+      }
     }
     PageResponse<Service> pageResponse =
         resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.SERVICE, withTags);
@@ -333,8 +342,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Optional<SearchFilter> appIdFilter =
         request.getFilters().stream().filter(t -> t.getFieldName().equals(APP_ID)).findFirst();
     if (!appIdFilter.isPresent()) {
-      logger.info("No AppId filter present in page request {}. Cannot apply infra filter", request);
-      return;
+      throw new InvalidRequestException("AppId is mandatory for infra-based filtering");
     }
     List<Object> appIdValues = asList(appIdFilter.get().getFieldValues());
 
@@ -360,6 +368,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         continue;
       }
       InfrastructureDefinition infra = infrastructureDefinitionService.get(appId, infraId);
+      if (infra == null) {
+        throw new InvalidRequestException(format("No Infrastructure Definition exists for id : [%s]", infraId), USER);
+      }
       deploymentType.add(infra.getDeploymentType());
       if (isNotEmpty(infra.getScopedToServices())) {
         scopedServicesList.add(Sets.newHashSet(infra.getScopedToServices()));
@@ -381,20 +392,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     // else filtering by deployment type. Artifact type filter is already be present in the API call.
-    if (isNotEmpty(deploymentType)) {
-      // if only one deployment type, load services with null deployment type or this one.
-      if (deploymentType.size() == 1) {
-        SearchFilter op1 = SearchFilter.builder()
-                               .fieldName(ServiceKeys.deploymentType)
-                               .op(EQ)
-                               .fieldValues(deploymentType.toArray())
-                               .build();
-        SearchFilter op2 = SearchFilter.builder().fieldName(ServiceKeys.deploymentType).op(NOT_EXISTS).build();
-        request.addFilter(ServiceKeys.deploymentType, OR, op1, op2);
-      } else {
-        // else load null deployment type services.
-        request.addFilter(ServiceKeys.deploymentType, NOT_EXISTS);
-      }
+    if (isNotEmpty(deploymentType)
+        && !request.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
+      addDeploymentTypeFilter(request, deploymentType);
+    }
+  }
+
+  private void addDeploymentTypeFilter(PageRequest<Service> request, EnumSet<DeploymentType> deploymentType) {
+    // if only one deployment type, load services with null deployment type or this one.
+    if (deploymentType.size() == 1) {
+      SearchFilter op1 = SearchFilter.builder()
+                             .fieldName(ServiceKeys.deploymentType)
+                             .op(EQ)
+                             .fieldValues(deploymentType.toArray())
+                             .build();
+      SearchFilter op2 = SearchFilter.builder().fieldName(ServiceKeys.deploymentType).op(NOT_EXISTS).build();
+      request.addFilter(ServiceKeys.deploymentType, OR, op1, op2);
+    } else {
+      // else load null deployment type services.
+      request.addFilter(ServiceKeys.deploymentType, NOT_EXISTS);
     }
   }
 

@@ -1,41 +1,73 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
+import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.ResourceLookupService;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.AbstractMultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceServiceImpl serviceResourceService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private AppService appService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @InjectMocks private ServiceResourceServiceImpl mockedServiceResourceService;
+  @Mock private ResourceLookupService resourceLookupService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
 
   @Test
@@ -263,5 +295,176 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     HelmVersion helmVersion = spyServiceResourceService.getHelmVersionWithDefault(APP_ID, SERVICE_ID);
 
     assertThat(helmVersion).isEqualTo(V2);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListServiceWithInfraDefFilterError() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
+    assertThatThrownBy(() -> mockedServiceResourceService.list(pageRequest, false, false, false, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("AppId is mandatory for infra-based filtering");
+    assertThat(pageRequest.getFilters()).isEmpty();
+
+    pageRequest.addFilter("appId", EQ, asList("app1", "app2").toArray());
+    assertThatThrownBy(() -> mockedServiceResourceService.list(pageRequest, false, false, false, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("More than 1 appId not supported for listing services");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListServiceWithInfraDefFilterNoScoping() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
+    pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
+    when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("infra1")
+                                               .name("ssh")
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    when(infrastructureDefinitionService.get("app1", "infra1")).thenReturn(sshInfraDef);
+
+    PageResponse<Service> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.EMPTY_LIST);
+    when(resourceLookupService.listWithTagFilters(pageRequest, null, EntityType.SERVICE, false))
+        .thenReturn(pageResponse);
+
+    mockedServiceResourceService.list(pageRequest, false, false, false, null);
+    assertThat(pageRequest.getFilters()).isNotEmpty();
+    assertThat(pageRequest.getFilters().size()).isEqualTo(2);
+    assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("deploymentType");
+    assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(OR);
+    SearchFilter searchFilter1 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[0];
+    SearchFilter searchFilter2 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[1];
+    assertThat(searchFilter1.getOp()).isEqualTo(EQ);
+    assertThat(searchFilter2.getOp()).isEqualTo(NOT_EXISTS);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListServiceWithInfraDefFilterScoped() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
+    pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
+    when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("infra1")
+                                               .name("ssh")
+                                               .scopedToServices(Collections.singletonList("s1"))
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    when(infrastructureDefinitionService.get("app1", "infra1")).thenReturn(sshInfraDef);
+
+    PageResponse<Service> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.emptyList());
+    when(resourceLookupService.listWithTagFilters(pageRequest, null, EntityType.SERVICE, false))
+        .thenReturn(pageResponse);
+
+    mockedServiceResourceService.list(pageRequest, false, false, false, null);
+    assertThat(pageRequest.getFilters()).isNotEmpty();
+    assertThat(pageRequest.getFilters().size()).isEqualTo(2);
+    assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("_id");
+    assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(IN);
+    assertThat(pageRequest.getFilters().get(1).getFieldValues()).containsExactly("s1");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListServiceWithInfraDefFilterNoCommonScoping() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("infraDefinitionId", asList("infra1", "infra2", "infra3"));
+    pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
+    when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
+    InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("infra1")
+                                               .name("ssh")
+                                               .scopedToServices(Collections.singletonList("s1"))
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    when(infrastructureDefinitionService.get("app1", "infra1")).thenReturn(sshInfraDef);
+
+    InfrastructureDefinition k8sInfraDef = InfrastructureDefinition.builder()
+                                               .uuid("infra2")
+                                               .name("k8s")
+                                               .scopedToServices(Collections.singletonList("s2"))
+                                               .deploymentType(DeploymentType.SSH)
+                                               .appId(APP_ID)
+                                               .build();
+    when(infrastructureDefinitionService.get("app1", "infra2")).thenReturn(k8sInfraDef);
+
+    InfrastructureDefinition noScopingInfraDef = InfrastructureDefinition.builder()
+                                                     .uuid("infra2")
+                                                     .name("k8s")
+                                                     .deploymentType(DeploymentType.SSH)
+                                                     .appId(APP_ID)
+                                                     .build();
+    when(infrastructureDefinitionService.get("app1", "infra3")).thenReturn(noScopingInfraDef);
+
+    PageResponse<Service> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.emptyList());
+    when(resourceLookupService.listWithTagFilters(pageRequest, null, EntityType.SERVICE, false))
+        .thenReturn(pageResponse);
+
+    assertThatThrownBy(() -> mockedServiceResourceService.list(pageRequest, false, false, false, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No common scoped Services for selected Infra Definitions: [ssh, k8s]");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testListServiceWithDeploymentTypeFilter() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("deploymentTypeFromMetadata", asList("SSH", "KUBERNETES"));
+    pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
+    when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
+    PageResponse<Service> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.emptyList());
+    when(resourceLookupService.listWithTagFilters(pageRequest, null, EntityType.SERVICE, false))
+        .thenReturn(pageResponse);
+
+    mockedServiceResourceService.list(pageRequest, false, false, false, null);
+    assertThat(pageRequest.getFilters()).isNotEmpty();
+    assertThat(pageRequest.getFilters().size()).isEqualTo(2);
+    assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("deploymentType");
+    assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(NOT_EXISTS);
   }
 }
