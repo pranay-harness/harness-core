@@ -1,12 +1,15 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQUEST_PARAM;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -24,6 +27,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.DeploymentType;
@@ -124,6 +128,17 @@ public class AwsCodeDeployState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (StateType.AWS_CODEDEPLOY_ROLLBACK.name().equals(this.getStateType())) {
+      AwsCodeDeployRequestElement codeDeployRequestElement =
+          context.getContextElement(ContextElementType.PARAM, AWS_CODE_DEPLOY_REQUEST_PARAM);
+      if (codeDeployRequestElement == null || codeDeployRequestElement.getOldCodeDeployParams() == null) {
+        return ExecutionResponse.builder()
+            .executionStatus(SKIPPED)
+            .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+            .build();
+      }
+    }
+
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
