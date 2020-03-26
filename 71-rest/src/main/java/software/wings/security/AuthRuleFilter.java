@@ -227,7 +227,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (!userService.isUserAssignedToAccount(user, accountId)) {
       if (!isHarnessUserExemptedRequest) {
         if (!httpMethod.equals(HttpMethod.GET.name())) {
-          if (httpMethod.equals(HttpMethod.POST.name()) && !isGraphQLRequest(uriPath)) {
+          if (httpMethod.equals(HttpMethod.POST.name())) {
+            if (!isGraphQLRequest(uriPath)) {
+              throw new AccessDeniedException("User not authorized", USER);
+            }
+          } else {
             throw new AccessDeniedException("User not authorized", USER);
           }
         }

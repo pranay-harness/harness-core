@@ -69,7 +69,10 @@ public class GraphQLResource {
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
   GraphQLUtils graphQLUtils;
-  private interface Constants { String QUERY = "query"; }
+  private interface Constants {
+    String QUERY = "query";
+    String EMPTY_BRACKET = "{";
+  }
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
@@ -156,7 +159,8 @@ public class GraphQLResource {
       userRequestContext = user.getUserRequestContext();
       accountId = userRequestContext.getAccountId();
       if (userRequestContext.isHarnessSupportUser()) {
-        if (!query.toLowerCase().startsWith(Constants.QUERY)) {
+        String queryInLowerCase = query.trim().toLowerCase();
+        if (!(queryInLowerCase.startsWith(Constants.QUERY) || queryInLowerCase.startsWith(Constants.EMPTY_BRACKET))) {
           throw graphQLUtils.getUnauthorizedException();
         }
       }

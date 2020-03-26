@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,10 +14,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.AccessDeniedException;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -67,6 +71,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock GraphQLUtils graphQLUtils;
   @Mock ContainerRequestContext requestContext;
   @Mock UriInfo uriInfo;
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
 
@@ -103,13 +108,68 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     actions.add(Action.DEFAULT);
     when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
     when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
-    when(requestContext.getMethod()).thenReturn("METHOD");
-    mockUriInfo();
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
     when(harnessUserGroupService.listAllowedUserActionsForAccount(ACCOUNT_ID, USER_ID)).thenReturn(actions);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     authRuleFilter.filter(requestContext);
-    assertThat(requestContext.getMethod()).isEqualTo("METHOD");
+    assertThat(requestContext.getMethod()).isEqualTo("GET");
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testHarnessUserGraphql() {
+    testHarnessUserMethod("graphql", "POST", false);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testHarnessUserPOST() {
+    testHarnessUserMethod("/api/services", "POST", true);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testHarnessUserPUT() {
+    testHarnessUserMethod("/api/services", "PUT", true);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testHarnessUserDELETE() {
+    testHarnessUserMethod("/api/services", "DELETE", true);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testHarnessUserGET() {
+    testHarnessUserMethod("/api/services", "GET", false);
+  }
+
+  private void testHarnessUserMethod(String url, String method, boolean exception) {
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.READ);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+    when(requestContext.getMethod()).thenReturn(method);
+    mockUriInfo(url, uriInfo);
+    when(harnessUserGroupService.listAllowedUserActionsForAccount(ACCOUNT_ID, USER_ID)).thenReturn(actions);
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
+    if (exception) {
+      thrown.expect(AccessDeniedException.class);
+    }
+    authRuleFilter.filter(requestContext);
+
+    if (!exception) {
+      assertThat(requestContext.getMethod()).isEqualTo(method);
+    }
   }
 
   private Class getMockResourceClass() {
@@ -125,16 +185,16 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     }
   }
 
-  private void mockUriInfo() {
+  private void mockUriInfo(String path, UriInfo uriInfo) {
     URI uri;
     try {
-      uri = new URI(PATH);
+      uri = new URI(path);
     } catch (Exception e) {
       uri = null;
     }
     MultivaluedMap<String, String> parameters = mockParameters();
     when(uriInfo.getAbsolutePath()).thenReturn(uri);
-    when(uriInfo.getPath()).thenReturn(PATH);
+    when(uriInfo.getPath()).thenReturn(path);
     when(uriInfo.getQueryParameters()).thenReturn(parameters);
     when(uriInfo.getPathParameters()).thenReturn(parameters);
     when(requestContext.getUriInfo()).thenReturn(uriInfo);
