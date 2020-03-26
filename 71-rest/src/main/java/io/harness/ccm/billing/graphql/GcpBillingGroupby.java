@@ -1,4 +1,6 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
+
+import io.harness.ccm.billing.GcpBillingTableSchema;
 import lombok.Data;
 
 @Data

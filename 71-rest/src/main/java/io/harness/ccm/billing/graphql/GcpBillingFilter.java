@@ -1,10 +1,13 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
+import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.Condition;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
+@NoArgsConstructor
 @Slf4j
 public class GcpBillingFilter {
   public static final String BILLING_GCP_STARTTIME = "billing/gcp/starttime";
@@ -22,11 +25,21 @@ public class GcpBillingFilter {
   BillingIdFilter billingAccountId;
 
   public BillingTimeFilter getStartTime() {
+    if (startTime == null) {
+      return null;
+    }
+    Preconditions.checkNotNull(startTime.getValue(), "Invalid GCP billing time filter.");
+    Preconditions.checkNotNull(startTime.getOperator(), "Invalid GCP billing time filter.");
     startTime.setVariable(BILLING_GCP_STARTTIME);
     return startTime;
   }
 
   public BillingTimeFilter getEndTime() {
+    if (endTime == null) {
+      return null;
+    }
+    Preconditions.checkNotNull(endTime.getValue(), "Invalid GCP billing time filter.");
+    Preconditions.checkNotNull(endTime.getOperator(), "Invalid GCP billing time filter.");
     endTime.setVariable(BILLING_GCP_ENDTIME);
     return endTime;
   }
@@ -53,14 +66,7 @@ public class GcpBillingFilter {
 
   public Condition toCondition() {
     if (startTime != null) {
-      BillingTimeFilter startTimeFilter = getStartTime();
-      if (null == startTimeFilter.getValue()) {
-        logger.error("The GCP billing time filter is missing value.");
-      }
-      if (null == startTimeFilter.getOperator()) {
-        logger.error("The billing time filter is missing operator");
-      }
-      return startTimeFilter.toCondition();
+      return getStartTime().toCondition();
     }
     if (endTime != null) {
       return getEndTime().toCondition();

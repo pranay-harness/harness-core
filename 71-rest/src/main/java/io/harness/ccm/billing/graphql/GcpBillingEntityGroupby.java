@@ -1,6 +1,7 @@
-package io.harness.ccm.billing;
+package io.harness.ccm.billing.graphql;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.GcpBillingTableSchema;
 
 // TODO: Remove Old/New Set of GroupBy's (Adding new groupBy's in lower case to maintain consistency)
 public enum GcpBillingEntityGroupby {

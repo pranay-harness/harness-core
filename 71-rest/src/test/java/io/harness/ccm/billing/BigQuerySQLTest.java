@@ -10,6 +10,7 @@ import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
+import io.harness.ccm.billing.graphql.GcpBillingEntityGroupby;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

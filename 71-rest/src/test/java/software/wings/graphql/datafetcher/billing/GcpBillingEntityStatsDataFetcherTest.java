@@ -8,14 +8,14 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.BillingAggregate;
-import io.harness.ccm.billing.BillingIdFilter;
-import io.harness.ccm.billing.BillingTimeFilter;
-import io.harness.ccm.billing.GcpBillingEntityGroupby;
 import io.harness.ccm.billing.GcpBillingEntityStatsDTO;
-import io.harness.ccm.billing.GcpBillingFilter;
-import io.harness.ccm.billing.GcpBillingGroupby;
-import io.harness.ccm.billing.GcpBillingService;
+import io.harness.ccm.billing.GcpBillingServiceImpl;
+import io.harness.ccm.billing.graphql.BillingAggregate;
+import io.harness.ccm.billing.graphql.BillingIdFilter;
+import io.harness.ccm.billing.graphql.BillingTimeFilter;
+import io.harness.ccm.billing.graphql.GcpBillingEntityGroupby;
+import io.harness.ccm.billing.graphql.GcpBillingFilter;
+import io.harness.ccm.billing.graphql.GcpBillingGroupby;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
-  @Mock GcpBillingService gcpBillingService;
+  @Mock GcpBillingServiceImpl gcpBillingServiceImpl;
   @InjectMocks @Inject GcpBillingEntityStatsDataFetcher entityStatsDataFetcher;
 
   private static final String COST = "cost";
@@ -58,7 +58,7 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
     groupBy.addAll(Arrays.asList(getProductGroupBy(), getProjectGroupBy(), getProjectIdGroupBy(),
         getProjectNumberGroupBy(), getSkuGroupBy(), getSkuIdGroupBy(), getUsageAmountGroupBy(), getUsageUnitGroupBy()));
 
-    when(gcpBillingService.getGcpBillingEntityStats(anyList(), anyList(), anyList()))
+    when(gcpBillingServiceImpl.getGcpBillingEntityStats(anyList(), anyList(), anyList()))
         .thenReturn(GcpBillingEntityStatsDTO.builder().build());
   }
 
