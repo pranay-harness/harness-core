@@ -1,8 +1,5 @@
 package io.harness.beans;
 
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
@@ -52,9 +49,6 @@ import javax.validation.constraints.NotNull;
   })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
-  public static final long DEFAULT_QUEUE_SYNC_EXPIRY = ofSeconds(15).toMillis();
-  public static final long DEFAULT_QUEUE_ASYNC_EXPIRY = ofMinutes(3).toMillis();
-
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 
