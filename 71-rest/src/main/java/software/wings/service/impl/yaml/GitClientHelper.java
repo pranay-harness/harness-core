@@ -21,7 +21,9 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.TransportException;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
@@ -158,7 +160,8 @@ public class GitClientHelper {
   public void checkIfTransportException(Exception ex) {
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
-    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
+    if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException
+        || ex instanceof RepositoryNotFoundException || ex instanceof JGitInternalException) {
       throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ExceptionUtils.getMessage(ex), USER_ADMIN)
           .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
