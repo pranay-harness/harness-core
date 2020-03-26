@@ -6,6 +6,7 @@ import software.wings.beans.Application;
 import software.wings.beans.GitCommit;
 import software.wings.beans.yaml.Change;
 import software.wings.exception.YamlProcessingException;
+import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
@@ -21,12 +22,20 @@ public interface GitSyncService {
    * @return
    */
   PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req);
+
   /**
    *
    * @param req
    * @return
    */
   PageResponse<GitCommit> fetchGitToHarnessErrors(PageRequest<GitCommit> req, String accountId);
+
+  /**
+   *
+   * @param req
+   * @return
+   */
+  PageResponse<GitProcessingError> fetchGitProcessingErrors(PageRequest<GitProcessingError> req, String accountId);
 
   /**
    *

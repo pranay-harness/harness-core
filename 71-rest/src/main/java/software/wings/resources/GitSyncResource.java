@@ -18,6 +18,7 @@ import software.wings.beans.Application;
 import software.wings.beans.GitCommit;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -95,6 +96,21 @@ public class GitSyncResource {
     pageRequest.addFilter(GitSyncErrorKeys.gitCommitId, SearchFilter.Operator.EQ, "");
     PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrors(pageRequest);
     return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * List Processing Errors
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/processingErrors")
+  public RestResponse<PageResponse<GitProcessingError>> listGitProcessingErrors(
+      @BeanParam PageRequest<GitProcessingError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    PageResponse<GitProcessingError> processingErrors = gitSyncService.fetchGitProcessingErrors(pageRequest, accountId);
+    return new RestResponse<>(processingErrors);
   }
 
   /**
