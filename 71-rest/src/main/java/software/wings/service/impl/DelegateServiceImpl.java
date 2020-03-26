@@ -2232,9 +2232,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public boolean filter(String delegateId, DelegateTask task) {
-    Delegate delegate = get(task.getAccountId(), delegateId, false);
-    return delegate != null && StringUtils.equals(delegate.getAccountId(), task.getAccountId());
+  public boolean filter(String accountId, String delegateId) {
+    Delegate delegate = get(accountId, delegateId, false);
+    return delegate != null && StringUtils.equals(delegate.getAccountId(), accountId);
   }
 
   @Override
