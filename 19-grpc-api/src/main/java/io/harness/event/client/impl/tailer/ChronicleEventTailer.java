@@ -37,10 +37,6 @@ public class ChronicleEventTailer extends AbstractScheduledService {
   private static final int MAX_BATCH_COUNT = 5000;
   private static final int MAX_BATCH_BYTES = 1024 * 1024; // 1MiB
 
-  // Delay between successive iterations
-  private static final Duration MIN_DELAY = Duration.ofSeconds(1);
-  private static final Duration MAX_DELAY = Duration.ofMinutes(5);
-
   private final ExcerptTailer readTailer;
 
   private final FileDeletionManager fileDeletionManager;
@@ -53,12 +49,12 @@ public class ChronicleEventTailer extends AbstractScheduledService {
 
   @Inject
   ChronicleEventTailer(EventPublisherBlockingStub blockingStub, @Named("tailer") RollingChronicleQueue chronicleQueue,
-      FileDeletionManager fileDeletionManager) {
+      FileDeletionManager fileDeletionManager, @Named("tailer") BackoffScheduler backoffScheduler) {
     this.blockingStub = blockingStub;
     this.queue = chronicleQueue;
     this.readTailer = chronicleQueue.createTailer(READ_TAILER);
     this.fileDeletionManager = fileDeletionManager;
-    this.scheduler = new BackoffScheduler(getClass().getSimpleName(), MIN_DELAY, MAX_DELAY);
+    this.scheduler = backoffScheduler;
     this.sampler = new Sampler(Duration.ofMinutes(1));
     addListener(new LoggingListener(this), MoreExecutors.directExecutor());
   }
@@ -149,8 +145,12 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     } catch (Exception e) {
       logger.error("Encountered exception", e);
     } finally {
-      sampler.sampled(this ::printStats);
-      sampler.sampled(fileDeletionManager::deleteOlderFiles);
+      try {
+        sampler.sampled(this ::printStats);
+        sampler.sampled(fileDeletionManager::deleteOlderFiles);
+      } catch (Exception e) {
+        logger.error("Encountered exception in finally", e);
+      }
     }
   }
 
