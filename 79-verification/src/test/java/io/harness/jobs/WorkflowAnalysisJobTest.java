@@ -269,6 +269,19 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTimeSeriesAnalysis_LETaskPriority() {
+    workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList().size())
+        .isEqualTo(metricGroups.size());
+    List<LearningEngineAnalysisTask> analysisTasks =
+        wingsPersistence.createAuthorizedQuery(LearningEngineAnalysisTask.class).asList();
+    assertThat(analysisTasks).isNotEmpty();
+    analysisTasks.forEach(task -> assertThat(task.getPriority()).isEqualTo(0));
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobQueuePreviousWithPredictiveIterator() throws IOException {

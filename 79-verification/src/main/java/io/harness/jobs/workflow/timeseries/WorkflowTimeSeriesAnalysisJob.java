@@ -268,6 +268,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
               .group_name(groupName)
               .time_series_ml_analysis_type(mlAnalysisType)
+              .priority(0)
               .build();
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);

@@ -69,6 +69,7 @@ public class LogMLClusterGenerator implements Runnable {
                                                   .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
                                                   .stateType(context.getStateType())
                                                   .query(Lists.newArrayList(logRequest.getQuery().split(" ")))
+                                                  .priority(0)
                                                   .build();
     analysisTask.setAppId(context.getAppId());
     analysisTask.setUuid(taskId);

@@ -4,6 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PARNIAN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1103,5 +1104,106 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
         ServiceApiVersion.V1, Optional.of("false"), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES)));
 
     assertThat(task).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetLETask_WithSamePriority() {
+    LearningEngineAnalysisTask task1 = getLEAnalysisTask();
+    task1.setPriority(0);
+    task1.setUuid("task1ID");
+    wingsPersistence.save(task1);
+
+    LearningEngineAnalysisTask task = null;
+    while (task == null) {
+      task = wingsPersistence.get(LearningEngineAnalysisTask.class, "task1ID");
+    }
+    // we've made sure that task1 is in the DB now. So it has an earlier createdAt date.
+
+    LearningEngineAnalysisTask task2 = getLEAnalysisTask();
+    task2.setPriority(0);
+    task2.setUuid("task2ID");
+    wingsPersistence.save(task2);
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task1ID");
+
+    // now we should fetch task 2 since 1 has been fetched already
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task2ID");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetLETask_WithDifferentPriority() {
+    LearningEngineAnalysisTask task1 = getLEAnalysisTask();
+    task1.setPriority(1);
+    task1.setUuid("task1ID");
+    wingsPersistence.save(task1);
+
+    LearningEngineAnalysisTask task = null;
+    while (task == null) {
+      task = wingsPersistence.get(LearningEngineAnalysisTask.class, "task1ID");
+    }
+    // we've made sure that task1 is in the DB now. So it has an earlier createdAt date.
+
+    LearningEngineAnalysisTask task2 = getLEAnalysisTask();
+    task2.setPriority(0);
+    task2.setUuid("task2ID");
+    wingsPersistence.save(task2);
+
+    // verify that task 2 is picked up first since it has higher priority
+    // even though it has later createdAt date.
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task2ID");
+
+    // now we should fetch task 1 since task2 has been fetched already
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task1ID");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetLETask_OneWithPrioAndOneWithout() {
+    LearningEngineAnalysisTask task1 = getLEAnalysisTask();
+    task1.setUuid("task1ID");
+    wingsPersistence.save(task1);
+
+    LearningEngineAnalysisTask task = null;
+    while (task == null) {
+      task = wingsPersistence.get(LearningEngineAnalysisTask.class, "task1ID");
+    }
+    // we've made sure that task1 is in the DB now. So it has an earlier createdAt date.
+
+    LearningEngineAnalysisTask task2 = getLEAnalysisTask();
+    task2.setPriority(0);
+    task2.setUuid("task2ID");
+    wingsPersistence.save(task2);
+
+    // verify that task 2 is picked up first since it has higher priority
+    // even though it has later createdAt date.
+
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task2ID");
+
+    // now we should fetch task 1 since task2 has been fetched already
+    task = learningEngineService.getNextLearningEngineAnalysisTask(
+        ServiceApiVersion.V1, Optional.empty(), Optional.empty());
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("task1ID");
   }
 }

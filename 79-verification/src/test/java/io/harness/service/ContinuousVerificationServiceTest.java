@@ -2314,6 +2314,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     assertThat(task).isNotNull();
     assertThat(task.getAnalysis_minute()).isEqualTo((int) currentMinute - 118);
+    assertThat(task.getPriority()).isEqualTo(1);
   }
 
   @Test
@@ -2661,6 +2662,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(currentMinute - task.getAnalysis_minute())
         .isLessThanOrEqualTo(150); // brings it within the 2hour + 30min buffer range.
     assertThat(task.getTest_input_url()).isNotNull();
+    assertThat(task.getPriority()).isEqualTo(1);
   }
 
   @Test
@@ -2678,6 +2680,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logConfig.setBaselineEndMinute(currentMinute - 30);
     logConfig.set247LogsV2(true);
 
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .cvConfigId(sumoConfig.getUuid())
+                                             .logCollectionMinute((int) logConfig.getBaselineEndMinute())
+                                             .build();
+    analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(analysisRecord);
+
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
@@ -2686,7 +2695,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
 
     // save some L2 records
-    for (long time = currentMinute - 29; time < currentMinute - 15; time++) {
+    long baselineEnd = logConfig.getBaselineEndMinute();
+    for (long time = baselineEnd + 1; time <= baselineEnd + 15; time++) {
       LogDataRecord record = LogDataRecord.builder()
                                  .cvConfigId(sumoConfig.getUuid())
                                  .clusterLevel(ClusterLevel.L2)
@@ -2701,14 +2711,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       wingsPersistence.save(Arrays.asList(record, record2));
     }
 
-    continuousVerificationService.trigger247LogDataV2Analysis(logConfig);
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
 
     LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                           .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
                                           .get();
 
     assertThat(task).isNotNull();
-    assertThat(task.getAnalysis_minute()).isEqualTo(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES);
+    assertThat(task.getAnalysis_minute()).isEqualTo(baselineEnd + CRON_POLL_INTERVAL_IN_MINUTES);
+    assertThat(task.getFeature_name()).isEqualTo("247_V2");
     assertThat(task.getControl_input_url()).isNull();
     assertThat(task.getTest_input_url()).isNotNull();
   }
@@ -2735,8 +2746,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
         .thenReturn(managerFeatureFlagCall);
 
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .cvConfigId(sumoConfig.getUuid())
+                                             .logCollectionMinute((int) logConfig.getBaselineEndMinute())
+                                             .build();
+    analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(analysisRecord);
+
     // save a L2 records which is created more than 2 hours ago
-    long time = currentMinute - 150;
+    long time = getFlooredTime(currentMinute, 155, true);
     LogDataRecord record = LogDataRecord.builder()
                                .cvConfigId(sumoConfig.getUuid())
                                .clusterLevel(ClusterLevel.L2)
@@ -2750,7 +2768,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                 .build();
     wingsPersistence.save(Arrays.asList(record, record2));
 
-    continuousVerificationService.trigger247LogDataV2Analysis(logConfig);
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
 
     LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                           .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
@@ -2782,7 +2800,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
 
     // save some L2 records
-    for (long time = logConfig.getBaselineStartMinute(); time < currentMinute - 15; time++) {
+    for (long time = logConfig.getBaselineStartMinute(); time <= logConfig.getBaselineStartMinute() + 15; time++) {
       LogDataRecord record = LogDataRecord.builder()
                                  .cvConfigId(sumoConfig.getUuid())
                                  .clusterLevel(ClusterLevel.L2)
@@ -2797,7 +2815,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       wingsPersistence.save(Arrays.asList(record, record2));
     }
 
-    continuousVerificationService.trigger247LogDataV2Analysis(logConfig);
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
 
     LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                           .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
@@ -2806,6 +2824,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task).isNotNull();
     assertThat(task.getAnalysis_minute())
         .isEqualTo(logConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1);
+    assertThat(task.getPriority()).isEqualTo(1);
     assertThat(task.getControl_input_url()).isNotNull();
     assertThat(task.getTest_input_url()).isNull();
   }
@@ -2891,6 +2910,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                       .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
+    assertThat(learningEngineAnalysisTasks.get(0).getPriority()).isEqualTo(1);
   }
 
   @Test
