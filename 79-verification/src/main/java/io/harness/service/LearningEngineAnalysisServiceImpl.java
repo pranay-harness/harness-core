@@ -28,6 +28,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.PhaseElement;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
@@ -215,7 +216,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
-    query = query.order(LearningEngineAnalysisTaskKeys.analysis_minute);
+    query = query.order(LearningEngineAnalysisTaskKeys.priority + "," + BaseKeys.createdAt);
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)

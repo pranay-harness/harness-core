@@ -117,6 +117,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String tag = "default";
   private int service_guard_backoff_count;
   private Double alertThreshold;
+
   @Builder.Default private int priority = 1;
 
   @Builder.Default

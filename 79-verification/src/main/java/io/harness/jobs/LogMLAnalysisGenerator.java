@@ -226,6 +226,7 @@ public class LogMLAnalysisGenerator implements Runnable {
                                 .log_analysis_get_url(logAnalysisGetUrl)
                                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                                 .feature_name(featureName)
+                                .priority(0)
                                 .stateType(context.getStateType())
                                 .analysis_failure_url(failureUrl);
 
@@ -292,6 +293,7 @@ public class LogMLAnalysisGenerator implements Runnable {
             .analysis_failure_url(failureUrl)
             .analysis_minute(logAnalysisMinute)
             .stateType(context.getStateType())
+            .priority(0)
             .is24x7Task(false)
             .build();
 
