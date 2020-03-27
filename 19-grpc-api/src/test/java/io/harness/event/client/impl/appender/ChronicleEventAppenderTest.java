@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.util.Modules;
 import com.google.protobuf.Any;
 
@@ -30,6 +31,7 @@ import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.flow.BackoffScheduler;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.Owner;
@@ -41,6 +43,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -70,6 +73,14 @@ public class ChronicleEventAppenderTest extends CategoryTest {
             @Singleton
             EventPublisherBlockingStub eventPublisherBlockingStub(ManagedChannel channel) {
               return EventPublisherGrpc.newBlockingStub(channel);
+            }
+
+            @Provides
+            @Singleton
+            @Named("tailer")
+            BackoffScheduler backoffScheduler() {
+              Duration delay = Duration.ofSeconds(1);
+              return new BackoffScheduler(ChronicleEventTailer.class.getSimpleName(), delay, delay);
             }
           }));
   @Inject private EventPublisher eventPublisher;

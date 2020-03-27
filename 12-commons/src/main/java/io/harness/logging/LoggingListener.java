@@ -43,6 +43,6 @@ public class LoggingListener extends Service.Listener {
   @Override
   public void failed(Service.State from, Throwable failure) {
     super.failed(from, failure);
-    logger.error("Service {} failed from {} with error {}", service, from, failure);
+    logger.error("Service {} failed from {} with error", service, from, failure);
   }
 }
