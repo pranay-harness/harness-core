@@ -318,7 +318,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
               "Analysis failed due to fail fast thresholds: " + failFastRecord.getFailFastErrorMsg());
           completeCron = true;
           error = true;
-          errMsg = "Analysis failed due to fail fast thresholds: " + failFastRecord.getFailFastErrorMsg();
+          errMsg = failFastRecord.getFailFastErrorMsg();
           return;
         }
 

@@ -682,7 +682,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                            .controlHostName(mlHostSummaryEntry.getValue().getNn())
                                            .controlValues(mlHostSummaryEntry.getValue().getControl_data())
                                            .testValues(mlHostSummaryEntry.getValue().getTest_data())
-                                           .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
+                                           .riskLevel(mlMetricSummary.isShould_fail_fast()
+                                                   ? RiskLevel.HIGH
+                                                   : getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
                                            .testStartIndex(-1)
                                            .anomalies(mlHostSummaryEntry.getValue().getAnomalies())
                                            .lowerThresholds(mlHostSummaryEntry.getValue().getLowerThreshold())

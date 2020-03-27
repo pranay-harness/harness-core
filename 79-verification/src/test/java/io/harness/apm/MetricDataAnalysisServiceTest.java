@@ -367,6 +367,78 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testAnalysisNodeData_FailFastRiskLevel() throws IOException {
+    final Gson gson = new Gson();
+    File file =
+        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_failfast.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+
+      timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      timeSeriesMLAnalysisRecord.setUuid(null);
+      timeSeriesMLAnalysisRecord.compressTransactions();
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    }
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getMetricAnalyses()
+                   .get(0)
+                   .getMetricValues()
+                   .get(0)
+                   .getHostAnalysisValues()
+                   .get(0)
+                   .getRiskLevel()
+                   .name())
+        .isEqualTo(RiskLevel.HIGH.name());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testAnalysisNodeData_FailFastRiskLevelLow() throws IOException {
+    final Gson gson = new Gson();
+    File file =
+        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_dont_failfast.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+
+      timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      timeSeriesMLAnalysisRecord.setUuid(null);
+      timeSeriesMLAnalysisRecord.compressTransactions();
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    }
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty(), false);
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getMetricAnalyses()
+                   .get(0)
+                   .getMetricValues()
+                   .get(0)
+                   .getHostAnalysisValues()
+                   .get(0)
+                   .getRiskLevel()
+                   .name())
+        .isEqualTo(RiskLevel.LOW.name());
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisDemoFailure() throws IOException {
