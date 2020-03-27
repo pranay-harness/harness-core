@@ -1936,8 +1936,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           join(", ", TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector));
     }
 
-    String delegates;
+    String delegates = null, timedoutDelegates = null;
     Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
+    Set<String> validatingDelegateIds = delegateTask.getValidatingDelegateIds();
+
     if (isNotEmpty(validationCompleteDelegateIds)) {
       delegates = join(", ",
           validationCompleteDelegateIds.stream()
@@ -1949,10 +1951,25 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       delegates = "no delegates";
     }
+
+    if (isNotEmpty(validatingDelegateIds)) {
+      timedoutDelegates = join(", ",
+          validatingDelegateIds.stream()
+              .filter(p -> !validationCompleteDelegateIds.contains(p))
+              .map(delegateId -> {
+                Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
+                return delegate == null ? delegateId : delegate.getHostName();
+              })
+              .collect(Collectors.joining()));
+    } else {
+      timedoutDelegates = "no delegates timedout";
+    }
+
     return String.format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
             + "  -  The capabilities were tested by the following delegates: [ %s ]%n"
+            + "  -  Following delegates were validating but never returned: [ %s ]%n"
             + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
-        capabilities, delegates);
+        capabilities, delegates, timedoutDelegates);
   }
 
   @VisibleForTesting

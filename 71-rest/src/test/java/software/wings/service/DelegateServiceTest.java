@@ -1257,6 +1257,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String expectedMessage =
         "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
         + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
+        + "  -  Following delegates were validating but never returned: [  ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.";
     RemoteMethodReturnValueData notifyResponse =
         (RemoteMethodReturnValueData) wingsPersistence.createQuery(DelegateTask.class).get().getNotifyResponse();
