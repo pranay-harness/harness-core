@@ -331,7 +331,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowLogClusterJob(),
         AnalysisContextKeys.logClusterIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowFeedbackAnalysisJob(),
-        AnalysisContextKeys.feedbackIteration, MLAnalysisType.FEEDBACK_ANALYSIS, ofSeconds(30), 4);
+        AnalysisContextKeys.feedbackIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerCreateCVTaskIterator(injector, workflowVerificationExecutor, ofSeconds(30), 4);
   }
 
