@@ -32,6 +32,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -469,12 +470,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public DataCollectionInfo createDataCollectionInfo(
       AnalysisContext analysisContext, ExecutionContext executionContext) {
     StateType stateType = StateType.valueOf(getStateType());
+    String resolvedConfigId = getResolvedConnectorId(
+        executionContext, AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId());
+    final SettingAttribute settingAttribute = getSettingAttribute(resolvedConfigId);
     switch (stateType) {
       case SUMO:
         SumoLogicAnalysisState sumoLogicAnalysisState = (SumoLogicAnalysisState) this;
-        String resolvedConfigId = getResolvedConnectorId(
-            executionContext, AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId());
-        SumoConfig sumoConfig = (SumoConfig) getSettingAttribute(resolvedConfigId).getValue();
+        SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();
         return SumoDataCollectionInfo.builder()
             .sumoConfig(sumoConfig)
             .accountId(analysisContext.getAccountId())
@@ -490,7 +492,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .build();
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;
-        DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
         return CustomLogDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
             .validationUrl(DatadogConfig.validationUrl)
@@ -518,10 +520,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .build();
       case STACK_DRIVER_LOG:
         StackDriverLogState stackDriverLogState = (StackDriverLogState) this;
-        GcpConfig gcpConfig = (GcpConfig) settingsService
-                                  .get(getResolvedConnectorId(executionContext,
-                                      AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId()))
-                                  .getValue();
+        GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
         return StackDriverLogDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
             .hostnameField(getResolvedFieldValue(executionContext, AnalysisContextKeys.hostNameField, hostnameField))

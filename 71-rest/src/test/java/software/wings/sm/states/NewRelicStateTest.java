@@ -542,6 +542,6 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
                            -> spyState.triggerAnalysisDataCollection(
                                executionContext, AnalysisContext.builder().build(), executionData, hosts))
         .isInstanceOf(NullPointerException.class)
-        .hasMessage("No new relic config setting with id: " + configId + " found");
+        .hasMessage("No connector found with id " + configId);
   }
 }

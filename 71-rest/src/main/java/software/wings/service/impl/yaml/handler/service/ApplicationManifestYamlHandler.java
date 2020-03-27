@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +134,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     Change change = changeContext.getChange();
 
     ApplicationManifest applicationManifest = get(change.getAccountId(), change.getFilePath());

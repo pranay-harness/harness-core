@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -121,9 +120,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         getResolvedConnectorId(context, NewRelicStateKeys.analysisServerConfigId, analysisServerConfigId);
     String finalNewRelicApplicationId = getResolvedFieldValue(context, NewRelicStateKeys.applicationId, applicationId);
 
-    SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
-    Preconditions.checkNotNull(
-        settingAttribute, "No new relic config setting with id: " + finalServerConfigId + " found");
+    SettingAttribute settingAttribute = getSettingAttribute(finalServerConfigId);
 
     try {
       newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);

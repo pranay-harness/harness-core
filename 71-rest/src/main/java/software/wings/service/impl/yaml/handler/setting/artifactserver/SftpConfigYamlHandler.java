@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SftpConfig.Yaml;
@@ -25,8 +24,8 @@ public class SftpConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SftpC
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     SftpConfig.Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
