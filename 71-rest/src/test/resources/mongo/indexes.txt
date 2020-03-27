@@ -411,6 +411,7 @@ resourceLookup { "name" : "resourceIndex_3" , "background" : true} { "accountId"
 resourceLookup { "name" : "tagsNameResourceLookupIndex" , "background" : true} { "accountId" : 1 , "tags.name" : 1}
 roles { "name" : "appId_1" , "background" : true} { "appId" : 1}
 roles { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+roles { "name" : "roleType_accountId_1" , "background" : true} { "roleType" : 1 , "accountId" : 1}
 schema { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 searchDistributedLocks { "name" : "heartbeat_1" , "background" : true , "expireAfterSeconds" : 70} { "heartbeat" : 1}
 searchDistributedLocks { "name" : "uuid_1" , "background" : true} { "uuid" : 1}
@@ -568,7 +569,7 @@ userGroups { "name" : "accountAndMemberIds" , "background" : true} { "accountId"
 userGroups { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 userGroups { "name" : "appId_1" , "background" : true} { "appId" : 1}
 userGroups { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-userInvites { "name" : "accountId" , "unique" : true} { "accountId" : 1 , "email" : 1}
+userInvites { "name" : "accountId_email_1" , "unique" : true} { "accountId" : 1 , "email" : 1}
 userInvites { "name" : "appId_1" , "background" : true} { "appId" : 1}
 userInvites { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 users { "name" : "accounts_1" , "background" : true} { "accounts" : 1}
