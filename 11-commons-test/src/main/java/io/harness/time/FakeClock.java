@@ -23,7 +23,7 @@ import java.time.temporal.TemporalUnit;
 @EqualsAndHashCode(callSuper = false)
 public class FakeClock extends Clock {
   @Getter @Setter @Accessors(fluent = true) private Instant instant = Instant.now();
-  @Getter @Wither private ZoneId zone = ZoneId.systemDefault();
+  @Getter @Wither private ZoneId zone = ZoneId.of("UTC");
 
   public void advanceBy(long amountToAdd, TemporalUnit unit) {
     instant = instant.plus(amountToAdd, unit);

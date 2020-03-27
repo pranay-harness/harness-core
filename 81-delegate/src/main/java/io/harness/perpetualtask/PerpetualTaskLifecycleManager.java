@@ -27,7 +27,7 @@ public class PerpetualTaskLifecycleManager {
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
 
   private Cache<String, PerpetualTaskResponse> perpetualTaskResponseCache =
-      Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
+      Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
 
   PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
