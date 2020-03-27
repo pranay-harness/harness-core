@@ -387,4 +387,39 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertThat(splunkDataCollectionInfoV2.getConnectorId()).isEqualTo(splunkState.getAnalysisServerConfigId());
     assertThat(splunkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo_withExpressionFields() throws IllegalAccessException {
+    SplunkConfig splunkConfig = SplunkConfig.builder()
+                                    .accountId(accountId)
+                                    .splunkUrl(UUID.randomUUID().toString())
+                                    .username(UUID.randomUUID().toString())
+                                    .password(UUID.randomUUID().toString().toCharArray())
+                                    .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("splunk-config")
+                                            .withValue(splunkConfig)
+                                            .withUuid(generateUuid())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    splunkState.setAnalysisServerConfigId(settingAttribute.getUuid());
+    splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    FieldUtils.writeField(splunkState, "renderedQuery", "rendered query", true);
+    FieldUtils.writeField(splunkState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    SplunkV2State spyState = spy(splunkState);
+
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
+        (SplunkDataCollectionInfoV2) spyState.createDataCollectionInfo(
+            executionContext, Sets.newHashSet("host1", "host2"));
+    assertThat(StateType.SPLUNKV2).isEqualTo(splunkDataCollectionInfoV2.getStateType());
+    assertThat(splunkDataCollectionInfoV2.getSplunkConfig()).isNull();
+    assertThat(splunkDataCollectionInfoV2.getStateExecutionId())
+        .isEqualTo(executionContext.getStateExecutionInstanceId());
+    assertThat(splunkDataCollectionInfoV2.getQuery()).isEqualTo(splunkState.getRenderedQuery());
+    assertThat(splunkDataCollectionInfoV2.getConnectorId()).isEqualTo(splunkState.getAnalysisServerConfigId());
+    assertThat(splunkDataCollectionInfoV2.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2"));
+  }
 }

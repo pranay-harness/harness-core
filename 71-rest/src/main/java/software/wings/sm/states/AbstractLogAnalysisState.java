@@ -462,6 +462,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       case DATA_DOG_LOG:
       case STACK_DRIVER_LOG:
         return this.getHostnameField(context);
+      case SPLUNKV2:
+        if (isEmpty(hostnameField)) {
+          return "host";
+        }
+        return getResolvedFieldValue(context, AbstractAnalysisStateKeys.hostnameField, hostnameField);
       default:
         return null;
     }

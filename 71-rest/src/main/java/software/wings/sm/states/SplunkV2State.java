@@ -1,14 +1,13 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -27,6 +26,7 @@ import java.util.Set;
  * Created by peeyushaggarwal on 7/15/16.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "SplunkV2StateKeys")
 public class SplunkV2State extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Splunk Server") private String analysisServerConfigId;
 
@@ -109,18 +109,6 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     this.isAdvancedQuery = advancedQuery;
   }
 
-  private String getServerConfigId(ExecutionContext context) {
-    String finalServerConfigId = analysisServerConfigId;
-    if (isNotEmpty(getTemplateExpressions())) {
-      TemplateExpression configIdExpression =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
-      if (configIdExpression != null) {
-        finalServerConfigId = templateExpressionProcessor.resolveTemplateExpression(context, configIdExpression);
-      }
-    }
-    return finalServerConfigId;
-  }
-
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
@@ -132,7 +120,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     // TODO: see if this can be moved to base class.
     // TODO: some common part needs to be refactored
 
-    String finalServerConfigId = getServerConfigId(context);
+    String finalServerConfigId =
+        getResolvedConnectorId(context, SplunkV2StateKeys.analysisServerConfigId, analysisServerConfigId);
     String envId = getEnvId(context);
     return SplunkDataCollectionInfoV2.builder()
         .connectorId(finalServerConfigId)
@@ -143,7 +132,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
         .envId(envId)
         .applicationId(context.getAppId())
         .query(getRenderedQuery())
-        .hostnameField(getHostnameField())
+        .hostnameField(getHostnameField(context))
         .hosts(hosts)
         .isAdvancedQuery(isAdvancedQuery)
         .build();
