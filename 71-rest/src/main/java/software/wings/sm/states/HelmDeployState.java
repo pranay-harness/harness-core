@@ -349,6 +349,9 @@ public class HelmDeployState extends State {
             .helmVersion(helmVersion)
             .build();
 
+    List<String> tags = new ArrayList<>();
+    tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+
     DelegateTask delegateTask = DelegateTask.builder()
                                     .data(TaskData.builder()
                                               .taskType(HELM_COMMAND_TASK.name())
@@ -358,6 +361,7 @@ public class HelmDeployState extends State {
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .async(false)
+                                    .tags(tags)
                                     .build();
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
@@ -796,11 +800,15 @@ public class HelmDeployState extends State {
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
         gitConfig, encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
 
+    List<String> tags = new ArrayList<>();
+    tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+
     delegateService.queueTask(DelegateTask.builder()
                                   .async(true)
                                   .accountId(app.getAccountId())
                                   .appId(app.getUuid())
                                   .waitId(activityId)
+                                  .tags(tags)
                                   .data(TaskData.builder()
                                             .taskType(HELM_COMMAND_TASK.name())
                                             .parameters(new Object[] {commandRequest})
@@ -860,6 +868,11 @@ public class HelmDeployState extends State {
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
+    List<String> tags = new ArrayList<>();
+    if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
+      tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
+    }
+
     String waitId = generateUuid();
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -869,6 +882,7 @@ public class HelmDeployState extends State {
             .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
             .async(true)
             .waitId(waitId)
+            .tags(tags)
             .data(TaskData.builder()
                       .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                       .parameters(new Object[] {fetchFilesTaskParams})
@@ -1061,6 +1075,12 @@ public class HelmDeployState extends State {
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId);
 
+    List<String> tags = new ArrayList<>();
+    if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
+      tags.addAll(
+          k8sStateHelper.fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
+    }
+
     String waitId = generateUuid();
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -1070,6 +1090,7 @@ public class HelmDeployState extends State {
             .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
             .waitId(waitId)
             .async(true)
+            .tags(tags)
             .data(TaskData.builder()
                       .taskType(TaskType.HELM_VALUES_FETCH.name())
                       .parameters(new Object[] {helmValuesFetchTaskParameters})

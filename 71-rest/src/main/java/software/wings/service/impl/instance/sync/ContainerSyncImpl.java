@@ -30,7 +30,9 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.states.k8s.K8sStateHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +47,7 @@ public class ContainerSyncImpl implements ContainerSync {
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private K8sStateHelper k8sStateHelper;
 
   @Override
   public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
@@ -142,6 +145,10 @@ public class ContainerSyncImpl implements ContainerSync {
 
         ContainerServiceParams containerServiceParams = getContainerServiceParams(
             containerInfraMapping, containerMetadata.getContainerServiceName(), containerMetadata.getNamespace());
+
+        List<String> tags = new ArrayList<>();
+        tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+
         Application app = appService.get(containerInfraMapping.getAppId());
         SyncTaskContext syncTaskContext =
             SyncTaskContext.builder()
@@ -151,6 +158,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .infrastructureMappingId(containerInfraMapping.getUuid())
                 .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
                 .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                .tags(tags)
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)

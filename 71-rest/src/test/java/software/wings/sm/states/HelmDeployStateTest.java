@@ -82,7 +82,9 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -100,6 +102,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.features.api.FeatureService;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmHelper;
@@ -142,6 +145,7 @@ import software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Arrays;
@@ -189,6 +193,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private LogService logService;
+  @Mock private K8sStateHelper k8sStateHelper;
+  @Mock private FeatureService featureService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -435,6 +441,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
@@ -444,6 +451,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
+    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
@@ -746,5 +754,77 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testTagsInExecuteGitTask() {
+    context.pushContextElement(HelmDeployContextElement.builder()
+                                   .releaseName(HELM_RELEASE_NAME_PREFIX)
+                                   .commandFlags(COMMAND_FLAGS)
+                                   .newReleaseRevision(2)
+                                   .previousReleaseRevision(1)
+                                   .build());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Environment,
+        ApplicationManifest.builder()
+            .storeType(StoreType.Remote)
+            .gitFileConfig(GitFileConfig.builder().build())
+            .build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
+    when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
+        .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
+    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
+
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
+
+    verifyDelegateNameInTags();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testTagsInExecuteHelmValuesFetchTask() {
+    context.pushContextElement(HelmDeployContextElement.builder()
+                                   .releaseName(HELM_RELEASE_NAME_PREFIX)
+                                   .commandFlags(COMMAND_FLAGS)
+                                   .newReleaseRevision(2)
+                                   .previousReleaseRevision(1)
+                                   .build());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Environment,
+        ApplicationManifest.builder()
+            .storeType(StoreType.Remote)
+            .helmChartConfig(HelmChartConfig.builder().build())
+            .build());
+
+    when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId()))
+        .thenReturn(true);
+    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
+    when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(true);
+
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.HELM_VALUES_FETCH);
+
+    verifyDelegateNameInTags();
+  }
+
+  private void verifyDelegateNameInTags() {
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
   }
 }
