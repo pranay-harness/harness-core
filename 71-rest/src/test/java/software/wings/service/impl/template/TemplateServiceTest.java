@@ -35,6 +35,7 @@ import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V3_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.SSH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
@@ -73,7 +74,10 @@ import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.ConstraintViolationException;
 
 public class TemplateServiceTest extends TemplateBaseTestHelper {
@@ -1019,5 +1023,65 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template refTemplate = templateServiceImpl.createLocalTemplateObject(
         savedImportedTemplate, savedImportedTemplate.getAccountId(), savedImportedTemplate.getAppId());
     return templateService.saveReferenceTemplate(refTemplate);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldListVersionsOfImportedTemplate() {
+    Template template = getSshCommandTemplate();
+    template.setImported(true);
+    template.setVersion(Long.valueOf(1));
+    template = templateService.saveReferenceTemplate(template);
+    TemplateVersion newVersion = TemplateVersion.builder()
+                                     .version(3L)
+                                     .accountId(template.getAccountId())
+                                     .changeType(TemplateVersion.ChangeType.IMPORTED.name())
+                                     .galleryId(template.getGalleryId())
+                                     .templateUuid(template.getUuid())
+                                     .templateType(SSH)
+                                     .build();
+    wingsPersistence.save(newVersion);
+    List<TemplateVersion> templateVersions =
+        templateVersionService.listImportedTemplateVersions(template.getUuid(), template.getAccountId());
+    List<Long> versions = templateVersions.stream().map(TemplateVersion::getVersion).collect(toList());
+    assertThat(versions).isEqualTo(Arrays.asList(1L, 3L));
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void nonImportedTemplateShouldNotBeReturnedByListImportedTemplateVersions() {
+    Template template = getSshCommandTemplate();
+    template = templateService.save(template);
+    List<TemplateVersion> templateVersions =
+        templateVersionService.listImportedTemplateVersions(template.getUuid(), template.getAccountId());
+    assertThat(templateVersions).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldListVersionsOfImportedTemplatesOfGivenIds() {
+    Template template = getSshCommandTemplate();
+    template.setImported(true);
+    template.setVersion(Long.valueOf(1));
+    template = templateService.saveReferenceTemplate(template);
+    TemplateVersion newVersion = TemplateVersion.builder()
+                                     .version(3L)
+                                     .accountId(template.getAccountId())
+                                     .changeType(TemplateVersion.ChangeType.IMPORTED.name())
+                                     .galleryId(template.getGalleryId())
+                                     .templateUuid(template.getUuid())
+                                     .templateType(SSH)
+                                     .build();
+    wingsPersistence.save(newVersion);
+    templateService.save(getSshCommandTemplate());
+
+    Map<String, String> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
+        Arrays.asList(template.getUuid()), template.getAccountId());
+    Map<String, String> expectedListOfimportedTemplateLatestVersion = new HashMap<>();
+    expectedListOfimportedTemplateLatestVersion.put(template.getUuid(), "3");
+    assertThat(importedTemplateLatestVersions).isEqualTo(expectedListOfimportedTemplateLatestVersion);
   }
 }

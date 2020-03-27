@@ -19,6 +19,10 @@ import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateVersionService;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Singleton
 @Slf4j
 public class TemplateVersionServiceImpl implements TemplateVersionService {
@@ -27,6 +31,37 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Override
   public PageResponse<TemplateVersion> listTemplateVersions(PageRequest<TemplateVersion> pageRequest) {
     return wingsPersistence.query(TemplateVersion.class, pageRequest);
+  }
+
+  @Override
+  public List<TemplateVersion> listImportedTemplateVersions(String templateId, String accountId) {
+    return wingsPersistence.createQuery(TemplateVersion.class)
+        .filter(TemplateVersionKeys.accountId, accountId)
+        .filter(TemplateVersionKeys.templateUuid, templateId)
+        .filter(TemplateVersionKeys.changeType, IMPORTED)
+        .order(Sort.ascending(TemplateVersionKeys.version))
+        .asList();
+  }
+
+  @Override
+  public Map<String, String> listLatestVersionOfImportedTemplates(List<String> templateUuids, String accountId) {
+    List<TemplateVersion> templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
+                                                 .filter(TemplateVersionKeys.accountId, accountId)
+                                                 .field(TemplateVersionKeys.templateUuid)
+                                                 .in(templateUuids)
+                                                 .filter(TemplateVersionKeys.changeType, IMPORTED)
+                                                 .order(Sort.descending(TemplateVersionKeys.version))
+                                                 .asList();
+
+    Map<String, String> templateUuidLatestVersionMap = new HashMap<>();
+    // Since versions are sorted descending first template will be latest.
+    for (TemplateVersion templateVersion : templateVersions) {
+      if (!templateUuidLatestVersionMap.containsKey(templateVersion.getTemplateUuid())) {
+        templateUuidLatestVersionMap.put(
+            templateVersion.getTemplateUuid(), String.valueOf(templateVersion.getVersion()));
+      }
+    }
+    return templateUuidLatestVersionMap;
   }
 
   @Override

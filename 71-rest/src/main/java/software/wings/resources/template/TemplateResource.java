@@ -22,6 +22,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -186,5 +187,23 @@ public class TemplateResource {
   @ExceptionMetered
   public RestResponse<PageResponse<TemplateVersion>> list(@BeanParam PageRequest<TemplateVersion> pageRequest) {
     return new RestResponse<>(templateVersionService.listTemplateVersions(pageRequest));
+  }
+
+  @GET
+  @Path("imported/versions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<TemplateVersion>> listImportedVersions(
+      @QueryParam("accountId") String accountId, @QueryParam("templateId") String templateId) {
+    return new RestResponse<>(templateVersionService.listImportedTemplateVersions(templateId, accountId));
+  }
+
+  @GET
+  @Path("imported/list/versions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> listLatestVersionsOfTemplates(
+      @QueryParam("accountId") String accountId, @QueryParam("templateIds") List<String> templateIds) {
+    return new RestResponse<>(templateVersionService.listLatestVersionOfImportedTemplates(templateIds, accountId));
   }
 }
