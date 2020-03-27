@@ -1,12 +1,17 @@
 #!/bin/bash -e
 
 JRE_VERSION="${JRE_VERSION:-"1.8.0_191"}"
+USE_CDN="${USE_CDN:-false}"
+JVM_URL_BASE_PATH=$DELEGATE_STORAGE_URL
+if [ "$USE_CDN" = true ]; then
+  JVM_URL_BASE_PATH=$JVM_URL_BASE_PATH/public/shared
+fi
 if [ "$JRE_VERSION" = "1.8.0_242" ]; then
   JRE_DIR=jdk8u242-b08-jre
-  JVM_URL=$DELEGATE_STORAGE_URL/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz
+  JVM_URL=$JVM_URL_BASE_PATH/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz
 else
   JRE_DIR=jre1.8.0_191
-  JVM_URL=$DELEGATE_STORAGE_URL/jre/8u191/jre-8u191-linux-x64.tar.gz
+  JVM_URL=$JVM_URL_BASE_PATH/jre/8u191/jre-8u191-linux-x64.tar.gz
 fi
 JRE_BINARY=$JRE_DIR/bin/java
 
@@ -70,8 +75,6 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   tar xzf $JVM_TAR_FILENAME
   rm -f $JVM_TAR_FILENAME
 fi
-
-USE_CDN="${USE_CDN:-false}"
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
