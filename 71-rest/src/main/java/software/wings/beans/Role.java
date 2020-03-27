@@ -7,6 +7,10 @@ import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -19,6 +23,9 @@ import java.util.List;
  */
 @Entity(value = "roles", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Indexes(@Index(
+    fields = { @Field("roleType")
+               , @Field("accountId") }, options = @IndexOptions(name = "roleType_accountId_1")))
 @FieldNameConstants(innerTypeName = "RoleKeys")
 public class Role extends Base {
   @NotEmpty private String name;

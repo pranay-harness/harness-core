@@ -31,9 +31,9 @@ import java.util.List;
  */
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Indexes(@Index(
-    fields = { @Field("accountId")
-               , @Field("email") }, options = @IndexOptions(name = "accountId", unique = true)))
+@Indexes(@Index(fields = { @Field("accountId")
+                           , @Field("email") },
+    options = @IndexOptions(name = "accountId_email_1", unique = true)))
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
 public class UserInvite extends Base {
   public static final String UUID_KEY = "uuid";
