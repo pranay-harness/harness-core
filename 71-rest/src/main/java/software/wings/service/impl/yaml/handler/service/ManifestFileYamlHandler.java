@@ -13,7 +13,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +46,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   }
 
   @Override
-  public ManifestFile upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public ManifestFile upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -129,7 +127,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     Change change = changeContext.getChange();
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
 

@@ -440,46 +440,31 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public NewRelicApplication resolveApplicationName(String settingId, String newRelicApplicationName) {
-    ErrorCode errorCode = null;
-    try {
-      final SettingAttribute settingAttribute = settingsService.get(settingId);
-      List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settingAttribute.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      errorCode = ErrorCode.NEWRELIC_ERROR;
-      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .resolveNewRelicApplicationName(
-              (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationName, null);
-    } catch (Exception e) {
-      throw new VerificationOperationException(errorCode,
-          "Error in resolving newrelic application " + newRelicApplicationName + " . " + ExceptionUtils.getMessage(e));
-    }
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
+    return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+        .resolveNewRelicApplicationName(
+            (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationName, null);
   }
 
   @Override
   public NewRelicApplication resolveApplicationId(String settingId, String newRelicApplicationId) {
-    ErrorCode errorCode = null;
-    try {
-      final SettingAttribute settingAttribute = settingsService.get(settingId);
-      List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settingAttribute.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      errorCode = ErrorCode.NEWRELIC_ERROR;
-      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .resolveNewRelicApplicationId(
-              (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationId, null);
-    } catch (Exception e) {
-      throw new VerificationOperationException(errorCode,
-          "Error in resolving newrelic application with ID: " + newRelicApplicationId + " . "
-              + ExceptionUtils.getMessage(e));
-    }
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
+    return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+        .resolveNewRelicApplicationId(
+            (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationId, null);
   }
 }

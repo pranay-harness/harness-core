@@ -67,11 +67,9 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_RESOLVE_APP_TASK)
   NewRelicApplication resolveNewRelicApplicationName(@NotNull NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException;
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog);
 
   @DelegateTaskType(TaskType.NEWRELIC_RESOLVE_APP_ID_TASK)
   NewRelicApplication resolveNewRelicApplicationId(@NotNull NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException;
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog);
 }

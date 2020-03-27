@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.AddressYaml;
@@ -36,7 +35,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   @Inject YamlHelper yamlHelper;
   @Inject NotificationSetupService notificationSetupService;
 
-  private NotificationGroup toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private NotificationGroup toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
@@ -73,8 +72,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   @Override
-  public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     NotificationGroup previous = get(accountId, changeContext.getChange().getFilePath());
 
@@ -118,7 +116,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String notificationGroupName = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     NotificationGroup notificationGroup =

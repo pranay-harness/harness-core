@@ -90,7 +90,7 @@ public class ApplicationManifestYamlHandlerTest extends WingsBaseTest {
     reset(applicationManifestService);
   }
 
-  private void shouldNotDeleteDeleteK8sManifest() throws Exception {
+  private void shouldNotDeleteDeleteK8sManifest() {
     doReturn(ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId("service").build())
         .when(yamlHandler)
         .get(anyString(), anyString());

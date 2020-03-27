@@ -173,15 +173,15 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public NewRelicApplication resolveNewRelicApplicationName(@NotNull NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
             .listAllApplicationsByNameFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationName);
-    List<NewRelicApplication> newRelicApplications = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
+    List<NewRelicApplication> newRelicApplications =
+        requestExecutor.executeRequest(apiCallLog, request).getApplications();
     if (isEmpty(newRelicApplications)) {
       throw new WingsException(
           "Application Name " + newRelicApplicationName + " could not be resolved to a valid NewRelic Application.");
@@ -205,15 +205,15 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public NewRelicApplication resolveNewRelicApplicationId(@NotNull NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException {
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
             .listAllApplicationsByIdFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId);
-    List<NewRelicApplication> newRelicApplications = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
+    List<NewRelicApplication> newRelicApplications =
+        requestExecutor.executeRequest(apiCallLog, request).getApplications();
     if (isEmpty(newRelicApplications)) {
       throw new WingsException(
           "Application ID " + newRelicApplicationId + " could not be resolved to a valid NewRelic Application.");

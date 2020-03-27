@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -29,8 +28,8 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();

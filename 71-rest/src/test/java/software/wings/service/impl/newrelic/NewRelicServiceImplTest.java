@@ -11,7 +11,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -122,7 +121,7 @@ public class NewRelicServiceImplTest extends WingsBaseTest {
     when(newRelicDelegateService.resolveNewRelicApplicationName(any(), any(), any(), any()))
         .thenThrow(new DataCollectionException("Application name not found"));
     assertThatThrownBy(() -> newRelicService.resolveApplicationName(settingId, applicationName))
-        .isInstanceOf(VerificationOperationException.class);
+        .isInstanceOf(DataCollectionException.class);
   }
 
   @Test
@@ -144,7 +143,7 @@ public class NewRelicServiceImplTest extends WingsBaseTest {
     when(newRelicDelegateService.resolveNewRelicApplicationId(any(), any(), any(), any()))
         .thenThrow(new DataCollectionException("Application ID not found"));
     assertThatThrownBy(() -> newRelicService.resolveApplicationId(settingId, applicationId.toString()))
-        .isInstanceOf(VerificationOperationException.class);
+        .isInstanceOf(DataCollectionException.class);
   }
 
   private TimeSeriesMetricDefinition buildTimeSeriesMetricDefinition(Metric metric) {

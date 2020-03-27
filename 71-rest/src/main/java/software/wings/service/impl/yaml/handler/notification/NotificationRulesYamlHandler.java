@@ -34,8 +34,7 @@ import java.util.List;
 public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRule.Yaml, NotificationRule> {
   @Inject NotificationSetupService notificationSetupService;
 
-  private NotificationRule toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeContextList)
-      throws HarnessException {
+  private NotificationRule toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeContextList) {
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
@@ -128,7 +127,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }
