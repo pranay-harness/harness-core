@@ -21,6 +21,7 @@ import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
+import io.harness.time.FakeClock;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,6 +54,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   private String[] perpetualTaskIds = new String[] {"1", "2"};
   private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord taskRecord;
+
+  FakeClock fakeClock = new FakeClock();
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -91,8 +94,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .perpetualTaskIds(perpetualTaskIds)
                         .build();
 
-    taskRecord =
-        PerpetualTaskRecord.builder().delegateId(delegateId).lastHeartbeat(Instant.now().toEpochMilli()).build();
+    taskRecord = PerpetualTaskRecord.builder().delegateId(delegateId).build();
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
@@ -100,7 +102,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(true);
     when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(clusterId)))
-        .thenReturn(LastReceivedPublishedMessage.builder().build());
+        .thenReturn(
+            LastReceivedPublishedMessage.builder().lastReceivedAt(Instant.now(fakeClock).toEpochMilli()).build());
   }
 
   @Test
@@ -124,7 +127,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldReturnHealthyForCloudProvidersWithHeatbeat() {
+  public void shouldReturnHealthyForCloudProviders() {
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isTrue();

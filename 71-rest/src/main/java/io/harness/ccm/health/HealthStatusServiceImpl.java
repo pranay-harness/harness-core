@@ -1,6 +1,11 @@
 package io.harness.ccm.health;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
+import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
+import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
+import static io.harness.ccm.health.CEError.PERPETUAL_TASK_NOT_ASSIGNED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
@@ -17,11 +22,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
@@ -31,6 +37,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject DelegateService delegateService;
   @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+
+  private static final String LAST_EVENT_TIMESTAMP_MESSAGE = "Last event collected at %s";
+  public static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
 
   @Override
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
@@ -45,30 +54,85 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       return CEHealthStatus.builder().isHealthy(true).build();
     }
 
-    Map<String, List<String>> clusterErrorMap = new HashMap<>();
-
-    for (ClusterRecord clusterRecord : clusterRecords) {
-      List<String> errors = getErrors(clusterRecord);
-      clusterErrorMap.put(clusterRecord.getUuid(), errors);
-    }
-
-    boolean isHealthy = clusterErrorMap.values().stream().allMatch(List::isEmpty);
-
     List<CEClusterHealth> ceClusterHealthList = new ArrayList<>();
     for (ClusterRecord clusterRecord : clusterRecords) {
       ceClusterHealthList.add(getClusterHealth(clusterRecord));
     }
 
+    boolean isHealthy = ceClusterHealthList.stream().allMatch(CEClusterHealth::isHealthy);
     return CEHealthStatus.builder().isHealthy(isHealthy).ceClusterHealthList(ceClusterHealthList).build();
   }
 
   private CEClusterHealth getClusterHealth(ClusterRecord clusterRecord) {
+    List<CEError> errors = getErrors(clusterRecord);
     return CEClusterHealth.builder()
+        .isHealthy(isEmpty(errors))
         .clusterId(clusterRecord.getUuid())
         .clusterRecord(clusterRecord)
-        .errors(getErrors(clusterRecord))
+        .messages(getMessages(clusterRecord, errors))
         .lastEventTimestamp(getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid()))
         .build();
+  }
+
+  private List<CEError> getErrors(ClusterRecord clusterRecord) {
+    List<CEError> errors = new ArrayList<>();
+    if (null == clusterRecord.getPerpetualTaskIds()) {
+      errors.add(PERPETUAL_TASK_CREATION_FAILURE);
+      return errors;
+    }
+    List<String> perpetualTaskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
+    for (String taskId : perpetualTaskIds) {
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+      String delegateId = perpetualTaskRecord.getDelegateId();
+      if (isNullOrEmpty(delegateId)) {
+        errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+        continue;
+      }
+      if (!delegateService.isDelegateConnected(delegateId)) {
+        errors.add(DELEGATE_NOT_AVAILABLE);
+        continue;
+      }
+      long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
+      if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp)) {
+        errors.add(NO_RECENT_EVENTS_PUBLISHED);
+      }
+    }
+    return errors;
+  }
+
+  private List<String> getMessages(ClusterRecord clusterRecord, List<CEError> errors) {
+    Preconditions.checkNotNull(clusterRecord.getCluster());
+    String clusterName = clusterRecord.getCluster().getClusterName();
+    List<String> messages = new ArrayList<>();
+    long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
+    for (CEError error : errors) {
+      switch (error) {
+        case DELEGATE_NOT_AVAILABLE:
+          messages.add(String.format(DELEGATE_NOT_AVAILABLE.getMessage(), clusterName));
+          break;
+        case NO_RECENT_EVENTS_PUBLISHED:
+          messages.add(
+              String.format(NO_RECENT_EVENTS_PUBLISHED.getMessage(), clusterName, new Date(lastEventTimestamp)));
+          break;
+        default:
+          messages.add("Unexpected error. Please contact Harness support.");
+          break;
+      }
+    }
+
+    if (isEmpty(messages)) {
+      if (lastEventTimestamp <= 0) {
+        messages.add("No events received. The first event will arrive in 5 minutes.");
+      } else {
+        messages.add(String.format(LAST_EVENT_TIMESTAMP_MESSAGE, new Date(lastEventTimestamp)));
+      }
+    }
+
+    return messages;
+  }
+
+  private boolean hasRecentEvents(long eventTimestamp) {
+    return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD;
   }
 
   private long getLastEventTimestamp(String accountId, String identifier) {
@@ -78,29 +142,5 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       return 0;
     }
     return lastReceivedPublishedMessage.getLastReceivedAt();
-  }
-
-  private List<String> getErrors(ClusterRecord clusterRecord) {
-    List<String> errorsMessages = new ArrayList<>();
-    if (null == clusterRecord.getPerpetualTaskIds()) {
-      errorsMessages.add(String.format(CEError.PERPETUAL_TASK_CREATION_FAILURE.getMessage(), clusterRecord.getUuid()));
-      return errorsMessages;
-    }
-
-    List<String> perpetualTaskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
-    for (String taskId : perpetualTaskIds) {
-      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
-      String delegateId = perpetualTaskRecord.getDelegateId();
-      if (isNullOrEmpty(delegateId)) {
-        errorsMessages.add(String.format(CEError.PERPETUAL_TASK_NOT_ASSIGNED.getMessage(), clusterRecord.getUuid()));
-        continue;
-      }
-
-      if (!delegateService.isDelegateConnected(delegateId)) {
-        errorsMessages.add(String.format(CEError.DELEGATE_NOT_AVAILABLE.getMessage(), clusterRecord.getUuid()));
-        continue;
-      }
-    }
-    return errorsMessages;
   }
 }
