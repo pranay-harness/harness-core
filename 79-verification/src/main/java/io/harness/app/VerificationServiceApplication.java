@@ -278,7 +278,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     harnessMetricRegistry.registerGaugeMetric(metricName, labels, getDataAnalysisMetricHelpDocument());
     String env = System.getenv("ENV");
     if (isNotEmpty(env)) {
-      env = env.replaceAll("-", "_");
+      env = env.replaceAll("-", "_").toLowerCase();
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, getDataAnalysisMetricHelpDocument());
     }
   }
