@@ -11,9 +11,11 @@ import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -62,7 +64,9 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -89,6 +93,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.KubernetesHelperService;
@@ -97,6 +102,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -104,6 +110,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -146,6 +153,7 @@ public class K8sStateHelper {
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private KustomizeHelper kustomizeHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
   private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
@@ -247,6 +255,11 @@ public class K8sStateHelper {
 
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
+    List<String> tags = new ArrayList<>();
+    if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
+      tags.addAll(fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
+    }
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
@@ -255,6 +268,7 @@ public class K8sStateHelper {
                                     .infrastructureMappingId(getContainerInfrastructureMappingId(context))
                                     .waitId(waitId)
                                     .async(true)
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                                               .parameters(new Object[] {fetchFilesTaskParams})
@@ -518,13 +532,17 @@ public class K8sStateHelper {
       taskTimeoutInMillis = taskTimeoutInMinutes * 60L * 1000L;
     }
 
+    List tags = new ArrayList();
+    tags.addAll(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters));
+    tags.addAll(fetchTagsFromK8sTaskParams(k8sTaskParameters));
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .waitId(waitId)
-                                    .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters))
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sTaskParameters})
@@ -665,13 +683,17 @@ public class K8sStateHelper {
             .releaseName(releaseName)
             .build();
 
+    List tags = new ArrayList();
+    tags.addAll(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters));
+    tags.addAll(fetchTagsFromK8sTaskParams(k8sInstanceSyncTaskParameters));
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(false)
                                     .accountId(containerInfrastructureMapping.getAccountId())
                                     .appId(containerInfrastructureMapping.getAppId())
                                     .waitId(waitId)
-                                    .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sInstanceSyncTaskParameters})
@@ -789,7 +811,8 @@ public class K8sStateHelper {
     ApplicationManifest applicationManifest =
         applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
     if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
-      return null;
+      throw new InvalidRequestException(
+          "Application Manifest not found while preparing helm values fetch task params", USER);
     }
 
     return HelmValuesFetchTaskParameters.builder()
@@ -837,6 +860,11 @@ public class K8sStateHelper {
     Application app = appService.get(context.getAppId());
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(context, activityId);
 
+    List<String> tags = new ArrayList<>();
+    if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
+      tags.addAll(fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
+    }
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
@@ -845,6 +873,7 @@ public class K8sStateHelper {
                                     .infrastructureMappingId(getContainerInfrastructureMappingId(context))
                                     .waitId(waitId)
                                     .async(true)
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HELM_VALUES_FETCH.name())
                                               .parameters(new Object[] {helmValuesFetchTaskParameters})
@@ -901,5 +930,40 @@ public class K8sStateHelper {
       throw new InvalidRequestException(format(
           "Service %s used in workflow is of incompatible type. Use Kubernetes V2 type service", service.getName()));
     }
+  }
+
+  public List<String> fetchTagsFromK8sCloudProvider(ContainerServiceParams containerServiceParams) {
+    if (containerServiceParams == null || containerServiceParams.getSettingAttribute() == null) {
+      return emptyList();
+    }
+
+    SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+    return getDelegateNameAsTagFromK8sCloudProvider(settingAttribute.getAccountId(), settingAttribute.getValue());
+  }
+
+  private List<String> fetchTagsFromK8sTaskParams(K8sTaskParameters request) {
+    if (request == null || request.getK8sClusterConfig() == null) {
+      return emptyList();
+    }
+
+    return getDelegateNameAsTagFromK8sCloudProvider(
+        request.getAccountId(), request.getK8sClusterConfig().getCloudProvider());
+  }
+
+  private List<String> getDelegateNameAsTagFromK8sCloudProvider(String accountId, SettingValue settingValue) {
+    if (!featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, accountId)) {
+      return emptyList();
+    }
+
+    if (!(settingValue instanceof KubernetesClusterConfig)) {
+      return emptyList();
+    }
+
+    KubernetesClusterConfig config = (KubernetesClusterConfig) settingValue;
+    if (config.isUseKubernetesDelegate() && isNotBlank(config.getDelegateName())) {
+      return Arrays.asList(config.getDelegateName());
+    }
+
+    return emptyList();
   }
 }

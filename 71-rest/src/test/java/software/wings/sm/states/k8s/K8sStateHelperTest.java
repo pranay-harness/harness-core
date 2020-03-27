@@ -1,5 +1,6 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -16,7 +17,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
@@ -27,19 +30,28 @@ import static software.wings.sm.states.k8s.K8sScale.K8S_SCALE_COMMAND_NAME;
 import static software.wings.sm.states.k8s.K8sTestConstants.VALUES_YAML_WITH_ARTIFACT_REFERENCE;
 import static software.wings.sm.states.k8s.K8sTestConstants.VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE;
 import static software.wings.sm.states.k8s.K8sTestConstants.VALUES_YAML_WITH_NO_ARTIFACT_REFERENCE;
+import static software.wings.sm.states.pcf.PcfStateTestHelper.PHASE_NAME;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -51,35 +63,59 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Account;
 import software.wings.beans.Activity;
+import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
+import software.wings.common.VariableProcessor;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
@@ -101,18 +137,46 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private HelmChartConfigHelperService helmChartConfigHelperService;
   @Mock private KustomizeHelper kustomizeHelper;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateService delegateService;
+  @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private ArtifactService artifactService;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private ManagerExpressionEvaluator evaluator;
+  @Mock private VariableProcessor variableProcessor;
+  @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private AccountService accountService;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
   private static final String APPLICATION_MANIFEST_ID = "AppManifestId";
 
+  @InjectMocks
+  private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
+                                                              .withAppId(APP_ID)
+                                                              .withEnvId(ENV_ID)
+                                                              .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
+                                                              .build();
+  private ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
+
+  @InjectMocks
+  private PhaseElement phaseElement = PhaseElement.builder()
+                                          .uuid(generateUuid())
+                                          .serviceElement(serviceElement)
+                                          .infraMappingId(INFRA_MAPPING_ID)
+                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                          .phaseName(PHASE_NAME)
+                                          .deploymentType(DeploymentType.HELM.name())
+                                          .build();
+
   private ExecutionContextImpl context;
-  private WorkflowStandardParams workflowStandardParams =
-      aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
           .displayName(STATE_NAME)
           .addContextElement(workflowStandardParams)
+          .addContextElement(phaseElement)
           .addStateExecutionData(K8sStateExecutionData.builder().build())
           .build();
 
@@ -121,9 +185,22 @@ public class K8sStateHelperTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("artifactService", artifactService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    on(context).set("featureFlagService", featureFlagService);
+    on(context).set("stateExecutionInstance", stateExecutionInstance);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
 
-    when(appService.getApplicationWithDefaults(APP_ID))
-        .thenReturn(anApplication().appId(APP_ID).name(APP_NAME).uuid(APP_ID).build());
+    when(accountService.getAccountWithDefaults(ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
+    Application application = anApplication().appId(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).uuid(APP_ID).build();
+    when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(application);
+    when(appService.get(any())).thenReturn(application);
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(Environment.Builder.anEnvironment()
                         .appId(APP_ID)
@@ -273,7 +350,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     wingsPersistence.save(applicationManifest);
     wingsPersistence.save(manifestFile);
-    wingsPersistence.save(createGCPInfraMapping());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(createGCPInfraMapping());
 
     // Service K8S_MANIFEST
     boolean result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
@@ -346,7 +423,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(result).isFalse();
 
     try {
-      wingsPersistence.delete(InfrastructureMapping.class, INFRA_MAPPING_ID);
+      when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(null);
       k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
       fail("Should not reach here");
     } catch (InvalidRequestException e) {
@@ -376,7 +453,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     context.pushContextElement(phaseElement);
 
     try {
-      wingsPersistence.save(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+      when(serviceResourceService.get(SERVICE_ID))
+          .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
       k8sStateHelper.validateK8sV2TypeServiceUsed(context);
 
       fail("Should not reach here");
@@ -385,7 +463,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
           .isEqualTo("Service SERVICE_NAME used in workflow is of incompatible type. Use Kubernetes V2 type service");
     }
 
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).isK8sV2(true).build());
+    when(serviceResourceService.get(SERVICE_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).isK8sV2(true).build());
     k8sStateHelper.validateK8sV2TypeServiceUsed(context);
   }
 
@@ -419,5 +498,152 @@ public class K8sStateHelperTest extends WingsBaseTest {
         .storeType(KustomizeSourceRepo)
         .serviceId("serviceId")
         .build();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testTagsInGetPodList() throws Exception {
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().accountId(ACCOUNT_ID).build();
+    infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
+
+    K8sTaskExecutionResponse response =
+        K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
+            .build();
+    when(delegateService.executeTask(any())).thenReturn(response);
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(SETTING_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(AzureConfig.builder().build())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).executeTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEmpty();
+
+    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).executeTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEmpty();
+
+    settingAttribute.setValue(KubernetesClusterConfig.builder().build());
+    wingsPersistence.save(settingAttribute);
+    k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(3)).executeTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEmpty();
+
+    settingAttribute.setValue(
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    wingsPersistence.save(settingAttribute);
+    k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(4)).executeTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).contains("delegateName");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testTagsInQueueK8sDelegateTask() throws Exception {
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
+    infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
+
+    K8sTaskExecutionResponse response =
+        K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
+            .build();
+    when(delegateService.executeTask(any())).thenReturn(response);
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
+    when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
+    when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
+    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString()))
+        .thenReturn(HelmConstants.HelmVersion.V2);
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(SETTING_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(KubernetesClusterConfig.builder().build())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    k8sStateHelper.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEmpty();
+
+    settingAttribute.setValue(
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    wingsPersistence.save(settingAttribute);
+    k8sStateHelper.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).isEmpty();
+
+    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    settingAttribute.setValue(
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    wingsPersistence.save(settingAttribute);
+    k8sStateHelper.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(3)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getTags()).contains("delegateName");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testFetchTagsFromK8sCloudProvider() {
+    List<String> tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(null);
+    assertThat(tags).isEmpty();
+
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder().build();
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isEmpty();
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(AwsConfig.builder().build()).build();
+    containerServiceParams.setSettingAttribute(settingAttribute);
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isEmpty();
+
+    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isEmpty();
+
+    settingAttribute.setValue(KubernetesClusterConfig.builder().build());
+    containerServiceParams.setSettingAttribute(settingAttribute);
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isEmpty();
+
+    settingAttribute.setValue(KubernetesClusterConfig.builder().useKubernetesDelegate(true).build());
+    containerServiceParams.setSettingAttribute(settingAttribute);
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isEmpty();
+
+    settingAttribute.setValue(
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    containerServiceParams.setSettingAttribute(settingAttribute);
+    tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    assertThat(tags).isNotEmpty();
+    assertThat(tags).contains("delegateName");
   }
 }
