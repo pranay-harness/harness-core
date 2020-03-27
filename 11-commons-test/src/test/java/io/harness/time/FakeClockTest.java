@@ -24,8 +24,7 @@ public class FakeClockTest extends CategoryTest {
 
     fake.advanceBy(1, ChronoUnit.MILLIS);
     assertThat(fake.getZone()).isEqualTo(fixed.getZone());
-    assertThat(fake.toFixed())
-        .isEqualTo(Clock.fixed(fixed.instant().plus(1, ChronoUnit.MILLIS), ZoneId.systemDefault()));
+    assertThat(fake.toFixed()).isEqualTo(Clock.fixed(fixed.instant().plus(1, ChronoUnit.MILLIS), ZoneId.of("UTC")));
     assertThat(Duration.between(fixed.instant(), fake.instant())).isEqualTo(Duration.ofMillis(1));
 
     fake.advanceBy(99, ChronoUnit.MILLIS);

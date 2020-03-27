@@ -13,4 +13,6 @@ public class EcsActiveInstancesCache {
   private Set<String> activeEc2InstanceIds;
   private Set<String> activeContainerInstanceArns;
   private Instant lastProcessedTimestamp;
+  // instant till which we've collected metrics (truncated to hour)
+  private Instant metricsCollectedTillHour;
 }

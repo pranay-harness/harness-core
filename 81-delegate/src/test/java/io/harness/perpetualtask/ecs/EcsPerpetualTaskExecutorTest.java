@@ -4,7 +4,6 @@ import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static java.time.temporal.ChronoUnit.HOURS;
-import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -21,6 +20,7 @@ import com.google.protobuf.Message;
 
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.Service;
+import com.github.benmanes.caffeine.cache.Cache;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
@@ -34,20 +34,23 @@ import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.time.FakeClock;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
 import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.sql.Date;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -58,13 +61,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(Parameterized.class)
 public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Mock private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private EcsMetricClient ecsMetricClient;
   @Mock private EventPublisher eventPublisher;
+
+  @Parameterized.Parameter public Clock clock;
+  @Parameterized.Parameters(name = "{index}: with clock: {0}")
+  public static Clock[] clocks() {
+    return new Clock[] {Clock.systemUTC(), // current  time
+        new FakeClock().instant(Instant.parse("2020-03-03T10:00:00.00Z")), // exact hour
+        new FakeClock().instant(Instant.parse("2020-03-03T10:00:01.00Z")), // second after
+        new FakeClock().instant(Instant.parse("2020-03-03T10:59:59.00Z"))}; // second before
+  }
+
   private EcsPerpetualTaskExecutor ecsPerpetualTaskExecutor;
+  private Cache<String, EcsActiveInstancesCache> cache;
 
   @Captor private ArgumentCaptor<Message> messageCaptor;
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
@@ -79,8 +93,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    ecsPerpetualTaskExecutor =
-        new EcsPerpetualTaskExecutor(ecsHelperServiceDelegate, ec2ServiceDelegate, ecsMetricClient, eventPublisher);
+    MockitoAnnotations.initMocks(this);
+    ecsPerpetualTaskExecutor = new EcsPerpetualTaskExecutor(
+        ecsHelperServiceDelegate, ec2ServiceDelegate, ecsMetricClient, eventPublisher, clock);
+    cache = Reflect.on(ecsPerpetualTaskExecutor).get("cache");
   }
 
   @Test
@@ -89,9 +105,9 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   public void shouldQueryEcsMetricClientAndPublishUtilizationMessages() throws Exception {
     AwsConfig awsConfig = AwsConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = Collections.emptyList();
-    final Instant now = Instant.now();
-    Instant lastMetricCollectionTime = now.minus(Duration.ofHours(1));
-    Instant truncatedPollTime = lastMetricCollectionTime.truncatedTo(HOURS);
+    final Instant now = Instant.now(clock);
+    Instant metricsCollectedTillHour = now.truncatedTo(HOURS).minus(1, HOURS);
+    cache.put(CLUSTER_ID, EcsActiveInstancesCache.builder().metricsCollectedTillHour(metricsCollectedTillHour).build());
     final ImmutableList<Service> services =
         ImmutableList.of(new Service()
                              .withServiceArn("arn:aws:ecs:us-east-2:132359207506:service/ccm-test-service")
@@ -106,19 +122,20 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
         .willReturn(services);
     final EcsPerpetualTaskParams ecsPerpetualTaskParams =
         EcsPerpetualTaskParams.newBuilder().setClusterId(CLUSTER_ID).setSettingId(SETTING_ID).setRegion(REGION).build();
-    given(ecsMetricClient.getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails), eq(Date.from(truncatedPollTime)),
-              eq(Date.from(now.truncatedTo(HOURS))),
+    given(ecsMetricClient.getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails),
+              eq(Date.from(metricsCollectedTillHour)), eq(Date.from(now.truncatedTo(HOURS))),
               eq(new Cluster().withClusterName(CLUSTER_NAME).withClusterArn(CLUSTER_ARN)), eq(services),
               eq(ecsPerpetualTaskParams)))
         .willReturn(utilizationMessages);
 
+    Instant heartbeatTime = Instant.EPOCH;
     ecsPerpetualTaskExecutor.publishUtilizationMetrics(
-        ecsPerpetualTaskParams, awsConfig, encryptionDetails, CLUSTER_ARN, lastMetricCollectionTime);
+        ecsPerpetualTaskParams, awsConfig, encryptionDetails, CLUSTER_ARN, now, heartbeatTime);
 
     then(eventPublisher)
         .should(times(2))
-        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(lastMetricCollectionTime)),
-            mapArgumentCaptor.capture());
+        .publishMessage(
+            messageCaptor.capture(), eq(HTimestamps.fromInstant(now.truncatedTo(HOURS))), mapArgumentCaptor.capture());
     assertThat(messageCaptor.getAllValues()).hasSize(2).containsAll(utilizationMessages);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
@@ -130,7 +147,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     Set<String> activeEc2InstanceIds = new HashSet<>(Arrays.asList("instance1", "instance2"));
     Set<String> activeContainerInstanceArns = new HashSet<>(Collections.singletonList("containerInstance1"));
     Set<String> activeTaskArns = new HashSet<>(Arrays.asList("task1", "task2"));
-    Instant pollTime = Instant.now();
+    Instant pollTime = Instant.now(clock);
 
     ecsPerpetualTaskExecutor.publishEcsClusterSyncEvent(CLUSTER_ID, SETTING_ID, CLUSTER_NAME, activeEc2InstanceIds,
         activeContainerInstanceArns, activeTaskArns, pollTime);
@@ -145,7 +162,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldRunEcsPerpetualTask() {
-    Instant heartBeatTime = Instant.now();
+    Instant heartBeatTime = Instant.now(clock);
 
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
@@ -173,13 +190,13 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AVMOHAN, intermittent = true)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldQuerySingleHourWindowInNormalCase() throws Exception {
-    final Instant now = Instant.now();
+    final Instant now = Instant.now(clock);
     Instant heartBeatTime = now.minus(Duration.ofHours(3));
-    // lastMetricCollection not within last hour so collect.
-    Reflect.on(ecsPerpetualTaskExecutor).set("lastMetricCollectionTime", now.minus(70, MINUTES));
+    Instant metricsCollectedTillHour = now.truncatedTo(HOURS).minus(1, HOURS);
+    cache.put(CLUSTER_ID, EcsActiveInstancesCache.builder().metricsCollectedTillHour(metricsCollectedTillHour).build());
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
@@ -230,7 +247,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
 
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
     then(ecsMetricClient)
         .should(times(1))
         .getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails),
@@ -242,7 +259,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleMultiHourWindowIfMissingLessThan24Hours() throws Exception {
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
     Instant heartBeatTime = now.minus(Duration.ofHours(7));
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
@@ -274,10 +291,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotPublishUtilizationMetricsIfAlreadyWithinLastHour() throws Exception {
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
     Instant heartBeatTime = now.minus(Duration.ofHours(7));
-    // lastMetricCollectionTime within last hour. So don't collect again.
-    Reflect.on(ecsPerpetualTaskExecutor).set("lastMetricCollectionTime", now.minus(50, MINUTES));
+    Instant metricsCollectedTillHour = now.truncatedTo(HOURS);
+    cache.put(CLUSTER_ID, EcsActiveInstancesCache.builder().metricsCollectedTillHour(metricsCollectedTillHour).build());
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
