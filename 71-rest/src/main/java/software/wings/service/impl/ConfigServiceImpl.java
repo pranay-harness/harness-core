@@ -376,7 +376,7 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
     }
 
-    if (inputConfigFile.getEntityType() != SERVICE) {
+    if (inputConfigFile.getEntityType() != SERVICE && inputConfigFile.getConfigOverrideType() != null) {
       updateMap.put("configOverrideType", inputConfigFile.getConfigOverrideType());
     }
 
