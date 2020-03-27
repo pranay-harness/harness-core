@@ -7,8 +7,15 @@ import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.template.TemplateVersion;
 
+import java.util.List;
+import java.util.Map;
+
 public interface TemplateVersionService {
   PageResponse<TemplateVersion> listTemplateVersions(PageRequest<TemplateVersion> pageRequest);
+
+  List<TemplateVersion> listImportedTemplateVersions(String templateId, String accountId);
+
+  Map<String, String> listLatestVersionOfImportedTemplates(List<String> templateUuids, String accountId);
 
   TemplateVersion lastTemplateVersion(@NotEmpty String accountId, @NotEmpty String templateUuid);
 
