@@ -19,5 +19,6 @@ import org.mongodb.morphia.query.Query;
 public interface Cluster {
   String getClusterType();
   String getCloudProviderId();
+  String getClusterName();
   void addRequiredQueryFilters(Query<ClusterRecord> query);
 }

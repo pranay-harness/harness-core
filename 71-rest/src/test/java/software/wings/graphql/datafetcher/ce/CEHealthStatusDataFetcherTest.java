@@ -32,7 +32,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
   private String clusterId = "CLUSTER_ID";
   private String errorMessage = String.format(CEError.PERPETUAL_TASK_NOT_ASSIGNED.getMessage(), clusterId);
   private CEHealthStatus ceHealthStatus = CEHealthStatus.builder().isHealthy(false).build();
-  private CEClusterHealth clusterHealthStatus = CEClusterHealth.builder().errors(Arrays.asList(errorMessage)).build();
+  private CEClusterHealth clusterHealthStatus = CEClusterHealth.builder().messages(Arrays.asList(errorMessage)).build();
   private List<CEClusterHealth> clusterHealthStatusList = Arrays.asList(clusterHealthStatus);
 
   @Mock private DataFetchingEnvironment environment;
