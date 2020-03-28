@@ -35,9 +35,15 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Indexes(@Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
-    fields = { @Field("appId")
-               , @Field("envId"), @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
+      fields = { @Field("appId")
+                 , @Field("envId"), @Field("name") })
+  ,
+      @Index(options = @IndexOptions(name = "infrastructure_cloudProviderId"),
+          fields = { @Field("infrastructure.cloudProviderId") })
+})
+
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
