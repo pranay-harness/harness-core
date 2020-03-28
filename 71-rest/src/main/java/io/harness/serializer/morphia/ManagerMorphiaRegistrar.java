@@ -400,6 +400,7 @@ import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.trigger.ArtifactCondition;
@@ -1217,6 +1218,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.template.artifactsource.ArtifactSourceTemplate", ArtifactSourceTemplate.class);
     w.put("beans.template.artifactsource.CustomArtifactSourceTemplate", CustomArtifactSourceTemplate.class);
     w.put("beans.template.command.HttpTemplate", HttpTemplate.class);
+    w.put("beans.template.command.PcfCommandTemplate", PcfCommandTemplate.class);
     w.put("beans.template.command.ShellScriptTemplate", ShellScriptTemplate.class);
     w.put("beans.template.command.SshCommandTemplate", SshCommandTemplate.class);
     w.put("beans.trigger.ArtifactCondition", ArtifactCondition.class);
