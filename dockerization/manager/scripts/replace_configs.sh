@@ -527,6 +527,10 @@ if [[ "" != "$CDN_WATCHER_JAR_BASE_PATH" ]]; then
   yq write -i $CONFIG_FILE cdnConfig.watcherJarBasePath "$CDN_WATCHER_JAR_BASE_PATH"
 fi
 
+if [[ "" != "$CDN_WATCHER_JAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherJarPath "$CDN_WATCHER_JAR_PATH"
+fi
+
 if [[ "" != "$CDN_WATCHER_METADATA_FILE_PATH" ]]; then
   yq write -i $CONFIG_FILE cdnConfig.watcherMetaDataFilePath "$CDN_WATCHER_METADATA_FILE_PATH"
 fi

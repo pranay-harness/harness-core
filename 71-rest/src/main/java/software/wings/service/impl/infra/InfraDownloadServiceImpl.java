@@ -38,6 +38,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR = "SERVICE_ACC";
   private static final String DELEGATE_JAR = "delegate.jar";
+  private static final String WATCHER_JAR = "watcher.jar";
   private static final String BUILDS_PATH = "/builds/";
 
   private static final String LOGGING_SERVICE_ACCOUNT_ENV_VAR = "LOGGING_SERVICE_ACC";
@@ -107,6 +108,34 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     }
 
     return DEFAULT_ERROR_STRING;
+  }
+
+  @Override
+  public String getDownloadUrlForWatcher(String version, String envString, String accountId) {
+    if (isEmpty(envString)) {
+      envString = getEnv();
+    }
+    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
+      return cdnStorageUrlGenerator.getWatcherJarUrl(version);
+    } else {
+      String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
+      if (isNotBlank(serviceAccountJson)) {
+        try {
+          return getGcsUtil().getSignedUrlForServiceAccount(
+              "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR, serviceAccountJson,
+              3600L, accountId);
+
+        } catch (Exception e) {
+          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+        }
+      }
+    }
+    return DEFAULT_ERROR_STRING;
+  }
+
+  public String getDownloadUrlForWatcher(String version, String accountId) {
+    String env = getEnv();
+    return getDownloadUrlForWatcher(version, env, accountId);
   }
 
   @Override

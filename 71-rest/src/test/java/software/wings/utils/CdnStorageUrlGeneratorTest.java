@@ -30,6 +30,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   private static final String KEY_NAME = "storage-qa-private";
   private static final String DELEGATE_JAR_PATH = "private/shared/delegates/builds/oracle-8u191/%s/delegate.jar";
   private static final String WATCHER_JAR_BASE_PATH = "public/shared/watchers/builds";
+  private static final String WATCHER_JAR_PATH = "oracle-8u191/%s/watcher.jar";
   private static final String WATCHER_METADATA_FILE_PATH = "public/%s/%s/watchers/current.version";
 
   private CdnStorageUrlGenerator cdnStorageUrlGenerator;
@@ -45,6 +46,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
     cdnConfig.setKeySecret(scmSecret.decryptToString(new SecretName("cdn_key_secret")));
     cdnConfig.setDelegateJarPath(DELEGATE_JAR_PATH);
     cdnConfig.setWatcherJarBasePath(WATCHER_JAR_BASE_PATH);
+    cdnConfig.setWatcherJarPath(WATCHER_JAR_PATH);
     cdnConfig.setWatcherMetaDataFilePath(WATCHER_METADATA_FILE_PATH);
 
     cdnStorageUrlGenerator = new CdnStorageUrlGenerator(cdnConfig, false);
@@ -66,6 +68,15 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
     String watcherJarBaseUrl = cdnStorageUrlGenerator.getWatcherJarBaseUrl();
 
     assertEquals(cdnConfig.getUrl() + "/public/shared/watchers/builds", watcherJarBaseUrl);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testWatcherJarUrl() throws IOException {
+    String watcherJarUrl = cdnStorageUrlGenerator.getWatcherJarUrl(WATCHER_JAR_VERSION);
+
+    assertEquals(HTTP_OK, checkIfFileExists(watcherJarUrl));
   }
 
   @Test
