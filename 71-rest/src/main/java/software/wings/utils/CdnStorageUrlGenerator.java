@@ -70,4 +70,10 @@ public class CdnStorageUrlGenerator {
   public String getWatcherJarBaseUrl() {
     return cdnConfig.getUrl() + "/" + cdnConfig.getWatcherJarBasePath();
   }
+
+  public String getWatcherJarUrl(String version) {
+    String watcherJarUrl = cdnConfig.getUrl() + "/" + cdnConfig.getWatcherJarBasePath() + "/"
+        + String.format(cdnConfig.getWatcherJarPath(), version);
+    return URI.create(watcherJarUrl).normalize().toString();
+  }
 }
