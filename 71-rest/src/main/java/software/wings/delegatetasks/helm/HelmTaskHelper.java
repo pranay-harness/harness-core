@@ -9,16 +9,20 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +46,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Singleton
 @Slf4j
@@ -147,7 +153,7 @@ public class HelmTaskHelper {
     }
   }
 
-  public void initHelm(String workingDirectory, HelmVersion helmVersion) throws Exception {
+  public void initHelm(String workingDirectory, HelmVersion helmVersion) throws IOException {
     String helmHomePath = getHelmHomePath(workingDirectory);
     createNewDirectoryAtPath(helmHomePath);
 
@@ -159,34 +165,37 @@ public class HelmTaskHelper {
       helmInitCommand = applyHelmHomePath(helmInitCommand, workingDirectory);
       logger.info("Initing helm. Command " + helmInitCommand);
 
-      ProcessResult processResult = executeCommand(helmInitCommand, workingDirectory);
+      ProcessResult processResult =
+          executeCommand(helmInitCommand, workingDirectory, "Initing helm Command " + helmInitCommand);
       if (processResult.getExitValue() != 0) {
-        throw new WingsException(
+        throw new HelmClientException(
             "Failed to init helm. Executed command " + helmInitCommand + ". " + processResult.getOutput().getUTF8(),
             USER);
       }
     }
   }
 
-  private void addChartMuseumRepo(String repoName, String repoDisplayName, int port, String chartDirectory,
-      HelmVersion helmVersion) throws Exception {
+  private void addChartMuseumRepo(
+      String repoName, String repoDisplayName, int port, String chartDirectory, HelmVersion helmVersion) {
     String repoAddCommand = getChartMuseumRepoAddCommand(repoName, port, chartDirectory, helmVersion);
     logger.info(repoAddCommand);
     logger.info("helm repo add command for repository " + repoDisplayName);
 
-    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
+    ProcessResult processResult =
+        executeCommand(repoAddCommand, chartDirectory, "helm repo add command for repository " + repoDisplayName);
     if (processResult.getExitValue() != 0) {
-      throw new WingsException(
+      throw new HelmClientException(
           "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
           USER);
     }
   }
 
   private void executeFetchChartFromRepo(
-      HelmChartConfigParams helmChartConfigParams, String chartDirectory, String helmFetchCommand) throws Exception {
+      HelmChartConfigParams helmChartConfigParams, String chartDirectory, String helmFetchCommand) {
     logger.info(helmFetchCommand);
 
-    ProcessResult processResult = executeCommand(helmFetchCommand, chartDirectory);
+    ProcessResult processResult = executeCommand(
+        helmFetchCommand, chartDirectory, format("fetch chart %s", helmChartConfigParams.getChartName()));
     if (processResult.getExitValue() != 0) {
       StringBuilder builder = new StringBuilder()
                                   .append("Failed to fetch chart \"")
@@ -202,7 +211,7 @@ public class HelmTaskHelper {
     }
   }
 
-  private void fetchChartFromRepo(HelmChartConfigParams helmChartConfigParams, String chartDirectory) throws Exception {
+  private void fetchChartFromRepo(HelmChartConfigParams helmChartConfigParams, String chartDirectory) {
     String helmFetchCommand =
         getHelmFetchCommand(helmChartConfigParams.getChartName(), helmChartConfigParams.getChartVersion(),
             helmChartConfigParams.getRepoName(), chartDirectory, helmChartConfigParams.getHelmVersion());
@@ -239,17 +248,32 @@ public class HelmTaskHelper {
     return applyHelmHomePath(repoAddCommand, workingDirectory);
   }
 
-  private ProcessResult executeCommand(String command, String directoryPath) throws Exception {
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .directory(isNotBlank(directoryPath) ? new File(directoryPath) : null)
-                                          .timeout(2, TimeUnit.MINUTES)
-                                          .commandSplit(command)
-                                          .readOutput(true);
+  @VisibleForTesting
+  ProcessResult executeCommand(String command, String directoryPath, String errorMessage) {
+    errorMessage = defaultString(errorMessage);
+    ProcessExecutor processExecutor = createProcessExecutor(command, directoryPath);
 
-    return processExecutor.execute();
+    try {
+      return processExecutor.execute();
+    } catch (IOException e) {
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e);
+    } catch (TimeoutException e) {
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
+    }
   }
 
-  public String createNewDirectoryAtPath(String directoryBase) throws Exception {
+  ProcessExecutor createProcessExecutor(String command, String directoryPath) {
+    return new ProcessExecutor()
+        .directory(isNotBlank(directoryPath) ? new File(directoryPath) : null)
+        .timeout(2, TimeUnit.MINUTES)
+        .commandSplit(command)
+        .readOutput(true);
+  }
+
+  public String createNewDirectoryAtPath(String directoryBase) throws IOException {
     String workingDirectory = Paths.get(directoryBase, convertBase64UuidToCanonicalForm(generateUuid()))
                                   .normalize()
                                   .toAbsolutePath()
@@ -261,7 +285,7 @@ public class HelmTaskHelper {
     return workingDirectory;
   }
 
-  public String createDirectory(String directoryBase) throws Exception {
+  public String createDirectory(String directoryBase) throws IOException {
     String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
 
     createDirectoryIfDoesNotExist(workingDirectory);
@@ -365,7 +389,7 @@ public class HelmTaskHelper {
   }
 
   public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
-      String chartDirectory, HelmVersion helmVersion) throws Exception {
+      String chartDirectory, HelmVersion helmVersion) {
     String repoAddCommand =
         getHttpRepoAddCommand(repoName, chartRepoUrl, username, password, chartDirectory, helmVersion);
 
@@ -374,16 +398,16 @@ public class HelmTaskHelper {
     logger.info(repoAddCommandForLogging);
     logger.info("helm repo add command for repository " + repoDisplayName);
 
-    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory);
+    ProcessResult processResult =
+        executeCommand(repoAddCommand, chartDirectory, "add helm repo. Executed command" + repoAddCommandForLogging);
     if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to add helm repo. Executed command " + repoAddCommandForLogging + ". "
+      throw new HelmClientException("Failed to add helm repo. Executed command " + repoAddCommandForLogging + ". "
               + processResult.getOutput().getUTF8(),
           USER);
     }
   }
 
-  private void fetchChartFromHttpServer(HelmChartConfigParams helmChartConfigParams, String chartDirectory)
-      throws Exception {
+  private void fetchChartFromHttpServer(HelmChartConfigParams helmChartConfigParams, String chartDirectory) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
 
     addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
@@ -444,7 +468,7 @@ public class HelmTaskHelper {
     try {
       String repoRemoveCommand = getRepoRemoveCommand(repoName, workingDirectory, helmVersion);
 
-      ProcessResult processResult = executeCommand(repoRemoveCommand, null);
+      ProcessResult processResult = executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName));
       if (processResult.getExitValue() != 0) {
         logger.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
@@ -460,8 +484,7 @@ public class HelmTaskHelper {
   2.) Passing null directoryPath in the helmFetchCommand so that it picks up default helm
   Ruckus is one of the customer that is using this mechanism
    */
-  private void fetchChartFromEmptyHelmRepoConfig(HelmChartConfigParams helmChartConfigParams, String chartDirectory)
-      throws Exception {
+  private void fetchChartFromEmptyHelmRepoConfig(HelmChartConfigParams helmChartConfigParams, String chartDirectory) {
     try {
       String helmFetchCommand;
       if (isNotBlank(helmChartConfigParams.getChartUrl())) {

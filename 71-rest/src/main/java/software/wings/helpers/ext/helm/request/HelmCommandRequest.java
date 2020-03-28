@@ -56,7 +56,6 @@ public class HelmCommandRequest implements ExecutionCapabilityDemander {
     if (containerServiceParams != null) {
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
     }
-
     return executionCapabilities;
   }
 
