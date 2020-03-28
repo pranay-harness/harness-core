@@ -249,6 +249,7 @@ hosts { "name" : "hostName_1" , "background" : true} { "hostName" : 1}
 hosts { "name" : "serviceTemplateId_1" , "background" : true} { "serviceTemplateId" : 1}
 idempotent_locks { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 infrastructureDefinitions { "name" : "infraDefinitionIdx" , "unique" : true} { "appId" : 1 , "envId" : 1 , "name" : 1}
+infrastructureDefinitions { "name" : "infrastructure_cloudProviderId" , "background" : true} { "infrastructure.cloudProviderId" : 1}
 infrastructureMapping { "name" : "appId_1" , "background" : true} { "appId" : 1}
 infrastructureMapping { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 infrastructureMapping { "name" : "nextIteration_1" , "background" : true} { "nextIteration" : 1}
