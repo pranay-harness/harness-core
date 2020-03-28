@@ -79,34 +79,23 @@ public class Http {
     // Install the all-trusting host verifier
     HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
     HttpURLConnection connection = getHttpsURLConnection(url);
-    // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
-    connection.setRequestMethod("GET");
-    connection.setConnectTimeout(15000);
-    connection.setReadTimeout(15000);
-    return connection.getResponseCode();
-  }
-
-  /**
-   * tests whether the http server can be connected or not for this url
-   * this takes care of proxy as well. simple socket connectivity does not take care of the
-   * http proxies.
-   */
-  public static boolean isHttpServerConnectable(String url) {
-    logger.info("Testing http server connectivity for url {}", url);
     try {
-      final int responseCode = getResponseCodeForValidation(url);
-      logger.info("Able to connect http server with response code= [{}] , Url= [{}]", responseCode, url);
-      return true;
-    } catch (Exception e) {
-      logger.info("Could not connect http server for url {}: {}", url, e.getMessage());
+      // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(15000);
+      connection.setReadTimeout(15000);
+      return connection.getResponseCode();
+    } finally {
+      if (connection != null) {
+        connection.disconnect();
+      }
     }
-    return false;
   }
 
   public static boolean connectableHttpUrl(String url) {
     logger.info("Testing connectivity to url {}", url);
     try {
-      final int responseCode = getResponseCodeForValidation(url);
+      int responseCode = getResponseCodeForValidation(url);
       if (responseCode != 400) {
         logger.info("Url {} is connectable", url);
         return true;
@@ -132,7 +121,7 @@ public class Http {
 
   private static SSLContext createSslContext() {
     try {
-      final SSLContext sslContext = SSLContext.getInstance("SSL");
+      SSLContext sslContext = SSLContext.getInstance("SSL");
       sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
       return sslContext;
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
