@@ -47,8 +47,8 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,6 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
-import software.wings.dl.WingsPersistence;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -82,19 +81,15 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheManager;
 import software.wings.utils.ResourceTestRule;
 
@@ -128,30 +123,24 @@ public class SecureResourceTest extends CategoryTest {
 
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
-  private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+  private static HPersistence hPersistence = mock(HPersistence.class);
   private static CacheManager cacheManager = mock(CacheManager.class);
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
-  private static WorkflowService workflowService = mock(WorkflowService.class);
   private static UserGroupService userGroupService = mock(UserGroupService.class);
   private static UsageRestrictionsService usageRestrictionsService = mock(UsageRestrictionsService.class);
-  private static EnvironmentService envService = mock(EnvironmentService.class);
   private static VerificationService learningEngineService = mock(VerificationService.class);
   private static MainConfiguration configuration = mock(MainConfiguration.class);
   private static AuthHandler authHandler = mock(AuthHandler.class);
-  private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
   private static WhitelistService whitelistService = mock(WhitelistService.class);
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
-  private static UsageMetricsEventPublisher usageMetricsEventPublisher = mock(UsageMetricsEventPublisher.class);
-  private static DashboardAuthHandler dashboardAuthHandler = mock(DashboardAuthHandler.class);
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
 
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
-      userGroupService, usageRestrictionsService, workflowService, envService, cacheManager, configuration,
-      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
-      usageMetricsEventPublisher, appService, dashboardAuthHandler);
+  private static AuthService authService =
+      new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
+          cacheManager, configuration, learningEngineService, authHandler, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
@@ -264,8 +253,10 @@ public class SecureResourceTest extends CategoryTest {
     when(cacheManager.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
     when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
 
-    when(genericDbCache.get(AuthToken.class, VALID_TOKEN))
-        .thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
+    Cache<String, AuthToken> authTokenCache = (Cache<String, AuthToken>) mock(Cache.class);
+    when(cacheManager.getAuthTokenCache()).thenReturn(authTokenCache);
+    when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
+
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))

@@ -1,6 +1,8 @@
 package software.wings.security.authentication;
 
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -16,11 +18,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
@@ -38,15 +43,11 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
@@ -60,16 +61,11 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   private static final String USER_NAME = "testUser@test.com";
   private static final String UUID = "TestUUID";
   @Mock private PasswordBasedAuthHandler PASSWORD_BASED_AUTH_HANDLER;
-  @Mock private SamlBasedAuthHandler SAML_BASED_AUTH_HANDLER;
   @Mock private SamlClientService SAML_CLIENT_SERVICE;
   @Mock private MainConfiguration MAIN_CONFIGURATION;
   @Mock private UserService USER_SERVICE;
-  @Mock private WingsPersistence WINGS_PERSISTENCE;
-  @Mock private AccountService ACCOUNT_SERVICE;
-  @Mock private SSOSettingService SSO_SETTING_SERVICE;
   @Mock private AuthenticationUtils AUTHENTICATION_UTL;
   @Mock private AuthService AUTHSERVICE;
-  @Mock private FeatureFlagService FEATURE_FLAG_SERVICE;
   @Mock private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
   @Captor ArgumentCaptor<String> argCaptor;
@@ -102,7 +98,49 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
-  public void getLoginTypeResponseForInvalidUser() {
+  public void testDefaultLoginAccountForInvalidUserinSaaS() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
+    testLoginAttemptForInvalidUser();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testDefaultLoginAccountForInvalidUserinOnPrem() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.ONPREM);
+    testLoginAttemptForInvalidUser();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testDefaultLoginAccountForInvalidUserinKubernetesOnPrem() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
+    testLoginAttemptForInvalidUser();
+  }
+
+  private void testLoginAttemptForInvalidUser() {
+    PortalConfig portalConfig = mock(PortalConfig.class);
+    when(portalConfig.getAuthTokenExpiryInMillis()).thenReturn(System.currentTimeMillis());
+    when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
+
+    String userName = "testUser@test.com";
+
+    String basicToken = Base64.encodeBase64String((userName + ":password").getBytes());
+
+    when(AUTHENTICATION_UTL.getUser(Matchers.eq(userName), Matchers.eq(USER)))
+        .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
+
+    assertThatThrownBy(() -> authenticationManager.defaultLoginAccount(basicToken, "testAccontId"))
+        .isInstanceOf(InvalidCredentialsException.class)
+        .matches(ex -> ((WingsException) ex).getCode() == INVALID_CREDENTIAL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testGetLoginTypeResponseForInvalidUserInSaaS() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
         .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
     assertThatThrownBy(() -> authenticationManager.getLoginTypeResponse(NON_EXISTING_USER))
@@ -258,5 +296,33 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     String token = authenticationManager.extractToken("Basic testData", "Basic");
     assertThat(token).isEqualTo("testData");
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testGetLoginTypeResponseForInvalidUserForOnPrem() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.ONPREM);
+    setInternalState(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION);
+    testForInvalidUserInOnPrem();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void getLoginTypeResponseForInvalidUserForKubernetesOnPrem() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
+    setInternalState(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION);
+    testForInvalidUserInOnPrem();
+  }
+
+  private void testForInvalidUserInOnPrem() {
+    when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
+    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
+        .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
+
+    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
+    assertThat(loginTypeResponse).isNotNull();
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
   }
 }

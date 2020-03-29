@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.beans.ApiKeyEntry;
+import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.security.UserPermissionInfo;
@@ -38,6 +39,7 @@ public class CacheManager {
   private static final String APIKEY_PERMISSION_CACHE = "apiKeyPermissionCache";
   private static final String APIKEY_RESTRICTION_CACHE = "apiKeyRestrictionCache";
   private static final String WHITELIST_CACHE = "whitelistCache";
+  private static final String AUTH_TOKEN_CACHE = "authTokenCache";
 
   @Value
   @Builder
@@ -71,6 +73,11 @@ public class CacheManager {
 
   public <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
     return getCache(cacheName, keyType, valueType, EternalExpiryPolicy.factoryOf());
+  }
+
+  public Cache<String, AuthToken> getAuthTokenCache() {
+    return getCache(
+        AUTH_TOKEN_CACHE, String.class, AuthToken.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
   }
 
   public Cache<String, String> getHarnessApiKeyCache() {
@@ -155,6 +162,11 @@ public class CacheManager {
     Cache<String, WhitelistConfig> whitelistConfigCache = getWhitelistConfigCache();
     if (whitelistConfigCache != null) {
       whitelistConfigCache.clear();
+    }
+
+    Cache<String, AuthToken> authTokenCache = getAuthTokenCache();
+    if (authTokenCache != null) {
+      authTokenCache.clear();
     }
   }
 }

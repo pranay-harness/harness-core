@@ -51,6 +51,7 @@ public class AuthenticationUtils {
   public User getUser(String userName, EnumSet<ReportTarget> reportTargets) {
     User user = isNotEmpty(userName) ? getUserByEmail(userName) : null;
     if (user == null) {
+      logger.info("User {} does not exists.", userName);
       if (reportTargets == null) {
         throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
       } else {

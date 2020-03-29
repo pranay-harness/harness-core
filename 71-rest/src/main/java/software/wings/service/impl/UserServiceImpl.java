@@ -1474,7 +1474,7 @@ public class UserServiceImpl implements UserService {
     User user = getUserByEmail(email);
 
     if (user == null) {
-      throw new InvalidRequestException("Email doesn't exist", USER);
+      return true;
     }
 
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
