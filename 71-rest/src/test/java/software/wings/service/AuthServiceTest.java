@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,6 +39,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.TokenGenerator;
 import org.apache.commons.codec.binary.Hex;
@@ -49,6 +51,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -69,7 +72,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheManager;
 
 import java.io.UnsupportedEncodingException;
@@ -87,14 +89,17 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
+  private final String NOT_AVAILABLE_TOKEN = "NOT_AVAILABLE_TOKEN";
   private final String AUTH_SECRET = "AUTH_SECRET";
 
   @Mock private GenericDbCache cache;
   @Mock private static CacheManager cacheManager;
   @Mock private Cache<String, User> userCache;
+  @Mock private Cache<String, AuthToken> authTokenCache;
+  @Mock private HPersistence persistence;
+  @Mock private AdvancedDatastore advancedDatastore;
 
   @Mock private AccountService accountService;
-  @Mock private UserService userService;
   @Mock private SegmentHandler segmentHandler;
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
@@ -114,8 +119,10 @@ public class AuthServiceTest extends WingsBaseTest {
     when(cacheManager.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
 
-    when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
-    when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
+    when(cacheManager.getAuthTokenCache()).thenReturn(authTokenCache);
+    when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
+    when(authTokenCache.get(EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
+
     when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build());
@@ -124,6 +131,23 @@ public class AuthServiceTest extends WingsBaseTest {
     when(cache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(portalConfig.getJwtAuthSecret()).thenReturn(AUTH_SECRET);
+
+    when(persistence.getDatastore(AuthToken.class)).thenReturn(advancedDatastore);
+  }
+
+  /**
+   * Test whether auth token is fetched from db if its not available in cache
+   */
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testAuthTokenNotAvailableInCache() {
+    AuthToken authTokenInDB = new AuthToken(ACCOUNT_ID, USER_ID, 86400000L);
+    when(advancedDatastore.get(AuthToken.class, NOT_AVAILABLE_TOKEN)).thenReturn(authTokenInDB);
+    AuthToken authToken = authService.validateToken(NOT_AVAILABLE_TOKEN);
+    assertThat(authToken).isNotNull().isInstanceOf(AuthToken.class);
+    assertThat(authToken).isEqualTo(authTokenInDB);
+    verify(advancedDatastore, times(1)).get(AuthToken.class, NOT_AVAILABLE_TOKEN);
   }
 
   /**
@@ -295,8 +319,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser =
-        Builder.anUser().uuid(USER_ID).email("admin@harness.io").accounts(Arrays.asList(mockAccount)).build();
+    User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
@@ -310,7 +333,7 @@ public class AuthServiceTest extends WingsBaseTest {
     String tokenString = user.getToken();
     AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);
     authToken.setJwtToken(user.getToken());
-    when(cache.get(Matchers.any(), Matchers.matches(authTokenId))).thenReturn(authToken);
+    when(authTokenCache.get(authTokenId)).thenReturn(authToken);
     assertThat(authService.validateToken(tokenString)).isEqualTo(authToken);
 
     try {
@@ -327,8 +350,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser =
-        Builder.anUser().uuid(USER_ID).email("admin@harness.io").accounts(Arrays.asList(mockAccount)).build();
+    User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
@@ -337,6 +359,7 @@ public class AuthServiceTest extends WingsBaseTest {
     JWT jwt = JWT.decode(user.getToken());
     String authTokenUuid = jwt.getClaim("authToken").asString();
     when(cache.get(Matchers.any(), Matchers.matches(authTokenUuid))).thenReturn(authToken);
+    when(authTokenCache.get(authTokenUuid)).thenReturn(authToken);
     assertThat(user.getToken().length() > 32);
     authService.validateToken(user.getToken());
   }
@@ -347,7 +370,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldSendSegmentTrackEvent() throws IllegalAccessException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").withUuid(ACCOUNT_ID).build();
-    User mockUser = Builder.anUser().uuid(USER_ID).email("admin@abcd.io").accounts(Arrays.asList(mockAccount)).build();
+    User mockUser = getMockUser(mockAccount);
     mockUser.setLastAccountId(ACCOUNT_ID);
     when(userCache.get(USER_ID)).thenReturn(mockUser);
 
@@ -360,5 +383,15 @@ public class AuthServiceTest extends WingsBaseTest {
     } catch (InterruptedException | URISyntaxException e) {
       throw new InvalidRequestException(e.getMessage());
     }
+  }
+
+  private User getMockUser(Account mockAccount) {
+    return Builder.anUser()
+        .uuid(USER_ID)
+        .name("TestUser")
+        .email("admin@abcd.io")
+        .appId("TestApp")
+        .accounts(Arrays.asList(mockAccount))
+        .build();
   }
 }

@@ -50,7 +50,6 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
-import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -79,7 +78,6 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
-import software.wings.dl.WingsPersistence;
 import software.wings.logcontext.UserLogContext;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
@@ -99,18 +97,13 @@ import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.ApiKeyService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.VerificationService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheManager;
 
 import java.io.UnsupportedEncodingException;
@@ -137,47 +130,32 @@ public class AuthServiceImpl implements AuthService {
   private UserService userService;
   private UserGroupService userGroupService;
   private UsageRestrictionsService usageRestrictionsService;
-  private WorkflowService workflowService;
-  private EnvironmentService environmentService;
   private CacheManager cacheManager;
   private MainConfiguration configuration;
   private VerificationService learningEngineService;
-  private FeatureFlagService featureFlagService;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
-  private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private ExecutorService executorService;
   @Inject private ApiKeyService apiKeyService;
   @Inject @Nullable private SegmentHandler segmentHandler;
-  private AppService appService;
-  private DashboardAuthHandler dashboardAuthHandler;
 
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence persistence, UserService userService,
-      UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
-      WorkflowService workflowService, EnvironmentService environmentService, CacheManager cacheManager,
+  public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
+      UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService, CacheManager cacheManager,
       MainConfiguration configuration, VerificationService learningEngineService, AuthHandler authHandler,
-      FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
-      SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher, AppService appService,
-      DashboardAuthHandler dashboardAuthHandler) {
+      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
     this.dbCache = dbCache;
     this.persistence = persistence;
     this.userService = userService;
     this.userGroupService = userGroupService;
     this.usageRestrictionsService = usageRestrictionsService;
-    this.workflowService = workflowService;
-    this.environmentService = environmentService;
     this.cacheManager = cacheManager;
     this.configuration = configuration;
     this.learningEngineService = learningEngineService;
     this.authHandler = authHandler;
-    this.featureFlagService = featureFlagService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
-    this.usageMetricsEventPublisher = usageMetricsEventPublisher;
-    this.appService = appService;
-    this.dashboardAuthHandler = dashboardAuthHandler;
   }
 
   @UtilityClass
@@ -189,8 +167,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthToken validateToken(String tokenString) {
     if (tokenString.length() <= 32) {
-      AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
-
+      AuthToken authToken = getAuthToken(tokenString);
       if (authToken == null) {
         throw new WingsException(INVALID_TOKEN, USER);
       } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
@@ -200,6 +177,34 @@ public class AuthServiceImpl implements AuthService {
     } else {
       return getAuthTokenWithUser(verifyToken(tokenString));
     }
+  }
+
+  private AuthToken getAuthToken(String authTokenId) {
+    AuthToken authToken = null;
+    Cache<String, AuthToken> authTokenCache = cacheManager.getAuthTokenCache();
+    if (authTokenCache != null) {
+      authToken = authTokenCache.get(authTokenId);
+    }
+
+    if (authToken == null) {
+      logger.info("Token with prefix {} not found in cache hence fetching it from db", authTokenId.substring(0, 5));
+      authToken = getAuthTokenFromDB(authTokenId);
+      addAuthTokenToCache(authToken);
+    }
+    return authToken;
+  }
+
+  private void addAuthTokenToCache(AuthToken authToken) {
+    if (authToken != null) {
+      Cache<String, AuthToken> authTokenCache = cacheManager.getAuthTokenCache();
+      if (authTokenCache != null) {
+        authTokenCache.put(authToken.getUuid(), authToken);
+      }
+    }
+  }
+
+  private AuthToken getAuthTokenFromDB(String tokenString) {
+    return persistence.getDatastore(AuthToken.class).get(AuthToken.class, tokenString);
   }
 
   private AuthToken verifyToken(String tokenString) {
@@ -453,8 +458,14 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void invalidateToken(String utoken) {
-    persistence.delete(AuthToken.class, utoken);
-    dbCache.invalidate(AuthToken.class, utoken);
+    AuthToken authToken = validateToken(utoken);
+    if (authToken != null) {
+      persistence.delete(AuthToken.class, authToken.getUuid());
+      Cache<String, AuthToken> authTokenCache = cacheManager.getAuthTokenCache();
+      if (authTokenCache != null) {
+        authTokenCache.remove(authToken.getUuid());
+      }
+    }
   }
 
   private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
@@ -844,7 +855,7 @@ public class AuthServiceImpl implements AuthService {
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
       verifier.verify(token);
       String authToken = JWT.decode(token).getClaim("authToken").asString();
-      return dbCache.get(AuthToken.class, authToken);
+      return getAuthToken(authToken);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException | InvalidClaimException e) {
@@ -856,7 +867,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public User refreshToken(String oldToken) {
     if (oldToken.length() <= 32) {
-      AuthToken authToken = dbCache.get(AuthToken.class, oldToken);
+      AuthToken authToken = getAuthToken(oldToken);
       if (authToken == null) {
         throw new WingsException(EXPIRED_TOKEN, USER);
       }
@@ -872,8 +883,13 @@ public class AuthServiceImpl implements AuthService {
     }
     User user = getUserFromAuthToken(authToken);
     authToken.setRefreshed(true);
-    persistence.save(authToken);
+    saveAuthToken(authToken);
+    addAuthTokenToCache(authToken);
     return generateBearerTokenForUser(user);
+  }
+
+  private String saveAuthToken(AuthToken authToken) {
+    return persistence.save(authToken);
   }
 
   private User getUserFromAuthToken(AuthToken authToken) {
@@ -894,7 +910,7 @@ public class AuthServiceImpl implements AuthService {
       AuthToken authToken = new AuthToken(
           user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
       authToken.setJwtToken(generateJWTSecret(authToken));
-      persistence.save(authToken);
+      saveAuthToken(authToken);
       boolean isFirstLogin = user.getLastLogin() == 0L;
       user.setLastLogin(System.currentTimeMillis());
       userService.update(user);

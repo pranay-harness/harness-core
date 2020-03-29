@@ -13,4 +13,9 @@ public class InvalidCredentialsException extends WingsException {
     super(message, null, INVALID_CREDENTIAL, Level.ERROR, reportTargets, null);
     super.param(MESSAGE_KEY, message);
   }
+
+  public InvalidCredentialsException(String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
+    super(message, cause, INVALID_CREDENTIAL, Level.ERROR, reportTargets, null);
+    super.param(MESSAGE_KEY, message);
+  }
 }

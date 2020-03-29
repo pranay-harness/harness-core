@@ -24,6 +24,7 @@ import com.google.inject.Singleton;
 
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
-import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
@@ -42,8 +42,6 @@ import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -68,11 +66,8 @@ public class AuthenticationManager {
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
   @Inject private OauthOptions oauthOptions;
-  @Inject private SSOSettingService ssoSettingService;
-  @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
@@ -167,7 +162,16 @@ public class AuthenticationManager {
      * The next page throws INVALID_CREDENTIAL exception in case of wrong userId/password which doesn't reveals any
      * information.
      */
-    User user = authenticationUtils.getUser(userName, USER);
+    User user = null;
+    try {
+      user = authenticationUtils.getUser(userName, USER);
+    } catch (WingsException ex) {
+      if (ex.getCode() == ErrorCode.USER_DOES_NOT_EXIST && mainConfiguration.getDeployMode() != null
+          && DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      }
+      throw ex;
+    }
 
     boolean showCaptcha = false;
     try {
@@ -280,10 +284,9 @@ public class AuthenticationManager {
   }
 
   public User defaultLoginAccount(String basicToken, String accountId) {
-    String userName = null;
     try {
       String[] decryptedData = decryptBasicToken(basicToken);
-      userName = decryptedData[0];
+      String userName = decryptedData[0];
       String password = decryptedData[1];
 
       if (isNotEmpty(accountId)) {
@@ -296,6 +299,8 @@ public class AuthenticationManager {
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED) {
         throw new WingsException(DOMAIN_WHITELIST_FILTER_CHECK_FAILED, USER);
+      } else if (e.getCode() == ErrorCode.USER_DOES_NOT_EXIST) {
+        throw new InvalidCredentialsException(INVALID_CREDENTIAL.name(), USER, e);
       }
       throw e;
     } catch (Exception e) {
