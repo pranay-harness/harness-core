@@ -44,9 +44,11 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Utils;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -81,6 +83,7 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient @Inject private YamlDirectoryService yamlDirectoryService;
   @Transient @Inject private WingsPersistence wingsPersistence;
   @Transient @Inject private transient GitChangeSetProcesser gitChangeSetProcesser;
+  @Inject GitSyncService gitSyncService;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
@@ -129,6 +132,11 @@ public class GitCommandCallback implements NotifyCallback {
                       gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
 
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
+              final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
+              gitSyncService.logActivityForGitOperation(yamlChangeSet.getGitFileChanges(),
+                  GitFileActivity.Status.SUCCESS, false, yamlChangeSet.isFullSync(), "", processingCommitId);
+              gitSyncService.addFileProcessingSummaryToGitCommit(
+                  processingCommitId, accountId, yamlChangeSet.getGitFileChanges());
             }
             yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
           }
@@ -177,6 +185,7 @@ public class GitCommandCallback implements NotifyCallback {
         .withChangeType(Utils.getEnumFromString(ChangeType.class, gitSyncError.getChangeType()))
         .withSyncFromGit(true)
         .withCommitId(gitSyncError.getGitCommitId())
+        .withChangeFromAnotherCommit(Boolean.TRUE)
         .build();
   }
   @VisibleForTesting

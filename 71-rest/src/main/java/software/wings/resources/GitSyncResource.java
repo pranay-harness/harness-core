@@ -14,11 +14,11 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.Application;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitDetail;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.yaml.GitSyncService;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
@@ -27,6 +27,7 @@ import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -141,10 +142,11 @@ public class GitSyncResource {
    * @return the rest response
    */
   @GET
-  @Path("activity")
+  @Path("activities")
   public RestResponse<PageResponse<GitFileActivity>> listGitFileActivity(
       @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter(GitFileActivityKeys.accountId, SearchFilter.Operator.EQ, accountId);
+    pageRequest.addFilter(GitFileActivityKeys.status, SearchFilter.Operator.IN, Status.SUCCESS, Status.FAILED);
     PageResponse<GitFileActivity> pageResponse = gitSyncService.fetchGitSyncActivity(pageRequest);
     return new RestResponse<>(pageResponse);
   }
@@ -156,9 +158,24 @@ public class GitSyncResource {
    * @return
    */
   @POST
+  @Path("errors/_discard")
+  public RestResponse discardGitSyncErrorV2(@QueryParam("accountId") String accountId, List<GitSyncError> errors) {
+    gitSyncService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
+    return RestResponse.Builder.aRestResponse().build();
+  }
+
+  // TODO remove this later on when UI starts consuming new endpoint : /errors/_discard
+  // adding this for backward compatibility with UI
+  /**
+   *
+   * @param accountId
+   * @param errors
+   * @return
+   */
+  @POST
   @Path("discard")
   public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<GitSyncError> errors) {
-    gitSyncService.updateGitSyncErrorStatus(errors, Status.DISCARDED, accountId);
+    gitSyncService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
@@ -168,10 +185,10 @@ public class GitSyncResource {
    * @return
    */
   @GET
-  @Path("apps")
+  @Path("repos")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<Application>> listRepositories(@QueryParam("accountId") String accountId) {
+  public RestResponse<List<GitDetail>> listRepositories(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(gitSyncService.fetchRepositories(accountId));
   }
 
@@ -184,9 +201,9 @@ public class GitSyncResource {
    */
   @GET
   @Path("commits")
-  public RestResponse<PageResponse<GitCommit>> listCommits(
-      @BeanParam PageRequest<GitCommit> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitCommits(pageRequest, accountId);
+  public RestResponse<PageResponse<GitCommit>> listCommits(@BeanParam PageRequest<GitCommit> pageRequest,
+      @QueryParam("gitToHarness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId) {
+    PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitCommits(pageRequest, gitToHarness, accountId);
     return new RestResponse<>(pageResponse);
   }
 }

@@ -16,8 +16,8 @@ import software.wings.beans.yaml.Change.ChangeType;
  * @author vardanb
  */
 @Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("filePath"), @Field("commitId") },
-    options = @IndexOptions(unique = true, name = "uniqueIdx")))
+                           , @Field("processingCommitId"), @Field("filePath") },
+    options = @IndexOptions(unique = true, name = "uniqueIdx_1")))
 @Getter
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -29,12 +29,14 @@ public class GitFileActivity extends Base {
   private String filePath;
   private String fileContent;
   private String commitId;
+  private String processingCommitId;
   private ChangeType changeType;
   private String errorMessage;
   private Status status;
   private TriggeredBy triggeredBy;
+  private boolean changeFromAnotherCommit;
 
-  public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED }
+  public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }
 
   public enum TriggeredBy { USER, GIT, FULL_SYNC }
 }

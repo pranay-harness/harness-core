@@ -19,19 +19,23 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
-import software.wings.beans.yaml.Change;
+import software.wings.beans.GitCommit.GitCommitKeys;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitDetail;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.YamlProcessingException;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
+import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
+import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
@@ -78,7 +82,8 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                           .build();
 
     wingsPersistence.save(gitSyncError);
-    gitSyncService.updateGitSyncErrorStatus(Arrays.asList(gitSyncError), GitFileActivity.Status.DISCARDED, accountId);
+    gitSyncService.deleteGitSyncErrorAndLogFileActivity(
+        Arrays.asList(gitSyncError), GitFileActivity.Status.DISCARDED, accountId);
     assertThat(wingsPersistence.get(GitSyncError.class, gitSyncError.getUuid())).isEqualTo(null);
   }
 
@@ -92,21 +97,29 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                                     .enabled(true)
                                                     .entityId(uuid)
                                                     .entityType(EntityType.APPLICATION)
+                                                    .gitConnectorId(generateUuid())
                                                     .build();
 
     wingsPersistence.save(expectedYamlGitConfig);
     final Application application = Application.Builder.anApplication()
                                         .yamlGitConfig(expectedYamlGitConfig)
                                         .accountId(accountId)
-                                        .appId(uuid)
+                                        .appId(expectedYamlGitConfig.getEntityId())
                                         .uuid(uuid)
+                                        .name("applicationName")
                                         .build();
     wingsPersistence.save(application);
-    final List<Application> applications = gitSyncService.fetchRepositories(accountId);
-    assertThat(applications.size()).isEqualTo(1);
-    final YamlGitConfig actualYamlGitConfig = applications.get(0).getYamlGitConfig();
-    assertThat(actualYamlGitConfig.isEnabled()).isEqualTo(true);
-    assertThat(actualYamlGitConfig.getBranchName()).isEqualTo("branchName");
+
+    final SettingAttribute gitConfig = SettingAttribute.Builder.aSettingAttribute()
+                                           .withAccountId(accountId)
+                                           .withValue(GitConfig.builder().branch("branchName").build())
+                                           .withUuid(expectedYamlGitConfig.getGitConnectorId())
+                                           .build();
+    wingsPersistence.save(gitConfig);
+    final List<GitDetail> gitDetails = gitSyncService.fetchRepositories(accountId);
+    assertThat(gitDetails.size()).isEqualTo(1);
+    final GitDetail gitDetail = gitDetails.get(0);
+    assertThat(gitDetail.getBranchName()).isEqualTo("branchName");
   }
 
   @Test
@@ -118,7 +131,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
             .commitId("commitId")
             .yamlGitConfigId("yamlGitConfigId")
             .fileProcessingSummary(
-                GitFileProcessingSummary.builder().totalCount(10).successCount(5).failureCount(5).build())
+                GitFileProcessingSummary.builder().totalCount(10L).successCount(5L).failureCount(5L).build())
             .accountId(accountId)
             .status(GitCommit.Status.COMPLETED)
             .yamlChangeSet(YamlChangeSet.builder()
@@ -126,40 +139,17 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                                                  .withAccountId(accountId)
                                                                  .withChangeType(ChangeType.ADD)
                                                                  .build()))
+                               .gitToHarness(true)
                                .build())
             .build();
 
     wingsPersistence.save(gitCommit);
-    final PageResponse pageResponse = gitSyncService.fetchGitCommits(aPageRequest().withLimit("1").build(), accountId);
+    final PageResponse pageResponse =
+        gitSyncService.fetchGitCommits(aPageRequest().withLimit("1").build(), true, accountId);
     assertThat(pageResponse).isNotNull();
     final List<GitCommit> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
     assertThat(responseList.get(0).getAccountId()).isEqualTo(accountId);
-  }
-
-  @Test
-  @Owner(developers = VARDAN_BANSAL)
-  @Category(UnitTests.class)
-  public void test_logFileActivityAndGenerateProcessingSummary() {
-    final List<Change> changes = Arrays.asList(Change.Builder.aFileChange()
-                                                   .withAccountId(accountId)
-                                                   .withCommitId("commitId")
-                                                   .withChangeType(ChangeType.ADD)
-                                                   .withFileContent("someContent")
-                                                   .build());
-    final HashMap<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap = new HashMap<>();
-    GitFileProcessingSummary fileProcessingSummary = gitSyncService.logFileActivityAndGenerateProcessingSummary(
-        changes, failedYamlFileChangeMap, GitFileActivity.Status.SKIPPED, "successfully proccessed");
-    assertThat(fileProcessingSummary).isNotNull();
-    assertThat(fileProcessingSummary.getFailureCount()).isEqualTo(1);
-    failedYamlFileChangeMap.put("errorMssg",
-        YamlProcessingException.ChangeWithErrorMsg.builder()
-            .change(Change.Builder.aFileChange().withAccountId(accountId).withChangeType(ChangeType.ADD).build())
-            .build());
-    fileProcessingSummary = gitSyncService.logFileActivityAndGenerateProcessingSummary(
-        changes, failedYamlFileChangeMap, GitFileActivity.Status.SUCCESS, "successfully proccessed");
-    assertThat(fileProcessingSummary).isNotNull();
-    assertThat(fileProcessingSummary.getSuccessCount()).isEqualTo(1);
   }
 
   @Test
@@ -183,6 +173,149 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_shouldLogActivityForFiles() {
+    final String commitId = "commitId";
+    final String filePath = "file1.yaml";
+    wingsPersistence.save(GitFileActivity.builder()
+                              .accountId(accountId)
+                              .commitId(commitId)
+                              .processingCommitId(commitId)
+                              .filePath(filePath)
+                              .status(Status.QUEUED)
+                              .build());
+    gitSyncService.logActivityForFiles(commitId, Arrays.asList(filePath), Status.SUCCESS, "", accountId);
+    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+                                             .filter(GitFileActivityKeys.accountId, accountId)
+                                             .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                             .get();
+    assertThat(fileActivity).isNotNull();
+    assertThat(fileActivity.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivity.getStatus()).isEqualTo(Status.SUCCESS);
+    assertThat(fileActivity.getFilePath()).isEqualTo(filePath);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_shouldLogActivityForGitOperation() {
+    final String commitId = "commitId";
+    final String filePath = "file1.yaml";
+    gitSyncService.logActivityForGitOperation(Arrays.asList(GitFileChange.Builder.aGitFileChange()
+                                                                .withFilePath(filePath)
+                                                                .withAccountId(accountId)
+                                                                .withCommitId(commitId)
+                                                                .withProcessingCommitId("commitId")
+                                                                .withChangeFromAnotherCommit(Boolean.TRUE)
+                                                                .build()),
+        Status.SUCCESS, true, false, accountId, commitId);
+    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+                                             .filter(GitFileActivityKeys.accountId, accountId)
+                                             .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                             .get();
+    assertThat(fileActivity).isNotNull();
+    assertThat(fileActivity.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivity.getStatus()).isEqualTo(Status.SUCCESS);
+    assertThat(fileActivity.getFilePath()).isEqualTo(filePath);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_shouldLogActivityForSkippedFiles() {
+    final String commitId = "commitId";
+    final String filePath = "file1.yaml";
+    wingsPersistence.save(GitFileActivity.builder()
+                              .accountId(accountId)
+                              .commitId(commitId)
+                              .processingCommitId(commitId)
+                              .filePath(filePath)
+                              .status(Status.QUEUED)
+                              .build());
+    final GitFileChange changeFile1 = GitFileChange.Builder.aGitFileChange()
+                                          .withFilePath(filePath)
+                                          .withAccountId(accountId)
+                                          .withCommitId(commitId)
+                                          .withProcessingCommitId(commitId)
+                                          .build();
+    final String commitId1 = commitId.concat("_1");
+    final GitFileChange changeFile2 = GitFileChange.Builder.aGitFileChange()
+                                          .withFilePath(filePath.concat("_1"))
+                                          .withAccountId(accountId)
+                                          .withCommitId(commitId1)
+                                          .withProcessingCommitId(commitId1)
+                                          .build();
+    gitSyncService.logActivityForSkippedFiles(Arrays.asList(changeFile2),
+        GitDiffResult.builder().commitId(commitId).gitFileChanges(Arrays.asList(changeFile1, changeFile2)).build(),
+        "skipped for testing", accountId);
+    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+                                             .filter(GitFileActivityKeys.accountId, accountId)
+                                             .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                             .get();
+    assertThat(fileActivity).isNotNull();
+    assertThat(fileActivity.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivity.getStatus()).isEqualTo(Status.SKIPPED);
+    assertThat(fileActivity.getFilePath()).isEqualTo(filePath);
+    assertThat(fileActivity.getErrorMessage()).isEqualTo("skipped for testing");
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_shouldAddFileProcessingSummaryToGitCommit() {
+    final String commitId = "commitId";
+    wingsPersistence.save(GitCommit.builder()
+                              .commitId(commitId)
+                              .yamlGitConfigId("yamlGitConfigId")
+                              .accountId(accountId)
+                              .status(GitCommit.Status.COMPLETED)
+                              .yamlChangeSet(YamlChangeSet.builder()
+                                                 .gitFileChanges(Arrays.asList(GitFileChange.Builder.aGitFileChange()
+                                                                                   .withAccountId(accountId)
+                                                                                   .withChangeType(ChangeType.ADD)
+                                                                                   .build()))
+                                                 .build())
+                              .build());
+
+    wingsPersistence.save(Arrays.asList(GitFileActivity.builder()
+                                            .accountId(accountId)
+                                            .commitId(commitId)
+                                            .processingCommitId(commitId)
+                                            .filePath("filePath1")
+                                            .status(Status.QUEUED)
+                                            .build(),
+        GitFileActivity.builder()
+            .accountId(accountId)
+            .commitId(commitId)
+            .processingCommitId(commitId)
+            .filePath("filePath2")
+            .status(Status.SUCCESS)
+            .build(),
+        GitFileActivity.builder()
+            .accountId(accountId)
+            .commitId(commitId)
+            .processingCommitId(commitId)
+            .filePath("filePath2")
+            .status(Status.FAILED)
+            .build()));
+
+    gitSyncService.addFileProcessingSummaryToGitCommit(commitId, accountId,
+        Arrays.asList(GitFileChange.Builder.aGitFileChange()
+                          .withFilePath("filePath")
+                          .withAccountId(accountId)
+                          .withCommitId(commitId)
+                          .withProcessingCommitId(commitId)
+                          .build()));
+
+    final GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
+                                    .filter(GitCommitKeys.accountId, accountId)
+                                    .filter(GitCommitKeys.commitId, commitId)
+                                    .get();
+
+    assertThat(gitCommit).isNotNull();
+    assertThat(gitCommit.getFileProcessingSummary()).isNotNull();
+  }
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_fetchGitToHarnessErrors() {
@@ -217,5 +350,26 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     assertThat(errorsList.size()).isEqualTo(1);
     GitSyncError error = errorsList.get(0);
     assertThat(error.equals(gitSyncError)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_shouldMarkRemainingFilesAsSkipped() {
+    final String commitId = "gitCommitId";
+    wingsPersistence.save(GitFileActivity.builder()
+                              .accountId(accountId)
+                              .commitId(commitId)
+                              .processingCommitId(commitId)
+                              .filePath("filePath1")
+                              .status(Status.QUEUED)
+                              .build());
+    gitSyncService.markRemainingFilesAsSkipped(commitId, accountId);
+    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+                                             .filter(GitFileActivityKeys.accountId, accountId)
+                                             .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                             .get();
+    assertThat(fileActivity).isNotNull();
+    assertThat(fileActivity.getStatus()).isEqualTo(Status.SKIPPED);
   }
 }

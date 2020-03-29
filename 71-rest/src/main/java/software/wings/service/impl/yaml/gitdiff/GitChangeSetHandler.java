@@ -31,8 +31,8 @@ import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
-import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -51,27 +51,22 @@ public class GitChangeSetHandler {
   @Transient @Inject private WingsPersistence wingsPersistence;
   @Transient @Inject private YamlDirectoryService yamlDirectoryService;
   @Transient @Inject private AppService appService;
+  @Inject GitSyncService gitSyncService;
 
   public Map<String, ChangeWithErrorMsg> ingestGitYamlChangs(String accountId, GitDiffResult gitDiffResult) {
+    // Mark invalid files as SKIPPED
+    final List<GitFileChange> gitDiffResultChangeSet = gitDiffResult.getGitFileChanges();
     List<GitFileChange> gitFileChangeList = obtainValidGitFileChangesBasedOnYamlGitConfig(
-        gitDiffResult.getYamlGitConfig(), gitDiffResult.getGitFileChanges(), accountId);
-    final int fileCountInGitDiff = gitFileChangeList.size();
+        gitDiffResult.getYamlGitConfig(), gitDiffResultChangeSet, accountId);
+    gitSyncService.logActivityForSkippedFiles(
+        gitFileChangeList, gitDiffResult, "application folder configured incorrectly", accountId);
     applySyncFromGit(gitFileChangeList);
 
     try {
       final List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
       logger.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
 
-      final int processedFileCount = fileChangeContexts.size();
-
-      final GitFileProcessingSummary processingSummary = GitFileProcessingSummary.builder()
-                                                             .totalCount(fileCountInGitDiff)
-                                                             .failureCount(0)
-                                                             .successCount(processedFileCount)
-                                                             .skippedCount(fileCountInGitDiff - processedFileCount)
-                                                             .build();
-
-      saveProcessedCommit(gitDiffResult, accountId, COMPLETED, processingSummary);
+      saveProcessedCommit(gitDiffResult, accountId, COMPLETED);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
       removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, emptySet(), accountId);
@@ -86,14 +81,7 @@ public class GitChangeSetHandler {
 
       removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, ex.getFailedYamlFileChangeMap().keySet(), accountId);
       // Add to gitCommits a failed commit.
-      final int mapSize = failedYamlFileChangeMap.keySet().size();
-      saveProcessedCommit(gitDiffResult, accountId, COMPLETED_WITH_ERRORS,
-          GitFileProcessingSummary.builder()
-              .totalCount(fileCountInGitDiff)
-              .failureCount(mapSize)
-              .successCount(fileCountInGitDiff - mapSize)
-              // TODO compute skipped and success counts correctly
-              .build());
+      saveProcessedCommit(gitDiffResult, accountId, COMPLETED_WITH_ERRORS);
 
       return failedYamlFileChangeMap;
     }
@@ -110,12 +98,11 @@ public class GitChangeSetHandler {
         .forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
   }
 
-  private void saveProcessedCommit(GitDiffResult gitDiffResult, String accountId, GitCommit.Status gitCommitStatus,
-      GitFileProcessingSummary processingSummary) {
+  private void saveProcessedCommit(GitDiffResult gitDiffResult, String accountId, GitCommit.Status gitCommitStatus) {
     final List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
         gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
 
-    saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, gitCommitStatus, processingSummary);
+    saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, gitCommitStatus);
   }
 
   private void removeGitSyncErrorsForSuccessfulFiles(
@@ -213,8 +200,8 @@ public class GitChangeSetHandler {
         .collect(toList());
   }
 
-  private void saveCommitFromGit(GitDiffResult gitDiffResult, List<String> yamlGitConfigIds, String accountId,
-      GitCommit.Status gitCommitStatus, GitFileProcessingSummary fileProcessingSummary) {
+  private void saveCommitFromGit(
+      GitDiffResult gitDiffResult, List<String> yamlGitConfigIds, String accountId, GitCommit.Status gitCommitStatus) {
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSet(YamlChangeSet.builder()
@@ -228,7 +215,6 @@ public class GitChangeSetHandler {
                       .status(gitCommitStatus)
                       .commitId(gitDiffResult.getCommitId())
                       .gitCommandResult(gitDiffResult)
-                      .fileProcessingSummary(fileProcessingSummary)
                       .build());
   }
 

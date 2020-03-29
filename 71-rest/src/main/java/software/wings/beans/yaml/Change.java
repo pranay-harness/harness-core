@@ -11,7 +11,6 @@ import lombok.ToString;
 @Data
 @ToString(exclude = "fileContent")
 public class Change {
-  private String commitId;
   private String filePath;
   private String fileContent;
   private String accountId;
@@ -23,7 +22,6 @@ public class Change {
 
   public Builder toBuilder() {
     return Builder.aFileChange()
-        .withCommitId(getCommitId())
         .withFilePath(getFilePath())
         .withFileContent(getFileContent())
         .withAccountId(getAccountId())
@@ -74,13 +72,11 @@ public class Change {
     }
 
     public Builder withCommitId(String commitId) {
-      change.commitId = commitId;
       return this;
     }
 
     public Builder but() {
       return aFileChange()
-          .withCommitId(change.getCommitId())
           .withFilePath(change.getFilePath())
           .withFileContent(change.getFileContent())
           .withAccountId(change.getAccountId())

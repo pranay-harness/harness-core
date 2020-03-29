@@ -18,7 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitSyncError;
 
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class GitSyncErrorHandlerTest extends WingsBaseTest {
     when(gitSyncService.fetchErrors(any())).thenReturn(pageResponse);
     gitSyncErrorHandler.handle(getAccount("PAID"));
     ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(gitSyncService, times(1)).updateGitSyncErrorStatus(argumentCaptor.capture(), any(), any());
+    verify(gitSyncService, times(1)).deleteGitSyncErrorAndLogFileActivity(argumentCaptor.capture(), any(), any());
     assert argumentCaptor.getValue().size() == 1;
   }
 }

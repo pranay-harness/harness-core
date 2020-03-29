@@ -6,7 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.first;
@@ -14,7 +13,10 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.Base.ID_KEY;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -23,35 +25,52 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitDetail;
+import software.wings.beans.GitDetail.GitDetailBuilder;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.YamlProcessingException;
-import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
+import software.wings.settings.SettingValue;
 import software.wings.utils.AlertsUtils;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityBuilder;
+import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
+import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlGitConfig;
+import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -64,24 +83,32 @@ import javax.validation.executable.ValidateOnExecution;
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AlertsUtils alertsUtils;
-  @Inject private AppService appService;
+  private static final EnumSet<Status> TERMINATING_STATUSES = EnumSet.of(Status.EXPIRED, Status.DISCARDED);
 
   @Override
-  public void updateGitSyncErrorStatus(List<GitSyncError> gitSyncErrors, Status status, String accountId) {
-    try {
-      if (Arrays.asList(Status.EXPIRED, Status.DISCARDED).contains(status)) {
-        deleteExpiredGitSyncErrors(
-            gitSyncErrors.stream().map(error -> error.getUuid()).collect(Collectors.toList()), accountId);
-      }
-      wingsPersistence.save(getActivitiesForGitSyncErrors(gitSyncErrors, status));
-    } catch (Exception ex) {
-      logger.error("Error while discarding git sync error", ex);
+  public PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req) {
+    return wingsPersistence.query(GitSyncError.class, req);
+  }
+
+  @Override
+  public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req) {
+    return wingsPersistence.query(GitFileActivity.class, req);
+  }
+
+  @Override
+  public void deleteGitSyncErrorAndLogFileActivity(List<GitSyncError> gitSyncErrors, Status status, String accountId) {
+    wingsPersistence.save(getActivitiesForGitSyncErrors(gitSyncErrors, status));
+    if (TERMINATING_STATUSES.contains(status)) {
+      final List<String> discardErrorIds =
+          gitSyncErrors.stream().map(error -> error.getUuid()).collect(Collectors.toList());
+      logger.info(String.format("Marking errors with ids: %s as %s", discardErrorIds, status.name()));
+      deleteGitSyncErrors(discardErrorIds, accountId);
     }
   }
 
   private List<GitFileActivity> getActivitiesForGitSyncErrors(final List<GitSyncError> errors, Status status) {
-    if (isEmpty(errors)) {
-      return Collections.EMPTY_LIST;
+    if (EmptyPredicate.isEmpty(errors)) {
+      return Collections.emptyList();
     }
     return errors.stream()
         .map(error
@@ -96,113 +123,228 @@ public class GitSyncServiceImpl implements GitSyncService {
         .collect(Collectors.toList());
   }
 
-  private void deleteExpiredGitSyncErrors(List<String> errorIds, String accountId) {
+  private void deleteGitSyncErrors(List<String> errorIds, String accountId) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
-    query.filter("accountId", accountId);
-    query.field("_id").in(errorIds);
+    query.filter(ACCOUNT_ID_KEY, accountId);
+    query.field(ID_KEY).in(errorIds);
     wingsPersistence.delete(query);
     alertsUtils.closeAlertIfApplicable(accountId, false);
   }
 
   @Override
-  public List<Application> fetchRepositories(String accountId) {
-    // TODO Add changes for GLOBAL_APP_ID
-    final List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
-                                                      .filter(ACCOUNT_ID_KEY, accountId)
-                                                      .filter("enabled", Boolean.TRUE)
-                                                      .filter(YamlGitConfig.ENTITY_TYPE_KEY, EntityType.APPLICATION)
-                                                      .asList();
+  public List<GitDetail> fetchRepositories(String accountId) {
+    final List<EntityType> supportedEntityTypes = Arrays.asList(EntityType.APPLICATION, EntityType.ACCOUNT);
+    final Set<YamlGitConfig> yamlGitConfigIds = wingsPersistence.createQuery(YamlGitConfig.class)
+                                                    .filter(ACCOUNT_ID_KEY, accountId)
+                                                    .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
+                                                    .field(YamlGitConfig.ENTITY_TYPE_KEY)
+                                                    .in(supportedEntityTypes)
+                                                    .asList()
+                                                    .stream()
+                                                    .collect(Collectors.toSet());
 
-    if (isEmpty(yamlGitConfigList)) {
-      return Collections.EMPTY_LIST;
+    if (EmptyPredicate.isEmpty(yamlGitConfigIds)) {
+      return Collections.emptyList();
     }
 
-    Map<String, YamlGitConfig> yamlGitConfigMap =
-        yamlGitConfigList.stream().collect(Collectors.toMap(YamlGitConfig::getEntityId, identity()));
+    final Set<String> entityIds =
+        yamlGitConfigIds.stream().map(yamlGitConfig -> yamlGitConfig.getEntityId()).collect(Collectors.toSet());
+    final Set<String> gitConnectorIds =
+        yamlGitConfigIds.stream().map(yamlGitConfig -> yamlGitConfig.getGitConnectorId()).collect(Collectors.toSet());
 
-    final List<Application> applicationsWithYamlGitConfigEnabled =
+    // app id to app name mapping for entity type APPLICATION
+    final Map<String, String> entityIdToEntityNameMapping =
         wingsPersistence.createQuery(Application.class)
             .filter(ACCOUNT_ID_KEY, accountId)
             .field(APP_ID_KEY)
-            .in(yamlGitConfigList.stream()
-                    .map(yamlGitConfig -> yamlGitConfig.getEntityId())
-                    .collect(Collectors.toList()))
-            .asList();
+            .in(entityIds)
+            .project(ApplicationKeys.appId, true)
+            .project(ApplicationKeys.name, true)
+            .asList()
+            .stream()
+            .collect(Collectors.toMap(Application::getUuid, Application::getName));
 
-    if (isEmpty(applicationsWithYamlGitConfigEnabled)) {
-      return Collections.EMPTY_LIST;
+    // account id to account name mapping for entity type ACCOUNT
+    final Account account = wingsPersistence.createQuery(Account.class)
+                                .filter(AccountKeys.uuid, accountId)
+                                .project(AccountKeys.uuid, true)
+                                .project(AccountKeys.accountName, true)
+                                .get();
+    if (account != null) {
+      entityIdToEntityNameMapping.put(account.getUuid(), account.getAccountName());
     }
 
-    applicationsWithYamlGitConfigEnabled.forEach(app -> { app.setYamlGitConfig(yamlGitConfigMap.get(app.getUuid())); });
-    return applicationsWithYamlGitConfigEnabled;
+    // git connector id to git config mapping
+    final Map<String, SettingValue> settingIdToValueMapping =
+        wingsPersistence.createQuery(SettingAttribute.class)
+            .filter(ACCOUNT_ID_KEY, accountId)
+            .field(ID_KEY)
+            .in(gitConnectorIds)
+            .project(SettingAttributeKeys.uuid, true)
+            .project(SettingAttributeKeys.value, true)
+            .asList()
+            .stream()
+            .collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getValue));
+
+    if (EmptyPredicate.isEmpty(entityIdToEntityNameMapping) || EmptyPredicate.isEmpty(settingIdToValueMapping)) {
+      return Collections.emptyList();
+    }
+
+    final List<GitDetail> gitDetails =
+        yamlGitConfigIds.stream()
+            .map(yamlGitConfig -> {
+              final SettingValue settingValue = settingIdToValueMapping.get(yamlGitConfig.getGitConnectorId());
+              if (settingValue instanceof GitConfig) {
+                final GitConfig gitConfig = (GitConfig) settingValue;
+                final GitDetailBuilder builder = GitDetail.builder()
+                                                     .entityType(yamlGitConfig.getEntityType())
+                                                     .branchName(yamlGitConfig.getBranchName())
+                                                     .repositoryUrl(gitConfig.getRepoUrl())
+                                                     .yamlGitConfigId(yamlGitConfig.getUuid());
+                final String entityName = entityIdToEntityNameMapping.get(yamlGitConfig.getEntityId());
+                if (entityName != null) {
+                  builder.entityName(entityName);
+                } else {
+                  return null;
+                }
+                return builder.build();
+              }
+              return null;
+            })
+            .collect(Collectors.toList());
+    Iterables.removeIf(gitDetails, Predicates.isNull());
+    return gitDetails;
   }
 
   @Override
-  public PageResponse<GitCommit> fetchGitCommits(PageRequest<GitCommit> pageRequest, String accountId) {
+  public PageResponse<GitCommit> fetchGitCommits(
+      PageRequest<GitCommit> pageRequest, Boolean gitToHarness, String accountId) {
     pageRequest.addFilter(GitCommitKeys.accountId, SearchFilter.Operator.HAS, accountId);
+    if (gitToHarness != null) {
+      pageRequest.addFilter("yamlChangeSet.gitToHarness", SearchFilter.Operator.HAS, gitToHarness);
+    }
     return wingsPersistence.query(GitCommit.class, pageRequest);
   }
 
-  @Override
-  public GitFileProcessingSummary logFileActivityAndGenerateProcessingSummary(List<Change> changeList,
-      Map<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap, Status status,
-      String errorMessage) {
-    try {
-      List<Change> changeListCopy = new ArrayList<>(changeList);
-      List<GitFileActivity> activities = new LinkedList<>();
-      if (EmptyPredicate.isEmpty(failedYamlFileChangeMap)) {
-        // if files got skipped before git processing, mark them as FAILURE
-        if (status == Status.SKIPPED) {
-          activities =
-              changeListCopy.stream()
-                  .map(change
-                      -> buildBaseGitFileActivity(change).status(Status.FAILED).errorMessage(errorMessage).build())
-                  .collect(Collectors.toList());
-        }
+  private TriggeredBy getTriggeredBy(boolean isGitToHarness, boolean isFullSync) {
+    if (isGitToHarness) {
+      return TriggeredBy.GIT;
+    } else {
+      if (isFullSync) {
+        return TriggeredBy.FULL_SYNC;
       } else {
-        // mark all files in failedYamlFileChangeMap as FAILURE
-        activities.addAll(failedYamlFileChangeMap.entrySet()
-                              .stream()
-                              .map(e -> {
-                                final Change change = e.getValue().getChange();
-                                // keep removing FAILURE files from original list of files, to obtain remaining
-                                // COMPLETED ones
-                                changeListCopy.remove(change);
-                                return buildBaseGitFileActivity(change)
-                                    .status(Status.FAILED)
-                                    .errorMessage(e.getValue().getErrorMsg())
-                                    .build();
-                              })
-                              .collect(Collectors.toList()));
-        // files successfully processed
-        if (isNotEmpty(changeListCopy)) {
-          activities.addAll(changeListCopy.stream()
-                                .map(change -> buildBaseGitFileActivity(change).status(Status.SUCCESS).build())
-                                .collect(Collectors.toList()));
-        }
+        return TriggeredBy.USER;
       }
-      if (isNotEmpty(activities)) {
-        wingsPersistence.save(activities);
-      }
-      return getFileProcessingSummary(activities);
-    } catch (Exception ex) {
-      logger.error("Error while logging activities", ex);
     }
-    return null;
   }
 
-  private GitFileActivityBuilder buildBaseGitFileActivity(Change change) {
+  @Override
+  public void logActivityForGitOperation(List<GitFileChange> changeList, Status status, boolean isGitToHarness,
+      boolean isFullSync, String message, String commitId) {
+    try {
+      final List<GitFileActivity> activities = changeList.stream()
+                                                   .map(change
+                                                       -> buildBaseGitFileActivity(change, commitId)
+                                                              .status(status)
+                                                              .errorMessage(message)
+                                                              .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
+                                                              .build())
+                                                   .collect(Collectors.toList());
+
+      wingsPersistence.save(activities);
+    } catch (Exception ex) {
+      logger.error(String.format("Error while saving activities: %s", ex));
+    }
+  }
+
+  @Override
+  public void logActivityForFiles(
+      final String commitId, final List<String> fileNames, Status status, String message, String accountId) {
+    if (EmptyPredicate.isEmpty(fileNames)) {
+      return;
+    }
+    try {
+      UpdateOperations<GitFileActivity> op = wingsPersistence.createUpdateOperations(GitFileActivity.class)
+                                                 .set(GitFileActivityKeys.status, status)
+                                                 .set(GitFileActivityKeys.errorMessage, message);
+      wingsPersistence.update(wingsPersistence.createQuery(GitFileActivity.class)
+                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                  .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                  .field(GitFileActivityKeys.filePath)
+                                  .in(fileNames),
+          op);
+    } catch (Exception ex) {
+      logger.error(String.format("Error while saving activities for commitId: %s", "commitId"));
+    }
+  }
+
+  @Override
+  public void logActivityForSkippedFiles(
+      List<GitFileChange> changeList, GitDiffResult gitDiffResult, String message, String accountId) {
+    List<GitFileChange> completeChangeList = new ArrayList<>(gitDiffResult.getGitFileChanges());
+    completeChangeList = ListUtils.removeAll(completeChangeList, changeList);
+    if (EmptyPredicate.isNotEmpty(completeChangeList)) {
+      logActivityForFiles(gitDiffResult.getCommitId(),
+          completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(Collectors.toList()),
+          Status.SKIPPED, message, accountId);
+    }
+  }
+
+  private GitFileActivityBuilder buildBaseGitFileActivity(GitFileChange change, String commitId) {
+    String commitIdToPersist = StringUtils.isEmpty(commitId) ? change.getCommitId() : commitId;
+    String processingCommitIdToPersist = StringUtils.isEmpty(commitId) ? change.getProcessingCommitId() : commitId;
+    final Boolean changeFromAnotherCommit = change.getChangeFromAnotherCommit();
     return GitFileActivity.builder()
         .accountId(change.getAccountId())
-        .commitId(change.getCommitId())
+        .commitId(commitIdToPersist)
+        .processingCommitId(processingCommitIdToPersist)
         .filePath(change.getFilePath())
         .fileContent(change.getFileContent())
-        .triggeredBy(change.isSyncFromGit() ? GitFileActivity.TriggeredBy.GIT : GitFileActivity.TriggeredBy.FULL_SYNC);
+        .changeType(change.getChangeType())
+        .changeFromAnotherCommit(changeFromAnotherCommit != null
+                ? changeFromAnotherCommit
+                : !processingCommitIdToPersist.equalsIgnoreCase(commitIdToPersist));
   }
 
-  @Override
-  public PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req) {
-    return wingsPersistence.query(GitSyncError.class, req);
+  public void addFileProcessingSummaryToGitCommit(
+      final String commitId, final String accountId, final List<GitFileChange> gitFileChanges) {
+    try {
+      final Map<Status, Long> statusToCountMap =
+          wingsPersistence.createQuery(GitFileActivity.class)
+              .filter(ACCOUNT_ID_KEY, accountId)
+              .filter(GitFileActivityKeys.processingCommitId, commitId)
+              .project(GitFileActivityKeys.status, true)
+              .asList()
+              .stream()
+              .map(gitFileActivity -> gitFileActivity.getStatus())
+              .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+      final Long totalCount = statusToCountMap.values().stream().reduce(0L, Long::sum);
+
+      final Long otherCount =
+          gitFileChanges.stream()
+              .filter(gitFileChange -> Boolean.TRUE.equals(gitFileChange.getChangeFromAnotherCommit()))
+              .count();
+
+      final GitFileProcessingSummary gitFileProcessingSummary =
+          GitFileProcessingSummary.builder()
+              .failureCount(statusToCountMap.getOrDefault(Status.FAILED, 0L))
+              .successCount(statusToCountMap.getOrDefault(Status.SUCCESS, 0L))
+              .skippedCount(statusToCountMap.getOrDefault(Status.SKIPPED, 0L))
+              .queuedCount(statusToCountMap.getOrDefault(Status.QUEUED, 0L))
+              .totalCount(totalCount)
+              .originalCount(totalCount - otherCount)
+              .otherCount(otherCount)
+              .build();
+
+      wingsPersistence.update(wingsPersistence.createQuery(GitCommit.class)
+                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                  .filter(GitCommitKeys.commitId, commitId),
+          wingsPersistence.createUpdateOperations(GitCommit.class)
+              .set(GitCommitKeys.fileProcessingSummary, gitFileProcessingSummary));
+    } catch (Exception ex) {
+      logger.error(String.format("Error while saving git file processing summary for commitId: %s", commitId), ex);
+    }
   }
 
   @Override
@@ -271,16 +413,18 @@ public class GitSyncServiceImpl implements GitSyncService {
     return aPageResponse().withTotal(gitProcessingErrors.size()).withResponse(gitProcessingErrors).build();
   }
 
-  @Override
-  public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req) {
-    return wingsPersistence.query(GitFileActivity.class, req);
-  }
-
-  public GitFileProcessingSummary getFileProcessingSummary(final List<GitFileActivity> activities) {
-    return GitFileProcessingSummary.builder()
-        .totalCount(activities.size())
-        .failureCount(activities.stream().filter(activity -> activity.getStatus() == Status.FAILED).count())
-        .successCount(activities.stream().filter(activity -> activity.getStatus() == Status.SUCCESS).count())
-        .build();
+  public void markRemainingFilesAsSkipped(String commitId, String accountId) {
+    try {
+      logger.warn(String.format("Few files still in QUEUED status after git processing of commitId: %s", commitId));
+      UpdateOperations<GitFileActivity> op = wingsPersistence.createUpdateOperations(GitFileActivity.class)
+                                                 .set(GitFileActivityKeys.status, Status.SKIPPED);
+      wingsPersistence.update(wingsPersistence.createQuery(GitFileActivity.class)
+                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                  .filter(GitFileActivityKeys.processingCommitId, commitId)
+                                  .filter(GitFileActivityKeys.status, Status.QUEUED),
+          op);
+    } catch (Exception ex) {
+      logger.error(String.format("Error while saving activities for commitId: %s", "commitId"), ex);
+    }
   }
 }
