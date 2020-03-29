@@ -2,6 +2,10 @@
 
 mkdir -p dist ;
 cd dist
+if [ ! -z ${JDK} ]
+then
+    echo ${JDK} > jdk.txt
+fi
 cp -R ../scripts/jenkins/ .
 cd ..
 
@@ -101,19 +105,19 @@ then
 fi
 cd ../..
 
-echo "System-Properties: version=1.0.24200${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
-echo "Application-Version: version=1.0.24200${VERSION}" >> app.mf
+echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
+echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
 cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
 cp 81-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jar ufm dist/delegate/delegate-capsule.jar app.mf
-cp dist/delegate/delegate-capsule.jar delegate-24200${VERSION}.jar
+cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
 cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
 jar ufm dist/watcher/watcher-capsule.jar app.mf
-cp dist/watcher/watcher-capsule.jar watcher-24200${VERSION}.jar
+cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 
 rm -rf app.mf
 
@@ -136,4 +140,17 @@ mkdir -p dist/test
 cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
 cp ../../91-model-gen-tool/config-datagen.yml .
+cd ../..
+
+mkdir -p dist/delegate-proxy
+cd dist/delegate-proxy
+cp ../../dockerization/delegate-proxy/setup.sh .
+cp ../../dockerization/delegate-proxy/Dockerfile .
+cp ../../dockerization/delegate-proxy/Dockerfile-gcr .
+cp ../../dockerization/delegate-proxy/nginx.conf .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
 cd ../..

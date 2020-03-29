@@ -2,16 +2,17 @@ set -x
 
 export VERSION=`cat destination/dist/${SERVICE}/version.txt`
 export PURPOSE=`cat destination/dist/${SERVICE}/purpose.txt 2>/dev/null`
+export JDK=`cat destination/dist/jdk.txt 2>/dev/null`
 
 if [ ! -z "${PURPOSE}" ]
 then
-    export PURPOSE=/${PURPOSE}
+    export PURPOSE=/${PURPOSE}-${JDK}
 fi
 
 
 docker login -u _json_key --password-stdin https://us.gcr.io < $GCR_CREDENTIALS
 
-export IMAGE_TAG="us.gcr.io/platform-205701/harness${PURPOSE}/${SNAPSHOT_PREFIX}${SERVICE}:24200${VERSION}"
+export IMAGE_TAG="us.gcr.io/platform-205701/harness${PURPOSE}/${SNAPSHOT_PREFIX}${SERVICE}:${VERSION}"
 docker build -t ${IMAGE_TAG} destination/dist/${SERVICE} -f destination/dist/${SERVICE}/Dockerfile-gcr
 docker push ${IMAGE_TAG}
 
