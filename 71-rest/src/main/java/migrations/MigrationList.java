@@ -46,6 +46,7 @@ import migrations.all.DeleteServiceGuardAlertMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
 import migrations.all.DropDelegateScopeCollectionMigration;
+import migrations.all.DropExistingIndexForGitFileActivityMigration;
 import migrations.all.DropMongoGcsFileIdMappingCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
@@ -319,6 +320,7 @@ public class MigrationList {
         .add(Pair.of(299, DataDogLogCvConfigMigration.class))
         .add(Pair.of(300, HostConnectionTypeMigration.class))
         .add(Pair.of(301, AddAccountIdToAppEntities.class))
+        .add(Pair.of(302, DropExistingIndexForGitFileActivityMigration.class))
         .build();
   }
 }

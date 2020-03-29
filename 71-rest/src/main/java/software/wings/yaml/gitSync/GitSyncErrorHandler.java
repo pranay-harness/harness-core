@@ -15,7 +15,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import software.wings.beans.Account;
-import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 
@@ -66,7 +66,7 @@ public class GitSyncErrorHandler implements Handler<Account> {
     } while (total <= pageResponse.getTotal());
 
     if (isNotEmpty(errorsToBeDeleted)) {
-      gitSyncService.updateGitSyncErrorStatus(errorsToBeDeleted, Status.EXPIRED, account.getUuid());
+      gitSyncService.deleteGitSyncErrorAndLogFileActivity(errorsToBeDeleted, Status.EXPIRED, account.getUuid());
     }
   }
 }

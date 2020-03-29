@@ -22,6 +22,7 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 
 public class GitChangeSetProcesserTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";
@@ -30,6 +31,7 @@ public class GitChangeSetProcesserTest extends CategoryTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private YamlGitService yamlGitService;
   @InjectMocks GitChangeSetProcesser gitChangeSetProcesser;
+  @Mock private GitSyncService gitSyncService;
 
   @Before
   public void setUp() throws Exception {

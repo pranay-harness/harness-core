@@ -26,7 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.service.impl.yaml.GitSyncService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.utils.ResourceTestRule;
 import software.wings.yaml.errorhandling.GitSyncError;
 
@@ -85,7 +85,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDiscardErrors() {
     RestResponse restResponse = RESOURCES.client()
-                                    .target(format("/git-sync/discard?accountId=%s", ACCOUNT_ID))
+                                    .target(format("/git-sync/errors/_discard?accountId=%s", ACCOUNT_ID))
                                     .request()
                                     .post(entity(Arrays.asList(GitSyncError.builder()
                                                                    .accountId(ACCOUNT_ID)

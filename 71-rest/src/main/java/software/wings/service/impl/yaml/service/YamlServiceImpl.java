@@ -112,7 +112,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.yaml.GitSyncService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
@@ -123,6 +122,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
@@ -134,7 +134,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -221,12 +221,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
     // e.g. remove files outside of setup folder. (checking filePath)
-    List<Change> changeListCopy = new ArrayList<>(changeList);
     changeList = filterInvalidFilePaths(changeList);
-    if (EmptyPredicate.isEmpty(changeList)) {
-      gitSyncService.logFileActivityAndGenerateProcessingSummary(
-          changeListCopy, null, GitFileActivity.Status.SKIPPED, "Invalid file path");
-    }
 
     // compute the order of processing
     computeProcessingOrder(changeList);
@@ -242,7 +237,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .putAll(emptyIfNull(processingErrorMap))
             .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
             .build();
-    gitSyncService.logFileActivityAndGenerateProcessingSummary(changeListCopy, failedYamlFileChangeMap, null, null);
     ensureNoError(failedYamlFileChangeMap);
 
     logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
@@ -629,9 +623,12 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           if (gitSyncPath) {
             yamlGitService.discardGitSyncErrorForFilePath(changeContext.getChange().getAccountId(), yamlFilePath);
           }
-
+          // mark file as successfully processed with status SUCCESS
+          onGitFileProcessingSuccess(changeContext.getChange(), accountId);
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {
+          // mark file as failed with status FAILED
+          onGitFileProcessingFailure(changeContext.getChange(), accountId, ex.getMessage());
           logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
           ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder()
                                                       .change(changeContext.getChange())
@@ -651,6 +648,31 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           GIT_YAML_LOG_PREFIX + "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
     }
     return failedYamlFileChangeMap;
+  }
+
+  private void onGitFileProcessingSuccess(Change change, String accountId) {
+    if (isChangeFromGit(change)) {
+      gitSyncService.logActivityForFiles(((GitFileChange) change).getProcessingCommitId(),
+          Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
+    }
+  }
+
+  private void onGitFileProcessingFailure(Change change, String accountId, String errorMessage) {
+    if (isChangeFromGit(change)) {
+      gitSyncService.logActivityForFiles(((GitFileChange) change).getProcessingCommitId(),
+          Arrays.asList(change.getFilePath()), GitFileActivity.Status.FAILED, errorMessage, accountId);
+    }
+  }
+
+  private boolean isChangeFromGit(Change change) {
+    try {
+      return change.isSyncFromGit() && change instanceof GitFileChange
+          && isNotEmpty(((GitFileChange) change).getCommitId())
+          && isNotEmpty(((GitFileChange) change).getProcessingCommitId());
+    } catch (Exception ex) {
+      logger.error(String.format("Error while checking if change is from git: %s", ex));
+    }
+    return false;
   }
 
   private void logAllErrorsWhileYamlInjestion(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {

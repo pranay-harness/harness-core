@@ -17,6 +17,8 @@ public class GitFileChange extends Change {
   private String commitId;
   private String objectId;
   private transient YamlGitConfig yamlGitConfig;
+  private String processingCommitId;
+  private Boolean changeFromAnotherCommit;
 
   public static final class Builder {
     private String commitId;
@@ -28,6 +30,8 @@ public class GitFileChange extends Change {
     private String oldFilePath;
     @JsonIgnore @SchemaIgnore private boolean syncFromGit;
     private transient YamlGitConfig yamlGitConfig;
+    private String processingCommitId;
+    private Boolean changeFromAnotherCommit;
 
     private Builder() {}
 
@@ -80,9 +84,20 @@ public class GitFileChange extends Change {
       return this;
     }
 
+    public Builder withChangeFromAnotherCommit(Boolean changeFromAnotherCommit) {
+      this.changeFromAnotherCommit = changeFromAnotherCommit;
+      return this;
+    }
+
+    public Builder withProcessingCommitId(String processingCommitId) {
+      this.processingCommitId = processingCommitId;
+      return this;
+    }
+
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
+          .withProcessingCommitId(processingCommitId)
           .withObjectId(objectId)
           .withFilePath(filePath)
           .withFileContent(fileContent)
@@ -90,12 +105,14 @@ public class GitFileChange extends Change {
           .withOldFilePath(oldFilePath)
           .withChangeType(changeType)
           .withSyncFromGit(syncFromGit)
-          .withYamlGitConfig(yamlGitConfig);
+          .withYamlGitConfig(yamlGitConfig)
+          .withChangeFromAnotherCommit(changeFromAnotherCommit);
     }
 
     public GitFileChange build() {
       GitFileChange gitFileChange = new GitFileChange();
       gitFileChange.setCommitId(commitId);
+      gitFileChange.setProcessingCommitId(processingCommitId);
       gitFileChange.setObjectId(objectId);
       gitFileChange.setFilePath(filePath);
       gitFileChange.setFileContent(fileContent);
@@ -104,6 +121,7 @@ public class GitFileChange extends Change {
       gitFileChange.setOldFilePath(oldFilePath);
       gitFileChange.setSyncFromGit(syncFromGit);
       gitFileChange.setYamlGitConfig(yamlGitConfig);
+      gitFileChange.setChangeFromAnotherCommit(changeFromAnotherCommit);
       return gitFileChange;
     }
   }

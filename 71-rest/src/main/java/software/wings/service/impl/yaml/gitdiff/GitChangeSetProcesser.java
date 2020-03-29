@@ -11,6 +11,7 @@ import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
@@ -22,7 +23,10 @@ import software.wings.service.impl.yaml.YamlProcessingLogContext;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
+import software.wings.yaml.gitSync.GitFileActivity;
 
+import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -32,6 +36,7 @@ public class GitChangeSetProcesser {
   @Inject private YamlAuditRecordGenerationUtils gitChangeAuditRecordHandler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private YamlGitService yamlGitService;
+  @Inject private GitSyncService gitSyncService;
 
   public void processGitChangeSet(String accountId, GitDiffResult gitDiffResult) {
     final Stopwatch stopwatch = Stopwatch.createStarted();
@@ -70,13 +75,45 @@ public class GitChangeSetProcesser {
 
     try (GlobalContextGuard guard = ensureGlobalContextGuard()) {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes
+      final String processingCommitId = gitDiffResult.getCommitId();
+      final List<GitFileChange> gitFileChanges = gitDiffResult.getGitFileChanges();
+      preProcessGitFileActivityChanges(processingCommitId, gitFileChanges);
       changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
-
+      postProcessGitFileActivityChanges(processingCommitId, accountId, gitFileChanges);
       // Finalize audit.
       // 1. Mark exit point.
       // 2. Set status code 200 / 207 (multi-status code (indicating success and failure for some paths)
       // 3. Set detailed message
       gitChangeAuditRecordHandler.finalizeAuditRecord(accountId, gitDiffResult, changeWithErrorMsgs);
     }
+  }
+
+  private void preProcessGitFileActivityChanges(String processingCommitId, List<GitFileChange> gitFileChanges) {
+    addProcessingCommitIdToChangeList(processingCommitId, gitFileChanges);
+    // All initial activities will be created with status QUEUED
+    gitSyncService.logActivityForGitOperation(gitFileChanges, GitFileActivity.Status.QUEUED, true, false, "", "");
+  }
+
+  private void postProcessGitFileActivityChanges(
+      String processingCommitId, String accountId, List<GitFileChange> gitFileChanges) {
+    // All remaining activities to be marked as SKIPPED
+    gitSyncService.markRemainingFilesAsSkipped(processingCommitId, accountId);
+    gitSyncService.addFileProcessingSummaryToGitCommit(processingCommitId, accountId, gitFileChanges);
+  }
+
+  private void addProcessingCommitIdToChangeList(String processingCommitId, List<GitFileChange> gitFileChanges) {
+    if (EmptyPredicate.isEmpty(gitFileChanges)) {
+      return;
+    }
+    gitFileChanges.forEach(gitFileChange -> {
+      gitFileChange.setProcessingCommitId(processingCommitId);
+      if (!isChangeFromAnotherCommitFlagSet(gitFileChange)) {
+        gitFileChange.setChangeFromAnotherCommit(gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
+      }
+    });
+  }
+
+  private boolean isChangeFromAnotherCommitFlagSet(GitFileChange gitFileChange) {
+    return gitFileChange.getChangeFromAnotherCommit() != null;
   }
 }

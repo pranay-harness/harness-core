@@ -117,6 +117,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;

@@ -228,7 +228,7 @@ gitCommits { "name" : "gitCommitStatusLastUpdatedIdx" , "background" : true} { "
 gitCommits { "name" : "status_1" , "background" : true} { "status" : 1}
 gitFileActivity { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitFileActivity { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-gitFileActivity { "name" : "uniqueIdx" , "unique" : true} { "accountId" : 1 , "filePath" : 1 , "commitId" : 1}
+gitFileActivity { "name" : "uniqueIdx_1" , "unique" : true} { "accountId" : 1 , "processingCommitId" : 1 , "filePath" : 1}
 gitSyncError { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitSyncError { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 gitSyncError { "name" : "nextIteration_1" , "background" : true} { "nextIteration" : 1}
