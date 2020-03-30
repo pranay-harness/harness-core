@@ -2,6 +2,7 @@ package software.wings.scim;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.UnauthorizedException;
 import io.harness.rule.Owner;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -54,11 +57,14 @@ public class ScimGroupServiceTest extends WingsBaseTest {
   @Inject @InjectMocks ScimGroupService scimGroupService;
 
   UpdateOperations<UserGroup> updateOperations;
+  Query<UserGroup> userGroupQuery;
+
   ObjectMapper mapper = new ObjectMapper();
 
   @Before
   public void setup() throws IllegalAccessException {
     updateOperations = realWingsPersistence.createUpdateOperations(UserGroup.class);
+    userGroupQuery = realWingsPersistence.createQuery(UserGroup.class);
   }
 
   @Test
@@ -88,7 +94,15 @@ public class ScimGroupServiceTest extends WingsBaseTest {
   public void testUpdateGroupRemoveMembersShouldPassOkta() {
     PatchRequest patchRequest = getOktaRemoveOperation();
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Arrays.asList(RANDOM_ID)).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Arrays.asList(RANDOM_ID))
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
     when(wingsPersistence.createUpdateOperations(UserGroup.class)).thenReturn(updateOperations);
 
@@ -109,7 +123,15 @@ public class ScimGroupServiceTest extends WingsBaseTest {
   public void testUpdateGroupAddMembersShouldPass() {
     PatchRequest patchRequest = getAddOperation();
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Arrays.asList(USER_ID_2)).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Arrays.asList(USER_ID_2))
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     User user = new User();
     user.setUuid(USER_ID_2);
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
@@ -128,7 +150,15 @@ public class ScimGroupServiceTest extends WingsBaseTest {
   public void testUpdateGroupAddMembersShouldPassOkta() {
     PatchRequest patchRequest = getOktaAddOperation();
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Arrays.asList(USER_ID_2)).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Arrays.asList(USER_ID_2))
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     User user = new User();
     user.setUuid(USER_ID_2);
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
@@ -150,7 +180,15 @@ public class ScimGroupServiceTest extends WingsBaseTest {
     User user = new User();
     user.setUuid(USER_ID_2);
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Collections.emptyList()).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Collections.emptyList())
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
     when(wingsPersistence.createUpdateOperations(UserGroup.class)).thenReturn(updateOperations);
     when(wingsPersistence.get(eq(User.class), anyString())).thenReturn(user);
@@ -170,7 +208,15 @@ public class ScimGroupServiceTest extends WingsBaseTest {
     User user = new User();
     user.setUuid(USER_ID_2);
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Collections.emptyList()).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Collections.emptyList())
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
     when(wingsPersistence.createUpdateOperations(UserGroup.class)).thenReturn(updateOperations);
     when(wingsPersistence.get(eq(User.class), anyString())).thenReturn(user);
@@ -187,12 +233,102 @@ public class ScimGroupServiceTest extends WingsBaseTest {
   public void testReplaceOperationOkta() {
     PatchRequest patchRequest = getOktaReplaceOperation();
 
-    UserGroup userGroup = UserGroup.builder().memberIds(Collections.emptyList()).build();
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Collections.emptyList())
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
     when(userGroupService.get(anyString(), anyString())).thenReturn(userGroup);
     when(wingsPersistence.createUpdateOperations(UserGroup.class)).thenReturn(updateOperations);
 
     scimGroupService.updateGroup(GROUP_ID, ACCOUNT_ID, patchRequest);
     verify(wingsPersistence, times(1)).update(userGroup, updateOperations);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSearchGroup() {
+    String filter = "value eq 'username@harness.io'";
+    int count = 1;
+    int startIndex = 0;
+
+    when(wingsPersistence.createQuery(UserGroup.class)).thenReturn(userGroupQuery);
+    ScimListResponse<ScimGroup> scimGroupScimListResponse =
+        scimGroupService.searchGroup(filter, ACCOUNT_ID, count, startIndex);
+
+    assertThat(scimGroupScimListResponse).isNotNull();
+    assertThat(scimGroupScimListResponse.getItemsPerPage()).isEqualTo(count);
+    assertThat(scimGroupScimListResponse.getStartIndex()).isEqualTo(startIndex);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testGetNullGroup() {
+    when(userGroupService.get(ACCOUNT_ID, GROUP_ID)).thenReturn(null);
+    try {
+      scimGroupService.getGroup(GROUP_ID, ACCOUNT_ID);
+    } catch (UnauthorizedException ue) {
+      assertThat(ue).isNotNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testGetGroup() {
+    User user = new User();
+    user.setUuid(USER_ID_1);
+    user.setName("UserName");
+    user.setEmail("emailId");
+
+    UserGroup userGroup = UserGroup.builder()
+                              .memberIds(Arrays.asList(USER_ID_1))
+                              .members(Arrays.asList(user))
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
+    when(userGroupService.get(ACCOUNT_ID, GROUP_ID)).thenReturn(userGroup);
+
+    ScimGroup scimGroup = scimGroupService.getGroup(GROUP_ID, ACCOUNT_ID);
+
+    assertThat(scimGroup).isNotNull();
+    assertThat(scimGroup.getId()).isEqualTo(userGroup.getUuid());
+    assertThat(scimGroup.getDisplayName()).isEqualTo(userGroup.getName());
+    assertThat(scimGroup.getMembers().size()).isEqualTo(userGroup.getMemberIds().size());
+    assertThat(scimGroup.getMembers().get(0).getDisplay()).isEqualTo(user.getEmail());
+    assertThat(scimGroup.getMembers().get(0).getValue()).isEqualTo(user.getUuid());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testGetEmptyMemberGroup() {
+    UserGroup userGroup = UserGroup.builder()
+                              .name("user_group")
+                              .uuid(GROUP_ID)
+                              .accountId(ACCOUNT_ID)
+                              .appId(generateUuid())
+                              .createdAt(1L)
+                              .build();
+
+    when(userGroupService.get(ACCOUNT_ID, GROUP_ID)).thenReturn(userGroup);
+
+    ScimGroup scimGroup = scimGroupService.getGroup(GROUP_ID, ACCOUNT_ID);
+
+    assertThat(scimGroup).isNotNull();
+    assertThat(scimGroup.getId()).isEqualTo(userGroup.getUuid());
+    assertThat(scimGroup.getDisplayName()).isEqualTo(userGroup.getName());
+    assertThat(scimGroup.getMembers().size()).isEqualTo(0);
   }
 
   @Test

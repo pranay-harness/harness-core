@@ -15,5 +15,5 @@ public interface ScimUserService {
 
   ScimUser updateUser(String accountId, String userId, PatchRequest patchRequest);
 
-  Response updateUser(String userId, String accountId, ScimUser ScimUser);
+  Response updateUser(String userId, String accountId, ScimUser scimUser);
 }
