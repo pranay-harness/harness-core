@@ -191,6 +191,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private WorkflowService workflowService;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private AlertService alertService;
+  @Inject private SettingServiceHelper settingServiceHelper;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
@@ -489,6 +490,18 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   @ValidationGroups(Create.class)
   public SettingAttribute forceSave(SettingAttribute settingAttribute) {
+    return forceSave(settingAttribute, false);
+  }
+
+  private SettingAttribute forceSave(SettingAttribute settingAttribute, boolean alreadyUpdatedReferencedSecrets) {
+    if (!alreadyUpdatedReferencedSecrets) {
+      settingServiceHelper.updateReferencedSecrets(settingAttribute);
+    }
+    if (settingServiceHelper.hasReferencedSecrets(settingAttribute)
+        && settingAttribute.getValue() instanceof EncryptableSetting) {
+      settingServiceHelper.resetEncryptedFields((EncryptableSetting) settingAttribute.getValue());
+    }
+
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
         settingAttribute.getAccountId(), getUsageRestriction(settingAttribute));
 
@@ -506,8 +519,8 @@ public class SettingsServiceImpl implements SettingsService {
       if (SettingCategory.CLOUD_PROVIDER == createdSettingAttribute.getCategory()) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build(), true, true);
-      } else if (SettingCategory.CONNECTOR == createdSettingAttribute.getCategory()
-          && isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
+      } else if (settingServiceHelper.isConnectorCategory(createdSettingAttribute.getCategory())
+          && settingServiceHelper.isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
             AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
       }
@@ -515,32 +528,18 @@ public class SettingsServiceImpl implements SettingsService {
     return createdSettingAttribute;
   }
 
-  private boolean isArtifactServer(SettingVariableTypes settingVariableTypes) {
-    switch (settingVariableTypes) {
-      case JENKINS:
-      case BAMBOO:
-      case DOCKER:
-      case NEXUS:
-      case ARTIFACTORY:
-      case SMB:
-      case SMTP:
-      case AMAZON_S3_HELM_REPO:
-      case GCS_HELM_REPO:
-      case HTTP_HELM_REPO:
-      case AZURE_ARTIFACTS_PAT:
-        return true;
-      default:
-        return false;
-    }
-  }
-
   @Override
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     try {
-      SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
-      if (existingSetting != null) {
-        resetUnchangedEncryptedFields(existingSetting, settingAttribute);
+      if (settingServiceHelper.hasReferencedSecrets(settingAttribute)) {
+        settingServiceHelper.updateReferencedSecrets(settingAttribute);
+      } else {
+        SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+        if (existingSetting != null) {
+          resetUnchangedEncryptedFields(existingSetting, settingAttribute);
+        }
       }
+
       if (settingAttribute.getValue() instanceof HostConnectionAttributes
           || settingAttribute.getValue() instanceof WinRmConnectionAttributes) {
         auditServiceHelper.reportForAuditingUsingAccountId(
@@ -563,6 +562,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
     try {
+      settingServiceHelper.updateReferencedSecrets(settingAttribute);
       return new ValidationResult(settingValidationService.validate(settingAttribute), "");
     } catch (Exception ex) {
       return new ValidationResult(false, ExceptionUtils.getMessage(ex));
@@ -616,11 +616,12 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
+    settingServiceHelper.updateReferencedSecrets(settingAttribute);
     settingValidationService.validate(settingAttribute);
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
     autoGenerateFieldsIfRequired(settingAttribute);
-    SettingAttribute newSettingAttribute = forceSave(settingAttribute);
+    SettingAttribute newSettingAttribute = forceSave(settingAttribute, true);
 
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), null, newSettingAttribute, Type.CREATE,
@@ -758,10 +759,19 @@ public class SettingsServiceImpl implements SettingsService {
     // This fields is populated by us and not by user
     autoGenerateFieldsIfRequired(settingAttribute);
 
-    resetUnchangedEncryptedFields(existingSetting, settingAttribute);
+    boolean referencesSecrets = settingServiceHelper.hasReferencedSecrets(settingAttribute);
+    if (referencesSecrets) {
+      settingServiceHelper.updateReferencedSecrets(settingAttribute);
+    } else {
+      resetUnchangedEncryptedFields(existingSetting, settingAttribute);
+    }
 
     if (updateConnectivity || isBlank(settingAttribute.getConnectivityError())) {
       settingValidationService.validate(settingAttribute);
+    }
+
+    if (referencesSecrets && settingAttribute.getValue() instanceof EncryptableSetting) {
+      settingServiceHelper.resetEncryptedFields((EncryptableSetting) settingAttribute.getValue());
     }
 
     SettingAttribute savedSettingAttributes = get(settingAttribute.getUuid());

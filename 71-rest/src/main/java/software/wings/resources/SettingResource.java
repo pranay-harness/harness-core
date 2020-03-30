@@ -47,6 +47,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
@@ -55,7 +56,6 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -98,7 +98,6 @@ public class SettingResource {
   @Inject private SettingsService settingsService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
-  @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private AzureResourceService azureResourceService;
@@ -106,6 +105,7 @@ public class SettingResource {
   @Inject private YamlGitService yamlGitService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
+  @Inject private SettingServiceHelper settingServiceHelper;
 
   /**
    * List.
@@ -155,15 +155,8 @@ public class SettingResource {
     } else {
       result = settingsService.list(pageRequest, currentAppId, currentEnvId);
     }
-    result.forEach(this ::maskEncryptedFields);
+    result.forEach(settingAttribute -> settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true));
     return new RestResponse<>(result);
-  }
-
-  private void maskEncryptedFields(SettingAttribute settingAttribute) {
-    SettingValue settingValue = settingAttribute.getValue();
-    if (settingValue instanceof EncryptableSetting) {
-      secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
-    }
   }
 
   /**
@@ -179,6 +172,7 @@ public class SettingResource {
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
+    settingServiceHelper.updateEncryptedFieldsInResponse(savedSettingAttribute, false);
     return new RestResponse<>(savedSettingAttribute);
   }
 
@@ -252,13 +246,6 @@ public class SettingResource {
     return new RestResponse<>();
   }
 
-  /**
-   * Gets the.
-   *
-   * @param appId  the app id
-   * @param attrId the attr id
-   * @return the rest response
-   */
   @GET
   @Path("{attrId}")
   @Timed
@@ -266,25 +253,19 @@ public class SettingResource {
   public RestResponse<SettingAttribute> get(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     SettingAttribute result = settingsService.get(appId, attrId);
-    maskEncryptedFields(result);
+    settingServiceHelper.updateEncryptedFieldsInResponse(result, true);
     return new RestResponse<>(result);
   }
 
-  /**
-   * Update.
-   *
-   * @param appId    the app id
-   * @param attrId   the attr id
-   * @param variable the variable
-   * @return the rest response
-   */
   @PUT
   @Path("{attrId}")
   @Timed
   @ExceptionMetered
   public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("attrId") String attrId, SettingAttribute variable) {
-    return new RestResponse<>(settingsService.updateWithSettingFields(variable, attrId, appId));
+    SettingAttribute updatedSettingAttribute = settingsService.updateWithSettingFields(variable, attrId, appId);
+    settingServiceHelper.updateEncryptedFieldsInResponse(updatedSettingAttribute, false);
+    return new RestResponse<>(updatedSettingAttribute);
   }
 
   /**
