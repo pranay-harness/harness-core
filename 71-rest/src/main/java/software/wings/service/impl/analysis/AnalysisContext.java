@@ -46,7 +46,9 @@ import java.util.Map;
         @Field("analysisType"), @Field("executionStatus"), @Field("timeSeriesAnalysisIteration")
       }, options = @IndexOptions(name = "timeSeriesAnalysisIterationIdx")), @Index(fields = {
         @Field("analysisType"), @Field("executionStatus"), @Field("logAnalysisIteration")
-      }, options = @IndexOptions(name = "logAnalysisIterationIdx"))
+      }, options = @IndexOptions(name = "logAnalysisIterationIdx")), @Index(fields = {
+        @Field("cvTasksCreated"), @Field("cvTaskCreationIteration")
+      }, options = @IndexOptions(name = "cvTaskCreationIndex"))
 })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")

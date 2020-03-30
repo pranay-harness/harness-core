@@ -594,6 +594,7 @@ verificationServiceConfigurations { "name" : "serviceId_1" , "background" : true
 verificationServiceConfigurations { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 verificationServiceTask { "name" : "appId_1" , "background" : true} { "appId" : 1}
 verificationServiceTask { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+verificationServiceTask { "name" : "cvTaskCreationIndex" , "background" : true} { "cvTasksCreated" : 1 , "cvTaskCreationIteration" : 1}
 verificationServiceTask { "name" : "cvTaskCreationIteration_1" , "background" : true} { "cvTaskCreationIteration" : 1}
 verificationServiceTask { "name" : "executionStatus_1" , "background" : true} { "executionStatus" : 1}
 verificationServiceTask { "name" : "feedbackIteration_1" , "background" : true} { "feedbackIteration" : 1}
