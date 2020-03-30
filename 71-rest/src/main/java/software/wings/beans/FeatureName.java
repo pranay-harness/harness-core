@@ -58,7 +58,6 @@ public enum FeatureName {
   WEEKLY_WINDOW,
   SWITCH_GLOBAL_TO_GCP_KMS,
   SIDE_NAVIGATION,
-  WORKFLOW_TS_RECORDS_NEW,
   /* This is marked deprecated as this feature is not used anywhere except a migration. Waiting for all the customers
    * for migration to run before removing the feature flag.*/
   @Deprecated TEMPLATE_YAML_SUPPORT,
