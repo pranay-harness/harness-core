@@ -80,6 +80,7 @@ import software.wings.verification.CVConfiguration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -178,11 +179,6 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
         timeSeriesAnalysisService.saveMetricData(accountId, appId, newRelicMetricDataRecord.getStateExecutionId(),
             generateUuid(), Lists.newArrayList(newRelicMetricDataRecord)))
         .isTrue();
-    NewRelicMetricDataRecord savedRecord =
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateExecutionId", newRelicMetricDataRecord.getStateExecutionId())
-            .get();
-    assertThat(savedRecord).isNotNull();
     TimeSeriesDataRecord timeSeriesDataRecord =
         wingsPersistence.createQuery(TimeSeriesDataRecord.class)
             .filter(TimeSeriesMetricRecordKeys.stateExecutionId, newRelicMetricDataRecord.getStateExecutionId())
@@ -394,7 +390,8 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                             .host(hostname)
                                                             .level(ClusterLevel.L1)
                                                             .build();
-    wingsPersistence.save(newRelicMetricDataRecord);
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(
+        Collections.singletonList(newRelicMetricDataRecord)));
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
         appId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, 10, accountId);
     assertThat(records).hasSize(1);
@@ -506,11 +503,14 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                             .groupName("DEFAULT")
                                                             .stateExecutionId(stateExecutionId)
                                                             .appId(appId)
+                                                            .name("metric-name")
                                                             .stateType(StateType.NEW_RELIC)
                                                             .dataCollectionMinute(currentEpochMinute)
                                                             .host("test-host")
+                                                            .level(ClusterLevel.L1)
                                                             .build();
-    wingsPersistence.save(newRelicMetricDataRecord);
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(
+        Collections.singletonList(newRelicMetricDataRecord)));
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "DEFAULT",
         Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
@@ -521,34 +521,35 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecordsAndExcludeHeartbeatRecord() {
-    NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
-                                                            .groupName("DEFAULT")
-                                                            .stateExecutionId(stateExecutionId)
-                                                            .appId(appId)
-                                                            .stateType(StateType.NEW_RELIC)
-                                                            .dataCollectionMinute(currentEpochMinute)
-                                                            .host("test-host")
-                                                            .level(ClusterLevel.L1)
-                                                            .build();
-    wingsPersistence.save(newRelicMetricDataRecord);
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.H0)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.HF)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = new ArrayList<>();
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .groupName("DEFAULT")
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .stateType(StateType.NEW_RELIC)
+                          .dataCollectionMinute(currentEpochMinute)
+                          .host("test-host")
+                          .level(ClusterLevel.L1)
+                          .build());
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .groupName("DEFAULT")
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .stateType(StateType.NEW_RELIC)
+                          .dataCollectionMinute(currentEpochMinute)
+                          .host("test-host")
+                          .level(ClusterLevel.H0)
+                          .build());
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .groupName("DEFAULT")
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .stateType(StateType.NEW_RELIC)
+                          .dataCollectionMinute(currentEpochMinute)
+                          .host("test-host")
+                          .level(ClusterLevel.HF)
+                          .build());
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "DEFAULT",
         Sets.newHashSet("test-host"), currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
@@ -559,34 +560,35 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetPreviousRecordsAndExcludeHeartbeatRecord() {
-    NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
-                                                            .groupName("DEFAULT")
-                                                            .workflowExecutionId(workflowExecutionId)
-                                                            .appId(appId)
-                                                            .stateType(StateType.NEW_RELIC)
-                                                            .dataCollectionMinute(currentEpochMinute)
-                                                            .host("test-host")
-                                                            .level(ClusterLevel.L1)
-                                                            .build();
-    wingsPersistence.save(newRelicMetricDataRecord);
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.H0)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.HF)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                                                                          .groupName("DEFAULT")
+                                                                          .workflowExecutionId(workflowExecutionId)
+                                                                          .appId(appId)
+                                                                          .stateType(StateType.NEW_RELIC)
+                                                                          .dataCollectionMinute(currentEpochMinute)
+                                                                          .host("test-host")
+                                                                          .level(ClusterLevel.L1)
+                                                                          .build(),
+        NewRelicMetricDataRecord.builder()
+            .groupName("DEFAULT")
+            .workflowExecutionId(workflowExecutionId)
+            .appId(appId)
+            .stateType(StateType.NEW_RELIC)
+            .dataCollectionMinute(currentEpochMinute)
+            .host("test-host")
+            .level(ClusterLevel.H0)
+            .build(),
+        NewRelicMetricDataRecord.builder()
+            .groupName("DEFAULT")
+            .workflowExecutionId(workflowExecutionId)
+            .appId(appId)
+            .stateType(StateType.NEW_RELIC)
+            .dataCollectionMinute(currentEpochMinute)
+            .host("test-host")
+            .level(ClusterLevel.HF)
+            .build());
+
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
         appId, workflowExecutionId, "DEFAULT", currentEpochMinute, currentEpochMinute, accountId);
     assertThat(records).hasSize(1);
@@ -617,30 +619,32 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testGetMaxControlMinuteWithData() {
     String workflowId = generateUuid();
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowId(workflowId)
-                              .stateExecutionId(stateExecutionId)
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .serviceId(serviceId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.L1)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowId(workflowId)
-                              .stateExecutionId(stateExecutionId)
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .serviceId(serviceId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute - 2)
-                              .host("test-host")
-                              .level(ClusterLevel.L1)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                                                                          .groupName("DEFAULT")
+                                                                          .workflowId(workflowId)
+                                                                          .stateExecutionId(stateExecutionId)
+                                                                          .workflowExecutionId(workflowExecutionId)
+                                                                          .appId(appId)
+                                                                          .serviceId(serviceId)
+                                                                          .stateType(StateType.NEW_RELIC)
+                                                                          .dataCollectionMinute(currentEpochMinute)
+                                                                          .host("test-host")
+                                                                          .level(ClusterLevel.L1)
+                                                                          .build(),
+        NewRelicMetricDataRecord.builder()
+            .groupName("DEFAULT")
+            .workflowId(workflowId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .appId(appId)
+            .serviceId(serviceId)
+            .stateType(StateType.NEW_RELIC)
+            .dataCollectionMinute(currentEpochMinute - 2)
+            .host("test-host")
+            .level(ClusterLevel.L1)
+            .build());
+
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMaxControlMinuteWithData(
         StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute);
@@ -661,30 +665,31 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testGetMinControlMinuteWithData() {
     String workflowId = generateUuid();
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowId(workflowId)
-                              .stateExecutionId(stateExecutionId)
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .serviceId(serviceId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .host("test-host")
-                              .level(ClusterLevel.L1)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .groupName("DEFAULT")
-                              .workflowId(workflowId)
-                              .stateExecutionId(stateExecutionId)
-                              .workflowExecutionId(workflowExecutionId)
-                              .appId(appId)
-                              .serviceId(serviceId)
-                              .stateType(StateType.NEW_RELIC)
-                              .dataCollectionMinute(currentEpochMinute - 2)
-                              .host("test-host")
-                              .level(ClusterLevel.L1)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                                                                          .groupName("DEFAULT")
+                                                                          .workflowId(workflowId)
+                                                                          .stateExecutionId(stateExecutionId)
+                                                                          .workflowExecutionId(workflowExecutionId)
+                                                                          .appId(appId)
+                                                                          .serviceId(serviceId)
+                                                                          .stateType(StateType.NEW_RELIC)
+                                                                          .dataCollectionMinute(currentEpochMinute)
+                                                                          .host("test-host")
+                                                                          .level(ClusterLevel.L1)
+                                                                          .build(),
+        NewRelicMetricDataRecord.builder()
+            .groupName("DEFAULT")
+            .workflowId(workflowId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .appId(appId)
+            .serviceId(serviceId)
+            .stateType(StateType.NEW_RELIC)
+            .dataCollectionMinute(currentEpochMinute - 2)
+            .host("test-host")
+            .level(ClusterLevel.L1)
+            .build());
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     int maxControlMinuteWithData = timeSeriesAnalysisService.getMinControlMinuteWithData(
         StateType.NEW_RELIC, appId, serviceId, workflowId, workflowExecutionId, "DEFAULT", accountId);
     assertThat(maxControlMinuteWithData).isEqualTo(currentEpochMinute - 2);
@@ -837,18 +842,21 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetHeartBeat() {
+    List<NewRelicMetricDataRecord> recordsToSave = new ArrayList<>();
     for (int i = 0; i < 10; i++) {
-      wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                                .stateType(StateType.NEW_RELIC)
-                                .appId(appId)
-                                .stateExecutionId(stateExecutionId)
-                                .workflowExecutionId(workflowExecutionId)
-                                .serviceId(serviceId)
-                                .groupName(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME)
-                                .dataCollectionMinute(i)
-                                .level(ClusterLevel.HF)
-                                .build());
+      recordsToSave.add(NewRelicMetricDataRecord.builder()
+                            .stateType(StateType.NEW_RELIC)
+                            .appId(appId)
+                            .stateExecutionId(stateExecutionId)
+                            .workflowExecutionId(workflowExecutionId)
+                            .serviceId(serviceId)
+                            .groupName(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME)
+                            .dataCollectionMinute(i)
+                            .level(ClusterLevel.HF)
+                            .build());
     }
+
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
 
     NewRelicMetricDataRecord heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, stateExecutionId,
         workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.ASC, accountId);
@@ -1451,37 +1459,39 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testBumpCollectionMinuteToProcess() {
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute - 1)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute - 10)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute + 1)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = new ArrayList<>();
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .stateType(StateType.NEW_RELIC)
+                          .level(ClusterLevel.H0)
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .dataCollectionMinute(currentEpochMinute)
+                          .build());
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .stateType(StateType.NEW_RELIC)
+                          .level(ClusterLevel.H0)
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .dataCollectionMinute(currentEpochMinute - 1)
+                          .build());
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .stateType(StateType.NEW_RELIC)
+                          .level(ClusterLevel.H0)
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .dataCollectionMinute(currentEpochMinute - 10)
+                          .build());
+    recordsToSave.add(NewRelicMetricDataRecord.builder()
+                          .stateType(StateType.NEW_RELIC)
+                          .level(ClusterLevel.H0)
+                          .stateExecutionId(stateExecutionId)
+                          .appId(appId)
+                          .dataCollectionMinute(currentEpochMinute + 1)
+                          .build());
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     timeSeriesAnalysisService.bumpCollectionMinuteToProcess(
         appId, stateExecutionId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, accountId);
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
+    PageRequest<TimeSeriesDataRecord> pageRequest =
         aPageRequest()
             .withLimit(UNLIMITED)
             .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
@@ -1489,48 +1499,49 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
             .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, currentEpochMinute)
             .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
-    final PageResponse<NewRelicMetricDataRecord> dataRecords =
-        wingsPersistence.query(NewRelicMetricDataRecord.class, pageRequest, excludeAuthority);
-    List<NewRelicMetricDataRecord> newRelicMetricDataRecords = dataRecords.getResponse();
-    assertThat(newRelicMetricDataRecords.size()).isEqualTo(3);
-    newRelicMetricDataRecords.forEach(record -> assertThat(record.getLevel()).isEqualTo(ClusterLevel.HF));
+    PageResponse<TimeSeriesDataRecord> dataRecords =
+        wingsPersistence.query(TimeSeriesDataRecord.class, pageRequest, excludeAuthority);
+    List<TimeSeriesDataRecord> timeSeriesDataRecords = dataRecords.getResponse();
+    assertThat(timeSeriesDataRecords.size()).isEqualTo(3);
+    timeSeriesDataRecords.forEach(record -> assertThat(record.getLevel()).isEqualTo(ClusterLevel.HF));
   }
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetAnalysisMinuteForLastHeartbeatRecord() {
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .serviceId(serviceId)
-                              .level(ClusterLevel.L1)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .serviceId(serviceId)
-                              .level(ClusterLevel.HF)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute - 1)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .serviceId(serviceId)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute - 10)
-                              .build());
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .stateType(StateType.NEW_RELIC)
-                              .serviceId(serviceId)
-                              .level(ClusterLevel.H0)
-                              .stateExecutionId(stateExecutionId)
-                              .appId(appId)
-                              .dataCollectionMinute(currentEpochMinute + 1)
-                              .build());
+    List<NewRelicMetricDataRecord> recordsToSave = Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                                                                          .stateType(StateType.NEW_RELIC)
+                                                                          .serviceId(serviceId)
+                                                                          .level(ClusterLevel.L1)
+                                                                          .stateExecutionId(stateExecutionId)
+                                                                          .appId(appId)
+                                                                          .dataCollectionMinute(currentEpochMinute)
+                                                                          .build(),
+        NewRelicMetricDataRecord.builder()
+            .stateType(StateType.NEW_RELIC)
+            .serviceId(serviceId)
+            .level(ClusterLevel.HF)
+            .stateExecutionId(stateExecutionId)
+            .appId(appId)
+            .dataCollectionMinute(currentEpochMinute - 1)
+            .build(),
+        NewRelicMetricDataRecord.builder()
+            .stateType(StateType.NEW_RELIC)
+            .serviceId(serviceId)
+            .level(ClusterLevel.H0)
+            .stateExecutionId(stateExecutionId)
+            .appId(appId)
+            .dataCollectionMinute(currentEpochMinute - 10)
+            .build(),
+        NewRelicMetricDataRecord.builder()
+            .stateType(StateType.NEW_RELIC)
+            .serviceId(serviceId)
+            .level(ClusterLevel.H0)
+            .stateExecutionId(stateExecutionId)
+            .appId(appId)
+            .dataCollectionMinute(currentEpochMinute + 1)
+            .build());
+    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(recordsToSave));
     NewRelicMetricDataRecord newRelicMetricDataRecord = timeSeriesAnalysisService.getAnalysisMinute(
         StateType.NEW_RELIC, appId, stateExecutionId, workflowExecutionId, serviceId, DEFAULT_GROUP_NAME, accountId);
     assertThat(newRelicMetricDataRecord.getLevel()).isEqualTo(ClusterLevel.H0);
