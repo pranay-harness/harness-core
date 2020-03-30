@@ -721,6 +721,7 @@ public abstract class TerraformProvisionState extends State {
                                           .targets(executionData.getTargets())
                                           .command(executionData.getCommandExecuted())
                                           .appId(context.getAppId())
+                                          .accountId(context.getAccountId())
                                           .build();
     wingsPersistence.save(terraformConfig);
   }

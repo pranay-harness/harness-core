@@ -379,7 +379,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public InfrastructureDefinition save(
       InfrastructureDefinition infrastructureDefinition, boolean migration, boolean skipValidation) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
-    setDefaults(infrastructureDefinition);
+    setMissingValues(infrastructureDefinition);
 
     if (!migration && !skipValidation) {
       validateInfraDefinition(infrastructureDefinition);
@@ -410,7 +410,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @VisibleForTesting
-  void setDefaults(InfrastructureDefinition infraDefinition) {
+  void setMissingValues(InfrastructureDefinition infraDefinition) {
+    infraDefinition.setAccountId(appService.getAccountIdByAppId(infraDefinition.getAppId()));
     if (infraDefinition.getInfrastructure() instanceof GoogleKubernetesEngine) {
       GoogleKubernetesEngine googleKubernetesEngine = (GoogleKubernetesEngine) infraDefinition.getInfrastructure();
       if (isBlank(googleKubernetesEngine.getNamespace())) {
@@ -589,7 +590,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public InfrastructureDefinition update(InfrastructureDefinition infrastructureDefinition) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
-    setDefaults(infrastructureDefinition);
+    setMissingValues(infrastructureDefinition);
     validateInfraDefinition(infrastructureDefinition);
     InfrastructureDefinition savedInfraDefinition =
         get(infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
@@ -693,7 +694,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
      * setDefaults is called as the namespace is empty
      * for already saved infraDef, could remove setDef() after DB migration
      * */
-    setDefaults(infrastructureDefinition);
+    setMissingValues(infrastructureDefinition);
     return getInfrastructureMapping(serviceId, infrastructureDefinition);
   }
 

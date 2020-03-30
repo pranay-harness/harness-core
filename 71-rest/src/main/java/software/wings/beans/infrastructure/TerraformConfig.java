@@ -29,6 +29,7 @@ public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAw
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore @Indexed private long createdAt;
+  @Indexed private String accountId;
 
   private final String sourceRepoSettingId;
   /**
