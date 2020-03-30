@@ -2,7 +2,6 @@ package software.wings.utils;
 
 import static software.wings.utils.SignedUrls.signUrl;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import lombok.AccessLevel;
@@ -39,7 +38,6 @@ public class CdnStorageUrlGenerator {
     clusterTypeFolderName = getClusterTypeFolderName(isFreeCluster);
   }
 
-  @VisibleForTesting
   final String getClusterTypeFolderName(boolean isFreeCluster) {
     return isFreeCluster ? FREE_CLUSTER_FOLDER_NAME : PAID_CLUSTER_FOLDER_NAME;
   }
