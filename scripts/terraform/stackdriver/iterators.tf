@@ -1,5 +1,6 @@
 resource "google_logging_metric" "iterators_working_on_entity_by_thread_pool" {
   name = join("_", [local.name_prefix, "iterators_working_on_entity"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "\"Working on entity\""])
   metric_descriptor {
@@ -18,6 +19,7 @@ resource "google_logging_metric" "iterators_working_on_entity_by_thread_pool" {
 
 resource "google_logging_metric" "iterators_delays" {
   name = join("_", [local.name_prefix, "iterators_delays"])
+  description = "Owner: Platform commons"
   filter = join("\n", [
     local.filter_prefix,
     "\"Working on entity\""])
@@ -34,7 +36,7 @@ resource "google_logging_metric" "iterators_delays" {
   value_extractor = "EXTRACT(jsonPayload.harness.delay)"
   bucket_options {
     explicit_buckets {
-      bounds = [1000, 30000, 60000, 300000, 1500000, 3000000, 6000000]
+      bounds = [0, 1000, 30000, 60000, 300000, 1500000, 3000000, 6000000]
     }
   }
   label_extractors = {
@@ -44,6 +46,7 @@ resource "google_logging_metric" "iterators_delays" {
 
 resource "google_logging_metric" "iterators_process_time" {
   name = join("_", [local.name_prefix, "iterators_process_time"])
+  description = "Owner: Platform commons"
   filter = join("\n", [
     local.filter_prefix,
     "\"Done with entity\""])
@@ -71,6 +74,7 @@ resource "google_logging_metric" "iterators_process_time" {
 
 resource "google_logging_metric" "iterators_issues" {
   name = join("_", [local.name_prefix, "iterators_issues"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "MongoPersistenceIterator",
     "severity=\"ERROR\""])

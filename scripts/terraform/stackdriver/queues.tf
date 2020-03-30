@@ -1,5 +1,6 @@
 resource "google_logging_metric" "queues_working_on_message_by_thread_pool" {
   name = join("_", [local.name_prefix, "queues_working_on_message"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "\"Working on message\""])
   metric_descriptor {
@@ -24,6 +25,7 @@ resource "google_logging_metric" "queues_working_on_message_by_thread_pool" {
 
 resource "google_logging_metric" "queues_delays" {
   name = join("_", [local.name_prefix, "queues_delays"])
+  description = "Owner: Platform commons"
   filter = join("\n", [
     local.filter_prefix,
     "\"Working on message\""])
@@ -40,7 +42,7 @@ resource "google_logging_metric" "queues_delays" {
   value_extractor = "EXTRACT(jsonPayload.harness.delay)"
   bucket_options {
     explicit_buckets {
-      bounds = [1000, 30000, 60000, 300000, 1500000, 3000000, 6000000]
+      bounds = [0, 1000, 30000, 60000, 300000, 1500000, 3000000, 6000000]
     }
   }
   label_extractors = {
@@ -50,6 +52,7 @@ resource "google_logging_metric" "queues_delays" {
 
 resource "google_logging_metric" "queues_process_time" {
   name = join("_", [local.name_prefix, "queues_process_time"])
+  description = "Owner: Platform commons"
   filter = join("\n", [
     local.filter_prefix,
     "\"Done with message\""])
@@ -76,6 +79,7 @@ resource "google_logging_metric" "queues_process_time" {
 
 resource "google_logging_metric" "queues_issues" {
   name = join("_", [local.name_prefix, "queues_issues"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "QueueListener",
     "severity=\"ERROR\""])

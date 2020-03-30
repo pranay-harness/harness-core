@@ -22,7 +22,7 @@ locals {
   ])
 
   prod_filter_prefix = join("\n", [
-    "resource.labels.cluster_name=\"prod-private\"",
+    "resource.labels.cluster_name=\"prod-private-uswest1-primary\"",
     "resource.labels.container_name=\"manager\"",
     "resource.labels.namespace_id:\"manager-prod-\""
   ])

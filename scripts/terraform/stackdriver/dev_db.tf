@@ -1,5 +1,6 @@
 resource "google_logging_metric" "dev_db_index_issues" {
   name = join("_", [local.name_prefix, "dev_db_index_issues"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "(\"IndexManager\" OR \"HObjectFactory\")",
     "severity=\"ERROR\""
