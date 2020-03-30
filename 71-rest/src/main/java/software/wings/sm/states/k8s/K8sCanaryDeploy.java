@@ -184,6 +184,10 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
             .build());
 
+    k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
+        k8sStateHelper.getInstanceElementList(k8sCanaryDeployResponse.getK8sPodList()),
+        k8sStateHelper.getInstanceDetails(k8sCanaryDeployResponse.getK8sPodList()));
+
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(context.getStateExecutionData())

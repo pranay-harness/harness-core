@@ -35,6 +35,9 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.deployment.InstanceDetails;
+import io.harness.deployment.InstanceDetails.InstanceType;
+import io.harness.deployment.InstanceDetails.K8s;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -53,6 +56,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
@@ -730,7 +734,7 @@ public class K8sStateHelper {
         k8sTaskExecutionResponse.getErrorMessage(), k8sTaskExecutionResponse.getCommandExecutionStatus()));
   }
 
-  private List<InstanceElement> getInstanceElementList(List<K8sPod> podList) {
+  List<InstanceElement> getInstanceElementList(List<K8sPod> podList) {
     if (isEmpty(podList)) {
       return Collections.emptyList();
     }
@@ -743,6 +747,7 @@ public class K8sStateHelper {
               .hostName(podDetails.getName())
               .displayName(podDetails.getName())
               .podName(podDetails.getName())
+              .newInstance(podDetails.isNewPod())
               .build();
         })
         .collect(Collectors.toList());
@@ -973,5 +978,30 @@ public class K8sStateHelper {
   @Nonnull
   public List<K8sPod> getNewPods(@Nullable List<K8sPod> k8sPodList) {
     return emptyIfNull(k8sPodList).stream().filter(K8sPod::isNewPod).collect(Collectors.toList());
+  }
+
+  @Nonnull
+  List<InstanceDetails> getInstanceDetails(@Nullable List<K8sPod> pods) {
+    return emptyIfNull(pods)
+        .stream()
+        .map(pod
+            -> InstanceDetails.builder()
+                   .instanceType(InstanceType.K8s)
+                   .hostName(pod.getName())
+                   .newInstance(pod.isNewPod())
+                   .k8s(K8s.builder().podName(pod.getName()).ip(pod.getPodIP()).build())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  void saveInstanceInfoToSweepingOutput(
+      ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.STATE)
+                                   .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(instanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .build())
+                                   .build());
   }
 }
