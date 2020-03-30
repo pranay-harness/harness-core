@@ -28,7 +28,7 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
@@ -314,8 +314,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(),
-            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION),
+            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
@@ -338,8 +338,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was not approved within 36m");
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(),
-            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION),
+            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test

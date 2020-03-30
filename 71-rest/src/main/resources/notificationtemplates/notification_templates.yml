@@ -166,6 +166,18 @@ APPROVAL_EXPIRED_NOTIFICATION:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
+APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION:
+  web: Workflow Execution ${STATUS_CAMELCASE}- ${WORKFLOW_NAME} in ${APP_NAME} ${VERB}
+  slack: Workflow Execution ${STATUS_CAMELCASE} - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${VERB} in \*${APP_NAME}\* application ||${TIMEOUT} ||||${VERB}
+  email:
+    subject: Workflow Execution ${STATUS_CAMELCASE} for ${WORKFLOW_NAME}
+    body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>${TIMEOUT}</i>
+  pagerDuty:
+    summary: Workflow Execution ${STATUS_CAMELCASE} - ${WORKFLOW_NAME}> ${VERB} in ${APP_NAME} application timeout ${TIMEOUT}
+    link:
+      href: ${WORKFLOW_URL}
+      text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
 MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
       web: Manual Intervention Needed - ${WORKFLOW_NAME} in ${APP_NAME} requires manual intervention
       slack: Manual Intervention Needed - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* requires manual intervention for \*${ARTIFACT}\* in \*${ENV}\*, triggered by \*${USER_NAME}\* in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
