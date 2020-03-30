@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
@@ -52,7 +54,9 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -123,6 +127,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class K8sStateHelperTest extends WingsBaseTest {
@@ -645,5 +650,42 @@ public class K8sStateHelperTest extends WingsBaseTest {
     tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
     assertThat(tags).isNotEmpty();
     assertThat(tags).contains("delegateName");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetNewPods() {
+    assertThat(k8sStateHelper.getNewPods(null)).isEmpty();
+    assertThat(k8sStateHelper.getNewPods(emptyList())).isEmpty();
+
+    final List<K8sPod> newPods = k8sStateHelper.getNewPods(
+        Arrays.asList(K8sPod.builder().name("pod-1").build(), K8sPod.builder().name("pod-2").newPod(true).build()));
+
+    assertThat(newPods).hasSize(1);
+    assertThat(newPods.get(0).isNewPod()).isTrue();
+    assertThat(newPods.get(0).getName()).isEqualTo("pod-2");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceDetails() {
+    assertThat(k8sStateHelper.getInstanceDetails(null)).isEmpty();
+    assertThat(k8sStateHelper.getInstanceDetails(emptyList())).isEmpty();
+
+    final List<InstanceDetails> instanceDetails =
+        k8sStateHelper.getInstanceDetails(Arrays.asList(K8sPod.builder().name("pod-1").podIP("ip-1").build(),
+            K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()));
+
+    assertThat(instanceDetails).hasSize(2);
+    assertThat(instanceDetails.stream().map(InstanceDetails::getInstanceType).collect(toSet()))
+        .hasSize(1)
+        .contains(InstanceDetails.InstanceType.K8s);
+    assertThat(instanceDetails.stream().map(pod -> pod.getK8s().getPodName()).collect(toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+    assertThat(instanceDetails.stream().map(pod -> pod.getK8s().getIp()).collect(toList()))
+        .containsExactlyInAnyOrder("ip-1", "ip-2");
+    assertThat(instanceDetails.stream().filter(InstanceDetails::isNewInstance).count()).isEqualTo(1);
   }
 }

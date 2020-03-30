@@ -354,7 +354,7 @@ public class PcfDeployState extends State {
                                      .build());
 
       // This sweeping element will be used by verification or other consumers.
-      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.STATE)
                                      .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
                                      .value(InstanceInfoVariables.builder()
                                                 .instanceElements(pcfStateHelper.generateInstanceElement(

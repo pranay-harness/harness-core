@@ -154,6 +154,10 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .stageServiceName(k8sBlueGreenDeployResponse.getStageServiceName())
             .build());
 
+    k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
+        k8sStateHelper.getInstanceElementList(k8sBlueGreenDeployResponse.getK8sPodList()),
+        k8sStateHelper.getInstanceDetails(k8sBlueGreenDeployResponse.getK8sPodList()));
+
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(stateExecutionData)

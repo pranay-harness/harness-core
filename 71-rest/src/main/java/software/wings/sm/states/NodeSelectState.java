@@ -215,7 +215,7 @@ public abstract class NodeSelectState extends State {
             .value(serviceIdParamElement)
             .build());
 
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.STATE)
                                    .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
