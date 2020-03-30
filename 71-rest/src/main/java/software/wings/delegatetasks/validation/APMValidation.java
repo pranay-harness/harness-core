@@ -3,6 +3,8 @@ package software.wings.delegatetasks.validation;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import io.harness.beans.DelegateTask;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class APMValidation extends AbstractSecretManagerValidation {
@@ -152,7 +155,14 @@ public class APMValidation extends AbstractSecretManagerValidation {
       if (config.getOptions() == null) {
         config.setOptions(new HashMap<>());
       }
-      config.getHeaders().put("Accept", "application/json");
+      if (!config.getHeaders()
+               .keySet()
+               .stream()
+               .map(String::toLowerCase)
+               .collect(Collectors.toList())
+               .contains("accept")) {
+        config.getHeaders().put("Accept", "application/json");
+      }
       Call<Object> request =
           getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
       if (isNotEmpty(config.getBody())) {
@@ -172,7 +182,8 @@ public class APMValidation extends AbstractSecretManagerValidation {
     }
   }
 
-  private APMRestClient getAPMRestClient(final APMValidateCollectorConfig config) {
+  @VisibleForTesting
+  APMRestClient getAPMRestClient(final APMValidateCollectorConfig config) {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(config.getBaseUrl())
                                   .addConverterFactory(JacksonConverterFactory.create())
