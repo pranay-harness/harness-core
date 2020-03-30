@@ -81,6 +81,8 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   @Transient @Getter @Setter private WorkflowCreationFlags creationFlags;
   // }}
 
+  @Transient @Getter @Setter private boolean envTemplatized;
+
   @Getter @Setter private transient List<HarnessTagLink> tagLinks;
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();

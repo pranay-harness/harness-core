@@ -730,11 +730,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow != null) {
         orchestrationWorkflow.onLoad(infraRefactor, templatedPipeline, workflow);
+        orchestrationWorkflow.setTransientFields(infraRefactor, workflow);
         workflow.setDeploymentTypes(workflowServiceHelper.obtainDeploymentTypes(orchestrationWorkflow));
         workflow.setTemplatized(orchestrationWorkflow.checkTemplatized());
         if (withServices) {
           populateServices(workflow);
         }
+      }
+
+      // Todo: Should not be required if UI also uses Workflow.getOrchestrationWorkflow everywhere. Keep it until
+      // cleanup is done.
+      OrchestrationWorkflow orchestration = workflow.getOrchestration();
+      if (orchestration != null) {
+        orchestration.setTransientFields(infraRefactor, workflow);
       }
     }
   }

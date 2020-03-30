@@ -56,6 +56,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
+  public void setTransientFields(boolean infraRefactor, Workflow workflow) {
+    // do nothing
+  }
+
+  @Override
   public Set<EntityType> getRequiredEntityTypes() {
     return null;
   }
