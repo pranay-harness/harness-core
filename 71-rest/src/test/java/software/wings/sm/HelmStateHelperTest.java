@@ -41,19 +41,19 @@ public class HelmStateHelperTest extends WingsBaseTest {
     assertThat(instanceDetails).hasSize(2);
     assertThat(instanceDetails.get(0).getHostName()).isEqualTo("hostname-1");
     assertThat(instanceDetails.get(0).getWorkloadName()).isEqualTo("workload-1");
-    assertThat(instanceDetails.get(0).getInstanceType()).isEqualTo(InstanceDetails.InstanceType.HELM);
+    assertThat(instanceDetails.get(0).getInstanceType()).isEqualTo(InstanceDetails.InstanceType.K8s);
     assertThat(instanceDetails.get(0).isNewInstance()).isFalse();
-    assertThat(instanceDetails.get(0).getHelm().getDockerId()).isEqualTo("docker-1");
-    assertThat(instanceDetails.get(0).getHelm().getIp()).isEqualTo("ip-1");
-    assertThat(instanceDetails.get(0).getHelm().getPodName()).isEqualTo("pod-1");
+    assertThat(instanceDetails.get(0).getK8s().getDockerId()).isEqualTo("docker-1");
+    assertThat(instanceDetails.get(0).getK8s().getIp()).isEqualTo("ip-1");
+    assertThat(instanceDetails.get(0).getK8s().getPodName()).isEqualTo("pod-1");
 
     assertThat(instanceDetails.get(1).getHostName()).isEqualTo("hostname-2");
     assertThat(instanceDetails.get(1).getWorkloadName()).isEqualTo("workload-2");
-    assertThat(instanceDetails.get(1).getInstanceType()).isEqualTo(InstanceDetails.InstanceType.HELM);
+    assertThat(instanceDetails.get(1).getInstanceType()).isEqualTo(InstanceDetails.InstanceType.K8s);
     assertThat(instanceDetails.get(1).isNewInstance()).isTrue();
-    assertThat(instanceDetails.get(1).getHelm().getIp()).isEqualTo("ip-2");
-    assertThat(instanceDetails.get(1).getHelm().getPodName()).isEqualTo("pod-2");
-    assertThat(instanceDetails.get(1).getHelm().getDockerId()).isEqualTo("docker-2");
+    assertThat(instanceDetails.get(1).getK8s().getIp()).isEqualTo("ip-2");
+    assertThat(instanceDetails.get(1).getK8s().getPodName()).isEqualTo("pod-2");
+    assertThat(instanceDetails.get(1).getK8s().getDockerId()).isEqualTo("docker-2");
   }
 
   @Test

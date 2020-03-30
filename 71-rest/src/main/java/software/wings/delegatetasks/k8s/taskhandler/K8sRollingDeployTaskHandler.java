@@ -45,7 +45,6 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.KubernetesConfig;
@@ -162,7 +161,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(getNewPods(existingPodList))
+            .k8sPodList(tagNewPods(getPods(), existingPodList))
             .loadBalancer(k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .build();
 
@@ -191,14 +190,16 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     return k8sPods;
   }
 
-  private List<K8sPod> getNewPods(List<K8sPod> existingPods) throws Exception {
-    List<K8sPod> newPods = getPods();
-    if (CollectionUtils.isEmpty(existingPods)) {
-      return newPods;
-    } else {
-      Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
-      return newPods.stream().filter(pod -> !existingPodNames.contains(pod.getName())).collect(Collectors.toList());
-    }
+  @VisibleForTesting
+  List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
+    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+    List<K8sPod> allPods = new ArrayList<>(newPods);
+    allPods.forEach(pod -> {
+      if (!existingPodNames.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {

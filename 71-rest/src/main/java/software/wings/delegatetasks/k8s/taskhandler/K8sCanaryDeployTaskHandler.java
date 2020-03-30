@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -129,8 +130,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(
-        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
+    List<K8sPod> allPods = getAllPods();
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
@@ -140,7 +140,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         K8sCanaryDeployResponse.builder()
             .releaseNumber(currentRelease.getNumber())
-            .k8sPodList(podList)
+            .k8sPodList(allPods)
             .currentInstances(targetInstances)
             .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
             .build();
@@ -148,6 +148,21 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sTaskResponse(k8sCanaryDeployResponse)
         .build();
+  }
+
+  @VisibleForTesting
+  List<K8sPod> getAllPods() throws Exception {
+    List<K8sPod> allPods =
+        k8sTaskHelper.getPodDetails(kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName);
+    List<K8sPod> canaryPods = k8sTaskHelper.getPodDetailsWithTrack(
+        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
+    Set<String> canaryPodNames = canaryPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+    allPods.forEach(pod -> {
+      if (canaryPodNames.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {
