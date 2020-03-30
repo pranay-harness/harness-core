@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
@@ -28,6 +29,7 @@ import software.wings.yaml.BaseEntityYaml;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 public class ApplicationManifest extends Base {
+  @Indexed private String accountId;
   private String serviceId;
   private String envId;
   private AppManifestKind kind;
@@ -38,6 +40,7 @@ public class ApplicationManifest extends Base {
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
+                                       .accountId(this.accountId)
                                        .serviceId(this.serviceId)
                                        .envId(this.envId)
                                        .storeType(this.storeType)

@@ -667,6 +667,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @VisibleForTesting
   void sanitizeApplicationManifestConfigs(ApplicationManifest applicationManifest) {
+    if (isEmpty(applicationManifest.getAccountId())) {
+      applicationManifest.setAccountId(appService.getAccountIdByAppId(applicationManifest.getAppId()));
+    }
     switch (applicationManifest.getStoreType()) {
       case Local:
       case Remote:
