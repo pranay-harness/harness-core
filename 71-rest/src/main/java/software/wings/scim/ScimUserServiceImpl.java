@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -66,18 +67,15 @@ public class ScimUserServiceImpl implements ScimUserService {
     }
 
     String userName = getName(userQuery);
-    UserInvite userInvite =
-        UserInviteBuilder.anUserInvite()
-            .withAccountId(accountId)
-            .withEmail(primaryEmail)
-            .withName(userName != null ? userName : userQuery.getDisplayName())
-            .withGivenName(userQuery.getName() != null ? userQuery.getName().get(GIVEN_NAME).textValue()
-                                                       : userQuery.getDisplayName())
-            .withFamilyName(userQuery.getName() != null ? userQuery.getName().get(FAMILY_NAME).textValue()
-                                                        : userQuery.getDisplayName())
-            .withUserGroups(Lists.newArrayList())
-            .withImportedByScim(true)
-            .build();
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAccountId(accountId)
+                                .withEmail(primaryEmail)
+                                .withName(userName != null ? userName : getDisplayNameFromName(userQuery))
+                                .withGivenName(getGivenNameFromScimUser(userQuery))
+                                .withFamilyName(getFamilyNameFromScimUser(userQuery))
+                                .withUserGroups(Lists.newArrayList())
+                                .withImportedByScim(true)
+                                .build();
 
     userService.inviteUser(userInvite);
 
@@ -90,6 +88,14 @@ public class ScimUserServiceImpl implements ScimUserService {
     } else {
       return Response.status(Status.NOT_FOUND).build();
     }
+  }
+
+  private String getGivenNameFromScimUser(@NotNull ScimUser userQuery) {
+    return userQuery.getName() != null ? userQuery.getName().get(GIVEN_NAME).textValue() : userQuery.getDisplayName();
+  }
+
+  private String getFamilyNameFromScimUser(@NotNull ScimUser userQuery) {
+    return userQuery.getName() != null ? userQuery.getName().get(FAMILY_NAME).textValue() : userQuery.getDisplayName();
   }
 
   private String getPrimaryEmail(ScimUser userQuery) {
@@ -159,7 +165,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     List<ScimUser> scimUsers = new ArrayList<>();
     try {
       scimUsers = searchUserByUserName(accountId, searchQuery, count, startIndex);
-      logger.info("Scim users found from query {}", scimUsers);
+      logger.info("SCIM: Scim users found from query {}", scimUsers);
       scimUsers.forEach(userResponse::resource);
     } catch (WingsException ex) {
       logger.info("SCIM: Search user by name failed. searchQuery: {}, account: {}", searchQuery, accountId, ex);
@@ -256,6 +262,13 @@ public class ScimUserServiceImpl implements ScimUserService {
     }
   }
 
+  private String getDisplayNameFromName(@NotNull ScimUser userResource) {
+    if (userResource.getName() != null) {
+      return userResource.getName().get(GIVEN_NAME).asText() + " " + userResource.getName().get(FAMILY_NAME).asText();
+    }
+    return null;
+  }
+
   @Override
   public Response updateUser(String userId, String accountId, ScimUser userResource) {
     logger.info("SCIM: Updating user resource: {}", userResource);
@@ -264,12 +277,12 @@ public class ScimUserServiceImpl implements ScimUserService {
     if (user == null) {
       return Response.status(Status.NOT_FOUND).build();
     } else {
-      String displayName = userResource.getDisplayName();
+      String displayName =
+          userResource.getDisplayName() != null ? userResource.getDisplayName() : getDisplayNameFromName(userResource);
 
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
 
       boolean userUpdate = false;
-
       if (StringUtils.isNotEmpty(displayName) && !displayName.equals(user.getName())) {
         userUpdate = true;
         updateOperations.set(UserKeys.name, displayName);
@@ -301,7 +314,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       if (userUpdate) {
         wingsPersistence.update(user, updateOperations);
       }
-      return Response.status(Status.ACCEPTED).entity(userResource).build();
+      return Response.status(Status.OK).entity(getUser(user.getUuid(), accountId)).build();
     }
   }
 }

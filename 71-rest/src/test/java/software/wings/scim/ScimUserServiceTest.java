@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -52,11 +53,14 @@ public class ScimUserServiceTest extends WingsBaseTest {
   @Inject @InjectMocks ScimUserService scimUserService;
 
   UpdateOperations<User> updateOperations;
+  Query<User> userQuery;
+
   ObjectMapper mapper = new ObjectMapper();
 
   @Before
   public void setup() throws IllegalAccessException {
     updateOperations = realWingsPersistence.createUpdateOperations(User.class);
+    userQuery = realWingsPersistence.createQuery(User.class);
   }
 
   @Test
@@ -83,7 +87,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void TC0_testCreateUser() {
+  public void TC0_testCreateUserWhichIsAlreadyPresent() {
     ScimUser scimUser = new ScimUser();
     Account account = new Account();
     account.setUuid(generateUuid());
@@ -103,13 +107,14 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
+    assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(409);
   }
 
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void TC1_testCreateUser() {
+  public void TC1_testCreateUserPositiveCase() {
     ScimUser scimUser = new ScimUser();
     Account account = new Account();
     account.setUuid(generateUuid());
@@ -133,13 +138,14 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
+    assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(201);
   }
 
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void TC2_testCreateUser() {
+  public void TC2_testCreateUserNegative() {
     ScimUser scimUser = new ScimUser();
     Account account = new Account();
     account.setUuid(generateUuid());
@@ -164,7 +170,73 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
+    assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(404);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC3_testCreateUserWithNullName() {
+    ScimUser scimUser = new ScimUser();
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("account_name");
+
+    scimUser.setUserName("username@harness.io");
+    scimUser.setDisplayName(null);
+
+    User user = new User();
+    user.setEmail("username@harness.io");
+    user.setDisabled(true);
+    user.setUuid(generateUuid());
+    user.setName(null);
+
+    UserInvite userInvite = new UserInvite();
+    userInvite.setUuid(generateUuid());
+
+    when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
+    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
+    when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
+    Response response = scimUserService.createUser(scimUser, account.getUuid());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(404);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testGetUser() {
+    User user = new User();
+    user.setEmail("user_name@harness.io");
+    user.setDisabled(false);
+    user.setUuid(USER_ID);
+    user.setName("display_name");
+    user.setGivenName("givenName");
+    user.setFamilyName("familyName");
+
+    when(userService.get(ACCOUNT_ID, USER_ID)).thenReturn(user);
+
+    ScimUser scimUser = scimUserService.getUser(USER_ID, ACCOUNT_ID);
+
+    assertThat(scimUser).isNotNull();
+    assertThat(scimUser.getId()).isEqualTo(user.getUuid());
+    assertThat(scimUser.getDisplayName()).isEqualTo(user.getName());
+    assertThat(scimUser.getActive()).isTrue();
+    assertThat(scimUser.getName()).isNotEmpty();
+    assertThat(scimUser.getEmails()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testGetNullUser() {
+    when(userService.get(ACCOUNT_ID, USER_ID)).thenReturn(null);
+    ScimUser scimUser = scimUserService.getUser(USER_ID, ACCOUNT_ID);
+
+    assertThat(scimUser).isNull();
   }
 
   @Test
@@ -224,7 +296,8 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.updateUser(user.getUuid(), account.getUuid(), scimUser);
     verify(wingsPersistence, times(1)).update(user, updateOperations);
-    assertThat(response.getStatus()).isEqualTo(202);
+
+    assertThat(response.getStatus()).isNotNull();
   }
 
   @Test
@@ -256,7 +329,67 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(null);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.updateUser(user.getUuid(), account.getUuid(), scimUser);
+
+    assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(404);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSearchUserWithNoUser() {
+    String filter = "value eq 'user_name@harness.io'";
+    int count = 1;
+    int startIndex = 0;
+
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("ACCOUNT_NAME");
+    account.setCompanyName("COMPANY_NAME");
+
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
+
+    ScimListResponse<ScimUser> response = scimUserService.searchUser(account.getUuid(), filter, count, startIndex);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getResources()).isNotNull();
+    assertThat(response.getItemsPerPage()).isEqualTo(count);
+    assertThat(response.getStartIndex()).isEqualTo(startIndex);
+    assertThat(response.getTotalResults()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSearchUserWithUser() {
+    String filter = "value eq 'user_name@harness.io'";
+    String searchString = "user_name@harness.io";
+    int count = 1;
+    int startIndex = 0;
+
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("ACCOUNT_NAME");
+    account.setCompanyName("COMPANY_NAME");
+
+    User user = User.Builder.anUser()
+                    .uuid(generateUuid())
+                    .name("scim_user")
+                    .familyName("family_name")
+                    .givenName("given_name")
+                    .accounts(Arrays.asList(account))
+                    .build();
+
+    realWingsPersistence.save(user);
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
+    ScimListResponse<ScimUser> response = scimUserService.searchUser(account.getUuid(), filter, count, startIndex);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getResources()).isNotNull();
+    assertThat(response.getItemsPerPage()).isEqualTo(count);
+    assertThat(response.getStartIndex()).isEqualTo(startIndex);
+
+    realWingsPersistence.delete(user);
   }
 
   private PatchRequest getOktaActivityReplaceOperation() {
