@@ -249,6 +249,7 @@ hosts { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 hosts { "name" : "hostName_1" , "background" : true} { "hostName" : 1}
 hosts { "name" : "serviceTemplateId_1" , "background" : true} { "serviceTemplateId" : 1}
 idempotent_locks { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+infrastructureDefinitions { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 infrastructureDefinitions { "name" : "infraDefinitionIdx" , "unique" : true} { "appId" : 1 , "envId" : 1 , "name" : 1}
 infrastructureDefinitions { "name" : "infrastructure_cloudProviderId" , "background" : true} { "infrastructure.cloudProviderId" : 1}
 infrastructureMapping { "name" : "appId_1" , "background" : true} { "appId" : 1}
@@ -340,6 +341,7 @@ logMlFeedbackRecords { "name" : "stateExecutionId_1" , "background" : true} { "s
 logMlFeedbackRecords { "name" : "workflowExecutionId_1" , "background" : true} { "workflowExecutionId" : 1}
 managerConfiguration { "name" : "appId_1" , "background" : true} { "appId" : 1}
 managerConfiguration { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+manifestFile { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 manifestFile { "name" : "appId_1" , "background" : true} { "appId" : 1}
 manifestFile { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 manifestFile { "name" : "manifestFileIdx" , "unique" : true} { "applicationManifestId" : 1 , "fileName" : 1}
@@ -518,6 +520,7 @@ templates { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 templates { "name" : "folderId_1" , "background" : true} { "folderId" : 1}
 templates { "name" : "name_1" , "background" : true} { "name" : 1}
 templates { "name" : "yaml" , "unique" : true} { "accountId" : 1 , "name" : 1 , "folderId" : 1 , "appId" : 1}
+terraformConfig { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 terraformConfig { "name" : "appId_1" , "background" : true} { "appId" : 1}
 terraformConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 terraformConfig { "name" : "entityId_1" , "background" : true} { "entityId" : 1}

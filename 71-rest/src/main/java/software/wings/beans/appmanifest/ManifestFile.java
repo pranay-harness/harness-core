@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
@@ -30,10 +31,12 @@ public class ManifestFile extends Base {
   @NotEmpty String fileName;
   private String fileContent;
   private String applicationManifestId;
+  @Indexed private String accountId;
 
   public ManifestFile cloneInternal() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(this.fileName).fileContent(this.fileContent).build();
     manifestFile.setAppId(this.appId);
+    manifestFile.setAccountId(this.accountId);
     return manifestFile;
   }
 

@@ -410,6 +410,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ManifestFile upsertApplicationManifestFile(
       ManifestFile manifestFile, ApplicationManifest applicationManifest, boolean isCreate) {
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
+    manifestFile.setAccountId(appService.getAccountIdByAppId(manifestFile.getAppId()));
 
     validateManifestFileName(manifestFile);
     validateFileNamePrefixForDirectory(manifestFile);

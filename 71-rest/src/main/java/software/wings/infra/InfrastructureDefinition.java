@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
@@ -66,10 +67,12 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
   private List<String> scopedToServices;
   @NotNull private String envId;
   private boolean sample;
+  @Indexed private String accountId;
 
   @JsonIgnore
   public InfrastructureMapping getInfraMapping() {
     InfrastructureMapping infrastructureMapping = infrastructure.getInfraMapping();
+    infrastructureMapping.setAccountId(accountId);
     infrastructureMapping.setAppId(appId);
     infrastructureMapping.setEnvId(envId);
     infrastructureMapping.setDeploymentType(deploymentType.name());
@@ -86,6 +89,7 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
         .deploymentType(getDeploymentType())
         .infrastructure(getInfrastructure())
         .scopedToServices(getScopedToServices())
+        .accountId(getAccountId())
         .build();
   }
 

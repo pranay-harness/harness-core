@@ -849,7 +849,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     InfrastructureDefinition googleKubernetesInfraDef =
         InfrastructureDefinition.builder().infrastructure(GoogleKubernetesEngine.builder().build()).build();
 
-    infrastructureDefinitionService.setDefaults(googleKubernetesInfraDef);
+    infrastructureDefinitionService.setMissingValues(googleKubernetesInfraDef);
 
     assertThat(((GoogleKubernetesEngine) (googleKubernetesInfraDef.getInfrastructure())).getNamespace())
         .isEqualTo(DEFAULT);
@@ -864,7 +864,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
             .infrastructure(GoogleKubernetesEngine.builder().namespace(USER_INPUT_NAMESPACE).build())
             .build();
 
-    infrastructureDefinitionService.setDefaults(googleKubernetesInfraDef);
+    infrastructureDefinitionService.setMissingValues(googleKubernetesInfraDef);
 
     assertThat(((GoogleKubernetesEngine) (googleKubernetesInfraDef.getInfrastructure())).getNamespace())
         .isEqualTo(USER_INPUT_NAMESPACE);
@@ -877,7 +877,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     InfrastructureDefinition directKubernetesInfraDef =
         InfrastructureDefinition.builder().infrastructure(DirectKubernetesInfrastructure.builder().build()).build();
 
-    infrastructureDefinitionService.setDefaults(directKubernetesInfraDef);
+    infrastructureDefinitionService.setMissingValues(directKubernetesInfraDef);
 
     assertThat(((DirectKubernetesInfrastructure) (directKubernetesInfraDef.getInfrastructure())).getNamespace())
         .isEqualTo(DEFAULT);
@@ -892,7 +892,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
             .infrastructure(DirectKubernetesInfrastructure.builder().namespace(USER_INPUT_NAMESPACE).build())
             .build();
 
-    infrastructureDefinitionService.setDefaults(directKubernetesInfraDef);
+    infrastructureDefinitionService.setMissingValues(directKubernetesInfraDef);
 
     assertThat(((DirectKubernetesInfrastructure) (directKubernetesInfraDef.getInfrastructure())).getNamespace())
         .isEqualTo(USER_INPUT_NAMESPACE);
