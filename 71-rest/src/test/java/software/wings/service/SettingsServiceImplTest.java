@@ -50,6 +50,7 @@ import static software.wings.settings.UsageRestrictions.AppEnvRestriction.builde
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.AZURE_DEVOPS_URL;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
@@ -100,6 +101,7 @@ import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
@@ -111,6 +113,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -152,6 +155,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private UserGroupService userGroupService;
   @Mock private CCMSettingService ccmSettingService;
   @Mock private AccountService accountService;
+  @Mock private SettingServiceHelper settingServiceHelper;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -491,6 +495,26 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withName("MY_CLOUD_PROVIDER")
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
+            .build();
+
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+
+    doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(spyQuery).get();
+    return settingAttribute;
+  }
+
+  private SettingAttribute prepareSettingAttributeForUpdateWithReferencedSecrets() {
+    String uuid = UUID.randomUUID().toString();
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withUuid(uuid)
+            .withAppId(APP_ID)
+            .withAccountId(ACCOUNT_ID)
+            .withName("AZURE_DEVOPS_ARTIFACT_SERVER")
+            .withCategory(SettingCategory.CONNECTOR)
+            .withValue(AzureArtifactsPATConfig.builder().accountId(ACCOUNT_ID).azureDevopsUrl(AZURE_DEVOPS_URL).build())
             .build();
 
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
@@ -964,5 +988,67 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     } catch (Exception e) {
       fail("should not throw exception");
     }
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidateConnectivityWithReferencedSecrets() {
+    SettingAttribute settingAttribute = prepareAzureArtifactsSetting();
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    settingsService.validateConnectivity(settingAttribute);
+    verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidateWithReferencedSecrets() {
+    SettingAttribute settingAttribute = prepareAzureArtifactsSetting();
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    settingsService.validate(settingAttribute);
+    verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSaveWithReferencedSecrets() {
+    SettingAttribute settingAttribute = prepareAzureArtifactsSetting();
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    settingsService.save(settingAttribute);
+    verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testForceSaveWithReferencedSecrets() {
+    SettingAttribute settingAttribute = prepareAzureArtifactsSetting();
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    settingsService.forceSave(settingAttribute);
+    verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
+    verify(settingServiceHelper).resetEncryptedFields(any());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUpdateWithReferencedSecrets() {
+    SettingAttribute settingAttribute = prepareSettingAttributeForUpdateWithReferencedSecrets();
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    settingsService.update(settingAttribute);
+    verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
+    verify(settingServiceHelper).resetEncryptedFields(any());
+  }
+
+  private SettingAttribute prepareAzureArtifactsSetting() {
+    return aSettingAttribute()
+        .withName("NAME")
+        .withAccountId(ACCOUNT_ID)
+        .withValue(AzureArtifactsPATConfig.builder().accountId(ACCOUNT_ID).azureDevopsUrl(AZURE_DEVOPS_URL).build())
+        .build();
   }
 }
