@@ -77,7 +77,6 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
     doReturn(service).when(mockServiceResourceService).get(anyString(), anyString());
     doReturn(null).when(mockInfrastructureProvisionerService).save(any());
     readYamlFile();
-    doReturn(yaml.getName()).when(mockYamlHelper).getNameFromYamlFilePath(anyString());
   }
 
   @Test
@@ -86,7 +85,6 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   public void testToYaml() {
     ShellScriptInfrastructureProvisioner provisioner = prepareProvisioner();
     Yaml yaml = handler.toYaml(provisioner, "my-app");
-    assertThat(yaml.getName()).isEqualTo(NAME);
     assertThat(yaml.getScriptBody()).isEqualTo(SCRIPT_BODY);
   }
 

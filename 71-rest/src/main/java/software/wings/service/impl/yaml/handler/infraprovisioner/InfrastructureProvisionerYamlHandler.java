@@ -83,7 +83,6 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
   }
 
   public InfraProvisionerYaml toYaml(InfraProvisionerYaml yaml, InfrastructureProvisioner bean) {
-    yaml.setName(bean.getName());
     yaml.setDescription(bean.getDescription());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
 

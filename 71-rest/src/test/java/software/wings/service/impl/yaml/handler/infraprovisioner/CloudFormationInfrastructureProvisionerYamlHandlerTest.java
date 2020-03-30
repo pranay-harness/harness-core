@@ -36,6 +36,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.util.Collections;
@@ -62,7 +63,6 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
       + "  - name: k1\n"
       + "    value: v1\n"
       + "  serviceName: ServiceName\n"
-      + "name: Name\n"
       + "sourceType: TEMPLATE_BODY\n"
       + "templateBody: Body\n";
 
@@ -98,6 +98,10 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
     assertThat("k1").isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getName());
     assertThat("v1").isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getValue());
 
+    Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
+    String yamlContent = getYamlContent(yamlFromObject);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
+
     CloudFormationInfrastructureProvisioner provisioner =
         CloudFormationInfrastructureProvisioner.builder()
             .appId(APP_ID)
@@ -122,7 +126,6 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
     assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
     assertThat("TEMPLATE_BODY").isEqualTo(yaml1.getSourceType());
     assertThat("Body1").isEqualTo(yaml1.getTemplateBody());
-    assertThat("Name1").isEqualTo(yaml1.getName());
     assertThat("Desc1").isEqualTo(yaml1.getDescription());
     assertThat(1).isEqualTo(yaml1.getMappingBlueprints().size());
     assertThat("ServiceName").isEqualTo(yaml1.getMappingBlueprints().get(0).getServiceName());

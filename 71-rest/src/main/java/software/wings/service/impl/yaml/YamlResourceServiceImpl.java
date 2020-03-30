@@ -350,7 +350,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             .toYaml(infrastructureProvisioner, appId);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureProvisioner.getUuid(), accountId,
-        provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
+        provisionerYaml, infrastructureProvisioner.getName() + YAML_EXTENSION);
   }
 
   /**
