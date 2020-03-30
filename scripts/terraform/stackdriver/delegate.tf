@@ -54,19 +54,14 @@ resource "google_logging_metric" "delegate_tasks_response" {
   }
 }
 
-resource "google_logging_metric" "delegate_tasks_creation" {
-  name = join("_", [local.name_prefix, "delegate_tasks_creation"])
+resource "google_logging_metric" "delegate_tasks_creation_by_type" {
+  name = join("_", [local.name_prefix, "delegate_tasks_creation_by_type"])
   description = "Owner: Platform delegate"
   filter = join("\n", [local.filter_prefix,
     "\"Queueing async\" OR \"Executing sync\""])
   metric_descriptor {
     metric_kind = "DELTA"
     value_type = "INT64"
-    labels {
-      key = "syncAsync"
-      value_type = "STRING"
-      description = "Is the task sync or async"
-    }
     labels {
       key = "taskType"
       value_type = "STRING"
@@ -79,9 +74,27 @@ resource "google_logging_metric" "delegate_tasks_creation" {
     }
   }
   label_extractors = {
-    "syncAsync": "REGEXP_EXTRACT(jsonPayload.message, \"(sync|async)\")",
     "taskType": "EXTRACT(jsonPayload.harness.taskType)",
     "taskGroup": "EXTRACT(jsonPayload.harness.taskGroup)"
+  }
+}
+
+resource "google_logging_metric" "delegate_tasks_creation_by_mode" {
+  name = join("_", [local.name_prefix, "delegate_tasks_creation_by_mode"])
+  description = "Owner: Platform delegate"
+  filter = join("\n", [local.filter_prefix,
+    "\"Queueing async\" OR \"Executing sync\""])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "syncAsync"
+      value_type = "STRING"
+      description = "Is the task sync or async"
+    }
+  }
+  label_extractors = {
+    "syncAsync": "REGEXP_EXTRACT(jsonPayload.message, \"(sync|async)\")",
   }
 }
 
