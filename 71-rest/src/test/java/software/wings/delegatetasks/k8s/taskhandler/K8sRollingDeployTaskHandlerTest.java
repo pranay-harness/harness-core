@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -12,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -32,8 +36,8 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -54,11 +58,9 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .thenReturn(KubernetesConfig.builder().build());
     when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(Collections.emptyList());
+    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean()))
-        .thenReturn(Collections.emptyList());
+    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(0)).dryRunManifests(any(), any(), any(), any());
@@ -86,10 +88,8 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(Collections.emptyList());
-    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean()))
-        .thenReturn(Collections.emptyList());
+    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
+    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelper, times(1)).dryRunManifests(any(), any(), any(), any());
@@ -110,7 +110,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
 
     Release.KubernetesResourceIdRevision resourceIdMock = Mockito.mock(Release.KubernetesResourceIdRevision.class);
-    Release release = Release.builder().managedWorkloads(Arrays.asList(resourceIdMock)).build();
+    Release release = Release.builder().managedWorkloads(asList(resourceIdMock)).build();
 
     on(k8sRollingDeployTaskHandler).set("release", release);
     when(k8sTaskHelper.getLatestRevision(any(), any(), any())).thenReturn("2");
@@ -124,5 +124,36 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     when(resourceIdMock.getWorkload()).thenReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build());
     verify(resourceIdMock, times(1)).setRevision(anyString());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTagNewPods() {
+    assertThat(k8sRollingDeployTaskHandler.tagNewPods(emptyList(), emptyList())).isEmpty();
+
+    List<K8sPod> pods = k8sRollingDeployTaskHandler.tagNewPods(
+        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("old-pod-1"), podWithName("old-pod-2")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods = k8sRollingDeployTaskHandler.tagNewPods(
+        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("pod-1")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods = k8sRollingDeployTaskHandler.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), emptyList());
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+  }
+
+  private K8sPod podWithName(String name) {
+    return K8sPod.builder().name(name).build();
   }
 }

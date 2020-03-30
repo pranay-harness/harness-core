@@ -2,9 +2,13 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -19,6 +23,7 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAM
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -43,6 +48,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -226,5 +232,44 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         .saveExecutionLog(
             "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.",
             LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetAllPods() throws Exception {
+    KubernetesResource kubernetesResource =
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().namespace("default").build()).build();
+    on(k8sCanaryDeployTaskHandler).set("canaryWorkload", kubernetesResource);
+    testGetAllPodsWithNoPreviousPods();
+    testGetAllPodsWithPreviousPods();
+  }
+
+  private void testGetAllPodsWithNoPreviousPods() throws Exception {
+    final K8sPod canaryPod = K8sPod.builder().name("pod-canary").build();
+    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString()))
+        .thenReturn(asList(canaryPod));
+    when(k8sTaskHelper.getPodDetailsWithTrack(any(KubernetesConfig.class), anyString(), anyString(), eq("canary")))
+        .thenReturn(asList(canaryPod));
+
+    final List<K8sPod> allPods = k8sCanaryDeployTaskHandler.getAllPods();
+    assertThat(allPods).hasSize(1);
+    assertThat(allPods.get(0).isNewPod()).isTrue();
+    assertThat(allPods.get(0).getName()).isEqualTo(canaryPod.getName());
+  }
+
+  private void testGetAllPodsWithPreviousPods() throws Exception {
+    final K8sPod canaryPod = K8sPod.builder().name("pod-canary").build();
+    final List<K8sPod> allPods =
+        asList(K8sPod.builder().name("primary-1").build(), K8sPod.builder().name("primary-2").build(), canaryPod);
+    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString())).thenReturn(allPods);
+    when(k8sTaskHelper.getPodDetailsWithTrack(any(KubernetesConfig.class), anyString(), anyString(), eq("canary")))
+        .thenReturn(asList(canaryPod));
+
+    final List<K8sPod> pods = k8sCanaryDeployTaskHandler.getAllPods();
+    assertThat(pods).hasSize(3);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-canary", "primary-1", "primary-2");
   }
 }

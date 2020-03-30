@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromNamespaceKindName;
@@ -14,6 +15,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Scale;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -37,7 +39,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -104,20 +106,22 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     List<K8sPod> afterPodList = k8sTaskHelper.getPodDetails(
         kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
 
-    k8sScaleResponse.setK8sPodList(getNewPods(beforePodList, afterPodList));
+    k8sScaleResponse.setK8sPodList(tagNewPods(beforePodList, afterPodList));
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
   }
 
-  private List<K8sPod> getNewPods(List<K8sPod> beforePodList, List<K8sPod> afterPodList) {
-    Set<String> beforePodSet = (beforePodList != null)
-        ? beforePodList.stream().map(K8sPod::getName).collect(Collectors.toSet())
-        : Collections.emptySet();
+  @VisibleForTesting
+  List<K8sPod> tagNewPods(List<K8sPod> beforePodList, List<K8sPod> afterPodList) {
+    Set<String> beforePodSet = emptyIfNull(beforePodList).stream().map(K8sPod::getName).collect(Collectors.toSet());
 
-    List<K8sPod> newPods = Collections.EMPTY_LIST;
-    if (afterPodList != null) {
-      newPods = afterPodList.stream().filter(pod -> !beforePodSet.contains(pod.getName())).collect(Collectors.toList());
-    }
-    return newPods;
+    List<K8sPod> allPods = new ArrayList<>(emptyIfNull(afterPodList));
+
+    allPods.forEach(pod -> {
+      if (!beforePodSet.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
   }
 
   private boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,

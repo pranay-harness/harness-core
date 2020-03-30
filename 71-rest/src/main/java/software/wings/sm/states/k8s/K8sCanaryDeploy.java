@@ -12,6 +12,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.k8s.model.K8sPod;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
@@ -168,8 +169,8 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setReleaseNumber(k8sCanaryDeployResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
 
-    InstanceElementListParam instanceElementListParam =
-        k8sStateHelper.getInstanceElementListParam(k8sCanaryDeployResponse.getK8sPodList());
+    final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sCanaryDeployResponse.getK8sPodList());
+    InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
 
     stateExecutionData.setNewInstanceStatusSummaries(
         k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));

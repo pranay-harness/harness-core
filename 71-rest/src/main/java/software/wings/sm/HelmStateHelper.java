@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.deployment.InstanceDetails.InstanceType.HELM;
+import static io.harness.deployment.InstanceDetails.InstanceType.K8s;
 
 import io.harness.deployment.InstanceDetails;
 import lombok.experimental.UtilityClass;
@@ -23,14 +23,14 @@ public final class HelmStateHelper {
           .map(containerInfo
               -> InstanceDetails.builder()
                      .hostName(containerInfo.getHostName())
-                     .instanceType(HELM)
+                     .instanceType(K8s)
                      .workloadName(containerInfo.getWorkloadName())
                      .newInstance(containerInfo.isNewContainer())
-                     .helm(InstanceDetails.HELM.builder()
-                               .podName(containerInfo.getPodName())
-                               .dockerId(containerInfo.getContainerId())
-                               .ip(containerInfo.getIp())
-                               .build())
+                     .k8s(InstanceDetails.K8s.builder()
+                              .podName(containerInfo.getPodName())
+                              .dockerId(containerInfo.getContainerId())
+                              .ip(containerInfo.getIp())
+                              .build())
                      .build())
           .collect(Collectors.toList());
     }

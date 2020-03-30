@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -12,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -29,6 +33,9 @@ import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -97,5 +104,33 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString());
     assertThat(argumentCaptor.getValue()).isEqualTo(namespace);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTagNewPods() {
+    assertThat(k8sScaleTaskHandler.tagNewPods(emptyList(), emptyList())).isEmpty();
+    assertThat(k8sScaleTaskHandler.tagNewPods(emptyList(), null)).isEmpty();
+    assertThat(k8sScaleTaskHandler.tagNewPods(null, null)).isEmpty();
+    assertThat(k8sScaleTaskHandler.tagNewPods(null, emptyList())).isEmpty();
+
+    List<K8sPod> pods = k8sScaleTaskHandler.tagNewPods(
+        asList(podWithName("pod-1")), asList(podWithName("pod-1"), podWithName("pod-2")));
+
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactly("pod-2");
+
+    pods = k8sScaleTaskHandler.tagNewPods(
+        asList(podWithName("pod-1")), asList(podWithName("pod-2"), podWithName("pod-3")));
+
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-2", "pod-3");
+  }
+
+  private K8sPod podWithName(String name) {
+    return K8sPod.builder().name(name).build();
   }
 }

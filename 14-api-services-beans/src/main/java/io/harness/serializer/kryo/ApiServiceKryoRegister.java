@@ -122,7 +122,7 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(InstanceDetails.PCF.class, 1407);
     kryo.register(InstanceDetails.AWS.class, 1408);
     kryo.register(InstanceDetails.InstanceType.class, 1409);
-    kryo.register(InstanceDetails.HELM.class, 1410);
     kryo.register(InstanceDetails.PHYSICAL_HOST.class, 1411);
+    kryo.register(InstanceDetails.K8s.class, 1412);
   }
 }

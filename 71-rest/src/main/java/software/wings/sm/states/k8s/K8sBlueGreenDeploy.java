@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.k8s.model.K8sPod;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
@@ -139,8 +140,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
     stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
 
-    InstanceElementListParam instanceElementListParam =
-        k8sStateHelper.getInstanceElementListParam(k8sBlueGreenDeployResponse.getK8sPodList());
+    final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sBlueGreenDeployResponse.getK8sPodList());
+    InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
 
     stateExecutionData.setNewInstanceStatusSummaries(
         k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));

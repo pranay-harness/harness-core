@@ -68,6 +68,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -153,8 +154,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithColor(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
+    final List<K8sPod> podList = getAllPods();
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -169,6 +169,18 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                          .stageServiceName(stageService.getResourceId().getName())
                                                          .build(),
         SUCCESS);
+  }
+
+  @VisibleForTesting
+  List<K8sPod> getAllPods() throws Exception {
+    List<K8sPod> allPods = new ArrayList<>();
+    final List<K8sPod> stagePods = k8sTaskHelper.getPodDetailsWithColor(
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
+    stagePods.forEach(pod -> pod.setNewPod(true));
+    allPods.addAll(stagePods);
+    allPods.addAll(k8sTaskHelper.getPodDetailsWithColor(
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, primaryColor));
+    return allPods;
   }
 
   @VisibleForTesting

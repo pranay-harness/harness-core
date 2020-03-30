@@ -14,4 +14,5 @@ public class K8sPod {
   private String releaseName;
   private String podIP;
   private List<K8sContainer> containerList;
+  private boolean newPod;
 }

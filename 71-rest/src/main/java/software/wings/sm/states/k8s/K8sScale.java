@@ -14,6 +14,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.K8sPod;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
@@ -45,6 +46,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -134,8 +136,8 @@ public class K8sScale extends State {
             .build();
       }
 
-      InstanceElementListParam instanceElementListParam =
-          k8sStateHelper.getInstanceElementListParam(k8sScaleResponse.getK8sPodList());
+      final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sScaleResponse.getK8sPodList());
+      InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
 
       stateExecutionData.setNewInstanceStatusSummaries(
           k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));

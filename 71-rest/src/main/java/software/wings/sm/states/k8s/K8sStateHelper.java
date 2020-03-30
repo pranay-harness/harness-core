@@ -1,6 +1,7 @@
 
 package software.wings.sm.states.k8s;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -132,6 +133,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 @Singleton
 @Slf4j
@@ -965,5 +968,10 @@ public class K8sStateHelper {
     }
 
     return emptyList();
+  }
+
+  @Nonnull
+  public List<K8sPod> getNewPods(@Nullable List<K8sPod> k8sPodList) {
+    return emptyIfNull(k8sPodList).stream().filter(K8sPod::isNewPod).collect(Collectors.toList());
   }
 }

@@ -19,11 +19,11 @@ public class InstanceDetails {
   private String serviceId;
   private PCF pcf;
   private AWS aws;
-  private HELM helm;
   private PHYSICAL_HOST physicalHost;
+  private K8s k8s;
   private InstanceType instanceType;
 
-  public enum InstanceType { PCF, AWS, HELM, PHYSICAL_HOST }
+  public enum InstanceType { PCF, AWS, K8s, PHYSICAL_HOST }
 
   @Value
   @Builder
@@ -50,7 +50,7 @@ public class InstanceDetails {
 
   @Value
   @Builder
-  public static class HELM {
+  public static class K8s {
     private String ip;
     private String podName;
     private String dockerId;
