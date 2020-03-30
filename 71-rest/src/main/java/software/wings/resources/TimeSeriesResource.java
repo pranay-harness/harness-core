@@ -174,6 +174,15 @@ public class TimeSeriesResource {
   }
 
   @DELETE
+  @Path("/threshold-by-id")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteCustomThreshold(
+      @QueryParam("accountId") String accountId, @QueryParam("thresholdIdList") List<String> thresholdsToBeDeleted) {
+    return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(thresholdsToBeDeleted));
+  }
+
+  @DELETE
   @Path("/threshold")
   @Timed
   @ExceptionMetered

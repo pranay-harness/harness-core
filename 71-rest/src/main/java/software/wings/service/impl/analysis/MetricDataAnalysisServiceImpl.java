@@ -319,64 +319,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
     if (isNotEmpty(thresholds)) {
       validateCustomThresholdsBeforeSaving(thresholds);
-      Map<String, TimeSeriesMLTransactionThresholds> uniqueKeyMap = new HashMap<>();
-      thresholds.forEach(threshold -> {
-        ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(threshold);
-        TimeSeriesCustomThresholdType customThresholdType = getCustomThresholdType(threshold);
-
-        uniqueKeyMap.put(threshold.getMetricName() + "," + threshold.getTransactionName() + ","
-                + thresholdComparisonType + "," + customThresholdType,
-            threshold);
-      });
-      List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
-          wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
-              .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
-              .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
-              .asList();
-
-      if (thresholdsInDB != null) {
-        thresholdsInDB.forEach(thresholdInDB -> {
-          ThresholdComparisonType thresholdComparisonType = getComparisonTypeFromThreshold(thresholdInDB);
-          TimeSeriesCustomThresholdType customThresholdType = getCustomThresholdType(thresholdInDB);
-          String uniqueKey = thresholdInDB.getMetricName() + "," + thresholdInDB.getTransactionName() + ","
-              + thresholdComparisonType + "," + customThresholdType;
-          if (uniqueKeyMap.containsKey(uniqueKey)) {
-            uniqueKeyMap.get(uniqueKey).setUuid(thresholdInDB.getUuid());
-          }
-        });
-      }
       logger.info(
           "Saving custom threshold list for cvConfigId {} , serviceId {} : {}", cvConfigId, serviceId, thresholds);
-      wingsPersistence.save(new ArrayList<>(uniqueKeyMap.values()));
+      wingsPersistence.save(thresholds);
     }
     return true;
-  }
-
-  private TimeSeriesCustomThresholdType getCustomThresholdType(TimeSeriesMLTransactionThresholds threshold) {
-    TimeSeriesCustomThresholdType thresholdComparisonType = null;
-    if (threshold.getThresholds() != null && isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
-      thresholdComparisonType =
-          threshold.getThresholds().getCustomThresholds().iterator().next().getCustomThresholdType();
-    }
-    if (thresholdComparisonType == null) {
-      final String errMsg = "Comparison type is null in saveCustomThreshold";
-      logger.info(errMsg);
-      return TimeSeriesCustomThresholdType.ACCEPTABLE;
-    }
-    return thresholdComparisonType;
-  }
-
-  private ThresholdComparisonType getComparisonTypeFromThreshold(TimeSeriesMLTransactionThresholds threshold) {
-    ThresholdComparisonType thresholdComparisonType = null;
-    if (threshold.getThresholds() != null && isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
-      thresholdComparisonType = threshold.getThresholds().getCustomThresholds().iterator().next().getComparisonType();
-    }
-    if (thresholdComparisonType == null) {
-      final String errMsg = "Comparison type is null in saveCustomThreshold";
-      logger.error(errMsg);
-      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
-    }
-    return thresholdComparisonType;
   }
 
   private Collection<TimeSeriesMLTransactionThresholds> validateCustomThresholdsBeforeSaving(
@@ -457,7 +404,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       if (acceptableAbsoluteHigherValue.doubleValue() < acceptableAbsoluteLowerValue.doubleValue()) {
         // TODO: Come up with better error msg.
         throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
-            "The lesser Absolute values should actually be lesser than the other one.");
+            "Absolute value thresholds with a criteria of 'Greater than' should be lesser in value "
+                + "than absolute value thresholds with a criteria of 'Lesser than'");
       }
     });
     return txnMetricThresholdMap.values();
@@ -510,6 +458,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
             .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
     return wingsPersistence.delete(thresholdsQuery);
+  }
+
+  @Override
+  public boolean deleteCustomThreshold(List<String> thresholdIdsToBeDeleted) {
+    if (isNotEmpty(thresholdIdsToBeDeleted)) {
+      logger.info("Deleting the custom thresholds with the IDs {}", thresholdIdsToBeDeleted);
+      thresholdIdsToBeDeleted.forEach(
+          thresholdId -> wingsPersistence.delete(TimeSeriesMLTransactionThresholds.class, thresholdId));
+    }
+    return true;
   }
 
   @Override
