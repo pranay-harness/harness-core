@@ -451,6 +451,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     List<TimeSeriesDataRecord> response = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).getResponse();
     List<NewRelicMetricDataRecord> results =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
+    if (isEmpty(results)) {
+      PageRequest<NewRelicMetricDataRecord> newRelicRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+              .build();
+      results = dataStoreService.list(NewRelicMetricDataRecord.class, newRelicRequest).getResponse();
+    }
     return results.stream()
         .filter(dataRecord -> ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
         .collect(Collectors.toSet());

@@ -390,8 +390,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                             .host(hostname)
                                                             .level(ClusterLevel.L1)
                                                             .build();
-    wingsPersistence.save(TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(
-        Collections.singletonList(newRelicMetricDataRecord)));
+    wingsPersistence.save(newRelicMetricDataRecord);
     Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getPreviousSuccessfulRecords(
         appId, workflowExecutionId, DEFAULT_GROUP_NAME, currentEpochMinute, 10, accountId);
     assertThat(records).hasSize(1);
