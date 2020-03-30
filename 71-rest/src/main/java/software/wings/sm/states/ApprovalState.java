@@ -22,6 +22,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
@@ -882,7 +883,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       notificationMessageType = APPROVAL_EXPIRED_NOTIFICATION;
       placeholderValues = getPlaceholderValues(context, errorMsg);
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), notificationMessageType, placeholderValues, context, approvalStateType);
+          app.getAccountId(), APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION, placeholderValues, context, approvalStateType);
     } else {
       if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
         errorMsg = "Pipeline was aborted";
@@ -892,17 +893,16 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         errorMsg = "Workflow or Pipeline was aborted";
       }
 
-      notificationMessageType = WORKFLOW_ABORT_NOTIFICATION;
+      notificationMessageType = APPROVAL_STATE_CHANGE_NOTIFICATION;
       User user = UserThreadLocal.get();
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       placeholderValues = getPlaceholderValues(context, userName, ABORTED);
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), notificationMessageType, placeholderValues, context, approvalStateType);
+          app.getAccountId(), WORKFLOW_ABORT_NOTIFICATION, placeholderValues, context, approvalStateType);
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
 
-    notificationMessageType = APPROVAL_STATE_CHANGE_NOTIFICATION;
     switch (approvalStateType) {
       case JIRA:
         handleAbortEventJira(context);
