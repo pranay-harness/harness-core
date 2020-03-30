@@ -382,6 +382,10 @@ public class AwsCodeDeployState extends State {
     if (getCommandName() == null) {
       invalidFields.put("commandName", "Command Name should not be null");
     }
+
+    if (steadyStateTimeout < 0) {
+      invalidFields.put("steadyStateTimeout", "Steady State Timeout cannot be less than 0");
+    }
     return invalidFields;
   }
 
