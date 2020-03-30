@@ -648,6 +648,64 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
             "Cannot use same variable ${InfraDefinition_Kubernetes} for different deployment Types: Secure Shell (SSH), Kubernetes");
   }
 
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void checkTransientFields() {
+    Map<String, Object> srvMetadata = getVarMetadata(SERVICE.toString());
+    Map<String, Object> infraMetadata = getVarMetadata(INFRASTRUCTURE_DEFINITION.toString());
+    Map<String, Object> envMetadata = getVarMetadata(ENVIRONMENT.toString());
+
+    TemplateExpression infraTemplateExpression =
+        getTemplateExpression("${InfraDefinition_Kubernetes}", "infraDefinitionId", infraMetadata);
+
+    TemplateExpression srvTemplateExpression = getTemplateExpression("${Service}", "serviceId", srvMetadata);
+    TemplateExpression envTemplateExpression = getTemplateExpression("${Environment}", "envId", envMetadata);
+
+    WorkflowPhase phase1 = getWorkflowPhase(asList(infraTemplateExpression, srvTemplateExpression));
+
+    Workflow workflow = getWorkflow(asList(phase1), envTemplateExpression, null);
+
+    workflow.getOrchestrationWorkflow().setTransientFields(true, workflow);
+    assertThat(workflow.isEnvTemplatized()).isTrue();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    List<String> workflowPhaseIds = canaryOrchestrationWorkflow.getWorkflowPhaseIds();
+    for (String id : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(id);
+      WorkflowPhase rollbackPhase = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(id);
+
+      assertThat(workflowPhase.isInfraTemplatised()).isTrue();
+      assertThat(workflowPhase.isSrvTemplatised()).isTrue();
+      assertThat(rollbackPhase.isInfraTemplatised()).isTrue();
+      assertThat(rollbackPhase.isSrvTemplatised()).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void checkTransientFieldsFalse() {
+    WorkflowPhase phase1 = getWorkflowPhase(new ArrayList<>());
+
+    Workflow workflow = getWorkflow(asList(phase1), null, null);
+
+    workflow.getOrchestrationWorkflow().setTransientFields(true, workflow);
+    assertThat(workflow.isEnvTemplatized()).isFalse();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    List<String> workflowPhaseIds = canaryOrchestrationWorkflow.getWorkflowPhaseIds();
+    for (String id : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(id);
+      WorkflowPhase rollbackPhase = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(id);
+
+      assertThat(workflowPhase.isInfraTemplatised()).isFalse();
+      assertThat(workflowPhase.isSrvTemplatised()).isFalse();
+      assertThat(rollbackPhase.isInfraTemplatised()).isFalse();
+      assertThat(rollbackPhase.isSrvTemplatised()).isFalse();
+    }
+  }
+
   private TemplateExpression getTemplateExpression(String expression, String fieldName, Map<String, Object> metadata) {
     return TemplateExpression.builder()
         .expression(expression)
@@ -711,18 +769,21 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
             .withUserVariables(workflowVariables);
 
     Map<String, WorkflowPhase> workflowPhaseIdmap = new HashMap<>();
+    Map<String, WorkflowPhase> rollbackPhaseIdmap = new HashMap<>();
+
     List<String> workflowPhaseIds = new ArrayList<>();
     int i = 1;
     for (WorkflowPhase workflowPhase : workflowPhases) {
       orchestrationWorkflowBuilder.addWorkflowPhase(workflowPhase);
       workflowPhaseIdmap.put("WORKFLOW_PHASE_ID" + i, workflowPhase);
+      rollbackPhaseIdmap.put("WORKFLOW_PHASE_ID" + i, workflowPhase);
       workflowPhaseIds.add("WORKFLOW_PHASE_ID" + i);
       i++;
     }
 
     orchestrationWorkflowBuilder.withWorkflowPhaseIdMap(workflowPhaseIdmap);
     orchestrationWorkflowBuilder.withWorkflowPhaseIds(workflowPhaseIds);
-
+    orchestrationWorkflowBuilder.withRollbackWorkflowPhaseIdMap(rollbackPhaseIdmap);
     Workflow workflow = aWorkflow().orchestrationWorkflow(orchestrationWorkflowBuilder.build()).envId(ENV_ID).build();
     if (envTemplateExpression != null) {
       workflow.setTemplateExpressions(asList(envTemplateExpression));

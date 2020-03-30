@@ -84,6 +84,8 @@ public abstract class OrchestrationWorkflow {
 
   public abstract void onLoad(boolean infraRefactor, boolean templatedPipeline, Workflow workflow);
 
+  public abstract void setTransientFields(boolean infraRefactor, Workflow workflow);
+
   public abstract Set<EntityType> getRequiredEntityTypes();
 
   public abstract void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes);

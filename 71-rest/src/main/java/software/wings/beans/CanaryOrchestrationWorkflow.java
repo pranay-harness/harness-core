@@ -385,6 +385,29 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     reorderUserVariables();
   }
 
+  @Override
+  public void setTransientFields(boolean infraRefactor, Workflow workflow) {
+    workflow.setEnvTemplatized(workflow.fetchEnvTemplatizedName() != null);
+
+    for (String workflowPhaseId : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
+      boolean srvTemplatised = workflowPhase.checkServiceTemplatized();
+      boolean infraTemplatised;
+      if (infraRefactor) {
+        infraTemplatised = workflowPhase.checkInfraDefinitionTemplatized();
+      } else {
+        infraTemplatised = workflowPhase.checkInfraTemplatized();
+      }
+      workflowPhase.setSrvTemplatised(srvTemplatised);
+      workflowPhase.setInfraTemplatised(infraTemplatised);
+      WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
+      if (rollbackPhase != null) {
+        rollbackPhase.setSrvTemplatised(srvTemplatised);
+        rollbackPhase.setInfraTemplatised(infraTemplatised);
+      }
+    }
+  }
+
   private void cleanupMetadata(List<Variable> userVariables) {
     for (Variable variable : userVariables) {
       if (variable.getType() == VariableType.ENTITY) {

@@ -15,7 +15,10 @@ import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.persistence.UuidAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
@@ -44,6 +47,8 @@ public class WorkflowPhase implements UuidAccess {
   private String infraDefinitionName;
 
   private DeploymentType deploymentType;
+  @Transient @Getter @Setter private boolean srvTemplatised;
+  @Transient @Getter @Setter private boolean infraTemplatised;
   private String computeProviderId;
   private boolean provisionNodes;
 
