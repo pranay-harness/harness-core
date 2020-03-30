@@ -34,5 +34,4 @@ mappingBlueprints:
   - name: namespace
     value: Collection[0].clusters.namespace
   serviceName: Test
-name: Shell Script Provisioner
 scriptBody: aws configure set default.region us-west-1

@@ -69,20 +69,18 @@ public abstract class InfrastructureProvisioner
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public abstract static class InfraProvisionerYaml extends BaseEntityYaml {
-    private String name;
     private String description;
     private String infrastructureProvisionerType;
     private List<NameValuePair.Yaml> variables;
     private List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints;
 
-    public InfraProvisionerYaml(String type, String harnessApiVersion, String name, String description,
+    public InfraProvisionerYaml(String type, String harnessApiVersion, String description,
         String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
         List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints) {
       super(type, harnessApiVersion);
-      setName(name);
-      setDescription(description);
-      setInfrastructureProvisionerType(infrastructureProvisionerType);
-      setMappingBlueprints(mappingBlueprints);
+      this.description = description;
+      this.infrastructureProvisionerType = infrastructureProvisionerType;
+      this.mappingBlueprints = mappingBlueprints;
     }
   }
 

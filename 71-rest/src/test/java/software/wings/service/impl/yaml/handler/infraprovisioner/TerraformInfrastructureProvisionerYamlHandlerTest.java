@@ -42,6 +42,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
@@ -61,6 +62,11 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Infrastructure Provisioners/TF_Name.yaml";
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: TERRAFORM\n"
+      + "backendConfigs:\n"
+      + "- name: access_key\n"
+      + "  valueType: TEXT\n"
+      + "- name: secret_key\n"
+      + "  valueType: ENCRYPTED_TEXT\n"
       + "mappingBlueprints:\n"
       + "- cloudProviderType: AWS\n"
       + "  deploymentType: SSH\n"
@@ -71,20 +77,14 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "    value: ${terraform.security_group}\n"
       + "  - name: tags\n"
       + "    value: ${terraform.archive_tags}\n"
-      + "  serviceName: Archive\n"
-      + "name: Harness Terraform Test\n"
+      + "  serviceName: ServiceName\n"
+      + "sourceRepoBranch: master\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
       + "variables:\n"
-      + "  - name: access_key\n"
-      + "    valueType: TEXT\n"
-      + "  - name: secret_key\n"
-      + "    valueType: ENCRYPTED_TEXT\n"
-      + "backendConfigs:\n"
-      + "  - name: access_key\n"
-      + "    valueType: TEXT\n"
-      + "  - name: secret_key\n"
-      + "    valueType: ENCRYPTED_TEXT\n"
-      + "sourceRepoBranch: master";
+      + "- name: access_key\n"
+      + "  valueType: TEXT\n"
+      + "- name: secret_key\n"
+      + "  valueType: ENCRYPTED_TEXT\n";
 
   @Test
   @Owner(developers = GEORGE)
@@ -99,7 +99,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     doReturn(service).when(mockServiceResourceService).get(anyString(), anyString());
     doReturn(service).when(mockServiceResourceService).getServiceByName(anyString(), anyString());
     SettingAttribute settingAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("Name").build();
+        SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("TERRAFORM_TEST_GIT_REPO").build();
     doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
     doReturn(settingAttribute).when(mockSettingsService).get(anyString(), anyString());
     doReturn(Application.Builder.anApplication().uuid(APP_ID).build()).when(appService).get(any());
@@ -113,6 +113,10 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
     assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
     assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
+
+    Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
+    String yamlContent = getYamlContent(yamlFromObject);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     List<NameValuePair> variables =
         Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
@@ -139,7 +143,6 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat(yaml1).isNotNull();
     assertThat("TERRAFORM").isEqualTo(yaml1.getType());
     assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
-    assertThat("Name1").isEqualTo(yaml1.getName());
     assertThat("Desc1").isEqualTo(yaml1.getDescription());
     assertThat("master").isEqualTo(yaml1.getSourceRepoBranch());
     assertThat(1).isEqualTo(yaml1.getMappingBlueprints().size());

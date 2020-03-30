@@ -74,11 +74,10 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     private List<NameValuePair.Yaml> backendConfigs;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String name, String description,
-        String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceRepoSettingName,
-        String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs) {
-      super(type, harnessApiVersion, name, description, infrastructureProvisionerType, variables, mappingBlueprints);
+    public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
+        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
+        String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs) {
+      super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.sourceRepoBranch = sourceRepoBranch;
       this.path = path;

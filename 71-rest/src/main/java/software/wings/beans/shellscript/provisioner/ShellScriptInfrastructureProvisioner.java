@@ -49,10 +49,10 @@ public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisio
     private String scriptBody;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String name, String description,
-        String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String scriptBody) {
-      super(type, harnessApiVersion, name, description, infrastructureProvisionerType, variables, mappingBlueprints);
+    public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
+        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
+        String scriptBody) {
+      super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.scriptBody = scriptBody;
     }
   }
