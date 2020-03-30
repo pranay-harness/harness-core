@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -44,7 +45,14 @@ public class APMDelegateServiceImpl implements APMDelegateService {
 
   @Override
   public boolean validateCollector(APMValidateCollectorConfig config) {
-    config.getHeaders().put("Accept", "application/json");
+    if (!config.getHeaders()
+             .keySet()
+             .stream()
+             .map(String::toLowerCase)
+             .collect(Collectors.toList())
+             .contains("accept")) {
+      config.getHeaders().put("Accept", "application/json");
+    }
     Call<Object> request = getAPMRestClient(config).validate(
         resolveDollarReferences(config.getUrl()), config.getHeaders(), config.getOptions());
     decryptFields(config.getEncryptedDataDetails());
@@ -113,7 +121,14 @@ public class APMDelegateServiceImpl implements APMDelegateService {
 
   @Override
   public String fetch(APMValidateCollectorConfig config, ThirdPartyApiCallLog apiCallLog) {
-    config.getHeaders().put("Accept", "application/json");
+    if (!config.getHeaders()
+             .keySet()
+             .stream()
+             .map(String::toLowerCase)
+             .collect(Collectors.toList())
+             .contains("accept")) {
+      config.getHeaders().put("Accept", "application/json");
+    }
     if (config.getEncryptedDataDetails() != null) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
