@@ -1883,6 +1883,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .startTime(startTime)
             .collectionTime(timeDuration)
             .dataCollectionMinute(0)
+            .dynatraceServiceId(config.getServiceEntityId())
             .encryptedDataDetails(secretManager.getEncryptionDetails(dynaTraceConfig, config.getAppId(), null))
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .build();

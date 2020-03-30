@@ -38,6 +38,7 @@ import software.wings.sm.states.DynatraceState;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -241,7 +242,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
               DynaTraceMetricDataRequest dataRequest =
                   DynaTraceMetricDataRequest.builder()
                       .timeseriesId(timeSeries.getTimeseriesId())
-                      .entities(dataCollectionInfo.getServiceMethods())
+                      .entities(dataCollectionInfo.getDynatraceServiceId() == null
+                              ? null
+                              : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
                       .aggregationType(timeSeries.getAggregationType())
                       .percentile(timeSeries.getPercentile())
                       .startTimestamp(collectionStartTime)
@@ -266,14 +269,17 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             hostStartTimeMap.put(hostName, startTimeStamp);
             for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
               callables.add(() -> {
-                DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
-                                                             .timeseriesId(timeSeries.getTimeseriesId())
-                                                             .entities(dataCollectionInfo.getServiceMethods())
-                                                             .aggregationType(timeSeries.getAggregationType())
-                                                             .percentile(timeSeries.getPercentile())
-                                                             .startTimestamp(startTimeStamp)
-                                                             .endTimestamp(endTimeStamp)
-                                                             .build();
+                DynaTraceMetricDataRequest dataRequest =
+                    DynaTraceMetricDataRequest.builder()
+                        .timeseriesId(timeSeries.getTimeseriesId())
+                        .entities(dataCollectionInfo.getDynatraceServiceId() == null
+                                ? null
+                                : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
+                        .aggregationType(timeSeries.getAggregationType())
+                        .percentile(timeSeries.getPercentile())
+                        .startTimestamp(startTimeStamp)
+                        .endTimestamp(endTimeStamp)
+                        .build();
 
                 DynaTraceMetricDataResponse metricDataResponse =
                     dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
@@ -302,14 +308,17 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           }
           for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
             callables.add(() -> {
-              DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
-                                                           .timeseriesId(timeSeries.getTimeseriesId())
-                                                           .entities(dataCollectionInfo.getServiceMethods())
-                                                           .aggregationType(timeSeries.getAggregationType())
-                                                           .percentile(timeSeries.getPercentile())
-                                                           .startTimestamp(startTimeStamp)
-                                                           .endTimestamp(endTimeStamp)
-                                                           .build();
+              DynaTraceMetricDataRequest dataRequest =
+                  DynaTraceMetricDataRequest.builder()
+                      .timeseriesId(timeSeries.getTimeseriesId())
+                      .entities(dataCollectionInfo.getDynatraceServiceId() == null
+                              ? null
+                              : Collections.singleton(dataCollectionInfo.getDynatraceServiceId()))
+                      .aggregationType(timeSeries.getAggregationType())
+                      .percentile(timeSeries.getPercentile())
+                      .startTimestamp(startTimeStamp)
+                      .endTimestamp(endTimeStamp)
+                      .build();
               return dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
                   createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             });

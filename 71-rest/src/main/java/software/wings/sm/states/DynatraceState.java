@@ -1,11 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -20,10 +22,12 @@ import org.slf4j.Logger;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
+import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -44,10 +48,10 @@ import java.util.concurrent.TimeUnit;
 public class DynatraceState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";
-
+  @Inject @SchemaIgnore private transient DynaTraceService dynaTraceService;
   @Attributes(required = true, title = "Dynatrace Server") private String analysisServerConfigId;
 
-  @Attributes(required = true, title = "Service Methods") private String serviceMethods;
+  private String serviceEntityId;
 
   public DynatraceState(String name) {
     super(name, StateType.DYNA_TRACE);
@@ -67,10 +71,30 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
     final SettingAttribute settingAttribute = settingsService.get(resolvedConnectorId);
     Preconditions.checkNotNull(settingAttribute, "No dynatrace setting with id: " + analysisServerConfigId + " found");
-
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
 
-    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
+    String resolvedServiceField = getResolvedFieldValue(context, DynatraceStateKeys.serviceEntityId, serviceEntityId);
+    String resolvedServiceId = null;
+
+    // we will do the resolution for serviceID only if it is not empty
+    // this is because already existing setups will not have this field.
+    if (isNotEmpty(resolvedServiceField)) {
+      // if this is a name, get the corresponding ID.
+      try {
+        resolvedServiceId = dynaTraceService.resolveDynatraceServiceNameToId(resolvedConnectorId, resolvedServiceField);
+      } catch (Exception ex) {
+        logger.info("Exception while trying to resolve dynatrace service name to id");
+      }
+      if (resolvedServiceId == null) {
+        boolean isValidId = dynaTraceService.validateDynatraceServiceId(resolvedConnectorId, resolvedServiceField);
+        if (!isValidId) {
+          throw new DataCollectionException("Invalid serviceId provided in setup: " + resolvedServiceField);
+        }
+        resolvedServiceId = resolvedServiceField;
+      }
+    }
+
     final DynaTraceDataCollectionInfo dataCollectionInfo =
         DynaTraceDataCollectionInfo.builder()
             .dynaTraceConfig(dynaTraceConfig)
@@ -83,6 +107,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
             .dataCollectionMinute(0)
+            .dynatraceServiceId(resolvedServiceId)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 dynaTraceConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .analysisComparisonStrategy(getComparisonStrategy())

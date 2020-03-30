@@ -13,7 +13,6 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -34,7 +33,7 @@ public class DynaTraceDataCollectionInfo implements TaskParameters, ExecutionCap
   private long startTime;
   private int collectionTime;
   private List<DynaTraceTimeSeries> timeSeriesDefinitions;
-  private Set<String> serviceMethods;
+  private String dynatraceServiceId;
   private AnalysisComparisonStrategy analysisComparisonStrategy;
   private int dataCollectionMinute;
   List<EncryptedDataDetail> encryptedDataDetails;

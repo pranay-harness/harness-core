@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
@@ -41,6 +43,7 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -60,7 +63,7 @@ import java.util.UUID;
  */
 public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
-
+  @Mock private DynaTraceService dynaTraceService;
   private DynatraceState dynatraceState;
   private List<String> serviceMethods = Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
@@ -79,8 +82,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
 
     dynatraceState = new DynatraceState("DynatraceState");
-    String serviceMethodsString = serviceMethods.get(0) + "\n" + serviceMethods.get(1);
-    dynatraceState.setServiceMethods(serviceMethodsString);
+
     dynatraceState.setTimeDuration("15");
     FieldUtils.writeField(dynatraceState, "appService", appService, true);
     FieldUtils.writeField(dynatraceState, "configuration", configuration, true);
@@ -98,6 +100,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "appService", appService, true);
     FieldUtils.writeField(dynatraceState, "accountService", accountService, true);
     FieldUtils.writeField(dynatraceState, "cvActivityLogService", cvActivityLogService, true);
+    FieldUtils.writeField(dynatraceState, "dynaTraceService", dynaTraceService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
   }
 
@@ -229,5 +232,66 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
                                                    .get("BASIC")
                                                    .get(0);
     assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerCollection_withServiceEntityId() {
+    when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
+    dynatraceState.setServiceEntityId("entityID1");
+    DelegateTask task = setupAndGetDelegateTaskFromTrigger();
+    final DynaTraceDataCollectionInfo actualCollectionInfo =
+        (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
+
+    assertThat(actualCollectionInfo.getDynatraceServiceId()).isEqualTo("entityID1");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerCollection_withServiceName() {
+    when(dynaTraceService.resolveDynatraceServiceNameToId(anyString(), anyString())).thenReturn("entityID3");
+    dynatraceState.setServiceEntityId("serviceName3");
+    DelegateTask task = setupAndGetDelegateTaskFromTrigger();
+    final DynaTraceDataCollectionInfo actualCollectionInfo =
+        (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
+
+    assertThat(actualCollectionInfo.getDynatraceServiceId()).isEqualTo("entityID3");
+  }
+
+  private DelegateTask setupAndGetDelegateTaskFromTrigger() {
+    DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
+                                          .accountId(accountId)
+                                          .dynaTraceUrl("dynatrace-url")
+                                          .apiToken(UUID.randomUUID().toString().toCharArray())
+                                          .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("prometheus-config")
+                                            .withValue(dynaTraceConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
+    DynatraceState spyState = spy(dynatraceState);
+    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    ExecutionResponse response = spyState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+
+    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
+    assertThat(tasks).hasSize(1);
+    return tasks.get(0);
   }
 }

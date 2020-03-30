@@ -14,12 +14,16 @@ import software.wings.verification.CVConfiguration;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class DynaTraceCVServiceConfiguration extends CVConfiguration {
+  private String serviceEntityId;
+
   @Override
   public CVConfiguration deepCopy() {
     DynaTraceCVServiceConfiguration clonedConfig = new DynaTraceCVServiceConfiguration();
     super.copy(clonedConfig);
+    clonedConfig.setServiceEntityId(this.serviceEntityId);
     return clonedConfig;
   }
 
@@ -31,5 +35,7 @@ public class DynaTraceCVServiceConfiguration extends CVConfiguration {
   @Builder
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class DynaTraceCVConfigurationYaml extends CVConfigurationYaml {}
+  public static final class DynaTraceCVConfigurationYaml extends CVConfigurationYaml {
+    private String dynatraceServiceName;
+  }
 }

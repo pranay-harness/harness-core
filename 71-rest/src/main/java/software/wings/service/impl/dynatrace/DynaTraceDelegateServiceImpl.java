@@ -23,6 +23,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.DynatraceState;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -64,16 +65,21 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       List<EncryptedDataDetail> encryptionDetails, DynaTraceSetupTestNodeData setupTestNodeData,
       ThirdPartyApiCallLog thirdPartyApiCallLog) {
     final List<DynaTraceMetricDataResponse> metricDataResponses = new ArrayList<>();
+
     List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
     for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.REQUEST_PER_MINUTE)) {
       callables.add(() -> {
-        DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
-                                                     .timeseriesId(timeSeries.getTimeseriesId())
-                                                     .aggregationType(timeSeries.getAggregationType())
-                                                     .percentile(timeSeries.getPercentile())
-                                                     .startTimestamp(setupTestNodeData.getFromTime())
-                                                     .endTimestamp(setupTestNodeData.getToTime())
-                                                     .build();
+        DynaTraceMetricDataRequest dataRequest =
+            DynaTraceMetricDataRequest.builder()
+                .timeseriesId(timeSeries.getTimeseriesId())
+                .aggregationType(timeSeries.getAggregationType())
+                .percentile(timeSeries.getPercentile())
+                .startTimestamp(setupTestNodeData.getFromTime())
+                .endTimestamp(setupTestNodeData.getToTime())
+                .entities(setupTestNodeData.getServiceEntityId() == null
+                        ? null
+                        : Collections.singleton(setupTestNodeData.getServiceEntityId()))
+                .build();
 
         DynaTraceMetricDataResponse metricDataResponse =
             fetchMetricData(config, dataRequest, encryptionDetails, thirdPartyApiCallLog);

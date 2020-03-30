@@ -16,13 +16,17 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by raghu on 8/28/17.
@@ -59,9 +63,26 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting 
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(dynaTraceUrl));
   }
 
+  private Map<String, String> headerMap() {
+    Map<String, String> headerMap = new HashMap<>();
+    // check for apiKey. If not empty populate the value else populate default value.
+    headerMap.put("Authorization", apiToken != null ? "Api-Token " + new String(apiToken) : "Api-Token ${apiToken}");
+    headerMap.put("Accept", "application/json");
+    return headerMap;
+  }
+
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
+  }
+
+  public APMValidateCollectorConfig createAPMValidateCollectorConfig(SecretManager secretManager) {
+    return APMValidateCollectorConfig.builder()
+        .baseUrl(dynaTraceUrl)
+        .collectionMethod(APMVerificationState.Method.GET)
+        .headers(headerMap())
+        .encryptedDataDetails(secretManager.getEncryptionDetails(this))
+        .build();
   }
 
   @Data
