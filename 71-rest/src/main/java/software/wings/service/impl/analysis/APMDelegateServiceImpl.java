@@ -93,10 +93,19 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       return output;
     }
     for (Map.Entry<String, String> entry : input.entrySet()) {
-      if (entry.getValue().startsWith("${")) {
-        output.put(entry.getKey(), decryptedFields.get(entry.getValue().substring(2, entry.getValue().length() - 1)));
-      } else {
+      String headerVal = entry.getValue();
+      if (!headerVal.contains("${")) {
         output.put(entry.getKey(), entry.getValue());
+        continue;
+      }
+      while (headerVal.contains("${")) {
+        int startIndex = headerVal.indexOf("${");
+        int endIndex = headerVal.indexOf('}', startIndex);
+        String fieldName = headerVal.substring(startIndex + 2, endIndex);
+        String headerBeforeIndex = headerVal.substring(0, startIndex);
+
+        headerVal = headerBeforeIndex + decryptedFields.get(fieldName) + headerVal.substring(endIndex + 1);
+        output.put(entry.getKey(), headerVal);
       }
     }
 

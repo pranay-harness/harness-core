@@ -12,10 +12,13 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.dynatrace.DynaTraceApplication;
 import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 
+import java.util.List;
 import javax.validation.Valid;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -39,5 +42,14 @@ public class DynaTraceResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid DynaTraceSetupTestNodeData setupTestNodeData) {
     return new RestResponse<>(dynatraceService.getMetricsWithDataForNode(setupTestNodeData));
+  }
+
+  @GET
+  @Path("/services")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<List<DynaTraceApplication>> getDynatraceServices(@QueryParam("settingId") String settingId) {
+    return new RestResponse<>(dynatraceService.getServices(settingId));
   }
 }
