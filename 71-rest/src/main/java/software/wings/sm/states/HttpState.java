@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -93,6 +95,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Attributes(title = "Header") private String header;
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
+  @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
 
   @Getter @Setter private List<NameValuePair> responseProcessingExpressions;
 
@@ -337,6 +340,14 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       taskSocketTimeout = stateTimeout - 1000;
     }
 
+    List<String> renderedTags = newArrayList();
+    if (isNotEmpty(tags)) {
+      for (String tag : tags) {
+        renderedTags.add(context.renderExpression(tag));
+      }
+      renderedTags = trimStrings(renderedTags);
+    }
+
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .header(finalHeader)
                                                 .method(finalMethod)
@@ -360,6 +371,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                     .async(true)
                                     .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
                                     .waitId(activityId)
+                                    .tags(renderedTags)
                                     .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
                                     .data(TaskData.builder()
                                               .taskType(getTaskType().name())
