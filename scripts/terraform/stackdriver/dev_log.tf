@@ -1,5 +1,6 @@
 resource "google_logging_metric" "dev_log_initialized_in_the_same_thread" {
   name = join("_", [local.name_prefix, "dev_log_initialized_in_the_same_thread"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "Initialized in the same thread with a different value"
   ])
@@ -19,6 +20,7 @@ resource "google_logging_metric" "dev_log_initialized_in_the_same_thread" {
 
 resource "google_logging_metric" "dev_log_same_value_in_mdc_and_messsage" {
   name = join("_", [local.name_prefix, "dev_log_same_value_in_mdc_and_messsage"])
+  description = "Owner: Platform commons"
   filter = join("\n", [local.filter_prefix,
     "MDC table and the logging message have the same value"
   ])
