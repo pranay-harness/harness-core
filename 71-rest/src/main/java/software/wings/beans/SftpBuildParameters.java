@@ -23,7 +23,7 @@ public class SftpBuildParameters implements TaskParameters, ExecutionCapabilityD
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities =
         CapabilityHelper.generateCapabilities(sftpConfig, artifactStreamAttributes);
-    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails));
+    executionCapabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptionDetails));
     return executionCapabilities;
   }
 }
