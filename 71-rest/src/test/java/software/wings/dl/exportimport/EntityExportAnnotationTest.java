@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
 import org.reflections.Reflections;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.Schema;
 
 import java.lang.reflect.Constructor;
@@ -39,7 +40,7 @@ public class EntityExportAnnotationTest extends CategoryTest {
         boolean isExportable = isAnnotatedExportable(clazz);
         if (isExportable) {
           boolean accountOrAppIdPresent = checkAccountIdOrAppIdPresence(clazz);
-          if (!accountOrAppIdPresent && !Schema.class.equals(clazz)) {
+          if (!accountOrAppIdPresent && !Schema.class.equals(clazz) && !FeatureFlag.class.equals(clazz)) {
             violationCounter.incrementAndGet();
             logger.info(
                 "Violation: Entity class {} is annotated as exportable, but doesn't have 'accountId' or 'appId' field defined.",
