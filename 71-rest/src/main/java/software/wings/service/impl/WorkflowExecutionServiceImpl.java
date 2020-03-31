@@ -4018,9 +4018,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   public Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags) {
-    if (!featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, accountId)) {
-      return null;
-    }
     if (isEmpty(tags)) {
       return null;
     }

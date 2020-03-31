@@ -43,7 +43,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineBuilder;
@@ -83,7 +82,6 @@ public class DeploymentTagsFunctionalTest extends AbstractFunctionalTest {
     owners.obtainApplication(
         () -> applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST));
 
-    featureFlagService.enableAccount(FeatureName.DEPLOYMENT_TAGS, owners.obtainAccount().getUuid());
     resetCache(owners.obtainAccount().getUuid());
   }
 
@@ -264,14 +262,4 @@ public class DeploymentTagsFunctionalTest extends AbstractFunctionalTest {
         .then()
         .statusCode(200);
   }
-  //  @Test
-  //  @Owner(developers = AADITI)
-  //  @Category(FunctionalTests.class)
-  //  public void fetchExecutions() {
-  //    List<String> executions = fetchExecutionsWithTagsTest(
-  //        "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"myworkflow\",\"operator\":\"IN\",\"values\":[\""
-  //        + "Workflow - 41cXy9VJRc2HRyE4MRP-KQ"
-  //        + "\"]}]}}");
-  //    System.out.println(executions);
-  //  }
 }

@@ -206,10 +206,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     handlePostExecution(context);
 
     final String workflowId = context.getWorkflowId(); // this will be pipelineId in case of pipeline
-    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, appService.getAccountIdByAppId(appId))) {
-      List<NameValuePair> resolvedTags = resolveDeploymentTags(context, workflowId);
-      addTagsToWorkflowExecution(resolvedTags);
-    }
+    List<NameValuePair> resolvedTags = resolveDeploymentTags(context, workflowId);
+    addTagsToWorkflowExecution(resolvedTags);
 
     if (WorkflowType.PIPELINE != context.getWorkflowType()) {
       try {

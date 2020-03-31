@@ -35,7 +35,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
-import static software.wings.beans.FeatureName.DEPLOYMENT_TAGS;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
@@ -2489,7 +2488,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .tags(asList(NameValuePair.builder().name("key1").value("value1").build(),
                                                   NameValuePair.builder().name("label").value("").build()))
                                               .build();
-    when(featureFlagService.isEnabled(eq(DEPLOYMENT_TAGS), eq(ACCOUNT_ID))).thenReturn(true, true);
     Map<String, String> deploymentTags =
         workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
     assertThat(deploymentTags).isNotEmpty();
@@ -2498,10 +2496,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .contains(tuple("key1", "value1"), tuple("label", ""));
 
     workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
-    deploymentTags = workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
-    assertThat(deploymentTags).isNull();
-
-    when(featureFlagService.isEnabled(eq(DEPLOYMENT_TAGS), eq(ACCOUNT_ID))).thenReturn(false);
     deploymentTags = workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
     assertThat(deploymentTags).isNull();
   }
