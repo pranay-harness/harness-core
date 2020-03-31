@@ -14,6 +14,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_AR
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CE_AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CUSTOM;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
@@ -151,7 +152,9 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
 
     HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO)),
 
-    AZURE_ARTIFACTS(Lists.newArrayList(AZURE_ARTIFACTS_PAT));
+    AZURE_ARTIFACTS(Lists.newArrayList(AZURE_ARTIFACTS_PAT)),
+
+    CE_CONNECTOR(Lists.newArrayList(CE_AWS));
 
     @Getter private List<SettingVariableTypes> settingVariableTypes;
 
