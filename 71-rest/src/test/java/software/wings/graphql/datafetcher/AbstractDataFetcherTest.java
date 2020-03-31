@@ -9,6 +9,8 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.ccm.setup.dao.CECloudAccountDao;
+import io.harness.ccm.setup.dao.CEClusterDao;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -26,6 +28,8 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECluster;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.events.TestUtils;
@@ -124,6 +128,8 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   @Inject PipelineService pipelineService;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject ClusterRecordService clusterRecordService;
+  @Inject CEClusterDao clusterDao;
+  @Inject CECloudAccountDao cloudAccountDao;
   @Inject protected TestUtils testUtils;
 
   public Account createAccount(String accountId, LicenseInfo licenseInfo) {
@@ -231,5 +237,13 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
         EcsCluster.builder().clusterName(clusterName).cloudProviderId(cloudProviderId).region(region).build();
     clusterRecordService.upsert(
         ClusterRecord.builder().cluster(cluster).accountId(accountId).uuid(clusterId).createdAt(1L).build());
+  }
+
+  public void createCECluster(CECluster ceCluster) {
+    clusterDao.create(ceCluster);
+  }
+
+  public void createCECloudAccount(CECloudAccount ceCloudAccount) {
+    cloudAccountDao.create(ceCloudAccount);
   }
 }

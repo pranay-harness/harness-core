@@ -159,6 +159,12 @@ public class DataFetcherUtils {
         }
         field.equal(idFilterValues[0]);
         break;
+      case NOT_NULL:
+        field.notEqual(null);
+        break;
+      case NOT_IN:
+        field.notIn(Arrays.asList(idFilterValues));
+        break;
       default:
         throw new WingsException("Unknown Id operator " + operator);
     }

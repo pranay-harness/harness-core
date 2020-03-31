@@ -228,7 +228,11 @@ public class PermissionAttribute {
 
     K8S_LABEL(ACCOUNT),
 
-    K8S_EVENT_YAML_DIFF(ACCOUNT);
+    K8S_EVENT_YAML_DIFF(ACCOUNT),
+
+    CE_CLUSTER(ACCOUNT),
+
+    LINKED_ACCOUNT(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
