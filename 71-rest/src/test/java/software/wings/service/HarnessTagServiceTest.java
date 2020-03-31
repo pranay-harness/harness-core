@@ -32,7 +32,6 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
@@ -577,7 +576,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithWorkflowVariableAsKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -596,7 +594,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithAccountDefaultAsKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -615,7 +612,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithAppDefaultAsKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -634,7 +630,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithInvalidExpressionAsKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
       harnessTagService.attachTag(HarnessTagLink.builder()
                                       .accountId(TEST_ACCOUNT_ID)
@@ -654,7 +649,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithExpressionAsKeyAndValueShouldFail() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
       harnessTagService.attachTag(HarnessTagLink.builder()
                                       .accountId(TEST_ACCOUNT_ID)
@@ -675,7 +669,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithWorkflowVariableAsValue() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -694,7 +687,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithAppNameAsKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -711,7 +703,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachTagWithInvalidCharacterInKey() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
       harnessTagService.attachTag(HarnessTagLink.builder()
                                       .accountId(TEST_ACCOUNT_ID)
@@ -732,7 +723,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachPipelineDefaultsAsTagKeyToWorkflow() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
       harnessTagService.attachTag(HarnessTagLink.builder()
                                       .accountId(TEST_ACCOUNT_ID)
@@ -753,7 +743,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void attachPipelineDefaultsAsTagValueToWorkflow() {
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, TEST_ACCOUNT_ID)).thenReturn(true);
     try {
       harnessTagService.attachTag(HarnessTagLink.builder()
                                       .accountId(TEST_ACCOUNT_ID)

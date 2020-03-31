@@ -34,7 +34,6 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
@@ -142,11 +141,10 @@ public class ExecutionResource {
       pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, accountId)) {
-      if (withTags && isNotBlank(tagFilter)) {
-        workflowExecutionService.addTagFilterToPageRequest(pageRequest, tagFilter);
-      }
+    if (withTags && isNotBlank(tagFilter)) {
+      workflowExecutionService.addTagFilterToPageRequest(pageRequest, tagFilter);
     }
+
     Optional<Integer> retentionPeriodInDays =
         ((DeploymentHistoryFeature) deploymentHistoryFeature).getRetentionPeriodInDays(accountId);
     retentionPeriodInDays.ifPresent(val

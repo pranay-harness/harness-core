@@ -333,11 +333,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   public void attachTagWithoutGitPush(HarnessTagLink tagLink) {
     validateAndSanitizeTagLink(tagLink);
     boolean allowExpressions = false;
-    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, tagLink.getAccountId())) {
-      if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
-        allowExpressions = true;
-      }
+    if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
+      allowExpressions = true;
     }
+
     validateAndCreateTagIfNeeded(tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue(), allowExpressions);
 
     HarnessTagLink existingTagLink = wingsPersistence.createQuery(HarnessTagLink.class)
@@ -532,16 +531,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     boolean allowExpressions = false;
-    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_TAGS, tagLink.getAccountId())) {
-      if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
-        allowExpressions = true;
-        if (tagLink.getKey().startsWith("${") && !tagLink.getValue().equals("")) {
-          throw new InvalidRequestException("Tag value should be empty as key contains expression");
-        }
+    if (tagLink.getEntityType() == WORKFLOW || tagLink.getEntityType() == PIPELINE) {
+      allowExpressions = true;
+      if (tagLink.getKey().startsWith("${") && !tagLink.getValue().equals("")) {
+        throw new InvalidRequestException("Tag value should be empty as key contains expression");
       }
-      // extra check to validate pipeline defaults are not used in workflow tags
-      validateNoPipelineDefaultsAsWorkflowTag(tagLink);
     }
+    // extra check to validate pipeline defaults are not used in workflow tags
+    validateNoPipelineDefaultsAsWorkflowTag(tagLink);
+
     tagLink.setKey(validateTagKey(tagLink.getKey(), allowExpressions));
     tagLink.setValue(validateTagValue(tagLink.getValue(), allowExpressions));
   }
