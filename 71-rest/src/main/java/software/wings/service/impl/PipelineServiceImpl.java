@@ -1136,7 +1136,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (NEWRELIC_MARKER_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
@@ -1150,7 +1152,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (NEWRELIC_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
@@ -1164,7 +1168,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (ELK_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
@@ -1178,7 +1184,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (SPLUNK_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
@@ -1192,7 +1200,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (APPDYNAMICS_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
@@ -1206,12 +1216,16 @@ public class PipelineServiceImpl implements PipelineService {
       if (APPDYNAMICS_APPID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("applicationId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("applicationId", relatedVarValue);
+          }
         }
       } else if (APPDYNAMICS_CONFIGID == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          parentFields.put("analysisServerConfigId", relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            parentFields.put("analysisServerConfigId", relatedVarValue);
+          }
         }
       }
     }
