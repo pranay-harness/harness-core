@@ -100,34 +100,9 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testExecute_featureflagDisabled() throws Exception {
-    workflowFeedbackAnalysisJob.execute(jobExecutionContext);
-    verify(analysisService, times(2)).getLastWorkflowAnalysisMinute(any(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testExecute_featureflagEnabled() throws Exception {
-    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    workflowFeedbackAnalysisJob.execute(jobExecutionContext);
-    verify(analysisService, times(0)).getLastWorkflowAnalysisMinute(any(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testHandle_featureflagEnabled() throws Exception {
+  public void testHandle_feedbackIterator() throws Exception {
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     workflowFeedbackAnalysisJob.handle(analysisContext);
     verify(analysisService, times(2)).getLastWorkflowAnalysisMinute(any(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testHandle_featureflagDisabled() {
-    workflowFeedbackAnalysisJob.handle(analysisContext);
-    verify(analysisService, times(0)).getLastWorkflowAnalysisMinute(any(), any(), any());
   }
 }
