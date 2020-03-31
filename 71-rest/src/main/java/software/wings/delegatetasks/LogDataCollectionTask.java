@@ -6,6 +6,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.BODY_STRING;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
+import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.collect.BiMap;
@@ -189,27 +190,37 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return input;
     }
 
-    private String fetchLogs(final String url, Map<String, String> headers, Map<String, String> options,
-        Map<String, Object> body, String query, Set<String> hosts, String hostNameSeparator) {
+    private String fetchLogs(String url, Map<String, String> headers, Map<String, String> options,
+        Map<String, Object> body, String query, String host, String hostNameSeparator) {
       try {
         BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
         BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
         final long startTime = collectionStartTime;
         final long endTime =
             is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
-
-        String concatenatedHostQuery = CustomDataCollectionUtils.getConcatenatedQuery(hosts, hostNameSeparator);
-        String resolvedUrl = CustomDataCollectionUtils.resolvedUrl(url, null, startTime, endTime, null);
+        String bodyStr = null;
+        // We're doing this check because in SG24/7 we allow only one logCollection. So the body is present in the
+        // dataCollectionInfo. In workflow there can be one body per logCollection in setup.
+        // So we're taking care of both.
+        if (isEmpty(body)) {
+          String[] urlAndBody = url.split(URL_BODY_APPENDER);
+          url = urlAndBody[0];
+          bodyStr = urlAndBody.length > 1 ? urlAndBody[1] : "";
+        } else {
+          bodyStr = JsonUtils.asJson(body);
+        }
+        String resolvedUrl =
+            CustomDataCollectionUtils.resolvedUrl(url, host, startTime, endTime, dataCollectionInfo.getQuery());
         resolvedUrl = resolveDollarReferencesOfSecrets(resolvedUrl);
 
-        Map<String, Object> resolvedBody =
-            CustomDataCollectionUtils.resolveMap(body, concatenatedHostQuery, startTime, endTime, query);
-        String bodyToLog = JsonUtils.asJson(resolvedBody);
-        String resolvedBodyStr = resolveDollarReferencesOfSecrets(JsonUtils.asJson(resolvedBody));
-        resolvedBody = new JSONObject(resolvedBodyStr).toMap();
+        String resolvedBodyStr =
+            CustomDataCollectionUtils.resolvedUrl(bodyStr, host, startTime, endTime, dataCollectionInfo.getQuery());
+        String bodyToLog = resolvedBodyStr;
+        resolvedBodyStr = resolveDollarReferencesOfSecrets(resolvedBodyStr);
+        Map<String, Object> resolvedBody = isNotEmpty(resolvedBodyStr) ? new JSONObject(resolvedBodyStr).toMap() : null;
 
         Call<Object> request;
-        if (isNotEmpty(body)) {
+        if (isNotEmpty(resolvedBody)) {
           request = getRestClient(dataCollectionInfo.getBaseUrl())
                         .postCollect(resolvedUrl, headersBiMap, optionsBiMap, resolvedBody);
         } else {
@@ -267,16 +278,21 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         try {
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
+            List<LogElement> logs = new ArrayList<>();
             // go fetch the logs first
-            String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
-                dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(),
-                dataCollectionInfo.getHosts(), dataCollectionInfo.getHostnameSeparator());
+            dataCollectionInfo.getHosts().forEach(host -> {
+              String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
+                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(), host,
+                  dataCollectionInfo.getHostnameSeparator());
 
-            LogResponseParser.LogResponseData data =
-                new LogResponseParser.LogResponseData(searchResponse, dataCollectionInfo.getHosts(),
-                    dataCollectionInfo.isShouldDoHostBasedFiltering(), logDataInfo.getValue());
-            // parse the results that were fetched.
-            List<LogElement> logs = new LogResponseParser().extractLogs(data);
+              LogResponseParser.LogResponseData data =
+                  new LogResponseParser.LogResponseData(searchResponse, dataCollectionInfo.getHosts(),
+                      dataCollectionInfo.isShouldDoHostBasedFiltering(), logDataInfo.getValue());
+              // parse the results that were fetched.
+              List<LogElement> curLogs = new LogResponseParser().extractLogs(data);
+              logs.addAll(curLogs);
+            });
+
             int i = 0;
             String tempHost = dataCollectionInfo.getHosts().iterator().next();
             for (LogElement log : logs) {

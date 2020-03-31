@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
 import com.google.common.collect.Lists;
@@ -219,6 +220,9 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     for (LogCollectionInfo logInfo : logCollectionInfos) {
       String evaluatedUrl =
           context != null ? context.renderExpression(logInfo.getCollectionUrl()) : logInfo.getCollectionUrl();
+      if (logInfo.getMethod() != null && logInfo.getMethod() == Method.POST) {
+        evaluatedUrl += URL_BODY_APPENDER + logInfo.getCollectionBody();
+      }
       logDefinition.put(evaluatedUrl, getResponseMappers(logInfo));
     }
     return logDefinition;
@@ -245,7 +249,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
         ResponseMapper.builder()
             .fieldName("timestamp")
             .jsonPath(timestampJsonList)
-            .timestampFormat(responseMapping.getTimestampFormat())
+            .timestampFormat(responseMapping.getTimeStampFormat())
             .build());
 
     logMsgList.add(responseMapping.getLogMessageJsonPath());
@@ -275,7 +279,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     private String hostJsonPath;
     private String hostRegex;
     private String timestampJsonPath;
-    private String timestampFormat;
+    private String timeStampFormat;
   }
   public enum ResponseType { JSON }
 

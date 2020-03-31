@@ -99,7 +99,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN, intermittent = true)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchElkLogs() throws IOException, IllegalAccessException {
     // setup
@@ -142,7 +142,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN, intermittent = true)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchElkLogsRetry() throws IOException, IllegalAccessException {
     // setup

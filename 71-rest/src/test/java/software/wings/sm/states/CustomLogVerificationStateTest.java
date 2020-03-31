@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.states.CustomLogVerificationState.constructLogDefinitions;
@@ -159,8 +160,37 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     Map<String, ResponseMapper> mapping = logDefinitions.get("customLogVerificationQuery");
     assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
     assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
+    assertThat(mapping.get("timestamp").getTimestampFormat()).isEqualTo("hh:mm a");
     assertThat("hits.hits[*]._source.log").isEqualTo(mapping.get("logMessage").getJsonPath().get(0));
     assertThat(state.shouldInspectHostsForLogAnalysis()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testConstructLogDefinitions_postWithBody() throws IOException {
+    CustomLogVerificationState state = new CustomLogVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        CustomLogVerificationStateTest.class.getResource("/apm/log_config_post.yml"), Charsets.UTF_8);
+    List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
+    state.setLogCollectionInfos(collectionInfos);
+
+    Map<String, Map<String, ResponseMapper>> logDefinitions = constructLogDefinitions(context, collectionInfos);
+    assertThat(logDefinitions).isNotNull();
+    assertThat(logDefinitions.size()).isEqualTo(1);
+    logDefinitions.forEach((url, mapping) -> {
+      assertThat(url.contains(URL_BODY_APPENDER)).isTrue();
+      String actualUrl = url.split(URL_BODY_APPENDER)[0];
+      String body = url.split(URL_BODY_APPENDER)[1];
+      assertThat(actualUrl).isEqualTo("customLogVerificationQuery");
+      assertThat(body).isEqualTo("body${host}");
+      assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
+      assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
+      assertThat(mapping.get("timestamp").getTimestampFormat()).isEqualTo("hh:mm a");
+      assertThat("hits.hits[*]._source.log").isEqualTo(mapping.get("logMessage").getJsonPath().get(0));
+      assertThat(state.shouldInspectHostsForLogAnalysis()).isTrue();
+    });
   }
 
   @Test
