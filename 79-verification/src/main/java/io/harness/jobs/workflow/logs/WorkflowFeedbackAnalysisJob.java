@@ -1,7 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import static software.wings.beans.FeatureName.REMOVE_FEEDBACK_CRON;
-
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -9,16 +7,13 @@ import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
@@ -33,7 +28,7 @@ import java.util.concurrent.Callable;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowFeedbackAnalysisJob implements Job, MongoPersistenceIterator.Handler<AnalysisContext> {
+public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Handler<AnalysisContext> {
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
@@ -44,48 +39,7 @@ public class WorkflowFeedbackAnalysisJob implements Job, MongoPersistenceIterato
   @Inject private DataStoreService dataStoreService;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    try {
-      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      logger.info("Starting feedback analysis cron " + JsonUtils.asJson(context));
-      if (managerClientHelper
-              .callManagerWithRetry(managerClient.isFeatureEnabled(REMOVE_FEEDBACK_CRON, context.getAccountId()))
-              .getResource()) {
-        logger.info("The feature REMOVE_FEEDBACK_CRON is enabled for {}, it will be handled by the iterators",
-            context.getAccountId());
-      } else {
-        logger.info("Executing workflow feedback cron job with context : {} and params : {}", context, params);
-        new WorkflowFeedbackAnalysisJob
-            .FeedbackAnalysisTask(analysisService, context, Optional.of(jobExecutionContext), learningEngineService,
-                managerClient, managerClientHelper, dataStoreService)
-            .call();
-      }
-      if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-        logger.info("The state {} is no longer valid, so we are deleting the cron now.", context.getStateExecutionId());
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      }
-      logger.info("Finish feedback analysis cron " + context.getStateExecutionId());
-    } catch (Exception ex) {
-      logger.warn("feedback analysis cron failed with error", ex);
-      try {
-        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
-      } catch (SchedulerException e) {
-        logger.error("Unable to clean up cron", e);
-      }
-    }
-  }
-
-  @Override
   public void handle(AnalysisContext analysisContext) {
-    if (!managerClientHelper
-             .callManagerWithRetry(managerClient.isFeatureEnabled(REMOVE_FEEDBACK_CRON, analysisContext.getAccountId()))
-             .getResource()) {
-      logger.info(
-          "The feature REMOVE_WORKFLOW_VERIFICATION_CLUSTERING_CRON is not enabled for {}, it will be handled by the cron",
-          analysisContext.getAccountId());
-      return;
-    }
     logger.info(
         "Handling the feedback for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
     try {
@@ -159,10 +113,6 @@ public class WorkflowFeedbackAnalysisJob implements Job, MongoPersistenceIterato
               context.getStateExecutionId());
         }
 
-      } catch (Exception ex) {
-        error = true;
-        logger.error(
-            "Exception encountered while running feedback analysis task for {}", context.getStateExecutionId());
       } finally {
         try {
           // send notification to state manager and delete cron.

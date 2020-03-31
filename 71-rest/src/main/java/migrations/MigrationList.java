@@ -321,6 +321,7 @@ public class MigrationList {
         .add(Pair.of(300, HostConnectionTypeMigration.class))
         .add(Pair.of(301, AddAccountIdToAppEntities.class))
         .add(Pair.of(302, DropExistingIndexForGitFileActivityMigration.class))
+        .add(Pair.of(303, DeleteCVCronMigration.class))
         .build();
   }
 }

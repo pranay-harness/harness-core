@@ -16,7 +16,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
-import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
@@ -51,10 +50,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class WorkflowVerificationTaskPoller {
-  // TODO - give better cron names
-  private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
-  private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
-
   @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService taskPollService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -79,14 +74,7 @@ public class WorkflowVerificationTaskPoller {
             scheduleDataCollection(verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
-                break;
               case LOG_ML:
-                if (verificationManagerClientHelper
-                        .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                            FeatureName.CV_FEEDBACKS, verificationAnalysisTask.getAccountId()))
-                        .getResource()) {
-                  scheduleFeedbackAnalysisCronJob(verificationAnalysisTask);
-                }
                 break;
               default:
                 throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
@@ -185,32 +173,5 @@ public class WorkflowVerificationTaskPoller {
         Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
     return logsCVConfiguration;
-  }
-
-  private void scheduleFeedbackAnalysisCronJob(AnalysisContext context) {
-    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(WorkflowFeedbackAnalysisJob.class)
-                        .withIdentity(context.getStateExecutionId(), "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", context.getDelegateTaskId())
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(60)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Scheduled Feedback Analysis Cron Job with details : {}", job);
-  }
-
-  public static void addJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP);
   }
 }

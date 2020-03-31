@@ -28,10 +28,13 @@ public class DeleteCVCronMigration implements Migration {
 
     deleteCron("quartz_verification_jobs", "LOG_CLUSTER_CRON_GROUP");
     deleteCron("quartz_verification_triggers", "LOG_CLUSTER_CRON_GROUP");
+
+    deleteCron("quartz_verification_jobs", "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP");
+    deleteCron("quartz_verification_triggers", "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP");
   }
 
   private void deleteCron(String collectionName, String keyGroupName) {
-    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "collectionName");
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, collectionName);
     collection.findAndRemove(new BasicDBObject("keyGroup", keyGroupName));
   }
 }
