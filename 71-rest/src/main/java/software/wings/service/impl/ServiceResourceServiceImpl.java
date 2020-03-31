@@ -2123,6 +2123,26 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           "Function name should be unique. Duplicate function names: [" + join(",", duplicateFunctionName) + "]");
     }
 
+    LambdaSpecification.DefaultSpecification defaultSpec = lambdaSpecification.getDefaults();
+    if (defaultSpec != null && defaultSpec.getTimeout() != null && defaultSpec.getTimeout() <= 0) {
+      throw new InvalidRequestException("Default function execution timeout must be greater than 0", USER);
+    }
+
+    List<FunctionSpecification> functions = lambdaSpecification.getFunctions();
+    if (isNotEmpty(functions)) {
+      List<String> functionsWithNegativeTimeout =
+          functions.stream()
+              .filter(functionSpec -> functionSpec.getTimeout() != null && functionSpec.getTimeout() <= 0)
+              .map(FunctionSpecification::getFunctionName)
+              .collect(toList());
+
+      if (isNotEmpty(functionsWithNegativeTimeout)) {
+        throw new InvalidRequestException("Function execution timeout must be greater than 0 for following functions: "
+                + String.join(",", functionsWithNegativeTimeout),
+            USER);
+      }
+    }
+
     /** Removed validation to check for duplicate handler names as part of HAR-3209 */
   }
 

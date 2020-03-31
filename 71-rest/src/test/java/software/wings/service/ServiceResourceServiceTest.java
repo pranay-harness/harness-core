@@ -1930,6 +1930,70 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence, times(1)).getWithAppId(Service.class, APP_ID, SERVICE_ID);
   }
 
+  private FunctionSpecification createFunctionSpecification(String functionName, Integer timeout) {
+    return FunctionSpecification.builder()
+        .runtime("TestRunTime")
+        .functionName(functionName)
+        .handler("TestHandler")
+        .timeout(timeout)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testLambdaTimeoutValidation() {
+    FunctionSpecification func1 = createFunctionSpecification("func1", -1);
+    LambdaSpecification lambdaSpecification =
+        LambdaSpecification.builder().serviceId("TestServiceID").functions(asList(func1)).build();
+    lambdaSpecification.setAppId(APP_ID);
+
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1");
+    }
+
+    FunctionSpecification func2 = createFunctionSpecification("func2", -1);
+    lambdaSpecification.setFunctions(asList(func1, func2));
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1,func2");
+    }
+
+    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(-1).build());
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage()).isEqualTo("Default function execution timeout must be greater than 0");
+    }
+
+    lambdaSpecification.setFunctions(asList(func1));
+    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(1).build());
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1");
+    }
+
+    func1.setTimeout(2);
+    lambdaSpecification.setFunctions(asList(func1));
+    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(1).build());
+
+    when(mockWingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification))
+        .thenReturn(lambdaSpecification);
+    srs.createLambdaSpecification(lambdaSpecification);
+    verify(mockWingsPersistence, times(1)).saveAndGet(LambdaSpecification.class, lambdaSpecification);
+  }
+
   @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
