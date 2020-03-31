@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.validation.Validator.nullCheckForInvalidRequest;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -310,6 +311,8 @@ public class AwsLambdaState extends State {
                                                                  .withActivityId(activity.getUuid());
 
     LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
+
+    nullCheckForInvalidRequest(specification, "Missing lambda function specification in service", USER);
 
     if (isEmpty(specification.getFunctions())) {
       logService.batchedSave(singletonList(logBuilder.but().withLogLine("No Lambda function to deploy.").build()));
