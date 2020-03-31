@@ -15,7 +15,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
-import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID;
+import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
@@ -149,6 +149,58 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
+  public Template updateReferenceTemplate(Template template) {
+    setTemplateFolder(template);
+    saveOrUpdate(template);
+    processTemplate(template);
+    template.setImported(true);
+
+    Template oldTemplate = getReferencedTemplate(
+        template.getReferencedTemplateId(), template.getReferencedTemplateStoreId(), template.getAccountId());
+    notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
+    template.setUuid(oldTemplate.getUuid());
+
+    validateScope(template, oldTemplate);
+    Set<String> existingKeywords = oldTemplate.getKeywords();
+    Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
+    if (isNotEmpty(existingKeywords)) {
+      existingKeywords.remove(oldTemplate.getName().toLowerCase());
+      if (oldTemplate.getDescription() != null) {
+        existingKeywords.remove(oldTemplate.getDescription().toLowerCase());
+      }
+      existingKeywords.remove(oldTemplate.getType().toLowerCase());
+      generatedKeywords.addAll(existingKeywords);
+    }
+    template.setKeywords(trimmedLowercaseSet(generatedKeywords));
+    VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
+    validateTemplateVariables(newVersionedTemplate.getVariables());
+    boolean templateObjectChanged = checkTemplateDetailsChanged(
+        template, oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
+
+    boolean templateVariablesChanged =
+        templateHelper.variablesChanged(newVersionedTemplate.getVariables(), oldTemplate.getVariables());
+
+    boolean templateDetailsChanged = false;
+    if (templateObjectChanged || templateVariablesChanged) {
+      TemplateVersion templateVersion = getReferencedTemplateVersion(template, template.getUuid());
+      newVersionedTemplate.setVersion(templateVersion.getVersion());
+      saveVersionedTemplate(template, newVersionedTemplate);
+      templateDetailsChanged = true;
+    }
+    PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
+
+    Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
+    if (templateDetailsChanged) {
+      executorService.submit(() -> updateLinkedEntities(savedTemplate));
+    }
+
+    auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.UPDATE);
+
+    return savedTemplate;
+  }
+
+  @Override
   @ValidationGroups(Create.class)
   public Template save(Template template) {
     validateTemplateVariables(template.getVariables());
@@ -173,21 +225,6 @@ public class TemplateServiceImpl implements TemplateService {
     return savedTemplate;
   }
 
-  @Override
-  public Template getAndSaveImportedTemplate(String templateUrl, String accountId, String appId) {
-    Template downloadedTemplate = downloadTemplateFromUrl(templateUrl);
-    Template template = createLocalTemplateObject(downloadedTemplate, accountId, appId);
-    return saveReferenceTemplate(template);
-  }
-
-  @Override
-  public Template getAndSaveAsCopiedTemplate(String templateUrl, String accountId, String appId) {
-    Template downloadedTemplate = downloadTemplateFromUrl(templateUrl);
-    Template template = createLocalTemplateObject(downloadedTemplate, accountId, appId);
-    populateTemplateFolderInCopiedTemplate(template);
-    return save(template);
-  }
-
   @VisibleForTesting
   Template createLocalTemplateObject(Template downloadedTemplate, String accountId, String appId) {
     return Template.builder()
@@ -202,19 +239,6 @@ public class TemplateServiceImpl implements TemplateService {
         .versionDetails(downloadedTemplate.getVersionDetails())
         .version(downloadedTemplate.getVersion())
         .description(downloadedTemplate.getDescription())
-        .build();
-  }
-
-  private Template downloadTemplateFromUrl(String templateUrl) {
-    // Stub code. May move to other service later.
-    /*
-    get template by making request to url and throw error if not found.
-     */
-    return Template.builder()
-        .name("abc")
-        .version(1)
-        .templateObject(HttpTemplate.builder().build())
-        .uuid("testuuid")
         .build();
   }
 
@@ -400,6 +424,14 @@ public class TemplateServiceImpl implements TemplateService {
     notNullCheck("Template does not exist", template);
     setDetailsOfTemplate(template, version);
     return template;
+  }
+
+  private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId) {
+    return wingsPersistence.createQuery(Template.class)
+        .filter(TemplateKeys.referencedTemplateStoreId, commandStoreId)
+        .filter(TemplateKeys.referencedTemplateId, commandId)
+        .filter(TemplateKeys.accountId, accountId)
+        .get();
   }
 
   @Override
@@ -851,7 +883,7 @@ public class TemplateServiceImpl implements TemplateService {
   public List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId) {
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                         .filter(TemplateKeys.appId, GLOBAL_APP_ID)
-                                        .filter(REFERENCED_TEMPLATE_ID, templateId);
+                                        .filter(REFERENCED_TEMPLATE_ID_KEY, templateId);
     List<Template> templates = templateQuery.asList();
     if (isNotEmpty(templates)) {
       for (Template template : templates) {

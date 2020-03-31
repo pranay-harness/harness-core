@@ -17,6 +17,7 @@
         <module>21-persistence</module>
         <module>31-orchestration</module>
         <module>51-migrator</module>
+        <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>65-delegate-beans</module>
         <module>71-rest</module>

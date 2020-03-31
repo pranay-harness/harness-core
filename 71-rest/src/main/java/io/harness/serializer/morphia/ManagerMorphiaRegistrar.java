@@ -343,6 +343,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
+import software.wings.beans.commandlibrary.CommandEntity;
+import software.wings.beans.commandlibrary.CommandVersionEntity;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
@@ -395,6 +397,7 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.beans.template.ImportedCommandTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -982,6 +985,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CECluster.class);
     set.add(GitFileActivity.class);
     set.add(K8sYaml.class);
+    set.add(CommandEntity.class);
+    set.add(CommandVersionEntity.class);
+    set.add(ImportedCommandTemplate.class);
   }
 
   @Override

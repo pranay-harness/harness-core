@@ -3,6 +3,7 @@ package software.wings.service.intfc.template;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
@@ -25,11 +26,9 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   @ValidationGroups(Create.class) Template saveReferenceTemplate(Template template);
 
+  @ValidationGroups(Update.class) Template updateReferenceTemplate(Template template);
+
   Template save(@Valid @NotNull Template template);
-
-  Template getAndSaveImportedTemplate(String templateUrl, String accountId, String appId);
-
-  Template getAndSaveAsCopiedTemplate(String templateUrl, String accountId, String appId);
 
   Template update(@Valid Template template);
 

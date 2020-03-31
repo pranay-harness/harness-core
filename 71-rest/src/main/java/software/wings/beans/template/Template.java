@@ -51,7 +51,8 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String NAME_KEY = "name";
   public static final String TYPE_KEY = "type";
   public static final String VERSION_KEY = "version";
-  public static final String REFERENCED_TEMPLATE_ID = "referencedTemplateId";
+  public static final String REFERENCED_TEMPLATE_ID_KEY = "referencedTemplateId";
+  public static final String REFERENCED_TEMPLATE_STORE_ID_KEY = "referencedTemplateStoreId";
   public static final String APP_ID_KEY = "appId";
 
   @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
@@ -70,6 +71,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   private String galleryId;
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
+  private String referencedTemplateStoreId;
   private transient String referencedTemplateUri;
   @SchemaIgnore private Set<String> keywords;
   private boolean isImported;
@@ -79,7 +81,8 @@ public class Template extends Base implements KeywordsAware, NameAccess {
       long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String accountId, String type,
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
-      String referencedTemplateId, Long referencedTemplateVersion, boolean isImported, String versionDetails) {
+      String referencedTemplateId, Long referencedTemplateVersion, boolean isImported, String versionDetails,
+      String referencedTemplateStoreId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
@@ -98,6 +101,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
     this.referencedTemplateVersion = referencedTemplateVersion;
     this.keywords = keywords;
     this.isImported = isImported;
+    this.referencedTemplateStoreId = referencedTemplateStoreId;
   }
 
   @Override
