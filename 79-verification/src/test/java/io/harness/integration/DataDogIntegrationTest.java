@@ -50,6 +50,7 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningE
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState;
@@ -70,6 +71,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper managerClient;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private CVActivityLogService cvActivityLogService;
   private MetricDataAnalysisService metricDataAnalysisService;
 
   @Override
@@ -282,7 +284,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
     new WorkflowTimeSeriesAnalysisJob
         .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-            Optional.of(jobExecutionContext))
+            Optional.of(jobExecutionContext), cvActivityLogService)
         .run();
 
     Thread.sleep(10000);

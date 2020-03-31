@@ -4,13 +4,14 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
@@ -29,12 +30,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -47,7 +50,7 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
   @Mock private VerificationManagerClient verificationManagerClient;
   @Mock private LogAnalysisService analysisService;
   @Mock private LearningEngineService learningEngineService;
-  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Spy private VerificationManagerClientHelper managerClientHelper;
   @Mock private DataStoreService dataStoreService;
 
   private WorkflowFeedbackAnalysisJob workflowFeedbackAnalysisJob;
@@ -83,6 +86,8 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     when(learningEngineService.isStateValid(any(), any())).thenReturn(true);
+
+    doReturn(false).when(managerClientHelper).isFeatureFlagEnabled(eq(FeatureName.OUTAGE_CV_DISABLE), any());
 
     Call<RestResponse<Boolean>> notifyState = mock(Call.class);
     when(notifyState.clone()).thenReturn(notifyState);

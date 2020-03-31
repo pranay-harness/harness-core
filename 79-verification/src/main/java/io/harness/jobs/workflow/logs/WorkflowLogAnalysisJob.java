@@ -23,6 +23,7 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +41,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
   @Transient @Inject private VerificationManagerClient managerClient;
 
   @Inject private DataStoreService dataStoreService;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Override
   public void handle(AnalysisContext analysisContext) {
@@ -49,7 +51,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
 
     new WorkflowLogAnalysisJob
         .LogAnalysisTask(analysisService, analysisContext, Optional.empty(), learningEngineService, managerClient,
-            managerClientHelper, dataStoreService)
+            managerClientHelper, dataStoreService, cvActivityLogService)
         .call();
   }
 
@@ -63,6 +65,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
     private DataStoreService dataStoreService;
+    private CVActivityLogService cvActivityLogService;
 
     protected void preProcess(long logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
@@ -120,6 +123,12 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
           return -1L;
+        }
+
+        if (managerClientHelper.isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, context.getAccountId())) {
+          cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+              .info("Continuous Verification is disabled for your account. Please contact harness support.");
+          completeCron = true;
         }
 
         if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),

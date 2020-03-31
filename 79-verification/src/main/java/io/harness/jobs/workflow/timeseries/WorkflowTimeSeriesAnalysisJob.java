@@ -20,6 +20,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
@@ -39,6 +40,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -65,6 +67,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
 
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Override
   public void handle(AnalysisContext analysisContext) {
@@ -73,8 +76,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
     }
 
     new WorkflowTimeSeriesAnalysisJob
-        .MetricAnalysisGenerator(
-            timeSeriesAnalysisService, learningEngineService, managerClientHelper, analysisContext, Optional.empty())
+        .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, analysisContext,
+            Optional.empty(), cvActivityLogService)
         .run();
   }
 
@@ -88,10 +91,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
     private VerificationManagerClientHelper managerClientHelper;
     private final int analysisDuration;
     private AnalysisContext context;
+    private CVActivityLogService cvActivityLogService;
 
     public MetricAnalysisGenerator(TimeSeriesAnalysisService service, LearningEngineService learningEngineService,
         VerificationManagerClientHelper managerClientHelper, AnalysisContext context,
-        Optional<JobExecutionContext> jobExecutionContext) {
+        Optional<JobExecutionContext> jobExecutionContext, CVActivityLogService cvActivityLogService) {
       this.analysisService = service;
       this.learningEngineService = learningEngineService;
       this.managerClientHelper = managerClientHelper;
@@ -99,6 +103,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       this.jobExecutionContext = jobExecutionContext;
       this.testNodes = context.getTestNodes();
       this.controlNodes = context.getControlNodes();
+      this.cvActivityLogService = cvActivityLogService;
 
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         this.testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
@@ -308,6 +313,12 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
           return;
+        }
+
+        if (managerClientHelper.isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, context.getAccountId())) {
+          cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+              .info("Continuous Verification is disabled for your account. Please contact harness support.");
+          completeCron = true;
         }
 
         // Check if we should fail fast based on the previous analysis.
