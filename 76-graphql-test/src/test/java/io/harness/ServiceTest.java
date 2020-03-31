@@ -100,9 +100,13 @@ public class ServiceTest extends GraphQLTest {
       attachTagToService(service);
       QLTestObject qlService = qlExecute(query, service.getAccountId());
       assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
-      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlService.get("tags")).get(0));
-      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
-      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+      assertThat((ArrayList) qlService.get("tags")).hasSize(3);
+
+      ArrayList<LinkedHashMap<String, String>> tags = (ArrayList<LinkedHashMap<String, String>>) qlService.get("tags");
+      LinkedHashMap<String, String> colorTag = new LinkedHashMap<>();
+      colorTag.put(QLTagKeys.name, "color");
+      colorTag.put(QLTagKeys.value, "red");
+      assertThat(tags).contains(colorTag);
     }
   }
 
@@ -192,9 +196,11 @@ public class ServiceTest extends GraphQLTest {
       QLTestObject serviceConnection = qlExecute(query, application.getAccountId());
       Map<String, Object> serviceMap = (LinkedHashMap) (((ArrayList) serviceConnection.get("nodes")).get(0));
       assertThat(serviceMap.get(QLServiceKeys.id)).isEqualTo(service1.getUuid());
-      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) serviceMap.get("tags")).get(0));
-      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
-      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+      ArrayList<LinkedHashMap<String, String>> tags = (ArrayList<LinkedHashMap<String, String>>) serviceMap.get("tags");
+      LinkedHashMap<String, String> colorTag = new LinkedHashMap<>();
+      colorTag.put(QLTagKeys.name, "color");
+      colorTag.put(QLTagKeys.value, "red");
+      assertThat(tags).contains(colorTag);
     }
   }
 
