@@ -163,7 +163,6 @@ public class K8sStateHelper {
   @Inject private FeatureFlagService featureFlagService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
-  private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
@@ -530,8 +529,6 @@ public class K8sStateHelper {
       long taskTimeoutInMinutes;
       if (k8sTaskParameters.getTimeoutIntervalInMin() < MIN_TASK_TIMEOUT_IN_MINUTES) {
         taskTimeoutInMinutes = MIN_TASK_TIMEOUT_IN_MINUTES;
-      } else if (k8sTaskParameters.getTimeoutIntervalInMin() > MAX_TASK_TIMEOUT_IN_MINUTES) {
-        taskTimeoutInMinutes = MAX_TASK_TIMEOUT_IN_MINUTES;
       } else {
         taskTimeoutInMinutes = k8sTaskParameters.getTimeoutIntervalInMin();
       }

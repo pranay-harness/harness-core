@@ -562,6 +562,44 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
+  public void testTimeoutInQueueK8sDelegateTask() throws Exception {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(SETTING_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(KubernetesClusterConfig.builder().build())
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
+    infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
+
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder().build();
+    when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
+    when(delegateService.executeTask(any())).thenReturn(response);
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
+    when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
+    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString()))
+        .thenReturn(HelmConstants.HelmVersion.V2);
+
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    k8sStateHelper.queueK8sDelegateTask(context, taskParameters);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getData().getTimeout()).isEqualTo(10 * 60 * 1000);
+
+    taskParameters.setTimeoutIntervalInMin(300);
+    k8sStateHelper.queueK8sDelegateTask(context, taskParameters);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getData().getTimeout()).isEqualTo(300 * 60 * 1000);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
   public void testTagsInQueueK8sDelegateTask() throws Exception {
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
