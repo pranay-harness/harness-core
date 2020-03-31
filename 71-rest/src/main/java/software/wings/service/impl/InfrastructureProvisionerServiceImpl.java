@@ -154,6 +154,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
+  static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
+
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
@@ -166,7 +168,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       checkForDuplicate(infrastructureProvisioner);
       populateDerivedFields(infrastructureProvisioner);
 
-      removeDuplicateVariables(infrastructureProvisioner);
       validateProvisioner(infrastructureProvisioner);
 
       InfrastructureProvisioner finalInfraProvisioner =
@@ -199,24 +200,32 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return query.count() > 0;
   }
 
-  void removeDuplicateVariables(InfrastructureProvisioner infrastructureProvisioner) {
+  void restrictDuplicateVariables(InfrastructureProvisioner infrastructureProvisioner) {
     List<NameValuePair> variables = infrastructureProvisioner.getVariables();
     if (isEmpty(variables)) {
       return;
     }
-    ArrayList<NameValuePair> distinctVariables = new ArrayList<>(variables.size());
+
     HashSet<String> distinctVariableNames = new HashSet<>();
+    Set<String> duplicateVariableNames = new HashSet<>();
     for (NameValuePair variable : variables) {
       if (!distinctVariableNames.contains(variable.getName())) {
-        distinctVariables.add(variable);
         distinctVariableNames.add(variable.getName());
+      } else {
+        duplicateVariableNames.add(variable.getName());
       }
     }
-    infrastructureProvisioner.setVariables(distinctVariables);
+
+    if (!duplicateVariableNames.isEmpty()) {
+      throw new InvalidRequestException(
+          DUPLICATE_VAR_MSG_PREFIX + duplicateVariableNames.toString(), WingsException.USER);
+    }
   }
 
   @VisibleForTesting
   void validateProvisioner(InfrastructureProvisioner provisioner) {
+    restrictDuplicateVariables(provisioner);
+
     if (provisioner instanceof TerraformInfrastructureProvisioner) {
       validateTerraformProvisioner((TerraformInfrastructureProvisioner) provisioner);
     }
@@ -240,7 +249,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     infrastructureProvisioner.setAccountId(appService.getAccountIdByAppId(infrastructureProvisioner.getAppId()));
 
-    removeDuplicateVariables(infrastructureProvisioner);
     validateProvisioner(infrastructureProvisioner);
 
     InfrastructureProvisioner savedInfraProvisioner =
