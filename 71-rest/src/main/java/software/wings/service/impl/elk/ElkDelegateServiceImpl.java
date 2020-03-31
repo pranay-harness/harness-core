@@ -28,6 +28,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.ElkConfigValidationParams;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.elk.ElkRestClient;
@@ -68,7 +69,8 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Inject private RequestExecutor requestExecutor;
 
   @Override
-  public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public boolean validateConfig(ElkConfigValidationParams elkConfigValidationParams) {
+    ElkConfig elkConfig = elkConfigValidationParams.getElkConfig();
     if (isNotBlank(elkConfig.getUsername()) && isEmpty(elkConfig.getPassword())) {
       throw new IllegalArgumentException("User name is given but password is empty");
     }
@@ -76,7 +78,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
       throw new IllegalArgumentException("User name is empty but password is given");
     }
-    getLogSample(elkConfig, "*", false, encryptedDataDetails);
+    getLogSample(elkConfig, "*", false, elkConfigValidationParams.getEncryptedDataDetails());
     return true;
   }
 
