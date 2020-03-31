@@ -1,20 +1,27 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
+import static software.wings.utils.Misc.replaceUnicodeWithDot;
+
 import com.google.common.base.Preconditions;
 
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "MetricsDataCollectionInfoKeys")
 public abstract class MetricsDataCollectionInfo extends DataCollectionInfoV2 {
   private Map<String, String> hostsToGroupNameMap;
 
@@ -26,7 +33,7 @@ public abstract class MetricsDataCollectionInfo extends DataCollectionInfoV2 {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, cvTaskId, connectorId, encryptedDataDetails, dataCollectionStartTime,
         shouldSendHeartbeat);
-    this.hostsToGroupNameMap = hostsToGroupNameMap;
+    setHostsToGroupNameMap(hostsToGroupNameMap);
   }
 
   protected void copy(MetricsDataCollectionInfo metricsDataCollectionInfo) {
@@ -38,5 +45,21 @@ public abstract class MetricsDataCollectionInfo extends DataCollectionInfoV2 {
   public void validate() {
     super.validate();
     Preconditions.checkNotNull(hostsToGroupNameMap, "hostToGroupNameMap");
+  }
+
+  public final void setHostsToGroupNameMap(Map<String, String> hostsToGroupNameMap) {
+    Map<String, String> updatedMap = new HashMap<>();
+    if (isEmpty(hostsToGroupNameMap)) {
+      this.hostsToGroupNameMap = updatedMap;
+      return;
+    }
+    hostsToGroupNameMap.forEach((key, value) -> updatedMap.put(replaceDotWithUnicode(key), value));
+    this.hostsToGroupNameMap = updatedMap;
+  }
+
+  public Map<String, String> getHostsToGroupNameMap() {
+    Map<String, String> updatedMap = new HashMap<>();
+    this.hostsToGroupNameMap.forEach((key, value) -> updatedMap.put(replaceUnicodeWithDot(key), value));
+    return updatedMap;
   }
 }
