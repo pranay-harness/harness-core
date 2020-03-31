@@ -20,6 +20,7 @@ public enum BatchJobType {
   ECS_UTILIZATION(400, 1, ChronoUnit.HOURS, singletonList(ECS_EVENT)),
   K8S_UTILIZATION(500, 1, ChronoUnit.HOURS, singletonList(K8S_EVENT)),
   INSTANCE_BILLING(600, 1, ChronoUnit.DAYS, Arrays.asList(ECS_UTILIZATION, K8S_UTILIZATION)),
+  ACTUAL_IDLE_COST_BILLING(650, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING)),
   UNALLOCATED_BILLING(700, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING));
 
   // Specifies order in which the jobs are to be run

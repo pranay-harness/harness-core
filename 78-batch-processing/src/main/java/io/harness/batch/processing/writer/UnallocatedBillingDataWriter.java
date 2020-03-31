@@ -87,6 +87,12 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
       unallocatedCostMap.forEach((clusterId, clusterCostData) -> {
         ClusterCostData commonFields = unallocatedBillingDataService.getCommonFields(
             clusterCostData.getAccountId(), clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime());
+        BigDecimal billingAmount = BigDecimal.valueOf(
+            clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost() - clusterCostData.getTotalSystemCost());
+        BigDecimal cpuBillingAmount = BigDecimal.valueOf(clusterCostData.getCpuTotalCost()
+            - clusterCostData.getCpuUtilizedCost() - clusterCostData.getCpuSystemCost());
+        BigDecimal memoryBillingAmount = BigDecimal.valueOf(clusterCostData.getMemoryTotalCost()
+            - clusterCostData.getMemoryUtilizedCost() - clusterCostData.getMemorySystemCost());
         InstanceBillingDataBuilder instanceBillingDataBuilder =
             InstanceBillingData.builder()
                 .accountId(commonFields.getAccountId())
@@ -96,12 +102,9 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                 .billingAccountId(commonFields.getBillingAccountId())
                 .startTimestamp(clusterCostData.getStartTime())
                 .endTimestamp(clusterCostData.getEndTime())
-                .billingAmount(BigDecimal.valueOf(clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost()
-                    - clusterCostData.getTotalSystemCost()))
-                .cpuBillingAmount(BigDecimal.valueOf(clusterCostData.getCpuTotalCost()
-                    - clusterCostData.getCpuUtilizedCost() - clusterCostData.getCpuSystemCost()))
-                .memoryBillingAmount(BigDecimal.valueOf(clusterCostData.getMemoryTotalCost()
-                    - clusterCostData.getMemoryUtilizedCost() - clusterCostData.getMemorySystemCost()))
+                .billingAmount(billingAmount)
+                .cpuBillingAmount(cpuBillingAmount)
+                .memoryBillingAmount(memoryBillingAmount)
                 .idleCost(BigDecimal.ZERO)
                 .cpuIdleCost(BigDecimal.ZERO)
                 .memoryIdleCost(BigDecimal.ZERO)
@@ -119,7 +122,13 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
                 .maxCpuUtilization(1)
                 .maxMemoryUtilization(1)
                 .avgCpuUtilization(1)
-                .avgMemoryUtilization(1);
+                .avgMemoryUtilization(1)
+                .actualIdleCost(BigDecimal.ZERO)
+                .cpuActualIdleCost(BigDecimal.ZERO)
+                .memoryActualIdleCost(BigDecimal.ZERO)
+                .unallocatedCost(billingAmount)
+                .cpuUnallocatedCost(cpuBillingAmount)
+                .memoryUnallocatedCost(memoryBillingAmount);
 
         switch (Enums.getIfPresent(ClusterType.class, commonFields.getClusterType()).or(INVALID)) {
           case ECS:

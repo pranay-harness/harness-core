@@ -7,6 +7,7 @@ import migrations.timescaledb.AddCostEvents;
 import migrations.timescaledb.AddDeploymentTagsToDeployment;
 import migrations.timescaledb.AddFieldsToServiceGuardStats;
 import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
+import migrations.timescaledb.AddIdleUnallocatedColumns;
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddRollbackToDeployment;
@@ -55,6 +56,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(20, AddSystemCostBillingData.class))
         .add(Pair.of(21, AddCostEvents.class))
         .add(Pair.of(22, AddDeploymentTagsToDeployment.class))
+        .add(Pair.of(23, AddIdleUnallocatedColumns.class))
         .build();
   }
 }

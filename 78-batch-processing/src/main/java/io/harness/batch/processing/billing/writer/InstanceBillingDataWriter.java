@@ -23,6 +23,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +121,13 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
                     .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
                     .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
+                    // Actual idle cost and unallocated cost for node/container will get updated by actualIdleCost job
+                    .actualIdleCost(billingData.getIdleCostData().getIdleCost())
+                    .cpuActualIdleCost(billingData.getIdleCostData().getCpuIdleCost())
+                    .memoryActualIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
+                    .unallocatedCost(BigDecimal.ZERO)
+                    .cpuUnallocatedCost(BigDecimal.ZERO)
+                    .memoryUnallocatedCost(BigDecimal.ZERO)
                     .build();
             billingDataService.create(instanceBillingData);
           });
