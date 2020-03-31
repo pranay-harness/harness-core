@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -16,7 +17,6 @@ import com.google.common.collect.Sets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
@@ -66,8 +66,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
 public class APMVerificationState extends AbstractMetricAnalysisState {
-  @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
-
   public APMVerificationState(String name) {
     super(name, StateType.APM_VERIFICATION);
   }

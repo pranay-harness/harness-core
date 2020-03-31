@@ -1478,12 +1478,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private LearningEngineAnalysisTask getLogMLAnalysisTask(
       LogsCVConfiguration logsCVConfiguration, long analysisEndMin, int nextBackoffCount) {
-    String stateExecutionIdForLETask = "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
+    String stateExecutionIdForLETask =
+        (logsCVConfiguration.is247LogsV2() ? "LOG_24X7_V2_ANALYSIS_" : "LOG_24X7_ANALYSIS_")
+        + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
     String taskId = generateUuid();
     String controlInputUrl = null;
     String testInputUrl = null;
     boolean isBaselineRun = false;
     long startMinute = analysisEndMin - CRON_POLL_INTERVAL_IN_MINUTES + 1;
+    long lastCVAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
+        logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     // this is the baseline prep case
     if (startMinute < logsCVConfiguration.getBaselineStartMinute()
         || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
@@ -1527,7 +1531,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL);
     getUrlBuilder.addParameter("cvConfigId", logsCVConfiguration.getUuid());
     getUrlBuilder.addParameter("appId", logsCVConfiguration.getAppId());
-    getUrlBuilder.addParameter("analysisMinute", String.valueOf(logsCVConfiguration.getBaselineEndMinute()));
+    if (logsCVConfiguration.is247LogsV2()) {
+      getUrlBuilder.addParameter("analysisMinute", String.valueOf(lastCVAnalysisMinute));
+    } else {
+      getUrlBuilder.addParameter("analysisMinute", String.valueOf(logsCVConfiguration.getBaselineEndMinute()));
+    }
     getUrlBuilder.addParameter("compressed",
         verificationManagerClientHelper
             .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(

@@ -2495,6 +2495,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task.getAnalysis_minute())
         .isEqualTo(logConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1);
     assertThat(task.getTest_input_url()).isNull();
+    assertThat(task.getLog_analysis_get_url().contains("analysisMinute=" + logConfig.getBaselineEndMinute())).isTrue();
   }
 
   @Test
@@ -2827,6 +2828,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task.getPriority()).isEqualTo(1);
     assertThat(task.getControl_input_url()).isNotNull();
     assertThat(task.getTest_input_url()).isNull();
+    assertThat(task.getLog_analysis_get_url().contains("analysisMinute=-1")).isTrue();
   }
 
   @Test
