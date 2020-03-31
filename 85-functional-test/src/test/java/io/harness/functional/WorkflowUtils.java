@@ -66,7 +66,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -567,18 +566,17 @@ public class WorkflowUtils {
     TemplateExpression templateExpressionForInfraDefinition =
         getTemplateExpressionsForInfraDefinition("${InfraDefinition_Kubernetes}");
 
-    Workflow workflow =
-        aWorkflow()
-            .name(name + System.currentTimeMillis())
-            .appId(service.getAppId())
-            .envId(defaultInfrastructureDefinition.getEnvId())
-            .infraDefinitionId(defaultInfrastructureDefinition.getUuid())
-            .serviceId(service.getUuid())
-            .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
-            .templatized(true)
-            .templateExpressions(Arrays.asList(templateExpressionForEnv, templateExpressionForInfraDefinition))
-            .build();
+    Workflow workflow = aWorkflow()
+                            .name(name + System.currentTimeMillis())
+                            .appId(service.getAppId())
+                            .envId(defaultInfrastructureDefinition.getEnvId())
+                            .infraDefinitionId(defaultInfrastructureDefinition.getUuid())
+                            .serviceId(service.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+                            .templatized(true)
+                            .templateExpressions(asList(templateExpressionForEnv, templateExpressionForInfraDefinition))
+                            .build();
     return workflow;
   }
 
@@ -811,13 +809,12 @@ public class WorkflowUtils {
 
     Workflow buildWorkflow =
         aWorkflow()
-            .name(name + System.currentTimeMillis())
+            .name(name)
             .appId(appId)
             .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aBuildOrchestrationWorkflow()
-                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
-                    .build())
+            .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                       .withWorkflowPhases(asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
+                                       .build())
             .build();
     return buildWorkflow;
   }
@@ -848,12 +845,60 @@ public class WorkflowUtils {
             .name(name + System.currentTimeMillis())
             .appId(appId)
             .workflowType(WorkflowType.ORCHESTRATION)
-            .orchestrationWorkflow(
-                aBuildOrchestrationWorkflow()
-                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
-                    .build())
+            .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                       .withWorkflowPhases(asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
+                                       .build())
             .build();
     return buildWorkflow;
+  }
+
+  public Workflow createMultiPhaseSshWorkflowWithNoNodePhase(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = Lists.newArrayList();
+    phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name())
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_NODE_SELECT.name())
+                                    .name(SELECT_NODES_CONSTANT)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceUnitType", "PERCENTAGE")
+                                                    .put("instanceCount", 100)
+                                                    .put("specificHosts", false)
+                                                    .put("excludeSelectedHostsFromFuturePhases", true)
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(asList(aWorkflowPhase()
+                                                                  .serviceId(service.getUuid())
+                                                                  .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                                  .phaseSteps(phaseSteps)
+                                                                  .build(),
+                                       aWorkflowPhase()
+                                           .serviceId(service.getUuid())
+                                           .infraDefinitionId(infrastructureDefinition.getUuid())
+                                           .phaseSteps(phaseSteps)
+                                           .build(),
+                                       aWorkflowPhase()
+                                           .serviceId(service.getUuid())
+                                           .infraDefinitionId(infrastructureDefinition.getUuid())
+                                           .phaseSteps(phaseSteps)
+                                           .build()))
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
   }
 
   private TemplateExpression getTemplateExpressionsForEnv() {
