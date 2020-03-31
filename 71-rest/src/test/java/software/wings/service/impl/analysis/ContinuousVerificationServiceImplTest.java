@@ -61,6 +61,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -123,6 +124,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private APMDelegateService apmDelegateService;
+  @Mock private MLServiceUtils mlServiceUtils;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
 
   @Before

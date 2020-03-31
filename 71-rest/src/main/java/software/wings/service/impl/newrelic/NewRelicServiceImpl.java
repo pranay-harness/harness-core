@@ -283,7 +283,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     long instanceId = -1;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
+      hostName = mlServiceUtils.getHostName(setupTestNodeData);
       List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(
           setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), StateType.NEW_RELIC);
 

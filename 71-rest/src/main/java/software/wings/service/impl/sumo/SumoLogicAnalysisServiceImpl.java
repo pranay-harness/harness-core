@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
@@ -14,6 +15,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 
@@ -24,6 +26,7 @@ import java.util.List;
  */
 @Singleton
 public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements SumoLogicAnalysisService {
+  @Inject private MLServiceUtils mlServiceUtils;
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       String accountId, SumoLogicSetupTestNodedata sumoLogicSetupTestNodedata) {
@@ -37,9 +40,7 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
         .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
-            sumoLogicSetupTestNodedata.getHostNameField(),
-            sumoLogicSetupTestNodedata.isServiceLevel() ? null
-                                                        : sumoLogicSetupTestNodedata.getInstanceElement().getHostName(),
+            sumoLogicSetupTestNodedata.getHostNameField(), mlServiceUtils.getHostName(sumoLogicSetupTestNodedata),
             encryptedDataDetails,
             createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getGuid()));
   }

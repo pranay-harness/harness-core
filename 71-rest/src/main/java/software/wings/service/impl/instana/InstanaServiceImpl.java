@@ -23,6 +23,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.instana.InstanaService;
@@ -40,6 +41,7 @@ public class InstanaServiceImpl implements InstanaService {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(InstanaSetupTestNodeData setupTestNodeData) {
@@ -72,7 +74,7 @@ public class InstanaServiceImpl implements InstanaService {
               .plugin(INSTANA_DOCKER_PLUGIN)
               .rollup(60)
               .query(setupTestNodeData.getInfraParams().getQuery().replace(
-                  VERIFICATION_HOST_PLACEHOLDER, "\"" + setupTestNodeData.getInstanceName() + "\""))
+                  VERIFICATION_HOST_PLACEHOLDER, "\"" + mlServiceUtils.getHostName(setupTestNodeData) + "\""))
               .build();
 
       try {
@@ -104,7 +106,7 @@ public class InstanaServiceImpl implements InstanaService {
       if (setupTestNodeData.getApplicationParams() != null) {
         tagFilters.add(InstanaTagFilter.builder()
                            .name(setupTestNodeData.getApplicationParams().getHostTagFilter())
-                           .value(setupTestNodeData.getInstanceElement().getHostName())
+                           .value(mlServiceUtils.getHostName(setupTestNodeData))
                            .operator(InstanaTagFilter.Operator.EQUALS)
                            .build());
       }

@@ -76,8 +76,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
     // Request is made without host
-    String hostName =
-        setupTestNodeData.isServiceLevel() ? null : mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
+    String hostName = setupTestNodeData.isServiceLevel() ? null : mlServiceUtils.getHostName(setupTestNodeData);
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeries =
         getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, hostName);
 
