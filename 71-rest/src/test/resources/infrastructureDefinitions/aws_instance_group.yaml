@@ -8,6 +8,7 @@ infrastructure:
   cloudProviderName: TEST_CLOUD_PROVIDER
   desiredCapacity: 0
   hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  hostConnectionType: PRIVATE_DNS
   hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
   loadBalancerName: a79142b5197c211e888710a45fa1545a
   region: us-east-1

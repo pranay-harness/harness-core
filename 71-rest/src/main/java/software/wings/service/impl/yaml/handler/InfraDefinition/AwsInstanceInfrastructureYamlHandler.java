@@ -34,6 +34,7 @@ public class AwsInstanceInfrastructureYamlHandler
         .cloudProviderName(cloudProvider.getName())
         .hostConnectionAttrsName(hostNameConnectionAttr.getName())
         .type(InfrastructureType.AWS_INSTANCE)
+        .hostConnectionType(bean.getHostConnectionType())
         .expressions(bean.getExpressions())
         .useAutoScalingGroup(bean.isProvisionInstances())
         .build();
@@ -67,6 +68,7 @@ public class AwsInstanceInfrastructureYamlHandler
     bean.setRegion(yaml.getRegion());
     bean.setExpressions(yaml.getExpressions());
     bean.setProvisionInstances(yaml.isUseAutoScalingGroup());
+    bean.setHostConnectionType(yaml.getHostConnectionType());
   }
 
   @Override
