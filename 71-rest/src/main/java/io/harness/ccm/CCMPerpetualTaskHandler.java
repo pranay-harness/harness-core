@@ -1,5 +1,7 @@
 package io.harness.ccm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,7 +26,9 @@ public class CCMPerpetualTaskHandler implements ClusterRecordObserver {
   @Override
   public boolean onUpserted(ClusterRecord clusterRecord) {
     if (ccmSettingService.isCloudCostEnabled(clusterRecord)) {
-      ccmPerpetualTaskManager.createPerpetualTasks(clusterRecord);
+      if (isEmpty(clusterRecord.getPerpetualTaskIds())) {
+        ccmPerpetualTaskManager.createPerpetualTasks(clusterRecord);
+      }
     }
     return true;
   }
