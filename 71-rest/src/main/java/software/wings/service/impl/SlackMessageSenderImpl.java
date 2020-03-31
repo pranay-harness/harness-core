@@ -119,7 +119,8 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
         .replaceAll("\\|-\\|", "|")
         .replaceAll(">>>", ">*")
         .replaceAll("\\\\n", "\n")
-        .replaceAll("\\\\\\*", "*");
+        .replaceAll("\\\\\\*", "*")
+        .replaceAll("\\*<\\|>\\*", "");
   }
 
   private String getColor(String status) {

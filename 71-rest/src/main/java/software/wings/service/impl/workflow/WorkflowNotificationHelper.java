@@ -380,6 +380,10 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("TRIGGER", triggerURL);
     placeHolderValues.put("PIPELINE", pipelineURL);
     placeHolderValues.put("ENVIRONMENT", environmentURL);
+    placeHolderValues.put("FAILED_PHASE", "");
+    placeHolderValues.put("MORE_ERRORS", "");
+    placeHolderValues.put("ERROR_URL", "");
+    placeHolderValues.put("ERRORS", "");
 
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
     placeHolderValues.put(

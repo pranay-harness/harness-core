@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 
@@ -7,17 +8,25 @@ import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections4.CollectionUtils;
+import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGroup> {
   private static final Logger log = LoggerFactory.getLogger(UserGroupBasedDispatcher.class);
@@ -28,6 +37,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   @Inject private PagerDutyEventDispatcher pagerDutyEventDispatcher;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
@@ -69,6 +79,12 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     // see discussion here: https://harness.slack.com/archives/C838QA2CW/p1562774945009400
 
     if (null != userGroup.getSlackConfig()) {
+      for (Notification notification : notifications) {
+        if (notification instanceof FailureNotification) {
+          fetchErrorMessages(notification);
+        }
+      }
+
       try {
         log.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
@@ -91,6 +107,63 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
         log.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
+  }
+
+  private void fetchErrorMessages(Notification notification) {
+    List<StateExecutionInstance> allExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, notification.getAppId())
+            .filter(StateExecutionInstanceKeys.executionUuid, notification.getEntityId())
+            .filter(StateExecutionInstanceKeys.status, FAILED)
+            .order(Sort.ascending(StateExecutionInstanceKeys.endTs))
+            .asList();
+
+    HashSet<String> parentInstances = new HashSet<>();
+    for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
+      if (stateExecutionInstance.getStateType().equals("PHASE")) {
+        notification.getNotificationTemplateVariables().replace(
+            "FAILED_PHASE", "", "*" + stateExecutionInstance.getDisplayName() + " failed*\n");
+      }
+      parentInstances.add(stateExecutionInstance.getParentInstanceId());
+    }
+
+    Map<String, String> errorMap = new LinkedHashMap<>();
+
+    for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
+      if (!parentInstances.contains(stateExecutionInstance.getUuid())) {
+        String errorMessage =
+            stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
+        if (errorMessage != null) {
+          errorMap.put(stateExecutionInstance.getDisplayName() + " failed -", errorMessage);
+        } else {
+          errorMap.put(stateExecutionInstance.getDisplayName() + " failed", "");
+        }
+      }
+    }
+
+    notification.getNotificationTemplateVariables().put("ERRORS", generateErrorMessageString(errorMap));
+
+    if (errorMap.size() > 3) {
+      notification.getNotificationTemplateVariables().put("MORE_ERRORS", (errorMap.size() - 3) + " more errors");
+      notification.getNotificationTemplateVariables().put(
+          "ERROR_URL", notification.getNotificationTemplateVariables().get("WORKFLOW_URL"));
+    }
+  }
+
+  private String generateErrorMessageString(Map<String, String> errorMap) {
+    StringBuilder errorMsgString = new StringBuilder();
+    int counter = 0;
+    for (Map.Entry error : errorMap.entrySet()) {
+      errorMsgString.append('*');
+      errorMsgString.append(error.getKey());
+      errorMsgString.append("* ");
+      errorMsgString.append(error.getValue());
+      errorMsgString.append('\n');
+      if (++counter > 2) {
+        break;
+      }
+    }
+    return errorMsgString.toString();
   }
 
   @Override

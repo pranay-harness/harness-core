@@ -570,16 +570,21 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     StringJoiner artifacts = new StringJoiner(", ");
 
     int tokenValidDuration = getTimeoutMillis();
-    boolean isPipeline = context.getWorkflowType() == WorkflowType.PIPELINE;
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true);
+
+    boolean isPipeline = workflowExecution.getPipelineSummary() != null;
+    String executionName;
     if (isPipeline) {
-      Pipeline pipeline = pipelineService.readPipeline(context.getAppId(), context.getWorkflowId(), true);
-      pausedStageName = getPipelineStageName(pipeline, getName());
+      executionName = workflowExecution.getPipelineSummary().getPipelineName();
+      Pipeline pipeline = pipelineService.readPipeline(
+          context.getAppId(), workflowExecution.getPipelineSummary().getPipelineId(), true);
+      pausedStageName = getPipelineStageName(pipeline, context.getWorkflowExecutionName());
     } else {
+      executionName = workflowExecution.getName();
       pausedStageName = context.getStateExecutionInstanceName();
     }
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true);
     if (EmptyPredicate.isNotEmpty(workflowExecution.getExecutionArgs().getArtifacts())) {
       for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
         artifacts.add(
@@ -610,7 +615,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                                                   .routingId(accountId)
                                                   .deploymentId(context.getWorkflowExecutionId())
                                                   .workflowId(context.getWorkflowId())
-                                                  .workflowExecutionName(context.getWorkflowExecutionName())
+                                                  .workflowExecutionName(executionName)
                                                   .stateExecutionId(context.getStateExecutionInstanceId())
                                                   .stateExecutionInstanceName(context.getStateExecutionInstanceName())
                                                   .approvalId(approvalId)
