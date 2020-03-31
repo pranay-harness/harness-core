@@ -46,7 +46,8 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(encryptedDataDetails));
+    executionCapabilities.addAll(
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     executionCapabilities.addAll(Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl)));
     return executionCapabilities;

@@ -13,24 +13,23 @@ import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmCapability;
-import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.KmsConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,13 +62,20 @@ public class CapabilityHelper {
             .collect(toList()));
 
     if (isNotEmpty(encryptionConfigs)) {
-      encryptionConfigs.forEach(encryptionConfig -> {
-        ExecutionCapability vaultCapability = getHttpCapabilityForDecryption(encryptionConfig);
-        if (vaultCapability != null) {
-          task.getExecutionCapabilities().add(vaultCapability);
-        }
-      });
+      task.getExecutionCapabilities().addAll(fetchExecutionCapabilitiesForSecretManagers(encryptionConfigs));
     }
+  }
+
+  private static List<ExecutionCapability> fetchExecutionCapabilitiesForSecretManagers(
+      Collection<EncryptionConfig> encryptionConfigs) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    encryptionConfigs.forEach(encryptionConfig -> {
+      List<ExecutionCapability> encryptionConfigExecutionCapabilities =
+          fetchExecutionCapabilityForSecretManager(encryptionConfig);
+      executionCapabilities.addAll(encryptionConfigExecutionCapabilities);
+    });
+
+    return executionCapabilities;
   }
 
   public static List<ExecutionCapability> generateDelegateCapabilities(
@@ -83,39 +89,31 @@ public class CapabilityHelper {
       return executionCapabilities;
     }
 
-    executionCapabilities.addAll(generateKmsHttpCapabilities(encryptedDataDetails));
+    executionCapabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     return executionCapabilities;
   }
 
-  public static List<ExecutionCapability> generateKmsHttpCapabilities(List<EncryptedDataDetail> encryptedDataDetails) {
+  public static List<ExecutionCapability> fetchExecutionCapabilitiesForEncryptedDataDetails(
+      List<EncryptedDataDetail> encryptedDataDetails) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isEmpty(encryptedDataDetails)) {
       return executionCapabilities;
     }
-
-    EncryptedDataDetail encryptedDataDetail = encryptedDataDetails.get(0);
-    ExecutionCapability vaultCapability = getHttpCapabilityForDecryption(encryptedDataDetail.getEncryptionConfig());
-    if (vaultCapability != null) {
-      executionCapabilities.add(vaultCapability);
-    }
-
-    return executionCapabilities;
+    return fetchExecutionCapabilitiesForSecretManagers(
+        fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails).values());
   }
 
-  public static HttpConnectionExecutionCapability getHttpCapabilityForDecryption(
+  public static List<ExecutionCapability> fetchExecutionCapabilityForSecretManager(
       @NotNull EncryptionConfig encryptionConfig) {
-    if (encryptionConfig instanceof KmsConfig) {
-      return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
-          ((KmsConfig) encryptionConfig).getRegion());
-    } else if (encryptionConfig instanceof VaultConfig) {
-      return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-          ((VaultConfig) encryptionConfig).getVaultUrl());
+    if (encryptionConfig instanceof ExecutionCapabilityDemander) {
+      return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities();
     } else if (isNotEmpty(encryptionConfig.getEncryptionServiceUrl())) {
-      return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-          encryptionConfig.getEncryptionServiceUrl());
+      return new ArrayList<>(
+          Collections.singleton(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              encryptionConfig.getEncryptionServiceUrl())));
     }
-    return null;
+    return new ArrayList<>();
   }
 
   public static Map<String, EncryptionConfig> fetchEncryptionDetailsListFromParameters(TaskData taskData) {
@@ -129,39 +127,65 @@ public class CapabilityHelper {
 
       if (argument != null) {
         List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) argument;
-
-        List<EncryptedDataDetail> nonLocalEncryptedDetails =
-            encryptedDataDetails.stream()
-                .filter(encryptedDataDetail
-                    -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
-                .collect(Collectors.toList());
-
-        // There can be more than 1 non-Local encryptedDataDetails.
-        // e.g. in case of JenkinConfig, it has token / username-password. User will select 1
-        // of the auth mechanism. In this case, it will have 2 encryptedDataDetails (same entry twice)
-        if (isNotEmpty(nonLocalEncryptedDetails)) {
-          EncryptedDataDetail encryptedDataDetail = nonLocalEncryptedDetails.get(0);
-          encryptionConfigsMap.put(
-              encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
-        }
-      } else {
-        // TODO: For Task "SECRET_DECRYPT_REF", is argument is only EncryptedDataDetail.
-        // Actually it should be later changed to List to match all other apis
-        // can be done later
-        argument = Arrays.stream(taskData.getParameters())
-                       .filter(parameter -> parameter instanceof EncryptedDataDetail)
-                       .findFirst()
-                       .orElse(null);
-
-        if (argument != null) {
-          EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) argument;
-          encryptionConfigsMap.put(
-              encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
-        }
+        return fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails);
       }
+      // TODO: For Task "SECRET_DECRYPT_REF", is argument is only EncryptedDataDetail.
+      // Actually it should be later changed to List to match all other apis
+      // can be done later
+      argument = Arrays.stream(taskData.getParameters())
+                     .filter(parameter -> parameter instanceof EncryptedDataDetail)
+                     .findFirst()
+                     .orElse(null);
+
+      if (argument != null) {
+        EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) argument;
+        return fetchEncryptionConfigsMapFromEncryptedDataDetails(Collections.singletonList(encryptedDataDetail));
+      }
+
+      // BATCH_SECRET_DECRYPT
+      argument = Arrays.stream(taskData.getParameters())
+                     .filter(CapabilityHelper::isEncryptableSettingWithEncryptionDetailsList)
+                     .findFirst()
+                     .orElse(null);
+
+      if (argument != null) {
+        List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =
+            (List<EncryptableSettingWithEncryptionDetails>) argument;
+        return fetchEncryptionConfigsMapFromEncryptableSettings(encryptableSettingWithEncryptionDetails);
+      }
+
     } catch (Exception e) {
       logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);
     }
+    return encryptionConfigsMap;
+  }
+
+  private static Map<String, EncryptionConfig> fetchEncryptionConfigsMapFromEncryptedDataDetails(
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    Map<String, EncryptionConfig> encryptionConfigsMap = new HashMap<>();
+    if (isEmpty(encryptedDataDetails)) {
+      return encryptionConfigsMap;
+    }
+    List<EncryptedDataDetail> nonLocalEncryptedDetails =
+        encryptedDataDetails.stream()
+            .filter(encryptedDataDetail
+                -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
+            .collect(Collectors.toList());
+    if (isNotEmpty(nonLocalEncryptedDetails)) {
+      nonLocalEncryptedDetails.forEach(nonLocalEncryptedDetail
+          -> encryptionConfigsMap.put(
+              nonLocalEncryptedDetail.getEncryptionConfig().getUuid(), nonLocalEncryptedDetail.getEncryptionConfig()));
+    }
+    return encryptionConfigsMap;
+  }
+
+  private static Map<String, EncryptionConfig> fetchEncryptionConfigsMapFromEncryptableSettings(
+      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails) {
+    Map<String, EncryptionConfig> encryptionConfigsMap = new HashMap<>();
+    encryptableSettingWithEncryptionDetails.forEach(encryptableSettingWithEncryptionDetail
+        -> encryptionConfigsMap.putAll(fetchEncryptionConfigsMapFromEncryptedDataDetails(
+            encryptableSettingWithEncryptionDetail.getEncryptedDataDetails())));
+
     return encryptionConfigsMap;
   }
 
@@ -182,6 +206,23 @@ public class CapabilityHelper {
       }
     } catch (Exception e) {
       logger.warn("Failed in determining if instance of EncryptionDetails");
+    }
+
+    return false;
+  }
+
+  private static boolean isEncryptableSettingWithEncryptionDetailsList(Object argument) {
+    try {
+      if (!(argument instanceof List)) {
+        return false;
+      }
+
+      List list = (List) argument;
+      if (isNotEmpty(list) && list.get(0) instanceof EncryptableSettingWithEncryptionDetails) {
+        return true;
+      }
+    } catch (Exception e) {
+      logger.warn("Failed in determining if instance of EncryptableSettingWithEncryptionDetails");
     }
 
     return false;
@@ -228,7 +269,8 @@ public class CapabilityHelper {
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
 
     if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
+      List<ExecutionCapability> capabilitiesForEncryption =
+          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
       if (isNotEmpty(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }
@@ -252,7 +294,8 @@ public class CapabilityHelper {
     executionCapabilities.add(HelmCapability.builder().helmCommand(HELM_VERSION_COMMAND).build());
 
     if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
+      List<ExecutionCapability> capabilitiesForEncryption =
+          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
       if (isNotEmpty(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }
@@ -265,7 +308,8 @@ public class CapabilityHelper {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(ChartMuseumCapability.builder().chartMuseumCommand(CHART_MUSEUM_VERSION_COMMAND).build());
     if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
+      List<ExecutionCapability> capabilitiesForEncryption =
+          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
       if (isNotEmpty(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }

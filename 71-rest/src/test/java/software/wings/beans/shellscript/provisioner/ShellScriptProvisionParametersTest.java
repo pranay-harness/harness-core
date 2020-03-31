@@ -8,6 +8,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -26,6 +28,7 @@ public class ShellScriptProvisionParametersTest extends WingsBaseTest {
 
     encryptedVariables.put("abc",
         EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
             .encryptionConfig(KmsConfig.builder()
                                   .accessKey("accessKey")
                                   .region("us-east-1")

@@ -78,7 +78,8 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
       executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
           "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/")));
     }
-    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(artifactServerEncryptedDataDetails));
+    executionCapabilities.addAll(
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(artifactServerEncryptedDataDetails));
     return executionCapabilities;
   }
 }

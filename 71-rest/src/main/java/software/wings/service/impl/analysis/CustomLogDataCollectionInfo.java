@@ -59,7 +59,8 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getBaseUrl()));
-    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(encryptedDataDetails));
+    executionCapabilities.addAll(
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     return executionCapabilities;
   }
 }

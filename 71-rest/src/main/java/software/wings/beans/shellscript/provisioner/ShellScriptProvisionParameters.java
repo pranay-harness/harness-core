@@ -35,7 +35,8 @@ public class ShellScriptProvisionParameters implements TaskParameters, Execution
 
     if (isNotEmpty(encryptedVariables)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedVariables.values()) {
-        executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(Arrays.asList(encryptedDataDetail)));
+        executionCapabilities.addAll(
+            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(Arrays.asList(encryptedDataDetail)));
       }
     }
 

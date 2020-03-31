@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,9 +10,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -149,8 +150,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
-    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat(HTTP_VAUTL_URL).isEqualTo(capability.fetchCapabilityBasis());
+    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    assertThat(HTTP_VAUTL_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
   @Test
@@ -158,8 +159,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
-    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat(AWS_KMS_URL).isEqualTo(capability.fetchCapabilityBasis());
+    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    assertThat(AWS_KMS_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
   @Test
@@ -167,7 +168,35 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
     EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();
-    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertThat("https://harness.cyberark.com").isEqualTo(capability.fetchCapabilityBasis());
+    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    assertThat("https://harness.cyberark.com").isEqualTo(capability.get(0).fetchCapabilityBasis());
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void testFetchEncryptionDetailsList_BATCH_SECRET_DECRYPT() throws Exception {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    encryptedDataDetails.add(
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.VAULT).build())
+            .encryptionConfig(VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build())
+            .build());
+    List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails = new ArrayList<>();
+    encryptableSettingWithEncryptionDetails.add(
+        EncryptableSettingWithEncryptionDetails.builder().encryptedDataDetails(encryptedDataDetails).build());
+    TaskData taskData =
+        TaskData.builder()
+            .parameters(new Object[] {JenkinsConfig.builder().build(), encryptableSettingWithEncryptionDetails})
+            .build();
+
+    Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
+    assertThat(encryptionMap).isNotNull();
+    assertThat(encryptionMap).hasSize(1);
+    EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
+
+    assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
+    assertThat(encryptionConfig instanceof VaultConfig).isTrue();
+    assertThat(((VaultConfig) encryptionConfig).getVaultUrl()).isEqualTo(HTTP_VAUTL_URL);
   }
 }
