@@ -539,8 +539,16 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testGetInstanceDetails() {
+    getInstanceDetailsWhenNoNewerInstancesDeployed();
     getInstanceDetailsForPartialRollout();
     getInstanceDetailsForNoInstances();
+  }
+
+  private void getInstanceDetailsWhenNoNewerInstancesDeployed() {
+    List<InstanceDetails> instanceDetails = nodeSelectState.getInstanceDetails(
+        APP_ID, ENV_ID, emptyList(), Arrays.asList(aServiceInstance().withUuid("id-3").withHostId("host-3").build()));
+    assertThat(instanceDetails).isNotEmpty();
+    assertThat(instanceDetails.get(0).getPhysicalHost().getInstanceId()).isEqualTo("host-3");
   }
 
   private void getInstanceDetailsForNoInstances() {
