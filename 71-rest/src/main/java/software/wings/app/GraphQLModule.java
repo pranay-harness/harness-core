@@ -9,6 +9,8 @@ import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
+import io.harness.ccm.setup.dao.EksClusterStatsDataFetcher;
+import io.harness.ccm.setup.dao.LinkedAccountStatsDataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
@@ -219,6 +221,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(LinkedAccountStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sEventYamlDiffDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
@@ -232,6 +235,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(SunburstChartStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsInUseConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsDataFetcher.class);
+    bindDataFetcherWithAnnotation(EksClusterStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);

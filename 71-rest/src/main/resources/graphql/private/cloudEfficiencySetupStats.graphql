@@ -1,0 +1,37 @@
+extend type Query {
+  eksClusterStats(filters: [CESetupFilter]): eksClusterData @dataFetcher(name: eksClusterStats)
+  linkedAccountStats(filters: [CESetupFilter]): linkedAccountData @dataFetcher(name: linkedAccountStats)
+}
+
+type linkedAccountData {
+  count: Number
+  linkedAccounts: [linkedAccount]
+}
+
+type linkedAccount {
+  id: String
+  name: String
+  arn: String
+  masterAccountId: String
+}
+
+type eksClusterData {
+  count: Number
+  clusters: [eksCluster]
+}
+
+type eksCluster {
+  id: String
+  name: String
+  region: String
+  infraAccountId: String
+  infraMasterAccountId: String
+  parentAccountSettingId: String
+  cloudProviderId: String
+}
+
+input CESetupFilter {
+  cloudProviderId: IdFilter
+  infraMasterAccountId: IdFilter
+  masterAccountSettingId: IdFilter
+}

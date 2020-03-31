@@ -24,6 +24,7 @@ enum DataFetcherEnum {
   connectorStats
   deploymentStats
   efficiencyStats
+  eksClusterStats
   environment
   environmentConnection
   environmentStats
@@ -36,6 +37,7 @@ enum DataFetcherEnum {
   instanceStats
   k8sEventYamlDiff
   k8sLabelConnection
+  linkedAccountStats
   outcomeConnection
   pipeline
   pipelineConnection

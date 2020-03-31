@@ -1,0 +1,87 @@
+package io.harness.ccm.setup.dao;
+
+import static io.harness.rule.OwnerRule.ROHIT;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Inject;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import software.wings.beans.User;
+import software.wings.beans.ce.CECluster;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.security.UserThreadLocal;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+
+public class EksClusterStatsDataFetcherTest extends AbstractDataFetcherTest {
+  @Inject EksClusterStatsDataFetcher eksClusterStatsDataFetcher;
+
+  private static final String INFRA_ACCOUNT_ID = "infraAccountId";
+  private static final String INFRA_MASTER_ACCOUNT_ID = "infraMasterAccountId";
+
+  @Before
+  public void setup() throws SQLException {
+    User user = testUtils.createUser(testUtils.createAccount());
+    UserThreadLocal.set(user);
+
+    createAccount(ACCOUNT1_ID, getLicenseInfo());
+    CECluster ceCluster = CECluster.builder()
+                              .accountId(ACCOUNT1_ID)
+                              .clusterName(CLUSTER1_NAME)
+                              .infraAccountId(INFRA_ACCOUNT_ID)
+                              .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
+                              .region(REGION1)
+                              .parentAccountSettingId(SETTING_ID1)
+                              .cloudProviderId(CLOUD_PROVIDER1_ID_ACCOUNT1)
+                              .build();
+    createCECluster(ceCluster);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testFetchConnection() {
+    List<QLCESetupFilter> filters = Arrays.asList(getCloudProviderIdFilter(), getInfraMasterAccountIdFilter());
+    QLEKSClusterData data = eksClusterStatsDataFetcher.fetchConnection(filters, null, null);
+    assertThat(data.getCount()).isEqualTo(1);
+    assertThat(data.getClusters().get(0).getInfraAccountId()).isEqualTo(INFRA_ACCOUNT_ID);
+    assertThat(data.getClusters().get(0).getId()).isNotNull();
+    assertThat(data.getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
+    assertThat(data.getClusters().get(0).getInfraMasterAccountId()).isEqualTo(INFRA_MASTER_ACCOUNT_ID);
+    assertThat(data.getClusters().get(0).getRegion()).isEqualTo(REGION1);
+    assertThat(data.getClusters().get(0).getCloudProviderId()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
+    assertThat(data.getClusters().get(0).getParentAccountSettingId()).isEqualTo(SETTING_ID1);
+  }
+
+  private QLCESetupFilter getCloudProviderIdFilter() {
+    return QLCESetupFilter.builder()
+        .cloudProviderId(QLIdFilter.builder()
+                             .operator(QLIdOperator.EQUALS)
+                             .values(new String[] {CLOUD_PROVIDER1_ID_ACCOUNT1})
+                             .build())
+        .build();
+  }
+
+  private QLCESetupFilter getInfraMasterAccountIdFilter() {
+    return QLCESetupFilter.builder()
+        .infraMasterAccountId(
+            QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {INFRA_ACCOUNT_ID}).build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGenerateFilter() {
+    QLCESetupFilter filter = eksClusterStatsDataFetcher.generateFilter(null, null, null);
+    assertThat(filter).isNull();
+  }
+}
