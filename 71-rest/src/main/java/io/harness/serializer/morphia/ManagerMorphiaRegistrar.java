@@ -304,6 +304,9 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SftpArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECluster;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -975,6 +978,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TimeSeriesKeyTransactions.class);
     set.add(K8sWorkload.class);
     set.add(LastReceivedPublishedMessage.class);
+    set.add(CECloudAccount.class);
+    set.add(CECluster.class);
     set.add(GitFileActivity.class);
     set.add(K8sYaml.class);
   }
@@ -1102,6 +1107,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.BuildWorkflow", BuildWorkflow.class);
     w.put("beans.CanaryOrchestrationWorkflow", CanaryOrchestrationWorkflow.class);
     w.put("beans.CanaryWorkflowExecutionAdvisor", CanaryWorkflowExecutionAdvisor.class);
+    w.put("beans.ce.CEAwsConfig", CEAwsConfig.class);
     w.put("beans.CustomArtifactServerConfig", CustomArtifactServerConfig.class);
     w.put("beans.CyberArkConfig", CyberArkConfig.class);
     w.put("beans.DatadogConfig", DatadogConfig.class);

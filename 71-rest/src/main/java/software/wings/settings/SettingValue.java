@@ -306,7 +306,9 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     AZURE_ARTIFACTS_PAT("Azure Artifacts"),
 
-    CUSTOM("Custom Artifact Source");
+    CUSTOM("Custom Artifact Source"),
+
+    CE_AWS("Continuous Efficiency AWS");
 
     @Getter private String displayName;
 
