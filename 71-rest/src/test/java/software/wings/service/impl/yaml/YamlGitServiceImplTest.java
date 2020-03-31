@@ -339,6 +339,31 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
                                            .build();
     gitSyncError5.setStatus(GitSyncErrorStatus.EXPIRED);
     wingsPersistence.save(gitSyncError5);
+
+    final GitSyncError gitSyncError6 = GitSyncError.builder()
+                                           .yamlFilePath("Setup/index789456.yaml")
+                                           .yamlContent("ds")
+                                           .accountId(ACCOUNT_ID)
+                                           .changeType("MODIFY")
+                                           .gitCommitId("")
+                                           .branchName("branchName")
+                                           .gitConnectorId(SETTING_ID)
+                                           .build();
+    gitSyncError6.setAppId(Application.GLOBAL_APP_ID);
+    wingsPersistence.save(gitSyncError6);
+
+    final GitSyncError gitSyncError7 = GitSyncError.builder()
+                                           .yamlFilePath("Setup/index789456565.yaml")
+                                           .yamlContent("ds")
+                                           .accountId(ACCOUNT_ID)
+                                           .changeType("MODIFY")
+                                           .gitCommitId(null)
+                                           .branchName("branchName")
+                                           .gitConnectorId(SETTING_ID)
+                                           .build();
+    gitSyncError7.setAppId(Application.GLOBAL_APP_ID);
+    wingsPersistence.save(gitSyncError7);
+
     final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
 
     final List<GitSyncError> activeGitToHarnessSyncErrors =
