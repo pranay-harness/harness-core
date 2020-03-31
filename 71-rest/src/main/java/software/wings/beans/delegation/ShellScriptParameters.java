@@ -195,12 +195,14 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
     }
     switch (connectionType) {
       case SSH:
-        executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(keyEncryptedDataDetails));
+        executionCapabilities.addAll(
+            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(keyEncryptedDataDetails));
         executionCapabilities.add(
             SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host + ":" + port));
         return executionCapabilities;
       case WINRM:
-        executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(winrmConnectionEncryptedDataDetails));
+        executionCapabilities.addAll(
+            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(winrmConnectionEncryptedDataDetails));
         executionCapabilities.add(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
             host, Integer.toString(winrmConnectionAttributes.getPort())));
         return executionCapabilities;

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +19,9 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,7 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureSecretsManagerConfigKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AzureVaultConfig extends SecretManagerConfig {
+public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Azure Client Id", required = true) @NotEmpty private String clientId;
@@ -54,6 +60,12 @@ public class AzureVaultConfig extends SecretManagerConfig {
   @Override
   public String getEncryptionServiceUrl() {
     return String.format("https://%s.vault.azure.net", getVaultName());
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getEncryptionServiceUrl()));
   }
 
   @Override

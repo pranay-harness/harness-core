@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +18,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author marklu on 2019-05-06
@@ -27,7 +33,7 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AwsSecretsManagerConfigKeys")
-public class AwsSecretsManagerConfig extends SecretManagerConfig {
+public class AwsSecretsManagerConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true) private String accessKey;
@@ -50,6 +56,12 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
   @Override
   public String getValidationCriteria() {
     return EncryptionType.AWS_SECRETS_MANAGER + "-" + getName() + "-" + getUuid();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getEncryptionServiceUrl()));
   }
 
   @Override

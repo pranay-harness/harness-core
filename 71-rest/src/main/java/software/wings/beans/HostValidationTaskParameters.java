@@ -25,7 +25,7 @@ public class HostValidationTaskParameters implements ExecutionCapabilityDemander
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     if (connectionSetting == null) {
-      return CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails);
+      return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptionDetails);
     }
     SettingValue settingValue = connectionSetting.getValue();
     int port = 22;

@@ -26,7 +26,7 @@ public class ConnectivityValidationDelegateRequest implements ExecutionCapabilit
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities =
-        CapabilityHelper.generateKmsHttpCapabilities(encryptedDataDetails);
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
     if (settingAttribute == null) {
       return executionCapabilities;
     }

@@ -18,6 +18,7 @@ public class MasterUrlFetchTaskParameter implements TaskParameters, ExecutionCap
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateKmsHttpCapabilities(containerServiceParams.getEncryptionDetails());
+    return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        containerServiceParams.getEncryptionDetails());
   }
 }
