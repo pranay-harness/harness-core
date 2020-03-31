@@ -16,7 +16,7 @@ import java.util.Set;
 @Data
 @Builder
 @Entity(value = "featureFlag", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties({"obsolete", "accountIds"})
 @FieldNameConstants(innerTypeName = "FeatureFlagKeys")
 public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {

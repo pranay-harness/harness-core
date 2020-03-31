@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,6 +38,9 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.FeatureFlagKeys;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitCommit;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
@@ -66,7 +70,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.AccountPermissionUtils;
@@ -132,8 +136,8 @@ public class AccountExportImportResource {
   private AppService appService;
   private UserService userService;
   private AuthService authService;
-  private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
+  private FeatureFlagService featureFlagService;
 
   private Map<String, Class<? extends PersistentEntity>> genericExportableEntityTypes = new LinkedHashMap<>();
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -154,9 +158,9 @@ public class AccountExportImportResource {
   @Inject
   public AccountExportImportResource(WingsMongoPersistence wingsPersistence, Morphia morphia,
       WingsMongoExportImport mongoExportImport, AccountService accountService, LicenseService licenseService,
-      AppService appService, AuthService authService, UsageRestrictionsService usageRestrictionsService,
-      UserService userService, AccountPermissionUtils accountPermissionUtils,
-      @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
+      AppService appService, AuthService authService, UserService userService,
+      AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler,
+      FeatureFlagService featureFlagService) {
     this.wingsPersistence = wingsPersistence;
     this.morphia = morphia;
     this.mongoExportImport = mongoExportImport;
@@ -166,9 +170,8 @@ public class AccountExportImportResource {
     this.appService = appService;
     this.userService = userService;
     this.authService = authService;
-    this.usageRestrictionsService = usageRestrictionsService;
     this.accountPermissionUtils = accountPermissionUtils;
-
+    this.featureFlagService = featureFlagService;
     findExportableEntityTypes();
   }
 
@@ -264,6 +267,10 @@ public class AccountExportImportResource {
             exportFilter = getGitCommitExportFilter(accountIdFilter);
           } else if (YamlChangeSet.class == entityClazz) {
             exportFilter = getYamlChangeSetExportFilter(accountIdFilter);
+          } else if (FeatureFlag.class == entityClazz) {
+            // 8. Need to migrate the feature flag also as part of account migration
+            //    https://harness.atlassian.net/browse/PL-9683
+            exportFilter = getFeatureFlagExportFilter(accountId);
           } else {
             exportFilter = accountOrAppIdsFilter;
           }
@@ -329,6 +336,16 @@ public class AccountExportImportResource {
     // 'yamlChangeSet' in QUEUED status should be exported.
     DBObject statusQueuedFilter = new BasicDBObject("status", Status.QUEUED.name());
     return new BasicDBObject("$and", Arrays.asList(accountIdFilter, statusQueuedFilter));
+  }
+
+  @VisibleForTesting
+  public DBObject getFeatureFlagExportFilter(String accountId) {
+    DBObject globallyEnabledFilter = new BasicDBObject(FeatureFlagKeys.enabled, Boolean.TRUE);
+    DBObject accountLevelEnabledFilter = new BasicDBObject(FeatureFlagKeys.accountIds, accountId);
+    DBObject accountIdAndGloballyEnabledFilter =
+        new BasicDBObject("$or", Arrays.asList(globallyEnabledFilter, accountLevelEnabledFilter));
+    DBObject obsoleteFeatureFlagFilter = new BasicDBObject(FeatureFlagKeys.obsolete, Boolean.FALSE);
+    return new BasicDBObject("$and", Arrays.asList(accountIdAndGloballyEnabledFilter, obsoleteFeatureFlagFilter));
   }
 
   private void exportConfigFilesContent(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream,
@@ -465,8 +482,14 @@ public class AccountExportImportResource {
       if (jsonArray == null) {
         logger.info("No data found for collection '{}' to import.", collectionName);
       } else {
-        ImportStatus importStatus =
-            mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
+        ImportStatus importStatus = null;
+        if (entry.getValue() == FeatureFlag.class) {
+          importStatus =
+              enableFeatureFlagForAccount(accountId, collectionName, convertJsonArrayToStringList(jsonArray));
+        } else {
+          importStatus =
+              mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
+        }
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }
@@ -509,6 +532,43 @@ public class AccountExportImportResource {
     logger.info("Finished importing data for account '{}'.", accountId);
 
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
+  }
+
+  @VisibleForTesting
+  public ImportStatus enableFeatureFlagForAccount(String accountId, String collectionName, List<String> records) {
+    int importedRecords = 0;
+    int idClashCount = 0;
+
+    for (String record : records) {
+      // Check for if there is any existing record with the same _id.
+      DBObject importRecord = BasicDBObject.parse(record);
+      String featureName = ((BasicDBObject) importRecord).getString(FeatureFlagKeys.name);
+      FeatureName featureEnum = null;
+      try {
+        featureEnum = FeatureName.valueOf(featureName);
+      } catch (IllegalArgumentException iae) {
+        logger.error(
+            "IllegalArgumentException exception occurred while fetch feature " + featureName.replaceAll("[\r\n]", ""),
+            iae);
+      }
+
+      if (featureEnum != null) {
+        if (featureFlagService.isEnabled(featureEnum, accountId)) {
+          logger.info("Feature {} is already enabled for accountId {} or is enabled globally",
+              featureName.replaceAll("[\r\n]", ""), accountId);
+          idClashCount++;
+        } else {
+          featureFlagService.enableAccount(featureEnum, accountId);
+          importedRecords++;
+        }
+      }
+    }
+
+    return ImportStatus.builder()
+        .collectionName(collectionName)
+        .imported(importedRecords)
+        .idClashes(idClashCount)
+        .build();
   }
 
   private void updateAdminUserPassword(String accountId, String adminUserEmail, String adminPassword) {
