@@ -70,7 +70,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -264,7 +264,7 @@ public abstract class NodeSelectState extends State {
     if (!selectionParams.isSelectSpecificHosts()) {
       builderForAllInstances.withCount(totalAvailableInstances);
     }
-    return builderForAllInstances.withExcludedServiceInstanceIds(Collections.emptyList()).build();
+    return builderForAllInstances.withExcludedServiceInstanceIds(new ArrayList<>()).build();
   }
 
   @VisibleForTesting
@@ -290,7 +290,7 @@ public abstract class NodeSelectState extends State {
       List<Host> hosts = emptyIfNull(hostService.getHostsByHostIds(appId, envId, hostIds));
       return hosts.stream().map(host -> buildInstanceDetailFromHost(host, isNewInstance)).collect(toList());
     }
-    return Collections.emptyList();
+    return new ArrayList<>();
   }
 
   @VisibleForTesting
