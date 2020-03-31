@@ -11,6 +11,7 @@ import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
+import migrations.all.AddTagsForServicesMigration;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.AmendCorruptedEncryptedServiceVariable;
@@ -158,6 +159,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(91, BaseMigration.class))
         .add(Pair.of(92, UpdateInstanceInfoWithLastArtifactIdMigration.class))
         .add(Pair.of(93, K8sBGTimeoutMigration.class))
+        .add(Pair.of(94, AddTagsForServicesMigration.class))
         .build();
   }
 }
