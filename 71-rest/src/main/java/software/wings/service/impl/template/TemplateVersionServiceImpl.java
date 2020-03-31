@@ -14,37 +14,52 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
+import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Inject private WingsPersistence wingsPersistence;
-
+  @Inject private ImportedTemplateService importedTemplateService;
   @Override
   public PageResponse<TemplateVersion> listTemplateVersions(PageRequest<TemplateVersion> pageRequest) {
     return wingsPersistence.query(TemplateVersion.class, pageRequest);
   }
 
   @Override
-  public List<TemplateVersion> listImportedTemplateVersions(String templateId, String accountId) {
-    return wingsPersistence.createQuery(TemplateVersion.class)
-        .filter(TemplateVersionKeys.accountId, accountId)
-        .filter(TemplateVersionKeys.templateUuid, templateId)
-        .filter(TemplateVersionKeys.changeType, IMPORTED)
-        .order(Sort.ascending(TemplateVersionKeys.version))
-        .asList();
+  public ImportedCommand listImportedTemplateVersions(String commandId, String commandStoreId, String accountId) {
+    Template template = importedTemplateService.getTemplateByCommandId(commandId, commandStoreId, accountId);
+    List<TemplateVersion> templateVersions = null;
+    if (template != null) {
+      templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
+                             .filter(TemplateVersionKeys.accountId, accountId)
+                             .filter(TemplateVersionKeys.templateUuid, template.getUuid())
+                             .filter(TemplateVersionKeys.changeType, IMPORTED)
+                             .order(Sort.ascending(TemplateVersionKeys.version))
+                             .asList();
+    }
+    return importedTemplateService.makeImportedCommandObject(
+        commandId, commandStoreId, templateVersions, accountId, template);
   }
 
   @Override
-  public Map<String, String> listLatestVersionOfImportedTemplates(List<String> templateUuids, String accountId) {
+  public List<ImportedCommand> listLatestVersionOfImportedTemplates(
+      List<String> commandIds, String commandStoreId, String accountId) {
+    Map<String, Template> commandIdTemplateMap =
+        importedTemplateService.getCommandIdTemplateMap(commandIds, commandStoreId, accountId);
+    List<String> templateUuids =
+        commandIdTemplateMap.values().stream().map(Template::getUuid).collect(Collectors.toList());
     List<TemplateVersion> templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
                                                  .filter(TemplateVersionKeys.accountId, accountId)
                                                  .field(TemplateVersionKeys.templateUuid)
@@ -52,16 +67,15 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                                                  .filter(TemplateVersionKeys.changeType, IMPORTED)
                                                  .order(Sort.descending(TemplateVersionKeys.version))
                                                  .asList();
-
-    Map<String, String> templateUuidLatestVersionMap = new HashMap<>();
+    Map<String, TemplateVersion> templateUuidLatestVersionMap = new HashMap<>();
     // Since versions are sorted descending first template will be latest.
     for (TemplateVersion templateVersion : templateVersions) {
       if (!templateUuidLatestVersionMap.containsKey(templateVersion.getTemplateUuid())) {
-        templateUuidLatestVersionMap.put(
-            templateVersion.getTemplateUuid(), String.valueOf(templateVersion.getVersion()));
+        templateUuidLatestVersionMap.put(templateVersion.getTemplateUuid(), templateVersion);
       }
     }
-    return templateUuidLatestVersionMap;
+    return importedTemplateService.makeImportedCommandObjectWithLatestVersion(
+        templateUuidLatestVersionMap, commandIds, commandStoreId, commandIdTemplateMap, accountId);
   }
 
   @Override

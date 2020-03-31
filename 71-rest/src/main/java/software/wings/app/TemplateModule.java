@@ -7,6 +7,7 @@ import software.wings.beans.template.TemplateType;
 import software.wings.service.impl.template.AbstractTemplateProcessor;
 import software.wings.service.impl.template.ArtifactSourceTemplateProcessor;
 import software.wings.service.impl.template.HttpTemplateProcessor;
+import software.wings.service.impl.template.ImportedTemplateServiceImpl;
 import software.wings.service.impl.template.PcfCommandTemplateProcessor;
 import software.wings.service.impl.template.ShellScriptTemplateProcessor;
 import software.wings.service.impl.template.SshCommandTemplateProcessor;
@@ -14,6 +15,7 @@ import software.wings.service.impl.template.TemplateFolderServiceImpl;
 import software.wings.service.impl.template.TemplateGalleryServiceImpl;
 import software.wings.service.impl.template.TemplateServiceImpl;
 import software.wings.service.impl.template.TemplateVersionServiceImpl;
+import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -26,7 +28,7 @@ public class TemplateModule extends AbstractModule {
     bind(TemplateService.class).to(TemplateServiceImpl.class);
     bind(TemplateFolderService.class).to(TemplateFolderServiceImpl.class);
     bind(TemplateVersionService.class).to(TemplateVersionServiceImpl.class);
-
+    bind(ImportedTemplateService.class).to(ImportedTemplateServiceImpl.class);
     MapBinder<String, AbstractTemplateProcessor> templateServiceBinder =
         MapBinder.newMapBinder(binder(), String.class, AbstractTemplateProcessor.class);
 
