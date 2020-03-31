@@ -66,6 +66,9 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(null);
     clusterRecordService.upsert(clusterRecord);
     verify(subject, times(1)).fireInform(any(), eq(clusterRecordWithId));
+    when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(ClusterRecord.builder().build());
+    clusterRecordService.upsert(clusterRecord);
+    verify(subject, times(2)).fireInform(any(), eq(clusterRecordWithId));
   }
 
   @Test
