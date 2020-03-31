@@ -1115,6 +1115,18 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  public boolean checkApplicationNameIsValid(GitFileChange gitFileChange) {
+    String filePath = gitFileChange.getFilePath();
+
+    String appFolderPath = APPLICATION_FOLDER_PATH + PATH_DELIMITER;
+    if (!filePath.contains(appFolderPath)) {
+      return false;
+    }
+    String appPath = filePath.substring(appFolderPath.length());
+    return appPath.contains("/");
+  }
+
+  @Override
   public void delete(String accountId, String entityId, EntityType entityType) {
     YamlGitConfig yamlGitConfig = get(accountId, entityId, entityType);
     if (yamlGitConfig == null) {

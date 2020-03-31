@@ -141,6 +141,12 @@ public class GitChangeSetHandler {
       if (yamlGitService.checkApplicationChange(gitFileChange)) {
         // Handles application
 
+        if (!yamlGitService.checkApplicationNameIsValid(gitFileChange)) {
+          logger.info(
+              "Skipping the file {} from processing as it contains invalid app name", gitFileChange.getFilePath());
+          continue;
+        }
+
         String appName = yamlGitService.obtainAppNameFromGitFileChange(gitFileChange);
         notNullCheck("Application name cannot be null", USER);
 
