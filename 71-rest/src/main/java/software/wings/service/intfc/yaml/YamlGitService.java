@@ -188,6 +188,8 @@ public interface YamlGitService {
 
   String obtainAppNameFromGitFileChange(GitFileChange gitFileChange);
 
+  boolean checkApplicationNameIsValid(GitFileChange gitFileChange);
+
   void delete(String accountId, String entityId, EntityType entityType);
 
   GitConfig getGitConfig(YamlGitConfig ygs);
