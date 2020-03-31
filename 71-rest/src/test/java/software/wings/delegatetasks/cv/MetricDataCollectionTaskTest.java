@@ -40,6 +40,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -68,10 +69,12 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   public void testSavingHeartbeatsForAllHosts() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3", "host4"));
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host1", "default");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host2", "default");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host3", "group1");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host4", "group2");
+    Map<String, String> hostToGroupNameMap = new HashMap<>();
+    hostToGroupNameMap.put("host1", "default");
+    hostToGroupNameMap.put("host2", "default");
+    hostToGroupNameMap.put("host3", "group1");
+    hostToGroupNameMap.put("host4", "group2");
+    when(metricsDataCollectionInfo.getHostsToGroupNameMap()).thenReturn(hostToGroupNameMap);
     Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
     when(metricsDataCollectionInfo.getEndTime()).thenReturn(now.plus(1, ChronoUnit.MINUTES));
     when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
@@ -104,10 +107,12 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.isShouldSendHeartbeat()).thenReturn(false);
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3", "host4"));
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host1", "default");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host2", "default");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host3", "group1");
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("host4", "group2");
+    Map<String, String> hostToGroupNameMap = new HashMap<>();
+    hostToGroupNameMap.put("host1", "default");
+    hostToGroupNameMap.put("host2", "default");
+    hostToGroupNameMap.put("host3", "group1");
+    hostToGroupNameMap.put("host4", "group2");
+    when(metricsDataCollectionInfo.getHostsToGroupNameMap()).thenReturn(hostToGroupNameMap);
     Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
     when(metricsDataCollectionInfo.getEndTime()).thenReturn(now.plus(1, ChronoUnit.MINUTES));
     when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
@@ -126,7 +131,9 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   public void testCollectAndSaveData_withoutHostWithAbsoluteMinute() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet());
-    metricsDataCollectionInfo.getHostsToGroupNameMap().put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    Map<String, String> hostToGroupNameMap = new HashMap<>();
+    hostToGroupNameMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    when(metricsDataCollectionInfo.getHostsToGroupNameMap()).thenReturn(hostToGroupNameMap);
     Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
     when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
     when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
@@ -248,17 +255,17 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
         .hasMessage("Unable to save metrics elements. Manager API returned false");
   }
 
-  public MetricsDataCollectionInfo createMetricDataCollectionInfo() {
+  private MetricsDataCollectionInfo createMetricDataCollectionInfo() {
     StateType stateType = StateType.NEW_RELIC;
     MetricsDataCollectionInfo dataCollectionInfo = mock(MetricsDataCollectionInfo.class);
     when(dataCollectionInfo.getAccountId()).thenReturn(UUID.randomUUID().toString());
     when(dataCollectionInfo.getApplicationId()).thenReturn(UUID.randomUUID().toString());
     when(dataCollectionInfo.getStateExecutionId()).thenReturn(UUID.randomUUID().toString());
     when(dataCollectionInfo.getStateType()).thenReturn(stateType);
+    when(dataCollectionInfo.getHostsToGroupNameMap()).thenReturn(new HashMap<>());
     Instant now = Instant.now();
     when(dataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
     when(dataCollectionInfo.getEndTime()).thenReturn(now);
-    when(dataCollectionInfo.getHostsToGroupNameMap()).thenReturn(new HashMap<>());
     when(dataCollectionInfo.isShouldSendHeartbeat()).thenReturn(true);
     return dataCollectionInfo;
   }

@@ -796,7 +796,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         (AppDynamicsDataCollectionInfoV2) spyState.createDataCollectionInfo(executionContext, hostMap);
 
     assertThat(dataCollectionInfoV2).isNotNull();
-    assertThat(dataCollectionInfoV2.getHostsToGroupNameMap()).isEqualToComparingFieldByField(hostMap);
+    assertThat(dataCollectionInfoV2.getHostsToGroupNameMap()).isEqualTo(hostMap);
     assertThat(dataCollectionInfoV2.getConnectorId()).isEqualTo(connectorId);
     assertThat(dataCollectionInfoV2.getAppDynamicsApplicationId()).isEqualTo(appId);
     assertThat(dataCollectionInfoV2.getAppDynamicsTierId()).isEqualTo(tierId);
@@ -838,7 +838,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         (AppDynamicsDataCollectionInfoV2) spyState.createDataCollectionInfo(executionContext, hostMap);
 
     assertThat(dataCollectionInfoV2).isNotNull();
-    assertThat(dataCollectionInfoV2.getHostsToGroupNameMap()).isEqualToComparingFieldByField(hostMap);
+    assertThat(dataCollectionInfoV2.getHostsToGroupNameMap()).isEqualTo(hostMap);
     assertThat(dataCollectionInfoV2.getConnectorId()).isEqualTo(connectorId);
     assertThat(dataCollectionInfoV2.getAppDynamicsApplicationId()).isEqualTo(appId);
     assertThat(dataCollectionInfoV2.getAppDynamicsTierId()).isEqualTo(tierId);

@@ -21,6 +21,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.MetricsDataCollectionInfo.MetricsDataCollectionInfoKeys;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -140,6 +142,44 @@ public class AnalysisContextTest extends WingsBaseTest {
     final AnalysisContext savedAnalysisContext = wingsPersistence.get(AnalysisContext.class, analysisContextId);
     assertThat(savedAnalysisContext.getControlNodes().keySet()).isEqualTo(controlNodes);
     assertThat(savedAnalysisContext.getTestNodes().keySet()).isEqualTo(testNodes);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisContext_withDotsInHostnameV2() {
+    Set<String> controlNodes = Sets.newHashSet("harness.todolist.control1", "harness.todolist.control2");
+    Set<String> testNodes = Sets.newHashSet("harness.todolist.test1", "harness.todolist.test2");
+    Map<String, String> hostToGroupNameMap = new HashMap<>();
+    hostToGroupNameMap.put("harness.todolist.control1", "default");
+    hostToGroupNameMap.put("harness.todolist.control2", "default");
+    hostToGroupNameMap.put("harness.todolist.test1", "default");
+    hostToGroupNameMap.put("harness.todolist.test2", "default");
+
+    final AnalysisContext analysisContext = AnalysisContext.builder()
+                                                .stateExecutionId(generateUuid())
+                                                .controlNodes(nodesWithGroups(controlNodes))
+                                                .testNodes(nodesWithGroups(testNodes))
+                                                .build();
+    analysisContext.setDataCollectionInfov2(
+        NewRelicDataCollectionInfoV2.builder().hostsToGroupNameMap(hostToGroupNameMap).build());
+
+    final String analysisContextId = wingsPersistence.save(analysisContext);
+    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "verificationServiceTask");
+    final BasicDBObject dbObject = (BasicDBObject) collection.findOne();
+    dbObject.get(AnalysisContextKeys.controlNodes);
+    verifyDotsReplacedWithUniCode((BasicDBObject) dbObject.get(AnalysisContextKeys.controlNodes), controlNodes);
+    verifyDotsReplacedWithUniCode((BasicDBObject) dbObject.get(AnalysisContextKeys.testNodes), testNodes);
+    verifyDotsReplacedWithUniCode(
+        (BasicDBObject) ((BasicDBObject) dbObject.get(AnalysisContextKeys.dataCollectionInfov2))
+            .get(MetricsDataCollectionInfoKeys.hostsToGroupNameMap),
+        hostToGroupNameMap.keySet());
+
+    final AnalysisContext savedAnalysisContext = wingsPersistence.get(AnalysisContext.class, analysisContextId);
+    assertThat(savedAnalysisContext.getControlNodes().keySet()).isEqualTo(controlNodes);
+    assertThat(savedAnalysisContext.getTestNodes().keySet()).isEqualTo(testNodes);
+    assertThat(((NewRelicDataCollectionInfoV2) savedAnalysisContext.getDataCollectionInfov2()).getHostsToGroupNameMap())
+        .isEqualTo(hostToGroupNameMap);
   }
 
   private void verifyDotsReplacedWithUniCode(BasicDBObject nodesInDb, Set<String> nodesToVerify) {
