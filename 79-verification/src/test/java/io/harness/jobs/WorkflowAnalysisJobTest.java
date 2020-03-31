@@ -7,8 +7,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import retrofit2.Call;
@@ -91,7 +91,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   private long logAnalysisClusteringTestMinute = 5;
   private long logAnalysisMinute = 4;
 
-  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Spy private VerificationManagerClientHelper managerClientHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
 
@@ -147,6 +147,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagRestMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(featureFlagRestMock);
+    doReturn(false).when(managerClientHelper).isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, accountId);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
     when(managerVersionsCall.clone()).thenReturn(managerVersionsCall);
@@ -319,7 +320,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     ArgumentCaptor<VerificationDataAnalysisResponse> taskCaptor =
         ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
-    verify(verificationManagerClient).sendNotifyForVerificationState(anyMap(), anyString(), taskCaptor.capture());
+    verify(managerClientHelper).notifyManagerForVerificationAnalysis(any(), taskCaptor.capture());
     assertThat(taskCaptor.getValue().getExecutionStatus().name()).isEqualTo(ExecutionStatus.ERROR.name());
   }
 

@@ -12,6 +12,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.springframework.web.client.HttpServerErrorException.InternalServerError;
 import retrofit2.Call;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -65,6 +66,10 @@ public class VerificationManagerClientHelper {
       String accountId, String correlationId, VerificationDataAnalysisResponse response) {
     callManagerWithRetry(
         managerClient.sendNotifyForVerificationState(getManagerHeader(accountId, null), correlationId, response));
+  }
+
+  public boolean isFeatureFlagEnabled(FeatureName featureName, String accountId) {
+    return callManagerWithRetry(managerClient.isFeatureEnabled(featureName, accountId)).getResource();
   }
 
   public <T> T callManagerWithRetry(final Call<T> call) {

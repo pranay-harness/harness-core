@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.FeatureName;
@@ -78,7 +80,7 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
   private Set<String> controlNodes = Sets.newHashSet("harness.todolist.control1", "harness.todolist.control2");
   private Set<String> testNodes = Sets.newHashSet("harness.todolist.test1", "harness.todolist.test2");
 
-  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Spy private VerificationManagerClientHelper managerClientHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
 
@@ -120,6 +122,7 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
         .thenReturn(featureFlagFalseMock);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(featureFlagFalseMock);
+    doReturn(false).when(managerClientHelper).isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, accountId);
 
     final Call<RestResponse<List<String>>> managerVersionsCall = mock(Call.class);
     when(managerVersionsCall.clone()).thenReturn(managerVersionsCall);

@@ -82,6 +82,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -127,6 +128,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
   @Inject private DataStoreService dataStoreService;
+  @Inject private CVActivityLogService cvActivityLogService;
   private AnalysisService mgrAnalysisService = new AnalysisServiceImpl();
   private Random r;
   private String appId;
@@ -1404,7 +1406,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         VerificationManagerClient client, VerificationManagerClientHelper managerClient,
         WingsPersistence wingsPersistence) {
       super(analysisService, context, Optional.of(jobExecutionContext), learningEngineService, client, managerClient,
-          dataStoreService);
+          dataStoreService, cvActivityLogService);
       this.wingsPersistence = wingsPersistence;
       stateExecutionId = context.getStateExecutionId();
     }

@@ -82,6 +82,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -120,6 +121,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private VerificationManagerClient mgrClient;
   @Inject private VerificationManagerClientHelper managerClient;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private CVActivityLogService cvActivityLogService;
   private MetricDataAnalysisService metricDataAnalysisService;
 
   private String newRelicConfigId;
@@ -678,7 +680,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        Optional.of(jobExecutionContext))
+        Optional.of(jobExecutionContext), cvActivityLogService)
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -812,7 +814,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        Optional.of(jobExecutionContext))
+        Optional.of(jobExecutionContext), cvActivityLogService)
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -949,7 +951,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        Optional.of(jobExecutionContext))
+        Optional.of(jobExecutionContext), cvActivityLogService)
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -1110,7 +1112,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        Optional.of(jobExecutionContext))
+        Optional.of(jobExecutionContext), cvActivityLogService)
         .run();
 
     // TODO I know....

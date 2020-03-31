@@ -15,12 +15,14 @@ import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +37,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
 
   @Transient @Inject private VerificationManagerClientHelper managerClientHelper;
   @Transient @Inject private VerificationManagerClient managerClient;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Inject private DataStoreService dataStoreService;
 
@@ -44,7 +47,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
         "Handling the feedback for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
     try {
       new FeedbackAnalysisTask(analysisService, analysisContext, Optional.empty(), learningEngineService, managerClient,
-          managerClientHelper, dataStoreService)
+          managerClientHelper, dataStoreService, cvActivityLogService)
           .call();
     } catch (Exception e) {
       logger.error("Feedback analysis iterator failed for {}", analysisContext.getStateExecutionId(), e);
@@ -61,6 +64,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
     private DataStoreService dataStoreService;
+    private CVActivityLogService cvActivityLogService;
 
     @Override
     public Long call() throws Exception {
@@ -73,6 +77,12 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn("Feedback analysis : state is not valid. Stopping cron." + context.getStateExecutionId());
           return -1L;
+        }
+
+        if (managerClientHelper.isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, context.getAccountId())) {
+          cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+              .info("Continuous Verification is disabled for your account. Please contact harness support.");
+          completeCron = true;
         }
 
         logAnalysisMinute = analysisService.getLastWorkflowAnalysisMinute(
