@@ -123,8 +123,9 @@ public class ClusterRecordHandlerTest extends CategoryTest {
         InfrastructureDefinition.builder().infrastructure(AwsEcsInfrastructure.builder().build()).build();
     ecsInfrastructureMapping =
         EcsInfrastructureMapping.builder().accountId(accountId).region("REGION").clusterName("CLUSTER_NAME").build();
-    when(infrastructureDefinitionDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureDefinition));
-    when(infrastructureMappingDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureMapping));
+    when(infrastructureDefinitionDao.list(eq(cloudProviderId)))
+        .thenReturn(Arrays.asList(ecsInfrastructureDefinition, null));
+    when(infrastructureMappingDao.list(eq(cloudProviderId))).thenReturn(Arrays.asList(ecsInfrastructureMapping, null));
 
     handler.onSaved(awsSettingAttribute);
     verify(clusterRecordService, times(2)).upsert(isA(ClusterRecord.class));

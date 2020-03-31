@@ -81,12 +81,14 @@ public class ClusterRecordHandler
                                   .map(Collection::stream)
                                   .orElseGet(Stream::empty)
                                   .map(id -> clusterRecordService.from(id))
+                                  .filter(cr -> cr != null)
                                   .collect(Collectors.toList()));
         List<InfrastructureMapping> infrastructureMappings = infrastructureMappingDao.list(cloudProvider.getUuid());
         clusterRecords.addAll(Optional.ofNullable(infrastructureMappings)
                                   .map(Collection::stream)
                                   .orElseGet(Stream::empty)
                                   .map(im -> clusterRecordService.from(im))
+                                  .filter(cr -> cr != null)
                                   .collect(Collectors.toList()));
         break;
       case "KUBERNETES_CLUSTER":
