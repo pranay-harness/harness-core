@@ -12,6 +12,7 @@ infrastructure:
     region: ${terraform.region}
     tags: tag
   hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  hostConnectionType: PRIVATE_DNS
   hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
   setDesiredCapacity: false
   useAutoScalingGroup: false
