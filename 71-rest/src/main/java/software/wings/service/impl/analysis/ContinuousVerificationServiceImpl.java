@@ -114,6 +114,7 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMResponseParser;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -243,6 +244,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private PrometheusAnalysisService prometheusAnalysisService;
+  @Inject private MLServiceUtils mlServiceUtils;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -1576,10 +1578,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // loop for each metric
     for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
       String url = entry.getKey();
-      String hostname = config.getInstanceName();
-      if (config.getInstanceElement() != null) {
-        hostname = config.getInstanceElement().getHostName();
-      }
+      String hostname = mlServiceUtils.getHostName(config);
       if (url.contains(VERIFICATION_HOST_PLACEHOLDER)) {
         url = url.replace(VERIFICATION_HOST_PLACEHOLDER, hostname);
       }
@@ -1634,10 +1633,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     APMValidateCollectorConfig apmValidateCollectorConfig = datadogConfig.createLogAPMValidateCollectorConfig();
     apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
-    Optional<String> hostName = Optional.empty();
-    if (config.getInstanceElement() != null) {
-      hostName = Optional.ofNullable(config.getInstanceElement().getHostName());
-    }
+    Optional<String> hostName = Optional.ofNullable(mlServiceUtils.getHostName(config));
     long from = Instant.now().minus(17, ChronoUnit.MINUTES).toEpochMilli();
     long to = Instant.now().minus(2, ChronoUnit.MINUTES).toEpochMilli();
     Map<String, Object> body = createDatadogBodyMapForLogsApi(

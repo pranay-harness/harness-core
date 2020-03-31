@@ -79,7 +79,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     String hostName = null;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
+      hostName = mlServiceUtils.getHostName(setupTestNodeData);
     }
 
     try {

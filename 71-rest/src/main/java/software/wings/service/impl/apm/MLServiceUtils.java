@@ -3,11 +3,10 @@ package software.wings.service.impl.apm;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.WorkflowExecution;
@@ -20,6 +19,8 @@ import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
+
+import javax.annotation.Nullable;
 
 /**
  * Utility files used by Verification services
@@ -35,7 +36,17 @@ public class MLServiceUtils {
    * @param nodeData
    * @return hostName
    */
-  public String getHostNameFromExpression(final SetupTestNodeData nodeData) {
+  @Nullable
+  public String getHostName(final SetupTestNodeData nodeData) {
+    if (nodeData.isServiceLevel()) {
+      // // this can return null because service guard does not set it.
+      return null;
+    }
+    if (nodeData.getInstanceElement() == null) {
+      // The hostname field is editable so user can enter some value there.
+      // Also for the fist time execution
+      return nodeData.getInstanceName();
+    }
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter("appId", nodeData.getAppId())
                                               .filter(WorkflowExecutionKeys.workflowId, nodeData.getWorkflowId())
@@ -43,29 +54,21 @@ public class MLServiceUtils {
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
 
-    if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
-          .addParam("reason", "No successful execution exists for the workflow.");
-    }
-
-    try {
-      StateExecutionInstance stateExecutionInstance =
-          wingsPersistence.createQuery(StateExecutionInstance.class)
-              .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
-              .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE)
-              .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
-              .get();
-      ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
-      String hostName = isEmpty(nodeData.getHostExpression())
-          ? nodeData.getInstanceName()
-          : executionContext.renderExpression(nodeData.getHostExpression(),
-                StateExecutionContext.builder()
-                    .contextElements(Lists.newArrayList(nodeData.getInstanceElement()))
-                    .build());
-      logger.info("rendered host is {}", hostName);
-      return hostName;
-    } catch (RuntimeException e) {
-      throw new WingsException(e).addContext(SetupTestNodeData.class, nodeData);
-    }
+    Preconditions.checkNotNull(workflowExecution, "No successful execution exists for the workflow.");
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
+            .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE)
+            .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
+            .get();
+    ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
+    String hostName = isEmpty(nodeData.getHostExpression())
+        ? nodeData.getInstanceName()
+        : executionContext.renderExpression(nodeData.getHostExpression(),
+              StateExecutionContext.builder()
+                  .contextElements(Lists.newArrayList(nodeData.getInstanceElement()))
+                  .build());
+    logger.info("rendered host is {}", hostName);
+    return hostName;
   }
 }

@@ -12,6 +12,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,6 +59,7 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMParserTest;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
@@ -103,6 +105,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private CloudWatchService cloudWatchService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private CVActivityLogService cvActivityLogService;
+  @Mock MLServiceUtils mlServiceUtils;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
   @Inject private APMDelegateService apmDelegateService;
@@ -176,7 +179,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
-
+    when(mlServiceUtils.getHostName(eq(nodeData))).thenReturn("sampleHostname");
     DatadogConfig ddConfig = DatadogConfig.builder().url("sampleUrl.com").build();
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(ddConfig);
@@ -213,7 +216,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
-
+    when(mlServiceUtils.getHostName(eq(nodeData))).thenReturn("sampleHostname");
     DatadogConfig ddConfig = DatadogConfig.builder().url("sampleUrl.com").build();
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(ddConfig);

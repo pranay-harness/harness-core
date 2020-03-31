@@ -61,7 +61,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
         .thenReturn(prometheusDelegateService);
     when(delegateProxyFactory.get(eq(APMDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(apmDelegateService);
-    when(mlServiceUtils.getHostNameFromExpression(any())).thenReturn("dummyHostName");
+    when(mlServiceUtils.getHostName(any())).thenReturn("dummyHostName");
     PrometheusConfig config = PrometheusConfig.builder().url("http://34.68.138.55:8080/").build();
     when(settingsService.get(settingId))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(config).build());

@@ -78,7 +78,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
           .build();
     }
 
-    String hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
+    String hostName = mlServiceUtils.getHostName(setupTestNodeData);
     List<LogElement> responseWithHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,

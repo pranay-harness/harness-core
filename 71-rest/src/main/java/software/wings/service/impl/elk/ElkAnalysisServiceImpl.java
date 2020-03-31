@@ -149,7 +149,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     }
 
     String hostNameField = elkSetupTestNodeData.getHostNameField();
-    String hostName = mlServiceUtils.getHostNameFromExpression(elkSetupTestNodeData);
+    String hostName = mlServiceUtils.getHostName(elkSetupTestNodeData);
 
     logger.info("Hostname Expression : " + hostName);
     final ElkLogFetchRequest elkFetchRequestWithHost =
