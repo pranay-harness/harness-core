@@ -168,6 +168,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                                               .add(GitCommit.Status.FAILED)
                                                                               .add(GitCommit.Status.SKIPPED)
                                                                               .build();
+  private static final List<String> NULL_AND_EMPTY = Arrays.asList(null, "");
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -1270,7 +1271,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
     final Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
                                           .filter(ACCOUNT_ID_KEY, accountId)
-                                          .filter(GitSyncErrorKeys.fullSyncPath, Boolean.FALSE)
+                                          .field(GitSyncErrorKeys.gitCommitId)
+                                          .notIn(NULL_AND_EMPTY)
                                           .filter(GitSyncErrorKeys.branchName, branchName)
                                           .filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId)
                                           .field(CreatedAtAware.CREATED_AT_KEY)

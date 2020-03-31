@@ -231,17 +231,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public List<GitFileChange> traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn,
-      String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors) {
-    path = path + PATH_DELIMITER + fn.getName();
+      final String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors) {
+    final String finalPath = path + (isNotBlank(path) ? PATH_DELIMITER : "") + fn.getName();
 
     for (DirectoryNode dn : fn.getChildren()) {
-      getGitFileChange(dn, path, accountId, includeFiles, gitFileChanges, failFast, listOfYamlErrors, true);
+      getGitFileChange(dn, finalPath, accountId, includeFiles, gitFileChanges, failFast, listOfYamlErrors, true);
 
       if (dn instanceof FolderNode) {
-        traverseDirectory(gitFileChanges, accountId, (FolderNode) dn, path, includeFiles, failFast, listOfYamlErrors);
+        traverseDirectory(
+            gitFileChanges, accountId, (FolderNode) dn, finalPath, includeFiles, failFast, listOfYamlErrors);
       }
     }
-
     return gitFileChanges;
   }
 
