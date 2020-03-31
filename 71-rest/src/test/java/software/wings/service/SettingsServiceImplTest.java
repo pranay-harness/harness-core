@@ -17,10 +17,12 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -75,6 +77,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -89,6 +92,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
@@ -991,6 +995,24 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testlistAllSettingAttributesByType() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName("NAME")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withValue(GcpConfig.builder().accountId("ACCOUNT_ID").build())
+                                            .build();
+    settingsService.save(settingAttribute);
+    when(mockWingsPersistence.query(eq(SettingAttribute.class), argThat(Matchers.hasProperty("offset", equalTo("0")))))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(settingAttribute)).build());
+    when(mockWingsPersistence.query(
+             eq(SettingAttribute.class), argThat(Matchers.hasProperty("offset", equalTo("1000")))))
+        .thenReturn(aPageResponse().withResponse(Collections.emptyList()).build());
+    List<SettingAttribute> settingAttributes = settingsService.listAllSettingAttributesByType(ACCOUNT_ID, "GCP");
+    assertThat(settingAttributes.size()).isEqualTo(1);
+  }
+
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testValidateConnectivityWithReferencedSecrets() {

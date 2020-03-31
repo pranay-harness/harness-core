@@ -37,6 +37,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
       String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
       String artifactStreamSearchString, int maxArtifactStreams, ArtifactType artifactType);
 
+  List<SettingAttribute> listAllSettingAttributesByType(String accountId, String type);
+
   List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest);
 

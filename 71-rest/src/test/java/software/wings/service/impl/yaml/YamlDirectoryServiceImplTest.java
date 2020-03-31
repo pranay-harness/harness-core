@@ -30,6 +30,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.common.TemplateConstants;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion;
@@ -47,6 +48,7 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
   @Mock private YamlGitService yamlGitSyncService;
   @Mock private TemplateService templateService;
   @Mock private AppService appService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService = new YamlDirectoryServiceImpl();
   @Before

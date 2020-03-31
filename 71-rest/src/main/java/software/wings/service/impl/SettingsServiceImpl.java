@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -21,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -213,6 +215,27 @@ public class SettingsServiceImpl implements SettingsService {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public List<SettingAttribute> listAllSettingAttributesByType(String accountId, String type) {
+    List<SettingAttribute> settingAttributeList = new ArrayList<>();
+    Integer limit = DEFAULT_UNLIMITED;
+    Integer previousOffset = 0;
+    PageRequest<SettingAttribute> pageRequest = aPageRequest()
+                                                    .addFilter(ACCOUNT_ID_KEY, EQ, accountId)
+                                                    .addFilter(SettingAttributeKeys.valueType, EQ, type)
+                                                    .withLimit(String.valueOf(limit))
+                                                    .withOffset(String.valueOf(previousOffset))
+                                                    .build();
+    PageResponse<SettingAttribute> pageResponse;
+    do {
+      pageResponse = list(pageRequest, null, null);
+      settingAttributeList.addAll(pageResponse.getResponse());
+      pageRequest.setOffset(String.valueOf(previousOffset + limit));
+      previousOffset += limit;
+    } while (!pageResponse.isEmpty());
+    return settingAttributeList;
   }
 
   @Override

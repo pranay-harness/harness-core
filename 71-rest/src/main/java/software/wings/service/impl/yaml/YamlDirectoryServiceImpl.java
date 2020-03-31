@@ -122,6 +122,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -208,6 +209,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private TemplateService templateService;
+  @Inject private AuthService authService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -502,7 +504,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         directoryPath.clone().add(tagsFileName), yamlGitSyncService, Type.TAGS));
 
     List<Future<FolderNode>> futureList = new ArrayList<>();
-
+    User user = UserThreadLocal.get();
     if (yamlDirectoryFetchPayload.isAddApplication()) {
       futureList.add(executorService.submit(
           ()
@@ -511,19 +513,25 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                   yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(), yamlDirectoryFetchPayload.getAppId())));
     }
 
-    futureList.add(executorService.submit(() -> doCloudProviders(accountId, directoryPath.clone())));
+    futureList.add(
+        executorService.submit(() -> UserThreadLocal.set(user), doCloudProviders(accountId, directoryPath.clone())));
 
-    futureList.add(executorService.submit(() -> doArtifactServers(accountId, directoryPath.clone())));
+    futureList.add(
+        executorService.submit(() -> UserThreadLocal.set(user), doArtifactServers(accountId, directoryPath.clone())));
 
-    futureList.add(executorService.submit(() -> doCollaborationProviders(accountId, directoryPath.clone())));
+    futureList.add(executorService.submit(
+        () -> UserThreadLocal.set(user), doCollaborationProviders(accountId, directoryPath.clone())));
 
-    futureList.add(executorService.submit(() -> doVerificationProviders(accountId, directoryPath.clone())));
+    futureList.add(executorService.submit(
+        () -> UserThreadLocal.set(user), doVerificationProviders(accountId, directoryPath.clone())));
 
-    futureList.add(executorService.submit(() -> doNotificationGroups(accountId, directoryPath.clone())));
+    futureList.add(executorService.submit(
+        () -> UserThreadLocal.set(user), doNotificationGroups(accountId, directoryPath.clone())));
 
     futureList.add(executorService.submit(()
-                                              -> doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
-                                                  GLOBAL_TEMPLATE_LIBRARY_FOLDER, Type.GLOBAL_TEMPLATE_LIBRARY)));
+                                              -> UserThreadLocal.set(user),
+        doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER,
+            Type.GLOBAL_TEMPLATE_LIBRARY)));
 
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
@@ -1811,10 +1819,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doCloudProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
+    List<SettingAttribute> settingAttributes;
+    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    } else {
+      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
+    }
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      List<SettingAttribute> settingAttributes =
-          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-
       if (settingAttributes != null) {
         // iterate over providers
         for (SettingAttribute settingAttribute : settingAttributes) {
@@ -1826,8 +1837,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
       }
     } else {
-      List<SettingAttribute> settingAttributes =
-          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
       if (settingAttributes != null) {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath cpPath = directoryPath.clone();
@@ -1896,10 +1905,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doArtifactServerType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
+    List<SettingAttribute> settingAttributes;
+    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    } else {
+      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
+    }
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      List<SettingAttribute> settingAttributes =
-          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-
       if (settingAttributes != null) {
         // iterate over providers
         for (SettingAttribute settingAttribute : settingAttributes) {
@@ -1911,9 +1923,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
       }
     } else {
-      List<SettingAttribute> settingAttributes =
-          settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-
       if (settingAttributes != null) {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath asPath = directoryPath.clone();
@@ -1965,7 +1974,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doCollaborationProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    List<SettingAttribute> settingAttributes;
+    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    } else {
+      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
+    }
 
     if (settingAttributes != null) {
       // iterate over providers
@@ -1979,10 +1993,21 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  private boolean userHasNotificationPermissions(String accountId, User user) {
+    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    Set<PermissionType> accountPermissions = userPermissionInfo.getAccountPermissionSummary().getPermissions();
+    return accountPermissions.contains(PermissionType.USER_PERMISSION_READ);
+  }
+
   private FolderNode doNotificationGroups(String accountId, DirectoryPath directoryPath) {
     // create notification groups
     FolderNode notificationGroupsFolder = new FolderNode(accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class,
         directoryPath.add(NOTIFICATION_GROUPS_FOLDER), yamlGitSyncService);
+    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      if (!userHasNotificationPermissions(accountId, UserThreadLocal.get())) {
+        return notificationGroupsFolder;
+      }
+    }
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
 
@@ -2029,7 +2054,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doVerificationProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    List<SettingAttribute> settingAttributes;
+    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    } else {
+      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
+    }
 
     if (settingAttributes != null) {
       // iterate over providers
@@ -2043,12 +2073,22 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  private boolean userHasTemplateLibraryPermissions(String accountId, User user) {
+    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    Set<PermissionType> accountPermissions = userPermissionInfo.getAccountPermissionSummary().getPermissions();
+    return accountPermissions.contains(PermissionType.TEMPLATE_MANAGEMENT);
+  }
+
   @Override
   public FolderNode doTemplateLibrary(
       String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
     final FolderNode templateLibraryFolder = new FolderNode(accountId, templateLibraryFolderName,
         SettingAttribute.class, directoryPath.add(templateLibraryFolderName), yamlGitSyncService);
-
+    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      if (!userHasTemplateLibraryPermissions(accountId, UserThreadLocal.get())) {
+        return templateLibraryFolder;
+      }
+    }
     // get the whole template folder tree  structure
     final TemplateFolder templateTree =
         templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
