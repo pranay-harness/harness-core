@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.EnumSet;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 @UtilityClass
 public class Validator {
@@ -32,6 +33,13 @@ public class Validator {
   public static void notNullCheck(String message, Object value, EnumSet<ReportTarget> reportTargets) {
     if (value == null) {
       throw new GeneralException(message, reportTargets);
+    }
+  }
+
+  public static void nullCheckForInvalidRequest(
+      Object value, @NotNull String message, @NotNull EnumSet<ReportTarget> reportTargets) {
+    if (value == null) {
+      throw new InvalidRequestException(message, reportTargets);
     }
   }
 
