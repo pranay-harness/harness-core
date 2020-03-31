@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -552,24 +553,43 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_SI)
+  @Owner(developers = RIHAZ)
   @Category(UnitTests.class)
-  public void testRemoveDuplicateVariables() {
+  public void testRestrictDuplicateVariables() {
     TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
-    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
-
-    provisioner.setVariables(emptyList());
-    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
-
     NameValuePair var1 = NameValuePair.builder().name("var1").build();
     NameValuePair var2 = NameValuePair.builder().name("var2").build();
+    NameValuePair var3 = NameValuePair.builder().name("var3").build();
     NameValuePair duplicateVar1 = NameValuePair.builder().name("var1").build();
+    NameValuePair duplicateVar2 = NameValuePair.builder().name("var1").build();
 
-    provisioner.setVariables(Arrays.asList(var1, var2, duplicateVar1));
-    infrastructureProvisionerServiceImpl.removeDuplicateVariables(provisioner);
-    assertThat(provisioner.getVariables()).hasSize(2);
+    // variable list is NULL
+    infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner);
+
+    // variable list is empty
+    provisioner.setVariables(emptyList());
+    infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner);
+
+    // all variable are same
+    provisioner.setVariables(Arrays.asList(var1, duplicateVar1, duplicateVar2));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner))
+        .withMessage("variable names should be unique, duplicate variable(s) found: [var1]");
+
+    // some variable are same
+    provisioner.setVariables(Arrays.asList(var1, duplicateVar1, var2, var3, var2));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner))
+        .withMessage("variable names should be unique, duplicate variable(s) found: [var2, var1]");
+
+    // all variable are distinct
+    provisioner.setVariables(Arrays.asList(var1, var2, var3));
+    infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner);
+
+    assertThat(provisioner.getVariables()).hasSize(3);
     assertThat(provisioner.getVariables().get(0)).isEqualTo(var1);
     assertThat(provisioner.getVariables().get(1)).isEqualTo(var2);
+    assertThat(provisioner.getVariables().get(2)).isEqualTo(var3);
   }
 
   @Test
