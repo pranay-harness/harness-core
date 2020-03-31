@@ -72,6 +72,8 @@ public class BillingDataTableSchema {
   DbColumn maxMemoryUtilization;
   DbColumn avgCpuUtilization;
   DbColumn avgMemoryUtilization;
+  DbColumn actualIdleCost;
+  DbColumn unallocatedCost;
 
   private static String varcharType = "varchar(40)";
   private static String doubleType = "double";
@@ -115,5 +117,7 @@ public class BillingDataTableSchema {
     maxMemoryUtilization = billingDataTable.addColumn("maxmemoryutilization", doubleType, null);
     avgCpuUtilization = billingDataTable.addColumn("avgcpuutilization", doubleType, null);
     avgMemoryUtilization = billingDataTable.addColumn("avgmemoryutilization", doubleType, null);
+    actualIdleCost = billingDataTable.addColumn("actualidlecost", doubleType, null);
+    unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
   }
 }

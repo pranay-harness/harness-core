@@ -38,6 +38,12 @@ public class InstanceBillingData {
   private BigDecimal systemCost;
   private BigDecimal cpuSystemCost;
   private BigDecimal memorySystemCost;
+  private BigDecimal actualIdleCost;
+  private BigDecimal unallocatedCost;
+  private BigDecimal cpuActualIdleCost;
+  private BigDecimal memoryActualIdleCost;
+  private BigDecimal cpuUnallocatedCost;
+  private BigDecimal memoryUnallocatedCost;
   private double maxCpuUtilization;
   private double maxMemoryUtilization;
   private double avgCpuUtilization;
