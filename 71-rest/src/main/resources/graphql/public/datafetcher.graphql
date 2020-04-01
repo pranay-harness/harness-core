@@ -32,6 +32,7 @@ enum DataFetcherEnum {
   execution
   executionConnection
   idleCostTrendStats
+  infraAccountConnection
   instanceConnection
   instanceCount
   instanceStats

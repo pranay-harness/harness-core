@@ -1,11 +1,19 @@
 extend type Query {
   eksClusterStats(filters: [CESetupFilter]): eksClusterData @dataFetcher(name: eksClusterStats)
   linkedAccountStats(filters: [CESetupFilter]): linkedAccountData @dataFetcher(name: linkedAccountStats)
+  infraAccountConnectionDetail(infraType: infraTypesEnum): infraAccountConnectionData
+    @dataFetcher(name: infraAccountConnection)
 }
 
 type linkedAccountData {
   count: Number
   linkedAccounts: [linkedAccount]
+}
+
+type infraAccountConnectionData {
+  harnessAccountId: String
+  externalId: String
+  cloudFormationTemplateLink: String
 }
 
 type linkedAccount {
@@ -34,4 +42,8 @@ input CESetupFilter {
   cloudProviderId: IdFilter
   infraMasterAccountId: IdFilter
   masterAccountSettingId: IdFilter
+}
+
+enum infraTypesEnum {
+  AWS
 }
