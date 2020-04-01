@@ -148,6 +148,8 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
      */
     CLOUD_WATCH("Cloudwatch"),
 
+    SCALYR("Scalyr"),
+
     /**
      * Elastic Load Balancer Settings
      */

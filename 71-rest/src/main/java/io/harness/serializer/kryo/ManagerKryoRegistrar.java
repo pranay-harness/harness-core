@@ -205,6 +205,7 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
@@ -1531,5 +1532,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
     kryo.register(SftpCapability.class, 7333);
+    kryo.register(ScalyrConfig.class, 7334);
   }
 }

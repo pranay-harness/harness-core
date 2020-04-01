@@ -51,6 +51,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
@@ -100,7 +101,7 @@ public class PluginServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(36)
+        .hasSize(37)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -235,6 +236,14 @@ public class PluginServiceTest extends CategoryTest {
                 .withIsEnabled(true)
                 .withDisplayName(SettingVariableTypes.INSTANA.getDisplayName())
                 .withType(SettingVariableTypes.INSTANA.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(ScalyrConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Scalyr")
+                .withType(StateType.SCALYR.name())
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -391,7 +400,7 @@ public class PluginServiceTest extends CategoryTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(multiArtifactEnabledAccountId))
-        .hasSize(37)
+        .hasSize(38)
         .contains(anAccountPlugin()
                       .withSettingClass(CustomArtifactServerConfig.class)
                       .withAccountId(multiArtifactEnabledAccountId)
@@ -407,18 +416,18 @@ public class PluginServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(36)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "INSTANA", "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
-            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
-            "GCS_HELM_REPO", "SERVICENOW", "SPOT_INST", "AZURE_ARTIFACTS_PAT");
-    assertThat(pluginService.getPluginSettingSchema(multiArtifactEnabledAccountId))
         .hasSize(37)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "INSTANA", "AWS", "GCP", "AZURE",
-            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
+            "INSTANA", "SCALYR", "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP",
+            "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
+            "NEXUS", "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
+            "GCS_HELM_REPO", "SERVICENOW", "SPOT_INST", "AZURE_ARTIFACTS_PAT");
+    assertThat(pluginService.getPluginSettingSchema(multiArtifactEnabledAccountId))
+        .hasSize(38)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "INSTANA", "SCALYR", "AWS", "GCP",
+            "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
+            "NEXUS", "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
             "GCS_HELM_REPO", "SERVICENOW", "CUSTOM", "SPOT_INST", "AZURE_ARTIFACTS_PAT");
   }
 }

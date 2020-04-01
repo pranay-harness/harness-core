@@ -285,9 +285,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(), host,
                   dataCollectionInfo.getHostnameSeparator());
 
-              LogResponseParser.LogResponseData data =
-                  new LogResponseParser.LogResponseData(searchResponse, dataCollectionInfo.getHosts(),
-                      dataCollectionInfo.isShouldDoHostBasedFiltering(), logDataInfo.getValue());
+              LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
+                  dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldDoHostBasedFiltering(),
+                  dataCollectionInfo.isFixedHostName(), logDataInfo.getValue());
               // parse the results that were fetched.
               List<LogElement> curLogs = new LogResponseParser().extractLogs(data);
               logs.addAll(curLogs);

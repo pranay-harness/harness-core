@@ -88,6 +88,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
         case SUMO:
         case DATA_DOG_LOG:
         case STACK_DRIVER_LOG:
+        case SCALYR:
           new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L1,
               ClusterLevel.L2, logRequest, (int) context.getStartDataCollectionMinute())
               .run();

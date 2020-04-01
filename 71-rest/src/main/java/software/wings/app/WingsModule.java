@@ -334,6 +334,7 @@ import software.wings.service.impl.notifications.UseUserGroup;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.impl.personalization.PersonalizationServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusAnalysisServiceImpl;
+import software.wings.service.impl.scalyr.ScalyrServiceImpl;
 import software.wings.service.impl.security.AwsSecretsManagerServiceImpl;
 import software.wings.service.impl.security.AzureSecretsManagerServiceImpl;
 import software.wings.service.impl.security.AzureVaultService;
@@ -524,6 +525,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
+import software.wings.service.intfc.scalyr.ScalyrService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
@@ -988,6 +990,7 @@ public class WingsModule extends DependencyModule {
     bind(ServerlessInstanceService.class).to(ServerlessInstanceServiceImpl.class);
     bind(ServerlessInstanceStatService.class).to(ServerlessInstanceStatServiceImpl.class);
     bind(ServerlessDashboardService.class).to(ServerlessDashboardServiceImpl.class);
+    bind(ScalyrService.class).to(ScalyrServiceImpl.class);
 
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);
