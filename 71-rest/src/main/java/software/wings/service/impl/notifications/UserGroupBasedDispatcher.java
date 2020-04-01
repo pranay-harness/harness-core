@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
@@ -8,6 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections4.CollectionUtils;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -110,13 +114,18 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   }
 
   private void fetchErrorMessages(Notification notification) {
-    List<StateExecutionInstance> allExecutionInstances =
+    Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
             .filter(StateExecutionInstanceKeys.appId, notification.getAppId())
             .filter(StateExecutionInstanceKeys.executionUuid, notification.getEntityId())
-            .filter(StateExecutionInstanceKeys.status, FAILED)
-            .order(Sort.ascending(StateExecutionInstanceKeys.endTs))
-            .asList();
+            .order(Sort.ascending(StateExecutionInstanceKeys.endTs));
+
+    List<Criteria> criterias = new ArrayList<>();
+    criterias.add(query.criteria("status").equal(FAILED));
+    criterias.add(query.criteria("status").equal(ERROR));
+    query.or(criterias.toArray(new Criteria[0]));
+
+    List<StateExecutionInstance> allExecutionInstances = query.asList();
 
     HashSet<String> parentInstances = new HashSet<>();
     for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
@@ -133,7 +142,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       if (!parentInstances.contains(stateExecutionInstance.getUuid())) {
         String errorMessage =
             stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
-        if (errorMessage != null) {
+        if (errorMessage != null && !errorMessage.equals("")) {
           errorMap.put(stateExecutionInstance.getDisplayName() + " failed -", errorMessage);
         } else {
           errorMap.put(stateExecutionInstance.getDisplayName() + " failed", "");
