@@ -1486,8 +1486,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
   }
 
   private AnalysisContext createDatadogLogAnalysisContext(int startMinute) {
@@ -1989,8 +1987,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
+
     setupFeedbacks(true);
 
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -2035,8 +2032,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
+
     setupFeedbacks(true);
 
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -3128,36 +3124,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     assertThat(latestFeedbackRecord).isNotNull();
     assertThat(latestFeedbackRecord.getLogCollectionMinute()).isEqualTo(minute);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCreateFeedbackTask_featureFlagDisabled() throws Exception {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
-    writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
-    // Save a previously analysed feedback record and log record.
-    Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
-    LogMLAnalysisRecord oldLogAnalysisRecord =
-        LogMLAnalysisRecord.builder()
-            .appId(appId)
-            .cvConfigId(cvConfigId)
-            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
-            .build();
-    oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-    wingsPersistence.save(oldLogAnalysisRecord);
-
-    // behavior under test
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
-            .asList();
-    assertThat(learningEngineAnalysisTasks).isEmpty();
   }
 
   @Test
