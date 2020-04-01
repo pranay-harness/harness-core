@@ -184,7 +184,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
 
     QLSunburstChartData postFetchData = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID,
         Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
-        QLSunburstChartData.builder().data(sunburstChartData).build(), 1);
+        QLSunburstChartData.builder().data(sunburstChartData).build(), 1, true);
     assertThat(postFetchData.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(postFetchData.getData().get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(postFetchData.getData().get(2).getId()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
@@ -193,7 +193,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
 
     QLSunburstChartData postFetchDataWithOtherPoints = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(
         ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
-        QLSunburstChartData.builder().data(sunburstChartData).build(), 0);
+        QLSunburstChartData.builder().data(sunburstChartData).build(), 0, true);
     assertThat(postFetchDataWithOtherPoints.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
   }
 

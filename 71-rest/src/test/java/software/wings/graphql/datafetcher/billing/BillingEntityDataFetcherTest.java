@@ -83,6 +83,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   final long[] calendar = {currentTime};
   private static Integer LIMIT = Integer.MAX_VALUE - 1;
   private static Integer OFFSET = 0;
+  private static boolean INCLUDE_OTHERS = true;
 
   @Before
   public void setup() throws SQLException {
@@ -470,7 +471,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
 
     data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getName()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getId()).isEqualTo(TAG_TEAM1);
@@ -508,7 +509,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
 
     data = (QLEntityTableListData) billingStatsEntityDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getName()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getId()).isEqualTo(LABEL);

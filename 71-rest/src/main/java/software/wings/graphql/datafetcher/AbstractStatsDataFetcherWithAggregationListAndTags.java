@@ -54,7 +54,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
   @Override
   public QLData postFetch(String accountId, List<G> groupByList, List<A> aggregateFunctions, List<S> sortCriteria,
-      QLData qlData, Integer limit) {
+      QLData qlData, Integer limit, boolean includeOthers) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
     List<LA> groupByLabelList = getGroupByLabel(groupByList);
     if (!groupByTagList.isEmpty()) {
@@ -68,8 +68,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
           return qlData;
         }
         billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
-          List<QLBillingDataPoint> dataPoints =
-              getTagDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByTagLevel1);
+          List<QLBillingDataPoint> dataPoints = getTagDataPoints(
+              accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByTagLevel1, includeOthers);
           billingStackedTimeSeriesDataPoint.setValues(dataPoints);
         });
       } else if (qlData instanceof QLEntityTableListData) {
@@ -78,33 +78,34 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         if (isEmpty(entityTableDataPoints)) {
           return qlData;
         }
-        getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1);
+        getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1, includeOthers);
       }
     } else if (!groupByLabelList.isEmpty()) {
       LA groupByLabelLevel1 = groupByLabelList.get(0);
-      prepareDataAfterLabelGroupBy(accountId, qlData, aggregateFunctions, groupByLabelLevel1, sortCriteria);
+      prepareDataAfterLabelGroupBy(
+          accountId, qlData, aggregateFunctions, groupByLabelLevel1, sortCriteria, includeOthers);
     }
     return qlData;
   }
 
-  private void prepareDataAfterLabelGroupBy(
-      String accountId, QLData qlData, List<A> aggregateFunctions, LA groupByLabelLevel1, List<S> sortCriteria) {
+  private void prepareDataAfterLabelGroupBy(String accountId, QLData qlData, List<A> aggregateFunctions,
+      LA groupByLabelLevel1, List<S> sortCriteria, boolean includeOthers) {
     if (qlData instanceof QLBillingStackedTimeSeriesData) {
       List<QLCCMAggregationFunction> billingDataAggregations = (List<QLCCMAggregationFunction>) aggregateFunctions;
       QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
       prepareStackedTimeSeriesDataAfterLabelGroupBy(
-          accountId, billingStackedTimeSeriesData, billingDataAggregations, groupByLabelLevel1);
+          accountId, billingStackedTimeSeriesData, billingDataAggregations, groupByLabelLevel1, includeOthers);
     } else if (qlData instanceof QLEntityTableListData) {
       QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
       List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
-      getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1);
+      getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1, includeOthers);
       sortEntityTableData(entityTableDataPoints, (List<QLBillingSortCriteria>) sortCriteria);
     }
   }
 
   private void prepareStackedTimeSeriesDataAfterLabelGroupBy(String accountId,
       QLBillingStackedTimeSeriesData billingStackedTimeSeriesData,
-      List<QLCCMAggregationFunction> billingDataAggregations, LA groupByLabelLevel1) {
+      List<QLCCMAggregationFunction> billingDataAggregations, LA groupByLabelLevel1, boolean includeOthers) {
     billingDataAggregations.forEach(aggregateFunction -> {
       List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints = new ArrayList<>();
       if (aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.billingAmount)
@@ -122,8 +123,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getMemoryUtilMetrics();
       }
       billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
-        List<QLBillingDataPoint> dataPoints = getLabelDataPoints(accountId,
-            billingStackedTimeSeriesDataPoint.getValues(), groupByLabelLevel1, aggregateFunction.getOperationType());
+        List<QLBillingDataPoint> dataPoints =
+            getLabelDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByLabelLevel1,
+                aggregateFunction.getOperationType(), includeOthers);
         billingStackedTimeSeriesDataPoint.setValues(dataPoints);
       });
     });
@@ -244,7 +246,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
   }
 
   private List<QLBillingDataPoint> getTagDataPoints(
-      String accountId, List<QLBillingDataPoint> dataPoints, TA groupByTag) {
+      String accountId, List<QLBillingDataPoint> dataPoints, TA groupByTag, boolean includeOthers) {
     Set<String> entityIdSet =
         dataPoints.stream().map(dataPoint -> dataPoint.getKey().getId()).collect(Collectors.toSet());
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
@@ -259,6 +261,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       HarnessTagLink tagLink = entityIdTagLinkMap.get(entityId);
       String tagName;
       if (tagLink == null) {
+        if (!includeOthers) {
+          return true;
+        }
         tagName = BillingStatsDefaultKeys.DEFAULT_TAG;
       } else {
         tagName = tagLink.getKey() + ":" + tagLink.getValue();
@@ -277,8 +282,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     return new ArrayList<>(tagNameDataPointMap.values());
   }
 
-  private List<QLBillingDataPoint> getLabelDataPoints(
-      String accountId, List<QLBillingDataPoint> dataPoints, LA groupByLabel, QLCCMAggregateOperation operation) {
+  private List<QLBillingDataPoint> getLabelDataPoints(String accountId, List<QLBillingDataPoint> dataPoints,
+      LA groupByLabel, QLCCMAggregateOperation operation, boolean includeOthers) {
     Set<String> entityIdSet = dataPoints.stream()
                                   .map(dataPoint -> getWorkloadNameFromId(dataPoint.getKey().getId()))
                                   .collect(Collectors.toSet());
@@ -300,6 +305,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
       String label;
       if (workload == null) {
+        if (!includeOthers) {
+          return true;
+        }
         label = BillingStatsDefaultKeys.DEFAULT_LABEL;
       } else {
         label = labelName + ":" + workload.getLabels().get(labelName);
@@ -362,7 +370,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     return false;
   }
 
-  private void getTagEntityTableDataPoints(String accountId, List<QLEntityTableData> dataPoints, TA groupByTag) {
+  private void getTagEntityTableDataPoints(
+      String accountId, List<QLEntityTableData> dataPoints, TA groupByTag, boolean includeOthers) {
     Set<String> entityIdSet = dataPoints.stream().map(dataPoint -> dataPoint.getId()).collect(Collectors.toSet());
     Set<HarnessTagLink> tagLinks = tagService.getTagLinks(
         accountId, getEntityType((E) groupByTag.getEntityType()), entityIdSet, groupByTag.getTagName());
@@ -377,6 +386,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       HarnessTagLink tagLink = entityIdTagLinkMap.get(entityId);
       String tagName;
       if (tagLink == null) {
+        if (!includeOthers) {
+          return true;
+        }
         tagName = BillingStatsDefaultKeys.DEFAULT_TAG;
       } else {
         tagName = tagLink.getKey() + ":" + tagLink.getValue();
@@ -414,7 +426,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
                 dataPoint.getCostTrend() / aggregatedPrevBillingAmount.get(dataPoint.getId()))));
   }
 
-  private void getLabelEntityTableDataPoints(String accountId, List<QLEntityTableData> dataPoints, LA groupByLabel) {
+  private void getLabelEntityTableDataPoints(
+      String accountId, List<QLEntityTableData> dataPoints, LA groupByLabel, boolean includeOthers) {
     if (dataPoints.isEmpty()) {
       return;
     }
@@ -432,6 +445,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
       String label;
       if (workload == null) {
+        if (!includeOthers) {
+          return true;
+        }
         label = BillingStatsDefaultKeys.DEFAULT_LABEL;
       } else {
         label = labelName + ":" + workload.getLabels().get(labelName);

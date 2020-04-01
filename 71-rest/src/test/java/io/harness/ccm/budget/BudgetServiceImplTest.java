@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,9 +40,9 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
-import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
+import software.wings.graphql.datafetcher.billing.QLTrendStatsCostData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
@@ -217,12 +216,13 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetForecastCost() {
     when(billingTrendStatsDataFetcher.getBillingAmountData(
-             eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class)))
-        .thenReturn(QLBillingAmountData.builder().build());
+             eq(accountId), anyListOf(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class)))
+        .thenReturn(QLTrendStatsCostData.builder().build());
     when(billingDataHelper.getEndInstant(anyListOf(QLBillingDataFilter.class))).thenReturn(Instant.now());
     budgetService.getForecastCost(budget);
     verify(billingTrendStatsDataFetcher)
-        .getBillingAmountData(eq(accountId), isA(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
+        .getBillingAmountData(
+            eq(accountId), anyListOf(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
   }
 
   @Test

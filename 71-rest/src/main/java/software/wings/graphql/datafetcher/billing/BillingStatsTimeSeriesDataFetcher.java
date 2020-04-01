@@ -374,8 +374,8 @@ public class BillingStatsTimeSeriesDataFetcher
   @Override
   public QLData postFetch(String accountId, List<QLCCMGroupBy> groupBy,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
-      Integer limit) {
-    qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit);
+      Integer limit, boolean includeOthers) {
+    qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit, includeOthers);
     if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT)) {
       return qlData;
     }
@@ -394,7 +394,7 @@ public class BillingStatsTimeSeriesDataFetcher
     List<String> selectedIdsAfterLimit = getElementIdsAfterLimit(aggregatedData, limit);
 
     return QLBillingStackedTimeSeriesData.builder()
-        .data(getDataAfterLimit(data, selectedIdsAfterLimit))
+        .data(getDataAfterLimit(data, selectedIdsAfterLimit, includeOthers))
         .cpuIdleCost(data.getCpuIdleCost())
         .memoryIdleCost(data.getMemoryIdleCost())
         .cpuUtilMetrics(data.getCpuUtilMetrics())
@@ -403,7 +403,7 @@ public class BillingStatsTimeSeriesDataFetcher
   }
 
   private List<QLBillingStackedTimeSeriesDataPoint> getDataAfterLimit(
-      QLBillingStackedTimeSeriesData data, List<String> selectedIdsAfterLimit) {
+      QLBillingStackedTimeSeriesData data, List<String> selectedIdsAfterLimit, boolean includeOthers) {
     List<QLBillingStackedTimeSeriesDataPoint> limitProcessedData = new ArrayList<>();
     data.getData().forEach(dataPoint -> {
       List<QLBillingDataPoint> limitProcessedValues = new ArrayList<>();
@@ -422,7 +422,7 @@ public class BillingStatsTimeSeriesDataFetcher
         }
       }
 
-      if (others.getValue().doubleValue() > 0) {
+      if (others.getValue().doubleValue() > 0 && includeOthers) {
         others.setValue(billingDataHelper.getRoundedDoubleValue(others.getValue().doubleValue()));
         limitProcessedValues.add(others);
       }

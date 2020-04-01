@@ -1,6 +1,7 @@
 extend type Query {
   billingStatsTimeSeries(
     limit: Int
+    includeOthers: Boolean
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -15,7 +16,7 @@ extend type Query {
 
   billingTrendStats(
     filters: [CCMFilter]
-    aggregateFunction: CCMAggregationFunction
+    aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingTrendStats)
 
@@ -30,6 +31,7 @@ extend type Query {
   billingStatsEntity(
     limit: Int
     offset: Int
+    includeOthers: Boolean
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -264,6 +266,9 @@ type BillingStatsData {
   totalCost: BillingStatsInfo
   costTrend: BillingStatsInfo
   forecastCost: BillingStatsInfo
+  idleCost: BillingStatsInfo
+  utilizedCost: BillingStatsInfo
+  unallocatedCost: BillingStatsInfo
 }
 
 type EfficiencyStatsData {
