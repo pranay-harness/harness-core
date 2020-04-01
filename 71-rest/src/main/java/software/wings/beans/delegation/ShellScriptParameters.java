@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
@@ -37,6 +38,7 @@ import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,6 +193,8 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
         }
       }
       executionCapabilities.add(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+      executionCapabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+          "DELEGATE_POWERSHELL", Arrays.asList("/bin/sh", "-c", "pwsh -Version")));
       return executionCapabilities;
     }
     switch (connectionType) {

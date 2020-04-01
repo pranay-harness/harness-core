@@ -17,7 +17,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -108,25 +107,6 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
     assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
     ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isEmpty();
-  }
-
-  @Test(expected = WingsException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testShouldFailPowerShellOnDelegate() {
-    shellExecutorConfig = ShellExecutorConfig.builder()
-                              .accountId(ACCOUNT_ID)
-                              .appId(APP_ID)
-                              .commandUnitName("MyCommand")
-                              .executionId(ACTIVITY_ID)
-                              .scriptType(ScriptType.POWERSHELL)
-                              .workingDirectory("%TEMP%")
-                              .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, shellExecutorConfig);
-    on(scriptProcessExecutor).set("logService", logService);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
-
-    scriptProcessExecutor.executeCommandString("echo Hello", asList("A", "B"));
   }
 
   @Test

@@ -4,13 +4,13 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.PRABU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -30,7 +30,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -43,7 +42,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
-import software.wings.beans.Log;
 import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.ShellExecutionData;
@@ -133,6 +131,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                            + "export B=\"bbb\"")
                                        .outputVars("A,B")
                                        .build();
+
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -174,27 +173,34 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
-  @Test(expected = WingsException.class)
-  @Owner(developers = AADITI)
+  @Test
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
-  public void shouldFailPowershellScriptOnDelegate() {
-    when(shellExecutorFactory.getExecutor(any())).thenReturn(scriptProcessExecutor);
-    on(scriptProcessExecutor).set("logService", logService);
-    on(scriptProcessExecutor).set("config", shellExecutorConfig);
-    on(scriptProcessExecutor).set("scriptType", POWERSHELL);
-    doNothing().when(logService).save(any(), any(Log.class));
-    when(scriptProcessExecutor.executeCommandString(anyString(), anyList())).thenCallRealMethod();
+  public void shouldRunPowershellScriptOnDelegate() {
     ShellScriptParameters params = ShellScriptParameters.builder()
                                        .accountId(ACCOUNT_ID)
                                        .appId(APP_ID)
                                        .activityId(ACTIVITY_ID)
-                                       .executeOnDelegate(true)
-                                       .connectionType(WINRM)
+                                       .workingDirectory("/tmp")
                                        .scriptType(POWERSHELL)
-                                       .script("exit 1")
-                                       .outputVars("A,B")
+                                       .script("Write-Host hello")
+                                       .connectionType(SSH)
+                                       .workingDirectory("%TEMP%")
+                                       .executeOnDelegate(true)
                                        .build();
-    shellScriptTask.run(params);
+
+    when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class))).thenReturn(scriptProcessExecutor);
+    when(scriptProcessExecutor.executeCommandString(anyString(), anyList()))
+        .thenReturn(CommandExecutionResult.builder()
+                        .status(CommandExecutionStatus.SUCCESS)
+                        .commandExecutionData(ShellExecutionData.builder().build())
+                        .build());
+
+    CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
+
+    assertThat(commandExecutionResult).isNotNull();
+    assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
   }
 
   @Test

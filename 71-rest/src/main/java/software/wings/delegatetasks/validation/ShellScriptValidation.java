@@ -9,6 +9,11 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
+import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
+import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
+import io.harness.delegate.task.shell.ScriptType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -24,6 +29,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -61,6 +67,16 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
             validated = containerValidationHelper.validateContainerServiceParams(containerServiceParams);
           }
         }
+      }
+      if (validated && parameters.getScriptType() == ScriptType.POWERSHELL) {
+        ProcessExecutorCapabilityCheck executorCapabilityCheck = new ProcessExecutorCapabilityCheck();
+        CapabilityResponse response = executorCapabilityCheck.performCapabilityCheck(
+            ProcessExecutorCapability.builder()
+                .capabilityType(CapabilityType.POWERSHELL)
+                .category("POWERSHELL_DELEGATE")
+                .processExecutorArguments(Arrays.asList("/bin/sh", "-c", "pwsh -Version"))
+                .build());
+        validated = response.isValidated();
       }
       return resultBuilder.validated(validated).build();
     }

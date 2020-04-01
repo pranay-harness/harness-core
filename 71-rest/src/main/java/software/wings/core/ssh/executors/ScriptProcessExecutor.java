@@ -21,8 +21,6 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -179,6 +177,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     saveExecutionLog("Executing command ...", INFO);
 
     switch (this.scriptType) {
+      case POWERSHELL:
       case BASH:
         try {
           commandExecutionResult = executeBashScript(command, envVariablesToCollect);
@@ -186,9 +185,6 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
           saveExecutionLog(format("Exception: %s", e), ERROR, FAILURE);
         }
         break;
-
-      case POWERSHELL:
-        throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
 
       default:
         unhandled(this.scriptType);
