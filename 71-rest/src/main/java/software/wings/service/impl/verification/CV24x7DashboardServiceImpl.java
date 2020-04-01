@@ -21,7 +21,6 @@ import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
@@ -354,29 +353,27 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
     long analysisEndMin = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
-    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
-      List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null, false);
-      Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
-      feedbackRecords.forEach(cvFeedbackRecord -> {
-        if (isNotEmpty(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
-            && cvFeedbackRecord.getAnalysisMinute() == analysisEndMin) {
-          CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
-          if (!clusterTypeRecordMap.containsKey(type)) {
-            clusterTypeRecordMap.put(type, new HashMap<>());
-          }
-
-          clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
-              .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
+    List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null, false);
+    Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
+    feedbackRecords.forEach(cvFeedbackRecord -> {
+      if (isNotEmpty(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
+          && cvFeedbackRecord.getAnalysisMinute() == analysisEndMin) {
+        CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
+        if (!clusterTypeRecordMap.containsKey(type)) {
+          clusterTypeRecordMap.put(type, new HashMap<>());
         }
-      });
 
-      analysisService.updateClustersWithFeedback(
-          clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
-      analysisService.updateClustersWithFeedback(
-          clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
-      analysisService.updateClustersWithFeedback(
-          clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
-    }
+        clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
+            .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
+      }
+    });
+
+    analysisService.updateClustersWithFeedback(
+        clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
+    analysisService.updateClustersWithFeedback(
+        clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
+    analysisService.updateClustersWithFeedback(
+        clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
 
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);

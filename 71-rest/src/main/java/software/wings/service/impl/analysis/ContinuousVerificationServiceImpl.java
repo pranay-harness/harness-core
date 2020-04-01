@@ -1703,10 +1703,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                      .logCollectionMinute(analysisContext.getTimeDuration())
                                                      .build();
 
-      analysisRecord.setAnalysisStatus(
-          featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, appService.getAccountIdByAppId(appId))
-              ? LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE
-              : LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+      analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
       wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(analysisRecord));
     } else if (getMetricAnalysisStates().contains(analysisContext.getStateType())) {
       NewRelicMetricAnalysisRecord metricAnalysisRecord =
