@@ -919,4 +919,11 @@ public class ArtifactCollectionUtils {
         .map(buildDetails -> artifactService.create(getArtifact(artifactStream, buildDetails)))
         .collect(Collectors.toList());
   }
+
+  public static boolean supportsCleanup(String artifactStreamType) {
+    return DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
+        || ARTIFACTORY.name().equals(artifactStreamType) || GCR.name().equals(artifactStreamType)
+        || ECR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
+        || NEXUS.name().equals(artifactStreamType);
+  }
 }

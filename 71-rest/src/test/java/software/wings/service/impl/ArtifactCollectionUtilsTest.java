@@ -10,6 +10,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCS;
+import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
+import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -53,6 +68,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionUtilsTest extends WingsBaseTest {
@@ -248,8 +264,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(buildSourceParameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
     assertThat(buildSourceParameters.getArtifactStreamAttributes().getCustomArtifactStreamScript())
         .isEqualTo(SCRIPT_STRING);
-    assertThat(buildSourceParameters.getArtifactStreamAttributes().getArtifactStreamType())
-        .isEqualTo(ArtifactStreamType.CUSTOM.name());
+    assertThat(buildSourceParameters.getArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(CUSTOM.name());
   }
 
   @Test
@@ -312,6 +327,20 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     artifactCollectionUtils.processBuilds(constructDockerArtifactStream(), asList(aBuildDetails().build()));
 
     verify(artifactService).create(any(Artifact.class));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSupportsCleanup() {
+    List<ArtifactStreamType> supported = asList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS);
+    List<ArtifactStreamType> unsupported = asList(JENKINS, BAMBOO, AMAZON_S3, GCS, SMB, SFTP, AZURE_ARTIFACTS, CUSTOM);
+    for (ArtifactStreamType artifactStreamType : supported) {
+      assertThat(ArtifactCollectionUtils.supportsCleanup(artifactStreamType.name())).isTrue();
+    }
+    for (ArtifactStreamType artifactStreamType : unsupported) {
+      assertThat(ArtifactCollectionUtils.supportsCleanup(artifactStreamType.name())).isFalse();
+    }
   }
 
   private DockerArtifactStream constructDockerArtifactStream() {
