@@ -93,7 +93,8 @@ public enum FeatureName {
   DELEGATE_TAGS_EXTENDED,
   YAML_RBAC,
   CONNECTORS_REF_SECRETS,
-  OUTAGE_CV_DISABLE;
+  OUTAGE_CV_DISABLE,
+  SCIM_INTEGRATION;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
