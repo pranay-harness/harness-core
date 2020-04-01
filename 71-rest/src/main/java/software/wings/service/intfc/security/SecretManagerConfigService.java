@@ -32,4 +32,6 @@ public interface SecretManagerConfigService {
   SecretManagerConfig getSecretManager(String accountId, String entityId);
 
   SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets);
+
+  List<Integer> getCountOfSecretManagersForAccounts(List<String> accountIds, boolean includeGlobalSecretManager);
 }

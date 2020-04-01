@@ -20,4 +20,6 @@ public class AccountSummary {
   private Boolean cloudCostEnabled;
   private Boolean is24x7GuardEnabled;
   private List<ConfiguredLimit> limits;
+  private Integer numSecretManagers;
+  private Integer numDelegates;
 }

@@ -1170,9 +1170,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public boolean is24x7GuardEnabledForAccount(String accountId) {
-    CVConfiguration cvConfiguration =
-        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfigurationKeys.accountId, accountId).get();
-    return cvConfiguration != null && cvConfiguration.isEnabled24x7();
+  public List<Boolean> is24x7GuardEnabledForAccounts(List<String> accountIdList) {
+    Set<String> accountIdSet = new HashSet<>();
+    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
+                                                    .field(CVConfigurationKeys.accountId)
+                                                    .in(accountIdList)
+                                                    .asList();
+
+    cvConfigurationList.forEach(cvConfiguration -> { accountIdSet.add(cvConfiguration.getAccountId()); });
+
+    return accountIdList.stream().map(accountIdSet::contains).collect(Collectors.toList());
   }
 }

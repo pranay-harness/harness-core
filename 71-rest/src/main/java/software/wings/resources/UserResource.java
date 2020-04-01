@@ -135,6 +135,7 @@ public class UserResource {
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
   private ReCaptchaVerifier reCaptchaVerifier;
   private static final String BASIC = "Basic";
+
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       AccountPermissionUtils accountPermissionUtils, AuthenticationManager authenticationManager,
