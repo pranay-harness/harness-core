@@ -8,6 +8,7 @@ public class BillingStatsDefaultKeys {
   public static final String NAME = "Total";
   public static final Double TOTALCOST = 0.0;
   public static final Double IDLECOST = 0.0;
+  public static final Double SYSTEMCOST = 0.0;
   public static final Double CPUIDLECOST = 0.0;
   public static final Double MEMORYIDLECOST = 0.0;
   public static final Double COSTTREND = 0.0;

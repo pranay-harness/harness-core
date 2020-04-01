@@ -27,6 +27,9 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
   private QLIdFilter cloudProvider;
+  private QLIdFilter nodeInstanceId;
+  private QLIdFilter podInstanceId;
+  private QLIdFilter parentInstanceId;
   private QLTimeFilter startTime;
   private QLTimeFilter endTime;
   private QLBillingDataTagFilter tag;
@@ -79,6 +82,15 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getLabel() != null) {
       filterTypes.add(QLBillingDataFilterType.Label);
     }
+    if (filter.getNodeInstanceId() != null) {
+      filterTypes.add(QLBillingDataFilterType.NodeInstanceId);
+    }
+    if (filter.getPodInstanceId() != null) {
+      filterTypes.add(QLBillingDataFilterType.PodInstanceId);
+    }
+    if (filter.getParentInstanceId() != null) {
+      filterTypes.add(QLBillingDataFilterType.ParentInstanceId);
+    }
     return filterTypes;
   }
 
@@ -114,6 +126,12 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getCloudProvider();
       case Label:
         return filter.getLabel();
+      case NodeInstanceId:
+        return filter.getNodeInstanceId();
+      case PodInstanceId:
+        return filter.getPodInstanceId();
+      case ParentInstanceId:
+        return filter.getParentInstanceId();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

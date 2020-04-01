@@ -17,6 +17,9 @@ public enum QLBillingDataFilterType {
   WorkloadName(BillingDataMetaDataFields.WORKLOADNAME),
   Namespace(BillingDataMetaDataFields.NAMESPACE),
   CloudProvider(BillingDataMetaDataFields.CLOUDPROVIDERID),
+  NodeInstanceId(BillingDataMetaDataFields.INSTANCEID),
+  PodInstanceId(BillingDataMetaDataFields.INSTANCEID),
+  ParentInstanceId(BillingDataMetaDataFields.PARENTINSTANCEID),
   Tag(null),
   Label(null);
 

@@ -7,9 +7,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
@@ -26,6 +28,7 @@ public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
   @Inject ClusterRecordService clusterRecordService;
   @Inject SettingsService settingsService;
+  @Inject InstanceDataServiceImpl instanceDataService;
 
   public String getEntityName(BillingDataMetaDataFields field, String entityId) {
     switch (field) {
@@ -39,6 +42,8 @@ public class QLBillingStatsHelper {
         return getClusterName(entityId);
       case CLOUDPROVIDERID:
         return getCloudProviderName(entityId);
+      case INSTANCEID:
+        return getInstanceName(entityId);
       case REGION:
       case CLOUDSERVICENAME:
       case TASKID:
@@ -127,6 +132,19 @@ public class QLBillingStatsHelper {
       SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, entityId);
       if (settingAttribute != null) {
         return settingAttribute.getName();
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      return entityId;
+    }
+  }
+
+  public String getInstanceName(String entityId) {
+    try {
+      InstanceData instanceData = instanceDataService.get(entityId);
+      if (instanceData != null) {
+        return instanceData.getInstanceName();
       } else {
         return entityId;
       }

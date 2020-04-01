@@ -38,6 +38,7 @@ enum DataFetcherEnum {
   instanceStats
   k8sEventYamlDiff
   k8sLabelConnection
+  nodeAndPodDetails
   linkedAccountStats
   outcomeConnection
   pipeline

@@ -102,23 +102,22 @@ public class BillingDataQueryBuilder {
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
-    if (!Lists.isNullOrEmpty(filters)) {
-      filters = processFilterForTagsAndLabels(accountId, filters);
-      decorateQueryWithFilters(selectQuery, filters);
-    }
-
     if (isValidGroupByTime(groupByTime)) {
       decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime, groupByFields);
     }
 
     if (isValidGroupBy(groupBy)) {
       decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
+      decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
+    }
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTagsAndLabels(accountId, filters);
+      decorateQueryWithFilters(selectQuery, filters);
     }
 
     List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
-
     addAccountFilter(selectQuery, accountId);
-
     selectQuery.getWhereClause().setDisableParens(true);
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
@@ -242,6 +241,48 @@ public class BillingDataQueryBuilder {
     return queryMetaDataBuilder.build();
   }
 
+  protected BillingDataQueryMetadata formNodeAndPodDetailsQuery(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria) {
+    BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+
+    ResultType resultType;
+    resultType = ResultType.NODE_AND_POD_DETAILS;
+
+    queryMetaDataBuilder.resultType(resultType);
+    List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+    List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
+
+    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
+
+    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+
+    if (isValidGroupByTime(groupByTime)) {
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime, groupByFields);
+    }
+
+    if (isValidGroupBy(groupBy)) {
+      decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
+    }
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.groupByFields(groupByFields);
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
   private void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getAccountId(), accountId));
   }
@@ -266,6 +307,11 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getIdleCost()),
                 BillingDataMetaDataFields.IDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.IDLECOST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getUnallocatedCost().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getIdleCost()),
+                BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.UNALLOCATEDCOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getCpuIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuIdleCost()),
@@ -436,6 +482,11 @@ public class BillingDataQueryBuilder {
         return schema.getNamespace();
       case CloudProvider:
         return schema.getCloudProviderId();
+      case NodeInstanceId:
+      case PodInstanceId:
+        return schema.getInstanceId();
+      case ParentInstanceId:
+        return schema.getParentInstanceId();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -502,6 +553,9 @@ public class BillingDataQueryBuilder {
       case CloudProvider:
         groupBy = schema.getCloudProviderId();
         break;
+      case Pod:
+      case Node:
+        return;
       default:
         throw new InvalidRequestException("Invalid groupBy clause");
     }
@@ -510,6 +564,38 @@ public class BillingDataQueryBuilder {
     fieldNames.add(BillingDataMetaDataFields.valueOf(groupBy.getName().toUpperCase()));
     selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
     groupByFields.add(BillingDataMetaDataFields.valueOf(groupBy.getName().toUpperCase()));
+  }
+
+  private void decorateQueryWithNodeOrPodGroupBy(List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<QLCCMEntityGroupBy> groupBy, List<BillingDataMetaDataFields> groupByFields,
+      List<QLBillingDataFilter> filters) {
+    for (QLCCMEntityGroupBy aggregation : groupBy) {
+      DbColumn groupByColumn;
+      List<String> instanceType = new ArrayList<>();
+      switch (aggregation) {
+        case Node:
+          groupByColumn = schema.getInstanceId();
+          instanceType.add("K8S_NODE");
+          break;
+        case Pod:
+          groupByColumn = schema.getInstanceId();
+          instanceType.add("K8S_POD");
+          break;
+        default:
+          continue;
+      }
+      filters.add(QLBillingDataFilter.builder()
+                      .instanceType(QLIdFilter.builder()
+                                        .operator(QLIdOperator.EQUALS)
+                                        .values(instanceType.toArray(new String[0]))
+                                        .build())
+                      .build());
+      selectQuery.addColumns(groupByColumn);
+      selectQuery.addGroupings(groupByColumn);
+      fieldNames.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
+      selectQuery.addCondition(UnaryCondition.isNotNull(groupByColumn));
+      groupByFields.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
+    }
   }
 
   protected List<QLCCMEntityGroupBy> getGroupByEntity(List<QLCCMGroupBy> groupBy) {
