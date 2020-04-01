@@ -59,10 +59,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   @ValidationGroups(Create.class)
   Service save(@Valid Service service, boolean createdFromYaml, boolean createDefaultCommands);
 
-  void setArtifactTypeTag(Service service);
-
-  void setDeploymentTypeTag(Service service);
-
   /**
    * Clone service.
    *
