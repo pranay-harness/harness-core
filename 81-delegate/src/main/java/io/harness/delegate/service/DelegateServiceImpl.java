@@ -870,37 +870,41 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
               profile.getName(), profile.getProfileLastUpdatedAt());
           String script = profile.getScriptContent();
-
-          Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
-          scriptLogger.info("Executing profile script: {}", profile.getName());
           List<String> result = new ArrayList<>();
+          int exitCode = 0;
 
-          ProcessExecutor processExecutor = new ProcessExecutor()
-                                                .timeout(10, TimeUnit.MINUTES)
-                                                .command("/bin/bash", "-c", script)
-                                                .readOutput(true)
-                                                .redirectOutput(new LogOutputStream() {
-                                                  @Override
-                                                  protected void processLine(String line) {
-                                                    scriptLogger.info(line);
-                                                    result.add(line);
-                                                  }
-                                                })
-                                                .redirectError(new LogOutputStream() {
-                                                  @Override
-                                                  protected void processLine(String line) {
-                                                    scriptLogger.error(line);
-                                                    result.add("ERROR: " + line);
-                                                  }
-                                                });
-          int exitCode = processExecutor.execute().getExitValue();
+          if (!isBlank(script)) {
+            Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
+            scriptLogger.info("Executing profile script: {}", profile.getName());
+
+            ProcessExecutor processExecutor = new ProcessExecutor()
+                                                  .timeout(10, TimeUnit.MINUTES)
+                                                  .command("/bin/bash", "-c", script)
+                                                  .readOutput(true)
+                                                  .redirectOutput(new LogOutputStream() {
+                                                    @Override
+                                                    protected void processLine(String line) {
+                                                      scriptLogger.info(line);
+                                                      result.add(line);
+                                                    }
+                                                  })
+                                                  .redirectError(new LogOutputStream() {
+                                                    @Override
+                                                    protected void processLine(String line) {
+                                                      scriptLogger.error(line);
+                                                      result.add("ERROR: " + line);
+                                                    }
+                                                  });
+            exitCode = processExecutor.execute().getExitValue();
+          }
+
           saveProfile(profile, result);
           uploadProfileResult(exitCode);
           logger.info("Profile applied");
         } catch (IOException e) {
           logger.error("Error applying profile [{}]", profile.getName(), e);
         } catch (InterruptedException e) {
-          logger.info("Interrupted", e);
+          Thread.currentThread().interrupt();
         } catch (TimeoutException e) {
           logger.info("Timed out", e);
         } catch (UncheckedTimeoutException ex) {
