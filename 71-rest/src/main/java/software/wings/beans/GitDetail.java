@@ -13,4 +13,5 @@ public class GitDetail {
   private String repositoryUrl;
   private String branchName;
   private String yamlGitConfigId;
+  private String gitConnectorId;
 }
