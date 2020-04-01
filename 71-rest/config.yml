@@ -51,6 +51,10 @@ executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 clusterName: ""
 
+ceSetUpConfig:
+  awsAccountId: awsAccountId
+  cloudFormationTemplateLink: cloudFormationTemplateLink
+
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
   awsSecretKey: awsMktPlaceSecretKeyPlaceHolder

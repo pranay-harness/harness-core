@@ -3,10 +3,12 @@ package io.harness.ccm.setup.service;
 import com.google.inject.Inject;
 
 import io.harness.ccm.setup.dao.CECloudAccountDao;
+import io.harness.ccm.setup.dao.CEClusterDao;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class CEInfraSetupHandler {
   @Inject protected CECloudAccountDao ceCloudAccountDao;
+  @Inject protected CEClusterDao ceClusterDao;
 
   public abstract void syncCEInfra(SettingAttribute settingAttribute);
 
@@ -24,6 +27,14 @@ public abstract class CEInfraSetupHandler {
     String accountId;
     String infraAccountId;
     String infraMasterAccountId;
+  }
+
+  @Value
+  private static class ClusterIdentifierKey {
+    String accountId;
+    String infraAccountId;
+    String clusterName;
+    String region;
   }
 
   protected void updateLinkedAccounts(
@@ -46,10 +57,36 @@ public abstract class CEInfraSetupHandler {
     });
   }
 
+  protected void updateClusters(String accountId, String infraAccountId, List<CECluster> infraClusters) {
+    Map<ClusterIdentifierKey, CECluster> infraClusterMap = createClusterMap(infraClusters);
+
+    List<CECluster> ceExistingClusters = ceClusterDao.getByInfraAccountId(accountId, infraAccountId);
+    Map<ClusterIdentifierKey, CECluster> ceExistingClusterMap = createClusterMap(ceExistingClusters);
+
+    infraClusterMap.forEach((clusterIdentifierKey, ceCluster) -> {
+      if (!ceExistingClusterMap.containsKey(clusterIdentifierKey)) {
+        ceClusterDao.create(ceCluster);
+      }
+    });
+
+    ceExistingClusterMap.forEach((clusterIdentifierKey, ceCluster) -> {
+      if (!infraClusterMap.containsKey(clusterIdentifierKey)) {
+        ceClusterDao.deleteCluster(ceCluster.getUuid());
+      }
+    });
+  }
+
   private Map<AccountIdentifierKey, CECloudAccount> createAccountMap(List<CECloudAccount> cloudAccounts) {
     return cloudAccounts.stream().collect(Collectors.toMap(cloudAccount
         -> new AccountIdentifierKey(
             cloudAccount.getAccountId(), cloudAccount.getInfraAccountId(), cloudAccount.getInfraMasterAccountId()),
+        Function.identity()));
+  }
+
+  private Map<ClusterIdentifierKey, CECluster> createClusterMap(List<CECluster> ceClusters) {
+    return ceClusters.stream().collect(Collectors.toMap(ceCluster
+        -> new ClusterIdentifierKey(
+            ceCluster.getAccountId(), ceCluster.getInfraAccountId(), ceCluster.getClusterName(), ceCluster.getRegion()),
         Function.identity()));
   }
 }

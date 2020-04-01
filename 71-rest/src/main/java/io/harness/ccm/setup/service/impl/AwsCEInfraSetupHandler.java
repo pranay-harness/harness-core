@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 
@@ -26,8 +27,12 @@ public class AwsCEInfraSetupHandler extends CEInfraSetupHandler {
 
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
       CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
-      List<CECloudAccount> awsAccounts = awsAccountService.getAWSAccounts(accountId, settingId, ceAwsConfig);
-      updateLinkedAccounts(accountId, ceAwsConfig.getAwsAccountId(), awsAccounts);
+      if (CEAwsConfig.AWSAccountType.MASTER_ACCOUNT.name().equals(ceAwsConfig.getAwsAccountType())) {
+        List<CECloudAccount> awsAccounts = awsAccountService.getAWSAccounts(accountId, settingId, ceAwsConfig);
+        updateLinkedAccounts(accountId, ceAwsConfig.getAwsAccountId(), awsAccounts);
+      }
+      List<CECluster> eksCluster = awsEKSClusterService.getEKSCluster(accountId, settingId, ceAwsConfig);
+      updateClusters(accountId, ceAwsConfig.getAwsAccountId(), eksCluster);
     }
   }
 }

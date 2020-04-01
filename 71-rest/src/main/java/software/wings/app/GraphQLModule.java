@@ -10,6 +10,7 @@ import com.google.inject.name.Names;
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
 import io.harness.ccm.setup.dao.EksClusterStatsDataFetcher;
+import io.harness.ccm.setup.dao.InfraAccountConnectionDataFetcher;
 import io.harness.ccm.setup.dao.LinkedAccountStatsDataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
@@ -236,6 +237,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TagsInUseConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsDataFetcher.class);
     bindDataFetcherWithAnnotation(EksClusterStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(InfraAccountConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
