@@ -1,7 +1,6 @@
 package io.harness.batch.processing.reader;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -14,7 +13,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.batch.item.ItemReader;
 import software.wings.WingsBaseTest;
-import software.wings.beans.SettingAttribute;
 
 import java.time.Instant;
 
@@ -32,14 +30,6 @@ public class MongoEventReaderFactoryTest extends WingsBaseTest {
   public void testPublishedMessageMongoEventReader() {
     ItemReader<PublishedMessage> reader =
         mongoEventReaderFactory.getEventReader(ACCOUNT_ID, EventTypeConstants.EC2_INSTANCE_INFO, START_TIME, END_TIME);
-    assertThat(reader).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testS3JobConfigReaderEventReader() {
-    ItemReader<SettingAttribute> reader = mongoEventReaderFactory.getS3JobConfigReader(ACCOUNT_ID);
     assertThat(reader).isNotNull();
   }
 }

@@ -3,10 +3,10 @@ package io.harness.batch.processing.service.impl;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 
-import com.amazonaws.services.securitytoken.model.Credentials;
 import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -31,7 +31,7 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
 
   private static final int SYNC_TIMEOUT_MINUTES = 5;
   private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
-  private static final String HARNESS_BASE_PATH = "HARNESS_BASE_PATH";
+  private static final String HARNESS_BASE_PATH = "ccm-cross-account-test";
   private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
   private static final String AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION";
   private static final String SESSION_TOKEN = "AWS_SESSION_TOKEN";
@@ -52,10 +52,12 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
 
       ProcessResult processResult =
           getProcessExecutor().command(assumeRoleCmd).environment(envVariables).readOutput(true).execute();
-      Credentials credentials = new Gson().fromJson(processResult.getOutput().getString(), Credentials.class);
-      ImmutableMap<String, String> roleEnvVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID,
-          awsCredentials.getAwsAccessKey(), AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION,
-          awsCredentials.getRegion(), SESSION_TOKEN, credentials.getSessionToken());
+      JsonObject credentials =
+          new Gson().fromJson(processResult.getOutput().getString(), JsonObject.class).getAsJsonObject("Credentials");
+      ImmutableMap<String, String> roleEnvVariables =
+          ImmutableMap.of(AWS_ACCESS_KEY_ID, credentials.get("AccessKeyId").getAsString(), AWS_SECRET_ACCESS_KEY,
+              credentials.get("SecretAccessKey").getAsString(), AWS_DEFAULT_REGION, awsCredentials.getRegion(),
+              SESSION_TOKEN, credentials.get("SessionToken").getAsString());
 
       final ArrayList<String> cmd = Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(),
           destinationBucketPath, "--source-region", s3SyncRecord.getBillingBucketRegion());
