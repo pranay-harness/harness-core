@@ -23,6 +23,7 @@ import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
+import software.wings.features.api.AccountId;
 import software.wings.features.api.RestrictedApi;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
@@ -63,7 +64,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   @Override
   @RestrictedApi(GovernanceFeature.class)
-  public GovernanceConfig upsert(String accountId, @Nonnull GovernanceConfig governanceConfig) {
+  public GovernanceConfig upsert(@AccountId String accountId, @Nonnull GovernanceConfig governanceConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Updating Deployment Freeze window");
       GovernanceConfig oldSetting = get(accountId);

@@ -30,14 +30,16 @@ public interface LimitConfigurationService extends OwnedByAccount {
    */
   @Nullable ConfiguredLimit get(String accountId, ActionType actionType);
 
-  @Nullable List<ConfiguredLimit> getAllLimitsConfiguredForAccount(String accountId);
+  List<List<ConfiguredLimit>> getAllLimitsConfiguredForAccounts(List<String> accountIds);
+
+  List<ConfiguredLimit> getLimitsConfiguredForAccount(String accountId);
 
   /**
    * Configure a new limit.
    *
-   * @param accountId the accountId for which the limit is being specified
+   * @param accountId  the accountId for which the limit is being specified
    * @param actionType the action type for which to impose this limit
-   * @param limit limit to be imposed
+   * @param limit      limit to be imposed
    * @return configuration was successful or now
    */
   boolean configure(String accountId, ActionType actionType, Limit limit);

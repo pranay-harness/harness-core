@@ -4,6 +4,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,8 +32,12 @@ import software.wings.beans.AccountType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -65,10 +70,27 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         .get();
   }
 
-  @Nullable
   @Override
-  public List<ConfiguredLimit> getAllLimitsConfiguredForAccount(String accountId) {
-    return dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId).asList();
+  public List<List<ConfiguredLimit>> getAllLimitsConfiguredForAccounts(List<String> accountIds) {
+    List<ConfiguredLimit> configuredLimitList =
+        dao.createQuery(ConfiguredLimit.class).field(ConfiguredLimitKeys.accountId).hasAnyOf(accountIds).asList();
+    Map<String, List<ConfiguredLimit>> limitsPerAccount = new HashMap<>();
+
+    accountIds.forEach(accountId -> { limitsPerAccount.put(accountId, new ArrayList<>()); });
+
+    configuredLimitList.forEach(
+        configuredLimit -> limitsPerAccount.get(configuredLimit.getAccountId()).add(configuredLimit));
+
+    return accountIds.stream().map(limitsPerAccount::get).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ConfiguredLimit> getLimitsConfiguredForAccount(String accountId) {
+    List<List<ConfiguredLimit>> limitsforAccounts = getAllLimitsConfiguredForAccounts(Lists.newArrayList(accountId));
+    if (!limitsforAccounts.isEmpty()) {
+      return limitsforAccounts.get(0);
+    }
+    return Lists.newArrayList();
   }
 
   @Nullable

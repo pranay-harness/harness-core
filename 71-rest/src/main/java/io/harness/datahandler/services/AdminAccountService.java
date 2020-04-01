@@ -4,6 +4,7 @@ import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.lib.Limit;
+import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 
@@ -23,4 +24,12 @@ public interface AdminAccountService {
   List<ConfiguredLimit> getLimitsConfiguredForAccount(String accountId);
 
   ConfiguredLimit getLimitConfiguredByActionType(String accountId, ActionType actionType);
+
+  Account createAccount(Account account, String adminUserEmail);
+
+  boolean enableAccount(String accountId);
+
+  boolean disableAccount(String accountId, String newClusterUrl);
+
+  boolean enableOrDisableUser(String accountId, String userId, boolean enabled);
 }

@@ -352,6 +352,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
+  public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).field(DelegateKeys.accountId).in(accountIds).asList();
+    Map<String, Integer> countOfDelegatesPerAccount =
+        accountIds.stream().collect(Collectors.toMap(accountId -> accountId, accountId -> 0));
+    delegates.forEach(delegate -> {
+      int currentCount = countOfDelegatesPerAccount.get(delegate.getAccountId());
+      countOfDelegatesPerAccount.put(delegate.getAccountId(), currentCount + 1);
+    });
+    return accountIds.stream().map(countOfDelegatesPerAccount::get).collect(Collectors.toList());
+  }
+
+  @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return wingsPersistence.query(Delegate.class, pageRequest);
   }

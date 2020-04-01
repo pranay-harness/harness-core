@@ -112,4 +112,6 @@ public interface DelegateService extends OwnedByAccount {
 
   File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId, String delegateName,
       String delegateProfile) throws IOException;
+
+  List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
 }

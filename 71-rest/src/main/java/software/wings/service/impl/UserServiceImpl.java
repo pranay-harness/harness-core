@@ -455,6 +455,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Account addAccount(Account account, User user, boolean addUser) {
+    if (!configuration.isTrialRegistrationAllowed()) {
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null && (AccountType.TRIAL.equals(licenseInfo.getAccountType()))) {
+        throw new InvalidRequestException("Cannot create a trial account in this cluster.");
+      }
+    }
     if (isNotBlank(account.getAccountName())) {
       account.setAccountName(account.getAccountName().trim());
     }

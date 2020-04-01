@@ -41,7 +41,9 @@ import software.wings.service.intfc.security.VaultService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author marklu on 2019-05-31
@@ -147,6 +149,31 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       secretManagerConfig.setNumOfEncryptedValue(getEncryptedDataCount(accountId, entityId));
     }
     return secretManagerConfig;
+  }
+
+  /**
+   * required for admin portal
+   * @param accountIds
+   * @param includeGlobalSecretManager
+   * @return
+   */
+  @Override
+  public List<Integer> getCountOfSecretManagersForAccounts(
+      List<String> accountIds, boolean includeGlobalSecretManager) {
+    SecretManagerConfig globalSecretManagerConfig =
+        wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, GLOBAL_ACCOUNT_ID).get();
+
+    List<SecretManagerConfig> secretManagerConfigList =
+        wingsPersistence.createQuery(SecretManagerConfig.class).field(ACCOUNT_ID_KEY).in(accountIds).asList();
+
+    Map<String, Integer> countOfSecretManagersPerAccount = accountIds.stream().collect(
+        Collectors.toMap(accountId -> accountId, accountId -> globalSecretManagerConfig != null ? 1 : 0));
+    secretManagerConfigList.forEach(secretManagerConfig -> {
+      int secretManagerCount = countOfSecretManagersPerAccount.get(secretManagerConfig.getAccountId());
+      countOfSecretManagersPerAccount.put(secretManagerConfig.getAccountId(), secretManagerCount + 1);
+    });
+
+    return accountIds.stream().map(countOfSecretManagersPerAccount::get).collect(Collectors.toList());
   }
 
   // This method will decrypt the secret manager's encrypted fields

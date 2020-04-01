@@ -12,6 +12,7 @@ import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
+import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.security.annotations.AdminPortalAuth;
@@ -21,6 +22,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -85,5 +87,32 @@ public class AdminAccountResource {
   public RestResponse<ConfiguredLimit> configureRateLimit(@PathParam("accountId") String accountId,
       @QueryParam("actionType") ActionType actionType, @Body RateLimit limit) {
     return new RestResponse<>(adminAccountService.updateLimit(accountId, actionType, limit));
+  }
+
+  @POST
+  @Path("")
+  public RestResponse<Account> createAccount(
+      @Body Account account, @QueryParam("adminUserEmail") String adminUserEmail) {
+    return new RestResponse<>(adminAccountService.createAccount(account, adminUserEmail));
+  }
+
+  @PUT
+  @Path("/{accountId}/enable")
+  public RestResponse<Boolean> enableAccount(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(adminAccountService.enableAccount(accountId));
+  }
+
+  @PUT
+  @Path("/{accountId}/disable")
+  public RestResponse<Boolean> disableAccount(
+      @PathParam("accountId") String accountId, @QueryParam("newClusterUrl") String newClusterUrl) {
+    return new RestResponse<>(adminAccountService.disableAccount(accountId, newClusterUrl));
+  }
+
+  @PUT
+  @Path("/{accountId}/users/{userId}")
+  public RestResponse<Boolean> enableOrDisableUser(@PathParam("accountId") String accountId,
+      @PathParam("userId") String userId, @QueryParam("enable") boolean enabled) {
+    return new RestResponse<>(adminAccountService.enableOrDisableUser(accountId, userId, enabled));
   }
 }
