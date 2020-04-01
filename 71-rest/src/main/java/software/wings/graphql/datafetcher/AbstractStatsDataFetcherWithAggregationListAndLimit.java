@@ -40,12 +40,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
     implements DataFetcher, BaseStatsDataFetcher {
   private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
   private static final Integer DEFAULT_OFFSET = 0;
+  private static final boolean DEFAULT_INCLUDE_OTHERS = true;
   private static final String GROUP_BY = "groupBy";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String FILTERS = "filters";
   private static final String LIMIT = "limit";
   private static final String OFFSET = "offset";
+  private static final String INCLUDE_OTHERS = "includeOthers";
   protected static final String EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
 
@@ -55,8 +57,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
   protected abstract QLData fetch(String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy,
       List<S> sort, Integer limit, Integer offset);
 
-  protected abstract QLData postFetch(
-      String accountId, List<G> groupByList, List<A> aggregations, List<S> sort, QLData qlData, Integer limit);
+  protected abstract QLData postFetch(String accountId, List<G> groupByList, List<A> aggregations, List<S> sort,
+      QLData qlData, Integer limit, boolean includeOthers);
 
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
@@ -78,6 +80,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
 
       final Integer limit = fetchLimit(dataFetchingEnvironment, LIMIT);
       final Integer offset = fetchOffset(dataFetchingEnvironment, OFFSET);
+      final boolean includeOthers = fetchIncludeOthers(dataFetchingEnvironment);
       String accountId = utils.getAccountId(dataFetchingEnvironment);
 
       try (AutoLogContext ignore1 =
@@ -87,7 +90,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
            AutoLogContext ignore3 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR)) {
         QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort, limit, offset);
-        QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData, limit);
+        QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData, limit, includeOthers);
         result = qlData;
         if (postFetchResult != null) {
           result = postFetchResult;
@@ -154,6 +157,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       return DEFAULT_OFFSET;
     }
     return (Integer) object;
+  }
+
+  private boolean fetchIncludeOthers(DataFetchingEnvironment dataFetchingEnvironment) {
+    Object object = dataFetchingEnvironment.getArguments().get(INCLUDE_OTHERS);
+    if (object == null) {
+      return DEFAULT_INCLUDE_OTHERS;
+    }
+    return (boolean) object;
   }
 
   @Value

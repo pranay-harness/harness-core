@@ -136,9 +136,11 @@ public class BudgetServiceImpl implements BudgetService {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
     filters.add(getEndTimeFilterForCurrentBillingCycle());
-    QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
+    aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
     QLBillingAmountData billingAmountData =
-        billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters);
+        billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters)
+            .getTotalCostData();
     Instant endInstant = billingDataHelper.getEndInstant(filters);
     BigDecimal forecastCost = billingDataHelper.getForecastCost(billingAmountData, endInstant);
     if (forecastCost == null) {
@@ -204,6 +206,7 @@ public class BudgetServiceImpl implements BudgetService {
         .type(budget.getType().toString())
         .scopeType(scopeType)
         .appliesTo(getAppliesTo(scope))
+        .appliesToIds(getAppliesToIds(scope))
         .environment(environment)
         .alertAt(alertAt.toArray(new Double[0]))
         .notifications(notificationMessages.toArray(new String[0]))
@@ -237,20 +240,21 @@ public class BudgetServiceImpl implements BudgetService {
 
       Double budgetVariancePercentage = getBudgetVariancePercentage(budgetVariance, budgetedAmount);
 
-      QLBudgetData qlBudgetData = QLBudgetData.builder()
-                                      .actualCost(actualCost)
-                                      .budgeted(budgetedAmount)
-                                      .budgetVariance(budgetVariance)
-                                      .budgetVariancePercentage(budgetVariancePercentage)
-                                      .time(time)
-                                      .build();
+      QLBudgetData qlBudgetData =
+          QLBudgetData.builder()
+              .actualCost(billingDataHelper.getRoundedDoubleValue(actualCost))
+              .budgeted(billingDataHelper.getRoundedDoubleValue(budgetedAmount))
+              .budgetVariance(billingDataHelper.getRoundedDoubleValue(budgetVariance))
+              .budgetVariancePercentage(billingDataHelper.getRoundedDoubleValue(budgetVariancePercentage))
+              .time(time)
+              .build();
       budgetTableDataList.add(qlBudgetData);
     }
     return QLBudgetDataList.builder().data(budgetTableDataList).build();
   }
 
   private static Double getBudgetVariance(Double budgetedAmount, Double actualCost) {
-    return budgetedAmount - actualCost;
+    return actualCost - budgetedAmount;
   }
 
   private static Double getBudgetVariancePercentage(Double budgetVariance, Double budgetedAmount) {
@@ -302,18 +306,29 @@ public class BudgetServiceImpl implements BudgetService {
     if (scope == null) {
       return entityIds;
     }
+    entityIds = getAppliesToIds(scope);
     List<String> entityNames = new ArrayList<>();
     BillingDataQueryMetadata.BillingDataMetaDataFields entityType =
         BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID;
-    if (scope.getBudgetScopeFilter().getCluster() != null) {
-      entityIds = scope.getBudgetScopeFilter().getCluster().getValues();
-    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
-      entityIds = scope.getBudgetScopeFilter().getApplication().getValues();
+    if (scope.getBudgetScopeFilter().getApplication() != null) {
       entityType = BillingDataQueryMetadata.BillingDataMetaDataFields.APPID;
     }
     for (String entityId : entityIds) {
       entityNames.add(statsHelper.getEntityName(entityType, entityId));
     }
     return entityNames.toArray(new String[0]);
+  }
+
+  private String[] getAppliesToIds(BudgetScope scope) {
+    String[] entityIds = {};
+    if (scope == null) {
+      return entityIds;
+    }
+    if (scope.getBudgetScopeFilter().getCluster() != null) {
+      entityIds = scope.getBudgetScopeFilter().getCluster().getValues();
+    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
+      entityIds = scope.getBudgetScopeFilter().getApplication().getValues();
+    }
+    return entityIds;
   }
 }

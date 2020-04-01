@@ -6,7 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -29,7 +29,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCMAggregationFunction,
+public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
@@ -45,18 +45,25 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   private static final String TOTAL_COST_VALUE = "$%s";
   private static final String TREND_COST_VALUE = "%s";
   private static final String FORECAST_COST_VALUE = "$%s";
+  private static final String IDLE_COST_DESCRIPTION = "%s of total";
+  private static final String IDLE_COST_LABEL = "Idle Cost";
+  private static final String UNALLOCATED_COST_DESCRIPTION = "%s of total";
+  private static final String UNALLOCATED_COST_LABEL = "Unallocated Cost";
+  private static final String UTILIZED_COST_DESCRIPTION = "%s of total";
+  private static final String UTILIZED_COST_LABEL = "Utilized Cost";
+  private static final String COST_VALUE = "$%s";
   private static final String EMPTY_VALUE = "-";
   private static final String NA_VALUE = "NA";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, QLCCMAggregationFunction aggregateFunction,
+  protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters);
       } else {
-        throw new InvalidRequestException("Cannot process request");
+        throw new InvalidRequestException("Cannot process request in BillingTrendStatsDataFetcher");
       }
     } catch (Exception e) {
       throw new InvalidRequestException("Error while billing data", e);
@@ -64,17 +71,22 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   }
 
   protected QLBillingTrendStats getData(
-      @NotNull String accountId, QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
-    QLBillingAmountData billingAmountData = getBillingAmountData(accountId, aggregateFunction, filters);
-    if (billingAmountData != null) {
-      BigDecimal totalBillingAmount = billingAmountData.getCost();
-      BigDecimal forecastCost =
-          billingDataHelper.getForecastCost(billingAmountData, billingDataHelper.getEndInstant(filters));
+      @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
+    QLTrendStatsCostData billingAmountData = getBillingAmountData(accountId, aggregateFunction, filters);
+    if (billingAmountData != null && billingAmountData.getTotalCostData() != null) {
+      BigDecimal totalBillingAmount = billingAmountData.getTotalCostData().getCost();
+      BigDecimal forecastCost = billingDataHelper.getForecastCost(
+          billingAmountData.getTotalCostData(), billingDataHelper.getEndInstant(filters));
       return QLBillingTrendStats.builder()
-          .totalCost(getTotalBillingStats(billingAmountData, filters))
+          .totalCost(getTotalBillingStats(billingAmountData.getTotalCostData(), filters))
           .costTrend(getBillingTrend(accountId, totalBillingAmount, forecastCost, aggregateFunction, filters))
-          .forecastCost(getForecastBillingStats(forecastCost, billingAmountData,
+          .forecastCost(getForecastBillingStats(forecastCost, billingAmountData.getTotalCostData(),
               billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
+          .idleCost(getIdleCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData()))
+          .utilizedCost(
+              getUnallocatedCostStats(billingAmountData.getUnallocatedCostData(), billingAmountData.getTotalCostData()))
+          .unallocatedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(),
+              billingAmountData.getUnallocatedCostData(), billingAmountData.getTotalCostData()))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
@@ -114,11 +126,74 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
         .build();
   }
 
+  private QLBillingStatsInfo getIdleCostStats(QLBillingAmountData idleCostData, QLBillingAmountData totalCostData) {
+    String idleCostDescription = EMPTY_VALUE;
+    String idleCostValue = EMPTY_VALUE;
+    if (idleCostData != null) {
+      idleCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(idleCostData.getCost()));
+      if (totalCostData != null) {
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(idleCostData.getCost().doubleValue() / totalCostData.getCost().doubleValue()));
+        idleCostDescription = String.format(IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+      }
+    }
+    return QLBillingStatsInfo.builder()
+        .statsLabel(IDLE_COST_LABEL)
+        .statsDescription(idleCostDescription)
+        .statsValue(idleCostValue)
+        .build();
+  }
+
+  private QLBillingStatsInfo getUnallocatedCostStats(
+      QLBillingAmountData unallocatedCostData, QLBillingAmountData totalCostData) {
+    String unallocatedCostDescription = EMPTY_VALUE;
+    String unallocatedCostValue = EMPTY_VALUE;
+    if (unallocatedCostData != null) {
+      unallocatedCostValue =
+          String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(unallocatedCostData.getCost()));
+      if (totalCostData != null) {
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(unallocatedCostData.getCost().doubleValue() / totalCostData.getCost().doubleValue()));
+        unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+      }
+    }
+    return QLBillingStatsInfo.builder()
+        .statsLabel(UNALLOCATED_COST_LABEL)
+        .statsDescription(unallocatedCostDescription)
+        .statsValue(unallocatedCostValue)
+        .build();
+  }
+
+  private QLBillingStatsInfo getUtilizedCostStats(
+      QLBillingAmountData idleCostData, QLBillingAmountData unallocatedCostData, QLBillingAmountData totalCostData) {
+    String utilizedCostDescription = EMPTY_VALUE;
+    String utilizedCostValue = EMPTY_VALUE;
+    if (idleCostData != null && totalCostData != null) {
+      double utilizedCost = totalCostData.getCost().doubleValue() - idleCostData.getCost().doubleValue();
+      if (unallocatedCostData != null) {
+        utilizedCost -= unallocatedCostData.getCost().doubleValue();
+      }
+      utilizedCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(utilizedCost));
+      double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
+          BigDecimal.valueOf(utilizedCost / totalCostData.getCost().doubleValue()));
+      utilizedCostDescription = String.format(UTILIZED_COST_DESCRIPTION, percentageOfTotalCost + "%",
+          billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+    }
+    return QLBillingStatsInfo.builder()
+        .statsLabel(UTILIZED_COST_LABEL)
+        .statsDescription(utilizedCostDescription)
+        .statsValue(utilizedCostValue)
+        .build();
+  }
+
   private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount, BigDecimal forecastCost,
-      QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
         filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
-    QLBillingAmountData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
+    QLBillingAmountData prevBillingAmountData =
+        getBillingAmountData(accountId, aggregateFunction, trendFilters).getTotalCostData();
     Instant filterStartTime =
         Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(trendFilters).getValue().longValue());
@@ -153,8 +228,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
         .build();
   }
 
-  public QLBillingAmountData getBillingAmountData(
-      String accountId, QLCCMAggregationFunction aggregateFunction, List<QLBillingDataFilter> filters) {
+  public QLTrendStatsCostData getBillingAmountData(
+      String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
     String query = queryData.getQuery();
@@ -172,23 +247,57 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
     return null;
   }
 
-  private QLBillingAmountData fetchBillingAmount(ResultSet resultSet) throws SQLException {
+  private QLTrendStatsCostData fetchBillingAmount(ResultSet resultSet) throws SQLException {
+    QLBillingAmountData totalCostData = null;
+    QLBillingAmountData idleCostData = null;
+    QLBillingAmountData unallocatedCostData = null;
     while (null != resultSet && resultSet.next()) {
       if (resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
-        return QLBillingAmountData.builder()
-            .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
-            .minStartTime(
-                resultSet
-                    .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(), utils.getDefaultCalendar())
-                    .getTime())
-            .maxStartTime(
-                resultSet
-                    .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar())
-                    .getTime())
-            .build();
+        totalCostData = QLBillingAmountData.builder()
+                            .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
+                            .minStartTime(resultSet
+                                              .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                  utils.getDefaultCalendar())
+                                              .getTime())
+                            .maxStartTime(resultSet
+                                              .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                  utils.getDefaultCalendar())
+                                              .getTime())
+                            .build();
+      }
+      if (resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()) != null) {
+        idleCostData = QLBillingAmountData.builder()
+                           .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()))
+                           .minStartTime(resultSet
+                                             .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                 utils.getDefaultCalendar())
+                                             .getTime())
+                           .maxStartTime(resultSet
+                                             .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                 utils.getDefaultCalendar())
+                                             .getTime())
+                           .build();
+      }
+      if (resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()) != null) {
+        unallocatedCostData =
+            QLBillingAmountData.builder()
+                .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
+                .minStartTime(resultSet
+                                  .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                      utils.getDefaultCalendar())
+                                  .getTime())
+                .maxStartTime(resultSet
+                                  .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                      utils.getDefaultCalendar())
+                                  .getTime())
+                .build();
       }
     }
-    return null;
+    return QLTrendStatsCostData.builder()
+        .totalCostData(totalCostData)
+        .idleCostData(idleCostData)
+        .unallocatedCostData(unallocatedCostData)
+        .build();
   }
 
   private double getRoundedDoubleValue(BigDecimal value) {
@@ -196,7 +305,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<QLCCM
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
+      List<QLCCMAggregationFunction> aggregations, List<QLBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
 

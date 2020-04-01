@@ -26,6 +26,7 @@ type BudgetTableData {
   type: String
   scopeType: String
   appliesTo: [String]
+  appliesToIds: [String]
   environment: String
   alertAt: [Number]
   notifications: [String]

@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -57,6 +58,8 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private Instant START_TIME = Instant.ofEpochMilli(1570645800000l);
   private Instant TREND_END_TIME = Instant.ofEpochMilli(1570473000000l);
   private Instant TREND_START_TIME = Instant.ofEpochMilli(1568226600000l);
+  final int[] count = {0};
+  final int[] countTrend = {0};
 
   @Before
   public void setup() throws SQLException {
@@ -76,7 +79,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   public void testGetBillingTrend() throws SQLException {
     prepareDataForTrend();
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     List<QLBillingDataFilter> filters = createFilter();
     QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
@@ -93,7 +96,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   public void testGetBillingTrendWithForecast() throws SQLException {
     prepareDataForTrend();
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     List<QLBillingDataFilter> filters = createForecastFilter();
     QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
@@ -111,7 +114,9 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     Statement mockStatement = mock(Statement.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
-    when(mockStatement.executeQuery(anyString())).thenReturn(resultSet).thenReturn(trendResultSet);
+    when(mockStatement.executeQuery(anyString()))
+        .thenReturn(resetCountAndReturnResultSet())
+        .thenReturn(resetCountAndReturnTrendResultSet());
     when(timeScaleDBService.isValid()).thenReturn(true);
   }
 
@@ -126,7 +131,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(null);
     when(timeScaleDBService.isValid()).thenReturn(true);
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data.getTotalCost()).isNull();
@@ -139,7 +144,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     assertThatThrownBy(()
                            -> billingTrendStatsDataFetcher.fetch(ACCOUNT1_ID, aggregationFunction,
                                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
@@ -157,7 +162,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
 
-    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     assertThat(data.getTotalCost()).isNull();
@@ -218,8 +223,6 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenReturn(new Timestamp(END_TIME.toEpochMilli()));
 
-    when(resultSet.next()).thenReturn(true);
-
     when(trendResultSet.getBigDecimal(anyString())).thenReturn(TOTAL_TREND_COST);
 
     when(
@@ -229,6 +232,35 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
         trendResultSet.getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenReturn(new Timestamp(TREND_END_TIME.toEpochMilli()));
 
-    when(trendResultSet.next()).thenReturn(true);
+    returnResultSet(1);
+  }
+
+  private void returnResultSet(int limit) throws SQLException {
+    when(resultSet.next()).then((Answer<Boolean>) invocation -> {
+      if (count[0] < limit) {
+        count[0]++;
+        return true;
+      }
+      count[0] = 0;
+      return false;
+    });
+    when(trendResultSet.next()).then((Answer<Boolean>) invocation -> {
+      if (countTrend[0] < limit) {
+        countTrend[0]++;
+        return true;
+      }
+      countTrend[0] = 0;
+      return false;
+    });
+  }
+
+  private ResultSet resetCountAndReturnResultSet() {
+    count[0] = 0;
+    return resultSet;
+  }
+
+  private ResultSet resetCountAndReturnTrendResultSet() {
+    countTrend[0] = 0;
+    return trendResultSet;
   }
 }

@@ -17,6 +17,7 @@ public class QLBudgetTableData {
   String type;
   String scopeType;
   String[] appliesTo;
+  String[] appliesToIds;
   String environment;
   Double[] alertAt;
   String[] notifications;

@@ -95,6 +95,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
   private static Integer LIMIT = Integer.MAX_VALUE - 1;
   private static Integer OFFSET = 0;
+  private static boolean INCLUDE_OTHERS = true;
 
   @Before
   public void setup() throws SQLException {
@@ -410,7 +411,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, 10);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, 10, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(NAMESPACE1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("NAMESPACE");
@@ -513,7 +514,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -521,7 +522,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
     // checking post fetch in case of no tag group by
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, Collections.emptyList(), aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, Collections.emptyList(), aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(TAG_TEAM1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("TAG");
@@ -531,7 +532,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     QLBillingStackedTimeSeriesData emptyData =
         QLBillingStackedTimeSeriesData.builder().data(Collections.emptyList()).build();
     emptyData = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, emptyData, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, emptyData, LIMIT, INCLUDE_OTHERS);
     assertThat(emptyData).isNotNull();
     assertThat(emptyData.getData()).hasSize(0);
   }
@@ -558,7 +559,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues()).hasSize(1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getName())
@@ -595,7 +596,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
 
     data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.postFetch(
-        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT);
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
