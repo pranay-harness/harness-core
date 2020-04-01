@@ -1573,9 +1573,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
-      Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
-      if (service == null && !workflowPhase.checkServiceTemplatized()) {
-        throw new InvalidRequestException("Service [" + workflowPhase.getServiceId() + "] does not exist", USER);
+      Service service = null;
+      if (!workflowPhase.checkServiceTemplatized()) {
+        service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
+        if (service == null) {
+          throw new InvalidRequestException("Service [" + workflowPhase.getServiceId() + "] does not exist", USER);
+        }
       }
       InfrastructureMapping infrastructureMapping = null;
       InfrastructureDefinition infrastructureDefinition = null;
@@ -1605,7 +1608,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
           infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
           notNullCheck("InfraMapping", infrastructureMapping, USER);
-          if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+          if (service != null && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
             throw new InvalidRequestException("Service Infrastructure [" + infrastructureMapping.getName()
                     + "] not mapped to Service [" + service.getName() + "]",
                 USER);
