@@ -1,6 +1,9 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
+import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -27,9 +30,7 @@ import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import io.harness.aws.AwsCallTracker;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -68,7 +69,8 @@ class AwsHelperServiceDelegateBase {
     builder.withCredentials(credentialsProvider);
   }
 
-  protected void handleAmazonClientException(AmazonClientException amazonClientException) {
+  @VisibleForTesting
+  void handleAmazonClientException(AmazonClientException amazonClientException) {
     logger.error("AWS API Client call exception", amazonClientException);
     String errorMessage = amazonClientException.getMessage();
     if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
@@ -77,24 +79,21 @@ class AwsHelperServiceDelegateBase {
           amazonClientException, USER);
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
-          .addParam("message",
-              amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message");
+      throw new InvalidRequestException(isNotEmpty(errorMessage) ? errorMessage : "Unknown Aws client exception", USER);
     }
   }
 
-  protected void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
+  @VisibleForTesting
+  void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
     logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
+      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
+      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof ClusterNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND)
-          .addParam("message", amazonServiceException.getMessage());
+      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_CLUSTER_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
-          .addParam("message", amazonServiceException.getMessage());
+      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       if (amazonServiceException.getMessage().contains(
               "Trying to remove Target Groups that are not part of the group")) {
@@ -112,7 +111,7 @@ class AwsHelperServiceDelegateBase {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
+      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
         logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
@@ -120,8 +119,8 @@ class AwsHelperServiceDelegateBase {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
       }
     } else {
-      logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
+      logger.error("Unhandled aws exception", amazonServiceException);
+      throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
     }
   }
 
