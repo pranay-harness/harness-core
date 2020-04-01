@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+
+option java_multiple_files = true;
+
+message CeExceptionMessage{
+    string cluster_id = 1;
+    string message = 2;
+}

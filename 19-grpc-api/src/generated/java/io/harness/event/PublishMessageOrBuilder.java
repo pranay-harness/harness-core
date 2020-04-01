@@ -68,4 +68,13 @@ public interface PublishMessageOrBuilder extends
    * <code>string message_id = 4;</code>
    */
   com.google.protobuf.ByteString getMessageIdBytes();
+
+  /**
+   * <code>string category = 5;</code>
+   */
+  java.lang.String getCategory();
+  /**
+   * <code>string category = 5;</code>
+   */
+  com.google.protobuf.ByteString getCategoryBytes();
 }

@@ -56,6 +56,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   @Mock private HPersistence hPersistence;
   @Mock private StreamObserver<PublishResponse> observer;
   @Mock private LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository;
+  @Mock private MessageProcessorRegistry messageProcessorRegistry;
 
   @InjectMocks private EventPublisherServerImpl publisherServer;
 
@@ -83,6 +84,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
                                              .setMessageId("id-" + pair.getLeft())
                                              .putAttributes("key1", "val1")
                                              .putAttributes("key2", pair.getRight().toString())
+                                             .setCategory("")
                                              .setPayload(Any.pack(pair.getRight()))
                                              .setOccurredAt(HTimestamps.fromInstant(occurredAt))
                                              .build())
@@ -100,6 +102,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
                          .data(Any.pack(pair.getRight()).toByteArray())
                          .accountId(TEST_ACC_ID)
                          .attributes(ImmutableMap.of("key1", "val1", "key2", pair.getRight().toString()))
+                         .category("")
                          .occurredAt(occurredAt.toEpochMilli())
                          .build())
               .collect(toList()));

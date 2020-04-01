@@ -77,6 +77,7 @@ cache { "name" : "commutativeIdx" , "unique" : true} { "_id" : 1 , "contextValue
 cache { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 ceCloudAccount { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "infraAccountId" : 1 , "infraMasterAccountId" : 1}
 ceCluster { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "infraAccountId" : 1 , "region" : 1 , "clusterName" : 1}
+ceExceptionRecord { "name" : "accountId_clusterId_createdAt" , "background" : true} { "accountId" : 1 , "clusterId" : 1 , "createdAt" : 1}
 cloudFormationRollbackConfig { "name" : "appId_1" , "background" : true} { "appId" : 1}
 cloudFormationRollbackConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 cloudFormationRollbackConfig { "name" : "entityId_1" , "background" : true} { "entityId" : 1}

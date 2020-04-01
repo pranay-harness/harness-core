@@ -34,17 +34,17 @@ public final class EventPublisherOuterClass {
         + "\022\020io.harness.event\032\031google/protobuf/any."
         + "proto\032\037google/protobuf/timestamp.proto\"D"
         + "\n\016PublishRequest\0222\n\010messages\030\001 \003(\0132 .io."
-        + "harness.event.PublishMessage\"\365\001\n\016Publish"
+        + "harness.event.PublishMessage\"\207\002\n\016Publish"
         + "Message\022%\n\007payload\030\001 \001(\0132\024.google.protob"
         + "uf.Any\022D\n\nattributes\030\002 \003(\01320.io.harness."
         + "event.PublishMessage.AttributesEntry\022/\n\013"
         + "occurred_at\030\003 \001(\0132\032.google.protobuf.Time"
-        + "stamp\022\022\n\nmessage_id\030\004 \001(\t\0321\n\017AttributesE"
-        + "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\021\n\017"
-        + "PublishResponse2`\n\016EventPublisher\022N\n\007Pub"
-        + "lish\022 .io.harness.event.PublishRequest\032!"
-        + ".io.harness.event.PublishResponseB\002P\001b\006p"
-        + "roto3"};
+        + "stamp\022\022\n\nmessage_id\030\004 \001(\t\022\020\n\010category\030\005 "
+        + "\001(\t\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005v"
+        + "alue\030\002 \001(\t:\0028\001\"\021\n\017PublishResponse2`\n\016Eve"
+        + "ntPublisher\022N\n\007Publish\022 .io.harness.even"
+        + "t.PublishRequest\032!.io.harness.event.Publ"
+        + "ishResponseB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -75,6 +75,7 @@ public final class EventPublisherOuterClass {
                 "Attributes",
                 "OccurredAt",
                 "MessageId",
+                "Category",
             });
     internal_static_io_harness_event_PublishMessage_AttributesEntry_descriptor =
         internal_static_io_harness_event_PublishMessage_descriptor.getNestedTypes().get(0);

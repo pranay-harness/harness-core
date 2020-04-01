@@ -65,6 +65,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock DelegateService delegateService;
   @Mock LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+  @Mock CeExceptionRecordDao CeExceptionRecordDao;
 
   @InjectMocks HealthStatusServiceImpl healthStatusService;
 

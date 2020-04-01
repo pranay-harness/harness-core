@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.event.payloads.Usage;
@@ -30,9 +31,11 @@ import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
+import software.wings.delegatetasks.k8s.exception.K8sClusterException;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
+  private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
@@ -60,19 +64,34 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
-    String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-    logger.info("Created a watch with id {}.", watchId);
-    K8sClusterConfig k8sClusterConfig =
-        (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
-    if (k8sMetricsClient == null) {
-      k8sMetricsClient = kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
+    try {
+      String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
+      logger.info("Created a watch with id {}.", watchId);
+      K8sClusterConfig k8sClusterConfig =
+          (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+      if (k8sMetricsClient == null) {
+        k8sMetricsClient = kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
+      }
+      if (taskWatchIdMap.get(taskId.getId()) == null) {
+        publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
+        taskWatchIdMap.put(taskId.getId(), watchId);
+      }
+      publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
+      publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
+    } catch (K8sClusterException ke) {
+      try {
+        eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
+                                          .setClusterId(watchTaskParams.getClusterId())
+                                          .setMessage((String) ke.getParams().get("reason"))
+                                          .build(),
+            HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+      } catch (Exception ex) {
+        logger.error("Failed to publish failure from {} to the Event Server.", taskId);
+      }
+    } catch (Exception e) {
+      logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
     }
-    if (taskWatchIdMap.get(taskId.getId()) == null) {
-      publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
-      taskWatchIdMap.put(taskId.getId(), watchId);
-    }
-    publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
-    publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
+
     return PerpetualTaskResponse.builder()
         .responseCode(200)
         .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)

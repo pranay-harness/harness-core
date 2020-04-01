@@ -11,6 +11,7 @@ import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
@@ -990,6 +991,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CommandEntity.class);
     set.add(CommandVersionEntity.class);
     set.add(ImportedCommandTemplate.class);
+    set.add(CeExceptionRecord.class);
   }
 
   @Override

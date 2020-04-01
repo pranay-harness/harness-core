@@ -17,6 +17,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
   }
   private PublishMessage() {
     messageId_ = "";
+    category_ = "";
   }
 
   @java.
@@ -81,6 +82,12 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
             java.lang.String s = input.readStringRequireUtf8();
 
             messageId_ = s;
+            break;
+          }
+          case 42: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            category_ = s;
             break;
           }
           default: {
@@ -266,6 +273,36 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
   }
 
+  public static final int CATEGORY_FIELD_NUMBER = 5;
+  private volatile java.lang.Object category_;
+  /**
+   * <code>string category = 5;</code>
+   */
+  public java.lang.String getCategory() {
+    java.lang.Object ref = category_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      category_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string category = 5;</code>
+   */
+  public com.google.protobuf.ByteString getCategoryBytes() {
+    java.lang.Object ref = category_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      category_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -291,6 +328,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
     if (!getMessageIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, messageId_);
+    }
+    if (!getCategoryBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, category_);
     }
     unknownFields.writeTo(output);
   }
@@ -318,6 +358,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
     if (!getMessageIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, messageId_);
+    }
+    if (!getCategoryBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, category_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -350,6 +393,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
     if (!getMessageId().equals(other.getMessageId()))
       return false;
+    if (!getCategory().equals(other.getCategory()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -376,6 +421,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
     hash = (37 * hash) + MESSAGE_ID_FIELD_NUMBER;
     hash = (53 * hash) + getMessageId().hashCode();
+    hash = (37 * hash) + CATEGORY_FIELD_NUMBER;
+    hash = (53 * hash) + getCategory().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -519,6 +566,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
       messageId_ = "";
 
+      category_ = "";
+
       return this;
     }
 
@@ -563,6 +612,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
         result.occurredAt_ = occurredAtBuilder_.build();
       }
       result.messageId_ = messageId_;
+      result.category_ = category_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -615,6 +665,10 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
       if (!other.getMessageId().isEmpty()) {
         messageId_ = other.messageId_;
+        onChanged();
+      }
+      if (!other.getCategory().isEmpty()) {
+        category_ = other.category_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1043,6 +1097,68 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       checkByteStringIsUtf8(value);
 
       messageId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object category_ = "";
+    /**
+     * <code>string category = 5;</code>
+     */
+    public java.lang.String getCategory() {
+      java.lang.Object ref = category_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        category_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string category = 5;</code>
+     */
+    public com.google.protobuf.ByteString getCategoryBytes() {
+      java.lang.Object ref = category_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        category_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string category = 5;</code>
+     */
+    public Builder setCategory(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      category_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string category = 5;</code>
+     */
+    public Builder clearCategory() {
+      category_ = getDefaultInstance().getCategory();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string category = 5;</code>
+     */
+    public Builder setCategoryBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      category_ = value;
       onChanged();
       return this;
     }
