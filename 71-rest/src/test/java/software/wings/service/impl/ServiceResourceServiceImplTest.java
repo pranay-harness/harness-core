@@ -5,16 +5,12 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.rule.OwnerRule.POOJA;
-import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -28,7 +24,6 @@ import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
@@ -37,37 +32,25 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.limits.Action;
-import io.harness.limits.ActionType;
-import io.harness.limits.LimitCheckerFactory;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
-import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
-import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ResourceLookupService;
-import software.wings.utils.ArtifactType;
-import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,14 +62,9 @@ import javax.ws.rs.core.UriInfo;
 
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private HarnessTagService harnessTagService;
+  @Inject private ServiceResourceServiceImpl serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
-  @Mock private LimitCheckerFactory limitCheckerFactory;
-  @Mock private AuditServiceHelper auditServiceHelper;
-  @Mock private ApplicationManifestService applicationManifestService;
-  @Mock private NotificationService notificationService;
-  @Inject @InjectMocks private ServiceResourceServiceImpl serviceResourceService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @InjectMocks private ServiceResourceServiceImpl mockedServiceResourceService;
   @Mock private ResourceLookupService resourceLookupService;
@@ -488,34 +466,5 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     assertThat(pageRequest.getFilters().size()).isEqualTo(2);
     assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("deploymentType");
     assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(NOT_EXISTS);
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(UnitTests.class)
-  public void shouldSetServiceDeploymentTypeAndArtifactTypeTag() {
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
-        .thenReturn(new WingsTestConstants.MockChecker(true, ActionType.CREATE_SERVICE));
-    when(applicationManifestService.create(any()))
-        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
-
-    doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
-    doNothing().when(notificationService).sendNotificationAsync(any());
-    Service helmService = Service.builder()
-                              .name(SERVICE_NAME)
-                              .accountId(ACCOUNT_ID)
-                              .appId(APP_ID)
-                              .deploymentType(HELM)
-                              .artifactType(ArtifactType.DOCKER)
-                              .build();
-    Service savedService = serviceResourceService.save(helmService);
-    List<HarnessTagLink> tagLinksWithEntityId =
-        harnessTagService.getTagLinksWithEntityId(ACCOUNT_ID, savedService.getUuid());
-    assertThat(tagLinksWithEntityId).hasSize(2);
-    assertTrue(tagLinksWithEntityId.stream().anyMatch(
-        tagLink -> tagLink.getKey().equals("deploymentType") && tagLink.getValue().equals("HELM")));
-    assertTrue(tagLinksWithEntityId.stream().anyMatch(
-        tagLink -> tagLink.getKey().equals("artifactType") && tagLink.getValue().equals("DOCKER")));
   }
 }

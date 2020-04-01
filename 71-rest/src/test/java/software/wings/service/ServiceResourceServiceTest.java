@@ -198,7 +198,6 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -269,7 +268,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private PipelineService pipelineService;
   @Mock private TriggerService triggerService;
-  @Mock private HarnessTagService harnessTagService;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private AuditServiceHelper auditServiceHelper;
@@ -388,7 +386,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Service service = serviceBuilder.build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
-    doNothing().when(harnessTagService).attachTag(any());
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
@@ -2404,7 +2401,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreatePCFV2Service() throws IOException {
-    doNothing().when(harnessTagService).attachTag(any());
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     Service service = Service.builder()
@@ -2472,7 +2468,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreatePCFV2ServiceWithExistingAppManifest() {
-    doNothing().when(harnessTagService).attachTag(any());
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     Service service = Service.builder()
