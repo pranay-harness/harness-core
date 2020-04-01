@@ -15,6 +15,8 @@ public enum CEError {
 
   CREDENTIALS_INCORRECT("Credentials are not correct."),
 
+  METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s."),
+
   BILLING_REPORTS_MISSING("Billing Reports are not generated/available/accessible."),
 
   INTERNAL_ERROR("Internal error.");

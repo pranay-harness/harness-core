@@ -2,6 +2,7 @@ package io.harness.ccm.health;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
+import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_NOT_ASSIGNED;
@@ -37,6 +38,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject DelegateService delegateService;
   @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+  @Inject CeExceptionRecordDao ceExceptionRecordDao;
 
   private static final String LAST_EVENT_TIMESTAMP_MESSAGE = "Last event collected at %s";
   public static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
@@ -96,7 +98,14 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp)) {
         errors.add(NO_RECENT_EVENTS_PUBLISHED);
       }
+
+      CeExceptionRecord CeExceptionRecord =
+          ceExceptionRecordDao.getLatestException(clusterRecord.getAccountId(), clusterRecord.getUuid());
+      if (CeExceptionRecord != null && CeExceptionRecord.getMessage().contains("metrics-server")) {
+        errors.add(METRICS_SERVER_NOT_FOUND);
+      }
     }
+
     return errors;
   }
 
@@ -113,6 +122,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         case NO_RECENT_EVENTS_PUBLISHED:
           messages.add(
               String.format(NO_RECENT_EVENTS_PUBLISHED.getMessage(), clusterName, new Date(lastEventTimestamp)));
+          break;
+        case METRICS_SERVER_NOT_FOUND:
+          messages.add(String.format(METRICS_SERVER_NOT_FOUND.getMessage(), clusterName));
           break;
         default:
           messages.add("Unexpected error. Please contact Harness support.");

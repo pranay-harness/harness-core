@@ -7,11 +7,14 @@ import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
+import io.harness.event.MessageProcessorType;
 import io.harness.event.grpc.EventPublisherServerImpl;
+import io.harness.event.grpc.MessageProcessor;
 import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
@@ -48,6 +51,14 @@ public class EventServiceModule extends AbstractModule {
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
+
+    MapBinder<MessageProcessorType, MessageProcessor> mapBinder =
+        MapBinder.newMapBinder(binder(), MessageProcessorType.class, MessageProcessor.class);
+    for (MessageProcessorType messageProcessorType : MessageProcessorType.values()) {
+      mapBinder.addBinding(messageProcessorType)
+          .to(messageProcessorType.getMessageProcessorClass())
+          .in(Singleton.class);
+    }
 
     install(new GrpcServerModule(eventServiceConfig.getConnectors(), //
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
