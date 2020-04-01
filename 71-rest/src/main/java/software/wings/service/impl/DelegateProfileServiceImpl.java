@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -100,12 +99,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
     List<Delegate> delegates =
         wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
-                                     .filter(delegate -> delegate.getDelegateProfileId() == delegateProfileId)
+                                     .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
                                      .map(Delegate::getHostName)
                                      .collect(toList());
     if (isNotEmpty(delegateNames)) {
       String message = format("Delegate profile [%s] could not be deleted because it's used by these delegates [%s]",
-          delegateProfile.getName(), Joiner.on(", ").join(delegateNames));
+          delegateProfile.getName(), String.join(", ", delegateNames));
       throw new InvalidRequestException(message, USER);
     }
   }
