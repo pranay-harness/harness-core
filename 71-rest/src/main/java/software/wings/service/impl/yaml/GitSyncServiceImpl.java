@@ -200,7 +200,8 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                      .entityType(yamlGitConfig.getEntityType())
                                                      .branchName(yamlGitConfig.getBranchName())
                                                      .repositoryUrl(gitConfig.getRepoUrl())
-                                                     .yamlGitConfigId(yamlGitConfig.getUuid());
+                                                     .yamlGitConfigId(yamlGitConfig.getUuid())
+                                                     .gitConnectorId(yamlGitConfig.getGitConnectorId());
                 final String entityName = entityIdToEntityNameMapping.get(yamlGitConfig.getEntityId());
                 if (entityName != null) {
                   builder.entityName(entityName);
