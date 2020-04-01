@@ -231,6 +231,7 @@ public class WorkflowServiceHelper {
   public static final String DATADOG_METRICS = "Datadog Metrics";
   public static final String STACKDRIVER = "Stackdriver";
   public static final String CLOUDWATCH = "CloudWatch";
+  public static final String SCALYR = "Scalyr";
   public static final String BUG_SNAG = "Bugsnag";
   public static final String CUSTOM_METRICS = "Custom Metrics";
   public static final String DATADOG_LOG = "Datadog Log";

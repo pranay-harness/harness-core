@@ -36,9 +36,10 @@ public class LogResponseParser {
   @Builder
   @AllArgsConstructor
   public static class LogResponseData {
-    String responseText;
-    Set<String> hostList;
-    boolean shouldDoHostBasedFiltering;
+    private String responseText;
+    private Set<String> hostList;
+    private boolean shouldDoHostBasedFiltering;
+    private boolean fixedHostName;
     private Map<String, ResponseMapper> responseMappers;
   }
 
@@ -73,7 +74,7 @@ public class LogResponseParser {
     } catch (Exception ex) {
       logger.error("Unable to extract data in LogResponseParser {}", data.responseText);
     }
-    createRecords(output, resultMap, timestampFormat);
+    createRecords(output, resultMap, timestampFormat, data.fixedHostName);
     // filter only the hosts we care about
     List<LogElement> logs = new ArrayList<>();
     if (resultMap.size() > 0 && data.shouldDoHostBasedFiltering) {
@@ -88,8 +89,8 @@ public class LogResponseParser {
     return logs;
   }
 
-  private static void createRecords(
-      List<Multimap<String, Object>> response, Map<String, LogElement> resultMap, String timestampFormat) {
+  private void createRecords(List<Multimap<String, Object>> response, Map<String, LogElement> resultMap,
+      String timestampFormat, boolean fixedHostName) {
     if (response == null) {
       logger.error("Something went wrong during parsing. Response is null.");
       return;
@@ -105,6 +106,7 @@ public class LogResponseParser {
         logMessages.add(record.get("logMessage" + index).iterator());
       }
       Iterator<Object> hostnames = record.get("host").iterator();
+      String singleHostName = fixedHostName ? (String) hostnames.next() : null;
       while (timestamps.hasNext()) {
         // Figure out which form the timestamp is in
         long timestamp = 0;
@@ -125,7 +127,12 @@ public class LogResponseParser {
           timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
         }
 
-        String hostName = record.containsKey("host") ? (String) hostnames.next() : null;
+        String hostName;
+        if (fixedHostName) {
+          hostName = singleHostName;
+        } else {
+          hostName = record.containsKey("host") ? (String) hostnames.next() : null;
+        }
         final String key = timestamp + ":" + hostName;
         if (!resultMap.containsKey(key)) {
           resultMap.put(key, new LogElement());

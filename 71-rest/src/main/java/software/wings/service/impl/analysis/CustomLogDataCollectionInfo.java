@@ -30,6 +30,7 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   private int collectionFrequency;
   private String hostnameSeparator;
   private boolean shouldDoHostBasedFiltering = true;
+  private boolean fixedHostName;
 
   @Builder
   public CustomLogDataCollectionInfo(String baseUrl, String validationUrl, String dataUrl,
@@ -38,7 +39,7 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
       String applicationId, String stateExecutionId, String cvConfidId, String workflowId, String workflowExecutionId,
       String serviceId, String query, long startTime, long endTime, int startMinute, int collectionTime,
       String hostnameField, Set<String> hosts, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails,
-      int initialDelayMinutes, String hostnameSeparator, boolean shouldDoHostBasedFiltering) {
+      int initialDelayMinutes, String hostnameSeparator, boolean shouldDoHostBasedFiltering, boolean fixedHostName) {
     super(accountId, applicationId, stateExecutionId, cvConfidId, workflowId, workflowExecutionId, serviceId, query,
         startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails,
         initialDelayMinutes);
@@ -52,6 +53,7 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     this.collectionFrequency = collectionFrequency;
     this.hostnameSeparator = hostnameSeparator;
     this.shouldDoHostBasedFiltering = shouldDoHostBasedFiltering;
+    this.fixedHostName = fixedHostName;
   }
 
   @Override

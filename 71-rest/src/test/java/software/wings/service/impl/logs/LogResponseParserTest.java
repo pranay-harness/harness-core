@@ -53,7 +53,7 @@ public class LogResponseParserTest extends CategoryTest {
 
     LogResponseParser parser = new LogResponseParser();
     LogResponseParser.LogResponseData data =
-        new LogResponseData(textLoad, new HashSet<>(hostList), false, responseMappers);
+        new LogResponseData(textLoad, new HashSet<>(hostList), false, false, responseMappers);
 
     List<LogElement> logs = parser.extractLogs(data);
     assertThat(logs).isNotNull();
@@ -89,7 +89,7 @@ public class LogResponseParserTest extends CategoryTest {
 
     LogResponseParser parser = new LogResponseParser();
     LogResponseParser.LogResponseData data =
-        new LogResponseData(textLoad, new HashSet<>(hostList), true, responseMappers);
+        new LogResponseData(textLoad, new HashSet<>(hostList), true, false, responseMappers);
 
     List<LogElement> logs = parser.extractLogs(data);
     assertThat(logs).isNotNull();
@@ -124,7 +124,7 @@ public class LogResponseParserTest extends CategoryTest {
 
     LogResponseParser parser = new LogResponseParser();
     LogResponseParser.LogResponseData data =
-        new LogResponseData(textLoad, new HashSet<>(hostList), true, responseMappers);
+        new LogResponseData(textLoad, new HashSet<>(hostList), true, false, responseMappers);
 
     List<LogElement> logs = parser.extractLogs(data);
     assertThat(logs).isNotNull();

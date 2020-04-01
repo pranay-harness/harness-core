@@ -54,6 +54,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -275,6 +276,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof PrometheusConfig) {
       newRelicService.validateAPMConfig(
           settingAttribute, ((PrometheusConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
+    } else if (settingValue instanceof ScalyrConfig) {
+      newRelicService.validateAPMConfig(
+          settingAttribute, ((ScalyrConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof GitConfig) {
       validateGitConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof HostConnectionAttributes) {

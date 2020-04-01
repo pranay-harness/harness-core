@@ -153,6 +153,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
           case LOG_VERIFICATION:
           case DATA_DOG_LOG:
           case STACK_DRIVER_LOG:
+          case SCALYR:
             cluster();
             break;
           case SPLUNKV2:

@@ -155,6 +155,7 @@ import software.wings.sm.states.PrometheusState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.ResourceConstraintState;
 import software.wings.sm.states.RollingNodeSelectState;
+import software.wings.sm.states.ScalyrState;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.StackDriverLogState;
@@ -360,6 +361,11 @@ public enum StateType implements StateTypeDescriptor {
    * Instana state type
    */
   INSTANA(InstanaState.class, VERIFICATIONS, 21, "Instana", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
+   * Scalyr state type
+   */
+  SCALYR(ScalyrState.class, VERIFICATIONS, 22, "Scalyr", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

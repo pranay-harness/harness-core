@@ -50,6 +50,7 @@ import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ScalyrConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -703,6 +704,67 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     doReturn(new ArrayList<>()).when(spyRequestExecutor).executeRequest(any(Call.class));
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(prometheusConfig).build());
+    assertThat(validationResult.isValid()).isTrue();
+    assertThat(validationResult.getErrorMessage()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateConnectivity_whenIllegalUrlScalyrConnector() {
+    final ScalyrConfig scalyrConfig =
+        ScalyrConfig.builder().url(generateUuid() + "/").apiToken(generateUuid().toCharArray()).build();
+    final ValidationResult validationResult = settingValidationService.validateConnectivity(
+        aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(scalyrConfig).build());
+    assertThat(validationResult.isValid()).isFalse();
+    assertThat(validationResult.getErrorMessage())
+        .isEqualTo("IllegalArgumentException: Illegal URL: " + scalyrConfig.getUrl());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateConnectivity_whenInvalidUrlScalyrConnector() {
+    final ScalyrConfig scalyrConfig =
+        ScalyrConfig.builder().url("https://scalyr-example.com").apiToken(generateUuid().toCharArray()).build();
+    scalyrConfig.setDecrypted(true);
+    final ValidationResult validationResult = settingValidationService.validateConnectivity(
+        aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(scalyrConfig).build());
+    assertThat(validationResult.isValid()).isFalse();
+    assertThat(validationResult.getErrorMessage())
+        .isEqualTo("Error while saving configuration. The Base URL must end with a / (forward slash)");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateConnectivity_whenWrongTokenScalyrConnector() {
+    final ScalyrConfig scalyrConfig =
+        ScalyrConfig.builder().url("https://scalyr-example.com/").apiToken(generateUuid().toCharArray()).build();
+    scalyrConfig.setDecrypted(true);
+    doThrow(
+        new DataCollectionException(
+            "Response code: 401, Message: , Error: {\"message\": \"Couldn't decode API token ...\",\"status\": \"error/client/badParam\"}"))
+        .when(spyRequestExecutor)
+        .executeRequest(any(Call.class));
+    final ValidationResult validationResult = settingValidationService.validateConnectivity(
+        aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(scalyrConfig).build());
+    assertThat(validationResult.isValid()).isFalse();
+    assertThat(validationResult.getErrorMessage())
+        .isEqualTo(
+            "DataCollectionException: Response code: 401, Message: , Error: {\"message\": \"Couldn't decode API token ...\",\"status\": \"error/client/badParam\"}");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testValidateConnectivity_whenValidScalyrConnector() {
+    final ScalyrConfig scalyrConfig =
+        ScalyrConfig.builder().url("https://scalyr-example.com/").apiToken(generateUuid().toCharArray()).build();
+    scalyrConfig.setDecrypted(true);
+    doReturn(new ArrayList<>()).when(spyRequestExecutor).executeRequest(any(Call.class));
+    final ValidationResult validationResult = settingValidationService.validateConnectivity(
+        aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(scalyrConfig).build());
     assertThat(validationResult.isValid()).isTrue();
     assertThat(validationResult.getErrorMessage()).isEmpty();
   }

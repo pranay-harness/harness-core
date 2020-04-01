@@ -1481,7 +1481,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Preconditions.checkState(logDefinitions.size() == 1);
 
       LogResponseParser.LogResponseData responseData = new LogResponseParser.LogResponseData(
-          logCollectionResponse, null, false, logDefinitions.values().iterator().next());
+          logCollectionResponse, null, false, false, logDefinitions.values().iterator().next());
 
       Collection<LogElement> logRecords = (new LogResponseParser()).extractLogs(responseData);
       if (isNotEmpty(logRecords)) {

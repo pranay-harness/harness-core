@@ -161,6 +161,7 @@ import static software.wings.sm.StateType.PAUSE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.StateType.SCALYR;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
@@ -4514,7 +4515,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAllStateTypesDefinedInStepTypes() {
     List<StateType> excludedStateTypes = asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP,
-        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION);
+        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION, SCALYR);
 
     Set<String> stateTypes = new HashSet<>();
     for (StateType stateType : StateType.values()) {

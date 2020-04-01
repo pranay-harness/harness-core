@@ -191,6 +191,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Jen
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.PrometheusConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.ScalyrConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
@@ -411,6 +412,8 @@ public class YamlModule extends AbstractModule {
         .to(SumoConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.INSTANA.name())
         .to(InstanaConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SCALYR.name())
+        .to(ScalyrConfigYamlHandler.class);
 
     MapBinder<String, CVConfigurationYamlHandler> cvConfigYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CVConfigurationYamlHandler.class);

@@ -50,6 +50,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
@@ -246,6 +247,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.INSTANA.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.INSTANA.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ScalyrConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.SCALYR.getDisplayName())
+            .withType(SettingVariableTypes.SCALYR.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.SCALYR.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SmtpConfig.class)

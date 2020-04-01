@@ -47,12 +47,11 @@ public class CustomDataCollectionUtils {
     if (result.contains("${end_time_seconds}")) {
       result = result.replace("${end_time_seconds}", String.valueOf(endTime / 1000L));
     }
-
-    if (result.contains("${host}")) {
-      result = result.replace("${host}", host);
-    }
     if (result.contains("${query}")) {
       result = result.replace("${query}", query);
+    }
+    if (result.contains("${host}")) {
+      result = result.replace("${host}", host);
     }
     return result;
   }
