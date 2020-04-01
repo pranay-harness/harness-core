@@ -2,6 +2,9 @@ package software.wings.helpers.ext.pcf;
 
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK;
 import static java.util.Comparator.comparingInt;
@@ -17,9 +20,11 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.pcf.model.PcfConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
@@ -392,6 +397,38 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
 
     return false;
+  }
+
+  @Override
+  public boolean isActiveApplication(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException {
+    // If we want to enable it, its expected to be disabled and vice versa
+    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())
+        && applicationEnvironments.getUserProvided().containsKey(PcfConstants.HARNESS__STATUS__INDENTIFIER)
+        && HARNESS__ACTIVE__INDENTIFIER.equals(
+               applicationEnvironments.getUserProvided().get(PcfConstants.HARNESS__STATUS__INDENTIFIER))) {
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public void setEnvironmentVariableForAppStatus(PcfRequestConfig pcfRequestConfig, boolean activeStatus,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    // If we want to enable it, its expected to be disabled and vice versa
+    pcfClient.setEnvVariablesForApplication(
+        Collections.singletonMap(
+            HARNESS__STATUS__INDENTIFIER, activeStatus ? HARNESS__ACTIVE__INDENTIFIER : HARNESS__STAGE__INDENTIFIER),
+        pcfRequestConfig, executionLogCallback);
+  }
+
+  @Override
+  public void unsetEnvironmentVariableForAppStatus(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    // If we want to enable it, its expected to be disabled and vice versa
+    pcfClient.unsetEnvVariablesForApplication(
+        Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, executionLogCallback);
   }
 
   @Override

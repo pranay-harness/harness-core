@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
@@ -15,6 +16,7 @@ import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 public interface PcfClient {
   CloudFoundryClient getCloudFoundryClient(PcfRequestConfig pcfRequestConfig, ConnectionContext connectionContext)
@@ -75,5 +77,12 @@ public interface PcfClient {
   List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
       throws PivotalClientApiException;
   StartedProcess tailLogsForPcf(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException;
+
+  void setEnvVariablesForApplication(Map<String, Object> envVars, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException;
+  void unsetEnvVariablesForApplication(List<String> varNames, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException;
+  ApplicationEnvironments getApplicationEnvironmentsByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException;
 }

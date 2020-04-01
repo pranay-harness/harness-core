@@ -8,7 +8,6 @@ import static software.wings.beans.Log.color;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
@@ -59,8 +58,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     File workingDirectory = null;
     try {
       // This will be CF_HOME for any cli related operations
-      String randomToken = UUIDGenerator.generateUuid();
-      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment();
 
       executionLogCallback.saveExecutionLog(color("--------- Starting PCF Route Update\n", White, Bold));
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) pcfCommandRequest;
@@ -239,13 +237,18 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     PcfRouteUpdateRequestConfigData data = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
-    List<String> mapRouteForNewApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
-    List<String> unmapRouteForNewApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
-    pcfCommandTaskHelper.mapRouteMaps(
-        data.getNewApplicatiaonName(), mapRouteForNewApp, pcfRequestConfig, executionLogCallback);
-    pcfCommandTaskHelper.unmapRouteMaps(
-        data.getNewApplicatiaonName(), unmapRouteForNewApp, pcfRequestConfig, executionLogCallback);
+    if (!data.isRollback()) {
+      updateRoutesForNewApplication(pcfRequestConfig, executionLogCallback, data);
+      updateRoutesForExistingApplication(pcfRequestConfig, executionLogCallback, data);
+    } else {
+      updateRoutesForExistingApplication(pcfRequestConfig, executionLogCallback, data);
+      updateRoutesForNewApplication(pcfRequestConfig, executionLogCallback, data);
+    }
+  }
 
+  private void updateRoutesForExistingApplication(PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback, PcfRouteUpdateRequestConfigData data)
+      throws PivotalClientApiException {
     if (isNotEmpty(data.getExistingApplicationNames())) {
       List<String> mapRouteForExistingApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
       List<String> unmapRouteForExistingApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
@@ -254,7 +257,30 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
             existingAppName, mapRouteForExistingApp, pcfRequestConfig, executionLogCallback);
         pcfCommandTaskHelper.unmapRouteMaps(
             existingAppName, unmapRouteForExistingApp, pcfRequestConfig, executionLogCallback);
+        updateEnvVariableForApplication(pcfRequestConfig, executionLogCallback, existingAppName, data.isRollback());
       }
     }
+  }
+
+  private void updateEnvVariableForApplication(PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback, String appName, boolean isActiveApplication)
+      throws PivotalClientApiException {
+    pcfRequestConfig.setApplicationName(appName);
+    pcfDeploymentManager.setEnvironmentVariableForAppStatus(
+        pcfRequestConfig, isActiveApplication, executionLogCallback);
+  }
+
+  private void updateRoutesForNewApplication(PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback, PcfRouteUpdateRequestConfigData data)
+      throws PivotalClientApiException {
+    List<String> mapRouteForNewApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
+    List<String> unmapRouteForNewApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
+    pcfCommandTaskHelper.mapRouteMaps(
+        data.getNewApplicatiaonName(), mapRouteForNewApp, pcfRequestConfig, executionLogCallback);
+    pcfCommandTaskHelper.unmapRouteMaps(
+        data.getNewApplicatiaonName(), unmapRouteForNewApp, pcfRequestConfig, executionLogCallback);
+    // mark new app as ACTIVE if not rollback, STAGE if rollback
+    updateEnvVariableForApplication(
+        pcfRequestConfig, executionLogCallback, data.getNewApplicatiaonName(), !data.isRollback());
   }
 }

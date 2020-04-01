@@ -11,7 +11,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -64,8 +63,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
     Exception exception = null;
     try {
       // This will be CF_HOME for any cli related operations
-      String randomToken = UUIDGenerator.generateUuid();
-      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment();
 
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails);

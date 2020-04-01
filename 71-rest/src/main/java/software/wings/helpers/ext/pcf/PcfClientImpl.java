@@ -29,6 +29,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.color;
 
@@ -51,11 +52,13 @@ import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationManifest;
 import org.cloudfoundry.operations.applications.ApplicationManifest.Builder;
 import org.cloudfoundry.operations.applications.ApplicationManifestUtils;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.DeleteApplicationRequest;
+import org.cloudfoundry.operations.applications.GetApplicationEnvironmentsRequest;
 import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.cloudfoundry.operations.applications.ListApplicationTasksRequest;
 import org.cloudfoundry.operations.applications.LogsRequest;
@@ -968,6 +971,49 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @Override
+  public ApplicationEnvironments getApplicationEnvironmentsByName(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
+    logger.info(new StringBuilder()
+                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                    .append("Getting application: ")
+                    .append(pcfRequestConfig.getApplicationName())
+                    .toString());
+    CountDownLatch latch = new CountDownLatch(1);
+
+    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+    List<ApplicationEnvironments> applicationEnvironments = new ArrayList<>();
+    try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations()
+          .applications()
+          .getEnvironments(
+              GetApplicationEnvironmentsRequest.builder().name(pcfRequestConfig.getApplicationName()).build())
+          .subscribe(applicationEnvironments::add, throwable -> {
+            exceptionOccured.set(true);
+            handleException(throwable, "getApplicationEnvironmentsByName", errorBuilder);
+            latch.countDown();
+          }, latch::countDown);
+
+      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
+      if (exceptionOccured.get()) {
+        throw new PivotalClientApiException(new StringBuilder()
+                                                .append("Exception occurred while  getting application Environments: ")
+                                                .append(pcfRequestConfig.getApplicationName())
+                                                .append(", Error: ")
+                                                .append(errorBuilder.toString())
+                                                .toString());
+      }
+
+      return applicationEnvironments.size() > 0 ? applicationEnvironments.get(0) : null;
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION
+              + "Failed while fetching Env details for application " + pcfRequestConfig.getApplicationName(),
+          ex);
+    }
+  }
+
+  @Override
   public void deleteApplication(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -1435,6 +1481,7 @@ public class PcfClientImpl implements PcfClient {
           logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
           throw new InvalidRequestException(errorMessage);
         }
+        pcfRequestConfig.setLoggedin(true);
       }
 
       List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
@@ -1475,6 +1522,113 @@ public class PcfClientImpl implements PcfClient {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed mapping routes", ex);
     } catch (IOException | TimeoutException ex) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed mapping routes", ex);
+    }
+  }
+
+  @VisibleForTesting
+  public void setEnvVariablesForApplication(Map<String, Object> envVars, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+    try {
+      if (!pcfRequestConfig.isUseCFCLI()) {
+        throw new InvalidRequestException("USE_PCF_CLI flag is needed");
+      }
+
+      if (!pcfRequestConfig.isLoggedin()) {
+        if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
+          String errorMessage = "Failed to login when performing: set-env";
+          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          throw new InvalidRequestException(errorMessage);
+        }
+      }
+
+      if (isNotEmpty(envVars)) {
+        int exitcode;
+        String command;
+        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        logCallback.saveExecutionLog(
+            color("\n # Set Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White,
+                LogWeight.Bold));
+        for (Map.Entry<String, Object> entry : envVars.entrySet()) {
+          logCallback.saveExecutionLog(new StringBuilder(128)
+                                           .append("Environment Variable- ")
+                                           .append(entry.getKey())
+                                           .append(": ")
+                                           .append(entry.getValue())
+                                           .toString());
+
+          command = new StringBuilder(128)
+                        .append("cf set-env ")
+                        .append(pcfRequestConfig.getApplicationName())
+                        .append(' ')
+                        .append(entry.getKey())
+                        .append(' ')
+                        .append(entry.getValue())
+                        .toString();
+
+          exitcode = executeCommand(command, env, logCallback);
+          if (exitcode != 0) {
+            String message = format("Failed to set env var: <%s>", entry.getKey() + ':' + entry.getValue());
+            logger.error(message);
+            logCallback.saveExecutionLog(message, ERROR);
+            throw new PivotalClientApiException(message);
+          }
+        }
+      }
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed to set Env Variable", ex);
+    } catch (IOException | TimeoutException ex) {
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed to set Env Variable", ex);
+    }
+  }
+
+  @VisibleForTesting
+  public void unsetEnvVariablesForApplication(List<String> varNames, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+    try {
+      if (!pcfRequestConfig.isUseCFCLI()) {
+        throw new InvalidRequestException("USE_PCF_CLI flag is needed");
+      }
+
+      if (!pcfRequestConfig.isLoggedin()) {
+        if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
+          String errorMessage = "Failed to login when performing: set-env";
+          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          throw new InvalidRequestException(errorMessage);
+        }
+      }
+
+      if (isNotEmpty(varNames)) {
+        int exitcode;
+        String command;
+        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        logCallback.saveExecutionLog(
+            color("\n # Unset Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White,
+                LogWeight.Bold));
+        for (String var : varNames) {
+          logCallback.saveExecutionLog(new StringBuilder(128).append("Environment Variable: ").append(var).toString());
+
+          command = new StringBuilder(128)
+                        .append("cf unset-env ")
+                        .append(pcfRequestConfig.getApplicationName())
+                        .append(' ')
+                        .append(var)
+                        .toString();
+
+          exitcode = executeCommand(command, env, logCallback);
+          if (exitcode != 0) {
+            String message = "Failed to unset env var: " + var;
+            logger.error(message);
+            logCallback.saveExecutionLog(message, ERROR);
+            throw new PivotalClientApiException(message);
+          }
+        }
+      }
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed to set Env Variable", ex);
+    } catch (IOException | TimeoutException ex) {
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Failed to set Env Variable", ex);
     }
   }
 

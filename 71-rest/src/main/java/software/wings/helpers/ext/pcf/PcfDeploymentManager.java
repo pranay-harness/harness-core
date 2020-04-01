@@ -54,4 +54,13 @@ public interface PcfDeploymentManager {
   String resolvePcfPluginHome();
   ApplicationDetail upsizeApplicationWithSteadyStateCheck(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+
+  boolean isActiveApplication(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException;
+
+  void setEnvironmentVariableForAppStatus(PcfRequestConfig pcfRequestConfig, boolean activeStatus,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+
+  void unsetEnvironmentVariableForAppStatus(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
 }

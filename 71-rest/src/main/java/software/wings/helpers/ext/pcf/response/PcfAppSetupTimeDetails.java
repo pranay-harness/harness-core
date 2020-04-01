@@ -12,4 +12,5 @@ public class PcfAppSetupTimeDetails {
   private String applicationName;
   private Integer initialInstanceCount;
   private List<String> urls;
+  private boolean activeApp;
 }

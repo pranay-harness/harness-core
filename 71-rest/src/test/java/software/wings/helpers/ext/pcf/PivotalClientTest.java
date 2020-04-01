@@ -5,6 +5,9 @@ import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -46,6 +49,7 @@ import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.doppler.MessageType;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.LogsRequest;
@@ -82,6 +86,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -240,6 +245,22 @@ public class PivotalClientTest extends WingsBaseTest {
     ApplicationDetail applicationDetail1 = client.getApplicationByName(getPcfRequestConfig());
     assertThat(applicationDetail1).isNotNull();
     assertThat(applicationDetail).isEqualTo(applicationDetail1);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetApplicationEnvironmentsByName() throws Exception {
+    ApplicationEnvironments applicationEnvironments =
+        ApplicationEnvironments.builder()
+            .putAllUserProvided(Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__STAGE__INDENTIFIER))
+            .build();
+    when(applications.getEnvironments(any())).thenReturn(Mono.just(applicationEnvironments));
+
+    ApplicationEnvironments environment = client.getApplicationEnvironmentsByName(getPcfRequestConfig());
+    assertThat(environment).isNotNull();
+    assertThat(environment.getUserProvided()).isNotNull();
+    assertThat(environment.getUserProvided().get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__STAGE__INDENTIFIER);
   }
 
   @Test
@@ -408,6 +429,25 @@ public class PivotalClientTest extends WingsBaseTest {
     } catch (Exception e) {
       assertThat(e.getMessage())
           .isEqualTo("Exception occurred while  getting application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetApplicationEnvironmentsByName_Exception() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+    pcfRequestConfig.setApplicationName("app");
+
+    try {
+      mockedClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+      assertThat(e.getMessage()).contains("Exception occurred while  getting application Environments: app");
     }
   }
 
@@ -1224,5 +1264,90 @@ public class PivotalClientTest extends WingsBaseTest {
             anyBoolean(), anyInt());
     assertThat(hostCaptor.getValue()).isEqualTo("cdp-10128");
     assertThat(domainCaptor.getValue()).isEqualTo("z.harness.io");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testSetEnvVariablesForApplication() throws Exception {
+    reset(mockedClient);
+    doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
+
+    PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().useCFCLI(true).loggedin(false).applicationName("app").build();
+    ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
+    doNothing().when(logger).saveExecutionLog(anyString());
+
+    // login failed
+    try {
+      mockedClient.setEnvVariablesForApplication(null, pcfRequestConfig, logger);
+      fail("should not reach here");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).contains("Failed to login when performing: set-env");
+    }
+
+    // check command generated
+    doReturn(true).when(mockedClient).doLogin(any(), any(), anyString());
+    doReturn(0).when(mockedClient).executeCommand(anyString(), anyMap(), any());
+    mockedClient.setEnvVariablesForApplication(
+        Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__ACTIVE__INDENTIFIER), pcfRequestConfig, logger);
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockedClient).executeCommand(commandCaptor.capture(), anyMap(), any());
+
+    assertThat(commandCaptor.getValue()).isEqualTo("cf set-env app HARNESS__STATUS__INDENTIFIER ACTIVE");
+
+    // Command execution failed, returned 1
+    doReturn(1).when(mockedClient).executeCommand(anyString(), anyMap(), any());
+    try {
+      mockedClient.setEnvVariablesForApplication(
+          Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__ACTIVE__INDENTIFIER), pcfRequestConfig,
+          logger);
+      fail("should not reach here");
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+      assertThat(e.getMessage()).contains("Failed to set env var: <HARNESS__STATUS__INDENTIFIER:ACTIVE>");
+    }
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testUnsetEnvVariablesForApplication() throws Exception {
+    reset(mockedClient);
+    doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
+
+    PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().useCFCLI(true).loggedin(false).applicationName("app").build();
+    ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
+    doNothing().when(logger).saveExecutionLog(anyString());
+
+    // login failed
+    try {
+      mockedClient.unsetEnvVariablesForApplication(null, pcfRequestConfig, logger);
+      fail("should not reach here");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).contains("Failed to login when performing: set-env");
+    }
+
+    // check command generated
+    doReturn(true).when(mockedClient).doLogin(any(), any(), anyString());
+    doReturn(0).when(mockedClient).executeCommand(anyString(), anyMap(), any());
+    mockedClient.unsetEnvVariablesForApplication(
+        Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, logger);
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockedClient).executeCommand(commandCaptor.capture(), anyMap(), any());
+
+    assertThat(commandCaptor.getValue()).isEqualTo("cf unset-env app HARNESS__STATUS__INDENTIFIER");
+
+    // Command execution failed, returned 1
+    doReturn(1).when(mockedClient).executeCommand(anyString(), anyMap(), any());
+    try {
+      mockedClient.unsetEnvVariablesForApplication(
+          Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, logger);
+      fail("should not reach here");
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+      assertThat(e.getMessage()).contains("Failed to unset env var: HARNESS__STATUS__INDENTIFIER");
+    }
   }
 }
