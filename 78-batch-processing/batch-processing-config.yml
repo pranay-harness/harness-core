@@ -25,3 +25,4 @@ awsS3SyncConfig:
   awsAccessKey: awsS3SyncAccessKeyPlaceHolder
   awsSecretKey: awsS3SyncSecretKeyPlaceHolder
   region: awsS3SyncRegionPlaceHolder
+

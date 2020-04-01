@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsS3BucketDetails;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
@@ -17,12 +18,12 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class CEAwsConfig extends SettingValue {
-  private String s3BucketName;
   private String awsAccountId;
   private String curReportName;
   private String awsAccountType;
   private String awsMasterAccountId;
   private String masterAccountSettingId;
+  private AwsS3BucketDetails s3BucketDetails;
   private AwsCrossAccountAttributes awsCrossAccountAttributes;
 
   @Override
@@ -39,15 +40,16 @@ public class CEAwsConfig extends SettingValue {
     super(SettingVariableTypes.CE_AWS.name());
   }
 
-  public CEAwsConfig(String s3BucketName, String awsAccountId, String curReportName, String awsAccountType,
-      String awsMasterAccountId, String masterAccountSettingId, AwsCrossAccountAttributes awsCrossAccountAttributes) {
+  public CEAwsConfig(String awsAccountId, String curReportName, String awsAccountType, String awsMasterAccountId,
+      String masterAccountSettingId, AwsS3BucketDetails s3BucketDetails,
+      AwsCrossAccountAttributes awsCrossAccountAttributes) {
     this();
-    this.s3BucketName = s3BucketName;
     this.awsAccountId = awsAccountId;
     this.curReportName = curReportName;
     this.awsAccountType = awsAccountType;
     this.awsMasterAccountId = awsMasterAccountId;
     this.masterAccountSettingId = masterAccountSettingId;
+    this.s3BucketDetails = s3BucketDetails;
     this.awsCrossAccountAttributes = awsCrossAccountAttributes;
   }
 

@@ -109,4 +109,20 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       String accountId, String offset, Instant startTime, Instant endTime) {
     return deploymentService.getDeploymentSummary(accountId, offset, startTime, endTime);
   }
+
+  @Override
+  public List<SettingAttribute> getSettingAttributes(String accountId, String category, String valueType) {
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+    try (HIterator<SettingAttribute> query =
+             new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)
+                                 .filter(SettingAttributeKeys.accountId, accountId)
+                                 .filter(SettingAttributeKeys.category, category)
+                                 .filter(SettingAttributeKeys.valueType, valueType)
+                                 .fetch())) {
+      for (SettingAttribute settingAttribute : query) {
+        settingAttributes.add(settingAttribute);
+      }
+    }
+    return settingAttributes;
+  }
 }

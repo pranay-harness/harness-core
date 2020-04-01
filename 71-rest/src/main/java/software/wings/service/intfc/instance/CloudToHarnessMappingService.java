@@ -22,4 +22,6 @@ public interface CloudToHarnessMappingService {
   List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds);
 
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
+
+  List<SettingAttribute> getSettingAttributes(String accountId, String category, String valueType);
 }

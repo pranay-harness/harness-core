@@ -338,10 +338,5 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
     public static final String uuid = "uuid";
     public static final String accountId = "accountId";
     public static final String valueType = SettingAttributeKeys.value + ".type";
-    public static final String isCEEnabled = SettingAttributeKeys.value + ".ccmConfig"
-        + ".cloudCostEnabled";
-    public static final String isBillingReportEnabled = SettingAttributeKeys.value + ".ccmConfig"
-        + ".billingReportConfig"
-        + ".isBillingReportEnabled";
   }
 }

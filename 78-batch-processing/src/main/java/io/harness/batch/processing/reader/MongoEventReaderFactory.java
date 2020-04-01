@@ -1,7 +1,5 @@
 package io.harness.batch.processing.reader;
 
-import static java.lang.Boolean.TRUE;
-
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +12,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
-import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 @Slf4j
 @Service
@@ -45,24 +39,6 @@ public class MongoEventReaderFactory implements EventReaderFactory {
     reader.setTargetType(PublishedMessage.class);
     reader.setQuery(query);
     reader.setPageSize(batchSize);
-    return reader;
-  }
-
-  @Override
-  public ItemReader<SettingAttribute> getS3JobConfigReader(String accountId) {
-    Query query = new Query();
-    query.addCriteria(new Criteria().andOperator(Criteria.where(SettingAttributeKeys.accountId).is(accountId),
-        Criteria.where(SettingAttributeKeys.category).is(SettingCategory.CLOUD_PROVIDER.toString()),
-        Criteria.where(SettingAttributeKeys.valueType).is(SettingVariableTypes.AWS.toString()),
-        Criteria.where(SettingAttributeKeys.isCEEnabled).is(TRUE),
-        Criteria.where(SettingAttributeKeys.isBillingReportEnabled).is(TRUE)));
-
-    MongoItemReader<SettingAttribute> reader = new MongoItemReader<>();
-    reader.setTemplate(mongoTemplate);
-    reader.setCollection("settingAttributes");
-    reader.setTargetType(SettingAttribute.class);
-    reader.setQuery(query);
-    reader.setPageSize(READER_BATCH_SIZE);
     return reader;
   }
 
