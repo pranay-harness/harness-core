@@ -77,7 +77,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
 
     settingAttribute.setCategory(CLOUD_PROVIDER);
-    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
   }
 
   @Test
