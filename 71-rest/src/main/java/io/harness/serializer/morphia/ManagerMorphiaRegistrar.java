@@ -8,6 +8,7 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
+import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
@@ -850,6 +851,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InfrastructureProvisioner.class);
     set.add(Instance.class);
     set.add(InstanceChangeEvent.class);
+    set.add(InstanceData.class);
     set.add(InstanceEvent.class);
     set.add(DeploymentTimeSeriesEvent.class);
     set.add(InstanceStatsSnapshot.class);

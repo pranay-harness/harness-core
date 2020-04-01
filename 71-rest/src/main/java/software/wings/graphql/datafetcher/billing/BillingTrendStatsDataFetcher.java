@@ -238,7 +238,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(query);
-      return fetchBillingAmount(resultSet);
+      return fetchBillingAmount(queryData, resultSet);
     } catch (SQLException e) {
       logger.error("BillingStatsTimeSeriesDataFetcher Error exception", e);
     } finally {
@@ -247,50 +247,56 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     return null;
   }
 
-  private QLTrendStatsCostData fetchBillingAmount(ResultSet resultSet) throws SQLException {
+  private QLTrendStatsCostData fetchBillingAmount(BillingDataQueryMetadata queryData, ResultSet resultSet)
+      throws SQLException {
     QLBillingAmountData totalCostData = null;
     QLBillingAmountData idleCostData = null;
     QLBillingAmountData unallocatedCostData = null;
     while (null != resultSet && resultSet.next()) {
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
-        totalCostData = QLBillingAmountData.builder()
-                            .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
-                            .minStartTime(resultSet
-                                              .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                                  utils.getDefaultCalendar())
-                                              .getTime())
-                            .maxStartTime(resultSet
-                                              .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                                  utils.getDefaultCalendar())
-                                              .getTime())
-                            .build();
-      }
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()) != null) {
-        idleCostData = QLBillingAmountData.builder()
-                           .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()))
-                           .minStartTime(resultSet
-                                             .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                                 utils.getDefaultCalendar())
-                                             .getTime())
-                           .maxStartTime(resultSet
-                                             .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                                 utils.getDefaultCalendar())
-                                             .getTime())
-                           .build();
-      }
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()) != null) {
-        unallocatedCostData =
-            QLBillingAmountData.builder()
-                .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
-                .minStartTime(resultSet
-                                  .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                      utils.getDefaultCalendar())
-                                  .getTime())
-                .maxStartTime(resultSet
-                                  .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                      utils.getDefaultCalendar())
-                                  .getTime())
-                .build();
+      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        switch (field) {
+          case SUM:
+            totalCostData = QLBillingAmountData.builder()
+                                .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
+                                .minStartTime(resultSet
+                                                  .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                      utils.getDefaultCalendar())
+                                                  .getTime())
+                                .maxStartTime(resultSet
+                                                  .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                      utils.getDefaultCalendar())
+                                                  .getTime())
+                                .build();
+            break;
+          case IDLECOST:
+            idleCostData = QLBillingAmountData.builder()
+                               .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()))
+                               .minStartTime(resultSet
+                                                 .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                     utils.getDefaultCalendar())
+                                                 .getTime())
+                               .maxStartTime(resultSet
+                                                 .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                     utils.getDefaultCalendar())
+                                                 .getTime())
+                               .build();
+            break;
+          case UNALLOCATEDCOST:
+            unallocatedCostData =
+                QLBillingAmountData.builder()
+                    .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
+                    .minStartTime(resultSet
+                                      .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                          utils.getDefaultCalendar())
+                                      .getTime())
+                    .maxStartTime(resultSet
+                                      .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                          utils.getDefaultCalendar())
+                                      .getTime())
+                    .build();
+            break;
+          default:
+        }
       }
     }
     return QLTrendStatsCostData.builder()

@@ -107,8 +107,8 @@ public class BillingStatsTimeSeriesDataFetcher
       filters = new ArrayList<>();
     }
 
-    queryData = billingDataQueryBuilder.formQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, true);
+    queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
+        sortCriteria, !isGroupByNodeOrPodPresent(groupByEntityList));
     logger.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 
@@ -369,6 +369,18 @@ public class BillingStatsTimeSeriesDataFetcher
       }
     }
     return filterMap;
+  }
+
+  private boolean isGroupByNodeOrPodPresent(List<QLCCMEntityGroupBy> entityGroupBy) {
+    for (QLCCMEntityGroupBy groupBy : entityGroupBy) {
+      switch (groupBy) {
+        case Node:
+        case Pod:
+          return true;
+        default:
+      }
+    }
+    return false;
   }
 
   @Override

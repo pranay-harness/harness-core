@@ -276,6 +276,7 @@ instance { "name" : "instance_index8" , "background" : true} { "appId" : 1 , "se
 instance { "name" : "isDeleted_1" , "background" : true} { "isDeleted" : 1}
 instanceChangeQueue { "name" : "earliestGet_1" , "background" : true , "expireAfterSeconds" : 86400} { "earliestGet" : 1}
 instanceChangeQueue { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestGet" : 1}
+instanceData { "name" : "accountId_clusterId_instanceId" , "background" : true} { "accountId" : 1 , "clusterId" : 1 , "instanceId" : 1}
 instanceEventQueue { "name" : "earliestGet_1" , "background" : true , "expireAfterSeconds" : 86400} { "earliestGet" : 1}
 instanceEventQueue { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestGet" : 1}
 instanceStats { "name" : "accountId_timestamp_unique_idx" , "unique" : true} { "accountId" : 1 , "timestamp" : 1}

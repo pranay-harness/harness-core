@@ -34,6 +34,8 @@ public class BillingDataQueryMetadata {
     CLOUDSERVICENAME("CLOUDSERVICENAME", DataType.STRING, QLFilterKind.SIMPLE),
     TASKID("TASKID", DataType.STRING, QLFilterKind.SIMPLE),
     INSTANCETYPE("INSTANCETYPE", DataType.STRING, QLFilterKind.SIMPLE),
+    PARENTINSTANCEID("PARENTINSTANCEID", DataType.STRING, QLFilterKind.SIMPLE),
+    INSTANCEID("INSTANCEID", DataType.STRING, QLFilterKind.SIMPLE),
     LAUNCHTYPE("LAUNCHTYPE", DataType.STRING, QLFilterKind.SIMPLE),
     WORKLOADNAME("WORKLOADNAME", DataType.STRING, QLFilterKind.SIMPLE),
     WORKLOADTYPE("WORKLOADTYPE", DataType.STRING, QLFilterKind.SIMPLE),
@@ -75,7 +77,7 @@ public class BillingDataQueryMetadata {
     }
   }
 
-  public enum ResultType { STACKED_TIME_SERIES }
+  public enum ResultType { STACKED_TIME_SERIES, NODE_AND_POD_DETAILS }
 
   List<BillingDataMetaDataFields> groupByFields;
 

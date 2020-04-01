@@ -64,6 +64,13 @@ extend type Query {
     groupBy: [CCMGroupBy]
     sortCriteria: [BillingSortCriteria]
   ): SunburstChartData @dataFetcher(name: sunburstChartStats)
+
+  nodeAndPodDetails(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): NodeAndPodData @dataFetcher(name: nodeAndPodDetails)
 }
 
 input CCMAggregationFunction {
@@ -130,6 +137,8 @@ enum CCMEntityGroupBy {
   ClusterName
   CloudProvider
   PROJECT
+  Node
+  Pod
 }
 
 input CETimeTruncGroupby {
@@ -352,6 +361,9 @@ input CCMFilter {
   cloudProvider: IdFilter
   tag: BillingDataTagFilter
   label: BillingDataLabelFilter
+  nodeInstanceId: IdFilter
+  podInstanceId: IdFilter
+  parentInstanceId: IdFilter
 }
 
 input BillingDataLabelFilter {
@@ -372,4 +384,31 @@ enum BillingDataTagType {
   APPLICATION
   SERVICE
   ENVIRONMENT
+}
+
+type NodeAndPodData {
+  data: [NodeAndPodDataPoint]
+}
+
+type NodeAndPodDataPoint {
+  id: String
+  name: String
+  namespace: String
+  workload: String
+  node: String
+  totalCost: Number
+  idleCost: Number
+  systemCost: Number
+  unallocatedCost: Number
+  cpuAllocatable: Number
+  memoryAllocatable: Number
+  cpuRequested: Number
+  memoryRequested: Number
+  cpuUnitPrice: Number
+  memoryUnitPrice: Number
+  instanceCategory: String
+  machineType: String
+  createTime: Number
+  deleteTime: Number
+  qosClass: String
 }
