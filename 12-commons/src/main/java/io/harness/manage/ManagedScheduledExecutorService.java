@@ -55,7 +55,8 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
    */
   @Override
   public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-    return ((ScheduledExecutorService) getExecutorService()).scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    return ((ScheduledExecutorService) getExecutorService())
+        .scheduleWithFixedDelay(GlobalContextManager.generateExecutorTask(command), initialDelay, delay, unit);
   }
 
   /* (non-Javadoc)
