@@ -281,6 +281,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       scriptType = ScriptType.BASH;
     }
 
+    if (scriptType == ScriptType.POWERSHELL && executeOnDelegate) {
+      setScriptString(processPowerShellScript());
+    }
+
     if (!executeOnDelegate) {
       if (connectionType == ConnectionType.SSH) {
         if (!isEmpty(getTemplateExpressions())) {
@@ -339,6 +343,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         commandPath = "/tmp";
       } else if (scriptType == ScriptType.POWERSHELL) {
         commandPath = "%TEMP%";
+        if (executeOnDelegate) {
+          commandPath = "/tmp";
+        }
       }
     }
 
@@ -425,6 +432,14 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         .correlationIds(singletonList(activityId))
         .delegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private String processPowerShellScript() {
+    StringBuilder scriptStringBuilder =
+        new StringBuilder("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {");
+    scriptStringBuilder.append(scriptString.replace("$", "\\$").replace("*", "\\*").replace("\"", "\\\""))
+        .append("}\"");
+    return scriptStringBuilder.toString();
   }
 
   private String getTagFromCloudProvider(ContainerServiceParams containerServiceParams) {
