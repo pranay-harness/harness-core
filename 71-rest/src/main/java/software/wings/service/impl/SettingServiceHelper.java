@@ -37,13 +37,17 @@ public class SettingServiceHelper {
       return false;
     }
 
-    if (!isConnectorCategory(settingAttribute.getCategory())) {
-      return false;
+    if (SettingAttribute.SettingCategory.CLOUD_PROVIDER == settingAttribute.getCategory()) {
+      return true;
     }
 
-    SettingValue.SettingVariableTypes settingVariableTypes = settingAttribute.getValue().getSettingType();
-    return isArtifactServer(settingVariableTypes) || isSourceRepoProvider(settingVariableTypes)
-        || isCollaborationProvider(settingVariableTypes);
+    if (isConnectorCategory(settingAttribute.getCategory())) {
+      SettingValue.SettingVariableTypes settingVariableTypes = settingAttribute.getValue().getSettingType();
+      return isArtifactServer(settingVariableTypes) || isSourceRepoProvider(settingVariableTypes)
+          || isCollaborationProvider(settingVariableTypes);
+    }
+
+    return false;
   }
 
   public void updateEncryptedFieldsInResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
