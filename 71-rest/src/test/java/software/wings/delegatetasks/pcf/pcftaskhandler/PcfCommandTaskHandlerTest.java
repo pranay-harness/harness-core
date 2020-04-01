@@ -234,12 +234,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat("10").isEqualTo(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid());
 
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).isNotNull();
-    assertThat(pcfSetupCommandResponse.getDownsizeDetails()).hasSize(2);
+    assertThat(pcfSetupCommandResponse.getDownsizeDetails()).hasSize(1);
     Set<String> appsToBeDownsized = new HashSet<>(pcfSetupCommandResponse.getDownsizeDetails()
                                                       .stream()
                                                       .map(PcfAppSetupTimeDetails::getApplicationName)
                                                       .collect(toList()));
-    assertThat(appsToBeDownsized.contains("a_s_e__3")).isTrue();
     assertThat(appsToBeDownsized.contains("a_s_e__4")).isTrue();
   }
 
@@ -596,7 +595,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:1")).isTrue();
 
     // Test Exception flow
-    doThrow(new IOException("")).when(pcfCommandTaskHelper).generateWorkingDirectoryForDeployment(anyString());
+    doThrow(new IOException("")).when(pcfCommandTaskHelper).generateWorkingDirectoryForDeployment();
     pcfCommandExecutionResponse =
         pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     assertThat(pcfCommandExecutionResponse.getErrorMessage()).isEqualTo("IOException: ");

@@ -10,7 +10,6 @@ import static software.wings.beans.Log.color;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -83,8 +82,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
                                               .build();
 
       // This will be CF_HOME for any cli related operations
-      String randomToken = UUIDGenerator.generateUuid();
-      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment();
       if (workingDirectory == null) {
         throw new PivotalClientApiException("Failed to create working CF directory");
       }

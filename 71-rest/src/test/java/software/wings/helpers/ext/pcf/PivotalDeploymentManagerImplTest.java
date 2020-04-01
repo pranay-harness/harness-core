@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -23,6 +26,7 @@ import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -34,6 +38,7 @@ import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
@@ -281,6 +286,44 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     pcfRequestConfig.setUseCFCLI(false);
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
     verify(client, never()).tailLogsForPcf(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testSetEnvironmentVariableForAppStatus() throws Exception {
+    reset(client);
+    deploymentManager.setEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), true, logCallback);
+    ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(client, times(1)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
+    Map map = mapCaptor.getValue();
+
+    assertThat(map).isNotNull();
+    assertThat(map.size()).isEqualTo(1);
+    assertThat(map.get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__ACTIVE__INDENTIFIER);
+
+    deploymentManager.setEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), false, logCallback);
+    verify(client, times(2)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
+    map = mapCaptor.getValue();
+
+    assertThat(map).isNotNull();
+    assertThat(map.size()).isEqualTo(1);
+    assertThat(map.get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__STAGE__INDENTIFIER);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testUnsetEnvironmentVariableForAppStatus() throws Exception {
+    reset(client);
+    deploymentManager.unsetEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), logCallback);
+    ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
+    verify(client).unsetEnvVariablesForApplication(listCaptor.capture(), any(), any());
+    List list = listCaptor.getValue();
+
+    assertThat(list).isNotNull();
+    assertThat(list.size()).isEqualTo(1);
+    assertThat(list).containsExactly(HARNESS__STATUS__INDENTIFIER);
   }
 
   @Test

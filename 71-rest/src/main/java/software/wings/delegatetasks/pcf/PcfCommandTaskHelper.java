@@ -12,6 +12,8 @@ import static io.harness.pcf.model.PcfConstants.DISK_QUOTA_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.DOCKER_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.DOMAINS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ENV_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_HTTP_ENDPOINT_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_TYPE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HOSTS_MANIFEST_YML_ELEMENT;
@@ -51,6 +53,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.FileCreationException;
@@ -90,6 +93,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,29 +123,18 @@ public class PcfCommandTaskHelper {
   @Inject private PcfDeploymentManager pcfDeploymentManager;
 
   /**
-   * Returns Application names those will be downsized in deployment process
+   * Returns Application that will be downsized in deployment process
    */
-  public List<PcfAppSetupTimeDetails> generateDownsizeDetails(PcfRequestConfig pcfRequestConfig, String releaseName)
-      throws PivotalClientApiException {
-    String prefix = getAppPrefix(releaseName);
-
-    List<ApplicationSummary> applicationSummaries =
-        pcfDeploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
-
+  public List<PcfAppSetupTimeDetails> generateDownsizeDetails(ApplicationSummary activeApplicationSumamry) {
     List<PcfAppSetupTimeDetails> downSizeUpdate = new ArrayList<>();
-    for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
-      ApplicationSummary applicationSummary = applicationSummaries.get(index);
-      if (releaseName.equals(applicationSummary.getName()) || applicationSummary.getInstances() == 0) {
-        continue;
-      }
-
+    if (activeApplicationSumamry != null) {
       List<String> urls = new ArrayList<>();
-      urls.addAll(applicationSummary.getUrls());
+      urls.addAll(activeApplicationSumamry.getUrls());
       downSizeUpdate.add(PcfAppSetupTimeDetails.builder()
-                             .applicationGuid(applicationSummary.getId())
-                             .applicationName(applicationSummary.getName())
+                             .applicationGuid(activeApplicationSumamry.getId())
+                             .applicationName(activeApplicationSumamry.getName())
                              .urls(urls)
-                             .initialInstanceCount(applicationSummary.getInstances())
+                             .initialInstanceCount(activeApplicationSumamry.getInstances())
                              .build());
     }
 
@@ -608,6 +601,7 @@ public class PcfCommandTaskHelper {
     // remove "create-services" elements as it would have been used by cf cli plugin to create services.
     // This elements is not needed for cf push
     map.remove(CREATE_SERVICE_MANIFEST_ELEMENT);
+    addInactiveIdentifierToManifest(applicationToBeUpdated, requestData);
     Map<String, Object> applicationMapForYamlDump = generateFinalMapForYamlDump(applicationToBeUpdated);
 
     // replace map for first application that we are deploying
@@ -623,7 +617,28 @@ public class PcfCommandTaskHelper {
     }
   }
 
-  public File generateWorkingDirectoryForDeployment(String workingDirecotry) throws IOException {
+  // Add Env Variable marking this deployment version as Inactive
+  void addInactiveIdentifierToManifest(Map<String, Object> map, PcfCreateApplicationRequestData requestData) {
+    PcfCommandSetupRequest setupRequest = requestData.getSetupRequest();
+    if (!setupRequest.isBlueGreen()) {
+      return;
+    }
+
+    Map<String, Object> envMap = null;
+    if (map.containsKey(ENV_MANIFEST_YML_ELEMENT)) {
+      envMap = (Map<String, Object>) map.get(ENV_MANIFEST_YML_ELEMENT);
+    }
+
+    if (envMap == null) {
+      envMap = new HashMap<>();
+    }
+
+    envMap.put(HARNESS__STATUS__INDENTIFIER, HARNESS__STAGE__INDENTIFIER);
+    map.put(ENV_MANIFEST_YML_ELEMENT, envMap);
+  }
+
+  public File generateWorkingDirectoryForDeployment() throws IOException {
+    String workingDirecotry = UUIDGenerator.generateUuid();
     FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
     FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
     String workingDir = PCF_ARTIFACT_DOWNLOAD_DIR_PATH + "/" + workingDirecotry;
@@ -748,5 +763,25 @@ public class PcfCommandTaskHelper {
     filePathList.forEach(filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
 
     executionLogCallback.saveExecutionLog(sb.toString());
+  }
+
+  public ApplicationSummary findCurrentActiveApplication(List<ApplicationSummary> previousReleases,
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    if (isEmpty(previousReleases)) {
+      return null;
+    }
+
+    // For existing
+    ApplicationSummary activeApplication = previousReleases.get(previousReleases.size() - 1);
+    for (int i = previousReleases.size() - 1; i >= 0; i--) {
+      ApplicationSummary applicationSummary = previousReleases.get(i);
+      pcfRequestConfig.setApplicationName(applicationSummary.getName());
+      if (pcfDeploymentManager.isActiveApplication(pcfRequestConfig, executionLogCallback)) {
+        activeApplication = applicationSummary;
+        break;
+      }
+    }
+
+    return activeApplication;
   }
 }

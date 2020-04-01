@@ -124,4 +124,22 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
+
+  @Override
+  public boolean isActiveApplication(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+      throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public void setEnvironmentVariableForAppStatus(PcfRequestConfig pcfRequestConfig, boolean activeStatus,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public void unsetEnvironmentVariableForAppStatus(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
 }
