@@ -23,6 +23,7 @@ public class CloudProviderServiceImpl implements CloudProviderService {
   private static final String GCP_SEARCH_STRING = "gce:";
   private static final String AWS_SEARCH_STRING = "aws:";
   private static final String AZURE_SEARCH_STRING = "azure:";
+  private static final String IBM_SEARCH_STRING = "ibm:";
 
   private static final CloudProvider DEFAULT_CLOUD_PROVIDER = CloudProvider.GCP;
 
@@ -66,6 +67,8 @@ public class CloudProviderServiceImpl implements CloudProviderService {
       return CloudProvider.AWS;
     } else if (checkAzureCloudProvider(providerId)) {
       return CloudProvider.AZURE;
+    } else if (checkIbmCloudProvider(providerId)) {
+      return CloudProvider.IBM;
     }
     return DEFAULT_CLOUD_PROVIDER;
   }
@@ -80,5 +83,9 @@ public class CloudProviderServiceImpl implements CloudProviderService {
 
   private boolean checkAzureCloudProvider(String providerId) {
     return providerId.contains(AZURE_SEARCH_STRING);
+  }
+
+  private boolean checkIbmCloudProvider(String providerId) {
+    return providerId.contains(IBM_SEARCH_STRING);
   }
 }

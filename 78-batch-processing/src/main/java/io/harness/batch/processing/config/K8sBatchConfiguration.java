@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   private static final int BATCH_SIZE = 500;
-  private static final int SKIP_LIMIT = 50;
+  private static final int SKIP_LIMIT = 500;
   private static final int RETRY_LIMIT = 1;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;

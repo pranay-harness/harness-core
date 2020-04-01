@@ -37,6 +37,9 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     Map<String, String> metaData = new HashMap<>();
     CloudProvider k8SCloudProvider =
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
+    if (CloudProvider.IBM == k8SCloudProvider) {
+      return InstanceInfo.builder().metaData(metaData).build();
+    }
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, k8SCloudProvider.name());
     metaData.put(InstanceMetaDataConstants.REGION, labelsMap.get(K8sCCMConstants.REGION));
     metaData.put(InstanceMetaDataConstants.ZONE, labelsMap.get(K8sCCMConstants.ZONE));
