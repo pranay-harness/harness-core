@@ -262,6 +262,29 @@ public class ArtifactServiceImpl implements ArtifactService {
     return artifactQuery.filter(key, value).get();
   }
 
+  @Override
+  public boolean deleteArtifactsByUniqueKey(ArtifactStream artifactStream,
+      ArtifactStreamAttributes artifactStreamAttributes, Collection<String> artifactKeys) {
+    if (isEmpty(artifactKeys)) {
+      return true;
+    }
+
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                                        .filter(ArtifactKeys.accountId, artifactStream.getAccountId())
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    String key;
+    if (AMI.name().equals(artifactStreamType)) {
+      key = ArtifactKeys.revision;
+    } else if (ArtifactCollectionUtils.isGenericArtifactStream(artifactStreamType, artifactStreamAttributes)) {
+      key = ArtifactKeys.metadata_artifactPath;
+    } else {
+      key = ArtifactKeys.metadata_buildNo;
+    }
+
+    return wingsPersistence.delete(artifactQuery.field(key).in(artifactKeys));
+  }
+
   private void setAccountId(Artifact artifact) {
     if (isEmpty(artifact.getAccountId())) {
       if (artifact.fetchAppId() != null && !artifact.fetchAppId().equals(GLOBAL_APP_ID)) {

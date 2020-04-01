@@ -10,6 +10,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.io.File;
@@ -209,6 +210,9 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param retentionSize the size of the artifacts to be retained
    */
   void deleteArtifacts(int retentionSize);
+
+  boolean deleteArtifactsByUniqueKey(ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes,
+      Collection<String> artifactKeys);
 
   Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream);
 
