@@ -18,8 +18,10 @@ public class K8sYamlDao {
     this.hPersistence = hPersistence;
   }
 
-  public K8sYaml fetchLatestYaml(String clusterId, String uid) {
+  public K8sYaml fetchLatestYaml(String accountId, String clusterId, String uid) {
     return hPersistence.createQuery(K8sYaml.class)
+        .field(K8sYamlKeys.accountId)
+        .equal(accountId)
         .field(K8sYamlKeys.clusterId)
         .equal(clusterId)
         .field(K8sYamlKeys.uid)
@@ -28,13 +30,18 @@ public class K8sYamlDao {
         .get(new FindOptions().limit(1));
   }
 
-  public String ensureYamlSaved(String clusterId, String uid, String resourceVersion, String yaml) {
-    K8sYaml latest = fetchLatestYaml(clusterId, uid);
+  public String ensureYamlSaved(String accountId, String clusterId, String uid, String resourceVersion, String yaml) {
+    K8sYaml latest = fetchLatestYaml(accountId, clusterId, uid);
     if (latest != null && yaml.equals(latest.getYaml())) {
       return latest.getUuid();
     } else {
-      return hPersistence.save(
-          K8sYaml.builder().clusterId(clusterId).uid(uid).resourceVersion(resourceVersion).yaml(yaml).build());
+      return hPersistence.save(K8sYaml.builder()
+                                   .accountId(accountId)
+                                   .clusterId(clusterId)
+                                   .uid(uid)
+                                   .resourceVersion(resourceVersion)
+                                   .yaml(yaml)
+                                   .build());
     }
   }
 

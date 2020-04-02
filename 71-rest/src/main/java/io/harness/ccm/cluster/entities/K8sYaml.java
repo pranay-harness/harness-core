@@ -2,6 +2,7 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -30,7 +31,7 @@ import org.mongodb.morphia.utils.IndexType;
   })
 })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
-public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware {
+public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   long createdAt;
 
