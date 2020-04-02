@@ -4,6 +4,10 @@
 package io.harness.event.payloads;
 
 /**
+ * <pre>
+ * Deprecated
+ * </pre>
+ *
  * Protobuf type {@code io.harness.event.payloads.Usage}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:Usage.java.pb.meta")
@@ -242,6 +246,10 @@ public final class Usage extends com.google.protobuf.GeneratedMessageV3 implemen
     return builder;
   }
   /**
+   * <pre>
+   * Deprecated
+   * </pre>
+   *
    * Protobuf type {@code io.harness.event.payloads.Usage}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements

@@ -61,22 +61,42 @@ public interface PodMetricOrBuilder extends
   com.google.protobuf.DurationOrBuilder getWindowOrBuilder();
 
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   java.util.List<io.harness.event.payloads.PodMetric.Container> getContainersList();
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   io.harness.event.payloads.PodMetric.Container getContainers(int index);
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   int getContainersCount();
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   java.util.List<? extends io.harness.event.payloads.PodMetric.ContainerOrBuilder> getContainersOrBuilderList();
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   io.harness.event.payloads.PodMetric.ContainerOrBuilder getContainersOrBuilder(int index);
@@ -98,4 +118,17 @@ public interface PodMetricOrBuilder extends
    * <code>string kube_system_uid = 8;</code>
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
+
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  boolean hasAggregatedUsage();
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  io.harness.event.payloads.AggregatedUsage getAggregatedUsage();
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder();
 }

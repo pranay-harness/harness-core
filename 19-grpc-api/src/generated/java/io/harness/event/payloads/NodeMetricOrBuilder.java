@@ -52,14 +52,26 @@ public interface NodeMetricOrBuilder extends
   com.google.protobuf.DurationOrBuilder getWindowOrBuilder();
 
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   boolean hasUsage();
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   io.harness.event.payloads.Usage getUsage();
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder();
@@ -81,4 +93,17 @@ public interface NodeMetricOrBuilder extends
    * <code>string kube_system_uid = 7;</code>
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
+
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  boolean hasAggregatedUsage();
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  io.harness.event.payloads.AggregatedUsage getAggregatedUsage();
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder();
 }

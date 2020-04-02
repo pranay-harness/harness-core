@@ -7,9 +7,17 @@ option java_multiple_files = true;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
+// Deprecated
 message Usage {
   int64 cpu_nano = 1;
   int64 memory_byte = 2;
+}
+
+message AggregatedUsage {
+  int64 avg_cpu_nano = 1;
+  int64 max_cpu_nano = 2;
+  int64 avg_memory_byte = 3;
+  int64 max_memory_byte = 4;
 }
 
 message NodeMetric {
@@ -17,9 +25,12 @@ message NodeMetric {
   string name = 2;
   google.protobuf.Timestamp timestamp = 3;
   google.protobuf.Duration window = 4;
+
+  // Deprecated - use aggregated_usage
   Usage usage = 5;
   string cluster_id = 6;
   string kube_system_uid = 7;
+  AggregatedUsage aggregated_usage = 8;
 }
 
 message PodMetric {
@@ -28,11 +39,15 @@ message PodMetric {
   string namespace = 3;
   google.protobuf.Timestamp timestamp = 4;
   google.protobuf.Duration window = 5;
+
+  // Deprecated - container metrics are aggregated in top level itself
   repeated Container containers = 6;
   message Container {
     string name = 1;
     Usage usage = 2;
   }
+
   string cluster_id = 7;
   string kube_system_uid = 8;
+  AggregatedUsage aggregated_usage = 9;
 }

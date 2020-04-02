@@ -111,6 +111,19 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
             kubeSystemUid_ = s;
             break;
           }
+          case 74: {
+            io.harness.event.payloads.AggregatedUsage.Builder subBuilder = null;
+            if (aggregatedUsage_ != null) {
+              subBuilder = aggregatedUsage_.toBuilder();
+            }
+            aggregatedUsage_ = input.readMessage(io.harness.event.payloads.AggregatedUsage.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(aggregatedUsage_);
+              aggregatedUsage_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -976,30 +989,50 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int CONTAINERS_FIELD_NUMBER = 6;
   private java.util.List<io.harness.event.payloads.PodMetric.Container> containers_;
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   public java.util.List<io.harness.event.payloads.PodMetric.Container> getContainersList() {
     return containers_;
   }
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   public java.util.List<? extends io.harness.event.payloads.PodMetric.ContainerOrBuilder> getContainersOrBuilderList() {
     return containers_;
   }
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   public int getContainersCount() {
     return containers_.size();
   }
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   public io.harness.event.payloads.PodMetric.Container getContainers(int index) {
     return containers_.get(index);
   }
   /**
+   * <pre>
+   * Deprecated - container metrics are aggregated in top level itself
+   * </pre>
+   *
    * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
    */
   public io.harness.event.payloads.PodMetric.ContainerOrBuilder getContainersOrBuilder(int index) {
@@ -1066,6 +1099,27 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
 
+  public static final int AGGREGATED_USAGE_FIELD_NUMBER = 9;
+  private io.harness.event.payloads.AggregatedUsage aggregatedUsage_;
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  public boolean hasAggregatedUsage() {
+    return aggregatedUsage_ != null;
+  }
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
+    return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance() : aggregatedUsage_;
+  }
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   */
+  public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
+    return getAggregatedUsage();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -1105,6 +1159,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     if (!getKubeSystemUidBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 8, kubeSystemUid_);
     }
+    if (aggregatedUsage_ != null) {
+      output.writeMessage(9, getAggregatedUsage());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -1138,6 +1195,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
     if (!getKubeSystemUidBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, kubeSystemUid_);
+    }
+    if (aggregatedUsage_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(9, getAggregatedUsage());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -1178,6 +1238,12 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return false;
     if (!getKubeSystemUid().equals(other.getKubeSystemUid()))
       return false;
+    if (hasAggregatedUsage() != other.hasAggregatedUsage())
+      return false;
+    if (hasAggregatedUsage()) {
+      if (!getAggregatedUsage().equals(other.getAggregatedUsage()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -1212,6 +1278,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     hash = (53 * hash) + getClusterId().hashCode();
     hash = (37 * hash) + KUBE_SYSTEM_UID_FIELD_NUMBER;
     hash = (53 * hash) + getKubeSystemUid().hashCode();
+    if (hasAggregatedUsage()) {
+      hash = (37 * hash) + AGGREGATED_USAGE_FIELD_NUMBER;
+      hash = (53 * hash) + getAggregatedUsage().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -1352,6 +1422,12 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
       kubeSystemUid_ = "";
 
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = null;
+      } else {
+        aggregatedUsage_ = null;
+        aggregatedUsageBuilder_ = null;
+      }
       return this;
     }
 
@@ -1408,6 +1484,11 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
       result.clusterId_ = clusterId_;
       result.kubeSystemUid_ = kubeSystemUid_;
+      if (aggregatedUsageBuilder_ == null) {
+        result.aggregatedUsage_ = aggregatedUsage_;
+      } else {
+        result.aggregatedUsage_ = aggregatedUsageBuilder_.build();
+      }
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -1501,6 +1582,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       if (!other.getKubeSystemUid().isEmpty()) {
         kubeSystemUid_ = other.kubeSystemUid_;
         onChanged();
+      }
+      if (other.hasAggregatedUsage()) {
+        mergeAggregatedUsage(other.getAggregatedUsage());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1952,6 +2036,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
         containersBuilder_;
 
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public java.util.List<io.harness.event.payloads.PodMetric.Container> getContainersList() {
@@ -1962,6 +2050,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public int getContainersCount() {
@@ -1972,6 +2064,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public io.harness.event.payloads.PodMetric.Container getContainers(int index) {
@@ -1982,6 +2078,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder setContainers(int index, io.harness.event.payloads.PodMetric.Container value) {
@@ -1998,6 +2098,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder setContainers(int index, io.harness.event.payloads.PodMetric.Container.Builder builderForValue) {
@@ -2011,6 +2115,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder addContainers(io.harness.event.payloads.PodMetric.Container value) {
@@ -2027,6 +2135,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder addContainers(int index, io.harness.event.payloads.PodMetric.Container value) {
@@ -2043,6 +2155,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder addContainers(io.harness.event.payloads.PodMetric.Container.Builder builderForValue) {
@@ -2056,6 +2172,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder addContainers(int index, io.harness.event.payloads.PodMetric.Container.Builder builderForValue) {
@@ -2069,6 +2189,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder addAllContainers(
@@ -2083,6 +2207,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder clearContainers() {
@@ -2096,6 +2224,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public Builder removeContainers(int index) {
@@ -2109,12 +2241,20 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public io.harness.event.payloads.PodMetric.Container.Builder getContainersBuilder(int index) {
       return getContainersFieldBuilder().getBuilder(index);
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public io.harness.event.payloads.PodMetric.ContainerOrBuilder getContainersOrBuilder(int index) {
@@ -2125,6 +2265,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public java.util.List<? extends io.harness.event.payloads.PodMetric.ContainerOrBuilder>
@@ -2136,12 +2280,20 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public io.harness.event.payloads.PodMetric.Container.Builder addContainersBuilder() {
       return getContainersFieldBuilder().addBuilder(io.harness.event.payloads.PodMetric.Container.getDefaultInstance());
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public io.harness.event.payloads.PodMetric.Container.Builder addContainersBuilder(int index) {
@@ -2149,6 +2301,10 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
           index, io.harness.event.payloads.PodMetric.Container.getDefaultInstance());
     }
     /**
+     * <pre>
+     * Deprecated - container metrics are aggregated in top level itself
+     * </pre>
+     *
      * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
      */
     public java.util.List<io.harness.event.payloads.PodMetric.Container.Builder> getContainersBuilderList() {
@@ -2290,6 +2446,122 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       kubeSystemUid_ = value;
       onChanged();
       return this;
+    }
+
+    private io.harness.event.payloads.AggregatedUsage aggregatedUsage_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+        io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>
+        aggregatedUsageBuilder_;
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public boolean hasAggregatedUsage() {
+      return aggregatedUsageBuilder_ != null || aggregatedUsage_ != null;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
+      if (aggregatedUsageBuilder_ == null) {
+        return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance()
+                                        : aggregatedUsage_;
+      } else {
+        return aggregatedUsageBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
+      if (aggregatedUsageBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        aggregatedUsage_ = value;
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage.Builder builderForValue) {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = builderForValue.build();
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public Builder mergeAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
+      if (aggregatedUsageBuilder_ == null) {
+        if (aggregatedUsage_ != null) {
+          aggregatedUsage_ =
+              io.harness.event.payloads.AggregatedUsage.newBuilder(aggregatedUsage_).mergeFrom(value).buildPartial();
+        } else {
+          aggregatedUsage_ = value;
+        }
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public Builder clearAggregatedUsage() {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = null;
+        onChanged();
+      } else {
+        aggregatedUsage_ = null;
+        aggregatedUsageBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsage.Builder getAggregatedUsageBuilder() {
+      onChanged();
+      return getAggregatedUsageFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
+      if (aggregatedUsageBuilder_ != null) {
+        return aggregatedUsageBuilder_.getMessageOrBuilder();
+      } else {
+        return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance()
+                                        : aggregatedUsage_;
+      }
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+        io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>
+    getAggregatedUsageFieldBuilder() {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsageBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+                io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>(
+                getAggregatedUsage(), getParentForChildren(), isClean());
+        aggregatedUsage_ = null;
+      }
+      return aggregatedUsageBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
