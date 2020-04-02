@@ -27,7 +27,9 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
+import io.harness.perpetualtask.k8s.metrics.collector.K8sMetricCollector;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
@@ -46,12 +48,11 @@ import java.util.stream.Collectors;
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
+  private Map<String, K8sMetricCollector> metricCollectors = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
   private final KubernetesClientFactory kubernetesClientFactory;
   private final K8sWatchServiceDelegate k8sWatchServiceDelegate;
-
-  private K8sMetricsClient k8sMetricsClient;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, KubernetesClientFactory kubernetesClientFactory,
@@ -69,13 +70,27 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       logger.info("Created a watch with id {}.", watchId);
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
-      if (k8sMetricsClient == null) {
-        k8sMetricsClient = kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
-      }
+      K8sMetricsClient k8sMetricsClient =
+          kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
       if (taskWatchIdMap.get(taskId.getId()) == null) {
         publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
         taskWatchIdMap.put(taskId.getId(), watchId);
       }
+      metricCollectors
+          .computeIfAbsent(taskId.getId(),
+              key -> {
+                ClusterDetails clusterDetails =
+                    ClusterDetails.builder()
+                        .clusterId(watchTaskParams.getClusterId())
+                        .cloudProviderId(watchTaskParams.getCloudProviderId())
+                        .clusterName(watchTaskParams.getClusterName())
+                        .kubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient))
+                        .build();
+                return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
+              })
+          .collectAndPublishMetrics(Instant.now());
+
+      // to be removed after batch processing changes
       publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
       publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
     } catch (K8sClusterException ke) {
@@ -91,7 +106,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     } catch (Exception e) {
       logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
     }
-
     return PerpetualTaskResponse.builder()
         .responseCode(200)
         .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
@@ -197,15 +211,18 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
 
   @Override
   public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
-    if (null != taskWatchIdMap.get(taskId.getId())) {
-      String watchId = taskWatchIdMap.get(taskId.getId());
-      logger.info("Stopping the watch with id {}", watchId);
-      k8sWatchServiceDelegate.delete(watchId);
-      return true;
+    if (taskWatchIdMap.get(taskId.getId()) == null) {
+      return false;
     }
-    if (k8sMetricsClient != null) {
-      k8sMetricsClient.close();
-    }
-    return false;
+    String watchId = taskWatchIdMap.get(taskId.getId());
+    logger.info("Stopping the watch with id {}", watchId);
+    k8sWatchServiceDelegate.delete(watchId);
+    taskWatchIdMap.remove(taskId.getId());
+
+    metricCollectors.computeIfPresent(taskId.getId(), (id, metricCollector) -> {
+      metricCollector.publishPending(Instant.now());
+      return null;
+    });
+    return true;
   }
 }

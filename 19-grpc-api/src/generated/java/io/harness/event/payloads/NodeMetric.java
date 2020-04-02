@@ -107,6 +107,19 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
             kubeSystemUid_ = s;
             break;
           }
+          case 66: {
+            io.harness.event.payloads.AggregatedUsage.Builder subBuilder = null;
+            if (aggregatedUsage_ != null) {
+              subBuilder = aggregatedUsage_.toBuilder();
+            }
+            aggregatedUsage_ = input.readMessage(io.harness.event.payloads.AggregatedUsage.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(aggregatedUsage_);
+              aggregatedUsage_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -242,18 +255,30 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
   public static final int USAGE_FIELD_NUMBER = 5;
   private io.harness.event.payloads.Usage usage_;
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   public boolean hasUsage() {
     return usage_ != null;
   }
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   public io.harness.event.payloads.Usage getUsage() {
     return usage_ == null ? io.harness.event.payloads.Usage.getDefaultInstance() : usage_;
   }
   /**
+   * <pre>
+   * Deprecated - use aggregated_usage
+   * </pre>
+   *
    * <code>.io.harness.event.payloads.Usage usage = 5;</code>
    */
   public io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder() {
@@ -320,6 +345,27 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     }
   }
 
+  public static final int AGGREGATED_USAGE_FIELD_NUMBER = 8;
+  private io.harness.event.payloads.AggregatedUsage aggregatedUsage_;
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  public boolean hasAggregatedUsage() {
+    return aggregatedUsage_ != null;
+  }
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
+    return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance() : aggregatedUsage_;
+  }
+  /**
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+   */
+  public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
+    return getAggregatedUsage();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -356,6 +402,9 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     if (!getKubeSystemUidBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 7, kubeSystemUid_);
     }
+    if (aggregatedUsage_ != null) {
+      output.writeMessage(8, getAggregatedUsage());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -386,6 +435,9 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     }
     if (!getKubeSystemUidBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, kubeSystemUid_);
+    }
+    if (aggregatedUsage_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(8, getAggregatedUsage());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -428,6 +480,12 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return false;
     if (!getKubeSystemUid().equals(other.getKubeSystemUid()))
       return false;
+    if (hasAggregatedUsage() != other.hasAggregatedUsage())
+      return false;
+    if (hasAggregatedUsage()) {
+      if (!getAggregatedUsage().equals(other.getAggregatedUsage()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -460,6 +518,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     hash = (53 * hash) + getClusterId().hashCode();
     hash = (37 * hash) + KUBE_SYSTEM_UID_FIELD_NUMBER;
     hash = (53 * hash) + getKubeSystemUid().hashCode();
+    if (hasAggregatedUsage()) {
+      hash = (37 * hash) + AGGREGATED_USAGE_FIELD_NUMBER;
+      hash = (53 * hash) + getAggregatedUsage().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -597,6 +659,12 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
 
       kubeSystemUid_ = "";
 
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = null;
+      } else {
+        aggregatedUsage_ = null;
+        aggregatedUsageBuilder_ = null;
+      }
       return this;
     }
 
@@ -646,6 +714,11 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       }
       result.clusterId_ = clusterId_;
       result.kubeSystemUid_ = kubeSystemUid_;
+      if (aggregatedUsageBuilder_ == null) {
+        result.aggregatedUsage_ = aggregatedUsage_;
+      } else {
+        result.aggregatedUsage_ = aggregatedUsageBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -712,6 +785,9 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       if (!other.getKubeSystemUid().isEmpty()) {
         kubeSystemUid_ = other.kubeSystemUid_;
         onChanged();
+      }
+      if (other.hasAggregatedUsage()) {
+        mergeAggregatedUsage(other.getAggregatedUsage());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1090,12 +1166,20 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Usage,
         io.harness.event.payloads.Usage.Builder, io.harness.event.payloads.UsageOrBuilder> usageBuilder_;
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public boolean hasUsage() {
       return usageBuilder_ != null || usage_ != null;
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public io.harness.event.payloads.Usage getUsage() {
@@ -1106,6 +1190,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       }
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public Builder setUsage(io.harness.event.payloads.Usage value) {
@@ -1122,6 +1210,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public Builder setUsage(io.harness.event.payloads.Usage.Builder builderForValue) {
@@ -1135,6 +1227,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public Builder mergeUsage(io.harness.event.payloads.Usage value) {
@@ -1152,6 +1248,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public Builder clearUsage() {
@@ -1166,6 +1266,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public io.harness.event.payloads.Usage.Builder getUsageBuilder() {
@@ -1173,6 +1277,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       return getUsageFieldBuilder().getBuilder();
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     public io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder() {
@@ -1183,6 +1291,10 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       }
     }
     /**
+     * <pre>
+     * Deprecated - use aggregated_usage
+     * </pre>
+     *
      * <code>.io.harness.event.payloads.Usage usage = 5;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Usage,
@@ -1319,6 +1431,122 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       kubeSystemUid_ = value;
       onChanged();
       return this;
+    }
+
+    private io.harness.event.payloads.AggregatedUsage aggregatedUsage_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+        io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>
+        aggregatedUsageBuilder_;
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public boolean hasAggregatedUsage() {
+      return aggregatedUsageBuilder_ != null || aggregatedUsage_ != null;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
+      if (aggregatedUsageBuilder_ == null) {
+        return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance()
+                                        : aggregatedUsage_;
+      } else {
+        return aggregatedUsageBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
+      if (aggregatedUsageBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        aggregatedUsage_ = value;
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage.Builder builderForValue) {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = builderForValue.build();
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public Builder mergeAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
+      if (aggregatedUsageBuilder_ == null) {
+        if (aggregatedUsage_ != null) {
+          aggregatedUsage_ =
+              io.harness.event.payloads.AggregatedUsage.newBuilder(aggregatedUsage_).mergeFrom(value).buildPartial();
+        } else {
+          aggregatedUsage_ = value;
+        }
+        onChanged();
+      } else {
+        aggregatedUsageBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public Builder clearAggregatedUsage() {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsage_ = null;
+        onChanged();
+      } else {
+        aggregatedUsage_ = null;
+        aggregatedUsageBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsage.Builder getAggregatedUsageBuilder() {
+      onChanged();
+      return getAggregatedUsageFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
+      if (aggregatedUsageBuilder_ != null) {
+        return aggregatedUsageBuilder_.getMessageOrBuilder();
+      } else {
+        return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance()
+                                        : aggregatedUsage_;
+      }
+    }
+    /**
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 8;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+        io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>
+    getAggregatedUsageFieldBuilder() {
+      if (aggregatedUsageBuilder_ == null) {
+        aggregatedUsageBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
+                io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>(
+                getAggregatedUsage(), getParentForChildren(), isClean());
+        aggregatedUsage_ = null;
+      }
+      return aggregatedUsageBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
