@@ -69,8 +69,8 @@ public class K8sWatchEventConfig {
       K8sWatchEvent k8sWatchEvent = (K8sWatchEvent) k8sWatchEventMsg.getMessage();
       // special handling for added events (for restarting watches)
       if (k8sWatchEvent.getType() == K8sWatchEvent.Type.TYPE_ADDED) {
-        K8sYaml k8sYaml =
-            k8sYamlDao.fetchLatestYaml(k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid());
+        K8sYaml k8sYaml = k8sYamlDao.fetchLatestYaml(
+            k8sWatchEventMsg.getAccountId(), k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid());
         if (k8sYaml != null) {
           if (k8sWatchEvent.getNewResourceYaml().equals(k8sYaml.getYaml())) {
             // same yaml already captured - skip.
@@ -130,22 +130,22 @@ public class K8sWatchEventConfig {
                   K8sWatchEvent.Type watchEventType = k8sWatchEvent.getType();
                   switch (watchEventType) {
                     case TYPE_ADDED:
-                      newYamlRef = k8sYamlDao.ensureYamlSaved(k8sWatchEvent.getClusterId(),
-                          k8sWatchEvent.getResourceRef().getUid(), k8sWatchEvent.getNewResourceVersion(),
-                          k8sWatchEvent.getNewResourceYaml());
+                      newYamlRef = k8sYamlDao.ensureYamlSaved(enrichedK8sEvent.getAccountId(),
+                          k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid(),
+                          k8sWatchEvent.getNewResourceVersion(), k8sWatchEvent.getNewResourceYaml());
                       break;
                     case TYPE_UPDATED:
-                      oldYamlRef = k8sYamlDao.ensureYamlSaved(k8sWatchEvent.getClusterId(),
-                          k8sWatchEvent.getResourceRef().getUid(), k8sWatchEvent.getOldResourceVersion(),
-                          k8sWatchEvent.getOldResourceYaml());
-                      newYamlRef = k8sYamlDao.ensureYamlSaved(k8sWatchEvent.getClusterId(),
-                          k8sWatchEvent.getResourceRef().getUid(), k8sWatchEvent.getNewResourceVersion(),
-                          k8sWatchEvent.getNewResourceYaml());
+                      oldYamlRef = k8sYamlDao.ensureYamlSaved(enrichedK8sEvent.getAccountId(),
+                          k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid(),
+                          k8sWatchEvent.getOldResourceVersion(), k8sWatchEvent.getOldResourceYaml());
+                      newYamlRef = k8sYamlDao.ensureYamlSaved(enrichedK8sEvent.getAccountId(),
+                          k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid(),
+                          k8sWatchEvent.getNewResourceVersion(), k8sWatchEvent.getNewResourceYaml());
                       break;
                     case TYPE_DELETED:
-                      oldYamlRef = k8sYamlDao.ensureYamlSaved(k8sWatchEvent.getClusterId(),
-                          k8sWatchEvent.getResourceRef().getUid(), k8sWatchEvent.getOldResourceVersion(),
-                          k8sWatchEvent.getOldResourceYaml());
+                      oldYamlRef = k8sYamlDao.ensureYamlSaved(enrichedK8sEvent.getAccountId(),
+                          k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid(),
+                          k8sWatchEvent.getOldResourceVersion(), k8sWatchEvent.getOldResourceYaml());
                       break;
                     default:
                       Switch.unhandled(watchEventType);

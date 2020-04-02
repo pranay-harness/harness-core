@@ -99,7 +99,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNormalizer_shouldPassThroughIfTrueAdded() throws Exception {
-    when(k8sYamlDao.fetchLatestYaml(CLUSTER_ID, UID)).thenReturn(null);
+    when(k8sYamlDao.fetchLatestYaml(ACCOUNT_ID, CLUSTER_ID, UID)).thenReturn(null);
     ItemProcessor<PublishedMessage, PublishedMessage> normalizer = k8sWatchEventConfig.normalizer(k8sYamlDao);
     PublishedMessage message = PublishedMessage.builder()
                                    .accountId(ACCOUNT_ID)
@@ -117,7 +117,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNormalizer_shouldReturnNullIfAlreadyAdded() throws Exception {
-    when(k8sYamlDao.fetchLatestYaml(CLUSTER_ID, UID))
+    when(k8sYamlDao.fetchLatestYaml(ACCOUNT_ID, CLUSTER_ID, UID))
         .thenReturn(K8sYaml.builder().uid(UID).clusterId(CLUSTER_ID).yaml("yaml").build());
     ItemProcessor<PublishedMessage, PublishedMessage> normalizer = k8sWatchEventConfig.normalizer(k8sYamlDao);
     PublishedMessage message = PublishedMessage.builder()
@@ -137,7 +137,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNormalizer_shouldConvertToUpdatedIfAlreadyAddedDifferentYaml() throws Exception {
-    when(k8sYamlDao.fetchLatestYaml(CLUSTER_ID, UID))
+    when(k8sYamlDao.fetchLatestYaml(ACCOUNT_ID, CLUSTER_ID, UID))
         .thenReturn(K8sYaml.builder().uid(UID).clusterId(CLUSTER_ID).resourceVersion("12334").yaml("yaml1").build());
     ItemProcessor<PublishedMessage, PublishedMessage> normalizer = k8sWatchEventConfig.normalizer(k8sYamlDao);
     PublishedMessage message = PublishedMessage.builder()
@@ -200,7 +200,8 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   public void testWriter_shouldHandleAdded() throws Exception {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     when(costEventService.create(captor.capture())).thenReturn(true);
-    when(k8sYamlDao.ensureYamlSaved(CLUSTER_ID, UID, "12345", "added-yaml")).thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
+    when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "added-yaml"))
+        .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
@@ -243,8 +244,10 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   public void testWriter_shouldHandleUpdated() throws Exception {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     when(costEventService.create(captor.capture())).thenReturn(true);
-    when(k8sYamlDao.ensureYamlSaved(CLUSTER_ID, UID, "12334", "old-yaml")).thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
-    when(k8sYamlDao.ensureYamlSaved(CLUSTER_ID, UID, "12345", "new-yaml")).thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
+    when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12334", "old-yaml"))
+        .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
+    when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "new-yaml"))
+        .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
@@ -290,7 +293,8 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   public void testWriter_shouldHandleDeleted() throws Exception {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     when(costEventService.create(captor.capture())).thenReturn(true);
-    when(k8sYamlDao.ensureYamlSaved(CLUSTER_ID, UID, "12334", "deleted-yaml")).thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
+    when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12334", "deleted-yaml"))
+        .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
