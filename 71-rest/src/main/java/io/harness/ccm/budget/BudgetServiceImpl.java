@@ -270,6 +270,7 @@ public class BudgetServiceImpl implements BudgetService {
   private QLBillingDataFilter getFilterForCurrentBillingCycle() {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
+    c.set(Calendar.YEAR, c.get(Calendar.YEAR) - 1);
     long startTime = c.getTimeInMillis();
     return QLBillingDataFilter.builder()
         .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
