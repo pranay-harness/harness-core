@@ -232,45 +232,45 @@ public class IndexManager {
     // https://github.com/mongodb/morphia/issues/706
 
     Set<String> processedCollections = processIndexes(datastore, morphia, (mc, collection) -> {
-      Map<String, IndexCreator> creators = indexCreators(mc, collection);
-      // We should be attempting to drop indexes only if we successfully created all new ones
-      boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
+      try {
+        Map<String, IndexCreator> creators = indexCreators(mc, collection);
+        // We should be attempting to drop indexes only if we successfully created all new ones
+        boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
 
-      Map<String, Accesses> accesses = fetchIndexAccesses(collection);
+        Map<String, Accesses> accesses = fetchIndexAccesses(collection);
 
-      if (okToDropIndexes) {
-        List<DBObject> indexInfo = collection.getIndexInfo();
-        List<String> obsoleteIndexes = indexInfo.stream()
-                                           .map(obj -> obj.get(NAME).toString())
-                                           .filter(name -> !"_id_".equals(name))
-                                           .filter(name -> !creators.keySet().contains(name))
-                                           .collect(toList());
+        if (okToDropIndexes) {
+          List<DBObject> indexInfo = collection.getIndexInfo();
+          List<String> obsoleteIndexes = indexInfo.stream()
+                                             .map(obj -> obj.get(NAME).toString())
+                                             .filter(name -> !"_id_".equals(name))
+                                             .filter(name -> !creators.keySet().contains(name))
+                                             .collect(toList());
 
-        if (isNotEmpty(obsoleteIndexes)) {
-          // Make sure that all indexes that we have are operational, we check that they have being seen since
-          // at least a day
-          Date tooNew = tooNew();
-          okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
+          if (isNotEmpty(obsoleteIndexes)) {
+            // Make sure that all indexes that we have are operational, we check that they have being seen since
+            // at least a day
+            Date tooNew = tooNew();
+            okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
 
-          if (okToDropIndexes) {
-            obsoleteIndexes.forEach(name -> {
-              try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
-                logger.info("Remove obsolete index");
-                collection.dropIndex(name);
-              } catch (RuntimeException ex) {
-                logger.error("Failed to drop index", ex);
-              }
-            });
+            if (okToDropIndexes) {
+              obsoleteIndexes.forEach(name -> {
+                try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
+                  logger.info("Remove obsolete index");
+                  collection.dropIndex(name);
+                } catch (RuntimeException ex) {
+                  logger.error("Failed to drop index", ex);
+                }
+              });
+            }
           }
         }
-      }
 
-      try {
         if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
           checkForUnusedIndexes(collection, accesses);
         }
-      } catch (Exception exception) {
-        logger.warn("", exception);
+      } catch (RuntimeException exception) {
+        logger.error("", exception);
       }
     });
 
