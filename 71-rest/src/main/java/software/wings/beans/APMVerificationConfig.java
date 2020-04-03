@@ -169,8 +169,8 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getValidationUrl()));
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        getUrl() + getValidationUrl()));
   }
 
   @Data

@@ -49,7 +49,7 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
     executionCapabilities.addAll(
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     executionCapabilities.addAll(Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl)));
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl + getUrl())));
     return executionCapabilities;
   }
 }

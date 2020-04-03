@@ -125,7 +125,8 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url + validationUrl));
   }
 
   @Data
