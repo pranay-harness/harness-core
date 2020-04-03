@@ -60,7 +60,6 @@ import migrations.all.EntityNameValidationMigration_All_04;
 import migrations.all.FixCVDashboardStatusMigration;
 import migrations.all.GcsArtifactProjectIdMigration;
 import migrations.all.GitCommitStatusMigration;
-import migrations.all.GitSyncErrorGitDetailsMigration;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
@@ -314,7 +313,7 @@ public class MigrationList {
         .add(Pair.of(293, DeleteCVCronMigration.class))
         .add(Pair.of(294, AmiDeploymentTypeMigration.class))
         .add(Pair.of(295, BaseMigration.class))
-        .add(Pair.of(296, GitSyncErrorGitDetailsMigration.class))
+        .add(Pair.of(296, BaseMigration.class))
         .add(Pair.of(297, BaseMigration.class))
         .add(Pair.of(298, GitCommitStatusMigration.class))
         .add(Pair.of(299, DataDogLogCvConfigMigration.class))

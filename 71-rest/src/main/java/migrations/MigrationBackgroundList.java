@@ -6,6 +6,7 @@ import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
+import migrations.all.AddCommitTimeToGitSyncError;
 import migrations.all.AddHarnessOwnedToResourceConstraint;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
@@ -23,6 +24,7 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.GitSyncErrorGitDetailsMigration;
 import migrations.all.HelmStateTimeoutMigration;
 import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
@@ -159,6 +161,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(92, UpdateInstanceInfoWithLastArtifactIdMigration.class))
         .add(Pair.of(93, K8sBGTimeoutMigration.class))
         .add(Pair.of(94, BaseMigration.class))
+        .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
+        .add(Pair.of(96, AddCommitTimeToGitSyncError.class))
         .build();
   }
 }

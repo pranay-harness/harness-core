@@ -43,11 +43,12 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   private String gitConnectorId;
   private String branchName;
   private String yamlGitConfigId;
+  private Long commitTime;
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String yamlContent, String gitCommitId, String changeType,
       String failureReason, boolean fullSyncPath, String lastAttemptedYaml, String gitConnectorId, String branchName,
-      String yamlGitConfigId) {
+      String yamlGitConfigId, Long commitTime) {
     this.accountId = accountId;
     this.yamlFilePath = yamlFilePath;
     this.yamlContent = yamlContent;
@@ -60,6 +61,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
     this.gitConnectorId = gitConnectorId;
     this.branchName = branchName;
     this.yamlGitConfigId = yamlGitConfigId;
+    this.commitTime = commitTime;
   }
 
   @Override

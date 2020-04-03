@@ -226,6 +226,8 @@ public class GitClientImpl implements GitClient {
             ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER, ADMIN_SRE);
       }
 
+      diffResult.setCommitTimeMs(getCommitTimeMs(endCommitIdStr, repository));
+
       try (ObjectReader reader = repository.newObjectReader()) {
         CanonicalTreeParser startTreeIter = new CanonicalTreeParser();
         startTreeIter.reset(reader, startCommitTreeId);
@@ -233,14 +235,24 @@ public class GitClientImpl implements GitClient {
         endTreeIter.reset(reader, endCommitTreeId);
 
         List<DiffEntry> diffs = git.diff().setNewTree(endTreeIter).setOldTree(startTreeIter).call();
-        addToGitDiffResult(diffs, diffResult, endCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder);
+        addToGitDiffResult(diffs, diffResult, endCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder,
+            diffResult.getCommitTimeMs());
       }
+
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
     return diffResult;
   }
+
+  private Long getCommitTimeMs(String endCommitIdStr, Repository repository) throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit != null ? endCommit.getCommitTime() * 1000L : null;
+    }
+  }
+
   private boolean ensureCommitOrdering(String startCommitIdStr, String endCommitIdStr, Repository repository)
       throws IOException {
     try (RevWalk revWalk = new RevWalk(repository)) {
@@ -276,7 +288,7 @@ public class GitClientImpl implements GitClient {
 
   @VisibleForTesting
   void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
-      Repository repository, boolean excludeFilesOutsideSetupFolder) throws IOException {
+      Repository repository, boolean excludeFilesOutsideSetupFolder, Long commitTimeMs) throws IOException {
     logger.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
     for (DiffEntry entry : diffs) {
       String content = null;
@@ -306,6 +318,7 @@ public class GitClientImpl implements GitClient {
                                         .withFileContent(content)
                                         .withObjectId(objectId.name())
                                         .withAccountId(gitConfig.getAccountId())
+                                        .withCommitTimeMs(commitTimeMs)
                                         .build();
       diffResult.addChangeFile(gitFileChange);
     }

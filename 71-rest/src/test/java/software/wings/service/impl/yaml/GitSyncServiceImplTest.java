@@ -328,7 +328,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitToHarnessErrorCommitStats> errorsList =
-        gitSyncService.fetchGitToHarnessErrors(req, accountId, null).getResponse();
+        gitSyncService.fetchGitToHarnessErrors(req, accountId, null, null).getResponse();
     assertThat(errorsList.size()).isEqualTo(1);
     GitToHarnessErrorCommitStats error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(1);

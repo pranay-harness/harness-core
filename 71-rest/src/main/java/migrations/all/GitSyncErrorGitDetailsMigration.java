@@ -15,7 +15,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.errorhandling.GitSyncError;
-import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
@@ -28,8 +27,7 @@ public class GitSyncErrorGitDetailsMigration implements Migration {
   public void migrate() {
     logger.info("Running migration GitSyncErrorGitDetailsMigration");
 
-    Query<GitSyncError> query =
-        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.fullSyncPath, Boolean.FALSE);
+    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class);
 
     try (HIterator<GitSyncError> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
