@@ -85,6 +85,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
@@ -814,7 +815,9 @@ public class UserServiceImpl implements UserService {
     logger.info("Auditing userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
 
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
-    return wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
+    UserInvite returnUserInvite = wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
+    returnUserInvite.setUuid(StringUtils.EMPTY);
+    return returnUserInvite;
   }
 
   private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {

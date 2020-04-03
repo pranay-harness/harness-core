@@ -789,6 +789,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
     when(authenticationUtils.getDefaultAccount(any())).thenReturn(account);
+    when(wingsPersistence.getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID)).thenReturn(userInvite);
 
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
@@ -841,6 +842,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
     when(authenticationUtils.getDefaultAccount(any())).thenReturn(account);
+    when(wingsPersistence.getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID)).thenReturn(userInvite);
     userService.inviteUsers(userInvite);
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
