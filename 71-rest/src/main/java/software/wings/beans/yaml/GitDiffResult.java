@@ -23,19 +23,21 @@ public class GitDiffResult extends GitCommandResult {
   private String commitId;
   private List<GitFileChange> gitFileChanges = new ArrayList<>();
   private YamlGitConfig yamlGitConfig;
+  private Long commitTimeMs;
 
   public GitDiffResult() {
     super(GitCommandType.DIFF);
   }
 
   public GitDiffResult(String repoName, String branch, String commitId, List<GitFileChange> gitFileChanges,
-      YamlGitConfig yamlGitConfig) {
+      YamlGitConfig yamlGitConfig, Long commitTimeMs) {
     super(GitCommandType.DIFF);
     this.repoName = repoName;
     this.branch = branch;
     this.commitId = commitId;
     this.gitFileChanges = gitFileChanges;
     this.yamlGitConfig = yamlGitConfig;
+    this.commitTimeMs = commitTimeMs;
   }
 
   /**

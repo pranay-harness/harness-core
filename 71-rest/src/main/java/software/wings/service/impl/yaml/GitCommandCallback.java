@@ -186,10 +186,11 @@ public class GitCommandCallback implements NotifyCallback {
         .withSyncFromGit(true)
         .withCommitId(gitSyncError.getGitCommitId())
         .withChangeFromAnotherCommit(Boolean.TRUE)
+        .withCommitTimeMs(gitSyncError.getCommitTime())
         .build();
   }
   @VisibleForTesting
-  void addActiveGitSyncErrorsToProcessAgain(GitDiffResult gitDiffResult, String accountId) {
+  void addActiveGitSyncErrorsToProcessAgain(final GitDiffResult gitDiffResult, final String accountId) {
     final List<GitFileChange> activeGitSyncErrorFiles = emptyIfNull(getActiveGitSyncErrorFiles(accountId,
         gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId()));
 

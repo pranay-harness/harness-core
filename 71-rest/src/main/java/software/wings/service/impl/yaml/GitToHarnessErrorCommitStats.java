@@ -6,5 +6,5 @@ import lombok.Data;
 public class GitToHarnessErrorCommitStats {
   String _id;
   Integer failedCount;
-  Long createdAt;
+  Long commitTime;
 }

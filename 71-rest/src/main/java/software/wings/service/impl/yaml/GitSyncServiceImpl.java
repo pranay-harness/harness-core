@@ -7,6 +7,7 @@ import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -84,6 +85,8 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AlertsUtils alertsUtils;
   private static final EnumSet<Status> TERMINATING_STATUSES = EnumSet.of(Status.EXPIRED, Status.DISCARDED);
+
+  private static final List<String> NULL_AND_EMPTY = Arrays.asList(null, "");
 
   @Override
   public PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req) {
@@ -350,17 +353,22 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String yamlGitConfigId) {
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName) {
     // Creating a page request to get the commits
-    Integer limit = req.getLimit() == null ? Integer.MAX_VALUE : Integer.parseInt(req.getLimit());
-    Integer offset = req.getOffset() == null ? 0 : Integer.parseInt(req.getOffset());
+    Integer limit = isBlank(req.getLimit()) ? Integer.MAX_VALUE : Integer.parseInt(req.getLimit());
+    Integer offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
 
     Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
                                     .filter(ACCOUNT_ID_KEY, accountId)
-                                    .filter("gitCommitId != ", "");
+                                    .field(GitSyncErrorKeys.gitCommitId)
+                                    .notIn(NULL_AND_EMPTY);
 
-    if (isNotEmpty(yamlGitConfigId)) {
-      query.filter(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfigId);
+    if (isNotEmpty(gitConnectorId)) {
+      query.filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId);
+    }
+
+    if (isNotEmpty(branchName)) {
+      query.filter(GitSyncErrorKeys.branchName, branchName);
     }
 
     List<GitToHarnessErrorCommitStats> commitWiseErrorMessages = new ArrayList<>();
@@ -368,8 +376,8 @@ public class GitSyncServiceImpl implements GitSyncService {
         .createAggregation(GitSyncError.class)
         .match(query)
         .group(GitSyncErrorKeys.gitCommitId, grouping("failedCount", accumulator("$sum", 1)),
-            grouping(GitSyncError.CREATED_AT_KEY, first(GitSyncError.CREATED_AT_KEY)))
-        .sort(Sort.descending(GitSyncError.CREATED_AT_KEY))
+            grouping(GitSyncErrorKeys.commitTime, first(GitSyncErrorKeys.commitTime)))
+        .sort(Sort.descending(GitSyncErrorKeys.commitTime))
         .limit(limit)
         .skip(offset)
         .aggregate(GitToHarnessErrorCommitStats.class)

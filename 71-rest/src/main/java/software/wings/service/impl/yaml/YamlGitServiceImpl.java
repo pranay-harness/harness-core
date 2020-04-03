@@ -21,6 +21,7 @@ import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -951,6 +952,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
+    final Long failedCommitTime =
+        failedGitFileChange.getCommitTimeMs() != null ? failedGitFileChange.getCommitTimeMs() : 0L;
     String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
     logger.info(String.format("Upsert git sync issue for file: %s", failedChange.getFilePath()));
 
@@ -964,9 +967,14 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("failureReason",
                 errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info")
             .set("fullSyncPath", fullSyncPath)
-            .set(APP_ID_KEY, appId);
+            .set(APP_ID_KEY, appId)
+            .set(GitSyncErrorKeys.commitTime, failedCommitTime);
 
-    populateGitDetails(failedUpdateOperations, failedGitFileChange);
+    final YamlGitConfig yamlGitConfig = failedGitFileChange.getYamlGitConfig() != null
+        ? failedGitFileChange.getYamlGitConfig()
+        : fetchYamlGitConfig(appId, failedChange.getAccountId());
+
+    populateGitDetails(failedUpdateOperations, yamlGitConfig);
 
     final GitSyncError gitSyncError = failedQuery.get();
 
@@ -990,9 +998,17 @@ public class YamlGitServiceImpl implements YamlGitService {
     failedQuery.project(GitSyncError.ID_KEY, true);
     wingsPersistence.upsert(failedQuery, failedUpdateOperations, upsertReturnNewOptions);
   }
-  private void populateGitDetails(
-      UpdateOperations<GitSyncError> failedUpdateOperations, GitFileChange failedGitFileChange) {
-    final YamlGitConfig yamlGitConfig = failedGitFileChange.getYamlGitConfig();
+
+  private YamlGitConfig fetchYamlGitConfig(String appId, String accountId) {
+    if (isNotEmpty(appId) && isNotEmpty(accountId)) {
+      final String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
+      final EntityType entityType = GLOBAL_APP_ID.equals(appId) ? ACCOUNT : APPLICATION;
+      return get(accountId, entityId, entityType);
+    }
+    return null;
+  }
+
+  private void populateGitDetails(UpdateOperations<GitSyncError> failedUpdateOperations, YamlGitConfig yamlGitConfig) {
     if (yamlGitConfig != null) {
       final String gitConnectorId = Strings.emptyIfNull(yamlGitConfig.getGitConnectorId());
       final String branchName = Strings.emptyIfNull(yamlGitConfig.getBranchName());

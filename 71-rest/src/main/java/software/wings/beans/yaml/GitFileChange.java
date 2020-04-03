@@ -19,6 +19,8 @@ public class GitFileChange extends Change {
   private transient YamlGitConfig yamlGitConfig;
   private String processingCommitId;
   private Boolean changeFromAnotherCommit;
+  private Long commitTimeMs;
+  private Long processingCommitTimeMs;
 
   public static final class Builder {
     private String commitId;
@@ -32,6 +34,8 @@ public class GitFileChange extends Change {
     private transient YamlGitConfig yamlGitConfig;
     private String processingCommitId;
     private Boolean changeFromAnotherCommit;
+    private Long commitTimeMs;
+    private Long processingCommitTimeMs;
 
     private Builder() {}
 
@@ -93,7 +97,15 @@ public class GitFileChange extends Change {
       this.processingCommitId = processingCommitId;
       return this;
     }
+    public Builder withCommitTimeMs(Long commitTimeMs) {
+      this.commitTimeMs = commitTimeMs;
+      return this;
+    }
 
+    public Builder withProcessingCommitTimeMs(Long processingCommitTimeMs) {
+      this.processingCommitTimeMs = processingCommitTimeMs;
+      return this;
+    }
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
@@ -106,7 +118,9 @@ public class GitFileChange extends Change {
           .withChangeType(changeType)
           .withSyncFromGit(syncFromGit)
           .withYamlGitConfig(yamlGitConfig)
-          .withChangeFromAnotherCommit(changeFromAnotherCommit);
+          .withChangeFromAnotherCommit(changeFromAnotherCommit)
+          .withCommitTimeMs(commitTimeMs)
+          .withProcessingCommitTimeMs(processingCommitTimeMs);
     }
 
     public GitFileChange build() {
@@ -122,6 +136,8 @@ public class GitFileChange extends Change {
       gitFileChange.setSyncFromGit(syncFromGit);
       gitFileChange.setYamlGitConfig(yamlGitConfig);
       gitFileChange.setChangeFromAnotherCommit(changeFromAnotherCommit);
+      gitFileChange.setCommitTimeMs(commitTimeMs);
+      gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
       return gitFileChange;
     }
   }

@@ -110,7 +110,7 @@ public interface GitSyncService {
    * @return
    */
   PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String yamlGitConfigId);
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName);
   /**
    *
    * @param req
