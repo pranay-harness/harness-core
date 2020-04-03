@@ -1,11 +1,15 @@
 package io.harness.network;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -70,40 +74,51 @@ public class Http {
     return false;
   }
 
-  private static int getResponseCodeForValidation(String url) throws IOException {
-    // Create a trust manager that does not validate certificate chains
-    // Install the all-trusting trust manager
-    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-    // Create all-trusting host name verifier
-    HostnameVerifier allHostsValid = (s, sslSession) -> true;
-    // Install the all-trusting host verifier
-    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-    HttpURLConnection connection = getHttpsURLConnection(url);
-    try {
-      // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
-      connection.setRequestMethod("GET");
-      connection.setConnectTimeout(15000);
-      connection.setReadTimeout(15000);
-      return connection.getResponseCode();
-    } finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
-    }
+  LoadingCache<String, Integer> responseCodeForValidation =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, Integer>() {
+            @Override
+            public Integer load(String url) throws IOException {
+              logger.info("Testing connectivity");
+
+              // Create a trust manager that does not validate certificate chains
+              // Install the all-trusting trust manager
+              HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+              // Create all-trusting host name verifier
+              HostnameVerifier allHostsValid = (s, sslSession) -> true;
+              // Install the all-trusting host verifier
+              HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+              HttpURLConnection connection = getHttpsURLConnection(url);
+              try {
+                // Changed to GET as some providers like artifactory SAAS is not
+                // accepting HEAD requests
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                int responseCode = connection.getResponseCode();
+                logger.info("Returned code {}", responseCode);
+                return responseCode;
+              } finally {
+                if (connection != null) {
+                  connection.disconnect();
+                }
+              }
+            }
+          });
+
+  public static boolean checkResponseCode(int responseCode) {
+    return responseCode != 400;
   }
 
   public static boolean connectableHttpUrl(String url) {
-    logger.info("Testing connectivity to url {}", url);
-    try {
-      int responseCode = getResponseCodeForValidation(url);
-      if (responseCode != 400) {
-        logger.info("Url {} is connectable", url);
-        return true;
-      } else {
-        logger.info("Url {} returned code {}", url, responseCode);
+    try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
+      try {
+        return checkResponseCode(responseCodeForValidation.get(url));
+      } catch (Exception e) {
+        logger.info("Could not connect: {}", e.getMessage());
       }
-    } catch (Exception e) {
-      logger.info("Could not connect to url {}: {}", url, e.getMessage());
     }
     return false;
   }
