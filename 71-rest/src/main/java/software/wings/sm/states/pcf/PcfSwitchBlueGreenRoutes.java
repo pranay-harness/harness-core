@@ -66,6 +66,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject protected transient FeatureFlagService featureFlagService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
+  static final String PCF_BG_SKIP_SWAP_ROUTE_MESG = "Skipping route swapping";
 
   @Attributes(title = "Downsize Old Applications") private boolean downsizeOldApps;
 
@@ -111,8 +112,13 @@ public class PcfSwitchBlueGreenRoutes extends State {
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
     PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
+    Activity activity = createActivity(context);
 
     if (isRollback()) {
+      if (pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf)) {
+        return pcfStateHelper.handleRollbackSkipped(
+            context.getAppId(), activity.getUuid(), PCF_BG_SWAP_ROUTE_COMMAND, PCF_BG_SKIP_SWAP_ROUTE_MESG);
+      }
       SweepingOutputInstance sweepingOutputInstance =
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
                                          .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
@@ -129,7 +135,6 @@ public class PcfSwitchBlueGreenRoutes extends State {
       requestConfigData.setSkipRollback(sweepingOutputInstance == null);
     }
 
-    Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 

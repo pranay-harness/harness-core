@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -29,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
@@ -65,6 +67,7 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
+import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -95,6 +98,7 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -162,6 +166,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @InjectMocks @Inject private PcfStateHelper pcfStateHelper;
   @Mock private ExecutionContext context;
+  @Mock private LogService logService;
 
   public static final String MANIFEST_YAML_CONTENT_With_RouteMap = "  applications:\n"
       + "  - name : ${APPLICATION_NAME}\n"
@@ -990,5 +995,38 @@ public class PcfStateHelperTest extends WingsBaseTest {
     String queryPhaseName = pcfStateHelper.getPhaseNameForQuery(APP_ID, WORKFLOW_EXECUTION_ID, phaseName);
     assertThat(queryPhaseName).isNotNull();
     assertThat(queryPhaseName).isEqualTo("Phase 1");
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testIsRollBackNotNeeded() {
+    SetupSweepingOutputPcf setupSweepingOutputPcf = null;
+    SetupSweepingOutputPcf setupSweepingOutputPcf1 = SetupSweepingOutputPcf.builder().isSuccess(false).build();
+    SetupSweepingOutputPcf setupSweepingOutputPcf2 = SetupSweepingOutputPcf.builder().isSuccess(true).build();
+
+    assertThat(pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf)).isTrue();
+    assertThat(pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf1)).isTrue();
+    assertThat(pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf2)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testHandleRollbackSkipped() {
+    PcfDeployStateExecutionData pcfDeployStateExecutionData =
+        PcfDeployStateExecutionData.builder()
+            .activityId(ACTIVITY_ID)
+            .commandName(COMMAND_NAME)
+            .updateDetails(new StringBuilder().append("test message").toString())
+            .build();
+
+    doReturn(true).when(logService).batchedSaveCommandUnitLogs(any(), any(), any());
+
+    ExecutionResponse executionResponse =
+        pcfStateHelper.handleRollbackSkipped(APP_ID, ACTIVITY_ID, COMMAND_NAME, "test message");
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(pcfDeployStateExecutionData);
   }
 }

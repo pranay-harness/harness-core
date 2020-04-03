@@ -42,6 +42,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private boolean useAppAutoscalar;
   private Integer desiredActualFinalCount;
   private PcfManifestsPackage pcfManifestsPackage;
+  private boolean isSuccess;
 
   public InfoVariables fetchPcfVariableInfo() {
     InfoVariablesBuilder infoVariablesBuilder = InfoVariables.builder();

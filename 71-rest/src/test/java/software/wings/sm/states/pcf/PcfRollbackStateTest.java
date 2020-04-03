@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -72,7 +73,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
 
-  @InjectMocks private PcfRollbackState pcfRollbackState;
+  @Spy @InjectMocks private PcfRollbackState pcfRollbackState;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
   @InjectMocks private WorkflowStandardParams workflowStandardParams = pcfStateTestHelper.getWorkflowStandardParams();

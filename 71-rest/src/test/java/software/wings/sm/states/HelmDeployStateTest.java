@@ -739,7 +739,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = RIHAZ)
   @Category(UnitTests.class)
-  public void testInitialRollbackNeeded() {
+  public void testInitialRollbackNotNeeded() {
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance()
             .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(0).build())
