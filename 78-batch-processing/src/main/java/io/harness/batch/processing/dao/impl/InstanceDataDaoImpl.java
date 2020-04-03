@@ -10,7 +10,10 @@ import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -106,11 +109,40 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
       FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
 
-      return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+      InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+
+      if (savedInstanceData.getHarnessServiceInfo() != null) {
+        try {
+          updateDeploymentEvent(savedInstanceData);
+        } catch (Exception e) {
+          logger.error("Exception while updating deployment event ", e);
+        }
+      }
+      return savedInstanceData;
+
     } else {
       logger.trace("Instance data found {} ", instanceData);
     }
     return instanceData;
+  }
+
+  private void updateDeploymentEvent(InstanceData instanceData) {
+    CostEventData costEventData = CostEventData.builder()
+                                      .settingId(instanceData.getSettingId())
+                                      .clusterId(instanceData.getClusterId())
+                                      .clusterType(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                                          InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
+                                      .cloudProvider(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                                          InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
+                                      .namespace(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                                          InstanceMetaDataConstants.NAMESPACE, instanceData))
+                                      .workloadName(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                                          InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
+                                      .workloadType(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+                                          InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
+                                      .deploymentId(instanceData.getHarnessServiceInfo().getDeploymentSummaryId())
+                                      .build();
+    costEventService.updateDeploymentEvent(costEventData);
   }
 
   @Override

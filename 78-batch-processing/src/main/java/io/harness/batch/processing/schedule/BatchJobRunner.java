@@ -2,7 +2,9 @@ package io.harness.batch.processing.schedule;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.entities.BatchJobInterval;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
+import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
@@ -25,6 +27,7 @@ import java.util.List;
 @Service
 public class BatchJobRunner {
   @Autowired private JobLauncher jobLauncher;
+  @Autowired private BatchJobIntervalService batchJobIntervalService;
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
 
   /**
@@ -38,6 +41,11 @@ public class BatchJobRunner {
     BatchJobType batchJobType = BatchJobType.fromJob(job);
     long duration = batchJobType.getInterval();
     ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
+    BatchJobInterval batchJobInterval = batchJobIntervalService.fetchBatchJobInterval(accountId, batchJobType);
+    if (null != batchJobInterval) {
+      chronoUnit = batchJobInterval.getIntervalUnit();
+      duration = batchJobInterval.getInterval();
+    }
     List<BatchJobType> dependentBatchJobs = batchJobType.getDependentBatchJobs();
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, batchJobType);
     if (null == startAt) {

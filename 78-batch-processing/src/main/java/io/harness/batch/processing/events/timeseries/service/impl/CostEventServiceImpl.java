@@ -32,7 +32,7 @@ public class CostEventServiceImpl implements CostEventService {
 
   static final String UPDATE_DEPLOYMENT_STATEMENT =
       "UPDATE COST_EVENT_DATA SET SETTINGID=?, CLUSTERID=?, CLUSTERTYPE=?, CLOUDPROVIDER=?, NAMESPACE=?, WORKLOADNAME=?,"
-      + "WORKLOADTYPE=?, CLOUDSERVICENAME=?, TASKID=?, LAUNCHTYPE=? WHERE DEPLOYMENTID=? ";
+      + "WORKLOADTYPE=?, CLOUDSERVICENAME=?, TASKID=?, LAUNCHTYPE=? WHERE DEPLOYMENTID=? AND CLUSTERID IS NULL ";
 
   @Override
   public boolean create(List<CostEventData> costEventDataList) {

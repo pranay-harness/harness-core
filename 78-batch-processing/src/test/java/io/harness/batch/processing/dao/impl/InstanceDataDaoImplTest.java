@@ -2,6 +2,7 @@ package io.harness.batch.processing.dao.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
@@ -13,12 +14,18 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.batch.processing.events.timeseries.data.CostEventData;
+import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.instance.HarnessServiceInfo;
@@ -33,7 +40,9 @@ import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InstanceDataDaoImplTest extends WingsBaseTest {
-  @Inject private InstanceDataDaoImpl instanceDataDao;
+  @Inject @InjectMocks private InstanceDataDaoImpl instanceDataDao;
+  @Mock private CostEventService costEventService;
+  @Captor private ArgumentCaptor<CostEventData> costEventDataArgumentCaptor;
 
   private static final String RUNNING_INSTANCE_ID = "running_instance_id";
   private static final String INSTANCE_NAME = "instance_name";
@@ -94,6 +103,14 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpsertInstanceInfo() {
     InstanceData instanceData = instanceDataDao.upsert(instanceInfo());
+    verify(costEventService).updateDeploymentEvent(costEventDataArgumentCaptor.capture());
+    CostEventData costEventData = costEventDataArgumentCaptor.getValue();
+    assertThat(costEventData.getDeploymentId()).isEqualTo("deploymentSummaryId");
+    assertThat(costEventData.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(costEventData.getNamespace()).isEqualTo(InstanceMetaDataConstants.NAMESPACE);
+    assertThat(costEventData.getWorkloadName()).isEqualTo(InstanceMetaDataConstants.WORKLOAD_NAME);
+    assertThat(costEventData.getWorkloadType()).isEqualTo(InstanceMetaDataConstants.WORKLOAD_TYPE);
+    assertThat(costEventData.getSettingId()).isEqualTo(CLOUD_PROVIDER_ID);
     assertThat(instanceData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceData.getHarnessServiceInfo()).isEqualTo(harnessServiceInfo());
     assertThat(instanceData.getMetaData()).isEqualTo(metaData());
@@ -202,6 +219,9 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, InstanceMetaDataConstants.PARENT_RESOURCE_ID);
+    metaData.put(InstanceMetaDataConstants.NAMESPACE, InstanceMetaDataConstants.NAMESPACE);
+    metaData.put(InstanceMetaDataConstants.WORKLOAD_NAME, InstanceMetaDataConstants.WORKLOAD_NAME);
+    metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, InstanceMetaDataConstants.WORKLOAD_TYPE);
     return metaData;
   }
 
