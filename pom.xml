@@ -15,6 +15,7 @@
         <module>20-delegate-tasks</module>
         <module>20-persistence-test</module>
         <module>21-persistence</module>
+        <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
         <module>51-migrator</module>
         <module>57-command-library-common</module>
