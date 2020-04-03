@@ -79,6 +79,7 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl()));
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl() + validationUrl));
   }
 }

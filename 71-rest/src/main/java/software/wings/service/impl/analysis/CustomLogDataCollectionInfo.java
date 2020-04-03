@@ -59,8 +59,8 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getBaseUrl()));
+    executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        getBaseUrl() + getValidationUrl()));
     executionCapabilities.addAll(
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     return executionCapabilities;

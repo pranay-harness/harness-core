@@ -19,6 +19,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.CustomAPMDataCollector;
 import software.wings.delegatetasks.cv.DataCollector;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 import software.wings.service.intfc.security.SecretManager;
@@ -115,7 +116,7 @@ public class CustomAPMDataCollectionInfo extends MetricsDataCollectionInfo {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return null;
+    return CapabilityHelper.generateDelegateCapabilities(apmConfig, getEncryptedDataDetails());
   }
 
   @JsonIgnore
