@@ -388,7 +388,7 @@ public class BillingStatsTimeSeriesDataFetcher
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
       Integer limit, boolean includeOthers) {
     qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit, includeOthers);
-    if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT)) {
+    if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT) || !isEntityGroupByPresent(groupBy)) {
       return qlData;
     }
     Map<String, Double> aggregatedData = new HashMap<>();
@@ -452,6 +452,15 @@ public class BillingStatsTimeSeriesDataFetcher
     List<String> topNElementIds = new ArrayList<>();
     list.forEach(entry -> topNElementIds.add(entry.getKey()));
     return topNElementIds;
+  }
+
+  private boolean isEntityGroupByPresent(List<QLCCMGroupBy> groupByList) {
+    for (QLCCMGroupBy groupBy : groupByList) {
+      if (groupBy.getEntityGroupBy() != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
