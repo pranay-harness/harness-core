@@ -124,6 +124,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private AwsUtils mockAwsUtils;
   @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
   @Mock private ServiceTemplateHelper mockServiceTemplateHelper;
+  @Mock private AwsStateHelper mockAwsStateHelper;
 
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
@@ -206,6 +207,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(ImmutableMap.of(asg1, 1, asg2, 1, asg3, 0))
         .when(mockAwsAsgHelperServiceManager)
         .getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList(), anyString());
+    doReturn(0).when(mockAwsStateHelper).fetchRequiredAsgCapacity(anyMap(), anyString());
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());

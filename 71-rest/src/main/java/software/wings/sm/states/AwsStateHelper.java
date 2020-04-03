@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.exception.InvalidRequestException;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.InfrastructureMapping;
@@ -75,5 +77,13 @@ public class AwsStateHelper {
     }
 
     return instanceElementList;
+  }
+
+  int fetchRequiredAsgCapacity(Map<String, Integer> currentCapacities, String asgName) {
+    Integer capacity = currentCapacities.get(asgName);
+    if (capacity == null) {
+      throw new InvalidRequestException(format("Current Capacity of Asg: [%s] not found", asgName));
+    }
+    return capacity;
   }
 }

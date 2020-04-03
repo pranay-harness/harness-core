@@ -127,6 +127,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private transient AwsUtils awsUtils;
   @Inject private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private AwsStateHelper awsStateHelper;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
@@ -244,9 +245,10 @@ public class AwsAmiServiceDeployState extends State {
     Map<String, Integer> existingDesiredCapacities = awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(
         awsConfig, encryptionDetails, region, gpNames, infrastructureMapping.getAppId());
 
-    Integer newAutoScalingGroupDesiredCapacity =
-        isNotEmpty(newAutoScalingGroupName) ? existingDesiredCapacities.get(newAutoScalingGroupName) : 0;
-    Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
+    int newAutoScalingGroupDesiredCapacity = isNotEmpty(newAutoScalingGroupName)
+        ? awsStateHelper.fetchRequiredAsgCapacity(existingDesiredCapacities, newAutoScalingGroupName)
+        : 0;
+    int totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
     Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
     List<ContainerServiceData> newInstanceData = singletonList(ContainerServiceData.builder()
                                                                    .name(newAutoScalingGroupName)

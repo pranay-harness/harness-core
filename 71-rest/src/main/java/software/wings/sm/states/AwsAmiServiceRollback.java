@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -51,9 +52,20 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     if (allPhaseRollbackDone(context)) {
       return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
-
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    if (serviceSetupElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage("No service setup element found. Skipping rollback.")
+          .build();
+    }
     AmiServiceDeployElement amiServiceDeployElement = context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
+    if (amiServiceDeployElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage("No service deploy element found. Skipping rollback.")
+          .build();
+    }
     List<AwsAmiResizeData> oldAsgCounts = Lists.newArrayList();
     String newAgName;
     int newAsgFinalDesiredCount;
