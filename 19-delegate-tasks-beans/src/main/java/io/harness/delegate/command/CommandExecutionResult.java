@@ -33,6 +33,11 @@ public class CommandExecutionResult implements DelegateTaskNotifyResponseData {
     /**
      * Queued execution status.
      */
-    QUEUED;
+    QUEUED,
+
+    /*
+     *  Skipped execution status
+     * */
+    SKIPPED;
   }
 }

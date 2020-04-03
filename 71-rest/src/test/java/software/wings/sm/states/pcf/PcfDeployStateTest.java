@@ -63,6 +63,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
@@ -138,8 +139,10 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
+  public static final String PCF_RESIZE_COMMAND = "PCF Resize";
+  private static final String NO_PREV_DEPLOYMENT_MSG = "No previous version available for rollback";
 
-  @InjectMocks private PcfDeployState pcfDeployState;
+  @Spy @InjectMocks private PcfDeployState pcfDeployState;
   @InjectMocks private WorkflowStandardParams workflowStandardParams = pcfStateTestHelper.getWorkflowStandardParams();
 
   private ServiceElement serviceElement = pcfStateTestHelper.getServiceElement();

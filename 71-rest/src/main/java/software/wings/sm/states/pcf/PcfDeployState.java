@@ -86,6 +86,7 @@ public class PcfDeployState extends State {
   @Attributes(title = "Instance Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
+  static final String NO_PREV_DEPLOYMENT_MSG = "No rollback required, skipping rollback";
 
   /**
    * Instantiates a new state.
@@ -151,6 +152,11 @@ public class PcfDeployState extends State {
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     Activity activity = createActivity(context);
+    if (isRollback() && pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf)) {
+      return pcfStateHelper.handleRollbackSkipped(
+          context.getAppId(), activity.getUuid(), PCF_RESIZE_COMMAND, NO_PREV_DEPLOYMENT_MSG);
+    }
+
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 

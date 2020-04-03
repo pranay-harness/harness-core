@@ -21,6 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -40,6 +41,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
@@ -59,6 +61,7 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.InfoVariables;
+import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -71,6 +74,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Log;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
@@ -94,6 +98,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -105,7 +110,9 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.rollback.RollbackStateMachineGenerator;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.ApplicationManifestUtils;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -134,6 +141,7 @@ public class PcfStateHelper {
   @Inject private transient StateExecutionService stateExecutionService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Inject private LogService logService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -768,5 +776,34 @@ public class PcfStateHelper {
                             .build())
                    .build())
         .collect(toList());
+  }
+
+  @VisibleForTesting
+  boolean isRollBackNotNeeded(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    return setupSweepingOutputPcf == null || !setupSweepingOutputPcf.isSuccess();
+  }
+
+  @VisibleForTesting
+  ExecutionResponse handleRollbackSkipped(String appId, String activityId, String commandUnitName, String logMessage) {
+    Log.Builder logBuilder = Log.Builder.aLog()
+                                 .withAppId(appId)
+                                 .withActivityId(activityId)
+                                 .withCommandUnitName(commandUnitName)
+                                 .withLogLevel(INFO)
+                                 .withExecutionResult(CommandExecutionResult.CommandExecutionStatus.SKIPPED);
+    ManagerExecutionLogCallback executionLogCallback =
+        new ManagerExecutionLogCallback(logService, logBuilder, activityId);
+
+    executionLogCallback.saveExecutionLog(logMessage, CommandExecutionResult.CommandExecutionStatus.SKIPPED);
+    Misc.logAllMessages(null, executionLogCallback, CommandExecutionResult.CommandExecutionStatus.SKIPPED);
+
+    return ExecutionResponse.builder()
+        .executionStatus(ExecutionStatus.SKIPPED)
+        .stateExecutionData(PcfDeployStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(commandUnitName)
+                                .updateDetails(new StringBuilder().append(logMessage).toString())
+                                .build())
+        .build();
   }
 }

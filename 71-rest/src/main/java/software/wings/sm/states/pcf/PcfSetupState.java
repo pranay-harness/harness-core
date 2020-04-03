@@ -610,6 +610,7 @@ public class PcfSetupState extends State {
               Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
           .appDetailsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS == executionStatus) {
+        setupSweepingOutputPcfBuilder.isSuccess(true);
         setupSweepingOutputPcfBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
         addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, setupSweepingOutputPcfBuilder);
       }
