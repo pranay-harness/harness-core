@@ -354,6 +354,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
     }
     feedbackRecordFromDataStore.setPriority(FeedbackPriority.BASELINE);
+    feedbackRecordFromDataStore.setFeedbackNote(feedbackRecord.getFeedbackNote());
     return saveLogFeedback(
         accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
   }
@@ -367,6 +368,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
     }
     feedbackRecordFromDataStore.setPriority(feedbackRecord.getPriority());
+    feedbackRecordFromDataStore.setFeedbackNote(feedbackRecord.getFeedbackNote());
     return saveLogFeedback(
         accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
   }
@@ -380,6 +382,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
     }
     feedbackRecordFromDataStore.setPriority(feedbackRecord.getPriority());
+    feedbackRecordFromDataStore.setFeedbackNote(feedbackRecord.getFeedbackNote());
     return saveLogFeedback(
         accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
   }

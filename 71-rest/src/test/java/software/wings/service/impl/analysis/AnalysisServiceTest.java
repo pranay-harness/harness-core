@@ -253,4 +253,119 @@ public class AnalysisServiceTest extends WingsBaseTest {
 
     assertThat(lastExecutionNodes).isEqualTo(expected);
   }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateFeedbackPriority_withFeedbackNote() {
+    CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()
+                                          .envId(envId)
+                                          .cvConfigId(cvConfiguration.getUuid())
+                                          .logMessage("This is a log message")
+                                          .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .priority(FeedbackPriority.P4)
+                                          .envId(envId)
+                                          .serviceId(serviceId)
+                                          .feedbackNote("testNote1")
+                                          .actionTaken(FeedbackAction.UPDATE_PRIORITY)
+                                          .clusterLabel(2)
+                                          .build();
+
+    boolean savedFeedback =
+        analysisService.updateFeedbackPriority(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+    assertThat(savedFeedback).isTrue();
+
+    List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
+    assertThat(feedbackRecords.size()).isEqualTo(1);
+    assertThat(feedbackRecords.get(0).getFeedbackNote()).isEqualTo("testNote1");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateFeedbackPriority_withPreExistingFeedbackNote() {
+    CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()
+                                          .envId(envId)
+                                          .cvConfigId(cvConfiguration.getUuid())
+                                          .logMessage("This is a log message")
+                                          .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .priority(FeedbackPriority.P4)
+                                          .envId(envId)
+                                          .serviceId(serviceId)
+                                          .feedbackNote("testNote1")
+                                          .actionTaken(FeedbackAction.UPDATE_PRIORITY)
+                                          .clusterLabel(2)
+                                          .build();
+
+    boolean savedFeedback =
+        analysisService.updateFeedbackPriority(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+    assertThat(savedFeedback).isTrue();
+
+    List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
+    assertThat(feedbackRecords.size()).isEqualTo(1);
+
+    feedbackRecord.setPriority(FeedbackPriority.P0);
+    feedbackRecord.setFeedbackNote("updated feedback note");
+    feedbackRecord.setUuid(feedbackRecords.get(0).getUuid());
+
+    savedFeedback = analysisService.updateFeedbackPriority(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+    assertThat(savedFeedback).isTrue();
+
+    feedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
+    assertThat(feedbackRecords.size()).isEqualTo(1);
+    assertThat(feedbackRecords.get(0).getPriority().name()).isEqualTo(FeedbackPriority.P0.name());
+    assertThat(feedbackRecords.get(0).getFeedbackNote()).isEqualTo("updated feedback note");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testRemoveFromBaseline_withFeedbackNote() {
+    CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()
+                                          .envId(envId)
+                                          .cvConfigId(cvConfiguration.getUuid())
+                                          .logMessage("This is a log message")
+                                          .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .priority(FeedbackPriority.P4)
+                                          .envId(envId)
+                                          .serviceId(serviceId)
+                                          .feedbackNote("removing from baseline")
+                                          .actionTaken(FeedbackAction.REMOVE_FROM_BASELINE)
+                                          .clusterLabel(2)
+                                          .build();
+
+    boolean savedFeedback =
+        analysisService.removeFromBaseline(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+    assertThat(savedFeedback).isTrue();
+
+    List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
+    assertThat(feedbackRecords.size()).isEqualTo(1);
+    assertThat(feedbackRecords.get(0).getFeedbackNote()).isEqualTo("removing from baseline");
+    assertThat(feedbackRecords.get(0).getPriority().name()).isEqualTo(FeedbackPriority.P4.name());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testAddToBaseline_withFeedbackNote() {
+    CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()
+                                          .envId(envId)
+                                          .cvConfigId(cvConfiguration.getUuid())
+                                          .logMessage("This is a log message")
+                                          .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .priority(FeedbackPriority.P4)
+                                          .envId(envId)
+                                          .serviceId(serviceId)
+                                          .feedbackNote("testNote2")
+                                          .actionTaken(FeedbackAction.ADD_TO_BASELINE)
+                                          .clusterLabel(2)
+                                          .build();
+
+    boolean savedFeedback = analysisService.addToBaseline(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+    assertThat(savedFeedback).isTrue();
+
+    List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
+    assertThat(feedbackRecords.size()).isEqualTo(1);
+    assertThat(feedbackRecords.get(0).getFeedbackNote()).isEqualTo("testNote2");
+  }
 }
