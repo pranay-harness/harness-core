@@ -3,9 +3,6 @@ package io.harness.network;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,14 +12,11 @@ import okhttp3.OkHttpClient;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.SocketException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Http.class)
@@ -121,33 +115,8 @@ public class HttpTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testConnectableHttpUrl() throws IOException {
-    PowerMockito.spy(Http.class);
-    HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
-
-    doReturn(400).when(httpURLConnectionMock).getResponseCode();
-    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isFalse();
-
-    doReturn(200).when(httpURLConnectionMock).getResponseCode();
-    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isTrue();
-
-    doReturn(500).when(httpURLConnectionMock).getResponseCode();
-    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isTrue();
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
-  public void testConnectableHttpUrl_error() throws IOException {
-    PowerMockito.spy(Http.class);
-    HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
-
-    doThrow(new SocketException("socket exception")).when(httpURLConnectionMock).getResponseCode();
-    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isFalse();
-  }
-
-  private HttpURLConnection getHttpURLConnectionMock() throws IOException {
-    HttpURLConnection httpURLConnectionMock = mock(HttpURLConnection.class);
-    PowerMockito.when(Http.getHttpsURLConnection("http://localhost:8080")).thenReturn(httpURLConnectionMock);
-    return httpURLConnectionMock;
+    assertThat(Http.checkResponseCode(200)).isTrue();
+    assertThat(Http.checkResponseCode(400)).isFalse();
+    assertThat(Http.checkResponseCode(500)).isTrue();
   }
 }
