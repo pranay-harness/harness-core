@@ -9,10 +9,11 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.sm.StateType;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,8 +45,12 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl + validationUrl));
+    executionCapabilities.addAll(
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
+    return executionCapabilities;
   }
 
   public boolean isCanaryUrlPresent() {
