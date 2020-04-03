@@ -41,9 +41,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     this.metricsDataCollector = (MetricsDataCollector<T>) getDataCollector();
     final List<NewRelicMetricDataRecord> newRelicMetrics = new ArrayList<>();
     final List<Callable<List<MetricElement>>> callables = new ArrayList<>();
-    if (dataCollectionInfo.isShouldSendHeartbeat()) {
-      addHeartbeats(dataCollectionInfo, newRelicMetrics);
-    }
+
     if (dataCollectionInfo.getHosts().isEmpty()) {
       callables.add(() -> metricsDataCollector.fetchMetrics());
     } else {
@@ -61,7 +59,16 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
       }
     });
     logger.info("Saving " + newRelicMetrics.size() + " metrics");
-    save(dataCollectionInfo, newRelicMetrics);
+    Map<String, List<NewRelicMetricDataRecord>> group =
+        newRelicMetrics.stream().collect(Collectors.groupingBy(NewRelicMetricDataRecord::getHost, Collectors.toList()));
+    group.forEach((host, records) -> {
+      logger.info("Saving metric for host {}, number of records {}", host, records.size());
+      save(dataCollectionInfo, records);
+    });
+    if (dataCollectionInfo.isShouldSendHeartbeat()) {
+      logger.info("Saving heartbeat");
+      save(dataCollectionInfo, getHeartbeat(dataCollectionInfo));
+    }
   }
 
   private NewRelicMetricDataRecord mapToNewRelicMetricDataRecord(
@@ -98,8 +105,8 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     }
   }
 
-  protected void addHeartbeats(
-      MetricsDataCollectionInfo metricsDataCollectionInfo, List<NewRelicMetricDataRecord> newRelicMetrics) {
+  protected List<NewRelicMetricDataRecord> getHeartbeat(MetricsDataCollectionInfo metricsDataCollectionInfo) {
+    List<NewRelicMetricDataRecord> newRelicMetrics = new ArrayList<>();
     int heartbeatMin = (int) (TimeUnit.MILLISECONDS.toMinutes(metricsDataCollectionInfo.getEndTime().toEpochMilli()));
     Set<String> groups = new HashSet<>();
     for (Map.Entry<String, String> entry : metricsDataCollectionInfo.getHostsToGroupNameMap().entrySet()) {
@@ -133,5 +140,6 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
         groups.add(entry.getValue());
       }
     }
+    return newRelicMetrics;
   }
 }
