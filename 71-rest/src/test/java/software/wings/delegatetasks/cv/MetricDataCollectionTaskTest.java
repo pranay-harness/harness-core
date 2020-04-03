@@ -8,7 +8,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -103,7 +105,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testSavingHeartbeatsForAllHosts_ShouldSendHeartbeatFalse() throws DataCollectionException {
+  public void testCollectAndSaveData_shouldSendHeartbeatFalse() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.isShouldSendHeartbeat()).thenReturn(false);
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3", "host4"));
@@ -118,11 +120,40 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
     when(metricsDataCollectionInfo.getDataCollectionStartTime()).thenReturn(now);
     metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
-    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(metricStoreService)
-        .saveNewRelicMetrics(anyString(), anyString(), anyString(), anyString(), captor.capture());
-    List<NewRelicMetricDataRecord> capturedList = captor.getValue();
-    assertThat(capturedList.size()).isEqualTo(0);
+    verifyZeroInteractions(metricStoreService);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectAndSaveData_forBatchingOfSaveCallByHost() throws DataCollectionException {
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2"));
+    Map<String, String> hostToGroupNameMap = new HashMap<>();
+    hostToGroupNameMap.put("host1", "default");
+    hostToGroupNameMap.put("host2", "default");
+    MetricElement metricElementHost1 = MetricElement.builder()
+                                           .name("metric1")
+                                           .host("host1")
+                                           .groupName("default")
+                                           .timestamp(System.currentTimeMillis())
+                                           .build();
+    MetricElement metricElementHost2 = MetricElement.builder()
+                                           .name("metric1")
+                                           .host("host2")
+                                           .groupName("default")
+                                           .timestamp(System.currentTimeMillis())
+                                           .build();
+    when(metricsDataCollector.fetchMetrics(any()))
+        .thenReturn(Lists.newArrayList(metricElementHost1))
+        .thenReturn(Lists.newArrayList(metricElementHost2));
+    when(metricsDataCollectionInfo.getHostsToGroupNameMap()).thenReturn(hostToGroupNameMap);
+    Instant now = Instant.ofEpochMilli(Timestamp.currentMinuteBoundary());
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now.plus(1, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now);
+    when(metricsDataCollectionInfo.getDataCollectionStartTime()).thenReturn(now);
+    metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
+    verify(metricStoreService, times(3)).saveNewRelicMetrics(anyString(), anyString(), anyString(), anyString(), any());
   }
 
   @Test
@@ -184,8 +215,8 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(metricStoreService).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
-    List<NewRelicMetricDataRecord> records = captor.getValue();
+    verify(metricStoreService, times(2)).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
+    List<NewRelicMetricDataRecord> records = captor.getAllValues().get(0);
     assertThat(records.size()).isEqualTo(1);
     assertThat(records.get(0).getStateExecutionId()).isEqualTo(metricsDataCollectionInfo.getStateExecutionId());
     assertThat(records.get(0).getServiceId()).isEqualTo(metricsDataCollectionInfo.getServiceId());
@@ -220,8 +251,8 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(metricStoreService).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
-    List<NewRelicMetricDataRecord> records = captor.getValue();
+    verify(metricStoreService, times(2)).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
+    List<NewRelicMetricDataRecord> records = captor.getAllValues().get(0);
     assertThat(records.size()).isEqualTo(1);
     assertThat(records.get(0).getStateExecutionId()).isEqualTo(metricsDataCollectionInfo.getStateExecutionId());
     assertThat(records.get(0).getServiceId()).isEqualTo(metricsDataCollectionInfo.getServiceId());
