@@ -32,6 +32,7 @@ import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
+import static software.wings.service.impl.analysis.LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE;
 import static software.wings.service.impl.analysis.MLAnalysisType.FEEDBACK_ANALYSIS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
@@ -1580,15 +1581,19 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled() throws Exception {
+  public void testTriggerFeedbackAnalysis_createFeedbackAnalysisTaskOutsideBaselineWindowWhenFeatureName247V2IsEnabled()
+      throws Exception {
     setupFeedbacks(true);
-
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
     LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
     cvConfiguration.set247LogsV2(true);
     wingsPersistence.save(cvConfiguration);
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
 
-    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    int analysisMinute = (int) startMin + 75;
     LogMLAnalysisRecord logAnalysisRecord =
         LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
 
@@ -1603,6 +1608,44 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(feedbackTasks).hasSize(1);
     assertThat(feedbackTasks.get(0).getAnalysis_minute()).isEqualTo(analysisMinute);
     assertThat(feedbackTasks.get(0).getFeature_name()).isEqualTo("247_V2");
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void
+  testTriggerFeedbackAnalysis_doNotCreateFeedbackAnalysisTaskWithInOrOnBaselineWindowWhenFeatureName247V2IsEnabled()
+      throws Exception {
+    setupFeedbacks(true);
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
+    cvConfiguration.set247LogsV2(true);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
+    int analysisMinute = (int) cvConfiguration.getBaselineEndMinute();
+    LogMLAnalysisRecord logAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+
+    logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(logAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> feedbackTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    List<LogMLAnalysisRecord> feedbackAnalysisRecords =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, FEEDBACK_ANALYSIS_COMPLETE)
+            .asList();
+    assertThat(feedbackTasks).hasSize(0);
+    assertThat(feedbackAnalysisRecords).hasSize(1);
+    assertThat(feedbackAnalysisRecords.get(0).getLogCollectionMinute())
+        .isEqualTo(logAnalysisRecord.getLogCollectionMinute());
   }
 
   @Test
@@ -1631,10 +1674,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
-  public void testCreateExperimentalFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled() throws Exception {
+  public void
+  testTriggerFeedbackAnalysis_createExperimentalFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled()
+      throws Exception {
     wingsPersistence.save(
         MLExperiments.builder().experimentName("textExp").ml_analysis_type(FEEDBACK_ANALYSIS).is24x7(true).build());
-    testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsSetIfLogsV2Enabled();
+    testTriggerFeedbackAnalysis_createFeedbackAnalysisTaskOutsideBaselineWindowWhenFeatureName247V2IsEnabled();
 
     LearningEngineExperimentalAnalysisTask expTask =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)

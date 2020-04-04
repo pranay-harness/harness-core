@@ -1225,6 +1225,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             logAnalysisService.createAndUpdateFeedbackAnalysis(
                 LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), minuteForFeedbackAnalysis);
           } else {
+            if (logsCVConfiguration.is247LogsV2()
+                && logsCVConfiguration.getBaselineStartMinute() < minuteForFeedbackAnalysis
+                && minuteForFeedbackAnalysis <= logsCVConfiguration.getBaselineEndMinute()) {
+              logAnalysisService.createAndUpdateFeedbackAnalysis(
+                  LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), minuteForFeedbackAnalysis);
+              return;
+            }
             boolean feedbackTask = createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
             logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
                 minuteForFeedbackAnalysis);
