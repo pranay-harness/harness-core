@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 @Redesign
 public class AsyncChainResponse {
-  boolean finalTask;
-  @Singular List<String> correlationIds;
-  String delegateTaskId;
+  boolean finalLink;
+  @Singular List<String> callbackIds;
 }

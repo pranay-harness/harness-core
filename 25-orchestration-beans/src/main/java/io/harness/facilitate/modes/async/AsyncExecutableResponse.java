@@ -11,6 +11,5 @@ import java.util.List;
 @Builder
 @Redesign
 public class AsyncExecutableResponse {
-  @Singular List<String> correlationIds;
-  String delegateTaskId;
+  @Singular List<String> callbackIds;
 }

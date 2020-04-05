@@ -11,5 +11,6 @@ import java.util.Map;
 @Redesign
 public interface AsyncExecutable {
   AsyncExecutableResponse executeAsync(StateExecutionPackage stateExecutionPackage);
+
   StateResponse handleAsyncResponse(Ambiance ambiance, Map<String, ResponseData> responseDataMap);
 }

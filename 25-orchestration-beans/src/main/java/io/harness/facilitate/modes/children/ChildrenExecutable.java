@@ -9,5 +9,6 @@ import java.util.Map;
 
 public interface ChildrenExecutable {
   ChildrenExecutableResponse obtainChildren(StateExecutionPackage stateExecutionPackage);
+
   StateResponse handleAsyncResponse(Ambiance ambiance, Map<String, ResponseData> responseDataMap);
 }

@@ -10,5 +10,5 @@ import lombok.Value;
 public class SweepingOutputRefObject implements RefObject {
   String name;
   String producerId;
-  RefType refType = RefType.SWEEPING_OUTPUT;
+  RefType refType = RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
 }

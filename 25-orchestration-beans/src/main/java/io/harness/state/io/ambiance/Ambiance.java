@@ -1,14 +1,19 @@
 package io.harness.state.io.ambiance;
 
 import io.harness.annotations.Redesign;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
 
 import java.util.Map;
 
 @Redesign
-public interface Ambiance {
+@Value
+@Builder
+public class Ambiance {
   // Setup details accountId, appId
-  Map<String, String> getSetupAbstractions();
+  @Singular Map<String, String> setupAbstractions;
 
   // These is a combination of setup/execution Id for a particular level
-  Map<String, Level> getLevels();
+  @Singular Map<String, Level> levels;
 }

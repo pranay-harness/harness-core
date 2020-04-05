@@ -7,7 +7,7 @@ import io.harness.state.execution.status.NodeExecutionStatus;
 public interface Adviser {
   AdviserType getType();
 
-  Advise onAdviseEvent(AdviseEvent adviseEvent);
+  Advise onAdviseEvent(AdvisingEvent advisingEvent);
 
   // TODO(prashant) : This doesn't belong here move it to separate interface. Also do we need this at all ?
   boolean canAdvise(NodeExecutionStatus status);

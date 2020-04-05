@@ -1,7 +1,7 @@
 package io.harness.facilitate;
 
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.io.FacilitatorData;
+import io.harness.facilitate.io.FacilitatorParameters;
 import lombok.Builder;
 import lombok.Value;
 
@@ -10,5 +10,5 @@ import lombok.Value;
 @Redesign
 public class FacilitatorObtainment {
   FacilitatorType type;
-  FacilitatorData facilitatorData;
+  FacilitatorParameters facilitatorParameters;
 }
