@@ -229,6 +229,7 @@ genericEvent { "name" : "earliestGet_1" , "background" : true , "expireAfterSeco
 genericEvent { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestGet" : 1}
 gitCommits { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitCommits { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+gitCommits { "name" : "gitCommitAccountIdLastUpdatedAT" , "background" : true} { "accountId" : 1 , "lastUpdatedAt" : -1}
 gitCommits { "name" : "gitCommitIdx" , "unique" : true} { "accountId" : 1 , "commitId" : 1}
 gitCommits { "name" : "gitCommitStatusLastUpdatedIdx" , "background" : true} { "accountId" : 1 , "status" : 1 , "lastUpdatedAt" : -1}
 gitCommits { "name" : "status_1" , "background" : true} { "status" : 1}
@@ -659,6 +660,7 @@ workflows { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 workflows { "name" : "linkedArtifactStreamIds_1" , "background" : true} { "linkedArtifactStreamIds" : 1}
 workflows { "name" : "linkedTemplateUuids_1" , "background" : true} { "linkedTemplateUuids" : 1}
 yamlChangeSet { "name" : "accountId_createdAt_index" , "background" : true} { "accountId" : 1 , "createdAt" : -1}
+yamlChangeSet { "name" : "accountId_status_gitToHarness_createdAt_index" , "background" : true} { "accountId" : 1 , "status" : 1 , "gitToHarness" : 1 , "createdAt" : 1}
 yamlChangeSet { "name" : "appId_1" , "background" : true} { "appId" : 1}
 yamlChangeSet { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 yamlChangeSet { "name" : "searchIdx" , "background" : true} { "accountId" : 1 , "status" : 1}

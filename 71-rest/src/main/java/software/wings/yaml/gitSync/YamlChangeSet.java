@@ -30,7 +30,9 @@ import javax.validation.constraints.NotNull;
                     , @Field("status") }, options = @IndexOptions(name = "searchIdx"))
   , @Index(fields = {
     @Field("accountId"), @Field(value = "createdAt", type = IndexType.DESC)
-  }, options = @IndexOptions(name = "accountId_createdAt_index", background = true))
+  }, options = @IndexOptions(name = "accountId_createdAt_index", background = true)), @Index(fields = {
+    @Field("accountId"), @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt")
+  }, options = @IndexOptions(name = "accountId_status_gitToHarness_createdAt_index", background = true))
 })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")
