@@ -39,7 +39,7 @@ import java.util.Map;
 public class DynaTraceConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "URL", required = true) private String dynaTraceUrl;
 
-  @Attributes(title = "API Token", required = true) @Encrypted private char[] apiToken;
+  @Attributes(title = "API Token", required = true) @Encrypted(fieldName = "api_token") private char[] apiToken;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

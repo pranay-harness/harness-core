@@ -45,7 +45,6 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -112,7 +111,6 @@ public class GcpKmsEncryptDecryptClient {
                                                                    .encryptionType(EncryptionType.GCP_KMS)
                                                                    .kmsId(gcpKmsConfig.getUuid())
                                                                    .enabled(true)
-                                                                   .parentIds(new HashSet<>())
                                                                    .accountId(accountId)
                                                                    .build();
     encryptedData.setEncryptedValue(encryptedValue);

@@ -44,7 +44,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final String GIT_USER = "git";
 
   @Attributes(title = "Username", required = true) private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
 
   @Attributes(title = "Git Branch", required = true) private String branch;

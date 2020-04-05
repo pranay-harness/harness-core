@@ -41,7 +41,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @DefaultValue("false") @Attributes(title = "Start TLS") private boolean startTLS;
   @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

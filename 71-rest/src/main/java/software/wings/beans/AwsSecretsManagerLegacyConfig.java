@@ -43,9 +43,13 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 public class AwsSecretsManagerLegacyConfig extends Base implements EncryptionConfig {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
+  @Attributes(title = "AWS Access Key", required = true)
+  @Encrypted(fieldName = "aws_access_key")
+  private String accessKey;
 
-  @Attributes(title = "AWS Secret Key", required = true) @Encrypted private String secretKey;
+  @Attributes(title = "AWS Secret Key", required = true)
+  @Encrypted(fieldName = "aws_secret_key")
+  private String secretKey;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 

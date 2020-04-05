@@ -94,7 +94,8 @@ public enum FeatureName {
   YAML_RBAC,
   CONNECTORS_REF_SECRETS,
   OUTAGE_CV_DISABLE,
-  SCIM_INTEGRATION;
+  SCIM_INTEGRATION,
+  SECRET_PARENTS_MIGRATED;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

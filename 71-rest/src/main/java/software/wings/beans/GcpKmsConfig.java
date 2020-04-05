@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -30,15 +31,17 @@ import java.util.List;
 public class GcpKmsConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "projectId", required = true) private String projectId;
+  @Attributes(title = "Project Id", required = true) private String projectId;
 
   @Attributes(title = "GCP Region", required = true) private String region;
 
-  @Attributes(title = "Keyring name", required = true) private String keyRing;
+  @Attributes(title = "Key Ring Name", required = true) private String keyRing;
 
-  @Attributes(title = "Key name", required = true) private String keyName;
+  @Attributes(title = "Key Name", required = true) private String keyName;
 
-  @Attributes(title = "GCP Serviceaccount credential", required = true) private char[] credentials;
+  @Attributes(title = "GCP Service Account Credentials", required = true)
+  @Encrypted(fieldName = "gcp_service_account_credentials")
+  private char[] credentials;
 
   @JsonIgnore
   @SchemaIgnore

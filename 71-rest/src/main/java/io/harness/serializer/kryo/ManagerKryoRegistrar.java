@@ -480,6 +480,7 @@ import software.wings.security.WorkflowFilter;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.DelayEventNotifyData;
@@ -1533,5 +1534,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
     kryo.register(SftpCapability.class, 7333);
     kryo.register(ScalyrConfig.class, 7334);
+    kryo.register(EncryptedDataParent.class, 7335);
   }
 }

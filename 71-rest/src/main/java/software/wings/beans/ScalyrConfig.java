@@ -41,7 +41,7 @@ public class ScalyrConfig extends SettingValue implements EncryptableSetting, Ex
   public static final String QUERY_URL = "query";
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "URL", required = true) private String url;
-  @Attributes(title = "API Token", required = true) @Encrypted private char[] apiToken;
+  @Attributes(title = "API Token", required = true) @Encrypted(fieldName = "api_token") private char[] apiToken;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedApiToken;
 
   public ScalyrConfig() {

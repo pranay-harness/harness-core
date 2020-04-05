@@ -6,6 +6,7 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import com.google.inject.Inject;
 
 import io.harness.data.validator.EntityNameValidator;
+import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -27,6 +29,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 @Slf4j
@@ -85,7 +88,11 @@ public class YamlGitConfigRefactoringMigration implements Migration {
           logger.info("Updating YamlGitConfig with newly created GitConnector");
 
           if (encryptedData != null) {
-            encryptedData.getParentIds().add(settingAttributeForGit.getUuid());
+            List<Field> encryptedFields = EncryptionReflectUtils.getEncryptedFields(gitConfig.getClass());
+            String fieldKey = EncryptionReflectUtils.getEncryptedFieldTag(encryptedFields.get(0));
+            EncryptedDataParent encryptedDataParent =
+                new EncryptedDataParent(settingAttributeForGit.getUuid(), gitConfig.getSettingType(), fieldKey);
+            encryptedData.addParent(encryptedDataParent);
             wingsPersistence.saveAndGet(EncryptedData.class, encryptedData);
           }
 

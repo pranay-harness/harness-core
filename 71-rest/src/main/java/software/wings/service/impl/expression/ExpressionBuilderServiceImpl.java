@@ -9,7 +9,6 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
-
 import static software.wings.service.impl.expression.ExpressionBuilder.APP_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.APP_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.INFRA_PREFIX;

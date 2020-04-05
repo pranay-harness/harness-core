@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -440,8 +441,8 @@ public class VaultTest extends WingsBaseTest {
                                                 .filter(EncryptedDataKeys.accountId, renameAccountId)
                                                 .asList();
     assertThat(encryptedDataList).hasSize(1);
-    assertThat(encryptedDataList.get(0).getParentIds()).hasSize(1);
-    assertThat(encryptedDataList.get(0).getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+    assertThat(encryptedDataList.get(0).getParents()).hasSize(1);
+    assertThat(encryptedDataList.get(0).containsParent(savedConfig.getUuid(), SettingVariableTypes.VAULT)).isTrue();
     assertThat(encryptedDataList.get(0).getName()).isEqualTo(savedConfig.getUuid() + "_token");
 
     name = UUID.randomUUID().toString();
@@ -454,8 +455,8 @@ public class VaultTest extends WingsBaseTest {
                             .filter(EncryptedDataKeys.type, SettingVariableTypes.VAULT)
                             .asList();
     assertThat(encryptedDataList).hasSize(1);
-    assertThat(encryptedDataList.get(0).getParentIds()).hasSize(1);
-    assertThat(encryptedDataList.get(0).getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+    assertThat(encryptedDataList.get(0).getParents()).hasSize(1);
+    assertThat(encryptedDataList.get(0).containsParent(savedConfig.getUuid(), SettingVariableTypes.VAULT)).isTrue();
     assertThat(encryptedDataList.get(0).getName()).isEqualTo(savedConfig.getUuid() + "_token");
   }
 
@@ -1491,7 +1492,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .filter(EncryptedDataKeys.accountId, accountId)
                                                 .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(encryptedFileData.get(0).getParentIds().isEmpty()).isFalse();
+    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
@@ -1509,7 +1510,7 @@ public class VaultTest extends WingsBaseTest {
                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(encryptedFileData.get(0).getParentIds().isEmpty()).isFalse();
+    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {
@@ -1571,10 +1572,10 @@ public class VaultTest extends WingsBaseTest {
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
     assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
-    assertThat(encryptedData.getParentIds()).hasSize(numOfSettingAttributes);
-    assertThat(encryptedData.getParentIds()).isEqualTo(attributeIds);
+    assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes);
 
     for (String attributeId : attributeIds) {
+      assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isTrue();
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertThat(savedConfig.getAccountId()).isEqualTo(accountId);
@@ -1588,10 +1589,8 @@ public class VaultTest extends WingsBaseTest {
 
     // delete configs and check
     int i = 0;
-    Set<String> remainingAttrs = new HashSet<>(attributeIds);
     for (String attributeId : attributeIds) {
       wingsPersistence.delete(accountId, SettingAttribute.class, attributeId);
-      remainingAttrs.remove(attributeId);
       encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(EncryptedDataKeys.accountId, accountId)
                            .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
@@ -1606,10 +1605,8 @@ public class VaultTest extends WingsBaseTest {
         assertThat(encryptedData.isEnabled()).isTrue();
         assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
         assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
-        assertThat(encryptedData.getParentIds()).hasSize(numOfSettingAttributes - (i + 1));
-
-        assertThat(encryptedData.getParentIds().contains(attributeId)).isFalse();
-        assertThat(encryptedData.getParentIds()).isEqualTo(remainingAttrs);
+        assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
+        assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       }
       i++;
     }

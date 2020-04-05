@@ -33,7 +33,7 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
 
   @NotEmpty private String chartRepoUrl;
   private String username;
-  @Encrypted private char[] password;
+  @Encrypted(fieldName = "password") private char[] password;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   public HttpHelmRepoConfig() {

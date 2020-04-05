@@ -11,6 +11,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CYBERARK;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,16 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.CyberArkConfig.CyberArkConfigKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -139,8 +141,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     }
 
     // Create a LOCAL encrypted record for AWS secret key
-    String clientCertEncryptedDataId = saveClientCertificateField(
-        cyberArkConfig, secretsManagerConfigId, clientCertEncryptedData, CLIENT_CERTIFICATE_NAME_SUFFIX);
+    String clientCertEncryptedDataId = saveClientCertificateField(cyberArkConfig, secretsManagerConfigId,
+        clientCertEncryptedData, CLIENT_CERTIFICATE_NAME_SUFFIX, CyberArkConfigKeys.clientCertificate);
     cyberArkConfig.setClientCertificate(clientCertEncryptedDataId);
 
     // PL-3237: Audit secret manager config changes.
@@ -175,12 +177,13 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   }
 
   private String saveClientCertificateField(CyberArkConfig cyberArkConfig, String configId,
-      EncryptedData secretFieldEncryptedData, String clientCertNameSuffix) {
+      EncryptedData secretFieldEncryptedData, String clientCertNameSuffix, String fieldName) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(cyberArkConfig.getAccountId());
-      secretFieldEncryptedData.addParent(configId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.CYBERARK);
+      secretFieldEncryptedData.addParent(
+          EncryptedDataParent.createParentRef(configId, CyberArkConfig.class, fieldName, CYBERARK));
+      secretFieldEncryptedData.setType(CYBERARK);
       secretFieldEncryptedData.setName(cyberArkConfig.getName() + clientCertNameSuffix);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }

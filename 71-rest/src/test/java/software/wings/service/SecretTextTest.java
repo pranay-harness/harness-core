@@ -384,7 +384,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -420,8 +420,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
     assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().contains(savedAttributeId)).isTrue();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(savedAttributeId, serviceVariable.getSettingType())).isTrue();
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertThat(savedVariable.getValue()).isNull();
@@ -477,8 +477,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
     assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().contains(savedAttributeId)).isTrue();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(savedAttributeId, serviceVariable.getSettingType())).isTrue();
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertThat(savedVariable.getValue()).isNull();
@@ -553,20 +553,19 @@ public class SecretTextTest extends WingsBaseTest {
                                       .filter(EncryptedDataKeys.name, secretName1)
                                       .filter(EncryptedDataKeys.accountId, accountId)
                                       .get();
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(serviceVariable.getUuid());
-
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(serviceVariable.getUuid(), serviceVariable.getSettingType())).isTrue();
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName2)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName3)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     savedVariable.setValue(secretId2.toCharArray());
     serviceVariableService.update(savedVariable);
@@ -580,20 +579,20 @@ public class SecretTextTest extends WingsBaseTest {
                         .filter(EncryptedDataKeys.name, secretName1)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName2)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(serviceVariable.getUuid());
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(serviceVariable.getUuid(), serviceVariable.getSettingType())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName3)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     String updatedName = "updatedName" + getRandomServiceVariableName();
     String updatedAppId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
@@ -613,20 +612,20 @@ public class SecretTextTest extends WingsBaseTest {
                         .filter(EncryptedDataKeys.name, secretName1)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName2)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName3)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(serviceVariable.getUuid());
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(serviceVariable.getUuid(), serviceVariable.getSettingType())).isTrue();
 
     savedVariable.setValue(secretId1.toCharArray());
     serviceVariableService.update(savedVariable);
@@ -641,20 +640,20 @@ public class SecretTextTest extends WingsBaseTest {
                         .filter(EncryptedDataKeys.name, secretName1)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(serviceVariable.getUuid());
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(serviceVariable.getUuid(), serviceVariable.getSettingType())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName2)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
 
     encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                         .filter(EncryptedDataKeys.name, secretName3)
                         .filter(EncryptedDataKeys.accountId, accountId)
                         .get();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
   }
 
   @Test
@@ -676,7 +675,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -717,14 +716,12 @@ public class SecretTextTest extends WingsBaseTest {
       assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
       assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
       assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-      assertThat(encryptedData.getParentIds()).hasSize(i + 1);
-      assertThat(encryptedData.getParentIds()).isEqualTo(variableIds);
+      assertThat(encryptedData.getParents()).hasSize(i + 1);
+      assertThat(encryptedData.containsParent(savedAttributeId, serviceVariable.getSettingType())).isTrue();
     }
 
-    Set<String> remainingVariables = new HashSet<>(variableIds);
     int i = numOfVariable - 1;
     for (String variableId : variableIds) {
-      remainingVariables.remove(variableId);
       wingsPersistence.delete(ServiceVariable.class, variableId);
 
       query = wingsPersistence.createQuery(EncryptedData.class)
@@ -742,10 +739,10 @@ public class SecretTextTest extends WingsBaseTest {
       assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
 
       if (i == 0) {
-        assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+        assertThat(isEmpty(encryptedData.getParents())).isTrue();
       } else {
-        assertThat(encryptedData.getParentIds()).hasSize(i);
-        assertThat(encryptedData.getParentIds()).isEqualTo(remainingVariables);
+        assertThat(encryptedData.getParents()).hasSize(i);
+        assertThat(encryptedData.containsParent(variableId, SettingVariableTypes.SERVICE_VARIABLE)).isFalse();
       }
       i--;
     }
@@ -763,7 +760,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
     assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
   }
 
   @Test
@@ -784,7 +781,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -825,14 +822,12 @@ public class SecretTextTest extends WingsBaseTest {
       assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
       assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
       assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-      assertThat(encryptedData.getParentIds()).hasSize(i + 1);
-      assertThat(encryptedData.getParentIds()).isEqualTo(variableIds);
+      assertThat(encryptedData.getParents()).hasSize(i + 1);
+      assertThat(encryptedData.containsParent(savedAttributeId, serviceVariable.getSettingType())).isTrue();
     }
 
-    Set<String> remainingVariables = new HashSet<>(variableIds);
     int i = numOfVariable - 1;
     for (String variableId : variableIds) {
-      remainingVariables.remove(variableId);
       wingsPersistence.delete(ServiceVariable.class, variableId);
 
       if (i == 0) {
@@ -1079,7 +1074,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(encryptionType);
     assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
   }
 
   @Test
@@ -1111,7 +1106,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -1134,8 +1129,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(query.count()).isEqualTo(1);
     encryptedData = query.get();
     assertSecretData(secretName, encryptedData);
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().contains(configFileId)).isTrue();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(configFileId, CONFIG_FILE)).isTrue();
 
     String encryptedUuid = encryptedData.getUuid();
 
@@ -1166,8 +1161,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(query.count()).isEqualTo(1);
     encryptedData = query.get();
     assertSecretData(newSecretName, encryptedData);
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().contains(configFileId)).isTrue();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(configFileId, CONFIG_FILE)).isTrue();
 
     download = configService.download(appId, configFileId);
     assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
@@ -1245,14 +1240,12 @@ public class SecretTextTest extends WingsBaseTest {
       assertThat(dataQuery.count()).isEqualTo(1);
       EncryptedData encryptedData = dataQuery.get();
       assertSecretData(secretName, encryptedData);
-      assertThat(encryptedData.getParentIds()).hasSize(i + 1);
-      assertThat(encryptedData.getParentIds()).isEqualTo(variableIds);
+      assertThat(encryptedData.getParents()).hasSize(i + 1);
+      assertThat(encryptedData.containsParent(configFileId, CONFIG_FILE)).isTrue();
     }
 
-    Set<String> remainingVariables = new HashSet<>(variableIds);
     int j = numOfVariable - 1;
     for (String variableId : variableIds) {
-      remainingVariables.remove(variableId);
       configService.delete(appId, variableId);
 
       dataQuery = wingsPersistence.createQuery(EncryptedData.class)
@@ -1263,10 +1256,10 @@ public class SecretTextTest extends WingsBaseTest {
       assertSecretData(secretName, encryptedData);
 
       if (j == 0) {
-        assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+        assertThat(isEmpty(encryptedData.getParents())).isTrue();
       } else {
-        assertThat(encryptedData.getParentIds()).hasSize(j);
-        assertThat(encryptedData.getParentIds()).isEqualTo(remainingVariables);
+        assertThat(encryptedData.getParents()).hasSize(j);
+        assertThat(encryptedData.containsParent(variableId, CONFIG_FILE)).isFalse();
       }
       j--;
     }
@@ -1277,7 +1270,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(dataQuery.count()).isEqualTo(1);
     EncryptedData data = dataQuery.get();
     assertSecretData(secretName, data);
-    assertThat(isEmpty(data.getParentIds())).isTrue();
+    assertThat(isEmpty(data.getParents())).isTrue();
   }
 
   private ConfigFile generateConfigFile(Random r, String secretFileId, Service service) {
@@ -1341,8 +1334,8 @@ public class SecretTextTest extends WingsBaseTest {
       assertThat(query.count()).isEqualTo(1);
       encryptedData = query.get();
       assertSecretData(secretName, encryptedData);
-      assertThat(encryptedData.getParentIds()).hasSize(i + 1);
-      assertThat(encryptedData.getParentIds()).isEqualTo(variableIds);
+      assertThat(encryptedData.getParents()).hasSize(i + 1);
+      assertThat(encryptedData.containsParent(configFileId, CONFIG_FILE)).isTrue();
     }
 
     Set<String> remainingVariables = new HashSet<>(variableIds);
@@ -1382,7 +1375,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -1477,7 +1470,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
+    assertThat(isEmpty(encryptedData.getParents())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
@@ -1530,9 +1523,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getName()).isEqualTo(newSecretName);
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
-    assertThat(encryptedData.getParentIds()).isNotNull();
-    assertThat(encryptedData.getParentIds()).hasSize(1);
-    assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(savedAttributeId);
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.containsParent(savedAttributeId, serviceVariable.getSettingType())).isTrue();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);

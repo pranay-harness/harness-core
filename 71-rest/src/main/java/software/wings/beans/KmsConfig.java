@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,11 +35,15 @@ import java.util.List;
 public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) private String accessKey;
+  @Attributes(title = "AWS Access Key", required = true)
+  @Encrypted(fieldName = "aws_access_key")
+  private String accessKey;
 
-  @Attributes(title = "AWS Secret Key", required = true) private String secretKey;
+  @Attributes(title = "AWS Secret Key", required = true)
+  @Encrypted(fieldName = "aws_secret_key")
+  private String secretKey;
 
-  @Attributes(title = "AWS key ARN", required = true) private String kmsArn;
+  @Attributes(title = "AWS key ARN", required = true) @Encrypted(fieldName = "aws_key_arn") private String kmsArn;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 

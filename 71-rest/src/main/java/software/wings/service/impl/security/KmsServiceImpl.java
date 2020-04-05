@@ -18,6 +18,7 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KMS;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -33,9 +34,11 @@ import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -190,7 +193,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       accessKeyData = savedAccessKey;
     }
     accessKeyData.setAccountId(accountId);
-    accessKeyData.setType(SettingVariableTypes.KMS);
+    accessKeyData.setType(KMS);
     accessKeyData.setName(kmsConfig.getName() + "_accessKey");
     String accessKeyId = wingsPersistence.save(accessKeyData);
     kmsConfig.setAccessKey(accessKeyId);
@@ -204,7 +207,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       secretKeyData = savedSecretKey;
     }
     secretKeyData.setAccountId(accountId);
-    secretKeyData.setType(SettingVariableTypes.KMS);
+    secretKeyData.setType(KMS);
     secretKeyData.setName(kmsConfig.getName() + "_secretKey");
     String secretKeyId = wingsPersistence.save(secretKeyData);
     kmsConfig.setSecretKey(secretKeyId);
@@ -218,7 +221,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       arnKeyData = savedArn;
     }
     arnKeyData.setAccountId(accountId);
-    arnKeyData.setType(SettingVariableTypes.KMS);
+    arnKeyData.setType(KMS);
     arnKeyData.setName(kmsConfig.getName() + "_arn");
     String arnKeyId = wingsPersistence.save(arnKeyData);
     kmsConfig.setKmsArn(arnKeyId);
@@ -228,13 +231,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     String parentId = secretManagerConfigService.save(kmsConfig);
 
-    accessKeyData.addParent(parentId);
+    accessKeyData.addParent(
+        EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.accessKey, KMS));
     wingsPersistence.save(accessKeyData);
 
-    secretKeyData.addParent(parentId);
+    secretKeyData.addParent(
+        EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.secretKey, KMS));
     wingsPersistence.save(secretKeyData);
 
-    arnKeyData.addParent(parentId);
+    arnKeyData.addParent(EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.kmsArn, KMS));
     wingsPersistence.save(arnKeyData);
 
     return parentId;

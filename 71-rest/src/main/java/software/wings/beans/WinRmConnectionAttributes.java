@@ -32,7 +32,7 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   @Attributes(required = true) @NotNull private AuthenticationScheme authenticationScheme;
   private String domain;
   @Attributes(required = true) @NotEmpty private String username;
-  @Attributes(required = true) @Encrypted private char[] password;
+  @Attributes(required = true) @Encrypted(fieldName = "password") private char[] password;
   @Attributes(required = true) private boolean useSSL;
   @Attributes(required = true) private int port;
   @Attributes(required = true) private boolean skipCertChecks;

@@ -44,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -201,7 +200,6 @@ public class KmsEncryptDecryptClient {
         .encryptionType(EncryptionType.KMS)
         .kmsId(kmsConfig.getUuid())
         .enabled(true)
-        .parentIds(new HashSet<>())
         .accountId(accountId)
         .build();
   }

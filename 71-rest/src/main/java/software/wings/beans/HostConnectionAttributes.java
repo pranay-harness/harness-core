@@ -38,17 +38,17 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "User Name") private String userName;
-  @Attributes(title = "SSH Password") @Encrypted private char[] sshPassword;
+  @Attributes(title = "SSH Password") @Encrypted(fieldName = "ssh_password") private char[] sshPassword;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSshPassword;
   @Attributes(title = "SSH Port") private Integer sshPort = 22;
-  @Attributes(title = "Key") @Encrypted private char[] key;
+  @Attributes(title = "Key") @Encrypted(fieldName = "key") private char[] key;
   @SchemaIgnore @NotNull private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   private boolean keyless;
   private String keyPath;
-  @Attributes(title = "Pass Phrase") @Encrypted private char[] passphrase;
+  @Attributes(title = "Pass Phrase") @Encrypted(fieldName = "passphrase") private char[] passphrase;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassphrase;
 
   @Attributes(title = "Auth Scheme") private AuthenticationScheme authenticationScheme = SSH_KEY;
@@ -68,7 +68,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
   public enum AuthenticationScheme { SSH_KEY, KERBEROS, HTTP_PASSWORD }
   @Attributes private KerberosConfig kerberosConfig;
-  @Attributes(title = "Kerberos Password") @Encrypted private char[] kerberosPassword;
+  @Attributes(title = "Kerberos Password") @Encrypted(fieldName = "kerberos_password") private char[] kerberosPassword;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKerberosPassword;
 
   /**

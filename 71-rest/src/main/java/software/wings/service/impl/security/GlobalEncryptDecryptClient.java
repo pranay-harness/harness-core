@@ -175,7 +175,6 @@ public class GlobalEncryptDecryptClient {
                                            .kmsId(encryptedData.getBackupKmsId())
                                            .type(encryptedData.getType())
                                            .enabled(encryptedData.isEnabled())
-                                           .parentIds(encryptedData.getParentIds())
                                            .base64Encoded(encryptedData.isBase64Encoded())
                                            .path(encryptedData.getPath())
                                            .fileSize(encryptedData.getFileSize())

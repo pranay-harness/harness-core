@@ -1,14 +1,18 @@
 package io.harness.encryption;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.beans.Encryptable;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @UtilityClass
 public class EncryptionReflectUtils {
@@ -17,6 +21,19 @@ public class EncryptionReflectUtils {
       Encrypted a = f.getAnnotation(Encrypted.class);
       return a != null && a.value();
     });
+  }
+
+  public static String getEncryptedFieldTag(@NotNull Field field) {
+    Encrypted a = field.getAnnotation(Encrypted.class);
+
+    if (a == null || !a.value() || isEmpty(a.fieldName())) {
+      throw new InvalidArgumentsException(
+          String.format("The field %s declared in %s is not annotated correctly with encryption annotation",
+              field.getName(), field.getDeclaringClass()),
+          USER_SRE);
+    }
+
+    return a.fieldName();
   }
 
   public static Field getEncryptedRefField(Field field, Encryptable object) {

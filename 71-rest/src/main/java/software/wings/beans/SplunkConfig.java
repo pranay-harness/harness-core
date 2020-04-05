@@ -37,7 +37,7 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting, Ex
 
   @NotEmpty @Attributes(title = "User Name", required = true) private String username;
 
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

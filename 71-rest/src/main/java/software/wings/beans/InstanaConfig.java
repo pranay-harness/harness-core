@@ -30,7 +30,7 @@ import java.util.List;
 public class InstanaConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @SchemaIgnore @NotEmpty private String accountId;
   @NotEmpty private String instanaUrl;
-  @Encrypted private char apiToken[];
+  @Encrypted(fieldName = "api_token") private char apiToken[];
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedApiToken;
 
   public InstanaConfig() {

@@ -48,11 +48,15 @@ import java.util.List;
 public class KmsLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
+  @Attributes(title = "AWS Access Key", required = true)
+  @Encrypted(fieldName = "aws_access_key")
+  private String accessKey;
 
-  @Attributes(title = "AWS Secret Key", required = true) @Encrypted private String secretKey;
+  @Attributes(title = "AWS Secret Key", required = true)
+  @Encrypted(fieldName = "aws_secret_key")
+  private String secretKey;
 
-  @Attributes(title = "AWS key ARN", required = true) @Encrypted private String kmsArn;
+  @Attributes(title = "AWS key ARN", required = true) @Encrypted(fieldName = "aws_key_arn") private String kmsArn;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 

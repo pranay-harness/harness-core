@@ -2,6 +2,10 @@ package software.wings.security.encryption;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICE_VARIABLE;
+
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -27,6 +31,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
@@ -37,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 9/29/17.
@@ -58,6 +66,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
+  @Inject @SchemaIgnore @Transient private static FeatureFlagService featureFlagService;
+
   @NotEmpty @Indexed private String name;
 
   @NotEmpty @Indexed private String encryptionKey;
@@ -70,6 +80,8 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
   @NotEmpty private SettingVariableTypes type;
 
   @NotEmpty @Default @Indexed private Set<String> parentIds = new HashSet<>();
+
+  @NotEmpty @Default @Indexed private Set<EncryptedDataParent> parents = new HashSet<>();
 
   @NotEmpty private String accountId;
 
@@ -113,20 +125,48 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
 
   @SchemaIgnore @Indexed private List<String> keywords;
 
-  public void addParent(String parentId) {
-    if (parentIds == null) {
-      parentIds = new HashSet<>();
-    }
-
-    parentIds.add(parentId);
+  @Deprecated
+  public Set<String> getParentIds() {
+    return parentIds;
   }
 
-  public void removeParentId(String parentId) {
-    if (parentIds == null) {
-      return;
-    }
+  public boolean areParentIdsEquivalentToParent() {
+    Set<String> derivedParentIds = parents.stream().map(EncryptedDataParent::getId).collect(Collectors.toSet());
+    return derivedParentIds.equals(parentIds);
+  }
 
-    parentIds.remove(parentId);
+  public void addParent(@NotNull EncryptedDataParent encryptedDataParent) {
+    if (!featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      parentIds.add(encryptedDataParent.getId());
+    }
+    parents.add(encryptedDataParent);
+  }
+
+  public void removeParent(@NotNull EncryptedDataParent encryptedDataParent) {
+    if (!featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      parentIds.remove(encryptedDataParent.getId());
+    }
+    parents.remove(encryptedDataParent);
+  }
+
+  public boolean containsParent(@NotNull String id, @NotNull SettingVariableTypes type) {
+    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      return parents.stream().anyMatch(
+          encryptedDataParent -> encryptedDataParent.getId().equals(id) && encryptedDataParent.getType() == type);
+    }
+    return parentIds.contains(id);
+  }
+
+  public Set<EncryptedDataParent> getParents() {
+    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      return parents;
+    }
+    return parentIds.stream()
+        .map(id -> {
+          SettingVariableTypes settingType = type == SECRET_TEXT ? SERVICE_VARIABLE : type;
+          return EncryptedDataParent.builder().id(id).type(settingType).build();
+        })
+        .collect(Collectors.toSet());
   }
 
   public void addApplication(String appId, String appName) {

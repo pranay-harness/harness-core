@@ -230,8 +230,8 @@ public class CyberArkTest extends WingsBaseTest {
       assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
       for (EncryptedData encryptedData : encryptedDataList) {
         assertThat(name + "_clientCertificate").isEqualTo(encryptedData.getName());
-        assertThat(encryptedData.getParentIds()).hasSize(1);
-        assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+        assertThat(encryptedData.getParents()).hasSize(1);
+        assertThat(encryptedData.containsParent(savedConfig.getUuid(), SettingVariableTypes.CYBERARK)).isTrue();
       }
     }
 
@@ -244,8 +244,8 @@ public class CyberArkTest extends WingsBaseTest {
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
     assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
     for (EncryptedData encryptedData : encryptedDataList) {
-      assertThat(encryptedData.getParentIds()).hasSize(1);
-      assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+      assertThat(encryptedData.getParents()).hasSize(1);
+      assertThat(encryptedData.containsParent(savedConfig.getUuid(), SettingVariableTypes.CYBERARK)).isTrue();
     }
   }
 

@@ -392,22 +392,23 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
         savedData.clearSearchTags();
 
-        if (!isEmpty(savedData.getParentIds())) {
-          savedData.getParentIds().forEach(serviceVariableId -> {
+        savedData.getParents().forEach(encryptedDataParent -> {
+          if (encryptedDataParent.getType() == SettingVariableTypes.SERVICE_VARIABLE) {
+            String serviceVariableId = encryptedDataParent.getId();
             ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
             if (serviceVariable == null) {
               return;
             }
             addSearchTags(serviceVariable, savedData);
-          });
-          if (!isEqualCollection(appIds, savedData.getAppIds())
-              || !isEqualCollection(serviceIds, savedData.getServiceIds())
-              || !isEqualCollection(envIds, savedData.getEnvIds())
-              || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
-            logger.info("updating {}", savedData.getUuid());
-            wingsPersistence.save(savedData);
-            updateRecords++;
           }
+        });
+        if (!isEqualCollection(appIds, savedData.getAppIds())
+            || !isEqualCollection(serviceIds, savedData.getServiceIds())
+            || !isEqualCollection(envIds, savedData.getEnvIds())
+            || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
+          logger.info("updating {}", savedData.getUuid());
+          wingsPersistence.save(savedData);
+          updateRecords++;
         }
       }
     }

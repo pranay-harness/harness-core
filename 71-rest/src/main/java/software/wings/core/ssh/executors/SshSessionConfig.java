@@ -31,12 +31,12 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
   @NotEmpty private String host;
   private Integer port = 22;
   private String userName;
-  @Encrypted private char[] password;
+  @Encrypted(fieldName = "password") private char[] password;
   private String keyName;
-  @Encrypted private char[] key;
-  @Encrypted private char[] keyPassphrase;
+  @Encrypted(fieldName = "key") private char[] key;
+  @Encrypted(fieldName = "key_passphrase") private char[] keyPassphrase;
   private String sudoAppName;
-  @Encrypted private char[] sudoAppPassword;
+  @Encrypted(fieldName = "sudo_app_password") private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
 
   @SchemaIgnore private String encryptedPassword;
@@ -52,7 +52,7 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
 
   private AuthenticationScheme authenticationScheme;
   private KerberosConfig kerberosConfig;
-  @Encrypted private char[] sshPassword;
+  @Encrypted(fieldName = "ssh_password") private char[] sshPassword;
   @SchemaIgnore private String encryptedSshPassword;
   private AccessType accessType;
 

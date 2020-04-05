@@ -45,8 +45,8 @@ public class JenkinsConfig extends SettingValue
   private String authMechanism;
 
   @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password/ API Token") @Encrypted private char[] password;
-  @Attributes(title = "Bearer Token(HTTP Header)") @Encrypted private char[] token;
+  @Attributes(title = "Password/ API Token") @Encrypted(fieldName = "password/api_token") private char[] password;
+  @Attributes(title = "Bearer Token(HTTP Header)") @Encrypted(fieldName = "bearer_token") private char[] token;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

@@ -25,6 +25,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.encryption.Encrypted;
+import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.WingsException;
@@ -54,6 +55,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestContext.EntityInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -519,10 +521,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   private void updateParent(EncryptableSetting object, String parentId) {
+    SettingVariableTypes entityType = object.getSettingType();
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       f.setAccessible(true);
       Field encryptedField = getEncryptedRefField(f, object);
+      String fieldKey = EncryptionReflectUtils.getEncryptedFieldTag(f);
       encryptedField.setAccessible(true);
       String encryptedId;
       try {
@@ -540,10 +544,9 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         continue;
       }
 
-      if (encryptedData.getParentIds() == null || !encryptedData.getParentIds().contains(parentId)) {
-        encryptedData.addParent(parentId);
-        save(encryptedData);
-      }
+      EncryptedDataParent parent = new EncryptedDataParent(parentId, entityType, fieldKey);
+      encryptedData.addParent(parent);
+      save(encryptedData);
     }
   }
 
@@ -575,6 +578,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   private void deleteEncryptionReference(EncryptableSetting object, Set<String> fieldNames, String parentId) {
+    SettingVariableTypes entityType = object.getSettingType();
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       if (fieldNames != null && !fieldNames.contains(f.getName())) {
@@ -582,6 +586,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       }
 
       Field encryptedField = getEncryptedRefField(f, object);
+      String fieldKey = EncryptionReflectUtils.getEncryptedFieldTag(f);
       encryptedField.setAccessible(true);
       String encryptedId;
       try {
@@ -598,8 +603,9 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       if (encryptedData == null) {
         continue;
       }
-      encryptedData.removeParentId(parentId);
-      if (isEmpty(encryptedData.getParentIds()) && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
+      EncryptedDataParent encryptedDataParent = new EncryptedDataParent(parentId, entityType, fieldKey);
+      encryptedData.removeParent(encryptedDataParent);
+      if (isEmpty(encryptedData.getParents()) && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
         delete(encryptedData);
       } else {
         save(encryptedData);

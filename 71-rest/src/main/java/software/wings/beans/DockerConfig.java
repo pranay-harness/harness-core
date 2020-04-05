@@ -38,7 +38,7 @@ import java.util.Objects;
 public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

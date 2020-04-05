@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -21,12 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.AzureVaultConfig.AzureVaultConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,8 +80,8 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     }
 
     // Create a LOCAL encrypted record for Azure secret key
-    String secretKeyEncryptedDataId =
-        saveSecretField(azureVautConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
+    String secretKeyEncryptedDataId = saveSecretField(azureVautConfig, secretsManagerConfigId, secretKeyEncryptedData,
+        SECRET_KEY_NAME_SUFFIX, AzureVaultConfigKeys.secretKey);
     azureVautConfig.setSecretKey(secretKeyEncryptedDataId);
 
     // PL-3237: Audit secret manager config changes.
@@ -89,12 +91,13 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   }
 
   private String saveSecretField(AzureVaultConfig secretsManagerConfig, String configId,
-      EncryptedData secretFieldEncryptedData, String secretNameSuffix) {
+      EncryptedData secretFieldEncryptedData, String secretNameSuffix, String fieldName) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(secretsManagerConfig.getAccountId());
-      secretFieldEncryptedData.addParent(configId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.AZURE);
+      secretFieldEncryptedData.addParent(
+          EncryptedDataParent.createParentRef(configId, AzureVaultConfig.class, fieldName, AZURE));
+      secretFieldEncryptedData.setType(AZURE);
       secretFieldEncryptedData.setName(secretsManagerConfig.getName() + secretNameSuffix);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }

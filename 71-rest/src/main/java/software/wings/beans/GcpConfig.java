@@ -39,7 +39,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class GcpConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String GCS_URL = "https://storage.cloud.google.com/";
-  @JsonIgnore @Encrypted private char[] serviceAccountKeyFileContent;
+  @JsonIgnore @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
 
   @SchemaIgnore @NotEmpty private String accountId;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;

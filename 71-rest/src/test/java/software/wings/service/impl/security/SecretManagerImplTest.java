@@ -38,6 +38,7 @@ import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -348,21 +349,19 @@ public class SecretManagerImplTest extends WingsBaseTest {
     serviceVariable1.setUuid(serviceVariableId1);
 
     encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
-    assertThat(encryptedData.getParentIds()).isNotNull();
-    assertThat(encryptedData.getParentIds().size()).isEqualTo(2);
-    encryptedData.getParentIds().add(generateUuid());
+    assertThat(encryptedData.getParents()).hasSize(2);
+    encryptedData.addParent(new EncryptedDataParent(
+        generateUuid(), SettingVariableTypes.SERVICE_VARIABLE, SettingVariableTypes.SERVICE_VARIABLE.toString()));
     wingsPersistence.save(encryptedData);
 
     encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
-    assertThat(encryptedData.getParentIds()).isNotNull();
-    assertThat(encryptedData.getParentIds().size()).isEqualTo(3);
+    assertThat(encryptedData.getParents()).hasSize(3);
 
     wingsPersistence.updateField(ServiceVariable.class, serviceVariable1.getUuid(), ServiceVariableKeys.encryptedValue,
         encryptedData1.getUuid());
 
     encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
-    assertThat(encryptedData.getParentIds()).isNotNull();
-    assertThat(encryptedData.getParentIds().size()).isEqualTo(3);
+    assertThat(encryptedData.getParents()).hasSize(3);
 
     List<UuidAware> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(usages).isNotNull();

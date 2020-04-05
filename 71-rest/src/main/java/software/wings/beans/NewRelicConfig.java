@@ -43,7 +43,7 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting, 
   @DefaultValue("https://api.newrelic.com")
   private String newRelicUrl = "https://api.newrelic.com";
 
-  @Attributes(title = "API key", required = true) @Encrypted private char[] apiKey;
+  @Attributes(title = "API key", required = true) @Encrypted(fieldName = "api_key") private char[] apiKey;
 
   @Attributes(title = "NewRelic Account Id") private String newRelicAccountId;
 
