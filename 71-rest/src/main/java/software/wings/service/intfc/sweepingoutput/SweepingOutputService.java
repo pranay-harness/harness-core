@@ -17,7 +17,13 @@ public interface SweepingOutputService {
 
   SweepingOutputInstance find(SweepingOutputInquiry inquiry);
 
+  List<SweepingOutputInstance> findManyWithNamePrefix(
+      SweepingOutputInquiry inquiry, SweepingOutputInstance.Scope scope);
+
   <T extends SweepingOutput> T findSweepingOutput(SweepingOutputInquiry inquiry);
+
+  <T extends SweepingOutput> List<T> findSweepingOutputsWithNamePrefix(
+      SweepingOutputInquiry inquiry, SweepingOutputInstance.Scope scope);
 
   void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);

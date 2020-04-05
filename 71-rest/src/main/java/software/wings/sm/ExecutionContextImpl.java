@@ -10,6 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.join;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -19,8 +20,10 @@ import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -106,6 +109,7 @@ import software.wings.service.intfc.ServiceTemplateService.EncryptedFieldCompute
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -117,14 +121,17 @@ import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesB
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
@@ -151,6 +158,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient VariableProcessor variableProcessor;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private transient StateExecutionService stateExecutionService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -1252,40 +1260,98 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         : ((InfraMappingSweepingOutput) sweepingOutputInstance.getValue()).getInfraMappingId();
   }
 
+  @Override
   public List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly) {
-    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(
-        prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build());
+    List<SweepingOutput> sweepingOutputs = sweepingOutputService.findSweepingOutputsWithNamePrefix(
+        prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(), Scope.PHASE);
+
+    InstanceInfoVariables instanceInfoVariables = getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    return renderExpressionFromInstanceInfoVariables(expression, newInstancesOnly, instanceInfoVariables);
+  }
+
+  @Override
+  public List<String> renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly) {
+    List<SweepingOutput> sweepingOutputs = sweepingOutputService.findSweepingOutputsWithNamePrefix(
+        prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(), Scope.WORKFLOW);
+
+    InstanceInfoVariables instanceInfoVariables = getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    return renderExpressionFromInstanceInfoVariables(expression, newInstancesOnly, instanceInfoVariables);
+  }
+
+  @VisibleForTesting
+  InstanceInfoVariables getAccumulatedInstanceInfoVariables(List<SweepingOutput> sweepingOutputs) {
+    if (sweepingOutputs.size() == 1) {
+      return (InstanceInfoVariables) sweepingOutputs.get(0);
+    }
+
+    Set<String> newHosts = new HashSet<>();
+    List<InstanceInfoVariables> instanceInfoVariables =
+        sweepingOutputs.stream().map(s -> (InstanceInfoVariables) s).collect(toList());
+    instanceInfoVariables.forEach(instanceInfoVariable -> {
+      newHosts.addAll(instanceInfoVariable.getInstanceDetails()
+                          .stream()
+                          .filter(InstanceDetails::isNewInstance)
+                          .map(InstanceDetails::getHostName)
+                          .collect(Collectors.toSet()));
+    });
+    InstanceInfoVariables finalInstanceInfo = Iterables.getLast(instanceInfoVariables);
+    final Set<String> finalInstances =
+        finalInstanceInfo.getInstanceElements().stream().map(InstanceElement::getHostName).collect(Collectors.toSet());
+    List<InstanceElement> instanceElements = finalInstanceInfo.getInstanceElements();
+    List<InstanceDetails> instanceDetails = finalInstanceInfo.getInstanceDetails();
+
+    instanceDetails.removeIf(instanceDetail -> !finalInstances.contains(instanceDetail.getHostName()));
+    instanceElements.removeIf(instanceElement -> !finalInstances.contains(instanceElement.getHostName()));
+
+    instanceDetails.forEach(detail -> {
+      if (newHosts.contains(detail.getHostName())) {
+        detail.setNewInstance(true);
+      }
+    });
+    instanceElements.forEach(element -> {
+      if (newHosts.contains(element.getHostName())) {
+        element.setNewInstance(true);
+      }
+    });
+
+    return InstanceInfoVariables.builder().instanceDetails(instanceDetails).instanceElements(instanceElements).build();
+  }
+
+  @VisibleForTesting
+  List<String> renderExpressionFromInstanceInfoVariables(
+      String expression, boolean newInstancesOnly, InstanceInfoVariables instanceInfoVariables) {
     final List<String> list = new ArrayList<>();
     final Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
     final Map<String, InstanceElement> hostNameToInstanceElementMap = new HashMap<>();
-    if (sweepingOutput != null) {
-      InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
-
-      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
-        instanceInfoVariables.getInstanceElements().forEach(
-            instanceElement -> hostNameToInstanceElementMap.put(instanceElement.getHostName(), instanceElement));
-        instanceInfoVariables.getInstanceDetails().forEach(
-            details -> hostNameToDetailMap.put(details.getHostName(), details));
-        list.addAll(instanceInfoVariables.getInstanceElements()
-                        .stream()
-                        .filter(instanceElement -> isEligible(instanceElement.isNewInstance(), newInstancesOnly))
-                        .map(instanceElement -> {
-                          StateExecutionData stateExecutionData = new StateExecutionData();
-                          stateExecutionData.setTemplateVariable(
-                              ImmutableMap.<String, Object>builder()
-                                  .put("instanceDetails", hostNameToDetailMap.get(instanceElement.getHostName()))
-                                  .build());
-                          return renderExpression(expression,
-                              StateExecutionContext.builder()
-                                  .contextElements(Lists.newArrayList(instanceElement))
-                                  .stateExecutionData(stateExecutionData)
-                                  .build());
-                        })
-                        .collect(toList()));
-      }
+    if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+      instanceInfoVariables.getInstanceElements().forEach(
+          instanceElement -> hostNameToInstanceElementMap.put(instanceElement.getHostName(), instanceElement));
+      instanceInfoVariables.getInstanceDetails().forEach(
+          details -> hostNameToDetailMap.put(details.getHostName(), details));
+      list.addAll(instanceInfoVariables.getInstanceElements()
+                      .stream()
+                      .filter(instanceElement -> isEligible(instanceElement.isNewInstance(), newInstancesOnly))
+                      .map(instanceElement -> {
+                        StateExecutionData stateExecutionData = new StateExecutionData();
+                        stateExecutionData.setTemplateVariable(
+                            ImmutableMap.<String, Object>builder()
+                                .put("instanceDetails", hostNameToDetailMap.get(instanceElement.getHostName()))
+                                .build());
+                        return renderExpression(expression,
+                            StateExecutionContext.builder()
+                                .contextElements(Lists.newArrayList(instanceElement))
+                                .stateExecutionData(stateExecutionData)
+                                .build());
+                      })
+                      .collect(toList()));
     }
 
     return list;
+  }
+
+  @Override
+  public String appendStateExecutionId(@Nonnull String str) {
+    return join(str, stateExecutionInstance.getUuid());
   }
 
   private boolean isEligible(boolean instanceFromNewDeployment, boolean newInstancesOnly) {

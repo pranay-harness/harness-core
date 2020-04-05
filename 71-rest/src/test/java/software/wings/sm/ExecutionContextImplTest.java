@@ -7,14 +7,23 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -34,14 +43,17 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import org.assertj.core.util.Maps;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,10 +65,12 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
@@ -74,9 +88,14 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The Class ExecutionContextImplTest.
@@ -97,6 +116,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @Before
   public void setup() {
@@ -597,5 +617,225 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     assertThat(assertion).isTrue();
     // Don't change the display name. This tests the https://harness.atlassian.net/browse/CD-2111
     assertThat(stateExecutionInstance.getDisplayName()).isEqualTo("ABC-TEST");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getAccumulatedInstanceInfoVariables() {
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    testInstanceScalingUp(context);
+    testInstanceScalingDown(context);
+    testInstanceScalingUpDown(context);
+    testInstanceRolling(context);
+  }
+
+  private void testInstanceRolling(ExecutionContextImpl context) {
+    InstanceInfoVariables instanceInfoVariables;
+    List<SweepingOutput> sweepingOutputs;
+
+    sweepingOutputs = new ArrayList<>(asList(instanceInfoVariablesWithNewTag(asList("1", "2", "3"), asList("4"))));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(4);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(4);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails())).containsExactlyInAnyOrder("host-4");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements())).containsExactlyInAnyOrder("host-4");
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "4"), asList("3")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(4);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(4);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-3");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-3");
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("3", "1", "4"), asList("2")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(4);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(4);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-3", "host-2");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-3", "host-2");
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("3", "2", "4"), asList("1")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(4);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(4);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-3", "host-2", "host-1");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-3", "host-2", "host-1");
+  }
+
+  private void testInstanceScalingUpDown(ExecutionContextImpl context) {
+    InstanceInfoVariables instanceInfoVariables;
+    List<SweepingOutput> sweepingOutputs;
+
+    sweepingOutputs = new ArrayList<>(asList(instanceInfoVariablesWithNewTag(asList("1", "2", "3"), asList("4", "5"))));
+
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(5);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(5);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4", "5"), asList("6", "7")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(7);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(7);
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4", "7"), emptyList()));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(5);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(5);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-7");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-7");
+  }
+
+  private void testInstanceScalingDown(ExecutionContextImpl context) {
+    InstanceInfoVariables instanceInfoVariables;
+    List<SweepingOutput> sweepingOutputs;
+    sweepingOutputs =
+        new ArrayList<>(asList(instanceInfoVariablesWithNewTag(asList("1", "2", "3"), asList("4", "5", "6")),
+            instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4"), emptyList())));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(4);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(4);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails())).containsExactlyInAnyOrder("host-4");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements())).containsExactlyInAnyOrder("host-4");
+
+    // scale up again
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4"), asList("7", "8", "9")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(7);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(7);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-7", "host-8", "host-9");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-7", "host-9", "host-8");
+  }
+
+  private void testInstanceScalingUp(ExecutionContextImpl context) {
+    InstanceInfoVariables instanceInfoVariables;
+    List<SweepingOutput> sweepingOutputs;
+
+    sweepingOutputs = new ArrayList<>(asList(instanceInfoVariablesWithNewTag(asList("1", "2", "3"), asList("4", "5"))));
+
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(5);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(5);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4", "5"), asList("6", "7")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(7);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(7);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-5", "host-6", "host-7");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-5", "host-6", "host-7");
+
+    sweepingOutputs.add(
+        instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4", "5", "6", "7"), asList("8", "9", "10")));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(10);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(10);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-5", "host-6", "host-7", "host-8", "host-9", "host-10");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-5", "host-6", "host-7", "host-8", "host-9", "host-10");
+  }
+
+  private InstanceInfoVariables instanceInfoVariablesWithNewTag(List<String> oldHosts, List<String> newHosts) {
+    return InstanceInfoVariables.builder()
+        .instanceDetails(
+            Stream.concat(oldHosts.stream(), newHosts.stream())
+                .map(name
+                    -> InstanceDetails.builder().hostName("host-" + name).newInstance(newHosts.contains(name)).build())
+                .collect(Collectors.toList()))
+        .instanceElements(
+            Stream.concat(oldHosts.stream(), newHosts.stream())
+                .map(name -> anInstanceElement().hostName("host-" + name).newInstance(newHosts.contains(name)).build())
+                .collect(Collectors.toList()))
+        .build();
+  }
+
+  private List<String> newHostsFromDetails(List<InstanceDetails> instanceDetails) {
+    return instanceDetails.stream()
+        .filter(InstanceDetails::isNewInstance)
+        .map(InstanceDetails::getHostName)
+        .collect(Collectors.toList());
+  }
+
+  private List<String> newHostsFromElement(List<InstanceElement> instanceElements) {
+    return instanceElements.stream()
+        .filter(InstanceElement::isNewInstance)
+        .map(InstanceElement::getHostName)
+        .collect(Collectors.toList());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testAppendStateExecutionId() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid("bar");
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    String result = context.appendStateExecutionId("foo");
+    assertThat(result).isEqualTo("foobar");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testRenderExpressionsForInstanceDetails() {
+    ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    List<String> expected = asList("host-1", "host-2");
+    List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
+
+    doReturn(expected).when(context).renderExpressionFromInstanceInfoVariables(
+        anyString(), eq(true), any(InstanceInfoVariables.class));
+    doReturn(sweepingOutputs)
+        .when(sweepingOutputService)
+        .findManyWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PHASE));
+    doReturn(sweepingOutputs.get(0)).when(context).getAccumulatedInstanceInfoVariables(anyList());
+
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.k8s.ip}", true)).isEqualTo(expected);
+
+    verify(sweepingOutputService, times(1))
+        .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PHASE));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testRenderExpressionsForInstanceDetailsForWorkflow() {
+    ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    List<String> expected = asList("host-1", "host-2");
+    List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
+
+    doReturn(expected).when(context).renderExpressionFromInstanceInfoVariables(
+        anyString(), eq(true), any(InstanceInfoVariables.class));
+    doReturn(sweepingOutputs)
+        .when(sweepingOutputService)
+        .findManyWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.WORKFLOW));
+    doReturn(sweepingOutputs.get(0)).when(context).getAccumulatedInstanceInfoVariables(anyList());
+
+    assertThat(context.renderExpressionsForInstanceDetailsForWorkflow("${instanceDetails.k8s.ip}", true))
+        .isEqualTo(expected);
+
+    verify(sweepingOutputService, times(1))
+        .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.WORKFLOW));
   }
 }
