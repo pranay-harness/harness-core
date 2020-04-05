@@ -18,6 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.InstanceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
@@ -93,6 +94,18 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
+  public <T extends SweepingOutput> List<T> findSweepingOutputsWithNamePrefix(
+      SweepingOutputInquiry inquiry, Scope scope) {
+    List<SweepingOutputInstance> sweepingOutputInstances = findManyWithNamePrefix(inquiry, scope);
+    if (sweepingOutputInstances == null) {
+      return null;
+    }
+    return (List<T>) sweepingOutputInstances.stream()
+        .map(SweepingOutputInstance::getValue)
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public List<InstanceDetails> fetchInstanceDetailsFromSweepingOutput(
       SweepingOutputInquiry inquiry, boolean newInstancesOnly) {
     List<InstanceDetails> instanceDetails = new ArrayList<>();
@@ -139,6 +152,48 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
 
     addFilters(sweepingOutputInquiry, query);
     return query.get();
+  }
+
+  @Override
+  public List<SweepingOutputInstance> findManyWithNamePrefix(SweepingOutputInquiry sweepingOutputInquiry, Scope scope) {
+    final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
+                                                    .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
+                                                    .field(SweepingOutputKeys.name)
+                                                    .startsWith(sweepingOutputInquiry.getName())
+                                                    .order(Sort.ascending(SweepingOutputKeys.createdAt));
+
+    addFiltersWithScope(sweepingOutputInquiry, query, scope);
+    return query.asList();
+  }
+
+  private void addFiltersWithScope(
+      SweepingOutputInquiry sweepingOutputInquiry, Query<SweepingOutputInstance> query, Scope scope) {
+    CriteriaContainerImpl criteria = null;
+    switch (scope) {
+      case PIPELINE:
+        if (sweepingOutputInquiry.getPipelineExecutionId() != null) {
+          criteria = query.criteria(SweepingOutputKeys.pipelineExecutionId)
+                         .equal(sweepingOutputInquiry.getPipelineExecutionId());
+        }
+        break;
+      case WORKFLOW:
+        criteria = query.criteria(SweepingOutputKeys.workflowExecutionIds)
+                       .equal(sweepingOutputInquiry.getWorkflowExecutionId());
+        break;
+      case PHASE:
+        criteria =
+            query.criteria(SweepingOutputKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
+        break;
+      case STATE:
+        criteria =
+            query.criteria(SweepingOutputKeys.stateExecutionId).equal(sweepingOutputInquiry.getStateExecutionId());
+        break;
+      default:
+        logger.error("Invalid scope", scope);
+    }
+    if (criteria != null) {
+      query.and(criteria);
+    }
   }
 
   private void addFilters(SweepingOutputInquiry sweepingOutputInquiry, Query<SweepingOutputInstance> query) {

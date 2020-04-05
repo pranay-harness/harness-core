@@ -2,7 +2,9 @@ package io.harness.deployment;
 
 import com.amazonaws.services.ec2.model.Instance;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 import java.util.Map;
 
@@ -11,7 +13,7 @@ import java.util.Map;
 public class InstanceDetails {
   private String hostName;
   private String workloadName;
-  private boolean newInstance;
+  @NonFinal @Setter private boolean newInstance;
   private Map<String, Object> properties;
   private String serviceTemplateName;
   private String serviceTemplateId;

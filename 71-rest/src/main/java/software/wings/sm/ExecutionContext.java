@@ -106,4 +106,8 @@ public interface ExecutionContext {
   AutoLogContext autoLogContext();
 
   List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly);
+
+  List<String> renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly);
+
+  String appendStateExecutionId(String str);
 }

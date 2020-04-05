@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.beans.SweepingOutputInstance.Scope.STATE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -28,6 +27,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -970,8 +970,8 @@ public class HelmDeployState extends State {
   @VisibleForTesting
   void saveInstanceInfoToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(STATE)
-                                   .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)

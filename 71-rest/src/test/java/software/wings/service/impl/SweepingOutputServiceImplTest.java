@@ -265,7 +265,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
     SweepingOutputInstance saved = sweepingOutputService.save(
         SweepingOutputInstance.builder()
-            .phaseExecutionId(phaseElementId)
+            .phaseExecutionId(workflowExecutionUuid + phaseElementId + phaseName)
             .stateExecutionId(stateExecutionInstanceId)
             .workflowExecutionId(workflowExecutionUuid)
             .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)

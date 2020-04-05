@@ -5,13 +5,16 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -50,13 +53,14 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Converters({SweepingOutputConverter.class})
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
-public class SweepingOutputInstance implements PersistentEntity, UuidAccess {
+public class SweepingOutputInstance implements PersistentEntity, UuidAccess, CreatedAtAware {
   @Id private String uuid;
   private String appId;
   private String pipelineExecutionId;
   @Singular private List<String> workflowExecutionIds;
   private String phaseExecutionId;
   private String stateExecutionId;
+  @NonFinal @Setter private long createdAt;
 
   @NotNull @Trimmed private String name;
 
