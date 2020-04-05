@@ -19,12 +19,14 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.InstanceEvent;
+import software.wings.beans.Account;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
@@ -243,11 +245,19 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public boolean purgeDeletedUpTo(Instant timestamp) {
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class)
-                                .filter(InstanceKeys.isDeleted, true)
-                                .field("deletedAt")
-                                .lessThan(timestamp.toEpochMilli());
-    return wingsPersistence.delete(query);
+    try (HIterator<Account> accounts =
+             new HIterator<>(wingsPersistence.createQuery(Account.class).project(Account.ID_KEY, true).fetch())) {
+      while (accounts.hasNext()) {
+        final Account account = accounts.next();
+        Query<Instance> query = wingsPersistence.createQuery(Instance.class)
+                                    .filter(InstanceKeys.accountId, account.getUuid())
+                                    .filter(InstanceKeys.isDeleted, true)
+                                    .field(InstanceKeys.deletedAt)
+                                    .lessThan(timestamp.toEpochMilli());
+        wingsPersistence.delete(query);
+      }
+    }
+    return true;
   }
 
   @Override
