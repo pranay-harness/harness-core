@@ -8,11 +8,10 @@ import lombok.Value;
  * Examples:
  *
  * Node is a level : nodeId, nodeExecutionInstanceId
- * Workflow is a level: workflowId, workflowExecutionId
  */
 @Value
 @Builder
 public class Level {
-  String entityId;
-  String executionId;
+  String setupId;
+  String runtimeId;
 }

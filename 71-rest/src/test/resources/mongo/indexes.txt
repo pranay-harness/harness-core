@@ -196,6 +196,7 @@ executionInterrupts { "name" : "appId_1" , "background" : true} { "appId" : 1}
 executionInterrupts { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 executionInterrupts { "name" : "executionUuid_1" , "background" : true} { "executionUuid" : 1}
 executionInterrupts { "name" : "stateExecutionInstanceId_1" , "background" : true} { "stateExecutionInstanceId" : 1}
+executionNodeInstances { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 executionQueue { "name" : "earliestGet_1" , "background" : true , "expireAfterSeconds" : 86400} { "earliestGet" : 1}
 executionQueue { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestGet" : 1}
 experimentalLogAnalysisRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}

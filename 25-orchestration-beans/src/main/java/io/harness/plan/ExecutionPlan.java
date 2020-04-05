@@ -2,11 +2,11 @@ package io.harness.plan;
 
 import io.harness.annotations.Redesign;
 import io.harness.persistence.PersistentEntity;
-import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.util.Map;
@@ -21,24 +21,23 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Redesign
+@Entity(value = "executionPlan", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "ExecutionPlanKeys")
-public class ExecutionPlan implements ExecutionNode, PersistentEntity {
-  @Id @NotNull(groups = {Update.class}) String uuid;
-  @Singular Map<String, ExecutionNode> nodes;
-  @NotNull String originId;
+public class ExecutionPlan implements PersistentEntity {
+  @Id @NotNull String uuid;
 
-  public static ExecutionPlan emptyPlan() {
-    return builder().build();
-  }
+  @Singular Map<String, ExecutionNode> nodes;
+
+  @NotNull String startingNodeId;
 
   public boolean isEmpty() {
     return nodes.isEmpty();
   }
 
-  public ExecutionNodeDefinition getInitialNode() {
+  public ExecutionNode fetchStartingNode() {
     if (isEmpty()) {
       return null;
     }
-    return (ExecutionNodeDefinition) nodes.get(originId);
+    return nodes.get(startingNodeId);
   }
 }
