@@ -15,9 +15,17 @@ import software.wings.beans.yaml.Change.ChangeType;
 /**
  * @author vardanb
  */
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("processingCommitId"), @Field("filePath") },
-    options = @IndexOptions(unique = true, name = "uniqueIdx_1")))
+@Indexes({
+  @Index(fields = { @Field("accountId")
+                    , @Field("processingCommitId"), @Field("filePath"), @Field("status") },
+      options = @IndexOptions(background = true, name = "accountId_procCommitId_filePath_status"))
+  ,
+      @Index(fields = {
+        @Field("accountId"), @Field("processingCommitId"), @Field("status")
+      }, options = @IndexOptions(background = true, name = "accountId_procCommitId_status")), @Index(fields = {
+        @Field("accountId"), @Field("filePath")
+      }, options = @IndexOptions(background = true, name = "accountId_filePath")),
+})
 @Getter
 @Builder
 @EqualsAndHashCode(callSuper = true)

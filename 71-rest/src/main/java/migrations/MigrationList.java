@@ -39,6 +39,7 @@ import migrations.all.DatadogCVServiceConfigurationMigration;
 import migrations.all.DatadogCustomMetricMigration;
 import migrations.all.DeleteCVAlertsMigration;
 import migrations.all.DeleteCVCronMigration;
+import migrations.all.DeleteGitActivityWithoutProcCommitIdMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
@@ -321,6 +322,7 @@ public class MigrationList {
         .add(Pair.of(301, AddAccountIdToAppEntities.class))
         .add(Pair.of(302, DropExistingIndexForGitFileActivityMigration.class))
         .add(Pair.of(303, DeleteCVCronMigration.class))
+        .add(Pair.of(304, DeleteGitActivityWithoutProcCommitIdMigration.class))
         .build();
   }
 }
