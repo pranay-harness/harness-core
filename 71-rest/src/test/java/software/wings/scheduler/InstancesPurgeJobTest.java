@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -41,6 +42,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void shouldPurgeCorrectly() {
+    generateAccount();
     generateInstances();
     generateInstanceStats();
 
@@ -83,6 +85,15 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
                                    .limit(MAX_INSTANCES)
                                    .collect(toList());
     wingsPersistence.save(instances);
+  }
+
+  private void generateAccount() {
+    Account account = Account.Builder.anAccount()
+                          .withUuid("DummyAccountId")
+                          .withCompanyName("Dummy")
+                          .withAccountName("Dummy")
+                          .build();
+    wingsPersistence.save(account);
   }
 
   private Instance createInstanceInTimeRange(Instant startInstant, Instant endInstant) {

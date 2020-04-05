@@ -17,6 +17,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
@@ -69,10 +70,19 @@ public class InstanceStatServiceImpl implements InstanceStatService {
 
   @Override
   public boolean purgeUpTo(Instant timestamp) {
-    Query<InstanceStatsSnapshot> query =
-        persistence.createQuery(InstanceStatsSnapshot.class).field("timestamp").lessThan(timestamp);
+    try (HIterator<Account> accounts =
+             new HIterator<>(persistence.createQuery(Account.class).project(Account.ID_KEY, true).fetch())) {
+      while (accounts.hasNext()) {
+        final Account account = accounts.next();
+        Query<InstanceStatsSnapshot> query = persistence.createQuery(InstanceStatsSnapshot.class)
+                                                 .filter(InstanceStatsSnapshotKeys.accountId, account.getUuid())
+                                                 .field(InstanceStatsSnapshotKeys.timestamp)
+                                                 .lessThan(timestamp);
 
-    return persistence.delete(query);
+        persistence.delete(query);
+      }
+    }
+    return true;
   }
 
   @Override
