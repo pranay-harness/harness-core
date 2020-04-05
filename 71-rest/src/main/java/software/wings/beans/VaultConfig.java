@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,11 +41,11 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   @Attributes(title = "Vault Url", required = true) @Indexed private String vaultUrl;
 
-  @Attributes(title = "Auth token") private String authToken;
+  @Attributes(title = "Auth token") @Encrypted(fieldName = "auth_token") private String authToken;
 
   @Attributes(title = "AppRole Id") private String appRoleId;
 
-  @Attributes(title = "Secret Id") private String secretId;
+  @Attributes(title = "Secret Id") @Encrypted(fieldName = "secret_id") private String secretId;
 
   @Attributes(title = "Base Path") private String basePath;
 

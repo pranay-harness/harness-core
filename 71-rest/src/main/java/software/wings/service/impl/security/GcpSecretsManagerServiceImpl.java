@@ -10,6 +10,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP_KMS;
 import static software.wings.utils.Utils.isJSONValid;
 
 import com.google.common.base.Preconditions;
@@ -25,14 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.GcpKmsConfig.GcpKmsConfigKeys;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -216,8 +218,9 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(gcpKmsConfig.getAccountId());
-      secretFieldEncryptedData.addParent(configId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.GCP_KMS);
+      secretFieldEncryptedData.addParent(
+          EncryptedDataParent.createParentRef(configId, GcpKmsConfig.class, GcpKmsConfigKeys.credentials, GCP_KMS));
+      secretFieldEncryptedData.setType(GCP_KMS);
       secretFieldEncryptedData.setName(gcpKmsConfig.getName() + CREDENTIAL_SUFFIX);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }

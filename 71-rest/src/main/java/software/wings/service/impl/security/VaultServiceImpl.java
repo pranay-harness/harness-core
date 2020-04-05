@@ -15,6 +15,7 @@ import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.VAULT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -41,6 +42,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
@@ -195,7 +197,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  private String saveSecretField(String accountId, String vaultConfigId, String secretValue, String secretNameSuffix) {
+  private String saveSecretField(
+      String accountId, String vaultConfigId, String secretValue, String secretNameSuffix, String fieldName) {
     EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
@@ -212,14 +215,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
 
     encryptedData.setAccountId(accountId);
-    encryptedData.addParent(vaultConfigId);
-    encryptedData.setType(SettingVariableTypes.VAULT);
+    encryptedData.addParent(EncryptedDataParent.createParentRef(vaultConfigId, VaultConfig.class, fieldName, VAULT));
+    encryptedData.setType(VAULT);
     encryptedData.setName(vaultConfigId + secretNameSuffix);
     return wingsPersistence.save(encryptedData);
   }
 
-  private String updateSecretField(
-      String secretFieldUuid, String accountId, String vaultConfigId, String secretValue, String secretNameSuffix) {
+  private String updateSecretField(String secretFieldUuid, String accountId, String vaultConfigId, String secretValue,
+      String secretNameSuffix, String fieldName) {
     EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
@@ -235,8 +238,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
     savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
     savedEncryptedData.setAccountId(accountId);
-    savedEncryptedData.addParent(vaultConfigId);
-    savedEncryptedData.setType(SettingVariableTypes.VAULT);
+    savedEncryptedData.addParent(
+        EncryptedDataParent.createParentRef(vaultConfigId, VaultConfig.class, fieldName, VAULT));
+    savedEncryptedData.setType(VAULT);
     savedEncryptedData.setName(vaultConfigId + secretNameSuffix);
     return wingsPersistence.save(savedEncryptedData);
   }
@@ -252,7 +256,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         if (loginResult != null && isNotEmpty(loginResult.getClientToken())) {
           logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
           updateSecretField(vaultConfig.getAuthToken(), vaultConfig.getAccountId(), vaultConfig.getUuid(),
-              loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX);
+              loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX, VaultConfigKeys.authToken);
           wingsPersistence.updateField(
               SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewedAt, System.currentTimeMillis());
         }
@@ -273,17 +277,18 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     // Create a LOCAL encrypted record for Vault authToken
     Preconditions.checkNotNull(authToken);
     Preconditions.checkNotNull(authTokenEncryptedDataId);
-    authTokenEncryptedDataId =
-        updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
+    authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
+        TOKEN_SECRET_NAME_SUFFIX, VaultConfigKeys.authToken);
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
 
     // Create a LOCAL encrypted record for Vault secretId
     if (isNotEmpty(secretId)) {
       if (isNotEmpty(secretIdEncryptedDataId)) {
-        secretIdEncryptedDataId = updateSecretField(
-            secretIdEncryptedDataId, accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+        secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
+            SECRET_ID_SECRET_NAME_SUFFIX, VaultConfigKeys.secretId);
       } else {
-        secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+        secretIdEncryptedDataId =
+            saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX, VaultConfigKeys.secretId);
       }
       savedVaultConfig.setSecretId(secretIdEncryptedDataId);
     }
@@ -295,13 +300,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     // Create a LOCAL encrypted record for Vault authToken
     Preconditions.checkNotNull(authToken);
-    String authTokenEncryptedDataId = saveSecretField(accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
+    String authTokenEncryptedDataId =
+        saveSecretField(accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX, VaultConfigKeys.authToken);
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
-
     // Create a LOCAL encrypted record for Vault secretId
     if (isNotEmpty(secretId)) {
       String secretIdEncryptedDataId =
-          saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+          saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX, VaultConfigKeys.secretId);
       savedVaultConfig.setSecretId(secretIdEncryptedDataId);
     }
   }
@@ -599,8 +604,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     if (!vaultConfig.isReadOnly()) {
       try {
-        encrypt(
-            VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+        encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, VAULT, vaultConfig, null);
       } catch (WingsException e) {
         String message =
             "Was not able to encrypt a secret in vault using given credentials. Please check your credentials and try again";

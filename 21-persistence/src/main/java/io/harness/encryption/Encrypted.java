@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Encrypted {
   boolean value() default true;
+  String fieldName();
 }

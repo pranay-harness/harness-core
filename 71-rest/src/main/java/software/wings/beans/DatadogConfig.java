@@ -37,9 +37,11 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;
 
-  @Attributes(title = "API Key", required = true) @Encrypted private char[] apiKey;
+  @Attributes(title = "API Key", required = true) @Encrypted(fieldName = "api_key") private char[] apiKey;
 
-  @Attributes(title = "Application Key", required = true) @Encrypted private char[] applicationKey;
+  @Attributes(title = "Application Key", required = true)
+  @Encrypted(fieldName = "application_key")
+  private char[] applicationKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

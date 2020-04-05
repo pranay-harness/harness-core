@@ -46,7 +46,7 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "Username") private String username;
 
-  @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

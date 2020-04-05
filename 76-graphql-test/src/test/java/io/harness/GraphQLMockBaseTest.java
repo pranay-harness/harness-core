@@ -18,7 +18,6 @@ import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
-import java.util.HashSet;
 import javax.crypto.spec.SecretKeySpec;
 
 public abstract class GraphQLMockBaseTest extends CategoryTest implements MockableTestMixin {
@@ -44,7 +43,6 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
         .encryptionType(EncryptionType.KMS)
         .kmsId(kmsConfig.getUuid())
         .enabled(true)
-        .parentIds(new HashSet<>())
         .accountId(accountId)
         .build();
   }
@@ -72,7 +70,6 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
         .encryptionType(EncryptionType.VAULT)
         .enabled(true)
         .accountId(accountId)
-        .parentIds(new HashSet<>())
         .kmsId(vaultConfig.getUuid())
         .build();
   }

@@ -31,7 +31,7 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;
 
-  @Attributes(title = "Auth Token", required = true) @Encrypted private char[] authToken;
+  @Attributes(title = "Auth Token", required = true) @Encrypted(fieldName = "auth_token") private char[] authToken;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

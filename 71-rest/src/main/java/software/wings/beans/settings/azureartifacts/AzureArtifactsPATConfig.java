@@ -31,7 +31,7 @@ public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifa
   @SchemaIgnore @NotEmpty private String accountId;
 
   @NotEmpty private String azureDevopsUrl;
-  @Encrypted private char[] pat;
+  @Encrypted(fieldName = "pat") private char[] pat;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPat;
 
   private AzureArtifactsPATConfig() {

@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,9 @@ public class CyberArkConfig extends SecretManagerConfig implements ExecutionCapa
 
   @Attributes(title = "App ID") private String appId;
 
-  @Attributes(title = "Client Certificate") private String clientCertificate;
+  @Attributes(title = "Client Certificate")
+  @Encrypted(fieldName = "client_certificate")
+  private String clientCertificate;
 
   @Override
   public void maskSecrets() {

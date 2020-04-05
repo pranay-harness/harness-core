@@ -44,7 +44,9 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
 
-  @Attributes(title = "AWS account secret key", required = true) @Encrypted private char[] secretKey;
+  @Attributes(title = "AWS account secret key", required = true)
+  @Encrypted(fieldName = "aws_account_secret_key")
+  private char[] secretKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

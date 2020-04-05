@@ -35,7 +35,7 @@ import java.util.List;
 public class BambooConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

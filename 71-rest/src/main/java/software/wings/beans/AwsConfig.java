@@ -35,7 +35,7 @@ import java.util.List;
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") private String accessKey;
-  @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;
+  @Attributes(title = "Secret Key") @Encrypted(fieldName = "secret_key") private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId; // internal
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 

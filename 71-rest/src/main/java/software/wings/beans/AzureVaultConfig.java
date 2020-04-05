@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,14 +29,17 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"secretKey"})
 @EqualsAndHashCode(callSuper = true)
-@FieldNameConstants(innerTypeName = "AzureSecretsManagerConfigKeys")
+@FieldNameConstants(innerTypeName = "AzureVaultConfigKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Azure Client Id", required = true) @NotEmpty private String clientId;
 
-  @Attributes(title = "Azure Secret Id", required = true) @NotEmpty private String secretKey;
+  @Attributes(title = "Azure Secret Id", required = true)
+  @NotEmpty
+  @Encrypted(fieldName = "azure_secret_id")
+  private String secretKey;
 
   @Attributes(title = "Azure Tenant Id", required = true) @NotEmpty private String tenantId;
 

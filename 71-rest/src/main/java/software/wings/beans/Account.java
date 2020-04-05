@@ -60,7 +60,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private Set<String> whitelistedDomains = new HashSet<>();
 
-  @JsonIgnore @NotNull(groups = Create.class) @Encrypted private String accountKey;
+  @JsonIgnore @NotNull(groups = Create.class) @Encrypted(fieldName = "account_key") private String accountKey;
 
   private String licenseId;
 

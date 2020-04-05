@@ -38,7 +38,7 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
   /**
    * Handles both password & OAuth(1.0) token.
    */
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 

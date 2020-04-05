@@ -40,6 +40,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Event.Type;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
@@ -156,7 +157,9 @@ public class ConfigServiceImpl implements ConfigService {
   private void updateParentForEncryptedData(ConfigFile configFile) {
     if (isNotBlank(configFile.getEncryptedFileId())) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-      encryptedData.addParent(configFile.getUuid());
+      EncryptedDataParent encryptedDataParent = new EncryptedDataParent(
+          configFile.getUuid(), configFile.getSettingType(), configFile.getSettingType().toString());
+      encryptedData.addParent(encryptedDataParent);
       wingsPersistence.save(encryptedData);
     }
   }
@@ -441,7 +444,9 @@ public class ConfigServiceImpl implements ConfigService {
       if (configFile.isEncrypted()) {
         EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
         if (encryptedData != null) {
-          encryptedData.removeParentId(configFile.getUuid());
+          EncryptedDataParent encryptedDataParent = new EncryptedDataParent(
+              configFile.getUuid(), configFile.getSettingType(), configFile.getSettingType().toString());
+          encryptedData.removeParent(encryptedDataParent);
           wingsPersistence.save(encryptedData);
         }
       }

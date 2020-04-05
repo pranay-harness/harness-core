@@ -39,7 +39,7 @@ import java.util.List;
 public class EcrConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
-  @Attributes(title = "Secret Key", required = true) @Encrypted private char[] secretKey;
+  @Attributes(title = "Secret Key", required = true) @Encrypted(fieldName = "secret_key") private char[] secretKey;
   @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)

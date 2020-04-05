@@ -45,12 +45,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   private String delegateName;
   private String masterUrl;
   private String username;
-  @Encrypted private char[] password;
-  @Encrypted private char[] caCert;
-  @Encrypted private char[] clientCert;
-  @Encrypted private char[] clientKey;
-  @Encrypted private char[] clientKeyPassphrase;
-  @Encrypted private char[] serviceAccountToken;
+  @Encrypted(fieldName = "password") private char[] password;
+  @Encrypted(fieldName = "ca_certificate") private char[] caCert;
+  @Encrypted(fieldName = "client_certificate") private char[] clientCert;
+  @Encrypted(fieldName = "client_key") private char[] clientKey;
+  @Encrypted(fieldName = "client_key_passphrase") private char[] clientKeyPassphrase;
+  @Encrypted(fieldName = "service_account_token") private char[] serviceAccountToken;
   private String clientKeyAlgo;
   private boolean skipValidation;
 
@@ -68,9 +68,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   private String oidcUsername;
   private OidcGrantType oidcGrantType;
   private String oidcScopes;
-  @Encrypted private char[] oidcClientId;
-  @Encrypted private char[] oidcSecret;
-  @Encrypted private char[] oidcPassword;
+  @Encrypted(fieldName = "oidc_client_id") private char[] oidcClientId;
+  @Encrypted(fieldName = "oidc_secret") private char[] oidcSecret;
+  @Encrypted(fieldName = "oidc_password") private char[] oidcPassword;
   @JsonView(JsonViews.Internal.class) private String encryptedOidcSecret;
   @JsonView(JsonViews.Internal.class) private String encryptedOidcPassword;
   @JsonView(JsonViews.Internal.class) private String encryptedOidcClientId;

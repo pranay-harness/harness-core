@@ -31,7 +31,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class SpotInstConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @NotEmpty @SchemaIgnore private String accountId;
-  @Encrypted private char[] spotInstToken;
+  @Encrypted(fieldName = "spot_instance_token") private char[] spotInstToken;
   private String spotInstAccountId;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSpotInstToken;
 

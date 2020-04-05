@@ -15,6 +15,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS_SECRETS_MANAGER;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -36,9 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AwsSecretsManagerConfig.AwsSecretsManagerConfigKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
@@ -185,10 +188,9 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     }
 
     // Create a LOCAL encrypted record for AWS secret key
-    String secretKeyEncryptedDataId =
-        saveSecretField(secretsManagerConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
+    String secretKeyEncryptedDataId = saveSecretField(secretsManagerConfig, secretsManagerConfigId,
+        secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX, AwsSecretsManagerConfigKeys.secretKey);
     secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
-
     // PL-3237: Audit secret manager config changes.
     generateAuditForSecretManager(accountId, oldConfigForAudit, secretsManagerConfig);
 
@@ -253,12 +255,13 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   private String saveSecretField(AwsSecretsManagerConfig secretsManagerConfig, String configId,
-      EncryptedData secretFieldEncryptedData, String secretNameSuffix) {
+      EncryptedData secretFieldEncryptedData, String secretNameSuffix, String fieldName) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(secretsManagerConfig.getAccountId());
-      secretFieldEncryptedData.addParent(configId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.AWS_SECRETS_MANAGER);
+      secretFieldEncryptedData.addParent(
+          EncryptedDataParent.createParentRef(configId, AwsSecretsManagerConfig.class, fieldName, AWS_SECRETS_MANAGER));
+      secretFieldEncryptedData.setType(AWS_SECRETS_MANAGER);
       secretFieldEncryptedData.setName(secretsManagerConfig.getName() + secretNameSuffix);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }

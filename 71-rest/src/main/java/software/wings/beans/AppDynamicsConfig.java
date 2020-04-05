@@ -36,10 +36,7 @@ import java.util.List;
 public class AppDynamicsConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
-  @Attributes(title = "Password", required = true)
-
-  @Encrypted
-  private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
 

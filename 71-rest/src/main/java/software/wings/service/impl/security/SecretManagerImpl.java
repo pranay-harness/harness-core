@@ -90,6 +90,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -109,6 +110,8 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.EncryptedDataParent;
+import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParentKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
@@ -231,7 +234,6 @@ public class SecretManagerImpl implements SecretManager {
                             .accountId(accountId)
                             .type(settingType)
                             .enabled(true)
-                            .parentIds(new HashSet<>())
                             .build();
       }
 
@@ -654,14 +656,20 @@ public class SecretManagerImpl implements SecretManager {
 
     // 2. Fetch children encrypted records associated with these setting attributes in a batch
     Map<String, EncryptedData> encryptedDataMap = new HashMap<>();
+    String parentIdKey;
+    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      parentIdKey = String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
+    } else {
+      parentIdKey = EncryptedDataKeys.parentIds;
+    }
     try (HIterator<EncryptedData> query = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
                                                               .filter(ACCOUNT_ID_KEY, accountId)
-                                                              .field(EncryptedDataKeys.parentIds)
+                                                              .field(parentIdKey)
                                                               .in(settingAttributeIds)
                                                               .fetch())) {
       for (EncryptedData encryptedData : query) {
-        for (String parentId : encryptedData.getParentIds()) {
-          encryptedDataMap.put(parentId, encryptedData);
+        for (EncryptedDataParent encryptedDataParent : encryptedData.getParents()) {
+          encryptedDataMap.put(encryptedDataParent.getId(), encryptedData);
         }
       }
     }
@@ -1429,7 +1437,6 @@ public class SecretManagerImpl implements SecretManager {
                                     .encryptionType(encryptionType)
                                     .kmsId(kmsId)
                                     .enabled(true)
-                                    .parentIds(new HashSet<>())
                                     .build();
       EncryptedData encryptedData =
           encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, encrypted, name, usageRestrictions);
@@ -2017,15 +2024,13 @@ public class SecretManagerImpl implements SecretManager {
     if (update && newEncryptedFile != null) {
       // update parent's file size
       Set<Parent> parents = new HashSet<>();
-      if (isNotEmpty(encryptedData.getParentIds())) {
-        for (String parentId : encryptedData.getParentIds()) {
-          parents.add(Parent.builder()
-                          .id(parentId)
-                          .variableType(SettingVariableTypes.CONFIG_FILE)
-                          .encryptionDetail(
-                              EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
-                          .build());
-        }
+      for (EncryptedDataParent encryptedDataParent : encryptedData.getParents()) {
+        parents.add(
+            Parent.builder()
+                .id(encryptedDataParent.getId())
+                .variableType(encryptedDataParent.getType())
+                .encryptionDetail(EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
+                .build());
       }
       List<UuidAware> configFiles = fetchParents(accountId, recordId, parents);
       configFiles.forEach(configFile -> {
@@ -2184,7 +2189,7 @@ public class SecretManagerImpl implements SecretManager {
 
       encryptedData.setEncryptedBy(
           getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
-      int secretUsageSize = encryptedData.getParentIds() == null ? 0 : encryptedData.getParentIds().size();
+      int secretUsageSize = encryptedData.getParents().size();
       encryptedData.setSetupUsage(secretUsageSize);
 
       if (usageLogSizes.containsKey(entityId)) {
@@ -2274,19 +2279,16 @@ public class SecretManagerImpl implements SecretManager {
   public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
     EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
     checkNotNull(secretText, "could not find secret with id " + secretTextId);
-    if (secretText.getParentIds() == null) {
+    if (isEmpty(secretText.getParents())) {
       return Collections.emptyList();
     }
 
     Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
-    SettingVariableTypes type = secretText.getType() == SettingVariableTypes.SECRET_TEXT
-        ? SettingVariableTypes.SERVICE_VARIABLE
-        : secretText.getType();
     Set<Parent> parents = new HashSet<>();
-    for (String parentId : secretText.getParentIds()) {
+    for (EncryptedDataParent encryptedDataParent : secretText.getParents()) {
       parents.add(Parent.builder()
-                      .id(parentId)
-                      .variableType(type)
+                      .id(encryptedDataParent.getId())
+                      .variableType(encryptedDataParent.getType())
                       .encryptionDetail(EncryptionDetail.builder()
                                             .encryptionType(secretText.getEncryptionType())
                                             .secretManagerName(getSecretManagerName(secretText.getKmsId(),

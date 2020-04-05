@@ -52,7 +52,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -94,7 +93,6 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .encryptionType(EncryptionType.KMS)
         .kmsId(kmsConfig.getUuid())
         .enabled(true)
-        .parentIds(new HashSet<>())
         .accountId(accountId)
         .build();
   }
@@ -129,7 +127,6 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .encryptionType(EncryptionType.CYBERARK)
         .kmsId(cyberArkConfig.getUuid())
         .enabled(true)
-        .parentIds(new HashSet<>())
         .accountId(cyberArkConfig.getAccountId())
         .build();
   }
@@ -156,7 +153,6 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .encryptionType(EncryptionType.VAULT)
         .enabled(true)
         .accountId(accountId)
-        .parentIds(new HashSet<>())
         .kmsId(vaultConfig.getUuid())
         .build();
   }

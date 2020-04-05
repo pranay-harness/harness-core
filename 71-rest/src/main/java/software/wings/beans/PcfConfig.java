@@ -33,7 +33,7 @@ import java.util.List;
 public class PcfConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.util.HashSet;
 
 /**
  * @author marklu on 2019-05-14
@@ -47,7 +46,6 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
         .accountId(accountId)
         .kmsId(localEncryptionConfig.getUuid())
         .enabled(true)
-        .parentIds(new HashSet<>())
         .build();
   }
 

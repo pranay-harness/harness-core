@@ -36,7 +36,7 @@ import java.util.List;
 public class LogzConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
-  @Attributes(title = "Token", required = true) @Encrypted private char[] token;
+  @Attributes(title = "Token", required = true) @Encrypted(fieldName = "token") private char[] token;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

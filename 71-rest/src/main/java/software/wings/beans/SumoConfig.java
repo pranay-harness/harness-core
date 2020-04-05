@@ -35,9 +35,9 @@ import java.util.List;
 public class SumoConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
-  @Attributes(title = "Access ID", required = true) @Encrypted private char[] accessId;
+  @Attributes(title = "Access ID", required = true) @Encrypted(fieldName = "access_id") private char[] accessId;
 
-  @Attributes(title = "Access Key", required = true) @Encrypted private char[] accessKey;
+  @Attributes(title = "Access Key", required = true) @Encrypted(fieldName = "access_key") private char[] accessKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

@@ -80,7 +80,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -461,7 +460,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                                    .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
                                                                    .enabled(true)
                                                                    .accountId(accountId)
-                                                                   .parentIds(new HashSet<>())
                                                                    .kmsId(secretsManagerConfig.getUuid())
                                                                    .build();
 
@@ -594,7 +592,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                           .encryptionType(EncryptionType.VAULT)
                           .enabled(true)
                           .accountId(accountId)
-                          .parentIds(new HashSet<>())
                           .kmsId(vaultConfig.getUuid())
                           .build();
     }
@@ -735,7 +732,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                                    .encryptionType(EncryptionType.AZURE_VAULT)
                                                                    .enabled(true)
                                                                    .accountId(accountId)
-                                                                   .parentIds(new HashSet<>())
                                                                    .kmsId(secretsManagerConfig.getUuid())
                                                                    .build();
 

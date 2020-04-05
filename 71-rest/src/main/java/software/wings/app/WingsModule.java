@@ -186,6 +186,7 @@ import software.wings.scim.ScimUserService;
 import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
@@ -791,6 +792,8 @@ public class WingsModule extends DependencyModule {
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
+
+    requestStaticInjection(EncryptedData.class);
 
     bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);
