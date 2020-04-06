@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_VAULT;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -96,8 +96,8 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(secretsManagerConfig.getAccountId());
       secretFieldEncryptedData.addParent(
-          EncryptedDataParent.createParentRef(configId, AzureVaultConfig.class, fieldName, AZURE));
-      secretFieldEncryptedData.setType(AZURE);
+          EncryptedDataParent.createParentRef(configId, AzureVaultConfig.class, fieldName, AZURE_VAULT));
+      secretFieldEncryptedData.setType(AZURE_VAULT);
       secretFieldEncryptedData.setName(secretsManagerConfig.getName() + secretNameSuffix);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }

@@ -1,14 +1,17 @@
 package software.wings.security.encryption;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,12 +25,14 @@ import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 @RunWith(Parameterized.class)
@@ -35,6 +40,7 @@ public class EncryptedDataTest extends WingsBaseTest {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WingsPersistence wingsPersistence;
   @Parameter public boolean secretMigrationComplete;
+  private static final Random random = new Random();
   private EncryptedData encryptedData;
   private SettingVariableTypes encryptedDataType;
 
@@ -112,5 +118,34 @@ public class EncryptedDataTest extends WingsBaseTest {
     assertThat(encryptedData.getParents()).hasSize(1);
     assertThat(encryptedData.containsParent(addedParents.get(0).getId(), addedParents.get(0).getType())).isTrue();
     assertThat(encryptedData.containsParent(addedParents.get(1).getId(), addedParents.get(1).getType())).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testEncryptedDataMigrationIteration() throws IllegalAccessException {
+    long nextMigrationIteration = random.nextLong();
+    FieldUtils.writeField(encryptedData, EncryptedDataKeys.nextMigrationIteration, nextMigrationIteration, true);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextMigrationIteration))
+        .isEqualTo(nextMigrationIteration);
+
+    nextMigrationIteration = random.nextLong();
+    encryptedData.updateNextIteration(EncryptedDataKeys.nextMigrationIteration, nextMigrationIteration);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextMigrationIteration))
+        .isEqualTo(nextMigrationIteration);
+
+    try {
+      encryptedData.updateNextIteration(generateUuid(), random.nextLong());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    try {
+      encryptedData.obtainNextIteration(generateUuid());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
   }
 }

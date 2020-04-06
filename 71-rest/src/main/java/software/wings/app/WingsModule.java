@@ -188,6 +188,13 @@ import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.migration.secretparents.Migrators;
+import software.wings.security.encryption.migration.secretparents.SecretsMigrator;
+import software.wings.security.encryption.migration.secretparents.migrators.ConfigFileMigrator;
+import software.wings.security.encryption.migration.secretparents.migrators.DirectInfraMappingMigrator;
+import software.wings.security.encryption.migration.secretparents.migrators.SecretManagerConfigMigrator;
+import software.wings.security.encryption.migration.secretparents.migrators.ServiceVariableMigrator;
+import software.wings.security.encryption.migration.secretparents.migrators.SettingAttributeMigrator;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
@@ -1139,6 +1146,27 @@ public class WingsModule extends DependencyModule {
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(CustomDashboardFeature.FEATURE_NAME))
         .to(CustomDashboardFeature.class);
+
+    binder()
+        .bind(SecretsMigrator.class)
+        .annotatedWith(Names.named(Migrators.SERVICE_VARIABLE_MIGRATOR.getName()))
+        .to(ServiceVariableMigrator.class);
+    binder()
+        .bind(SecretsMigrator.class)
+        .annotatedWith(Names.named(Migrators.SECRET_MANAGER_CONFIG_MIGRATOR.getName()))
+        .to(SecretManagerConfigMigrator.class);
+    binder()
+        .bind(SecretsMigrator.class)
+        .annotatedWith(Names.named(Migrators.SETTING_ATTRIBUTE_MIGRATOR.getName()))
+        .to(SettingAttributeMigrator.class);
+    binder()
+        .bind(SecretsMigrator.class)
+        .annotatedWith(Names.named(Migrators.DIRECT_INFRA_MAPPING_MIGRATOR.getName()))
+        .to(DirectInfraMappingMigrator.class);
+    binder()
+        .bind(SecretsMigrator.class)
+        .annotatedWith(Names.named(Migrators.CONFIG_FILE_MIGRATOR.getName()))
+        .to(ConfigFileMigrator.class);
   }
 
   @Override
