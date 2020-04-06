@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -63,5 +64,19 @@ public class K8sResourceStandardizerTest extends CategoryTest {
             .isEqualTo(e.getValue());
       }
     });
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testCpuFractionalNano() throws Exception {
+    assertThat(K8sResourceStandardizer.getCpuNano("111.2n")).isEqualTo(111);
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testMemByteFractionalByte() throws Exception {
+    assertThat(K8sResourceStandardizer.getMemoryByte("1123m")).isEqualTo(1);
   }
 }
