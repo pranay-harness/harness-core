@@ -43,22 +43,29 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
               - parentInstanceIdToPodData.get(parentInstanceId).getCpuCost() - nodeData.getCpuSystemCost());
           BigDecimal memoryUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getMemoryCost()
               - parentInstanceIdToPodData.get(parentInstanceId).getMemoryCost() - nodeData.getMemorySystemCost());
-          billingDataService.update(
-              ActualIdleCostWriterData.builder()
-                  .accountId(nodeData.getAccountId())
-                  .instanceId(nodeData.getInstanceId())
-                  .parentInstanceId(nodeData.getParentInstanceId())
-                  .unallocatedCost(unallocatedCostForNode)
-                  .cpuUnallocatedCost(cpuUnallocatedCostForNode)
-                  .memoryUnallocatedCost(memoryUnallocatedCostForNode)
-                  .actualIdleCost(BigDecimal.valueOf(nodeData.getIdleCost() - unallocatedCostForNode.doubleValue()))
-                  .cpuActualIdleCost(
-                      BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue()))
-                  .memoryActualIdleCost(
-                      BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue()))
-                  .startTime(nodeData.getStartTime())
-                  .clusterId(nodeData.getClusterId())
-                  .build());
+          BigDecimal actualIdleCost = BigDecimal.ZERO;
+          BigDecimal cpuActualIdleCost = BigDecimal.ZERO;
+          BigDecimal memoryActualIdleCost = BigDecimal.ZERO;
+          double nodeIdleCost = nodeData.getIdleCost() - unallocatedCostForNode.doubleValue();
+          if (nodeIdleCost > 0) {
+            actualIdleCost = BigDecimal.valueOf(nodeIdleCost);
+            cpuActualIdleCost = BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
+            memoryActualIdleCost =
+                BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
+          }
+          billingDataService.update(ActualIdleCostWriterData.builder()
+                                        .accountId(nodeData.getAccountId())
+                                        .instanceId(nodeData.getInstanceId())
+                                        .parentInstanceId(nodeData.getParentInstanceId())
+                                        .unallocatedCost(unallocatedCostForNode)
+                                        .cpuUnallocatedCost(cpuUnallocatedCostForNode)
+                                        .memoryUnallocatedCost(memoryUnallocatedCostForNode)
+                                        .actualIdleCost(actualIdleCost)
+                                        .cpuActualIdleCost(cpuActualIdleCost)
+                                        .memoryActualIdleCost(memoryActualIdleCost)
+                                        .startTime(nodeData.getStartTime())
+                                        .clusterId(nodeData.getClusterId())
+                                        .build());
         }
       });
     });
