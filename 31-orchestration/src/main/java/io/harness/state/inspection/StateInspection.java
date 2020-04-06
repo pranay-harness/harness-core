@@ -2,7 +2,7 @@ package io.harness.state.inspection;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
-import io.harness.state.State;
+import io.harness.state.StateInspectionUtils;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -25,5 +25,5 @@ public class StateInspection implements PersistentEntity {
   private Map<String, StateInspectionData> data;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plus(State.TTL).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(StateInspectionUtils.TTL).toInstant());
 }
