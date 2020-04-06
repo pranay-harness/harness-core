@@ -120,6 +120,7 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
@@ -1614,11 +1615,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String notes = serviceCommand.getNotes();
     Command command = serviceCommand.getCommand();
     if (serviceCommand.getTemplateUuid() != null) {
+      List<Variable> existingTemplateVariables = command.getTemplateVariables();
       command = (Command) templateService.constructEntityFromTemplate(
           serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion(), EntityType.COMMAND);
       command.setAppId(appId);
       if (isNotEmpty(serviceCommand.getName())) {
         command.setName(serviceCommand.getName());
+      }
+      if (isNotEmpty(existingTemplateVariables)) {
+        command.setTemplateVariables(existingTemplateVariables);
       }
     } else if (Objects.isNull(command)) {
       throw new InvalidRequestException(format("Underlying command is null for service command "
