@@ -30,6 +30,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -75,7 +76,7 @@ public class AwsLambdaVerification extends State {
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
     try {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      Application app = workflowStandardParams.getApp();
+      Application app = workflowStandardParams.fetchRequiredApp();
 
       AwsLambdaInfraStructureMapping infrastructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
@@ -113,7 +114,7 @@ public class AwsLambdaVerification extends State {
               .awsLambdaExecutionData(awsLambdaExecutionData)
               .lambdaTestEvent(lambdaTestEvent)
               .build(),
-          context.getAppId(), activityId);
+          context.getAppId(), activityId, infrastructureMapping);
 
     } catch (WingsException e) {
       throw e;
@@ -122,11 +123,14 @@ public class AwsLambdaVerification extends State {
     }
   }
 
-  private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId) {
+  private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId,
+      InfrastructureMapping infrastructureMapping) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .envId(infrastructureMapping.getEnvId())
+            .infrastructureMappingId(infrastructureMapping.getUuid())
             .async(true)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
@@ -207,8 +211,9 @@ public class AwsLambdaVerification extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.fetchRequiredApp();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
 
     Activity activity = Activity.builder()
                             .applicationName(app.getName())
