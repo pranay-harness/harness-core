@@ -17,10 +17,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
@@ -29,6 +32,7 @@ import software.wings.service.intfc.security.SecretManagerConfigService;
 import java.util.List;
 
 public class SecretManagerConfigServiceTest extends WingsBaseTest {
+  @Inject WingsPersistence wingsPersistence;
   @Mock FeatureFlagService featureFlagService;
   @Mock KmsService kmsService;
   @Mock GcpSecretsManagerService gcpSecretsManagerService;
@@ -161,5 +165,31 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
     assertThat(returnedSecretManagerConfig).isNotNull();
     assertThat(returnedSecretManagerConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
     assertThat(returnedSecretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testListSecresManager_AccountLocalEncryptionEnabled() {
+    Account account = getAccount(AccountType.PAID);
+    account.setLocalEncryptionEnabled(true);
+    wingsPersistence.save(account);
+
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    String kmsConfigId = wingsPersistence.save(kmsConfig);
+    kmsConfig.setUuid(kmsConfigId);
+
+    List<SecretManagerConfig> secretManagerConfigList =
+        secretManagerConfigService.listSecretManagers(account.getUuid(), true);
+    assertThat(secretManagerConfigList).hasSize(1);
+    assertThat(secretManagerConfigList.get(0).getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+
+    account.setLocalEncryptionEnabled(false);
+    wingsPersistence.save(account);
+
+    secretManagerConfigList = secretManagerConfigService.listSecretManagers(account.getUuid(), true);
+    assertThat(secretManagerConfigList).hasSize(1);
+    assertThat(secretManagerConfigList.get(0).getEncryptionType()).isEqualTo(EncryptionType.KMS);
   }
 }
