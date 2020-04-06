@@ -1,5 +1,6 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -50,13 +51,14 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
   @Before
   public void setup() {
     when(billingDataService.create(any())).thenReturn(true);
-    actualIdleCostBatchJobData = mockActualIdleCostBatchJobData(INSTANCE_ID);
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteActualIdleCostData() throws Exception {
+    actualIdleCostBatchJobData =
+        mockActualIdleCostBatchJobData(INSTANCE_ID, IDLE_COST, CPU_IDLE_COST, MEMORY_IDLE_COST);
     actualIdleBillingDataWriter.write(Collections.singletonList(actualIdleCostBatchJobData));
     ArgumentCaptor<ActualIdleCostWriterData> actualIdleCostWriterDataArgumentCaptor =
         ArgumentCaptor.forClass(ActualIdleCostWriterData.class);
@@ -74,7 +76,30 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
   }
 
-  private ActualIdleCostData mockActualIdleCostDataForNode(String instanceId, String parentInstanceId) {
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldWriteActualIdleCostDataWhenUtilDataIsNotPresent() throws Exception {
+    actualIdleCostBatchJobData = mockActualIdleCostBatchJobData(INSTANCE_ID, 0.0, 0.0, 0.0);
+    actualIdleBillingDataWriter.write(Collections.singletonList(actualIdleCostBatchJobData));
+    ArgumentCaptor<ActualIdleCostWriterData> actualIdleCostWriterDataArgumentCaptor =
+        ArgumentCaptor.forClass(ActualIdleCostWriterData.class);
+    verify(billingDataService, atMost(1)).update(actualIdleCostWriterDataArgumentCaptor.capture());
+    List<ActualIdleCostWriterData> actualIdleCostWriterData = actualIdleCostWriterDataArgumentCaptor.getAllValues();
+    assertThat(actualIdleCostWriterData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(actualIdleCostWriterData.get(0).getParentInstanceId()).isEqualTo("PARENT_INSTANCE_ID");
+    assertThat(actualIdleCostWriterData.get(0).getInstanceId()).isEqualTo(INSTANCE_ID);
+    assertThat(actualIdleCostWriterData.get(0).getActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
+    assertThat(actualIdleCostWriterData.get(0).getCpuActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
+    assertThat(actualIdleCostWriterData.get(0).getMemoryActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
+    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.4));
+    assertThat(actualIdleCostWriterData.get(0).getCpuUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
+    assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
+  }
+
+  private ActualIdleCostData mockActualIdleCostDataForNode(
+      String instanceId, String parentInstanceId, double idleCost, double cpuIdleCost, double memoryIdleCost) {
     return ActualIdleCostData.builder()
         .accountId(ACCOUNT_ID)
         .clusterId(CLUSTER_ID)
@@ -83,9 +108,9 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
         .cost(COST)
         .cpuCost(CPU_COST)
         .memoryCost(MEMORY_COST)
-        .idleCost(IDLE_COST)
-        .cpuIdleCost(CPU_IDLE_COST)
-        .memoryIdleCost(MEMORY_IDLE_COST)
+        .idleCost(idleCost)
+        .cpuIdleCost(cpuIdleCost)
+        .memoryIdleCost(memoryIdleCost)
         .systemCost(SYSTEM_COST)
         .cpuSystemCost(CPU_SYSTEM_COST)
         .memorySystemCost(MEMORY_SYSTEM_COST)
@@ -110,9 +135,11 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
         .build();
   }
 
-  private ActualIdleCostBatchJobData mockActualIdleCostBatchJobData(String instanceId) {
+  private ActualIdleCostBatchJobData mockActualIdleCostBatchJobData(
+      String instanceId, double idleCost, double cpuIdleCost, double memoryIdleCost) {
     return ActualIdleCostBatchJobData.builder()
-        .nodeData(Collections.singletonList(mockActualIdleCostDataForNode(instanceId, "PARENT_INSTANCE_ID")))
+        .nodeData(Collections.singletonList(
+            mockActualIdleCostDataForNode(instanceId, "PARENT_INSTANCE_ID", idleCost, cpuIdleCost, memoryIdleCost)))
         .podData(Collections.singletonList(mockActualIdleCostDataForPod(null, instanceId)))
         .build();
   }
