@@ -3,17 +3,14 @@ package software.wings.resources;
 import com.google.inject.Inject;
 
 import io.dropwizard.jersey.PATCH;
-import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.FeatureName;
 import software.wings.beans.scim.ScimUser;
 import software.wings.scim.PatchRequest;
 import software.wings.scim.ScimListResponse;
 import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.annotations.ScimAPI;
-import software.wings.service.intfc.FeatureFlagService;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -35,18 +32,11 @@ import javax.ws.rs.core.Response.Status;
 @ScimAPI
 public class ScimUserResource extends ScimResource {
   @Inject private ScimUserServiceImpl scimUserServiceImpl;
-  @Inject private FeatureFlagService featureFlagService;
-
-  private static final String FEATURE_NOT_ALLOWED = "Feature not allowed for account: ";
 
   @POST
   @Path("Users")
   @ApiOperation(value = "Create a new user")
   public Response createUser(ScimUser userQuery, @PathParam("accountId") String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
-
     try {
       return scimUserServiceImpl.createUser(userQuery, accountId);
     } catch (Exception ex) {
@@ -60,9 +50,6 @@ public class ScimUserResource extends ScimResource {
   @ApiOperation(value = "Update an existing user by uuid")
   public Response updateUser(
       @PathParam("userId") String userId, @PathParam("accountId") String accountId, ScimUser userQuery) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
     try {
       return scimUserServiceImpl.updateUser(userId, accountId, userQuery);
     } catch (Exception ex) {
@@ -75,9 +62,6 @@ public class ScimUserResource extends ScimResource {
   @Path("Users/{userId}")
   @ApiOperation(value = "Get an existing user by uuid")
   public Response getUser(@PathParam("userId") String userId, @PathParam("accountId") String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
     try {
       return Response.status(Response.Status.OK).entity(scimUserServiceImpl.getUser(userId, accountId)).build();
     } catch (Exception ex) {
@@ -94,9 +78,6 @@ public class ScimUserResource extends ScimResource {
   public Response
   searchUser(@PathParam("accountId") String accountId, @QueryParam("filter") String filter,
       @QueryParam("count") Integer count, @QueryParam("startIndex") Integer startIndex) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
     try {
       ScimListResponse<ScimUser> searchUserResponse =
           scimUserServiceImpl.searchUser(accountId, filter, count, startIndex);
@@ -112,9 +93,6 @@ public class ScimUserResource extends ScimResource {
   @Path("Users/{userId}")
   @ApiOperation(value = "Delete an user by uuid")
   public Response deleteUser(@PathParam("userId") String userId, @PathParam("accountId") String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
     scimUserServiceImpl.deleteUser(userId, accountId);
     return javax.ws.rs.core.Response.status(Status.NO_CONTENT).build();
   }
@@ -124,9 +102,6 @@ public class ScimUserResource extends ScimResource {
   @ApiOperation(value = "Update some fields of a user by uuid")
   public ScimUser updateUser(
       @PathParam("accountId") String accountId, @PathParam("userId") String userId, PatchRequest patchRequest) {
-    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
-      throw new InvalidRequestException(FEATURE_NOT_ALLOWED + accountId);
-    }
     return scimUserServiceImpl.updateUser(accountId, userId, patchRequest);
   }
 }

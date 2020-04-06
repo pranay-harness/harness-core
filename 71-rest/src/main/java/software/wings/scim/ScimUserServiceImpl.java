@@ -147,6 +147,7 @@ public class ScimUserServiceImpl implements ScimUserService {
   public ScimListResponse<ScimUser> searchUser(String accountId, String filter, Integer count, Integer startIndex) {
     startIndex = startIndex == null ? 0 : startIndex;
     count = count == null ? MAX_RESULT_COUNT : count;
+
     logger.info("SCIM: Searching users in account {} with filter: {}", accountId, filter);
 
     ScimListResponse<ScimUser> userResponse = new ScimListResponse<>();
