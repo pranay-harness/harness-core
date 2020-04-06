@@ -10,6 +10,7 @@ import java.util.EnumSet;
 public class InvalidRequestException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 
+  // This method does not create the intended message, needs to be fixed @George
   public InvalidRequestException(String message) {
     super(message, null, INVALID_REQUEST, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);

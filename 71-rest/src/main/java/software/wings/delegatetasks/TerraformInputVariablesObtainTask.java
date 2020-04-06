@@ -114,8 +114,9 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
       return FileUtils.listFiles(dir, new WildcardFileFilter("*.tf"), null).isEmpty();
     } catch (IllegalArgumentException e) {
       throw new InvalidRequestException(format("Could not read the specified "
-              + "directory  \"%s\" for terraform files",
-          dir.getName()));
+                                                + "directory  \"%s\" for terraform files",
+                                            dir.getName()),
+          WingsException.USER);
     }
   }
 }
