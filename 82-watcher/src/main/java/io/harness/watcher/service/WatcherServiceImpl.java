@@ -556,7 +556,7 @@ public class WatcherServiceImpl implements WatcherService {
           if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
             logger.info("New delegate process for version {} will be started", version);
             try {
-              downloadRunScripts(version, false);
+              downloadRunScripts(version, version, false);
               downloadDelegateJar(version);
               startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
               break;
@@ -591,12 +591,13 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() throws Exception {
-    if (multiVersion) {
-      for (String expectedVersion : findExpectedDelegateVersions()) {
-        downloadRunScripts(expectedVersion, true);
+    List<String> expectedDelegateVersions = findExpectedDelegateVersions();
+    for (String expectedVersion : expectedDelegateVersions) {
+      if (multiVersion) {
+        downloadRunScripts(expectedVersion, expectedVersion, true);
+      } else {
+        downloadRunScripts(".", expectedVersion, true);
       }
-    } else {
-      downloadRunScripts(".", true);
     }
   }
 
@@ -691,8 +692,8 @@ public class WatcherServiceImpl implements WatcherService {
     return 0;
   }
 
-  private void downloadRunScripts(String version, boolean forceDownload) throws Exception {
-    if (!forceDownload && new File(version + File.separator + DELEGATE_SCRIPT).exists()) {
+  private void downloadRunScripts(String directory, String version, boolean forceDownload) throws Exception {
+    if (!forceDownload && new File(directory + File.separator + DELEGATE_SCRIPT).exists()) {
       return;
     }
 
@@ -702,7 +703,7 @@ public class WatcherServiceImpl implements WatcherService {
         1L, TimeUnit.MINUTES, true);
     DelegateScripts delegateScripts = restResponse.getResource();
 
-    Path versionDir = Paths.get(version);
+    Path versionDir = Paths.get(directory);
     if (!versionDir.toFile().exists()) {
       Files.createDirectory(versionDir);
     }
@@ -710,7 +711,7 @@ public class WatcherServiceImpl implements WatcherService {
     for (String fileName : asList("start.sh", "stop.sh", DELEGATE_SCRIPT, "setup-proxy.sh")) {
       String filePath = fileName;
       if (DELEGATE_SCRIPT.equals(fileName)) {
-        filePath = version + "/" + fileName;
+        filePath = directory + File.separator + fileName;
       }
       File scriptFile = new File(filePath);
       String script = delegateScripts.getScriptByName(fileName);
