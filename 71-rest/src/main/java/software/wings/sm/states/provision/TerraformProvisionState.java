@@ -268,38 +268,39 @@ public abstract class TerraformProvisionState extends State {
     if (!(this instanceof DestroyTerraformProvisionState)) {
       markApplyExecutionCompleted(context);
     }
-    saveUserInputs(context, terraformExecutionData, terraformProvisioner);
+
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
       return ExecutionResponse.builder()
           .stateExecutionData(terraformExecutionData)
           .executionStatus(terraformExecutionData.getExecutionStatus())
           .errorMessage(terraformExecutionData.getErrorMessage())
           .build();
-    } else {
-      TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
-      if (outputInfoElement == null) {
-        outputInfoElement = TerraformOutputInfoElement.builder().build();
-      }
-      if (terraformExecutionData.getOutputs() != null) {
-        Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
-        outputInfoElement.addOutPuts(outputs);
-        ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
-            terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
-        infrastructureProvisionerService.regenerateInfrastructureMappings(
-            provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.empty());
-      }
-
-      updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
-
-      // subsequent execution
-      return ExecutionResponse.builder()
-          .stateExecutionData(terraformExecutionData)
-          .contextElement(outputInfoElement)
-          .notifyElement(outputInfoElement)
-          .executionStatus(terraformExecutionData.getExecutionStatus())
-          .errorMessage(terraformExecutionData.getErrorMessage())
-          .build();
     }
+
+    saveUserInputs(context, terraformExecutionData, terraformProvisioner);
+    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    if (outputInfoElement == null) {
+      outputInfoElement = TerraformOutputInfoElement.builder().build();
+    }
+    if (terraformExecutionData.getOutputs() != null) {
+      Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
+      outputInfoElement.addOutPuts(outputs);
+      ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
+          terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
+      infrastructureProvisionerService.regenerateInfrastructureMappings(
+          provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.empty());
+    }
+
+    updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+
+    // subsequent execution
+    return ExecutionResponse.builder()
+        .stateExecutionData(terraformExecutionData)
+        .contextElement(outputInfoElement)
+        .notifyElement(outputInfoElement)
+        .executionStatus(terraformExecutionData.getExecutionStatus())
+        .errorMessage(terraformExecutionData.getErrorMessage())
+        .build();
   }
 
   private void saveUserInputs(ExecutionContext context, TerraformExecutionData terraformExecutionData,
