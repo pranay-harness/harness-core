@@ -85,6 +85,24 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
+  public Query<SweepingOutputInstance> prepareApprovalStateOutputsQuery(
+      String appId, String fromPipelineExecutionId, String fromStateExecutionId) {
+    return wingsPersistence.createQuery(SweepingOutputInstance.class)
+        .filter(SweepingOutputKeys.appId, appId)
+        .filter(SweepingOutputKeys.pipelineExecutionId, fromPipelineExecutionId)
+        .filter(SweepingOutputKeys.stateExecutionId, fromStateExecutionId);
+  }
+
+  @Override
+  public Query<SweepingOutputInstance> prepareEnvStateOutputsQuery(
+      String appId, String fromPipelineExecutionId, String fromWorkflowExecutionId) {
+    return wingsPersistence.createQuery(SweepingOutputInstance.class)
+        .filter(SweepingOutputKeys.appId, appId)
+        .filter(SweepingOutputKeys.pipelineExecutionId, fromPipelineExecutionId)
+        .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
+  }
+
+  @Override
   public <T extends SweepingOutput> T findSweepingOutput(SweepingOutputInquiry inquiry) {
     SweepingOutputInstance sweepingOutputInstance = find(inquiry);
     if (sweepingOutputInstance == null) {

@@ -52,6 +52,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNET
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -66,6 +67,8 @@ import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -156,6 +159,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -213,6 +217,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
+  @Mock private PipelineResumeUtils pipelineResumeUtils;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 
@@ -2498,5 +2503,50 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
     deploymentTags = workflowExecutionService.getDeploymentTags(ACCOUNT_ID, workflowExecution.getTags());
     assertThat(deploymentTags).isNull();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testTriggerPipelineResumeExecution() {
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().accountId(account.getUuid()).executionArgs(new ExecutionArgs()).build();
+    Pipeline pipeline =
+        Pipeline.builder()
+            .uuid(PIPELINE_ID)
+            .appId(app.getUuid())
+            .name(PIPELINE_NAME)
+            .pipelineStages(singletonList(PipelineStage.builder()
+                                              .pipelineStageElements(singletonList(PipelineStageElement.builder()
+                                                                                       .type(APPROVAL.name())
+                                                                                       .parallelIndex(1)
+                                                                                       .name("APPROVAL")
+                                                                                       .properties(new HashMap<>())
+                                                                                       .build()))
+                                              .build()))
+            .build();
+    when(pipelineResumeUtils.getPipelineForResume(eq(app.getUuid()), eq(1), eq(workflowExecution), any()))
+        .thenReturn(pipeline);
+    workflowExecutionService.triggerPipelineResumeExecution(app.getUuid(), 1, workflowExecution);
+    verify(pipelineResumeUtils).getPipelineForResume(eq(app.getUuid()), eq(1), eq(workflowExecution), any());
+    verify(pipelineResumeUtils).updatePipelineExecutionsAfterResume(any(), eq(workflowExecution));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetResumeStages() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    workflowExecutionService.getResumeStages(APP_ID, workflowExecution);
+    verify(pipelineResumeUtils).getResumeStages(eq(APP_ID), eq(workflowExecution));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetResumeHistory() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    workflowExecutionService.getResumeHistory(APP_ID, workflowExecution);
+    verify(pipelineResumeUtils).getResumeHistory(eq(APP_ID), eq(workflowExecution));
   }
 }

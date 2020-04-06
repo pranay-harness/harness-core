@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.GE;
+import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -34,8 +35,10 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
@@ -151,6 +154,10 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
+    if (featureFlagService.isEnabled(FeatureName.PIPELINE_RESUME, accountId)) {
+      pageRequest.addFilter(WorkflowExecutionKeys.latestPipelineResume, NOT_EQ, Boolean.FALSE);
+    }
+
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 
@@ -226,6 +233,46 @@ public class ExecutionResource {
         workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
     workflowExecution.setStateMachine(null);
     return new RestResponse<>(workflowExecution);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("triggerResume")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<WorkflowExecution> triggerPipelineResumeExecution(@QueryParam("appId") String appId,
+      @QueryParam("parallelIndexToResume") int parallelIndexToResume,
+      @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    WorkflowExecution resumedExecution =
+        workflowExecutionService.triggerPipelineResumeExecution(appId, parallelIndexToResume, workflowExecution);
+    resumedExecution.setStateMachine(null);
+    return new RestResponse<>(resumedExecution);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("resumeStages")
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<List<PipelineStage>> getResumeStages(
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    return new RestResponse<>(workflowExecutionService.getResumeStages(appId, workflowExecution));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("resumeHistory")
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<List<WorkflowExecution>> getResumeHistory(
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    return new RestResponse<>(workflowExecutionService.getResumeHistory(appId, workflowExecution));
   }
 
   @POST
@@ -625,5 +672,9 @@ public class ExecutionResource {
       throw new InvalidRequestException("workflowExecutionId is required", USER);
     }
     return new RestResponse<>(workflowExecutionService.getWorkflowExecutionInfo(workflowExecutionId));
+  }
+
+  private void requireWorkflowExecution(String workflowExecutionId, WorkflowExecution workflowExecution) {
+    notNullCheck("No workflow execution exists for id: " + workflowExecutionId, workflowExecution);
   }
 }

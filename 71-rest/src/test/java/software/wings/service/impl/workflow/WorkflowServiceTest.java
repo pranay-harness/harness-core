@@ -144,12 +144,14 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getInfraTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
+import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_VERIFICATION;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.HTTP;
@@ -4515,7 +4517,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAllStateTypesDefinedInStepTypes() {
     List<StateType> excludedStateTypes = asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP,
-        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION, SCALYR);
+        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION, SCALYR, ENV_RESUME_STATE, APPROVAL_RESUME);
 
     Set<String> stateTypes = new HashSet<>();
     for (StateType stateType : StateType.values()) {

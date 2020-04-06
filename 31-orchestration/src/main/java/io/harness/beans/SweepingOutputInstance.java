@@ -15,6 +15,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -32,6 +33,7 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
+@Wither
 @Indexes({
   @Index(options = @IndexOptions(name = "uniquePipelineExecution", unique = true),
       fields =
