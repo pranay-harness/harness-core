@@ -1,7 +1,9 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -40,6 +42,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +57,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -800,6 +804,19 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                               .dockerImageName(IMAGE_NAME)
                                               .build();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(gcrArtifactStream);
+
+    String serviceAccountFileContent = "{ \"key\": \"value\" }";
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(GcpConfig.builder()
+                           .accountId("GCP_ACCOUNT_ID")
+                           .serviceAccountKeyFileContent(serviceAccountFileContent.toCharArray())
+                           .build())
+            .withAccountId(ACCOUNT_ID)
+            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(artifact, WORKFLOW_EXECUTION_ID);
     assertThat(imageDetails).isNotNull();
     assertThat(imageDetails.getName()).isEqualTo(REGISTRY_HOST + '/' + IMAGE_NAME);
@@ -1047,6 +1064,43 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     String dockerConfig = artifactCollectionUtils.getDockerConfig(ARTIFACT_STREAM_ID);
     assertThat(dockerConfig).isNotEqualTo("");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetDockerConfigWithGCRCredentials() {
+    GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                              .uuid(ARTIFACT_STREAM_ID)
+                                              .appId(APP_ID)
+                                              .sourceName("GCR_ARTIFACT_SOURCE")
+                                              .serviceId(SERVICE_ID)
+                                              .settingId(SETTING_ID)
+                                              .registryHostName("registry")
+                                              .dockerImageName("image")
+                                              .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(gcrArtifactStream);
+
+    String serviceAccountFileContent = "{ \"key\": \"value\" }";
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(GcpConfig.builder()
+                           .accountId("GCP_ACCOUNT_ID")
+                           .serviceAccountKeyFileContent(serviceAccountFileContent.toCharArray())
+                           .build())
+            .withAccountId(ACCOUNT_ID)
+            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
+    String dockerConfigEncoded = artifactCollectionUtils.getDockerConfig(ARTIFACT_STREAM_ID);
+    assertThat(dockerConfigEncoded).isNotEqualTo("");
+    String dockerConfig = decodeBase64ToString(dockerConfigEncoded);
+    String username = JsonUtils.jsonPath(dockerConfig, "$.registry/image.username");
+    assertThat(username).isEqualTo("_json_key");
+    String password = JsonUtils.jsonPath(dockerConfig, "$.registry/image.password");
+    String value = JsonUtils.jsonPath(password, "$.key");
+    assertThat(value).isEqualTo("value");
   }
 
   @Test
