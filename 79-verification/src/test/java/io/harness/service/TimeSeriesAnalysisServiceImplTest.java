@@ -73,6 +73,7 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
@@ -104,6 +105,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   private String hostname;
   private int currentEpochMinute;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DataStoreService dataStoreService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Mock private VerificationManagerClientHelper managerClientHelper;
 
@@ -163,6 +165,70 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
         .isTrue();
     assertThat(newRelicMetricDataRecord.getValidUntil())
         .isBefore(Date.from(OffsetDateTime.now().plusMonths(2).toInstant()));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_saveMetricDataWhenAlreadyProcessed() throws IllegalAccessException {
+    String stateExecutionId = generateUuid();
+    String groupName = generateUuid();
+    int dataCollectionMinute = 5;
+    List<NewRelicMetricDataRecord> metricDataRecords =
+        Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                               .stateExecutionId(stateExecutionId)
+                               .groupName(groupName)
+                               .dataCollectionMinute(dataCollectionMinute)
+                               .appId(appId)
+                               .build(),
+            NewRelicMetricDataRecord.builder()
+                .stateExecutionId(stateExecutionId)
+                .groupName(groupName)
+                .dataCollectionMinute(dataCollectionMinute)
+                .appId(appId)
+                .level(ClusterLevel.H0)
+                .build());
+    LearningEngineService learningEngineService = mock(LearningEngineService.class);
+    FieldUtils.writeField(timeSeriesAnalysisService, "learningEngineService", learningEngineService, true);
+    when(learningEngineService.isStateValid(anyString(), anyString())).thenReturn(true);
+    PageRequest<TimeSeriesDataRecord> pageRequest = aPageRequest().build();
+    PageResponse<TimeSeriesDataRecord> timeSeriesDataRecords =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+
+    assertThat(timeSeriesDataRecords).isEmpty();
+    dataStoreService.save(TimeSeriesDataRecord.class,
+        Lists.newArrayList(TimeSeriesDataRecord.builder()
+                               .stateExecutionId(stateExecutionId)
+                               .groupName(groupName)
+                               .level(ClusterLevel.HF)
+                               .dataCollectionMinute(dataCollectionMinute)
+                               .build()),
+        false);
+
+    assertThat(dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).size()).isEqualTo(1);
+    assertThat(
+        timeSeriesAnalysisService.saveMetricData(accountId, appId, stateExecutionId, generateUuid(), metricDataRecords))
+        .isTrue();
+
+    assertThat(dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).size()).isEqualTo(1);
+    metricDataRecords = Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                                               .stateExecutionId(stateExecutionId)
+                                               .groupName(groupName)
+                                               .dataCollectionMinute(dataCollectionMinute + 1)
+                                               .appId(appId)
+                                               .build(),
+        NewRelicMetricDataRecord.builder()
+            .stateExecutionId(stateExecutionId)
+            .groupName(groupName)
+            .dataCollectionMinute(dataCollectionMinute + 1)
+            .appId(appId)
+            .level(ClusterLevel.H0)
+            .build());
+
+    assertThat(
+        timeSeriesAnalysisService.saveMetricData(accountId, appId, stateExecutionId, generateUuid(), metricDataRecords))
+        .isTrue();
+    assertThat(dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).size()).isEqualTo(3);
   }
 
   @Test
