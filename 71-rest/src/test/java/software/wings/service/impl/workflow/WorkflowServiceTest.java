@@ -165,6 +165,10 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SCALYR;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
+import static software.wings.sm.StateType.SPOTINST_ALB_SHIFT_DEPLOY;
+import static software.wings.sm.StateType.SPOTINST_ALB_SHIFT_SETUP;
+import static software.wings.sm.StateType.SPOTINST_LISTENER_ALB_SHIFT;
+import static software.wings.sm.StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.StateType.WAIT;
@@ -4516,8 +4520,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testAllStateTypesDefinedInStepTypes() {
-    List<StateType> excludedStateTypes = asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP,
-        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION, SCALYR, ENV_RESUME_STATE, APPROVAL_RESUME);
+    List<StateType> excludedStateTypes =
+        asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP, AWS_LAMBDA_VERIFICATION,
+            STAGING_ORIGINAL_EXECUTION, SCALYR, ENV_RESUME_STATE, APPROVAL_RESUME, SPOTINST_ALB_SHIFT_SETUP,
+            SPOTINST_ALB_SHIFT_DEPLOY, SPOTINST_LISTENER_ALB_SHIFT, SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK);
 
     Set<String> stateTypes = new HashSet<>();
     for (StateType stateType : StateType.values()) {

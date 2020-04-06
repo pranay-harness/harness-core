@@ -10,5 +10,6 @@ infrastructure:
   cloudProviderName: TEST_CLOUD_PROVIDER
   hostNameConvention: ${host.ec2Instance.publicDnsName.split('\.')[0]}
   region: us-east-1
+  useTrafficShift: false
 scopedServices:
 - httpd

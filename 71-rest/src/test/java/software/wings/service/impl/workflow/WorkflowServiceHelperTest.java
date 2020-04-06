@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -12,9 +13,12 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CloudProviderType.AWS;
 import static software.wings.api.CloudProviderType.GCP;
@@ -211,6 +215,31 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     isDaemonSchedulingStrategy =
         workflowServiceHelper.isDaemonSchedulingStrategy(APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), BASIC);
     assertThat(isDaemonSchedulingStrategy).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGenerateNewWorkflowPhaseStepsForSpotinstTrafficShiftAlb() {
+    ServiceResourceService mockServiceResourceService = mock(ServiceResourceService.class);
+    WorkflowServiceHelper helper = spy(WorkflowServiceHelper.class);
+    on(helper).set("serviceResourceService", mockServiceResourceService);
+    Service service = Service.builder().appId(APP_ID).build();
+    doReturn(service).when(mockServiceResourceService).getWithDetails(anyString(), anyString());
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    helper.generateNewWorkflowPhaseStepsForSpotinstAlbTrafficShift(APP_ID, workflowPhase);
+    verifyPhase(workflowPhase,
+        asList(StateType.SPOTINST_ALB_SHIFT_SETUP.name(), StateType.SPOTINST_ALB_SHIFT_DEPLOY.name()), 5);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGenerateRollbackWorkflowPhaseForSpotinstAlbTrafficShift() {
+    WorkflowServiceHelper helper = spy(WorkflowServiceHelper.class);
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase rollbackPhase = helper.generateRollbackWorkflowPhaseForSpotinstAlbTrafficShift(workflowPhase);
+    verifyPhase(rollbackPhase, singletonList(StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name()), 3);
   }
 
   @Test

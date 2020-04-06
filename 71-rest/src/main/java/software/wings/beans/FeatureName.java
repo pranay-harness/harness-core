@@ -98,7 +98,8 @@ public enum FeatureName {
   OUTAGE_CV_DISABLE,
   SCIM_INTEGRATION,
   SECRET_PARENTS_MIGRATED,
-  PIPELINE_RESUME;
+  PIPELINE_RESUME,
+  AWS_TRAFFIC_SHIFT;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

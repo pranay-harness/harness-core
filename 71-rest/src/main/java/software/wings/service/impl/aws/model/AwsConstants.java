@@ -11,4 +11,8 @@ public interface AwsConstants {
   String AWS_AMI_ALL_PHASE_ROLLBACK_NAME = "Aws Ami All Phase Rollback";
   String PHASE_PARAM = "PHASE_PARAM";
   String FORWARD_LISTENER_ACTION = "forward";
+
+  // Alb Traffic Shift Constants
+  int MAX_TRAFFIC_SHIFT_WEIGHT = 100;
+  int MIN_TRAFFIC_SHIFT_WEIGHT = 0;
 }

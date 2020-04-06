@@ -2,34 +2,45 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
 
 import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthResult;
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.ActionTypeEnum;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeRulesResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.ForwardActionConfig;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.ModifyRuleRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupTuple;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.aws.AwsCallTracker;
@@ -37,6 +48,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -393,5 +406,110 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(targetGroup).isNotNull();
     assertThat(targetGroup.getTargetGroupArn()).isEqualTo("TGT_ARN");
     assertThat(targetGroup.getTargetGroupName()).isEqualTo("TGT_NAME");
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testFetchRequiredTargetGroup() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    doReturn(empty()).when(service).getTargetGroup(any(), anyList(), anyString(), anyString());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    assertThatThrownBy(()
+                           -> service.fetchRequiredTargetGroup(
+                               AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", mockCallback))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateActionAndGetTuples() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    Action forwardingAction1 = new Action().withType(ActionTypeEnum.FixedResponse.name());
+    assertThatThrownBy(() -> service.validateActionAndGetTuples(forwardingAction1, mockCallback))
+        .isInstanceOf(InvalidRequestException.class);
+    Action forwardingAction2 = new Action().withType(ActionTypeEnum.Forward.name());
+    assertThatThrownBy(() -> service.validateActionAndGetTuples(forwardingAction2, mockCallback))
+        .isInstanceOf(InvalidRequestException.class);
+    Action forwardingAction3 = new Action()
+                                   .withType(ActionTypeEnum.Forward.name())
+                                   .withForwardConfig(new ForwardActionConfig().withTargetGroups(emptyList()));
+    assertThatThrownBy(() -> service.validateActionAndGetTuples(forwardingAction3, mockCallback))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetFinalAction() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    AmazonElasticLoadBalancing mockClient = mock(AmazonElasticLoadBalancing.class);
+    doReturn(new DescribeRulesResult())
+        .doReturn(new DescribeRulesResult().withRules(new Rule()))
+        .when(mockClient)
+        .describeRules(any());
+    doReturn(new Listener().withDefaultActions(new Action().withType(ActionTypeEnum.Forward.name())))
+        .when(service)
+        .getElbListener(any(), anyList(), anyString(), anyString());
+    LbDetailsForAlbTrafficShift details0 =
+        LbDetailsForAlbTrafficShift.builder().useSpecificRule(true).ruleArn("ruleArn").build();
+    assertThatThrownBy(()
+                           -> service.getFinalAction(mockClient, details0, mockCallback, AwsConfig.builder().build(),
+                               emptyList(), "us-east-1"))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> service.getFinalAction(mockClient, details0, mockCallback, AwsConfig.builder().build(),
+                               emptyList(), "us-east-1"))
+        .isInstanceOf(InvalidRequestException.class);
+    LbDetailsForAlbTrafficShift details1 =
+        LbDetailsForAlbTrafficShift.builder().useSpecificRule(false).listenerArn("listArn").build();
+    assertThat(service.getFinalAction(
+                   mockClient, details1, mockCallback, AwsConfig.builder().build(), emptyList(), "us-east-1"))
+        .isNotNull();
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testLoadTrafficShiftTargetGroupData() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    EncryptionService mockEncryptionService = mock(EncryptionService.class);
+    on(service).set("encryptionService", mockEncryptionService);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    AmazonElasticLoadBalancingClient mockClient = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockClient).when(service).getAmazonElasticLoadBalancingClientV2(any(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new Action().withForwardConfig(new ForwardActionConfig()))
+        .when(service)
+        .getFinalAction(any(), any(), any(), any(), anyList(), anyString());
+    doReturn(asList(new TargetGroupTuple().withTargetGroupArn("arnProd").withWeight(MAX_TRAFFIC_SHIFT_WEIGHT),
+                 new TargetGroupTuple().withTargetGroupArn("arnStage").withWeight(MIN_TRAFFIC_SHIFT_WEIGHT)))
+        .when(service)
+        .validateActionAndGetTuples(any(), any());
+    doReturn(new TargetGroup())
+        .doReturn(new TargetGroup())
+        .when(service)
+        .fetchRequiredTargetGroup(any(), anyList(), anyString(), anyString(), any());
+    LbDetailsForAlbTrafficShift originalDetails = LbDetailsForAlbTrafficShift.builder()
+                                                      .loadBalancerName("lbName")
+                                                      .loadBalancerArn("lbArn")
+                                                      .listenerPort("port")
+                                                      .listenerArn("listArn")
+                                                      .useSpecificRule(true)
+                                                      .ruleArn("ruleArn")
+                                                      .build();
+    LbDetailsForAlbTrafficShift finalDetails = service.loadTrafficShiftTargetGroupData(
+        AwsConfig.builder().build(), "us-east-1", emptyList(), originalDetails, mockCallback);
+    assertThat(finalDetails).isNotNull();
+    assertThat(finalDetails.getProdTargetGroupArn()).isEqualTo("arnProd");
+    assertThat(finalDetails.getStageTargetGroupArn()).isEqualTo("arnStage");
   }
 }

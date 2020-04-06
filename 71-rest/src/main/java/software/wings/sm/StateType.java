@@ -196,6 +196,10 @@ import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
 import software.wings.sm.states.spotinst.SpotInstRollbackState;
 import software.wings.sm.states.spotinst.SpotInstServiceSetup;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbDeployState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbRollbackSwitchRoutesState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -487,17 +491,32 @@ public enum StateType implements StateTypeDescriptor {
   SPOTINST_SETUP(SpotInstServiceSetup.class, SPOTINST, WorkflowServiceHelper.SPOTINST_SETUP,
       asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_SETUP), ORCHESTRATION_STENCILS),
 
+  SPOTINST_ALB_SHIFT_SETUP(SpotinstTrafficShiftAlbSetupState.class, SPOTINST,
+      WorkflowServiceHelper.SPOTINST_ALB_SHIFT_SETUP, asList(InfrastructureMappingType.AWS_AMI),
+      asList(PhaseStepType.SPOTINST_SETUP), ORCHESTRATION_STENCILS),
+
   SPOTINST_DEPLOY(SpotInstDeployState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_DEPLOY,
+      asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
+
+  SPOTINST_ALB_SHIFT_DEPLOY(SpotinstTrafficShiftAlbDeployState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_DEPLOY,
       asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
 
   SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
       asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
       ORCHESTRATION_STENCILS),
 
+  SPOTINST_LISTENER_ALB_SHIFT(SpotinstTrafficShiftAlbSwitchRoutesState.class, SPOTINST,
+      WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE, asList(InfrastructureMappingType.AWS_AMI),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE), ORCHESTRATION_STENCILS),
+
   SPOTINST_ROLLBACK(SpotInstRollbackState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_ROLLBACK,
       asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_ROLLBACK), ORCHESTRATION_STENCILS),
 
   SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class, SPOTINST,
+      WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(InfrastructureMappingType.AWS_AMI),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), ORCHESTRATION_STENCILS),
+
+  SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK(SpotinstTrafficShiftAlbRollbackSwitchRoutesState.class, SPOTINST,
       WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(InfrastructureMappingType.AWS_AMI),
       asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), ORCHESTRATION_STENCILS),
 

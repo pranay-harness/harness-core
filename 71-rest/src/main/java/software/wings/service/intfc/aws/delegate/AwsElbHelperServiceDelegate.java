@@ -6,6 +6,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
@@ -64,4 +65,7 @@ public interface AwsElbHelperServiceDelegate {
   TargetGroup fetchTargetGroupForSpecificRules(AwsElbListener listener, String ruleArn,
       ExecutionLogCallback logCallback, AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails);
+  LbDetailsForAlbTrafficShift loadTrafficShiftTargetGroupData(AwsConfig awsConfig, String region,
+      List<EncryptedDataDetail> encryptionDetails, LbDetailsForAlbTrafficShift originalLbDetails,
+      ExecutionLogCallback logCallback);
 }
