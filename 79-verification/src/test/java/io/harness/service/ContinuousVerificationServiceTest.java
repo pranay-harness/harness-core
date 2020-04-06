@@ -1655,8 +1655,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     setupFeedbacks(true);
 
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
-    LogMLAnalysisRecord logAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+    LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                .appId(appId)
+                                                .cvConfigId(cvConfigId)
+                                                .accountId(accountId)
+                                                .logCollectionMinute(analysisMinute)
+                                                .build();
 
     logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(logAnalysisRecord);
@@ -1718,8 +1722,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
 
-    LogMLAnalysisRecord logAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+    LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                .appId(appId)
+                                                .cvConfigId(cvConfigId)
+                                                .accountId(accountId)
+                                                .logCollectionMinute(analysisMinute)
+                                                .build();
 
     logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
@@ -2041,6 +2049,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 - PREDECTIVE_HISTORY_MINUTES;
     LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
                                      .cvConfigId(cvConfigId)
+                                     .accountId(accountId)
                                      .logCollectionMinute(lastLogTime)
                                      .stateExecutionId(cvConfigId + "stateExecutionId")
                                      .appId(appId)
@@ -2050,6 +2059,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
                                       .cvConfigId(cvConfigId)
+                                      .accountId(accountId)
                                       .logCollectionMinute(lastLogTime)
                                       .stateExecutionId(cvConfigId + "stateExecutionId2")
                                       .appId(appId)
@@ -2087,6 +2097,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
                                       .cvConfigId(cvConfigId)
+                                      .accountId(accountId)
                                       .logCollectionMinute(lastLogTime)
                                       .stateExecutionId(cvConfigId + "stateExecutionId2")
                                       .appId(appId)
@@ -2098,6 +2109,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 + CRON_POLL_INTERVAL_IN_MINUTES;
     LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
                                      .cvConfigId(cvConfigId)
+                                     .accountId(accountId)
                                      .logCollectionMinute(lastLogTime)
                                      .stateExecutionId(cvConfigId + "stateExecutionId")
                                      .appId(appId)
@@ -2430,6 +2442,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
 
@@ -2562,6 +2575,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute() + 45)
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2617,6 +2631,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2673,6 +2688,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2724,6 +2740,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2790,6 +2807,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2940,8 +2958,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
 
-    LogMLAnalysisRecord oldLogAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
+    LogMLAnalysisRecord oldLogAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                   .appId(appId)
+                                                   .cvConfigId(cvConfigId)
+                                                   .accountId(accountId)
+                                                   .logCollectionMinute(oldMinute)
+                                                   .build();
 
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
@@ -2969,6 +2991,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(cvConfigId)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
             .build();
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -2976,6 +2999,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogMLAnalysisRecord oldFeedbackAnalysisRecord = LogMLAnalysisRecord.builder()
                                                         .appId(appId)
                                                         .cvConfigId(cvConfigId)
+                                                        .accountId(accountId)
                                                         .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(
                                                             oldMinute.minus(15, ChronoUnit.MINUTES).toEpochMilli()))
                                                         .build();
@@ -3008,6 +3032,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(cvConfigId)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
             .build();
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -3015,6 +3040,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogMLAnalysisRecord oldFeedbackAnalysisRecord = LogMLAnalysisRecord.builder()
                                                         .appId(appId)
                                                         .cvConfigId(cvConfigId)
+                                                        .accountId(accountId)
                                                         .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(
                                                             oldMinute.minus(15, ChronoUnit.MINUTES).toEpochMilli()))
                                                         .build();
@@ -3049,18 +3075,27 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(cvConfigId)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
             .build();
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(oldLogAnalysisRecord);
     // here we are setting the old feedback analysis record just 5mins before the new LE analysis record.
     int previousMinute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.minus(5, ChronoUnit.MINUTES).toEpochMilli());
-    LogMLAnalysisRecord previousLogAnalysisMinute =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+    LogMLAnalysisRecord previousLogAnalysisMinute = LogMLAnalysisRecord.builder()
+                                                        .appId(appId)
+                                                        .cvConfigId(cvConfigId)
+                                                        .accountId(accountId)
+                                                        .logCollectionMinute(previousMinute)
+                                                        .build();
     previousLogAnalysisMinute.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(previousLogAnalysisMinute);
-    LogMLAnalysisRecord oldFeedbackAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+    LogMLAnalysisRecord oldFeedbackAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                        .appId(appId)
+                                                        .cvConfigId(cvConfigId)
+                                                        .accountId(accountId)
+                                                        .logCollectionMinute(previousMinute)
+                                                        .build();
     oldFeedbackAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
 
     wingsPersistence.save(oldFeedbackAnalysisRecord);
@@ -3098,6 +3133,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(cvConfigId)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
             .build();
 
@@ -3109,6 +3145,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(cvConfigId)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()))
             .build();
 
@@ -3141,15 +3178,23 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
     int previousMinute = minute - CRON_POLL_INTERVAL_IN_MINUTES;
 
-    LogMLAnalysisRecord oldFeedbackRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(previousMinute).build();
+    LogMLAnalysisRecord oldFeedbackRecord = LogMLAnalysisRecord.builder()
+                                                .appId(appId)
+                                                .cvConfigId(cvConfigId)
+                                                .accountId(accountId)
+                                                .logCollectionMinute(previousMinute)
+                                                .build();
 
     oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
 
     wingsPersistence.save(oldFeedbackRecord);
 
-    LogMLAnalysisRecord newLogMLAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+    LogMLAnalysisRecord newLogMLAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                     .appId(appId)
+                                                     .cvConfigId(cvConfigId)
+                                                     .accountId(accountId)
+                                                     .logCollectionMinute(minute)
+                                                     .build();
 
     newLogMLAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
@@ -3194,6 +3239,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -3252,6 +3298,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                              .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
                                              .logCollectionMinute((int) logConfig.getBaselineEndMinute())
                                              .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);

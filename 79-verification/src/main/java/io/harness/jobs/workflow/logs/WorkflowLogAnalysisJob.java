@@ -193,7 +193,8 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
         // if no data generated till this time, create a dummy summary so UI can get a response
         if (!analysisService.isAnalysisPresent(context.getStateExecutionId(), context.getAppId())) {
           analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(),
-              context.getStateExecutionId(), context.getQuery(), "No data found for the given queries.");
+              context.getStateExecutionId(), context.getQuery(), "No data found for the given queries.",
+              context.getAccountId());
         }
 
         return logAnalysisMinute;

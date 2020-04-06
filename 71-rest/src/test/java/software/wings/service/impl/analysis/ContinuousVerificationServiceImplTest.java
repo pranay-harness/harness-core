@@ -1,6 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -19,11 +22,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.DATADOG_END_TIME_PLACEHOLDER;
 import static software.wings.common.VerificationConstants.DATADOG_START_TIME_PLACEHOLDER;
+import static software.wings.service.impl.analysis.LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE;
+import static software.wings.sm.StateType.ELK;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.DelegateTask;
@@ -34,6 +40,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
+import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +79,8 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
@@ -125,7 +134,12 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private APMDelegateService apmDelegateService;
   @Mock private MLServiceUtils mlServiceUtils;
+  @Inject private WingsPersistence wingsPersistence;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
+  @Mock private CVActivityLogService cvActivityLogService;
+  @Mock private WaitNotifyEngine waitNotifyEngine;
+
+  private Logger logger = mock(Logger.class);
 
   @Before
   public void setupMocks() throws IllegalAccessException {
@@ -149,11 +163,15 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
       { put(appId, buildAppPermissionSummary()); }
     });
 
+    when(cvActivityLogService.getLoggerByStateExecutionId(any())).thenReturn(logger);
+
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
     FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     FieldUtils.writeField(continuousVerificationService, "settingsService", settingsService, true);
     FieldUtils.writeField(continuousVerificationService, "secretManager", secretManager, true);
     FieldUtils.writeField(continuousVerificationService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(continuousVerificationService, "cvActivityLogService", cvActivityLogService, true);
+    FieldUtils.writeField(continuousVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
@@ -678,5 +696,93 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     assertThat(thirdPartyApiCallLog).isNotNull();
     assertThat(thirdPartyApiCallLog.getAccountId()).isEqualTo(accountId);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testNotifyWorkflowVerificationState_nullAnalysisContext() throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    boolean notifyStatus =
+        continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
+    assertThat(notifyStatus).isFalse();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testNotifyWorkflowVerificationState_logAnalysisWithSuccessState() throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+
+    AnalysisContext context =
+        AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
+    wingsPersistence.save(context);
+    boolean notifyStatus =
+        continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
+
+    assertThat(notifyStatus).isTrue();
+
+    LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(mlAnalysisRecord).isNotNull();
+    assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
+    assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
+
+    ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(logger, times(1)).info(stringArgumentCaptor.capture());
+    assertThat(stringArgumentCaptor.getValue()).isEqualTo("The state was marked success");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testNotifyWorkflowVerificationState_logAnalysisWithErrorState() throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+
+    AnalysisContext context =
+        AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
+    wingsPersistence.save(context);
+    boolean notifyStatus =
+        continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, ERROR);
+
+    assertThat(notifyStatus).isTrue();
+
+    LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(mlAnalysisRecord).isNotNull();
+    assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
+    assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
+
+    ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(logger, times(0)).info(any());
+    verify(logger, times(1)).error(stringArgumentCaptor.capture());
+    assertThat(stringArgumentCaptor.getValue()).isEqualTo("The state was marked error");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testNotifyWorkflowVerificationState_logAnalysisWithSuccessStateButNotifyFailed()
+      throws IllegalAccessException {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    when(waitNotifyEngine.doneWith(anyString(), any())).thenThrow(new IllegalArgumentException(""));
+
+    AnalysisContext context =
+        AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
+    wingsPersistence.save(context);
+    boolean notifyStatus =
+        continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
+
+    assertThat(notifyStatus).isFalse();
+
+    LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(mlAnalysisRecord).isNotNull();
+    assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
+    assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
+
+    ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(logger, times(1)).info(stringArgumentCaptor.capture());
+    assertThat(stringArgumentCaptor.getValue()).isEqualTo("The state was marked success");
   }
 }

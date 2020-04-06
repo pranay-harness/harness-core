@@ -148,6 +148,7 @@ public class LogVerificationResource {
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     mlAnalysisResponse.setAppId(applicationId);
+    mlAnalysisResponse.setAccountId(accountId);
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(
         mlAnalysisResponse, stateType, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
   }
@@ -167,8 +168,8 @@ public class LogVerificationResource {
     Preconditions.checkNotNull(logsCVConfiguration);
     try (VerificationLogContext ignored = new VerificationLogContext(logsCVConfiguration.getAccountId(), cvConfigId,
              null, logsCVConfiguration.getStateType(), OVERRIDE_ERROR)) {
-      return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, analysisMinute,
-          comparisonStrategy, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
+      return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(
+          appId, cvConfigId, analysisMinute, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
     }
   }
 

@@ -44,7 +44,8 @@ public interface AnalysisService {
 
   int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters);
 
-  void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
+  void createAndSaveSummary(
+      StateType stateType, String appId, String stateExecutionId, String query, String message, String accountId);
 
   boolean isStateValid(String appId, String stateExecutionID);
 

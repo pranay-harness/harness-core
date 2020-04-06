@@ -623,10 +623,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
-      Optional<Boolean> isFeedbackAnalysis) {
+      LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis) {
     mlAnalysisResponse.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
     final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    mlAnalysisResponse.setAccountId(logsCVConfiguration.getAccountId());
     if (taskId.isPresent()) {
       LearningEngineAnalysisTask analysisTask = learningEngineService.getTaskById(taskId.get());
       Preconditions.checkNotNull(analysisTask);
@@ -895,10 +895,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public void createAndSaveSummary(
-      StateType stateType, String appId, String stateExecutionId, String query, String message) {
+      StateType stateType, String appId, String stateExecutionId, String query, String message, String accountId) {
     final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                                    .logCollectionMinute(-1)
                                                    .stateType(stateType)
+                                                   .accountId(accountId)
                                                    .appId(appId)
                                                    .stateExecutionId(stateExecutionId)
                                                    .query(query)

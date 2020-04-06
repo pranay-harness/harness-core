@@ -14,6 +14,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Data;
@@ -93,10 +94,11 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "LogMLAnalysisRecordKeys")
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogMLAnalysisRecord extends Base {
+public class LogMLAnalysisRecord extends Base implements AccountAccess {
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;
   @Indexed private String workflowExecutionId;
+  @Indexed private String accountId;
 
   @NotEmpty private StateType stateType;
 
@@ -145,7 +147,7 @@ public class LogMLAnalysisRecord extends Base {
       Map<String, Map<String, SplunkAnalysisCluster>> test_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters,
       Map<Integer, FrequencyPattern> frequency_patterns, Map<Integer, LogAnalysisResult> log_analysis_result,
-      LogMLClusterScores cluster_scores, byte[] analysisDetailsCompressedJson) {
+      LogMLClusterScores cluster_scores, byte[] analysisDetailsCompressedJson, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.cvConfigId = cvConfigId;
@@ -169,6 +171,7 @@ public class LogMLAnalysisRecord extends Base {
     this.log_analysis_result = log_analysis_result;
     this.analysisDetailsCompressedJson = analysisDetailsCompressedJson;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+    this.accountId = accountId;
   }
 
   public void decompressLogAnalysisRecord() {
