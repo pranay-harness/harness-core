@@ -78,6 +78,8 @@ public abstract class InstanceHandler {
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact);
 
+  // todo -- aman this has been moved to the instanceService. Once all the perpetual tasks are moved
+  // delete this method and use it from instance sync.
   protected List<Instance> getInstances(String appId, String infraMappingId) {
     PageRequest<Instance> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);

@@ -13,7 +13,11 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
@@ -34,6 +38,11 @@ import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
+import software.wings.service.InstanceSyncController;
+import software.wings.service.InstanceSyncController.InstanceSyncFlow;
+import software.wings.service.PcfInstanceSyncConstants;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
@@ -53,24 +62,64 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PcfInstanceHandler extends InstanceHandler {
   @Inject private PcfHelperService pcfHelperService;
+  @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private InstanceSyncController instanceSyncController;
 
   @Override
   public void syncInstances(String appId, String infraMappingId) {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false,
-        OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+        OnDemandRollbackInfo.builder().onDemandRollback(false).build(), null);
   }
 
+  public void processInstanceSyncResponse(
+      PcfCommandExecutionResponse pcfCommandExecutionResponse, String perpetualTaskId) throws PcfAppNotFoundException {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse =
+        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+
+    logger.info("Received instance sync response {}, perpetual taskId: {}",
+        CollectionUtils.size(pcfInstanceSyncResponse.getInstanceIndices()), perpetualTaskId);
+    PerpetualTaskRecord taskContext = perpetualTaskService.getTaskRecord(perpetualTaskId);
+    PerpetualTaskClientContext clientParamMap = taskContext.getClientContext();
+
+    Map<String, String> clientParams = clientParamMap.getClientParams();
+
+    String infraId = clientParams.get(InfrastructureMapping.ID_KEY);
+    String applicationId = clientParams.get(PcfInstanceSyncConstants.APPLICATION_ID);
+
+    Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
+    try {
+      syncInstancesInternal(applicationId, infraId, pcfAppNameInstanceMap, null, false,
+          OnDemandRollbackInfo.builder().onDemandRollback(false).build(), pcfCommandExecutionResponse);
+    } catch (Exception ex) {
+      logger.warn("Instance sync failed for infraMapping", ex);
+      String errorMsg;
+      if (ex instanceof WingsException) {
+        errorMsg = ex.getMessage();
+      } else {
+        errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
+      }
+      InfrastructureMapping infraMapping = infraMappingService.get(applicationId, infraId);
+      instanceService.handleSyncFailure(applicationId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraId,
+          infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
+    }
+  }
   /**
-   *
-   * @param appId
+   *  @param appId
    * @param infraMappingId
    * @param pcfAppNameInstanceMap  key - pcfAppName     value - Instances
+   * @param pcfCommandExecutionResponse
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
-      boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    logger.info("# Performing PCF Instance sync");
+      boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo,
+      final PcfCommandExecutionResponse pcfCommandExecutionResponse) {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse = pcfCommandExecutionResponse == null
+        ? null
+        : (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+    InstanceSyncFlow instanceSyncFlow = getInstanceSyncFlow(pcfCommandExecutionResponse, newDeploymentSummaries);
+
+    logger.info("Performing PCF Instance sync. Caller is: {}, inframapping id: {}", instanceSyncFlow, infraMappingId);
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
@@ -83,7 +132,8 @@ public class PcfInstanceHandler extends InstanceHandler {
 
     Map<String, DeploymentSummary> pcfAppNamesNewDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
-    loadPcfAppNameInstanceMap(appId, infraMappingId, pcfAppNameInstanceMap);
+    String applicationNameIfSupplied = (pcfInstanceSyncResponse == null) ? null : pcfInstanceSyncResponse.getName();
+    loadPcfAppNameInstanceMap(appId, infraMappingId, pcfAppNameInstanceMap, applicationNameIfSupplied);
 
     PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
@@ -98,8 +148,9 @@ public class PcfInstanceHandler extends InstanceHandler {
         boolean failedToRetrieveData = false;
         List<PcfInstanceInfo> latestpcfInstanceInfoList = new ArrayList<>();
         try {
-          latestpcfInstanceInfoList = pcfHelperService.getApplicationDetails(pcfApplicationName,
-              pcfInfrastructureMapping.getOrganization(), pcfInfrastructureMapping.getSpace(), pcfConfig);
+          latestpcfInstanceInfoList =
+              pcfHelperService.getApplicationDetails(pcfApplicationName, pcfInfrastructureMapping.getOrganization(),
+                  pcfInfrastructureMapping.getSpace(), pcfConfig, pcfCommandExecutionResponse);
         } catch (Exception e) {
           logger.warn("Error while fetching application details for PCFApplication", e);
 
@@ -152,11 +203,17 @@ public class PcfInstanceHandler extends InstanceHandler {
           });
           logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
 
-          logger.info("Total no of instances found in DB for AppId: {}, "
+          logger.info("Total no of instances found in DB wih caller: {} AppId: {}, "
                   + "No of instances in DB: {}, No of Running instances: {}, "
                   + "No of instances to be Added: {}, No of instances to be deleted: {}",
-              appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(), instancesToBeAdded.size(),
-              instanceIdsToBeDeleted.size());
+              instanceSyncFlow, appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(),
+              instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
+
+          // Control if the DB will be updated by PERP_TASK or Iterator_INSTANCE_SYNC
+          if (!instanceSyncController.canUpdateDb(instanceSyncFlow, infrastructureMapping, getClass())) {
+            return;
+          }
+
           if (isNotEmpty(instanceIdsToBeDeleted)) {
             instanceService.delete(instanceIdsToBeDeleted);
           }
@@ -192,6 +249,25 @@ public class PcfInstanceHandler extends InstanceHandler {
           }
         }
       });
+    }
+  }
+
+  /**
+   * Returns the parent caller function.
+   * The function can be called from 3 different sources and the return will be:
+   *    In case of new deployment - NEW_DEPLOYMENT
+   *    From iterator sync from the manager side - ITERATOR_INSTANCE_SYNC
+   *    Called after the PT gets the instances in the delegate and calls the manager to process the response -
+   * PERPETUAL_TASK
+   */
+  private InstanceSyncFlow getInstanceSyncFlow(
+      PcfCommandExecutionResponse pcfInstanceSyncDelegateResponse, List<DeploymentSummary> newDeploymentSummaries) {
+    if (newDeploymentSummaries != null) {
+      return InstanceSyncFlow.NEW_DEPLOYMENT;
+    } else if (pcfInstanceSyncDelegateResponse != null) {
+      return InstanceSyncFlow.PERPETUAL_TASK;
+    } else {
+      return InstanceSyncFlow.ITERATOR_INSTANCE_SYNC;
     }
   }
 
@@ -237,14 +313,18 @@ public class PcfInstanceHandler extends InstanceHandler {
     return builder.build();
   }
 
-  private void loadPcfAppNameInstanceMap(
-      String appId, String infraMappingId, Multimap<String, Instance> pcfApplicationNameInstanceMap) {
+  private void loadPcfAppNameInstanceMap(String appId, String infraMappingId,
+      Multimap<String, Instance> pcfApplicationNameInstanceMap, String applicationNameIfSupplied) {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof PcfInstanceInfo) {
         PcfInstanceInfo pcfInstanceInfo = (PcfInstanceInfo) instanceInfo;
         String pcfAppName = pcfInstanceInfo.getPcfApplicationName();
+        // todo(aman) this logic needs to be reviewed.
+        if (isNotEmpty(applicationNameIfSupplied) && !pcfAppName.equals(applicationNameIfSupplied)) {
+          continue;
+        }
         pcfApplicationNameInstanceMap.put(pcfAppName, instance);
       } else {
         throw WingsException.builder()
@@ -265,7 +345,7 @@ public class PcfInstanceHandler extends InstanceHandler {
 
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), pcfApplicationNameInstanceMap, deploymentSummaries,
-        rollback, onDemandRollbackInfo);
+        rollback, onDemandRollbackInfo, null);
   }
 
   @Override

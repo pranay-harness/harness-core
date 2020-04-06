@@ -132,4 +132,6 @@ public interface InstanceService
   void deleteManualSyncJob(String appId, String manualSyncJobId);
 
   List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet);
+
+  List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId);
 }

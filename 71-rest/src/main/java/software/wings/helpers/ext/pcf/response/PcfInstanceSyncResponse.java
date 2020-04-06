@@ -4,10 +4,12 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class PcfInstanceSyncResponse extends PcfCommandResponse {
   private String name;

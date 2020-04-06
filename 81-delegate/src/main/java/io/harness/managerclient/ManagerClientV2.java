@@ -27,6 +27,7 @@ import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -133,4 +134,8 @@ public interface ManagerClientV2 {
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
+
+  @POST("agent/delegates/instance-sync/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishPcfInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body PcfCommandExecutionResponse pcfCommandExecutionResponse);
 }

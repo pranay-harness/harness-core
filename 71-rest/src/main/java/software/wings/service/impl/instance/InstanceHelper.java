@@ -9,6 +9,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -53,6 +54,7 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.service.InstanceSyncController;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -109,6 +111,7 @@ public class InstanceHelper {
   @Inject private DeploymentService deploymentService;
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private InstanceSyncController instanceSyncController;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -475,9 +478,11 @@ public class InstanceHelper {
 
       InfrastructureMappingType infrastructureMappingType =
           Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+      Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback, onDemandRollbackInfo);
+        instanceSyncController.createPerpetualTaskForNewDeployment(infrastructureMappingType, deploymentSummaries);
         logger.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
       } else {
         logger.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);

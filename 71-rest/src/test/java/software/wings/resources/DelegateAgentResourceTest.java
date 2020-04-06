@@ -40,6 +40,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
+import software.wings.service.impl.instance.PcfInstanceHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
@@ -59,6 +60,7 @@ public class DelegateAgentResourceTest {
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static PcfInstanceHandler pcfInstanceSyncResponseHandler = mock(PcfInstanceHandler.class);
   private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
       mock(ArtifactCollectionResponseHandler.class);
 
@@ -72,8 +74,9 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
-              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler))
+          .addResource(
+              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
+                  subdomainUrlHelper, artifactCollectionResponseHandler, pcfInstanceSyncResponseHandler))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {

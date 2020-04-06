@@ -49,9 +49,14 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
-    fields = { @Field("appId")
-               , @Field("envId"), @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true),
+      fields = { @Field("appId")
+                 , @Field("envId"), @Field("name") })
+  ,
+      @Index(options = @IndexOptions(name = "app_infratype"), fields = { @Field("appId")
+                                                                         , @Field("infraMappingType") })
+})
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")

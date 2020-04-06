@@ -52,6 +52,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -382,5 +383,15 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, true));
     assertThat(featureFlagService.isEnabledReloadCache(featureName, generateUuid())).isTrue();
+  }
+
+  protected void disableFeatureFlag(FeatureName featureName) {
+    featureFlagService.initializeFeatureFlags();
+    wingsPersistence.update(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class)
+            .set(FeatureFlagKeys.enabled, false)
+            .set(FeatureFlagKeys.accountIds, Collections.emptyList()));
+    assertThat(featureFlagService.isEnabledReloadCache(featureName, generateUuid()));
   }
 }

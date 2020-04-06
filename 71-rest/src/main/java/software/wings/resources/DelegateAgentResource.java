@@ -29,11 +29,13 @@ import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.instance.PcfInstanceHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 
@@ -66,11 +68,14 @@ public class DelegateAgentResource {
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+  private PcfInstanceHandler instanceHandler;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
-      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler) {
+      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
+      PcfInstanceHandler instanceHandler) {
+    this.instanceHandler = instanceHandler;
     this.delegateService = delegateService;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
@@ -310,6 +315,21 @@ public class DelegateAgentResource {
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
       artifactCollectionResponseHandler.processArtifactCollectionResult(executionResponse);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("instance-sync/{perpetualTaskId}")
+  public RestResponse<Boolean> processInstanceSyncResult(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, PcfCommandExecutionResponse pcfCommandExecutionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      instanceHandler.processInstanceSyncResponse(
+          pcfCommandExecutionResponse, perpetualTaskId.replaceAll("[\r\n]", ""));
+    } catch (Exception e) {
+      logger.error("Failed to sync pcf instances for perpetual task: {}", perpetualTaskId.replaceAll("[\r\n]", ""), e);
     }
     return new RestResponse<>(true);
   }

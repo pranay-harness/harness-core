@@ -16,6 +16,7 @@ import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.service.InstanceSyncController;
 import software.wings.service.impl.InfraMappingLogContext;
 import software.wings.service.impl.instance.InstanceHelper;
 
@@ -27,6 +28,7 @@ import software.wings.service.impl.instance.InstanceHelper;
 public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private InstanceHelper instanceHelper;
+  @Inject private InstanceSyncController instanceSyncController;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -47,6 +49,10 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   public void handle(InfrastructureMapping infrastructureMapping) {
     try (AutoLogContext ignore1 = new AccountLogContext(infrastructureMapping.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new InfraMappingLogContext(infrastructureMapping.getUuid(), OVERRIDE_ERROR)) {
+      if (instanceSyncController.shouldSkipIteratorInstanceSync(infrastructureMapping)) {
+        logger.info("Skipping instance sync for infra mapping {}", infrastructureMapping.getUuid());
+        return;
+      }
       logger.info("Performing instance sync for infra mapping {}", infrastructureMapping.getUuid());
       try {
         instanceHelper.syncNow(infrastructureMapping.getAppId(), infrastructureMapping);
