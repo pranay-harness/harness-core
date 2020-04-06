@@ -15,9 +15,16 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
- * This is the Graph of state which is the part of the execution plan
- * This consist a list of GraphNodes which can be either a leaf node i.e GraphNodeDefinition
- * or it can be a StateGraph itself
+ * This is the plan we want to execute during the execution
+ * It contains a list of ExecutionNode and stating point
+ * This is contained as a list sorted by the uuid to quick retrieval.
+ *
+ * Do not want this to be a map as we will lost the ability to query the database by node properties
+ * This will be required by the apps to performs some migrations etc.
+ *
+ * This was a major pain point for the design of our StateMachine.
+ *
+ * With this approach we can crate iterators over these and perform the migrations
  */
 
 @Value
