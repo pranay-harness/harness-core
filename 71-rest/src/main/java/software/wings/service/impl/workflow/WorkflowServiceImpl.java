@@ -174,6 +174,7 @@ import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.peronalization.Personalization.PersonalizationKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
@@ -728,6 +729,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean templatedPipeline = featureFlagService.isEnabled(TEMPLATED_PIPELINES, workflow.getAccountId());
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      checkCommandStep(workflow);
       if (orchestrationWorkflow != null) {
         orchestrationWorkflow.onLoad(infraRefactor, templatedPipeline, workflow);
         orchestrationWorkflow.setTransientFields(infraRefactor, workflow);
@@ -743,6 +745,41 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       OrchestrationWorkflow orchestration = workflow.getOrchestration();
       if (orchestration != null) {
         orchestration.setTransientFields(infraRefactor, workflow);
+      }
+    }
+  }
+
+  private void checkCommandStep(Workflow workflow) {
+    if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
+        for (String phaseId : canaryOrchestrationWorkflow.getWorkflowPhaseIds()) {
+          WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+          if (workflowPhase.getPhaseSteps() != null) {
+            for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+              Graph subWorkflowGraph =
+                  canaryOrchestrationWorkflow.getGraph().getSubworkflows().get(phaseStep.getUuid());
+              checkCommandState(subWorkflowGraph.getNodesMap());
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private void checkCommandState(Map<String, GraphNode> nodesMap) {
+    for (Map.Entry<String, GraphNode> node : nodesMap.entrySet()) {
+      GraphNode stepNode = node.getValue();
+      if (stepNode.getType() != null && stepNode.getType().equals("COMMAND") && stepNode.getTemplateUuid() != null) {
+        Template template = templateService.get(stepNode.getTemplateUuid());
+        if (template != null) {
+          if (!stepNode.getName().equals(template.getName())) {
+            stepNode.setName(template.getName());
+          }
+        } else {
+          logger.error("No command template found for the templateid in state machine");
+        }
       }
     }
   }
