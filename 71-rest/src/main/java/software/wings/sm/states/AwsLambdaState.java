@@ -339,6 +339,8 @@ public class AwsLambdaState extends State {
               .accountId(app.getAccountId())
               .waitId(activity.getUuid())
               .appId(context.getAppId())
+              .envId(envId)
+              .infrastructureMappingId(infrastructureMapping.getUuid())
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
               .data(TaskData.builder()
