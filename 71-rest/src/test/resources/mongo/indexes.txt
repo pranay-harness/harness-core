@@ -178,6 +178,7 @@ encryptedRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" :
 encryptedRecords { "name" : "encryptionKey_1" , "background" : true} { "encryptionKey" : 1}
 encryptedRecords { "name" : "keywords_1" , "background" : true} { "keywords" : 1}
 encryptedRecords { "name" : "name_1" , "background" : true} { "name" : 1}
+encryptedRecords { "name" : "nextMigrationIteration_1" , "background" : true} { "nextMigrationIteration" : 1}
 encryptedRecords { "name" : "parentIds_1" , "background" : true} { "parentIds" : 1}
 encryptedRecords { "name" : "parents_1" , "background" : true} { "parents" : 1}
 encryptedRecords { "name" : "path_1" , "background" : true} { "path" : 1}

@@ -310,7 +310,9 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     CUSTOM("Custom Artifact Source"),
 
-    CE_AWS("Continuous Efficiency AWS");
+    CE_AWS("Continuous Efficiency AWS"),
+
+    AZURE_VAULT("Azure Vault Secrets Manager");
 
     @Getter private String displayName;
 

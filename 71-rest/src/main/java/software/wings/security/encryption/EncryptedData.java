@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -65,7 +66,7 @@ import javax.validation.constraints.NotNull;
                       , @Field("kmsId") }, options = @IndexOptions(name = "acctKmsIdx"))
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
+public class EncryptedData extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable {
   @Inject @SchemaIgnore @Transient private static FeatureFlagService featureFlagService;
 
   @NotEmpty @Indexed private String name;
@@ -112,6 +113,8 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
   private Map<String, AtomicInteger> searchTags;
 
   private UsageRestrictions usageRestrictions;
+
+  @Indexed private Long nextMigrationIteration;
 
   @SchemaIgnore private boolean base64Encoded;
 
@@ -167,6 +170,23 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
           return EncryptedDataParent.builder().id(id).type(settingType).build();
         })
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    if (EncryptedDataKeys.nextMigrationIteration.equals(fieldName)) {
+      this.nextMigrationIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (EncryptedDataKeys.nextMigrationIteration.equals(fieldName)) {
+      return nextMigrationIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   public void addApplication(String appId, String appName) {
