@@ -60,6 +60,8 @@ public class AwsAmiInfrastructure
   private String spotinstCloudProvider;
   private boolean asgIdentifiesWorkload;
 
+  private boolean useTrafficShift;
+
   private Map<String, String> expressions;
 
   public AmiDeploymentType getAmiDeploymentType() {
@@ -183,13 +185,14 @@ public class AwsAmiInfrastructure
     private String spotinstElastiGroupJson;
     private String spotinstCloudProviderName;
     boolean asgIdentifiesWorkload;
+    boolean useTrafficShift;
 
     @Builder
     public Yaml(String type, String cloudProviderName, String region, String autoScalingGroupName,
         List<String> classicLoadBalancers, List<String> targetGroupArns, String hostNameConvention,
         List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns, Map<String, String> expressions,
         AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson, String spotinstCloudProviderName,
-        boolean asgIdentifiesWorkload) {
+        boolean asgIdentifiesWorkload, boolean useTrafficShift) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setRegion(region);
@@ -204,6 +207,7 @@ public class AwsAmiInfrastructure
       setSpotinstCloudProviderName(spotinstCloudProviderName);
       setSpotinstElastiGroupJson(spotinstElastiGroupJson);
       setAsgIdentifiesWorkload(asgIdentifiesWorkload);
+      setUseTrafficShift(useTrafficShift);
     }
 
     public Yaml() {

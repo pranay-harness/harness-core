@@ -26,6 +26,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.FeatureName.AWS_TRAFFIC_SHIFT;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -79,6 +80,7 @@ import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disable;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Enable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -203,6 +205,7 @@ public class WorkflowServiceHelper {
   public static final String PCF_SETUP = "App Setup";
   public static final String PCF_PLUGIN = "CF Command";
   public static final String SPOTINST_SETUP = "Elastigroup Setup";
+  public static final String SPOTINST_ALB_SHIFT_SETUP = "Elastigroup Alb Shift Setup";
   public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
   public static final String SPOTINST_ROLLBACK = "Elastigroup Rollback";
   public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Route Update Rollback";
@@ -619,6 +622,31 @@ public class WorkflowServiceHelper {
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  @VisibleForTesting
+  void generateNewWorkflowPhaseStepsForSpotinstAlbTrafficShift(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_ALB_SHIFT_SETUP)
+                       .addStep(GraphNode.builder()
+                                    .type(StateType.SPOTINST_ALB_SHIFT_SETUP.name())
+                                    .name(SPOTINST_ALB_SHIFT_SETUP)
+                                    .build())
+                       .build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
+            .addStep(GraphNode.builder().type(StateType.SPOTINST_ALB_SHIFT_DEPLOY.name()).name(SPOTINST_DEPLOY).build())
+            .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
+            .addStep(GraphNode.builder().type(StateType.SPOTINST_LISTENER_ALB_SHIFT.name()).name(SPOTINST_SWAP).build())
+            .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
@@ -1503,6 +1531,30 @@ public class WorkflowServiceHelper {
                 .withRollback(true)
                 .build(),
             aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
+  @VisibleForTesting
+  WorkflowPhase generateRollbackWorkflowPhaseForSpotinstAlbTrafficShift(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(
+            asList(aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK, SPOTINST_LISTENER_UPDATE_ROLLBACK)
+                       .addStep(GraphNode.builder()
+                                    .type(StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name())
+                                    .name(SPOTINST_SWAP_ROLLBACK)
+                                    .rollback(true)
+                                    .build())
+                       .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                       .withStatusForRollback(SUCCESS)
+                       .withRollback(true)
+                       .build(),
+                aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                    .withRollback(true)
+                    .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                    .withStatusForRollback(SUCCESS)
+                    .withRollback(true)
+                    .build(),
+                aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -2433,7 +2485,7 @@ public class WorkflowServiceHelper {
       if (isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
               workflowPhase.getInfraMappingId(), appId)) {
         if (BLUE_GREEN == orchestrationWorkflowType) {
-          generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
+          generateNewWfPhaseStepsForSpotinstBg(creationFlags, accountId, appId, workflowPhase, serviceRepeat);
         } else {
           generateNewWorkflowPhaseStepsForSpotinst(appId, workflowPhase, !serviceRepeat);
         }
@@ -2455,6 +2507,20 @@ public class WorkflowServiceHelper {
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
+  }
+
+  private void generateNewWfPhaseStepsForSpotinstBg(WorkflowCreationFlags creationFlags, String accountId, String appId,
+      WorkflowPhase workflowPhase, boolean serviceRepeat) {
+    if (isAlbTrafficShiftType(creationFlags, accountId)) {
+      generateNewWorkflowPhaseStepsForSpotinstAlbTrafficShift(appId, workflowPhase);
+    } else {
+      generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
+    }
+  }
+
+  private boolean isAlbTrafficShiftType(WorkflowCreationFlags flags, String accountId) {
+    return featureFlagService.isEnabled(AWS_TRAFFIC_SHIFT, accountId) && flags != null
+        && flags.isAwsTrafficShiftAlbType();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase,
@@ -2486,7 +2552,7 @@ public class WorkflowServiceHelper {
       if (isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
               workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
         if (BLUE_GREEN == orchestrationWorkflowType) {
-          return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
+          return generateRollbackBgPhaseForSpotinstBg(workflowPhase, creationFlags, accountId);
         } else {
           return generateRollbackWorkflowPhaseForSpotinst(workflowPhase);
         }
@@ -2507,6 +2573,15 @@ public class WorkflowServiceHelper {
       }
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
+    }
+  }
+
+  private WorkflowPhase generateRollbackBgPhaseForSpotinstBg(
+      WorkflowPhase workflowPhase, WorkflowCreationFlags creationFlags, String accountId) {
+    if (isAlbTrafficShiftType(creationFlags, accountId)) {
+      return generateRollbackWorkflowPhaseForSpotinstAlbTrafficShift(workflowPhase);
+    } else {
+      return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
     }
   }
 

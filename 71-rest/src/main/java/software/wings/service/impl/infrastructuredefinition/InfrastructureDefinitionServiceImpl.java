@@ -629,9 +629,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("Cloud Provider Type is immutable");
     }
     if (newInfrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure) {
-      if (((AwsAmiInfrastructure) oldInfraDefinition.getInfrastructure()).isAsgIdentifiesWorkload()
-          != ((AwsAmiInfrastructure) newInfrastructureDefinition.getInfrastructure()).isAsgIdentifiesWorkload()) {
+      AwsAmiInfrastructure oldInfra = (AwsAmiInfrastructure) oldInfraDefinition.getInfrastructure();
+      AwsAmiInfrastructure newInfra = (AwsAmiInfrastructure) newInfrastructureDefinition.getInfrastructure();
+      if (oldInfra.isAsgIdentifiesWorkload() != newInfra.isAsgIdentifiesWorkload()) {
         throw new InvalidRequestException("\"Asg Uniquely Identifies Workload\" field is immutable");
+      }
+      if (oldInfra.isUseTrafficShift() != newInfra.isUseTrafficShift()) {
+        throw new InvalidRequestException("\"Use Traffic Shift\" field is immutable");
       }
     }
   }

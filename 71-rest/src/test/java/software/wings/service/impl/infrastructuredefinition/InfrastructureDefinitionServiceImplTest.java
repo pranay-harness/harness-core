@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAUNAK;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -811,6 +812,27 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     infrastructureDefinitionService.save(infraDef, false, true);
     verify(infrastructureDefinitionService, times(0)).validateInfraDefinition(any(InfrastructureDefinition.class));
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void asgFieldUpdateShouldThrowExceptionForTraffic() {
+    InfrastructureDefinition oldInfraDef =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.AMI)
+            .cloudProviderType(CloudProviderType.AWS)
+            .infrastructure(AwsAmiInfrastructure.builder().useTrafficShift(true).build())
+            .build();
+    InfrastructureDefinition newInfraDef =
+        InfrastructureDefinition.builder()
+            .deploymentType(DeploymentType.AMI)
+            .cloudProviderType(CloudProviderType.AWS)
+            .infrastructure(AwsAmiInfrastructure.builder().useTrafficShift(false).build())
+            .build();
+
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateImmutableFields(newInfraDef, oldInfraDef))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

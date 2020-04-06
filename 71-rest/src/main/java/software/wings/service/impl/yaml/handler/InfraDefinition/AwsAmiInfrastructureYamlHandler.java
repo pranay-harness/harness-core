@@ -44,6 +44,7 @@ public class AwsAmiInfrastructureYamlHandler
         .spotinstCloudProviderName(spotinstCloudProviderName)
         .spotinstElastiGroupJson(bean.getSpotinstElastiGroupJson())
         .asgIdentifiesWorkload(bean.isAsgIdentifiesWorkload())
+        .useTrafficShift(bean.isUseTrafficShift())
         .type(InfrastructureType.AWS_AMI)
         .expressions(bean.getExpressions())
         .build();
@@ -78,6 +79,7 @@ public class AwsAmiInfrastructureYamlHandler
     bean.setSpotinstCloudProvider(spotinstCloudProviderId);
     bean.setSpotinstElastiGroupJson(yaml.getSpotinstElastiGroupJson());
     bean.setAsgIdentifiesWorkload(yaml.isAsgIdentifiesWorkload());
+    bean.setUseTrafficShift(yaml.isUseTrafficShift());
     bean.setExpressions(yaml.getExpressions());
   }
 
