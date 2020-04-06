@@ -50,6 +50,7 @@ import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOL
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.common.TemplateConstants.TEMPLATE_TYPES_WITH_YAML_SUPPORT;
+import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -513,23 +514,37 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                   yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(), yamlDirectoryFetchPayload.getAppId())));
     }
 
-    futureList.add(
-        executorService.submit(() -> UserThreadLocal.set(user), doCloudProviders(accountId, directoryPath.clone())));
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+      }
+    }, doCloudProviders(accountId, directoryPath.clone())));
 
-    futureList.add(
-        executorService.submit(() -> UserThreadLocal.set(user), doArtifactServers(accountId, directoryPath.clone())));
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+      }
+    }, doArtifactServers(accountId, directoryPath.clone())));
+
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+      }
+    }, doCollaborationProviders(accountId, directoryPath.clone())));
+
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+      }
+    }, doVerificationProviders(accountId, directoryPath.clone())));
+
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+      }
+    }, doNotificationGroups(accountId, directoryPath.clone())));
 
     futureList.add(executorService.submit(
-        () -> UserThreadLocal.set(user), doCollaborationProviders(accountId, directoryPath.clone())));
-
-    futureList.add(executorService.submit(
-        () -> UserThreadLocal.set(user), doVerificationProviders(accountId, directoryPath.clone())));
-
-    futureList.add(executorService.submit(
-        () -> UserThreadLocal.set(user), doNotificationGroups(accountId, directoryPath.clone())));
-
-    futureList.add(executorService.submit(()
-                                              -> UserThreadLocal.set(user),
+        ()
+            -> {
+          try (UserThreadLocal.Guard guard = userGuard(user)) {
+          }
+        },
         doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER,
             Type.GLOBAL_TEMPLATE_LIBRARY)));
 
