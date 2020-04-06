@@ -15,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
@@ -78,66 +79,26 @@ public class PcfHelperService {
   }
 
   public List<PcfInstanceInfo> getApplicationDetails(String pcfApplicationName, String organization, String space,
-      PcfConfig pcfConfig) throws PcfAppNotFoundException {
+      PcfConfig pcfConfig, PcfCommandExecutionResponse pcfCommandExecutionPerpTaskResponse)
+      throws PcfAppNotFoundException {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
 
     try {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
 
-      pcfCommandExecutionResponse = delegateService.executeTask(
-          DelegateTask.builder()
-              .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
-              .async(false)
-              .data(TaskData.builder()
-                        .taskType(TaskType.PCF_COMMAND_TASK.name())
-                        .parameters(new Object[] {PcfInstanceSyncRequest.builder()
-                                                      .pcfConfig(pcfConfig)
-                                                      .pcfApplicationName(pcfApplicationName)
-                                                      .organization(organization)
-                                                      .space(space)
-                                                      .pcfCommandType(PcfCommandType.APP_DETAILS)
-                                                      .timeoutIntervalInMin(5)
-                                                      .build(),
-                            encryptionDetails})
-                        .timeout(TimeUnit.MINUTES.toMillis(5))
-                        .build())
-              .build());
-
-      PcfInstanceSyncResponse pcfInstanceSyncResponse =
-          (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
-
-      if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-        logger.warn("Failed to fetch PCF application details for Instance Sync, check delegate logs"
-            + pcfCommandExecutionResponse.getPcfCommandResponse().getOutput());
-        if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
-            || pcfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
-            || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
-          throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
-        } else {
-          String errMsg = new StringBuilder(128)
-                              .append("Failed to fetch app details for PCF APP: ")
-                              .append(pcfApplicationName)
-                              .append(" with Error: ")
-                              .append(pcfInstanceSyncResponse.getOutput())
-                              .toString();
-          throw new WingsException(ErrorCode.GENERAL_ERROR, errMsg).addParam("message", errMsg);
-        }
+      if (pcfCommandExecutionPerpTaskResponse == null) {
+        pcfCommandExecutionResponse =
+            executeTaskOnDelegate(pcfApplicationName, organization, space, pcfConfig, encryptionDetails);
+      } else {
+        pcfCommandExecutionResponse = pcfCommandExecutionPerpTaskResponse;
       }
 
+      PcfInstanceSyncResponse pcfInstanceSyncResponse =
+          validatePcfInstanceSyncResponse(pcfApplicationName, organization, space, pcfCommandExecutionResponse);
+
+      // creates the response based on the count of instances it has got.
       if (CollectionUtils.isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
-        return pcfInstanceSyncResponse.getInstanceIndices()
-            .stream()
-            .map(index
-                -> PcfInstanceInfo.builder()
-                       .instanceIndex(index)
-                       .pcfApplicationName(pcfInstanceSyncResponse.getName())
-                       .pcfApplicationGuid(pcfInstanceSyncResponse.getGuid())
-                       .organization(pcfInstanceSyncResponse.getOrganization())
-                       .space(pcfInstanceSyncResponse.getSpace())
-                       .id(pcfInstanceSyncResponse.getGuid() + ":" + index)
-                       .build())
-            .collect(Collectors.toList());
+        return getPcfInstanceInfoList(pcfInstanceSyncResponse);
       }
 
     } catch (InterruptedException e) {
@@ -145,6 +106,73 @@ public class PcfHelperService {
     }
 
     return Collections.EMPTY_LIST;
+  }
+
+  private PcfCommandExecutionResponse executeTaskOnDelegate(String pcfApplicationName, String organization,
+      String space, PcfConfig pcfConfig, List<EncryptedDataDetail> encryptionDetails) throws InterruptedException {
+    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    pcfCommandExecutionResponse = delegateService.executeTask(
+        DelegateTask.builder()
+            .accountId(pcfConfig.getAccountId())
+            .appId(GLOBAL_APP_ID)
+            .async(false)
+            .data(TaskData.builder()
+                      .taskType(TaskType.PCF_COMMAND_TASK.name())
+                      .parameters(new Object[] {PcfInstanceSyncRequest.builder()
+                                                    .pcfConfig(pcfConfig)
+                                                    .pcfApplicationName(pcfApplicationName)
+                                                    .organization(organization)
+                                                    .space(space)
+                                                    .pcfCommandType(PcfCommandType.APP_DETAILS)
+                                                    .timeoutIntervalInMin(5)
+                                                    .build(),
+                          encryptionDetails})
+                      .timeout(TimeUnit.MINUTES.toMillis(5))
+                      .build())
+            .build());
+    return pcfCommandExecutionResponse;
+  }
+
+  public PcfInstanceSyncResponse validatePcfInstanceSyncResponse(String pcfApplicationName, String organization,
+      String space, PcfCommandExecutionResponse pcfCommandExecutionResponse) throws PcfAppNotFoundException {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse =
+        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+
+    // checks the status code and error messages.
+    if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
+      logger.warn("Failed to fetch PCF application details for Instance Sync, check delegate logs"
+          + pcfCommandExecutionResponse.getPcfCommandResponse().getOutput());
+      if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
+          || pcfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
+          || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
+        throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
+      } else {
+        String errMsg = new StringBuilder(128)
+                            .append("Failed to fetch app details for PCF APP: ")
+                            .append(pcfApplicationName)
+                            .append(" with Error: ")
+                            .append(pcfInstanceSyncResponse.getOutput())
+                            .toString();
+        throw new WingsException(ErrorCode.GENERAL_ERROR, errMsg).addParam("message", errMsg);
+      }
+    }
+    return pcfInstanceSyncResponse;
+  }
+
+  @NotNull
+  private List<PcfInstanceInfo> getPcfInstanceInfoList(PcfInstanceSyncResponse pcfInstanceSyncResponse) {
+    return pcfInstanceSyncResponse.getInstanceIndices()
+        .stream()
+        .map(index
+            -> PcfInstanceInfo.builder()
+                   .instanceIndex(index)
+                   .pcfApplicationName(pcfInstanceSyncResponse.getName())
+                   .pcfApplicationGuid(pcfInstanceSyncResponse.getGuid())
+                   .organization(pcfInstanceSyncResponse.getOrganization())
+                   .space(pcfInstanceSyncResponse.getSpace())
+                   .id(pcfInstanceSyncResponse.getGuid() + ":" + index)
+                   .build())
+        .collect(Collectors.toList());
   }
 
   public List<String> listOrganizations(PcfConfig pcfConfig) {

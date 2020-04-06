@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instanceSync;
+
+message PcfInstanceSyncPerpetualTaskParams {
+    string infraMappingId= 1;
+    string applicationName = 2;
+    string orgName= 3;
+    string space= 4;
+    bytes pcfConfig = 5;
+    bytes encryptedData = 6;
+}

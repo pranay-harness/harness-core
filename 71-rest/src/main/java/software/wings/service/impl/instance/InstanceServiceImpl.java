@@ -381,4 +381,12 @@ public class InstanceServiceImpl implements InstanceService {
     manualJobIdSet.forEach(jobId -> result.add(!jobIdSetInDB.contains(jobId)));
     return result;
   }
+
+  public List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId) {
+    PageRequest<Instance> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
+    pageRequest.addFilter("appId", Operator.EQ, appId);
+    PageResponse<Instance> pageResponse = list(pageRequest);
+    return pageResponse.getResponse();
+  }
 }

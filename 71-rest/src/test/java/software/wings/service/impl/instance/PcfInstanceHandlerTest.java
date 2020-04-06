@@ -204,7 +204,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pcfInstanceInfos)
         .when(pcfHelperService)
-        .getApplicationDetails(anyString(), anyString(), anyString(), any());
+        .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
 
     pcfInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
@@ -255,7 +255,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pcfInstanceInfos)
         .when(pcfHelperService)
-        .getApplicationDetails(anyString(), anyString(), anyString(), any());
+        .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
 
     OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
@@ -332,7 +332,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pcfInstanceInfos)
         .when(pcfHelperService)
-        .getApplicationDetails(anyString(), anyString(), anyString(), any());
+        .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
 
     doReturn(
         Optional.of(DeploymentSummary.builder()
