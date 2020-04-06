@@ -72,6 +72,8 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @Mock private LogService mockLogService;
 
   @InjectMocks private EcsBGUpdateListnerState state = new EcsBGUpdateListnerState("stateName");
+  @InjectMocks
+  private EcsBGUpdateListnerRollbackState rollbackState = new EcsBGUpdateListnerRollbackState("rollbackState");
 
   @Test
   @Owner(developers = SATYAM)
@@ -138,6 +140,14 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     assertThat(config.isDownsizeOldService()).isEqualTo(true);
     assertThat(config.getTargetGroupForNewService()).isEqualTo("TgtNew");
     assertThat(config.getTargetGroupForExistingService()).isEqualTo("TgtOld");
+
+    doReturn(singletonList(
+                 ContainerServiceElement.builder().deploymentType(ECS).infraMappingId(INFRA_MAPPING_ID + "1").build()))
+        .when(mockContext)
+        .getContextElementList(any());
+    response = rollbackState.execute(mockContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("No context found for rollback. Skipping.");
   }
 
   @Test
