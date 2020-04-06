@@ -74,6 +74,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
@@ -614,7 +615,10 @@ public class WingsModule extends DependencyModule {
   @Provides
   @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
-    return new CdnStorageUrlGenerator(configuration.getCdnConfig(), configuration.isTrialRegistrationAllowed());
+    String pathPrefix = System.getenv("CLUSTER_TYPE");
+    boolean isFreeCluster = StringUtils.equals(pathPrefix, "freeemium");
+
+    return new CdnStorageUrlGenerator(configuration.getCdnConfig(), isFreeCluster);
   }
 
   @Override
