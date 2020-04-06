@@ -39,6 +39,8 @@ public interface ExecutionContext {
 
   Map<String, Object> asMap();
 
+  void resetPreparedCache();
+
   String renderExpression(String expression);
 
   String renderExpression(String expression, StateExecutionContext stateExecutionContext);

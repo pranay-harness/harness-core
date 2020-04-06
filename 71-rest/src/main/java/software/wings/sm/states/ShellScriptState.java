@@ -20,6 +20,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -224,7 +225,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
-    final ExecutionResponse executionResponse = executionResponseBuilder.build();
+    ExecutionResponse executionResponse = executionResponseBuilder.build();
 
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getAppId(), executionResponse.getExecutionStatus());
@@ -365,7 +366,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       renderedTags = trimStrings(renderedTags);
     }
 
-    final ShellScriptParametersBuilder shellScriptParameters =
+    ShellScriptParametersBuilder shellScriptParameters =
         ShellScriptParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
             .appId(executionContext.getAppId())
@@ -407,6 +408,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     shellScriptParameters.serviceVariables(serviceVariables).safeDisplayServiceVariables(safeDisplayServiceVariables);
     //    }
 
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(executionContext.getApp().getAccountId())
@@ -417,6 +419,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                                               .taskType(TaskType.SCRIPT.name())
                                               .parameters(new Object[] {shellScriptParameters.build()})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .expressionFunctorToken(expressionFunctorToken)
                                               .build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
@@ -424,7 +427,12 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                                     .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
-        StateExecutionContext.builder().stateExecutionData(scriptStateExecutionData).scriptType(scriptType).build());
+        StateExecutionContext.builder()
+            .stateExecutionData(scriptStateExecutionData)
+            .scriptType(scriptType)
+            .adoptDelegateDecryption(true)
+            .expressionFunctorToken(expressionFunctorToken)
+            .build());
 
     return ExecutionResponse.builder()
         .async(true)
@@ -463,6 +471,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   protected String renderAndScheduleDelegateTask(
       ExecutionContext context, DelegateTask task, StateExecutionContext stateExecutionContext) {
+    context.resetPreparedCache();
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
       ExpressionReflectionUtils.applyExpression(

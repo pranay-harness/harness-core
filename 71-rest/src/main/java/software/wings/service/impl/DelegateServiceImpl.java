@@ -144,6 +144,7 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
+import software.wings.beans.DelegateTaskPackage.DelegateTaskPackageBuilder;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FeatureName;
@@ -2068,27 +2069,33 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
-      if (delegateTask.getData().getParameters().length == 1
-          && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
-        logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegate task");
-        ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
-            value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
+      DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder().delegateTask(delegateTask);
 
-        SecretManagerFunctor secretManagerFunctor =
-            (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
-
-        if (secretManagerFunctor == null) {
-          return null;
-        }
-
-        return DelegateTaskPackage.builder()
-            .delegateTask(delegateTask)
-            .encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
-            .secretDetails(secretManagerFunctor.getSecretDetails())
-            .build();
+      if (delegateTask.getData().getParameters().length != 1
+          || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
+        return delegateTaskPackageBuilder.build();
       }
 
-      return DelegateTaskPackage.builder().delegateTask(delegateTask).build();
+      logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegate task");
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
+          value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
+
+      SecretManagerFunctor secretManagerFunctor =
+          (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
+
+      if (secretManagerFunctor == null) {
+        return null;
+      }
+
+      delegateTaskPackageBuilder.encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
+          .secretDetails(secretManagerFunctor.getSecretDetails());
+
+      if (isNotEmpty(secretManagerFunctor.getEvaluatedSecrets())) {
+        delegateTaskPackageBuilder.secrets(
+            secretManagerFunctor.getEvaluatedSecrets().values().stream().collect(Collectors.toSet()));
+      }
+
+      return delegateTaskPackageBuilder.build();
     } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -2171,8 +2178,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .set(DelegateTaskKeys.status, STARTED);
     DelegateTask task =
         wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
-    // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
-    // client is retrying the request
+    // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in
+    // case client is retrying the request
     if (task != null) {
       try (
           DelayLogContext ignore = new DelayLogContext(task.getLastUpdatedAt() - task.getCreatedAt(), OVERRIDE_ERROR)) {
