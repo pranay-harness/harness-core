@@ -35,15 +35,15 @@ GRAFANA_TAR="${IMAGES_DIR}/grafana.tar"
 CADVISOR_TAR="${IMAGES_DIR}/cadvisor.tar"
 ALERT_MANAGER_TAR="${IMAGES_DIR}/alertmanager.tar"
 
-JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u131
-JRE_SOLARIS_1=jre-8u131-solaris-x64.tar.gz
-JRE_MACOSX_1=jre-8u131-macosx-x64.tar.gz
-JRE_LINUX_1=jre-8u131-linux-x64.tar.gz
+JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u191
+JRE_SOLARIS_1=jre-8u191-solaris-x64.tar.gz
+JRE_MACOSX_1=jre-8u191-macosx-x64.tar.gz
+JRE_LINUX_1=jre-8u191-linux-x64.tar.gz
 
-JRE_SOURCE_URL_2=https://app.harness.io/storage/wingsdelegates/jre/8u191
-JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
-JRE_MACOSX_2=jre-8u191-macosx-x64.tar.gz
-JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
+JRE_SOURCE_URL_2=https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242
+JRE_SOLARIS_2=jre_x64_solaris_8u242b08.tar.gz
+JRE_MACOSX_2=jre_x64_macosx_8u242b08.tar.gz
+JRE_LINUX_2=jre_x64_linux_8u242b08.tar.gz
 
 KUBECTL_VERSION=v1.13.2
 KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
