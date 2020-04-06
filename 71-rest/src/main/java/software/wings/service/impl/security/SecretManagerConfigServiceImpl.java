@@ -266,6 +266,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
     if (isLocalEncryptionEnabled(accountId)) {
       // If account level local encryption is enabled. Mask all other encryption configs.
+      SecretManagerConfig localSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+      localSecretManagerConfig.setNumOfEncryptedValue(
+          getEncryptedDataCount(accountId, localSecretManagerConfig.getUuid()));
+      rv.add(localSecretManagerConfig);
       return rv;
     } else {
       List<SecretManagerConfig> secretManagerConfigList = wingsPersistence.createQuery(SecretManagerConfig.class)
