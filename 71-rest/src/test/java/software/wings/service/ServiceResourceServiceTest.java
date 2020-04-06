@@ -10,12 +10,14 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,12 +86,14 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.base.Charsets;
@@ -152,6 +156,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -794,6 +799,69 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(mockWingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldAddCommandWithTemplateVariables() {
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand serviceCommand = invocation.getArgumentAt(1, ServiceCommand.class);
+          serviceCommand.setServiceId(SERVICE_ID);
+          serviceCommand.setUuid(ID_KEY);
+          Command command = serviceCommand.getCommand();
+          assertThat(command.getTemplateVariables()).isNotNull();
+          assertThat(command.getTemplateVariables().stream().map(Variable::getName).collect(toList()))
+              .containsExactly("var2", "var3");
+          return serviceCommand;
+        });
+
+    when(templateService.constructEntityFromTemplate(eq(TEMPLATE_ID), eq(TEMPLATE_VERSION), eq(EntityType.COMMAND)))
+        .thenReturn(aCommand()
+                        .withTemplateVariables(asList(prepareVariable(1), prepareVariable(2)))
+                        .withName(COMMAND_NAME)
+                        .withTemplateId(TEMPLATE_ID)
+                        .withTemplateVersion(TEMPLATE_VERSION)
+                        .build());
+
+    Command expectedCommand = aCommand()
+                                  .withTemplateId(TEMPLATE_ID)
+                                  .withTemplateVersion(TEMPLATE_VERSION)
+                                  .withTemplateVariables(asList(prepareVariable(2), prepareVariable(3)))
+                                  .build();
+
+    Service service = serviceBuilder.build();
+    service.getServiceCommands().add(aServiceCommand()
+                                         .withTargetToAllEnv(true)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withUuid(ID_KEY)
+                                         .withDefaultVersion(1)
+                                         .withName("START")
+                                         .withCommand(expectedCommand)
+                                         .withTemplateUuid(TEMPLATE_ID)
+                                         .withTemplateVersion(TEMPLATE_VERSION)
+                                         .build());
+
+    srs.addCommand(APP_ID, SERVICE_ID,
+        aServiceCommand()
+            .withServiceId(SERVICE_ID)
+            .withTargetToAllEnv(true)
+            .withCommand(expectedCommand)
+            .withTemplateUuid(TEMPLATE_ID)
+            .withTemplateVersion(TEMPLATE_VERSION)
+            .build(),
+        true);
+
+    verify(mockWingsPersistence, times(2)).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(mockWingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
+  }
+
+  private Variable prepareVariable(int idx) {
+    return aVariable().name(format("var%d", idx)).value(format("val%d", idx)).build();
   }
 
   /**
