@@ -60,7 +60,9 @@ import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
+import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
@@ -204,6 +206,7 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
+import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
@@ -340,6 +343,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AuthService authService;
   @Inject private RollbackStateMachineGenerator rollbackStateMachineGenerator;
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
+  @Inject private PipelineResumeUtils pipelineResumeUtils;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -608,7 +612,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                            .estimatedTime(estimatedTime)
                                            .build());
 
-          } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
+          } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())
+              || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType())) {
             PipelineStageExecution stageExecution = PipelineStageExecution.builder()
                                                         .stateUuid(pipelineStageElement.getUuid())
                                                         .stateType(stateExecutionInstance.getStateType())
@@ -633,7 +638,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             }
             stageExecutionDataList.add(stageExecution);
 
-          } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
+          } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())
+              || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
             PipelineStageExecution stageExecution = PipelineStageExecution.builder()
                                                         .stateUuid(pipelineStageElement.getUuid())
                                                         .stateType(pipelineStageElement.getType())
@@ -1005,15 +1011,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @VisibleForTesting
   WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    checkPreDeploymentConditions(accountId, appId);
-
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
+    return triggerPipelineExecution(appId, pipeline, executionArgs, workflowExecutionUpdate, trigger);
+  }
 
+  private WorkflowExecution triggerPipelineExecution(String appId, Pipeline pipeline, ExecutionArgs executionArgs,
+      WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
+
+    String pipelineId = pipeline.getUuid();
+    String accountId = appService.getAccountIdByAppId(appId);
+    checkPreDeploymentConditions(accountId, appId);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
         governanceConfigService, new DeploymentCtx(appId, pipeline.getEnvIds()), environmentService);
@@ -1737,6 +1748,41 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (trigger != null) {
       throw new InvalidRequestException("Hosts can't be overridden for triggers", USER);
+    }
+  }
+
+  @Override
+  public WorkflowExecution triggerPipelineResumeExecution(
+      String appId, int parallelIndexToResume, WorkflowExecution prevWorkflowExecution) {
+    String accountId = prevWorkflowExecution.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
+          getStateExecutionInstanceMap(prevWorkflowExecution);
+      Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
+          appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
+      WorkflowExecution currWorkflowExecution =
+          triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null);
+      pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
+      return currWorkflowExecution;
+    }
+  }
+
+  @Override
+  public List<PipelineStage> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
+    String accountId = prevWorkflowExecution.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
+      return pipelineResumeUtils.getResumeStages(appId, prevWorkflowExecution);
+    }
+  }
+
+  @Override
+  public List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution prevWorkflowExecution) {
+    String accountId = prevWorkflowExecution.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
+      return pipelineResumeUtils.getResumeHistory(appId, prevWorkflowExecution);
     }
   }
 

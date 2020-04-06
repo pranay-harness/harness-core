@@ -22,6 +22,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
@@ -84,6 +85,13 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs, Trigger trigger);
+
+  WorkflowExecution triggerPipelineResumeExecution(
+      String appId, int parallelIndexToResume, WorkflowExecution workflowExecution);
+
+  List<PipelineStage> getResumeStages(String appId, WorkflowExecution workflowExecution);
+
+  List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution workflowExecution);
 
   WorkflowExecution triggerRollbackExecutionWorkflow(String appId, WorkflowExecution workflowExecution);
 

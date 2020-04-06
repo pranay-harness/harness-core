@@ -92,6 +92,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
+import software.wings.sm.states.ApprovalResumeState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
 import software.wings.sm.states.ArtifactCollectionState;
@@ -131,6 +132,7 @@ import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
+import software.wings.sm.states.EnvResumeState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.GcpClusterSetup;
@@ -373,6 +375,11 @@ public enum StateType implements StateTypeDescriptor {
   ENV_STATE(EnvState.class, ENVIRONMENTS, asList(), PIPELINE_STENCILS),
 
   /**
+   * Env state state type.
+   */
+  ENV_RESUME_STATE(EnvResumeState.class, ENVIRONMENTS, emptyList(), NONE),
+
+  /**
    * Command state type.
    */
   COMMAND(CommandState.class, COMMANDS,
@@ -384,6 +391,8 @@ public enum StateType implements StateTypeDescriptor {
    * Approval state type for pipeline and workflow.
    */
   APPROVAL(ApprovalState.class, OTHERS, asList(), PIPELINE_STENCILS, ORCHESTRATION_STENCILS, COMMON),
+
+  APPROVAL_RESUME(ApprovalResumeState.class, OTHERS, emptyList(), NONE),
 
   /**
    * The Load balancer.

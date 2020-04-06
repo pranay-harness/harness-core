@@ -3,6 +3,7 @@ package software.wings.service.intfc.sweepingoutput;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.deployment.InstanceDetails;
+import org.mongodb.morphia.query.Query;
 import software.wings.api.InstanceElement;
 import software.wings.sm.StateExecutionInstance;
 
@@ -27,6 +28,12 @@ public interface SweepingOutputService {
 
   void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);
+
+  Query<SweepingOutputInstance> prepareApprovalStateOutputsQuery(
+      String appId, String fromPipelineExecutionId, String fromStateExecutionId);
+
+  Query<SweepingOutputInstance> prepareEnvStateOutputsQuery(
+      String appId, String fromPipelineExecutionId, String fromWorkflowExecutionId);
 
   void cleanForStateExecutionInstance(@NotNull StateExecutionInstance stateExecutionInstance);
 

@@ -195,6 +195,17 @@ public class WorkflowExecution
   private List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries;
   private ConcurrencyStrategy concurrencyStrategy;
 
+  // For pipeline resume.
+  //
+  // pipelineResumeId is the pipeline execution id of the very first execution.
+  // It makes getting the history very simple. Just filter by the same
+  // pipelineResumeId and sort by createdAt.
+  private String pipelineResumeId;
+  // latestPipelineResume is true only for the latest resumed execution.
+  // It is required to make the list execution call efficient to fetch only
+  // the latest execution.
+  private boolean latestPipelineResume;
+
   private Long nextIteration;
   private List<NameValuePair> tags;
 
