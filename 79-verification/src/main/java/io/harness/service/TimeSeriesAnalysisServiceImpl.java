@@ -97,6 +97,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -138,11 +139,39 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
     });
 
+    final Optional<NewRelicMetricDataRecord> lastHeartBeatRecord =
+        metricData.stream()
+            .filter(metric -> metric.getLevel() != null)
+            .max(Comparator.comparingInt(NewRelicMetricDataRecord::getDataCollectionMinute));
+    if (lastHeartBeatRecord.isPresent()
+        && checkIfProcessed(lastHeartBeatRecord.get().getStateExecutionId(), lastHeartBeatRecord.get().getGroupName(),
+               lastHeartBeatRecord.get().getDataCollectionMinute())) {
+      logger.info("for {} minute {} data already exists in db so returning", stateExecutionId,
+          lastHeartBeatRecord.get().getDataCollectionMinute());
+      return true;
+    }
+
     final List<TimeSeriesDataRecord> dataRecords =
         TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricData);
     dataRecords.forEach(TimeSeriesDataRecord::compress);
     dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, true);
     return true;
+  }
+
+  /**
+   * There is a still a race condition where if the data collection save is retried and resaved while the processing of
+   * the minute happens just after this check but right before saving the data.
+   */
+  private boolean checkIfProcessed(String stateExecutionId, String groupName, int dataCollectionMinute) {
+    PageRequest<TimeSeriesDataRecord> pageRequest =
+        aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+            .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+            .addFilter(TimeSeriesMetricRecordKeys.level, Operator.EQ, ClusterLevel.HF)
+            .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, dataCollectionMinute)
+            .build();
+    return !dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).isEmpty();
   }
 
   @Override
@@ -694,14 +723,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .withLimit(UNLIMITED)
             .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
             .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+            .addFilter(TimeSeriesMetricRecordKeys.level, Operator.EQ, ClusterLevel.H0)
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
             .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
     final PageResponse<TimeSeriesDataRecord> dataRecords =
         dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
-    dataRecords.stream()
-        .filter(dataRecord -> ClusterLevel.H0 == dataRecord.getLevel())
-        .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+    dataRecords.forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
     dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, false);
   }
 
