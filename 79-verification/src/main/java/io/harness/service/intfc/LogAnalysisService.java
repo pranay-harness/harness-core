@@ -46,8 +46,7 @@ public interface LogAnalysisService {
       Optional<Boolean> isFeedbackAnalysis);
 
   boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
-      Optional<Boolean> isFeedbackAnalysis);
+      LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis);
 
   boolean save24X7ExpLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
       AnalysisComparisonStrategy comparisonStrategy, ExperimentalLogMLAnalysisRecord mlAnalysisResponse,
@@ -95,7 +94,8 @@ public interface LogAnalysisService {
 
   boolean isAnalysisPresentForMinute(String cvConfigId, int analysisMinute, LogMLAnalysisStatus analysisStatus);
 
-  void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
+  void createAndSaveSummary(
+      StateType stateType, String appId, String stateExecutionId, String query, String message, String accountId);
 
   Optional<LogDataRecord> getHearbeatRecordForL0(String appId, String stateExecutionId, StateType type, String host);
 

@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
@@ -163,6 +164,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(94, BaseMigration.class))
         .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
         .add(Pair.of(96, AddCommitTimeToGitSyncError.class))
+        .add(Pair.of(97, AddAccountIdToLogAnalysisRecordsMigration.class))
         .build();
   }
 }

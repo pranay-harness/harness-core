@@ -403,7 +403,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     String cvConfigId = wingsPersistence.save(logsCVConfig);
     int numOfAnalysisRecords = 17;
     for (int i = 0; i < numOfAnalysisRecords * CRON_POLL_INTERVAL_IN_MINUTES; i += CRON_POLL_INTERVAL_IN_MINUTES) {
-      wingsPersistence.save(LogMLAnalysisRecord.builder().logCollectionMinute(i).cvConfigId(cvConfigId).build());
+      wingsPersistence.save(
+          LogMLAnalysisRecord.builder().logCollectionMinute(i).cvConfigId(cvConfigId).accountId(accountId).build());
       wingsPersistence.save(LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).build());
     }
 

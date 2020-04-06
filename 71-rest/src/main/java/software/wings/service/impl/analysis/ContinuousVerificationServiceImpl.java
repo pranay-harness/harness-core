@@ -1694,6 +1694,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                                      .logCollectionMinute(-1)
                                                      .stateType(analysisContext.getStateType())
+                                                     .accountId(analysisContext.getAccountId())
                                                      .appId(appId)
                                                      .stateExecutionId(stateExecutionId)
                                                      .query(analysisContext.getQuery())
@@ -1719,7 +1720,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     } else {
       throw new IllegalArgumentException("Invalid state type :" + analysisContext.getStateType());
     }
-    continuousVerificationService.setMetaDataExecutionStatus(stateExecutionId, status, true, true);
+    setMetaDataExecutionStatus(stateExecutionId, status, true, true);
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()

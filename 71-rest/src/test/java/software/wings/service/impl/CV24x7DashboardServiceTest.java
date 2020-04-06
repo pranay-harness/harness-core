@@ -162,6 +162,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     LogMLAnalysisRecord firstRec = LogMLAnalysisRecord.builder()
                                        .uuid(generateUuid())
                                        .cvConfigId(cvConfigId)
+                                       .accountId(accountId)
                                        .logCollectionMinute(analysisMin)
                                        .appId(appId)
                                        .build();
@@ -391,6 +392,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
                                                .cvConfigId(cvConfigId)
+                                               .accountId(accountId)
                                                .logCollectionMinute((int) currentTime - 15)
                                                .query("exception")
                                                .build();
@@ -423,6 +425,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
                                                .cvConfigId(cvConfigId)
+                                               .accountId(accountId)
                                                .logCollectionMinute((int) currentTime - 135)
                                                .query("exception")
                                                .build();
@@ -446,6 +449,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
                                                .cvConfigId(cvConfigId)
+                                               .accountId(accountId)
                                                .logCollectionMinute((int) currentTime - 200)
                                                .query("exception")
                                                .build();
@@ -512,6 +516,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
         LogMLAnalysisRecord.builder()
             .appId(appId)
             .cvConfigId(id1)
+            .accountId(accountId)
             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 30)
             .score(1)
             .build();

@@ -1266,10 +1266,11 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public void createAndSaveSummary(
-      StateType stateType, String appId, String stateExecutionId, String query, String message) {
+      StateType stateType, String appId, String stateExecutionId, String query, String message, String accountId) {
     final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                                    .logCollectionMinute(-1)
                                                    .stateType(stateType)
+                                                   .accountId(accountId)
                                                    .appId(appId)
                                                    .stateExecutionId(stateExecutionId)
                                                    .query(query)

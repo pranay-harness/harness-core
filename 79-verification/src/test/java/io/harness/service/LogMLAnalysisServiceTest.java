@@ -1194,6 +1194,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
                                      .stateExecutionId(stateExecutionId)
                                      .appId(appId)
+                                     .accountId(accountId)
                                      .stateType(StateType.SPLUNKV2)
                                      .logCollectionMinute(0)
                                      .query(UUID.randomUUID().toString())
@@ -1230,8 +1231,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       logDataRecord.setAppId(appId);
       logDataRecord.setLogCollectionMinute(i);
       wingsPersistence.save(logDataRecord);
-      wingsPersistence.save(
-          LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(i).appId(appId).build());
+      wingsPersistence.save(LogMLAnalysisRecord.builder()
+                                .stateExecutionId(stateExecutionId)
+                                .accountId(accountId)
+                                .logCollectionMinute(i)
+                                .appId(appId)
+                                .build());
       wingsPersistence.save(
           ContinuousVerificationExecutionMetaData.builder().stateExecutionId(stateExecutionId).build());
       wingsPersistence.save(
@@ -1392,6 +1397,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     // save using json compression
     LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
+                                                 .accountId(accountId)
                                                  .unknown_events(logMLAnalysisRecord.getUnknown_events())
                                                  .test_events(logMLAnalysisRecord.getTest_events())
                                                  .control_events(logMLAnalysisRecord.getControl_events())
@@ -1602,12 +1608,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
-        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).hasSize(1);
 
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
-        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).hasSize(1);
   }
@@ -1638,7 +1644,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
-        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.empty());
     verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 
@@ -1668,7 +1674,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
-        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.empty());
     verify(continuousVerificationService, never()).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 
@@ -1736,8 +1742,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysis() {
     String cvConfigId = generateUuid();
-    LogMLAnalysisRecord analysisRecord =
-        LogMLAnalysisRecord.builder().logCollectionMinute(10).appId(appId).cvConfigId(cvConfigId).uuid("uuid1").build();
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .logCollectionMinute(10)
+                                             .appId(appId)
+                                             .accountId(accountId)
+                                             .cvConfigId(cvConfigId)
+                                             .uuid("uuid1")
+                                             .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(analysisRecord);
 
@@ -2107,7 +2118,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     for (int i = 1; i <= 100; i++) {
       final LogMLAnalysisRecord mlAnalysisRecord =
-          LogMLAnalysisRecord.builder().cvConfigId(cvConfigId).logCollectionMinute(i).build();
+          LogMLAnalysisRecord.builder().accountId(accountId).cvConfigId(cvConfigId).logCollectionMinute(i).build();
       mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
       wingsPersistence.save(mlAnalysisRecord);
     }
@@ -2128,8 +2139,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         .isEqualTo(-1);
 
     for (int i = 1; i <= 100; i++) {
-      final LogMLAnalysisRecord mlAnalysisRecord =
-          LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(i).build();
+      final LogMLAnalysisRecord mlAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                       .accountId(accountId)
+                                                       .stateExecutionId(stateExecutionId)
+                                                       .logCollectionMinute(i)
+                                                       .build();
       mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
       wingsPersistence.save(mlAnalysisRecord);
     }
@@ -2163,8 +2177,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testIsAnalysisPresent() {
     assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isFalse();
-    wingsPersistence.save(
-        LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(100).build());
+    wingsPersistence.save(LogMLAnalysisRecord.builder()
+                              .accountId(accountId)
+                              .stateExecutionId(stateExecutionId)
+                              .logCollectionMinute(100)
+                              .build());
     assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isTrue();
   }
 
@@ -2221,7 +2238,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testCreateAndSaveSummary() {
     String query = generateUuid();
     String message = generateUuid();
-    analysisService.createAndSaveSummary(StateType.SUMO, appId, stateExecutionId, query, message);
+    analysisService.createAndSaveSummary(StateType.SUMO, appId, stateExecutionId, query, message, accountId);
     final LogMLAnalysisRecord logMLAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
@@ -2230,6 +2247,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecord.getQuery()).isEqualTo(query);
     assertThat(logMLAnalysisRecord.getAnalysisSummaryMessage()).isEqualTo(message);
     assertThat(logMLAnalysisRecord.getStateType()).isEqualTo(StateType.SUMO);
+    assertThat(logMLAnalysisRecord.getAccountId()).isEqualTo(accountId);
   }
 
   private void createLETaskForBackoffTest(int analysisMinute, int backoffCount) {
@@ -2252,8 +2270,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
     String cvConfigId = generateUuid();
     int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
-    LogMLAnalysisRecord oldLogAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+    LogMLAnalysisRecord oldLogAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                   .appId(appId)
+                                                   .accountId(accountId)
+                                                   .cvConfigId(cvConfigId)
+                                                   .logCollectionMinute(minute)
+                                                   .build();
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(oldLogAnalysisRecord);
 
@@ -2268,8 +2290,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
     String cvConfigId = generateUuid();
     int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
-    LogMLAnalysisRecord oldLogAnalysisRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(minute).build();
+    LogMLAnalysisRecord oldLogAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                   .appId(appId)
+                                                   .accountId(accountId)
+                                                   .cvConfigId(cvConfigId)
+                                                   .logCollectionMinute(minute)
+                                                   .build();
     oldLogAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.save(oldLogAnalysisRecord);
 

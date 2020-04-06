@@ -381,8 +381,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   @Override
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
-    analysisService.createAndSaveSummary(
-        context.getStateType(), context.getAppId(), context.getStateExecutionId(), context.getQuery(), message);
+    analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
+        context.getQuery(), message, context.getAccountId());
     return createExecutionResponse(context, status, message, true);
   }
 

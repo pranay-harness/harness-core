@@ -328,6 +328,7 @@ limitCounters { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 limitCounters { "name" : "appId_1" , "background" : true} { "appId" : 1}
 limitCounters { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 limitCounters { "name" : "key_idx" , "unique" : true} { "key" : 1}
+logAnalysisRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 logAnalysisRecords { "name" : "analysisSummaryIdx" , "background" : true} { "stateExecutionId" : 1 , "logCollectionMinute" : -1 , "analysisStatus" : 1 , "lastUpdatedAt" : -1}
 logAnalysisRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}
 logAnalysisRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
