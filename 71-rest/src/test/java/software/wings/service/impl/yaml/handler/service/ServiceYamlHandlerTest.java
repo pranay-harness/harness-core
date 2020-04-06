@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -138,6 +139,23 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
     assertThat(
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("other-secret", "other-secret");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testUpdateServiceVariableType() {
+    when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
+
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    yaml.getConfigVariables().get(0).setValueType("TEXT");
+    Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
+    assertThat(fromYaml).isNotNull();
+    verify(serviceVariableService, times(2)).update(captor.capture(), anyBoolean());
+    assertThat(
+        captor.getAllValues().stream().map(ServiceVariable::getType).map(String::valueOf).collect(Collectors.toList()))
+        .containsExactly("TEXT", "ENCRYPTED_TEXT");
   }
 
   @Test
