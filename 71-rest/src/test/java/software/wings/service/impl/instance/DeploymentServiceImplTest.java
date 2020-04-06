@@ -14,11 +14,13 @@ import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.K8sDeploymentInfo;
+import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,7 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
 
   private final String ACCOUNT_ID = "account_id";
   private final String RELEASE_NAME = "release_name";
+  private final String HELM_RELEASE_NAME = "release-name";
   private final String ECS_SERVICE_NAME = "ecs_service_name";
   private final String ECS_CLUSTER_NAME = "ecs_cluster_name";
   private final String INFRA_MAPPING_ID_ECS = "infra_mapping_id_ecs";
@@ -61,6 +64,17 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void testGetDeploymentSummaryForHelm() {
+    DeploymentSummary deploymentSummary = getHelmDeploymentSummary();
+    deploymentService.save(deploymentSummary);
+    Optional<DeploymentSummary> savedK8sDeploymentSummary = deploymentService.getWithAccountId(deploymentSummary);
+    assertThat(savedK8sDeploymentSummary).isPresent();
+    assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_K8S);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void testGetDeploymentSummaryPaginated() {
     DeploymentSummary deploymentSummary = getK8sDeploymentSummary();
     deploymentService.save(deploymentSummary);
@@ -80,6 +94,17 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .k8sDeploymentKey(k8sDeploymentKey)
         .deploymentInfo(k8sDeploymentInfo)
+        .infraMappingId(INFRA_MAPPING_ID_K8S)
+        .build();
+  }
+
+  private DeploymentSummary getHelmDeploymentSummary() {
+    Label label = Label.Builder.aLabel().withName(HELM_RELEASE_NAME).withValue(HELM_RELEASE_NAME).build();
+    ContainerDeploymentKey containerDeploymentKey =
+        ContainerDeploymentKey.builder().labels(Arrays.asList(label)).build();
+    return DeploymentSummary.builder()
+        .accountId(ACCOUNT_ID)
+        .containerDeploymentKey(containerDeploymentKey)
         .infraMappingId(INFRA_MAPPING_ID_K8S)
         .build();
   }

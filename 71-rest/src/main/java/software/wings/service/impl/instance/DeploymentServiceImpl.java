@@ -105,11 +105,14 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (deploymentSummary.getContainerDeploymentKey() != null) {
       ContainerDeploymentInfoWithNames deploymentInfo =
           (ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo();
-      if (deploymentInfo.getContainerSvcName() != null) {
+      ContainerDeploymentKey containerDeploymentKey = deploymentSummary.getContainerDeploymentKey();
+      if (deploymentInfo != null && deploymentInfo.getContainerSvcName() != null) {
         query.filter(
             DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES, deploymentInfo.getClusterName());
         query.filter(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES,
             deploymentInfo.getContainerSvcName());
+      } else if (isNotEmpty(containerDeploymentKey.getLabels())) {
+        query.field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS).hasAllOf(containerDeploymentKey.getLabels());
       }
     } else if (deploymentSummary.getK8sDeploymentKey() != null) {
       K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();

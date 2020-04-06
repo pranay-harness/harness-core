@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EcsBatchConfiguration {
   private static final int BATCH_SIZE = 500;
-  private static final int SKIP_LIMIT = 100;
+  private static final int SKIP_LIMIT = 400;
   private static final int RETRY_LIMIT = 1;
 
   @Autowired private JobBuilderFactory jobBuilderFactory;
