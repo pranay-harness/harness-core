@@ -785,6 +785,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  @Override
+  public void resetPreparedCache() {
+    contextMap = null;
+  }
+
   private Map<String, Object> prepareCacheContext(StateExecutionContext stateExecutionContext) {
     if (contextMap != null) {
       return contextMap;
@@ -1295,7 +1300,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                           .collect(Collectors.toSet()));
     });
     InstanceInfoVariables finalInstanceInfo = Iterables.getLast(instanceInfoVariables);
-    final Set<String> finalInstances =
+    Set<String> finalInstances =
         finalInstanceInfo.getInstanceElements().stream().map(InstanceElement::getHostName).collect(Collectors.toSet());
     List<InstanceElement> instanceElements = finalInstanceInfo.getInstanceElements();
     List<InstanceDetails> instanceDetails = finalInstanceInfo.getInstanceDetails();
@@ -1320,9 +1325,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @VisibleForTesting
   List<String> renderExpressionFromInstanceInfoVariables(
       String expression, boolean newInstancesOnly, InstanceInfoVariables instanceInfoVariables) {
-    final List<String> list = new ArrayList<>();
-    final Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
-    final Map<String, InstanceElement> hostNameToInstanceElementMap = new HashMap<>();
+    List<String> list = new ArrayList<>();
+    Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
+    Map<String, InstanceElement> hostNameToInstanceElementMap = new HashMap<>();
     if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
       instanceInfoVariables.getInstanceElements().forEach(
           instanceElement -> hostNameToInstanceElementMap.put(instanceElement.getHostName(), instanceElement));

@@ -9,7 +9,9 @@ import lombok.Builder.Default;
 import lombok.Value;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Value
 @Builder
@@ -18,4 +20,5 @@ public class DelegateTaskPackage {
   private DelegateTask delegateTask;
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();
+  @Default private Set<String> secrets = new HashSet<>();
 }

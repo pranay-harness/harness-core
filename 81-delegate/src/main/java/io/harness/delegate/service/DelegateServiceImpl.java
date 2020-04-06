@@ -1552,7 +1552,7 @@ public class DelegateServiceImpl implements DelegateService {
         applyDelegateSecretFunctor(delegateTaskPackage);
         // Whitelisted. Proceed immediately.
         logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
-        executeTask(delegateTask);
+        executeTask(delegateTaskPackage);
       }
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
@@ -1634,7 +1634,7 @@ public class DelegateServiceImpl implements DelegateService {
             && delegateId.equals(delegateTaskPackage.getDelegateTask().getDelegateId())) {
           logger.info("Got the go-ahead to proceed for task {}.", taskId);
           applyDelegateSecretFunctor(delegateTaskPackage);
-          executeTask(delegateTaskPackage.getDelegateTask());
+          executeTask(delegateTaskPackage);
         } else {
           logger.info("Did not get the go-ahead to proceed for task {}", taskId);
           if (validated) {
@@ -1658,14 +1658,16 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private void executeTask(@NotNull DelegateTask delegateTask) {
+  private void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {
+    DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
+
     if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
       logger.info("Already executing task {}", delegateTask.getUuid());
       return;
     }
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getData().getTaskType());
-    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTask.getData());
+    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTaskPackage);
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
             .getDelegateRunnableTask(delegateId, delegateTask,
@@ -1686,9 +1688,11 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
-  private Optional<LogSanitizer> getLogSanitizer(@NotNull TaskData taskData) {
+  private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTaskPackage delegateTaskPackage) {
+    TaskData taskData = delegateTaskPackage.getDelegateTask().getData();
+
     String activityId = null;
-    Set<String> secrets = new HashSet<>();
+    Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
 
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
@@ -1698,8 +1702,8 @@ public class DelegateServiceImpl implements DelegateService {
         // Shell Script
         ShellScriptParameters shellScriptParameters = (ShellScriptParameters) parameters[0];
         activityId = shellScriptParameters.getActivityId();
-        secrets = secretsFromMaskedVariables(
-            shellScriptParameters.getServiceVariables(), shellScriptParameters.getSafeDisplayServiceVariables());
+        secrets.addAll(secretsFromMaskedVariables(
+            shellScriptParameters.getServiceVariables(), shellScriptParameters.getSafeDisplayServiceVariables()));
       } else if (parameters[0] instanceof ShellScriptProvisionParameters) {
         // Shell Script Provision
         ShellScriptProvisionParameters shellScriptProvisionParameters = (ShellScriptProvisionParameters) parameters[0];
@@ -1721,7 +1725,8 @@ public class DelegateServiceImpl implements DelegateService {
         // Command
         CommandExecutionContext context = (CommandExecutionContext) parameters[1];
         activityId = context.getActivityId();
-        secrets = secretsFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables());
+        secrets.addAll(
+            secretsFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables()));
       }
     }
 
