@@ -2,7 +2,6 @@ package software.wings.service.intfc.elk;
 
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.ElkConfigValidationParams;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -18,13 +17,8 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 08/01/17.
  */
 public interface ElkDelegateService {
-  @Deprecated
-  default boolean validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return validateConfig(
-        ElkConfigValidationParams.builder().elkConfig(elkConfig).encryptedDataDetails(encryptedDataDetails).build());
-  }
-
-  @DelegateTaskType(TaskType.ELK_CONFIGURATION_VALIDATE_TASK) boolean validateConfig(ElkConfigValidationParams build);
+  @DelegateTaskType(TaskType.ELK_CONFIGURATION_VALIDATE_TASK)
+  boolean validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.ELK_GET_HOST_RECORDS)
   Object search(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,

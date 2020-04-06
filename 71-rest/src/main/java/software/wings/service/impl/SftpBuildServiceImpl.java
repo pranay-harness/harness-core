@@ -11,7 +11,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.SftpBuildParameters;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -32,13 +31,12 @@ public class SftpBuildServiceImpl implements SftpBuildService {
   @Inject private SftpHelperService sftpHelperService;
 
   @Override
-  public List<BuildDetails> getBuilds(SftpBuildParameters sftpBuildParameters) {
-    String artifactName = sftpBuildParameters.getArtifactStreamAttributes().getArtifactName();
-    return wrapNewBuildsWithLabels(
-        sftpService.getBuildDetails(sftpBuildParameters.getSftpConfig(), sftpBuildParameters.getEncryptionDetails(),
-            Lists.newArrayList(artifactName), artifactName.contains("*")),
-        sftpBuildParameters.getArtifactStreamAttributes(), sftpBuildParameters.getSftpConfig(),
-        sftpBuildParameters.getEncryptionDetails());
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails) {
+    String artifactName = artifactStreamAttributes.getArtifactName();
+    return wrapNewBuildsWithLabels(sftpService.getBuildDetails(sftpConfig, encryptionDetails,
+                                       Lists.newArrayList(artifactName), artifactName.contains("*")),
+        artifactStreamAttributes, sftpConfig, encryptionDetails);
   }
 
   @Override
