@@ -51,6 +51,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -265,7 +266,7 @@ public class ArtifactCollectionUtils {
     if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
       return encodeBase64(format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
-          imageDetails.getUsername(), imageDetails.getPassword()));
+          imageDetails.getUsername(), imageDetails.getPassword().replaceAll("\"", "\\\\\"")));
     }
     return "";
   }
@@ -368,6 +369,12 @@ public class ArtifactCollectionUtils {
         GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
         String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
         imageDetailsBuilder.name(imageName).sourceName(imageName).registryUrl(imageName);
+        GcpConfig gcpConfig = (GcpConfig) settingsService.get(settingId).getValue();
+        managerDecryptionService.decrypt(
+            gcpConfig, secretManager.getEncryptionDetails(gcpConfig, null, workflowExecutionId));
+        if (gcpConfig.getServiceAccountKeyFileContent() != null) {
+          imageDetailsBuilder.username("_json_key").password(new String(gcpConfig.getServiceAccountKeyFileContent()));
+        }
       } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
         AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
         AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
