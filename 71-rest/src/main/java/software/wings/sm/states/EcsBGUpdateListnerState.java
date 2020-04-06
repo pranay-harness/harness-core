@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -93,6 +96,15 @@ public class EcsBGUpdateListnerState extends State {
             .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
+
+    if (StateType.ECS_LISTENER_UPDATE_ROLLBACK.name().equals(this.getStateType())) {
+      if (containerElement == null || containerElement.getEcsBGSetupData() == null) {
+        return ExecutionResponse.builder()
+            .executionStatus(SKIPPED)
+            .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+            .build();
+      }
+    }
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
