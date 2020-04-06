@@ -1256,7 +1256,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     refreshEnvSummary(workflowExecution, keywords);
 
-    populateCurrentUser(workflowExecution, stdParams, trigger, keywords, executionArgs);
+    populateCurrentUser(workflowExecution, stdParams, trigger, keywords);
 
     populateServiceInstances(workflowExecution, keywords, executionArgs);
 
@@ -1420,30 +1420,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void populateCurrentUser(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
-      Trigger trigger, Set<String> keywords, ExecutionArgs executionArgs) {
-    User user = UserThreadLocal.get();
-    if (user != null) {
-      EmbeddedUser triggeredBy =
-          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
-      workflowExecution.setTriggeredBy(triggeredBy);
-      workflowExecution.setCreatedBy(triggeredBy);
-    } else if (trigger != null) {
+  private void populateCurrentUser(
+      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, Set<String> keywords) {
+    if (trigger != null) {
       // Triggered by Auto Trigger
       workflowExecution.setTriggeredBy(
           EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
       workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
       workflowExecution.setDeploymentTriggerId(trigger.getUuid());
-    } else if (executionArgs.getTriggerExecutionArgs() != null) {
-      workflowExecution.setTriggeredBy(
-          EmbeddedUser.builder()
-              .name(executionArgs.getTriggerExecutionArgs().getTriggerName() + " (Deployment Trigger)")
-              .build());
-      workflowExecution.setCreatedBy(
-          EmbeddedUser.builder()
-              .name(executionArgs.getTriggerExecutionArgs().getTriggerName() + " (Deployment Trigger)")
-              .build());
-      workflowExecution.setDeploymentTriggerId(executionArgs.getTriggerExecutionArgs().getTriggerUuid());
+    } else {
+      User user = UserThreadLocal.get();
+      if (user != null) {
+        EmbeddedUser triggeredBy =
+            EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+        workflowExecution.setTriggeredBy(triggeredBy);
+        workflowExecution.setCreatedBy(triggeredBy);
+      }
     }
     if (workflowExecution.getCreatedBy() != null) {
       keywords.add(workflowExecution.getCreatedBy().getName());
