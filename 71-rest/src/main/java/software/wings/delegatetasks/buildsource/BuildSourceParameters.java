@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -9,7 +10,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
@@ -71,9 +71,8 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
           : default_server;
       return Collections.singletonList(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl(loginServer)));
-    } else {
-      return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
     }
+    return emptyList();
   }
 
   private String getUrl(String hostName) {

@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.IgnoreValidationCapability;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -202,7 +201,6 @@ public class BuildSourceParametersTest extends WingsBaseTest {
             .artifactStreamAttributes(ArtifactStreamAttributes.builder().build())
             .build();
     List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
-    assertThat(capabilityList).hasSize(1);
-    assertThat(capabilityList.get(0)).isExactlyInstanceOf(IgnoreValidationCapability.class);
+    assertThat(capabilityList).hasSize(0);
   }
 }

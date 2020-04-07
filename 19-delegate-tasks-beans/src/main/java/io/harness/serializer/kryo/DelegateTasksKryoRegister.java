@@ -14,7 +14,6 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.HelmCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.IgnoreValidationCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
@@ -81,7 +80,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(HelmCapability.class, 19019);
     kryo.register(ChartMuseumCapability.class, 19020);
-    kryo.register(IgnoreValidationCapability.class, 19021);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
     kryo.register(ErrorNotifyResponseData.class, 5213);

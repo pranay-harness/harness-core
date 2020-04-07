@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
@@ -11,7 +12,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
-import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -231,7 +231,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         return singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
       case AMI:
       case AWS_LAMBDA:
-        return singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+        return emptyList();
       default:
         unhandled(deploymentType);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)

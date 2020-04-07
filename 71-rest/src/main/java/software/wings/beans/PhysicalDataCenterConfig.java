@@ -1,8 +1,9 @@
 package software.wings.beans;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,6 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,7 +33,7 @@ public class PhysicalDataCenterConfig extends SettingValue {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+    return emptyList();
   }
 
   /**

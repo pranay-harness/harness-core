@@ -1,12 +1,13 @@
 package software.wings.beans;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.LoadBalancerProviderYaml;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -75,7 +75,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+    return emptyList();
   }
 
   @Data
