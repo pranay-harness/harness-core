@@ -33,6 +33,7 @@ public class HelmChartSpecification extends DeploymentSpecification {
                                                .chartVersion(this.getChartVersion())
                                                .serviceId(this.serviceId)
                                                .build();
+    specification.setAccountId(this.getAccountId());
     specification.setAppId(this.getAppId());
     return specification;
   }

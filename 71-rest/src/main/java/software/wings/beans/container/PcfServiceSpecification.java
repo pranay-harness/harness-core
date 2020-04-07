@@ -57,6 +57,7 @@ public class PcfServiceSpecification extends DeploymentSpecification {
     PcfServiceSpecification specification =
         PcfServiceSpecification.builder().serviceId(this.serviceId).manifestYaml(this.getManifestYaml()).build();
     specification.setAppId(this.getAppId());
+    specification.setAccountId(this.getAccountId());
     return specification;
   }
 

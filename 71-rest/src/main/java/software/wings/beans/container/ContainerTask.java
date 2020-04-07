@@ -131,6 +131,7 @@ public abstract class ContainerTask extends DeploymentSpecification {
     newContainerTask.setAdvancedConfig(this.getAdvancedConfig());
     newContainerTask.setContainerDefinitions(this.getContainerDefinitions());
     newContainerTask.setServiceId(this.getServiceId());
+    newContainerTask.setAccountId(this.getAccountId());
     newContainerTask.setAppId(this.getAppId());
   }
 

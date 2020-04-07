@@ -26,6 +26,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "CloudFormationRollbackConfigKeys")
 public class CloudFormationRollbackConfig implements PersistentEntity, UuidAware, CreatedAtAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed private String accountId;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore @Indexed private long createdAt;
 

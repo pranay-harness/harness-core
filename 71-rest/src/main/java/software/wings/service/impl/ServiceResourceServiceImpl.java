@@ -1296,14 +1296,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");
     }
+    String appId = containerTask.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    containerTask.setAccountId(accountId);
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
 
     if (advanced) {
       return persistedContainerTask.convertToAdvanced();
     }
 
-    String appId = persistedContainerTask.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, persistedContainerTask.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
@@ -1435,11 +1436,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");
     }
+
+    String appId = helmChartSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    helmChartSpecification.setAccountId(accountId);
     HelmChartSpecification persistedHelmChartSpecification =
         wingsPersistence.saveAndGet(HelmChartSpecification.class, helmChartSpecification);
 
-    String appId = persistedHelmChartSpecification.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, persistedHelmChartSpecification.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
@@ -1456,19 +1460,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("Service doesn't exist");
     }
 
+    String appId = ecsServiceSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+
     Type type = Type.CREATE;
-    EcsServiceSpecification specification =
-        getEcsServiceSpecification(ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+    EcsServiceSpecification specification = getEcsServiceSpecification(appId, ecsServiceSpecification.getServiceId());
     if (specification != null) {
       ecsServiceSpecification.setUuid(specification.getUuid());
       type = Type.UPDATE;
     }
 
+    ecsServiceSpecification.setAccountId(accountId);
     EcsServiceSpecification serviceSpecification =
         wingsPersistence.saveAndGet(EcsServiceSpecification.class, ecsServiceSpecification);
 
-    String appId = serviceSpecification.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, serviceSpecification.getServiceId());
 
     yamlPushService.pushYamlChangeSet(
@@ -1518,14 +1523,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");
     }
+    String appId = pcfServiceSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
 
+    pcfServiceSpecification.setAccountId(accountId);
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     PcfServiceSpecification persistedPcfServiceSpecification =
         wingsPersistence.saveAndGet(PcfServiceSpecification.class, pcfServiceSpecification);
     upsertPCFSpecInManifestFile(pcfServiceSpecification);
 
-    String appId = persistedPcfServiceSpecification.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, persistedPcfServiceSpecification.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
@@ -1922,10 +1928,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   public UserDataSpecification upsertUserDataSpecification(
       UserDataSpecification userDataSpecification, boolean isCreate) {
+    String appId = userDataSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    userDataSpecification.setAccountId(accountId);
+
     UserDataSpecification persistedUserDataSpec =
         wingsPersistence.saveAndGet(UserDataSpecification.class, userDataSpecification);
-    String appId = persistedUserDataSpec.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, persistedUserDataSpec.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
@@ -2132,11 +2140,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private LambdaSpecification upsertLambdaSpecification(LambdaSpecification lambdaSpecification, boolean isCreate) {
     validateLambdaSpecification(lambdaSpecification);
+    String appId = lambdaSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
 
+    lambdaSpecification.setAccountId(accountId);
     LambdaSpecification persistedLambdaSpec =
         wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
-    String appId = persistedLambdaSpec.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = getWithDetails(appId, persistedLambdaSpec.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;

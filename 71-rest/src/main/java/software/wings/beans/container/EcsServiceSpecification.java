@@ -42,6 +42,7 @@ public class EcsServiceSpecification extends DeploymentSpecification {
                                                 .serviceSpecJson(serviceSpecJson)
                                                 .schedulingStrategy(schedulingStrategy)
                                                 .build();
+    specification.setAccountId(this.getAccountId());
     specification.setAppId(this.getAppId());
     return specification;
   }
