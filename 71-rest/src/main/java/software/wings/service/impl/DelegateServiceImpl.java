@@ -66,7 +66,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.github.zafarkhaja.semver.Version;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
@@ -732,7 +731,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String delegateStorageUrl = null;
     String delegateCheckLocation = null;
     boolean jarFileExists = false;
-    boolean versionChanged = false;
     String delegateDockerImage = "harness/delegate:latest";
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
     boolean useCDN =
@@ -748,7 +746,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         latestVersion = inquiry.getVersion();
         String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
-        versionChanged = true;
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
           logger.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
@@ -760,18 +757,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
-        versionChanged = !(Version.valueOf(inquiry.getVersion()).equals(Version.valueOf(latestVersion)));
       }
-
-      if (versionChanged) {
-        int responseCode = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
-                               .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
-                               .execute()
-                               .code();
-        logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
-        jarFileExists = responseCode == 200;
-        logger.info("jarFileExists [{}]", jarFileExists);
-      }
+      int responseCode = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
+                             .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
+                             .execute()
+                             .code();
+      logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
+      jarFileExists = responseCode == 200;
+      logger.info("jarFileExists [{}]", jarFileExists);
     } catch (IOException | ExecutionException e) {
       logger.warn("Unable to fetch delegate version information", e);
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
@@ -779,7 +772,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
-    if (versionChanged && jarFileExists) {
+    if (jarFileExists) {
       String watcherMetadataUrl;
       String watcherStorageUrl;
       String watcherCheckLocation;
@@ -848,8 +841,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return params.build();
     }
 
-    String msg = "Failed to get jar and script runtime params. versionChanged: " + versionChanged
-        + ", jarFileExists: " + jarFileExists;
+    String msg = "Failed to get jar and script runtime params. jarFileExists: " + jarFileExists;
     logger.warn(msg);
     return null;
   }
