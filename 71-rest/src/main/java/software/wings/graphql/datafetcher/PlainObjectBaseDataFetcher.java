@@ -74,7 +74,10 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
       throw new InvalidRequestException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
       throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, ex, USER_SRE);
+    } finally {
+      authRuleInstrumentation.unsetAllThreadLocal();
     }
+
     return result;
   }
 

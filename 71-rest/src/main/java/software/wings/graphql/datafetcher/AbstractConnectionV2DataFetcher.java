@@ -82,7 +82,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     } catch (Exception ex) {
       throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
     } finally {
-      AccountThreadLocal.unset();
+      authRuleInstrumentation.unsetAllThreadLocal();
     }
   }
 
