@@ -78,6 +78,7 @@ cache { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0
 ceCloudAccount { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "infraAccountId" : 1 , "infraMasterAccountId" : 1}
 ceCluster { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "infraAccountId" : 1 , "region" : 1 , "clusterName" : 1}
 ceExceptionRecord { "name" : "accountId_clusterId_createdAt" , "background" : true} { "accountId" : 1 , "clusterId" : 1 , "createdAt" : 1}
+cloudFormationRollbackConfig { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 cloudFormationRollbackConfig { "name" : "appId_1" , "background" : true} { "appId" : 1}
 cloudFormationRollbackConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 cloudFormationRollbackConfig { "name" : "entityId_1" , "background" : true} { "entityId" : 1}
@@ -98,6 +99,7 @@ configFiles { "name" : "entityId_1_templateId_1_relativeFilePath_1_OType_1_insta
 containerDeploymentInfo { "name" : "appId_1" , "background" : true} { "appId" : 1}
 containerDeploymentInfo { "name" : "containerSvcNameNoRevision_1" , "background" : true} { "containerSvcNameNoRevision" : 1}
 containerDeploymentInfo { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+containerTasks { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 containerTasks { "name" : "appId_1" , "background" : true} { "appId" : 1}
 containerTasks { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 containerTasks { "name" : "service" , "unique" : true} { "serviceId" : 1 , "deploymentType" : 1}
@@ -165,6 +167,7 @@ deploymentTriggers { "name" : "uniqueTriggerIdx" , "unique" : true} { "appId" : 
 deploymentTriggers { "name" : "uniqueTypeIdx" , "background" : true} { "accountId" : 1 , "appId" : 1 , "type" : 1}
 ecsPollingJobEntity { "name" : "clusterName_1" , "background" : true} { "clusterName" : 1}
 ecsPollingJobEntity { "name" : "nextIteration_1" , "background" : true} { "nextIteration" : 1}
+ecsServiceSpecification { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 ecsServiceSpecification { "name" : "appId_1" , "background" : true} { "appId" : 1}
 ecsServiceSpecification { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 emailQueue2 { "name" : "earliestGet_1" , "background" : true , "expireAfterSeconds" : 86400} { "earliestGet" : 1}
@@ -249,6 +252,7 @@ governanceConfig { "name" : "accountId_1" , "background" : true} { "accountId" :
 harnessApiKeys { "name" : "clientType_1" , "background" : true} { "clientType" : 1}
 harnessUserGroups { "name" : "appId_1" , "background" : true} { "appId" : 1}
 harnessUserGroups { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+helmChartSpecifications { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 helmChartSpecifications { "name" : "appId_1" , "background" : true} { "appId" : 1}
 helmChartSpecifications { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 helmChartSpecifications { "name" : "serviceId_1" , "unique" : true} { "serviceId" : 1}
@@ -301,6 +305,7 @@ kmsConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 kmsConfig { "name" : "uniqueIdx" , "unique" : true} { "name" : 1 , "accountId" : 1}
 kmsTransitionEvent2 { "name" : "earliestGet_1" , "background" : true , "expireAfterSeconds" : 86400} { "earliestGet" : 1}
 kmsTransitionEvent2 { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestGet" : 1}
+lambdaSpecifications { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 lambdaSpecifications { "name" : "appId_1" , "background" : true} { "appId" : 1}
 lambdaSpecifications { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 lambdaSpecifications { "name" : "serviceId_1" , "unique" : true} { "serviceId" : 1}
@@ -391,6 +396,7 @@ notifyQueue { "name" : "next4" , "background" : true} { "topic" : 1 , "earliestG
 notifyQueue { "name" : "unique" , "unique" : true} { "waitInstanceId" : 1}
 notifyResponses { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 notifyResponses { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+pcfServiceSpecification { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 pcfServiceSpecification { "name" : "appId_1" , "background" : true} { "appId" : 1}
 pcfServiceSpecification { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 permits { "name" : "appId_1" , "background" : true} { "appId" : 1}
@@ -582,6 +588,7 @@ triggers { "name" : "conditionArtifactStreamId" , "background" : true} { "condit
 triggers { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 triggers { "name" : "webHookToken_1" , "background" : true} { "webHookToken" : 1}
 triggers { "name" : "yaml" , "unique" : true} { "appId" : 1 , "name" : 1}
+userDataSpecifications { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 userDataSpecifications { "name" : "appId_1" , "background" : true} { "appId" : 1}
 userDataSpecifications { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 userDataSpecifications { "name" : "serviceId_1" , "unique" : true} { "serviceId" : 1}

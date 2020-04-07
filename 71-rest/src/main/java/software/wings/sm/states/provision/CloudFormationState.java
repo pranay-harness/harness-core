@@ -9,6 +9,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -237,12 +238,13 @@ public abstract class CloudFormationState extends State {
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Application app = executionContext.getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
-
+    Preconditions.checkNotNull(app, "No app found from executionContext");
+    Preconditions.checkNotNull(env, "No env found from executionContext");
     ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
@@ -329,6 +331,7 @@ public abstract class CloudFormationState extends State {
       body = rollbackInfo.getBody();
     }
     wingsPersistence.save(CloudFormationRollbackConfig.builder()
+                              .accountId(context.getAccountId())
                               .appId(context.getAppId())
                               .url(url)
                               .body(body)
