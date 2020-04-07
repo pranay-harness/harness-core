@@ -113,7 +113,12 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   }
 
   @Override
-  public boolean enableOrDisableUser(String accountId, String userId, boolean enabled) {
-    return userService.enableUser(accountId, userId, enabled);
+  public boolean enableOrDisableCloudCost(String accountId, boolean enabled) {
+    return accountService.updateCloudCostEnabled(accountId, enabled);
+  }
+
+  @Override
+  public boolean delete(String accountId) {
+    return accountService.delete(accountId);
   }
 }

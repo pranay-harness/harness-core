@@ -31,5 +31,7 @@ public interface AdminAccountService {
 
   boolean disableAccount(String accountId, String newClusterUrl);
 
-  boolean enableOrDisableUser(String accountId, String userId, boolean enabled);
+  boolean enableOrDisableCloudCost(String accountId, boolean enabled);
+
+  boolean delete(String accountId);
 }

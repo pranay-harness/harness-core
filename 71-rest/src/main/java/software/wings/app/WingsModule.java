@@ -31,6 +31,8 @@ import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminAccountServiceImpl;
+import io.harness.datahandler.services.AdminUserService;
+import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -690,6 +692,7 @@ public class WingsModule extends DependencyModule {
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);
     bind(AdminAccountService.class).to(AdminAccountServiceImpl.class);
+    bind(AdminUserService.class).to(AdminUserServiceImpl.class);
     bind(AccountSummaryHelper.class).to(AccountSummaryHelperImpl.class);
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
