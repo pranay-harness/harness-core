@@ -19,7 +19,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
@@ -247,11 +246,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       if (serviceVariablesMap.containsKey(configVar.getName())) {
         ServiceVariable serviceVariable = serviceVariablesMap.get(configVar.getName());
 
-        if (!serviceVariable.getType().name().equals(configVar.getValueType())) {
-          configVarsToUpdate.add(configVar);
-          continue;
-        }
-
         switch (serviceVariable.getType()) {
           case TEXT:
             if (configVar.getValue() == null
@@ -344,27 +338,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     for (NameValuePair.Yaml configVar : configVarsToUpdate) {
       ServiceVariable serviceVariable = serviceVariableMap.get(configVar.getName());
       String value = configVar.getValue();
-
-      if (!serviceVariable.getType().name().equals(configVar.getValueType())) {
-        String newType = configVar.getValueType();
-        switch (newType) {
-          case "TEXT":
-          case "ENCRYPTED_TEXT":
-            serviceVariable.setType(Type.valueOf(newType));
-            break;
-          case "ARTIFACT":
-            if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-              serviceVariable.setType(ARTIFACT);
-            } else {
-              logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
-              continue;
-            }
-            break;
-          default:
-            throw new YamlException(
-                "Yaml doesn't support {} type service variables. Only TEXT and ENCRYPTED_TEXT are valid types", USER);
-        }
-      }
 
       switch (serviceVariable.getType()) {
         case TEXT:
