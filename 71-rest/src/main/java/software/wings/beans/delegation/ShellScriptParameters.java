@@ -7,7 +7,6 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
@@ -192,9 +191,11 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
           }
         }
       }
-      executionCapabilities.add(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
-      executionCapabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
-          "DELEGATE_POWERSHELL", Arrays.asList("/bin/sh", "-c", "pwsh -Version")));
+
+      if (scriptType == ScriptType.POWERSHELL) {
+        executionCapabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+            "DELEGATE_POWERSHELL", Arrays.asList("/bin/sh", "-c", "pwsh -Version")));
+      }
       return executionCapabilities;
     }
     switch (connectionType) {

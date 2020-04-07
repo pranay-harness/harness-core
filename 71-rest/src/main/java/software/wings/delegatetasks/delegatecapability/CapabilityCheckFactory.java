@@ -10,7 +10,6 @@ import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HelmCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
-import io.harness.delegate.task.executioncapability.IgnoreValidationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
@@ -24,7 +23,6 @@ import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidati
 @Singleton
 public class CapabilityCheckFactory {
   @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
-  @Inject IgnoreValidationCapabilityCheck ignoreValidationCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
@@ -43,8 +41,6 @@ public class CapabilityCheckFactory {
     switch (capabilityCheckType) {
       case SOCKET:
         return socketConnectivityCapabilityCheck;
-      case ALWAYS_TRUE:
-        return ignoreValidationCapabilityCheck;
       case PROCESS_EXECUTOR:
         return processExecutorCapabilityCheck;
       case AWS_REGION:

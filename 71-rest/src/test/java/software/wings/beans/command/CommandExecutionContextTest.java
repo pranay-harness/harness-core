@@ -15,7 +15,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.IgnoreValidationCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -143,8 +142,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
     CommandExecutionContext executionContext = contextBuilder.withDeploymentType(DeploymentType.AMI.name()).build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(IgnoreValidationCapability.class);
+    assertThat(executionCapabilities).hasSize(0);
   }
 
   @Test
@@ -155,7 +153,6 @@ public class CommandExecutionContextTest extends WingsBaseTest {
         contextBuilder.withDeploymentType(DeploymentType.AWS_LAMBDA.name()).build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(IgnoreValidationCapability.class);
+    assertThat(executionCapabilities).hasSize(0);
   }
 }
