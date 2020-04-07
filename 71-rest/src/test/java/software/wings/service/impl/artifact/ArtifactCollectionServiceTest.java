@@ -1081,7 +1081,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                               .build();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(gcrArtifactStream);
 
-    String serviceAccountFileContent = "{ \"key\": \"value\" }";
+    String serviceAccountFileContent = "{\n  \"key\": \"val\nue\"\n}";
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
             .withValue(GcpConfig.builder()
@@ -1099,6 +1099,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     String username = JsonUtils.jsonPath(dockerConfig, "$.registry/image.username");
     assertThat(username).isEqualTo("_json_key");
     String password = JsonUtils.jsonPath(dockerConfig, "$.registry/image.password");
+    assertThat(password.contains("\n")).isFalse();
     String value = JsonUtils.jsonPath(password, "$.key");
     assertThat(value).isEqualTo("value");
   }

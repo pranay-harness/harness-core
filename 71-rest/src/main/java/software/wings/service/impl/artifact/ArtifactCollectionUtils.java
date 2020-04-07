@@ -373,7 +373,9 @@ public class ArtifactCollectionUtils {
         managerDecryptionService.decrypt(
             gcpConfig, secretManager.getEncryptionDetails(gcpConfig, null, workflowExecutionId));
         if (gcpConfig.getServiceAccountKeyFileContent() != null) {
-          imageDetailsBuilder.username("_json_key").password(new String(gcpConfig.getServiceAccountKeyFileContent()));
+          // Create password as the service account file content (without newlines) as username as _json_key.
+          imageDetailsBuilder.username("_json_key")
+              .password(new String(gcpConfig.getServiceAccountKeyFileContent()).replaceAll("\n", ""));
         }
       } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
         AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
