@@ -419,7 +419,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .comparisonStrategy(getComparisonStrategy())
             .timeDuration(Integer.parseInt(getTimeDuration()))
             .stateType(StateType.valueOf(getStateType()))
-            .analysisServerConfigId(getAnalysisServerConfigId())
+            .analysisServerConfigId(getResolvedConnectorId(
+                context, AnalysisContextKeys.analysisServerConfigId, getAnalysisServerConfigId()))
             .correlationId(correlationId)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
             .envId(getEnvId(context))
