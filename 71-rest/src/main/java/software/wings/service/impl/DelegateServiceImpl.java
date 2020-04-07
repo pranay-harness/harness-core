@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.collect.Sets.newHashSet;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
@@ -107,6 +106,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
 import io.harness.persistence.AccountLogContext;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -208,6 +208,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -395,19 +396,20 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Set<String> getAllDelegateTags(String accountId) {
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
-                                   .filter(DelegateKeys.accountId, accountId)
-                                   .field(DelegateKeys.tags)
-                                   .exists()
-                                   .asList();
-    if (isNotEmpty(delegates)) {
-      Set<String> tags = newHashSet();
-      delegates.forEach(delegate -> {
-        if (isNotEmpty(delegate.getTags())) {
+    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .field(DelegateKeys.tags)
+                                        .notEqual(null)
+                                        .project(DelegateKeys.tags, true);
+
+    try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
+      if (delegates.hasNext()) {
+        Set<String> tags = new HashSet<>();
+        for (Delegate delegate : delegates) {
           tags.addAll(delegate.getTags());
         }
-      });
-      return tags;
+        return tags;
+      }
     }
     return emptySet();
   }
