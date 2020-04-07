@@ -13,6 +13,6 @@ import java.util.List;
 @Redesign
 public class StateResponse {
   NodeExecutionStatus executionStatus;
-  @Singular List<StateOutput> outputs;
+  @Singular List<StateTransput> outputs;
   String errorMessage;
 }

@@ -1,7 +1,7 @@
 package io.harness.facilitate.modes.children;
 
 import io.harness.plan.ExecutionNode;
-import io.harness.state.io.StateInput;
+import io.harness.state.io.StateTransput;
 import lombok.Builder;
 import lombok.Value;
 
@@ -14,6 +14,6 @@ public class ChildrenExecutableResponse {
 
   public static class Child {
     ExecutionNode childNode;
-    List<StateInput> additionalInputs;
+    List<StateTransput> additionalInputs;
   }
 }

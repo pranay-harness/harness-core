@@ -12,6 +12,6 @@ import java.util.List;
 @Redesign
 public class StateExecutionPackage {
   Ambiance ambiance;
-  List<StateInput> inputs;
+  List<StateTransput> inputs;
   StateParameters stateParameter;
 }
