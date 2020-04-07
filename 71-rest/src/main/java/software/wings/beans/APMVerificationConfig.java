@@ -26,6 +26,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.states.APMVerificationState.Method;
+import software.wings.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -170,7 +171,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        getUrl() + getValidationUrl()));
+        Utils.appendPathToBaseUrl(getUrl(), getValidationUrl())));
   }
 
   @Data

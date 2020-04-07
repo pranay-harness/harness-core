@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NonNull;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.sm.states.APMVerificationState.Method;
+import software.wings.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -48,8 +49,9 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.addAll(
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
-    executionCapabilities.addAll(Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl + getUrl())));
+    executionCapabilities.addAll(
+        Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            Utils.appendPathToBaseUrl(baseUrl, getUrl()))));
     return executionCapabilities;
   }
 }

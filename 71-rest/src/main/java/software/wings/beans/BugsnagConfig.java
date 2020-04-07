@@ -16,6 +16,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.utils.Utils;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl() + validationUrl));
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        Utils.appendPathToBaseUrl(getUrl(), validationUrl)));
   }
 }

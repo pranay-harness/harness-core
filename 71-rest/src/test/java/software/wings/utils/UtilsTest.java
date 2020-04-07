@@ -71,4 +71,31 @@ public class UtilsTest extends CategoryTest {
                    "abc-def"))
         .isEqualTo("abc-def-13");
   }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void testAppendPathToBaseUrl() {
+    assertThat(Utils.appendPathToBaseUrl("https://example.com", "hello")).isEqualTo("https://example.com/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/", "hello")).isEqualTo("https://example.com/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/", "/hello")).isEqualTo("https://example.com/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com:8080", "hello"))
+        .isEqualTo("https://example.com:8080/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com:8080/", "hello"))
+        .isEqualTo("https://example.com:8080/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com:8080/", "/hello"))
+        .isEqualTo("https://example.com:8080/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/path1/path2", "hello"))
+        .isEqualTo("https://example.com/path1/path2/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/path1/path2", "/hello"))
+        .isEqualTo("https://example.com/path1/path2/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/path1/path2/", "/hello/"))
+        .isEqualTo("https://example.com/path1/path2/hello/");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com/path1/path2/", "/hello/q=abc&abc=%20abc"))
+        .isEqualTo("https://example.com/path1/path2/hello/q=abc&abc=%20abc");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com", "q=abc&abc=%20abc"))
+        .isEqualTo("https://example.com/q=abc&abc=%20abc");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com", "./hello")).isEqualTo("https://example.com/hello");
+    assertThat(Utils.appendPathToBaseUrl("http://example.com", "./hello")).isEqualTo("http://example.com/hello");
+  }
 }
