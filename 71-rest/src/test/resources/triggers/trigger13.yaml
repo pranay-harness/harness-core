@@ -1,0 +1,21 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- regex: false
+  serviceName: SSH
+  type: LAST_DEPLOYED
+  workflowName: w1
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: SCHEDULED
+  cronDescription: at 00:00 at 1 day at January month UTC
+  cronExpression: 0 0 1 1 ?
+  onNewArtifact: true
+workflowVariables:
+- name: var4
+  value: val4
+- name: var3
+  value: test
+- name: var1
+  value: valu1

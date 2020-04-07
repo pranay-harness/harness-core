@@ -140,12 +140,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                 .orElse(null);
 
         if (workflowEnvVariable != null) {
-          if (skipEmpty && isEmpty(workflowEnvVariable.getValue())) {
-            if (workflowEnvVariable.getValue() != null) {
-              workflowVariables.put(workflowEnvVariable.getName(), workflowEnvVariable.getValue());
-            }
-          } else if (matchesVariablePattern(workflowEnvVariable.getValue())) {
-            workflowVariables.put(workflowEnvVariable.getName(), workflowEnvVariable.getValue());
+          if (matchesVariablePattern(workflowEnvVariable.getValue())) {
             logger.info("Environment parameterized in pipeline and the value is {}", workflowEnvVariable.getValue());
             properties.put("envId", workflowEnvVariable.getValue());
           } else {
@@ -154,7 +149,6 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
             notNullCheck("Environment [" + workflowEnvVariable.getValue() + "] does not exist", environment, USER);
 
             envId = environment.getUuid();
-            workflowVariables.put(workflowEnvVariable.getName(), envId);
             properties.put("envId", envId);
           }
         }

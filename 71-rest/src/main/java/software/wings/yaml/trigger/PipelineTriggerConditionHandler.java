@@ -36,7 +36,7 @@ public class PipelineTriggerConditionHandler extends TriggerConditionYamlHandler
 
     return PipelineTriggerCondition.builder()
         .pipelineName(pipelineTriggerConditionYaml.getPipelineName())
-        .pipelineId(yamlHelper.getPipelineId(appId, pipelineName))
+        .pipelineId(yamlHelper.getPipelineFromName(appId, pipelineName).getUuid())
         .build();
   }
 

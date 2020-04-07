@@ -78,7 +78,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
                                               .build();
 
     if (isNotBlank(yaml.getPipelineName())) {
-      String pipelineId = yamlHelper.getPipelineId(appId, yaml.getPipelineName());
+      String pipelineId = yamlHelper.getPipelineFromName(appId, yaml.getPipelineName()).getUuid();
       artifactSelection.setPipelineId(pipelineId);
       artifactSelection.setPipelineName(yaml.getPipelineName());
     } else if (isNotBlank(yaml.getWorkflowName())) {

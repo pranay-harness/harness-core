@@ -1,0 +1,22 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- pipelineName: tp_2
+  regex: false
+  serviceName: k8s
+  type: LAST_DEPLOYED
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: PIPELINE_COMPLETION
+  pipelineName: tp_2
+workflowVariables:
+- entityType: SERVICE
+  name: srv
+  value: k8s
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: infra
+  value: Azure k8s
+- entityType: ENVIRONMENT
+  name: env
+  value: Prod

@@ -1,0 +1,9 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: NEW_ARTIFACT
+  artifactStreamName: library_nginx
+  regex: false
+  serviceName: k8s

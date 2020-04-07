@@ -1,0 +1,16 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: WEBHOOK
+workflowVariables:
+- entityType: SERVICE
+  name: srv
+  value: ${srv}
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: infra
+  value: ${infra}
+- entityType: ENVIRONMENT
+  name: env
+  value: ${env}

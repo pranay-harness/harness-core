@@ -1,0 +1,36 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- artifactStreamName: library_nginx
+  regex: false
+  serviceName: k8s
+  type: WEBHOOK_VARIABLE
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: WEBHOOK
+  action:
+  - closed
+  branchName: test*
+  eventType:
+  - pull_request
+  repositoryType: GITHUB
+workflowVariables:
+- entityType: APPDYNAMICS_APPID
+  name: app_app
+  value: '10699'
+- entityType: NEWRELIC_APPID
+  name: Napp
+  value: '117116134'
+- entityType: NEWRELIC_CONFIGID
+  name: Nserver
+  value: Q1MyA0U_RsOndAqi0Ryh5A
+- entityType: SS_SSH_CONNECTION_ATTRIBUTE
+  name: ssh
+  value: Wings Key
+- entityType: APPDYNAMICS_CONFIGID
+  name: app_server
+  value: MXkP2FrGRuynqVpU-ITxww
+- entityType: APPDYNAMICS_TIERID
+  name: app_tier
+  value: '151137'

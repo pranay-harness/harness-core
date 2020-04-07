@@ -1,0 +1,24 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- artifactStreamName: library_nginx
+  regex: false
+  serviceName: k8s
+  type: WEBHOOK_VARIABLE
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: WEBHOOK
+  eventType:
+  - pull_request
+  repositoryType: GITLAB
+workflowVariables:
+- entityType: SERVICE
+  name: srv
+  value: k8s
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: infra
+  value: Azure k8s
+- entityType: ENVIRONMENT
+  name: env
+  value: Prod
