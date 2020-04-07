@@ -1,0 +1,21 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- regex: false
+  serviceName: k8s
+  type: PIPELINE_SOURCE
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: PIPELINE_COMPLETION
+  pipelineName: tp_1
+workflowVariables:
+- entityType: ENVIRONMENT
+  name: Environment
+  value: Prod
+- entityType: SERVICE
+  name: Service
+  value: k8s
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: InfraDefinition_KUBERNETES
+  value: Azure k8s

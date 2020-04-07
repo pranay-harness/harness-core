@@ -1,0 +1,28 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: WEBHOOK
+  eventType:
+  - push
+  repositoryType: GITLAB
+workflowVariables:
+- entityType: NEWRELIC_CONFIGID
+  name: NewRelic_Server
+  value: Q1MyA0U_RsOndAqi0Ryh5A
+- entityType: APPDYNAMICS_CONFIGID
+  name: AppDynamics_Server
+  value: MXkP2FrGRuynqVpU-ITxww
+- entityType: APPDYNAMICS_TIERID
+  name: AppDynamics_Tier
+  value: '151137'
+- entityType: APPDYNAMICS_APPID
+  name: AppDynamics_Application
+  value: '10699'
+- entityType: SS_SSH_CONNECTION_ATTRIBUTE
+  name: SSH_ConnectionAttribute
+  value: Wings Key
+- entityType: NEWRELIC_APPID
+  name: NewRelic_Application
+  value: '117116134'

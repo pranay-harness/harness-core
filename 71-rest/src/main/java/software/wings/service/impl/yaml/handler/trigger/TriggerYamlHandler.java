@@ -8,6 +8,8 @@ import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Maps;
@@ -16,12 +18,14 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.ArtifactSelection;
@@ -90,14 +94,20 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     String executionType = getExecutionType(bean.getWorkflowType());
     String executionName = null;
 
-    Workflow workflow = null;
-
+    List<TriggerVariable> triggerVariablesYaml = null;
     String workflowOrPipelineId = bean.getWorkflowId();
     if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
-      workflow = yamlHelper.getWorkflowFromId(appId, workflowOrPipelineId);
+      Workflow workflow = yamlHelper.getWorkflowFromId(appId, workflowOrPipelineId);
       executionName = workflow.getName();
+      if (workflow.getOrchestrationWorkflow() != null) {
+        triggerVariablesYaml = convertToTriggerYamlVariables(
+            appId, bean.getWorkflowVariables(), workflow.getOrchestrationWorkflow().getUserVariables());
+      }
     } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
-      executionName = yamlHelper.getPipelineName(appId, workflowOrPipelineId);
+      Pipeline pipeline = yamlHelper.getPipelineFromId(appId, workflowOrPipelineId);
+      executionName = pipeline.getName();
+      triggerVariablesYaml =
+          convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), pipeline.getPipelineVariables());
     }
 
     List<ArtifactSelection.Yaml> artifactSelectionList =
@@ -106,13 +116,21 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             .map(artifactSelection -> { return artifactSelectionYamlHandler.toYaml(artifactSelection, appId); })
             .collect(Collectors.toList());
 
+    for (ArtifactSelection.Yaml artifactSelectionYAML : artifactSelectionList) {
+      if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+        artifactSelectionYAML.setPipelineName(null);
+      } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
+        artifactSelectionYAML.setWorkflowName(null);
+      }
+    }
+
     TriggerConditionYaml triggerConditionYaml = handler.toYaml(bean.getCondition(), appId);
     Yaml yaml = Yaml.builder()
                     .description(bean.getDescription())
                     .executionType(executionType)
                     .triggerCondition(Arrays.asList(triggerConditionYaml))
                     .executionName(executionName)
-                    .workflowVariables(convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), workflow))
+                    .workflowVariables(triggerVariablesYaml)
                     .artifactSelections(artifactSelectionList)
                     .harnessApiVersion(getHarnessApiVersion())
                     .build();
@@ -177,14 +195,20 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         YamlType.TRIGGER.getPathExpression(), change.getFilePath(), PATH_DELIMITER);
 
     List<ArtifactSelection> artifactSelectionList = new ArrayList<>();
+    WorkflowType workflowType = getWorkflowType(changeContext.getChange().getFilePath(), yaml.getExecutionType());
+
     yaml.getArtifactSelections().forEach(artifactSelectionYaml -> {
+      if (workflowType == ORCHESTRATION) {
+        artifactSelectionYaml.setPipelineName(null);
+      } else if (workflowType == WorkflowType.PIPELINE) {
+        artifactSelectionYaml.setWorkflowName(null);
+      }
       ChangeContext.Builder artifactClonedContext = cloneFileChangeContext(changeContext, artifactSelectionYaml);
       ArtifactSelection artifactSelection =
           artifactSelectionYamlHandler.upsertFromYaml(artifactClonedContext.build(), changeSetContext);
       artifactSelectionList.add(artifactSelection);
     });
 
-    WorkflowType workflowType = getWorkflowType(changeContext.getChange().getFilePath(), yaml.getExecutionType());
     Trigger updatedTrigger = Trigger.builder()
                                  .description(yaml.getDescription())
                                  .name(triggerName)
@@ -202,11 +226,88 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       updatedTrigger.setWorkflowVariables(
           convertToTriggerBeanVariables(change.getAccountId(), appId, workflow, yaml.getWorkflowVariables()));
     } else if (workflowType == WorkflowType.PIPELINE) {
-      String pipelineId = yamlHelper.getPipelineId(appId, yaml.getExecutionName());
-      updatedTrigger.setWorkflowId(pipelineId);
+      Pipeline pipeline = yamlHelper.getPipelineFromName(appId, yaml.getExecutionName());
+      updatedTrigger.setWorkflowId(pipeline.getUuid());
+      updatedTrigger.setWorkflowVariables(
+          convertToTriggerBeanVariablesPipeline(change.getAccountId(), appId, pipeline, yaml.getWorkflowVariables()));
     }
 
     return updatedTrigger;
+  }
+
+  private Map<String, String> convertToTriggerBeanVariablesPipeline(
+      String accountId, String appId, Pipeline pipeline, List<TriggerVariable> triggerVariables) {
+    Map<String, String> workflowVariables = Maps.newLinkedHashMap();
+
+    if (isEmpty(triggerVariables)) {
+      return workflowVariables;
+    }
+
+    for (TriggerVariable variable : triggerVariables) {
+      String entityType = variable.getEntityType();
+      String variableName = variable.getName();
+      String variableValue = variable.getValue();
+      String valueForBean = null;
+      if (isNotEmpty(entityType)
+          && (entityType.equals(INFRASTRUCTURE_DEFINITION.name())
+                 || entityType.equals(INFRASTRUCTURE_MAPPING.name()))) {
+        valueForBean = getValueForInfraVariable(triggerVariables, variable, pipeline, accountId, appId);
+      } else {
+        valueForBean =
+            workflowYAMLHelper.getWorkflowVariableValueBean(accountId, null, appId, entityType, variableValue);
+      }
+      if (valueForBean != null) {
+        workflowVariables.put(variableName, valueForBean);
+      }
+    }
+
+    return workflowVariables;
+  }
+
+  private String getValueForInfraVariable(List<TriggerVariable> triggerVariables, TriggerVariable variable,
+      Pipeline pipeline, String accountId, String appId) {
+    List<Variable> pipelineVariables = pipeline.getPipelineVariables();
+    Variable infraVarInPipeline =
+        pipelineVariables.stream().filter(t -> t.getName().equals(variable.getName())).findFirst().orElse(null);
+    String envId = null;
+    if (infraVarInPipeline != null) {
+      Map<String, Object> metadata = infraVarInPipeline.getMetadata();
+      // get envId from Metadata
+      if (isNotEmpty(metadata) && metadata.get(Variable.ENV_ID) != null) {
+        envId = (String) metadata.get(Variable.ENV_ID);
+        return workflowYAMLHelper.getWorkflowVariableValueBean(
+            accountId, envId, appId, variable.getEntityType(), variable.getValue());
+      }
+    }
+    // look for an env variable in pipeline having infra var as related field and get its value from trigger variables.
+    for (Variable var : pipelineVariables) {
+      Map<String, Object> metadata = var.getMetadata();
+      if (isNotEmpty(metadata) && ENVIRONMENT == var.obtainEntityType()
+          && Arrays.asList(var.obtainRelatedField().split(",")).contains(variable.getName())) {
+        TriggerVariable envVarInTrigger =
+            triggerVariables.stream().filter(t -> t.getName().equals(var.getName())).findFirst().orElse(null);
+        if (envVarInTrigger != null) {
+          if (matchesVariablePattern(envVarInTrigger.getValue())) {
+            logger.info("Environment parameterized in Trigger and the value is {}", envVarInTrigger.getValue());
+            if (!matchesVariablePattern(variable.getValue())) {
+              throw new InvalidRequestException(
+                  "Infrastructure Definition should be templatised when environment value is templatised: Invalid Infra value: "
+                      + variable.getValue(),
+                  USER);
+            }
+            return variable.getValue();
+          } else {
+            Environment environment = environmentService.getEnvironmentByName(appId, envVarInTrigger.getValue(), false);
+            notNullCheck("Environment [" + envVarInTrigger.getValue() + "] does not exist", environment, USER);
+
+            envId = environment.getUuid();
+          }
+          return workflowYAMLHelper.getWorkflowVariableValueBean(
+              accountId, envId, appId, variable.getEntityType(), variable.getValue());
+        }
+      }
+    }
+    return variable.getValue();
   }
 
   private String getExecutionType(WorkflowType workflowType) {
@@ -254,14 +355,12 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   }
 
   private List<TriggerVariable> convertToTriggerYamlVariables(
-      String appId, Map<String, String> workflowVariables, Workflow workflow) {
-    if (workflow == null || EmptyPredicate.isEmpty(workflowVariables)) {
+      String appId, Map<String, String> workflowVariables, List<Variable> userVariables) {
+    if (EmptyPredicate.isEmpty(workflowVariables)) {
       return null;
     }
-
     List<TriggerVariable> triggerVariables = new ArrayList<>();
 
-    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (isEmpty(userVariables)) {
       userVariables = new ArrayList<>();
     }
@@ -278,11 +377,13 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
                                                .entityType(entityType != null ? entityType.name() : null)
                                                .build();
         String entryValue = entry.getValue();
+        triggerVariables.add(workflowVariable);
 
-        String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(appId, entryValue, entityType);
-        if (variableValue != null) {
-          workflowVariable.setValue(variableValue);
-          triggerVariables.add(workflowVariable);
+        if (isNotEmpty(entryValue)) {
+          String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(appId, entryValue, entityType);
+          if (variableValue != null) {
+            workflowVariable.setValue(variableValue);
+          }
         }
       }
     }
@@ -307,15 +408,13 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
         if (workflowEnvVariable != null) {
           if (matchesVariablePattern(workflowEnvVariable.getValue())) {
-            workflowVariables.put(workflowEnvVariable.getName(), workflowEnvVariable.getValue());
-            logger.info("Environment parameterized in pipeline and the value is {}", workflowEnvVariable.getValue());
+            logger.info("Environment parameterized in Trigger and the value is {}", workflowEnvVariable.getValue());
           } else {
             Environment environment =
                 environmentService.getEnvironmentByName(appId, workflowEnvVariable.getValue(), false);
             notNullCheck("Environment [" + workflowEnvVariable.getValue() + "] does not exist", environment, USER);
 
             envId = environment.getUuid();
-            workflowVariables.put(workflowEnvVariable.getName(), envId);
           }
         }
       }

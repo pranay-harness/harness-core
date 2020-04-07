@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.EntityType.ENVIRONMENT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,9 +35,6 @@ public class WorkflowYAMLHelper {
       return variableValue;
     }
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
-    if (ENVIRONMENT == entityTypeEnum) {
-      return null;
-    }
 
     UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, variableValue, entityTypeEnum);
     if (uuidAccess != null) {
@@ -96,6 +92,10 @@ public class WorkflowYAMLHelper {
       String accountId, String envId, String appId, String variableValue, EntityType entityType) {
     UuidAccess uuidAccess;
     switch (entityType) {
+      case ENVIRONMENT:
+        uuidAccess = environmentService.getEnvironmentByName(appId, variableValue, false);
+        notNullCheck("Environment [" + variableValue + "] does not exist", uuidAccess, USER);
+        break;
       case SERVICE:
         uuidAccess = serviceResourceService.getServiceByName(appId, variableValue, false);
         notNullCheck("Service [" + variableValue + "] does not exist", uuidAccess, USER);
@@ -108,7 +108,7 @@ public class WorkflowYAMLHelper {
       case INFRASTRUCTURE_DEFINITION:
         uuidAccess = infrastructureDefinitionService.getInfraDefByName(appId, envId, variableValue);
         notNullCheck(
-            "Service Infrastructure [" + variableValue + "] does not exist for the environment", uuidAccess, USER);
+            "Infrastructure Definition [" + variableValue + "] does not exist for the environment", uuidAccess, USER);
         break;
       case CF_AWS_CONFIG_ID:
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.AWS);

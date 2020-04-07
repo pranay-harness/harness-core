@@ -69,6 +69,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.verification.CVConfiguration;
 import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -471,20 +472,21 @@ public class YamlHelper {
 
   public Workflow getWorkflowFromId(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    notNullCheck("workflow name does not exist " + workflowId, workflow);
+    notNullCheck("Workflow  does not exist for " + workflowId, workflow);
     return workflow;
   }
 
-  public String getPipelineName(String appId, String pipelineId) {
-    String pipelineName = pipelineService.readPipeline(appId, pipelineId, false).getName();
-    notNullCheck("workflow name does not exist " + pipelineId, pipelineName);
-    return pipelineName;
+  public Pipeline getPipelineFromId(String appId, String pipelineId) {
+    Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
+    notNullCheck("Pipeline does not exist for " + pipelineId, pipeline);
+    return pipeline;
   }
 
-  public String getPipelineId(String appId, String pipelineName) {
-    String pipelineId = pipelineService.getPipelineByName(appId, pipelineName).getUuid();
-    notNullCheck("pipeline name does not exist " + pipelineName, pipelineId);
-    return pipelineId;
+  public Pipeline getPipelineFromName(String appId, String pipelineName) {
+    Pipeline pipeline = pipelineService.getPipelineByName(appId, pipelineName);
+    notNullCheck("Pipeline does not exist for " + pipelineName, pipeline);
+    pipelineService.setPipelineDetails(Collections.singletonList(pipeline), true);
+    return pipeline;
   }
 
   public Pipeline getPipeline(String accountId, String yamlFilePath) {

@@ -35,7 +35,7 @@ public class PipelineCompletionConditionYamlHandler extends ConditionYamlHandler
 
     return PipelineCondition.builder()
         .pipelineName(yaml.getPipelineName())
-        .pipelineId(yamlHelper.getPipelineId(appId, pipelineName))
+        .pipelineId(yamlHelper.getPipelineFromName(appId, pipelineName).getUuid())
         .build();
   }
 

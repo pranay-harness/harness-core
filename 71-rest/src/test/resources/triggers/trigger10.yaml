@@ -1,0 +1,22 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- artifactFilter: test
+  artifactStreamName: library_nginx
+  regex: false
+  serviceName: k8s
+  type: LAST_COLLECTED
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: SCHEDULED
+  cronDescription: at 00:00 UTC
+  cronExpression: 0 0 * * ?
+  onNewArtifact: false
+workflowVariables:
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: InfraDefinition_Kubernetes
+  value: Azure k8s
+- entityType: SERVICE
+  name: Service
+  value: k8s

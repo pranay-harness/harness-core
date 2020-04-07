@@ -1,0 +1,19 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+artifactSelections:
+- artifactStreamName: library_nginx
+  regex: false
+  serviceName: SSH
+  type: LAST_COLLECTED
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: SCHEDULED
+  cronDescription: at 00:00 at Sunday day UTC
+  cronExpression: 0 0 ? * SUN
+  onNewArtifact: true
+workflowVariables:
+- name: var2
+  value: val1
+- name: test-pip
+  value: test3

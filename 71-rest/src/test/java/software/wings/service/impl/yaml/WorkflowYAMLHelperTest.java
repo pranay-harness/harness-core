@@ -58,10 +58,6 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
     assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(
                    ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SERVICE.name(), "", true))
         .isEmpty();
-
-    assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(
-                   ACCOUNT_ID, ENV_ID, APP_ID, EntityType.ENVIRONMENT.name(), ENV_NAME, false))
-        .isNull();
   }
 
   @Test

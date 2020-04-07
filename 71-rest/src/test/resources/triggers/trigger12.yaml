@@ -1,0 +1,22 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: WEBHOOK
+  action:
+  - edited
+  branchName: test
+  eventType:
+  - pull_request
+  repositoryType: GITHUB
+workflowVariables:
+- entityType: ENVIRONMENT
+  name: Environment
+  value: Prod
+- entityType: SERVICE
+  name: Service
+  value: k8s
+- entityType: INFRASTRUCTURE_DEFINITION
+  name: InfraDefinition_KUBERNETES
+  value: ${pull_request.id}
