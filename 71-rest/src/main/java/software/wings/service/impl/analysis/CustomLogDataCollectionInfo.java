@@ -10,6 +10,7 @@ import lombok.ToString;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +61,7 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        getBaseUrl() + getValidationUrl()));
+        Utils.appendPathToBaseUrl(getBaseUrl(), getValidationUrl())));
     executionCapabilities.addAll(
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     return executionCapabilities;

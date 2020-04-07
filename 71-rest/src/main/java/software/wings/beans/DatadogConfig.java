@@ -18,6 +18,7 @@ import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
+import software.wings.utils.Utils;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import java.util.Arrays;
@@ -127,8 +128,8 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url + validationUrl));
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        Utils.appendPathToBaseUrl(url, validationUrl)));
   }
 
   @Data

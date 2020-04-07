@@ -12,6 +12,7 @@ import lombok.Data;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.sm.StateType;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +47,8 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl + validationUrl));
+    executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        Utils.appendPathToBaseUrl(baseUrl, validationUrl)));
     executionCapabilities.addAll(
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     return executionCapabilities;
