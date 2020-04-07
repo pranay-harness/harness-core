@@ -516,37 +516,40 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doCloudProviders(accountId, directoryPath.clone());
       }
-    }, doCloudProviders(accountId, directoryPath.clone())));
+    }));
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doArtifactServers(accountId, directoryPath.clone());
       }
-    }, doArtifactServers(accountId, directoryPath.clone())));
+    }));
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doCollaborationProviders(accountId, directoryPath.clone());
       }
-    }, doCollaborationProviders(accountId, directoryPath.clone())));
+    }));
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doVerificationProviders(accountId, directoryPath.clone());
       }
-    }, doVerificationProviders(accountId, directoryPath.clone())));
+    }));
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doNotificationGroups(accountId, directoryPath.clone());
       }
-    }, doNotificationGroups(accountId, directoryPath.clone())));
+    }));
 
-    futureList.add(executorService.submit(
-        ()
-            -> {
-          try (UserThreadLocal.Guard guard = userGuard(user)) {
-          }
-        },
-        doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER,
-            Type.GLOBAL_TEMPLATE_LIBRARY)));
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER,
+            Type.GLOBAL_TEMPLATE_LIBRARY);
+      }
+    }));
 
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();

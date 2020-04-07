@@ -357,4 +357,10 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       authService.evictUserPermissionAndRestrictionCacheForAccount(mutationContext.getAccountId(), true, true);
     }
   }
+
+  public void unsetAllThreadLocal() {
+    AccountThreadLocal.unset();
+    UserThreadLocal.unset();
+    PrincipalThreadLocal.unset();
+  }
 }
