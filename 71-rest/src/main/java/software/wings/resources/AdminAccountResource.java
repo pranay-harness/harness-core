@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.services.AdminAccountService;
+import io.harness.datahandler.services.AdminUserService;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
@@ -16,11 +17,11 @@ import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.security.annotations.AdminPortalAuth;
-import software.wings.service.intfc.AccountService;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -37,10 +38,12 @@ import javax.ws.rs.core.MediaType;
 @AdminPortalAuth
 public class AdminAccountResource {
   private AdminAccountService adminAccountService;
+  private AdminUserService adminUserService;
 
   @Inject
-  public AdminAccountResource(AdminAccountService adminAccountService, AccountService accountService) {
+  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService) {
     this.adminAccountService = adminAccountService;
+    this.adminUserService = adminUserService;
   }
 
   @GET
@@ -110,9 +113,22 @@ public class AdminAccountResource {
   }
 
   @PUT
-  @Path("/{accountId}/users/{userId}")
+  @Path("/{accountId}/users/{userIdOrEmail}")
   public RestResponse<Boolean> enableOrDisableUser(@PathParam("accountId") String accountId,
-      @PathParam("userId") String userId, @QueryParam("enable") boolean enabled) {
-    return new RestResponse<>(adminAccountService.enableOrDisableUser(accountId, userId, enabled));
+      @PathParam("userIdOrEmail") String userIdOrEmail, @QueryParam("enable") boolean enabled) {
+    return new RestResponse<>(adminUserService.enableOrDisableUser(accountId, userIdOrEmail, enabled));
+  }
+
+  @PUT
+  @Path("/{accountId}/cloudCost")
+  public RestResponse<Boolean> enableOrDisableCloudCost(
+      @PathParam("accountId") String accountId, @QueryParam("enable") boolean enabled) {
+    return new RestResponse<>(adminAccountService.enableOrDisableCloudCost(accountId, enabled));
+  }
+
+  @DELETE
+  @Path("{accountId}")
+  public RestResponse<Boolean> deleteAccount(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(adminAccountService.delete(accountId));
   }
 }
