@@ -388,7 +388,7 @@ public class BillingStatsTimeSeriesDataFetcher
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
       Integer limit, boolean includeOthers) {
     qlData = super.postFetch(accountId, groupBy, aggregateFunction, sortCriteria, qlData, limit, includeOthers);
-    if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT) || !isEntityGroupByPresent(groupBy)) {
+    if (limit.equals(BillingStatsDefaultKeys.DEFAULT_LIMIT) || !isEntityGroupByPresent(groupBy) || qlData == null) {
       return qlData;
     }
     Map<String, Double> aggregatedData = new HashMap<>();
