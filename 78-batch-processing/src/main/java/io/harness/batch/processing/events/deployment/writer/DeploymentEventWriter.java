@@ -74,8 +74,8 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
         harnessServiceInfoList.stream().map(HarnessServiceInfo::getEnvId).collect(Collectors.toList()));
 
     List<ResourceLookup> resourceList = cloudToHarnessMappingService.getResourceList(accountId, resourceIdList);
-    Map<String, ResourceLookup> resourceLookupMap =
-        resourceList.stream().collect(Collectors.toMap(ResourceLookup::getResourceId, Function.identity()));
+    Map<String, ResourceLookup> resourceLookupMap = resourceList.stream().collect(
+        Collectors.toMap(ResourceLookup::getResourceId, Function.identity(), (existing, replacement) -> existing));
 
     List<CostEventData> cloudEventDataList = new ArrayList<>();
     deploymentSummaries.forEach(deploymentSummary -> {

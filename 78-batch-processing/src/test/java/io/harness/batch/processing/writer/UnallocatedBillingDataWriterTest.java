@@ -49,7 +49,7 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   private final String CLUSTER_ID_2 = "clusterId_2";
   private final double COST_POD = 2.0;
   private final double SYSTEM_COST_POD = 0.0;
-  private final double COST_NODE = 4.0;
+  private final double COST_NODE = 6.0;
   private final double SYSTEM_COST_NODE = 0.75;
   // ECS Data
   private final String CLUSTER_ID_3 = "clusterId_3";
@@ -161,12 +161,9 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
     assertThat(instanceUtilizationData.get(2).getMemoryBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .4 - COST_TASK * .5 - SYSTEM_COST_CONTAINER * .4));
     assertThat(instanceUtilizationData.get(3).getClusterId()).isEqualTo(CLUSTER_ID_4);
-    assertThat(instanceUtilizationData.get(3).getBillingAmount())
-        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK - SYSTEM_COST_CONTAINER));
-    assertThat(instanceUtilizationData.get(3).getCpuBillingAmount())
-        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .4 - COST_TASK * .75 - SYSTEM_COST_CONTAINER * .4));
-    assertThat(instanceUtilizationData.get(3).getMemoryBillingAmount())
-        .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .6 - COST_TASK * .25 - SYSTEM_COST_CONTAINER * .6));
+    assertThat(instanceUtilizationData.get(3).getBillingAmount()).isEqualTo(BigDecimal.ZERO);
+    assertThat(instanceUtilizationData.get(3).getCpuBillingAmount()).isEqualTo(BigDecimal.ZERO);
+    assertThat(instanceUtilizationData.get(3).getMemoryBillingAmount()).isEqualTo(BigDecimal.ZERO);
     assertThat(instanceUtilizationData.get(3).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
   }
 
