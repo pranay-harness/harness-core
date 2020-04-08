@@ -25,6 +25,7 @@ import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -97,5 +98,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactFileMetadata.class, 19034);
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
+    kryo.register(LbDetailsForAlbTrafficShift.class, 19037);
   }
 }

@@ -36,6 +36,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
@@ -77,6 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Singleton
 public class SpotInstStateHelper {
   @Inject private AppService appService;
@@ -217,7 +219,7 @@ public class SpotInstStateHelper {
         .toString();
   }
 
-  private String getBase64EncodedUserData(String appId, String serviceId, ExecutionContext context) {
+  String getBase64EncodedUserData(String appId, String serviceId, ExecutionContext context) {
     UserDataSpecification userDataSpecification = serviceResourceService.getUserDataSpecification(appId, serviceId);
     if (userDataSpecification != null && isNotEmpty(userDataSpecification.getData())) {
       String userData = userDataSpecification.getData();
@@ -243,7 +245,7 @@ public class SpotInstStateHelper {
     return elastiGroup;
   }
 
-  private ElastiGroup generateConfigFromJson(String elastiGroupJson) {
+  public ElastiGroup generateConfigFromJson(String elastiGroupJson) {
     java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
     Gson gson = new Gson();
 
@@ -390,5 +392,46 @@ public class SpotInstStateHelper {
     }
 
     return commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin();
+  }
+
+  int renderCount(String expr, ExecutionContext context, int defaultValue) {
+    int retVal = defaultValue;
+    if (isNotEmpty(expr)) {
+      try {
+        retVal = Integer.parseInt(context.renderExpression(expr));
+      } catch (NumberFormatException e) {
+        logger.error(format("Number format Exception while evaluating: [%s]", expr), e);
+        retVal = defaultValue;
+      }
+    }
+    return retVal;
+  }
+
+  SpotinstTrafficShiftDataBag getDataBag(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.fetchRequiredApp();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
+    AwsAmiInfrastructureMapping infrastructureMapping =
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+    notNullCheck("Inframapping is null", infrastructureMapping);
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Aws Cloud Provider is null", settingAttribute);
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> awsEncryptedDataDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+    settingAttribute = settingsService.get(infrastructureMapping.getSpotinstCloudProvider());
+    notNullCheck("Spotinst Cloud Provider is null", settingAttribute);
+    SpotInstConfig spotinstConfig = (SpotInstConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> spotinstEncryptedDataDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+    return SpotinstTrafficShiftDataBag.builder()
+        .app(app)
+        .env(env)
+        .infrastructureMapping(infrastructureMapping)
+        .awsConfig(awsConfig)
+        .awsEncryptedDataDetails(awsEncryptedDataDetails)
+        .spotinstConfig(spotinstConfig)
+        .spotinstEncryptedDataDetails(spotinstEncryptedDataDetails)
+        .build();
   }
 }

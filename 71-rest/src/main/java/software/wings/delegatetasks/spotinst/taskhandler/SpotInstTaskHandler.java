@@ -4,7 +4,17 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
+import static io.harness.spotinst.model.SpotInstConstants.CAPACITY;
+import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MAXIMUM_CONFIG_ELEMENT;
+import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFIG_ELEMENT;
+import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
+import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
+import static io.harness.spotinst.model.SpotInstConstants.NAME_CONFIG_ELEMENT;
+import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -18,6 +28,8 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -38,6 +50,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -209,6 +222,45 @@ public abstract class SpotInstTaskHandler {
     ExecutionLogCallback logCallback;
     logCallback = getLogCallBack(taskParameters, upScaleCommandUnit);
     logCallback.saveExecutionLog(message, INFO, SUCCESS);
+  }
+
+  Map<String, Object> getJsonConfigMapFromElastigroupJson(String elastigroupJson) {
+    java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
+    Gson gson = new Gson();
+
+    // Map<"group": {...entire config...}>, this is elastiGroupConfig json that spotinst exposes
+    return gson.fromJson(elastigroupJson, mapType);
+  }
+
+  @VisibleForTesting
+  void removeUnsupportedFieldsForCreatingNewGroup(Map<String, Object> elastiGroupConfigMap) {
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_ID)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_ID);
+    }
+
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_CREATED_AT)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_CREATED_AT);
+    }
+
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_UPDATED_AT)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_UPDATED_AT);
+    }
+  }
+
+  void updateName(Map<String, Object> elastiGroupConfigMap, String stageElastiGroupName) {
+    elastiGroupConfigMap.put(NAME_CONFIG_ELEMENT, stageElastiGroupName);
+  }
+
+  void updateInitialCapacity(Map<String, Object> elastiGroupConfigMap) {
+    Map<String, Object> capacityConfig = (Map<String, Object>) elastiGroupConfigMap.get(CAPACITY);
+
+    capacityConfig.put(CAPACITY_MINIMUM_CONFIG_ELEMENT, 0);
+    capacityConfig.put(CAPACITY_TARGET_CONFIG_ELEMENT, 0);
+    capacityConfig.put(CAPACITY_MAXIMUM_CONFIG_ELEMENT, 0);
+
+    if (!capacityConfig.containsKey(CAPACITY_UNIT_CONFIG_ELEMENT)) {
+      capacityConfig.put(CAPACITY_UNIT_CONFIG_ELEMENT, UNIT_INSTANCE);
+    }
   }
 
   protected abstract SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,

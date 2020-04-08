@@ -693,6 +693,8 @@ import software.wings.sm.states.spotinst.SpotInstSetupStateExecutionData;
 import software.wings.sm.states.spotinst.SpotinstDeployExecutionSummary;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbDeployState;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbRollbackSwitchRoutesState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupExecutionData;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
 import software.wings.verification.CVActivityLog;
@@ -1500,5 +1502,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put(smss + "SpotinstTrafficShiftAlbSwitchRoutesState", SpotinstTrafficShiftAlbSwitchRoutesState.class);
     w.put(smss + "SpotinstTrafficShiftAlbRollbackSwitchRoutesState",
         SpotinstTrafficShiftAlbRollbackSwitchRoutesState.class);
+    w.put(smss + "SpotinstTrafficShiftAlbSetupElement", SpotinstTrafficShiftAlbSetupElement.class);
+    w.put(smss + "SpotinstTrafficShiftAlbSetupExecutionData", SpotinstTrafficShiftAlbSetupExecutionData.class);
   }
 }
