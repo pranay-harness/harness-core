@@ -29,12 +29,19 @@ public class InfraAccountConnectionDataFetcherTest extends AbstractDataFetcherTe
     when(mainConfiguration.getCeSetUpConfig())
         .thenReturn(CESetUpConfig.builder()
                         .awsAccountId(awsAccountId)
-                        .cloudFormationTemplateLink(cloudFormationTemplateLink)
+                        .masterAccountCloudFormationTemplateLink(cloudFormationTemplateLink)
+                        .linkedAccountCloudFormationTemplateLink(cloudFormationTemplateLink)
                         .build());
     QLInfraType qlInfraType = QLInfraType.builder().infraType(QLInfraTypesEnum.AWS).build();
     QLInfraAccountConnectionData qlInfraAccountConnectionData =
-        infraAccountConnectionDataFetcher.fetchConnection(qlInfraType);
-    assertThat(qlInfraAccountConnectionData.getCloudFormationTemplateLink()).isEqualTo(cloudFormationTemplateLink);
+        infraAccountConnectionDataFetcher.fetch(qlInfraType, ACCOUNT1_ID);
+    assertThat(qlInfraAccountConnectionData.getMasterAccountCloudFormationTemplateLink())
+        .isEqualTo(cloudFormationTemplateLink);
+    assertThat(qlInfraAccountConnectionData.getLinkedAccountCloudFormationTemplateLink())
+        .isEqualTo(cloudFormationTemplateLink);
+    assertThat(qlInfraAccountConnectionData.getExternalId()).isEqualTo("harness:" + awsAccountId + ":" + ACCOUNT1_ID);
     assertThat(qlInfraAccountConnectionData.getHarnessAccountId()).isEqualTo(awsAccountId);
+    assertThat(qlInfraAccountConnectionData.getLinkedAccountLaunchTemplateLink()).isNotNull();
+    assertThat(qlInfraAccountConnectionData.getMasterAccountLaunchTemplateLink()).isNotNull();
   }
 }
