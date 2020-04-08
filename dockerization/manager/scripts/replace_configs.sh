@@ -265,6 +265,18 @@ if [[ "" != "$SALESFORCE_INTEGRATION_ENABLED" ]]; then
   yq write -i $CONFIG_FILE salesforceConfig.enabled "$SALESFORCE_INTEGRATION_ENABLED"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.awsAccountId "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_MASTER_CLOUD_FORMATION" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.masterAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_MASTER_CLOUD_FORMATION"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.linkedAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION"
+fi
+
 if [[ "" != "$DATADOG_ENABLED" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
 fi

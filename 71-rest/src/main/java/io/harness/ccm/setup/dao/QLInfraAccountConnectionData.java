@@ -12,5 +12,8 @@ import software.wings.security.annotations.Scope;
 public class QLInfraAccountConnectionData implements QLObject {
   private String externalId;
   private String harnessAccountId;
-  private String cloudFormationTemplateLink;
+  private String masterAccountCloudFormationTemplateLink;
+  private String linkedAccountCloudFormationTemplateLink;
+  private String masterAccountLaunchTemplateLink;
+  private String linkedAccountLaunchTemplateLink;
 }

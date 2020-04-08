@@ -13,7 +13,10 @@ type linkedAccountData {
 type infraAccountConnectionData {
   harnessAccountId: String
   externalId: String
-  cloudFormationTemplateLink: String
+  masterAccountCloudFormationTemplateLink: String
+  linkedAccountCloudFormationTemplateLink: String
+  masterAccountLaunchTemplateLink: String
+  linkedAccountLaunchTemplateLink: String
 }
 
 type linkedAccount {
