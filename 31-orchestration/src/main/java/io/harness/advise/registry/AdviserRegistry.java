@@ -6,14 +6,13 @@ import io.harness.advise.Adviser;
 import io.harness.advise.AdviserObtainment;
 import io.harness.advise.AdviserType;
 import io.harness.exception.InvalidRequestException;
-import lombok.Value;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Value
 @Singleton
 public class AdviserRegistry {
-  Map<AdviserType, AdviserProducer> registry;
+  private Map<AdviserType, AdviserProducer> registry = new ConcurrentHashMap<>();
 
   public void register(AdviserType adviserType, AdviserProducer producer) {
     if (registry.containsKey(adviserType)) {
