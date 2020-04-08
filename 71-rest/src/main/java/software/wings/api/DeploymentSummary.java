@@ -60,6 +60,14 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
           },
           options = @IndexOptions(name = "accountId_createdAtAsc", background = true)),
 
+      @Index(fields =
+          {
+            @Field(DeploymentSummaryKeys.accountId)
+            , @Field(DeploymentSummaryKeys.infraMappingId),
+                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+          },
+          options = @IndexOptions(name = "accountId_infraMappingId_createdAtDesc", background = true)),
+
       @Index(fields = {
         @Field(DeploymentSummaryKeys.infraMappingId)
         , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),

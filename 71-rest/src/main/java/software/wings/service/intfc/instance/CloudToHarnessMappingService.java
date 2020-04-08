@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface CloudToHarnessMappingService {
   Optional<HarnessServiceInfo> getHarnessServiceInfo(DeploymentSummary deploymentSummary);
 
+  Optional<HarnessServiceInfo> getHarnessServiceInfo(
+      String accountId, String computeProviderId, String namespace, String podName);
+
   Optional<SettingAttribute> getSettingAttribute(String id);
 
   List<HarnessServiceInfo> getHarnessServiceInfoList(List<DeploymentSummary> deploymentSummaryList);

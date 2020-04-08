@@ -39,5 +39,7 @@ public interface DeploymentService extends OwnedByApplication {
 
   Optional<DeploymentSummary> getWithAccountId(DeploymentSummary deploymentSummary);
 
+  Optional<DeploymentSummary> getWithInfraMappingId(String accountId, String infraMappingId);
+
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 }

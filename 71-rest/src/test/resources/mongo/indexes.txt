@@ -151,6 +151,7 @@ deploymentReconciliation { "name" : "accountId_reconciliationStatus" , "backgrou
 deploymentReconciliation { "name" : "ttl_1" , "background" : true , "expireAfterSeconds" : 0} { "ttl" : 1}
 deploymentSummary { "name" : "accountId_containerDeploymentInfo" , "background" : true} { "accountId" : 1 , "deploymentInfo.clusterName" : 1 , "deploymentInfo.containerSvcName" : 1 , "createdAt" : -1}
 deploymentSummary { "name" : "accountId_createdAtAsc" , "background" : true} { "accountId" : 1 , "createdAt" : 1}
+deploymentSummary { "name" : "accountId_infraMappingId_createdAtDesc" , "background" : true} { "accountId" : 1 , "infraMappingId" : 1 , "createdAt" : -1}
 deploymentSummary { "name" : "accountId_k8sDeploymentInfo" , "background" : true} { "accountId" : 1 , "deploymentInfo.releaseName" : 1 , "createdAt" : -1}
 deploymentSummary { "name" : "appId_1" , "background" : true} { "appId" : 1}
 deploymentSummary { "name" : "containerSvcName_inframappingId_createdAt" , "background" : true} { "containerDeploymentKey.containerServiceName" : 1 , "infraMappingId" : 1 , "createdAt" : -1}
@@ -278,6 +279,7 @@ infrastructureProvisioner { "name" : "createdAt_1" , "background" : true} { "cre
 instance { "name" : "appId_1" , "background" : true} { "appId" : 1}
 instance { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 instance { "name" : "instance_index1" , "background" : true} { "appId" : 1 , "isDeleted" : 1 , "deletedAt" : 1}
+instance { "name" : "instance_index10" , "background" : true} { "accountId" : 1 , "infraMappingId" : 1}
 instance { "name" : "instance_index2" , "background" : true} { "appId" : 1 , "infraMappingId" : 1 , "isDeleted" : 1 , "deletedAt" : 1}
 instance { "name" : "instance_index3" , "background" : true} { "accountId" : 1 , "createdAt" : 1 , "isDeleted" : 1 , "deletedAt" : 1}
 instance { "name" : "instance_index5" , "background" : true} { "appId" : 1 , "serviceId" : 1 , "createdAt" : 1 , "isDeleted" : 1 , "deletedAt" : 1}

@@ -75,6 +75,18 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void testGetDeploymentSummaryForInfraMappingId() {
+    DeploymentSummary deploymentSummary = getHelmDeploymentSummary();
+    deploymentService.save(deploymentSummary);
+    Optional<DeploymentSummary> savedK8sDeploymentSummary =
+        deploymentService.getWithInfraMappingId(ACCOUNT_ID, INFRA_MAPPING_ID_K8S);
+    assertThat(savedK8sDeploymentSummary).isPresent();
+    assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_K8S);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void testGetDeploymentSummaryPaginated() {
     DeploymentSummary deploymentSummary = getK8sDeploymentSummary();
     deploymentService.save(deploymentSummary);

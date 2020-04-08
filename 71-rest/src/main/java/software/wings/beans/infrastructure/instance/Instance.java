@@ -50,7 +50,9 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
         @Field("appId"), @Field("serviceId"), @Field("isDeleted")
       }, options = @IndexOptions(name = "instance_index8", background = true)), @Index(fields = {
         @Field("accountId"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index9", background = true))
+      }, options = @IndexOptions(name = "instance_index9", background = true)), @Index(fields = {
+        @Field("accountId"), @Field("infraMappingId")
+      }, options = @IndexOptions(name = "instance_index10", background = true))
 })
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
@@ -150,5 +152,7 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     public static final String uuid = "uuid";
     public static final String createdAt = "createdAt";
     public static final String isDeleted = "isDeleted";
+    public static final String instanceInfoPodName = "instanceInfo.podName";
+    public static final String instanceInfoNamespace = "instanceInfo.namespace";
   }
 }

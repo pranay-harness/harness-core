@@ -14,7 +14,7 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.processor.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -51,7 +51,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Mock private HPersistence hPersistence;
   @Mock private WorkloadRepository workloadRepository;
 
-  @Mock private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
@@ -113,7 +113,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, label)).thenReturn(harnessServiceInfo());
+    when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, CLOUD_PROVIDER_ID, NAMESPACE, POD_NAME, label))
+        .thenReturn(harnessServiceInfo());
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
@@ -149,7 +150,9 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
-    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, label)).thenReturn(harnessServiceInfo());
+    when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(
+             ACCOUNT_ID, CLOUD_PROVIDER_ID, KUBE_SYSTEM_NAMESPACE, KUBE_PROXY_POD_NAME, label))
+        .thenReturn(harnessServiceInfo());
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
