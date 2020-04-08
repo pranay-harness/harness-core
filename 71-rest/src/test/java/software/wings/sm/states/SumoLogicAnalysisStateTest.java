@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -87,6 +89,7 @@ public class SumoLogicAnalysisStateTest extends APMStateVerificationTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testTriggerAnalysisDataCollection_whenConnectorIdIsValid() {
+    sumoLogicAnalysisState.setHostnameField(generateUuid());
     sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -107,5 +110,65 @@ public class SumoLogicAnalysisStateTest extends APMStateVerificationTestBase {
         () -> sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("No connector found with id " + configId);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenHostnameField_equalsSourceHost() {
+    sumoLogicAnalysisState.setHostnameField("_sourceHost");
+    sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(delegateTaskArgumentCaptor.capture());
+
+    DelegateTask task = delegateTaskArgumentCaptor.getValue();
+    SumoDataCollectionInfo dataCollectionInfo = (SumoDataCollectionInfo) task.getData().getParameters()[0];
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo("_sourcehost");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenHostnameField_equalsSourceName() {
+    sumoLogicAnalysisState.setHostnameField("_sourceName");
+    sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(delegateTaskArgumentCaptor.capture());
+
+    DelegateTask task = delegateTaskArgumentCaptor.getValue();
+    SumoDataCollectionInfo dataCollectionInfo = (SumoDataCollectionInfo) task.getData().getParameters()[0];
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo("_sourcename");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenHostnameField_ValidExpression() {
+    sumoLogicAnalysisState.setHostnameField("${workflow.variables.hostnamefield}");
+    when(executionContext.renderExpression("${workflow.variables.hostnamefield}")).thenReturn("valid_host_name_field");
+    sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(delegateTaskArgumentCaptor.capture());
+
+    DelegateTask task = delegateTaskArgumentCaptor.getValue();
+    SumoDataCollectionInfo dataCollectionInfo = (SumoDataCollectionInfo) task.getData().getParameters()[0];
+    assertThat(dataCollectionInfo.getHostnameField()).isEqualTo("valid_host_name_field");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollection_whenHostnameField_InvalidExpression() {
+    sumoLogicAnalysisState.setHostnameField("${workflow.variables.hostnamefield}");
+    when(executionContext.renderExpression("${workflow.variables.hostnamefield}"))
+        .thenReturn("${workflow.variables.hostnamefield}");
+
+    assertThatThrownBy(
+        () -> sumoLogicAnalysisState.triggerAnalysisDataCollection(executionContext, executionData, hosts))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("Expression ${workflow.variables.hostnamefield} could not be resolved");
   }
 }

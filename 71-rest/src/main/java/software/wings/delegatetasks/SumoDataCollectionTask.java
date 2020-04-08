@@ -9,14 +9,11 @@ import com.sumologic.client.SumoLogicClient;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -24,7 +21,6 @@ import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.sm.StateType;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -42,7 +38,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   public static final String DEFAULT_TIME_ZONE = "UTC";
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
-  @Inject private DelegateLogService delegateLogService;
   @Inject private SumoDelegateServiceImpl sumoDelegateService;
 
   public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
@@ -129,10 +124,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               logElements.addAll(logElementsResponse);
             } catch (CancellationException e) {
               logger.info("Ugh. Search job was cancelled. Retrying ...", e);
-              apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-              apiCallLog.addFieldToResponse(
-                  HttpStatus.SC_REQUEST_TIMEOUT, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-              delegateLogService.save(getAccountId(), apiCallLog);
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
@@ -165,12 +156,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
           break;
         } catch (Throwable ex) {
-          ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-          sumoDelegateService.saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(),
-              dataCollectionInfo.getQuery(), String.valueOf(dataCollectionInfo.getStartTime()),
-              String.valueOf(dataCollectionInfo.getStartTime()), ex, Timestamp.currentMinuteBoundary(),
-              Timestamp.currentMinuteBoundary(), HttpStatus.SC_INTERNAL_SERVER_ERROR, FieldType.TEXT);
-
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);

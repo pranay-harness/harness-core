@@ -7,6 +7,8 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
@@ -36,12 +38,19 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
     }
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext sumoTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-    return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
-        .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
-            sumoLogicSetupTestNodedata.getHostNameField(), mlServiceUtils.getHostName(sumoLogicSetupTestNodedata),
-            encryptedDataDetails,
-            createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getGuid()));
+    SyncTaskContext sumoTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .build();
+    try {
+      return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
+          .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
+              sumoLogicSetupTestNodedata.getHostNameField(), mlServiceUtils.getHostName(sumoLogicSetupTestNodedata),
+              encryptedDataDetails,
+              createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getGuid()));
+    } catch (Exception e) {
+      throw new VerificationOperationException(ErrorCode.SUMO_DATA_COLLECTION_ERROR, e.getMessage(), e);
+    }
   }
 }

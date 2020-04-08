@@ -170,7 +170,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void test_saveMetricDataWhenAlreadyProcessed() throws IllegalAccessException {
+  public void testSaveMetricData_WhenAlreadyProcessed() throws IllegalAccessException {
     String stateExecutionId = generateUuid();
     String groupName = generateUuid();
     int dataCollectionMinute = 5;

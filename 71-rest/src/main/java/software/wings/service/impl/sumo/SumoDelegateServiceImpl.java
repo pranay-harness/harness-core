@@ -8,6 +8,7 @@ import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,13 +18,10 @@ import com.sumologic.client.SumoServerException;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import software.wings.beans.SumoConfig;
@@ -37,7 +35,6 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
-import software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
@@ -176,28 +173,20 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           + searchJobStatusResponse.getMessageCount());
       return getMessagesForSearchJob(dataCollectionInfo, messageCount, sumoClient, searchJobId, 0, 0,
           Math.min(messageCount, 5), logCollectionMinute, is247Task);
-    } catch (InterruptedException e) {
-      throw new VerificationOperationException(
-          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Unable to get client for given config");
     } catch (SumoServerException sumoServerException) {
       saveThirdPartyCallLogs(apiCallLog.copy(), dataCollectionInfo.getSumoConfig(), searchQuery,
-          String.valueOf(startTime), String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
+          String.valueOf(startTime), String.valueOf(endTime), sumoServerException, requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), sumoServerException.getHTTPStatus(), FieldType.TEXT);
       if (sumoServerException.getHTTPStatus() == RATE_LIMIT_STATUS) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
-        logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
+        logger.info("Encountered Rate limiting from sumo. Sleeping {} seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
         sleep(DATA_COLLECTION_RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
       }
-      throw new VerificationOperationException(
-          ErrorCode.SUMO_DATA_COLLECTION_ERROR, sumoServerException.getErrorMessage());
+      throw sumoServerException;
 
     } catch (Exception e) {
-      saveThirdPartyCallLogs(apiCallLog.copy(), dataCollectionInfo.getSumoConfig(), searchQuery,
-          String.valueOf(startTime), String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
-          OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
-      throw new VerificationOperationException(
-          ErrorCode.SUMO_DATA_COLLECTION_ERROR, e.getMessage() == null ? e.toString() : e.getMessage());
+      throw new DataCollectionException(e);
     }
   }
 
@@ -264,15 +253,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     if (is247Task) {
       return logMessage.getSourceHost();
     }
-    switch (SumoHostNameField.getHostNameFieldFromValue(dataCollectionInfo.getHostnameField())) {
-      case SOURCE_HOST:
-        return logMessage.getSourceHost();
-      case SOURCE_NAME:
-        return logMessage.getSourceName();
-      default:
-        throw new VerificationOperationException(
-            ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Invalid host name field " + dataCollectionInfo.getHostnameField());
-    }
+
+    Preconditions.checkState(logMessage.getFieldNames().contains(dataCollectionInfo.getHostnameField()),
+        "No field " + dataCollectionInfo.getHostnameField()
+            + " found in the log message. The fields found in the response are " + logMessage.getFieldNames());
+
+    return logMessage.stringField(dataCollectionInfo.getHostnameField());
   }
 
   /**
