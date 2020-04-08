@@ -22,7 +22,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
@@ -193,9 +192,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     when(appService.getAccountIdByAppId(appId)).thenReturn(accountId);
 
-    setInternalState(analysisService, "managerClient", verificationManagerClient);
-    setInternalState(learningEngineService, "managerClient", verificationManagerClient);
-    setInternalState(analysisService, "learningEngineService", learningEngineService);
+    FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeDeclaredField(learningEngineService, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeDeclaredField(analysisService, "learningEngineService", learningEngineService, true);
 
     FieldUtils.writeField(analysisService, "managerClient", verificationManagerClient, true);
 
@@ -242,7 +241,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveLogDataWithInvalidState() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
@@ -258,7 +257,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveLogDataNoHeartbeat() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
@@ -275,16 +274,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void saveLogDataValid() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final List<LogElement> logElements = new ArrayList<>();
+    List<LogElement> logElements = new ArrayList<>();
 
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
+    String query = UUID.randomUUID().toString();
+    String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 3;
     LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
@@ -300,7 +299,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
 
-    final LogRequest logRequest = new LogRequest(
+    LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
 
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
@@ -315,7 +314,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
-    final LogDataRecord logDataRecord = logDataRecords.iterator().next();
+    LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
     assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
     assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
@@ -330,7 +329,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void getLogDataNoPreviousAnalysis() throws Exception {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -341,7 +340,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logMLAnalysisRecord.setWorkflowExecutionId(generateUuid());
     wingsPersistence.save(logMLAnalysisRecord);
 
-    final LogRequest logRequest =
+    LogRequest logRequest =
         new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
 
     Set<LogDataRecord> logData = analysisService.getLogData(
@@ -356,7 +355,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void getLogDataPreviousAnalysis() throws Exception {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -367,7 +366,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
     wingsPersistence.save(logMLAnalysisRecord);
 
-    final LogRequest logRequest =
+    LogRequest logRequest =
         new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
 
     Set<LogDataRecord> logData = analysisService.getLogData(
@@ -376,7 +375,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Set<LogDataRecord> expectedLogs = new HashSet<>();
     logMLAnalysisRecord.getTest_events().forEach((s, analysisClusters) -> {
       analysisClusters.forEach(analysisCluster -> {
-        final MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
+        MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
         expectedLogs.add(LogDataRecord.builder()
                              .stateType(logMLAnalysisRecord.getStateType())
                              .workflowExecutionId(logMLAnalysisRecord.getWorkflowExecutionId())
@@ -399,23 +398,23 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataSuccessfulWorkflowExecution() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);
     workflowExecution.setUuid(workflowExecutionId);
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(workflowExecution);
 
-    final List<LogElement> logElements = new ArrayList<>();
+    List<LogElement> logElements = new ArrayList<>();
 
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
+    String query = UUID.randomUUID().toString();
+    String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 3;
     LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
@@ -431,7 +430,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
 
-    final LogRequest logRequest = new LogRequest(
+    LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
@@ -442,7 +441,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
-    final LogDataRecord logDataRecord = logDataRecords.iterator().next();
+    LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
     assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
     assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
@@ -455,16 +454,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testBumpClusterLevel() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final List<LogElement> logElements = new ArrayList<>();
+    List<LogElement> logElements = new ArrayList<>();
 
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
+    String query = UUID.randomUUID().toString();
+    String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 3;
     LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
@@ -485,7 +484,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(status).isTrue();
 
-    final LogRequest logRequest = new LogRequest(
+    LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
@@ -520,21 +519,21 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testIsLogDataCollected() throws Exception {
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
+    String query = UUID.randomUUID().toString();
+    String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 3;
 
     assertThat(
         analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2))
         .isFalse();
 
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final List<LogElement> logElements = new ArrayList<>();
+    List<LogElement> logElements = new ArrayList<>();
 
     LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
@@ -1114,7 +1113,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testUserFeedback() throws Exception {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setWorkflowId(workflowId);
@@ -1316,7 +1315,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testCompressionLogMlAnalysisRecord() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1377,7 +1376,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testCompressionLogMlAnalysisRecordOnDemand() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1508,7 +1507,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testCompressionLogMLAnalysisRecordFrequencyPattern() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord compressedLogMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1532,7 +1531,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testCompressionLogMLAnalysisRecordLogAnalysisResult() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord compressedLogMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1556,7 +1555,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void testGetAnalysisForBaseline() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1577,7 +1576,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size())
         .isEqualTo(numOfRecords);
 
-    final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
+    LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);
 
     assertThat(logAnalysisRecord.getLogCollectionMinute()).isEqualTo(numOfRecords);
@@ -1586,16 +1585,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testSaveDuplicate() throws IOException {
+  public void testSaveDuplicate() throws IOException, IllegalAccessException {
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
     when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
-    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
 
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1626,12 +1625,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
-    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
     doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
 
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1656,12 +1655,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
-    setInternalState(analysisService, "managerClient", verificationManagerClient);
+    FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
     doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
 
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final Gson gson = new Gson();
+    Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
@@ -1892,7 +1891,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                        .count())
             .isEqualTo(numOfL0Records);
 
-        final boolean status = analysisService.saveClusteredLogData(
+        boolean status = analysisService.saveClusteredLogData(
             appId, cvConfigId, ClusterLevel.L1, logCollectionMinute, "host-" + hostNum, logElements);
         assertThat(status).isTrue();
         assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
@@ -1909,7 +1908,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                        .count())
             .isEqualTo(logElements.size());
 
-        final LearningEngineAnalysisTask analysisL1Task =
+        LearningEngineAnalysisTask analysisL1Task =
             wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                 .filter(LearningEngineAnalysisTaskKeys.state_execution_id,
                     "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute)
@@ -1977,7 +1976,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                                             .clusterLabel("2")
                                                             .build());
 
-      final boolean status = analysisService.saveClusteredLogData(
+      boolean status = analysisService.saveClusteredLogData(
           appId, cvConfigId, ClusterLevel.L2, logCollectionMinute, null, logElements);
       assertThat(status).isTrue();
       assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
@@ -1991,7 +1990,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                      .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
                      .count())
           .isEqualTo(logElements.size());
-      final LearningEngineAnalysisTask analysisL1Task =
+      LearningEngineAnalysisTask analysisL1Task =
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
               .filter(LearningEngineAnalysisTaskKeys.state_execution_id,
                   "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute)
@@ -2117,7 +2116,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         .isEqualTo(-1);
 
     for (int i = 1; i <= 100; i++) {
-      final LogMLAnalysisRecord mlAnalysisRecord =
+      LogMLAnalysisRecord mlAnalysisRecord =
           LogMLAnalysisRecord.builder().accountId(accountId).cvConfigId(cvConfigId).logCollectionMinute(i).build();
       mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
       wingsPersistence.save(mlAnalysisRecord);
@@ -2139,11 +2138,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         .isEqualTo(-1);
 
     for (int i = 1; i <= 100; i++) {
-      final LogMLAnalysisRecord mlAnalysisRecord = LogMLAnalysisRecord.builder()
-                                                       .accountId(accountId)
-                                                       .stateExecutionId(stateExecutionId)
-                                                       .logCollectionMinute(i)
-                                                       .build();
+      LogMLAnalysisRecord mlAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                 .accountId(accountId)
+                                                 .stateExecutionId(stateExecutionId)
+                                                 .logCollectionMinute(i)
+                                                 .build();
       mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
       wingsPersistence.save(mlAnalysisRecord);
     }
@@ -2196,7 +2195,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodesNoSummary() {
-    final WorkflowExecution workflowExecution =
+    WorkflowExecution workflowExecution =
         WorkflowExecution.builder()
             .appId(appId)
             .workflowId(workflowId)
@@ -2211,7 +2210,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodes() {
-    final WorkflowExecution workflowExecution =
+    WorkflowExecution workflowExecution =
         WorkflowExecution.builder()
             .appId(appId)
             .workflowId(workflowId)
@@ -2226,7 +2225,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                     .build()))
             .build();
     wingsPersistence.save(workflowExecution);
-    final Map<String, InstanceElement> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
+    Map<String, InstanceElement> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
     assertThat(lastExecutionNodes)
         .isEqualTo(Collections.singletonMap(
             "host1", anInstanceElement().hostName("host1").displayName("hostDisplayName").build()));
@@ -2239,10 +2238,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     String query = generateUuid();
     String message = generateUuid();
     analysisService.createAndSaveSummary(StateType.SUMO, appId, stateExecutionId, query, message, accountId);
-    final LogMLAnalysisRecord logMLAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-            .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .get();
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                                  .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                                                  .get();
 
     assertThat(logMLAnalysisRecord.getQuery()).isEqualTo(query);
     assertThat(logMLAnalysisRecord.getAnalysisSummaryMessage()).isEqualTo(message);
