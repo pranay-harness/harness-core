@@ -43,16 +43,34 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
               - parentInstanceIdToPodData.get(parentInstanceId).getCpuCost() - nodeData.getCpuSystemCost());
           BigDecimal memoryUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getMemoryCost()
               - parentInstanceIdToPodData.get(parentInstanceId).getMemoryCost() - nodeData.getMemorySystemCost());
-          BigDecimal actualIdleCost = BigDecimal.ZERO;
-          BigDecimal cpuActualIdleCost = BigDecimal.ZERO;
-          BigDecimal memoryActualIdleCost = BigDecimal.ZERO;
-          double nodeIdleCost = nodeData.getIdleCost() - unallocatedCostForNode.doubleValue();
-          if (nodeIdleCost > 0) {
-            actualIdleCost = BigDecimal.valueOf(nodeIdleCost);
-            cpuActualIdleCost = BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
-            memoryActualIdleCost =
-                BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
+          if (unallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
+              || cpuUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
+              || memoryUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1) {
+            logger.warn(
+                "Unallocated billing amount -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
+                nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
+                unallocatedCostForNode, cpuUnallocatedCostForNode, memoryUnallocatedCostForNode);
+            unallocatedCostForNode = BigDecimal.ZERO;
+            cpuUnallocatedCostForNode = BigDecimal.ZERO;
+            memoryUnallocatedCostForNode = BigDecimal.ZERO;
           }
+          BigDecimal actualIdleCost = BigDecimal.valueOf(nodeData.getIdleCost() - unallocatedCostForNode.doubleValue());
+          BigDecimal cpuActualIdleCost =
+              BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
+          BigDecimal memoryActualIdleCost =
+              BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
+
+          if (actualIdleCost.compareTo(BigDecimal.ZERO) == -1 || cpuActualIdleCost.compareTo(BigDecimal.ZERO) == -1
+              || memoryActualIdleCost.compareTo(BigDecimal.ZERO) == -1) {
+            logger.warn(
+                "Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
+                nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
+                actualIdleCost, cpuActualIdleCost, memoryActualIdleCost);
+            actualIdleCost = BigDecimal.ZERO;
+            cpuActualIdleCost = BigDecimal.ZERO;
+            memoryActualIdleCost = BigDecimal.ZERO;
+          }
+
           billingDataService.update(ActualIdleCostWriterData.builder()
                                         .accountId(nodeData.getAccountId())
                                         .instanceId(nodeData.getInstanceId())
