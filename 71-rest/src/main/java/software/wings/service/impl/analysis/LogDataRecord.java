@@ -58,6 +58,8 @@ import java.util.List;
         , @Field("serviceId"), @Field("stateType"), @Field("query"), @Field("clusterLevel"),
             @Field(value = "logCollectionMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "statePrevExIdx")), @Index(fields = {
+        @Field("workflowExecutionId"), @Field("clusterLevel"), @Field("stateType")
+      }, options = @IndexOptions(name = "state_Prev_Ex_Idx")), @Index(fields = {
         @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
       }, options = @IndexOptions(name = "cvRawRecordIdx")), @Index(fields = {
         @Field("cvConfigId")
@@ -80,7 +82,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty private String serviceId;
+  @NotEmpty @Indexed private String serviceId;
 
   @NotEmpty private String stateExecutionId;
 
