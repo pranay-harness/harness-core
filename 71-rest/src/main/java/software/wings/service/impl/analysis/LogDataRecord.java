@@ -16,6 +16,7 @@ import com.google.cloud.datastore.Key;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,7 +73,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogDataRecord extends Base implements GoogleDataStoreAware {
+public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowId;
@@ -100,6 +101,8 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty private ClusterLevel clusterLevel;
   @NotEmpty private long logCollectionMinute;
 
+  @Indexed private String accountId;
+
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -107,7 +110,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
-      ClusterLevel clusterLevel, ClusterLevel heartbeat, List<LogElement> logElements) {
+      ClusterLevel clusterLevel, ClusterLevel heartbeat, List<LogElement> logElements, String accountId) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
       final LogDataRecord record = new LogDataRecord();
@@ -127,6 +130,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
       record.setClusterLevel(Integer.parseInt(logElement.getClusterLabel()) < 0 ? heartbeat : clusterLevel);
       record.setServiceId(serviceId);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
+      record.setAccountId(accountId);
       records.add(record);
     }
     return records;
@@ -157,6 +161,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLevel, String.valueOf(clusterLevel), false);
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.count, count, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.accountId, accountId, false);
     try {
       Blob compressedLog = Blob.copyFrom(compressString(logMessage));
       addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.logMessage, compressedLog, true);
@@ -189,6 +194,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .workflowExecutionId(readString(entity, LogDataRecordKeys.workflowExecutionId))
             .stateExecutionId(readString(entity, LogDataRecordKeys.stateExecutionId))
             .validUntil(new Date(readLong(entity, LogDataRecordKeys.validUntil)))
+            .accountId(readString(entity, LogDataRecordKeys.accountId))
             .build();
 
     try {
