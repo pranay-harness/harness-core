@@ -461,10 +461,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     return true;
   }
 
-  public String getHostnameField(ExecutionContext context) {
+  protected String getHostnameField(ExecutionContext context) {
     switch (StateType.valueOf(getStateType())) {
-      case SUMO:
-        return ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
       case ELK:
         return context.renderExpression(((ElkAnalysisState) this).getHostnameField());
       case DATA_DOG_LOG:
@@ -500,8 +498,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .serviceId(analysisContext.getServiceId())
             .query(sumoLogicAnalysisState.getRenderedQuery())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .hostnameField(getResolvedFieldValue(executionContext, AbstractAnalysisStateKeys.hostnameField,
-                sumoLogicAnalysisState.getHostnameField().getHostNameField()))
+            .hostnameField(getResolvedFieldValue(
+                executionContext, AbstractAnalysisStateKeys.hostnameField, sumoLogicAnalysisState.getHostnameField()))
             .build();
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;

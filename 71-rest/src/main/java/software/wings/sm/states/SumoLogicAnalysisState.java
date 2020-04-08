@@ -1,16 +1,15 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
-import static software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField.SOURCE_HOST;
+
+import com.google.common.base.Preconditions;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -131,8 +130,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
-              .hostnameField(getResolvedFieldValue(
-                  context, AbstractAnalysisStateKeys.hostnameField, getHostnameField().getHostNameField()))
+              .hostnameField(getHostnameField(context))
               .initialDelayMinutes(DELAY_MINUTES)
               .build();
 
@@ -172,15 +170,11 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
 
   @DefaultValue("_sourceHost")
   @Attributes(required = true, title = "Field name for Host/Container")
-  public SumoHostNameField getHostnameField() {
-    if (isEmpty(hostnameField)) {
-      return SOURCE_HOST;
-    }
-    return SumoHostNameField.getHostNameFieldFromValue(hostnameField);
+  public String getHostnameField() {
+    return hostnameField;
   }
 
   public void setHostnameField(String hostnameField) {
-    SumoHostNameField.getHostNameFieldFromValue(hostnameField);
     this.hostnameField = hostnameField;
   }
 
@@ -205,27 +199,17 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
-  public enum SumoHostNameField {
-    SOURCE_HOST("_sourceHost"),
-    SOURCE_NAME("_sourceName");
-
-    private String hostNameField;
-
-    SumoHostNameField(String hostNameField) {
-      this.hostNameField = hostNameField;
-    }
-
-    public String getHostNameField() {
-      return hostNameField;
-    }
-
-    public static SumoHostNameField getHostNameFieldFromValue(String hostNameField) {
-      for (SumoHostNameField sumoHost : SumoHostNameField.values()) {
-        if (sumoHost.getHostNameField().equalsIgnoreCase(hostNameField.trim())) {
-          return sumoHost;
-        }
-      }
-      throw new WingsException("Invalid host name field " + hostNameField, WingsException.USER);
+  // for backward compatibilty we need to make "_sourceHost" and "_sourceName" lowercase
+  @Override
+  protected String getHostnameField(ExecutionContext context) {
+    Preconditions.checkNotNull(hostnameField, "hostnameField can't be null");
+    switch (hostnameField) {
+      case "_sourceHost":
+        return hostnameField.toLowerCase();
+      case "_sourceName":
+        return hostnameField.toLowerCase();
+      default:
+        return getResolvedFieldValue(context, AbstractAnalysisStateKeys.hostnameField, hostnameField);
     }
   }
 }

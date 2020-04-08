@@ -90,7 +90,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
   }
 
   @Override
-  public String getHostnameField(ExecutionContext executionContext) {
+  protected String getHostnameField(ExecutionContext executionContext) {
     if (hostnameField != null) {
       return hostnameField;
     }

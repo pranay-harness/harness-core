@@ -29,4 +29,15 @@ public class SumoLogicSetupTestNodedata extends SetupTestNodeData {
     this.query = query;
     this.hostNameField = hostNameField;
   }
+
+  public String getHostNameField() {
+    switch (hostNameField) {
+      case "_sourceHost":
+        return hostNameField.toLowerCase();
+      case "_sourceName":
+        return hostNameField.toLowerCase();
+      default:
+        return hostNameField;
+    }
+  }
 }
