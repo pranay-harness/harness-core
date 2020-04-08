@@ -31,7 +31,7 @@ public final class HelmTestConstants {
       + "4       \tWed Jan 22 11:34:51 2020\tsuperseded\tchartmuseum-2.7.0\t0.11.0     \tUpgrade complete";
   public static final String VERSION_V2 = "Client: v2.16.0+ge13bc94\n"
       + "Server: v2.16.0+ge13bc94";
-  public static final String VERSION_V3 = "v3.0.2+g19e47ee";
+  public static final String VERSION_V3 = "v3.1.2+g19e47ee";
   public static final String REPO_LIST_V3 = "NAME                                \tURL\n"
       + "bitnami                             \thttps://charts.bitnami.com/bitnami\n"
       + "oci                                 \thttp://127.0.0.1:8080\n"

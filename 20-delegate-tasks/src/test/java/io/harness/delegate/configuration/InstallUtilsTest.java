@@ -1,7 +1,10 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.delegate.configuration.InstallUtils.helm2Version;
+import static io.harness.delegate.configuration.InstallUtils.helm3Version;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,12 +16,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
@@ -142,5 +147,37 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   public void shouldNotInstallWhenPathSetInDelegateConfig() {
     DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().kustomizePath("RANDOM").build();
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
+  }
+
+  @Before
+  public void setup() throws Exception {
+    setStaticFieldValue(InstallUtils.class, "helmPaths", new HashMap() {
+      {
+        put(helm2Version, "helm");
+        put(helm3Version, "helm");
+      }
+    });
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testHelm2Install() {
+    DelegateConfiguration helm2DelegateConfiguration = DelegateConfiguration.builder().helmPath("helm2Path").build();
+
+    assertThat(InstallUtils.delegateConfigHasHelmPath(helm2DelegateConfiguration, helm2Version)).isTrue();
+    assertThat(InstallUtils.getHelm2Path()).isEqualTo("helm2Path");
+    assertThat(InstallUtils.getHelm3Path()).isEqualTo("helm");
+  }
+
+  @Test
+  @Owner(developers = RIHAZ)
+  @Category(UnitTests.class)
+  public void testHelm3Install() {
+    DelegateConfiguration helm3DelegateConfiguration = DelegateConfiguration.builder().helm3Path("helm3Path").build();
+
+    assertThat(InstallUtils.delegateConfigHasHelmPath(helm3DelegateConfiguration, helm3Version)).isTrue();
+    assertThat(InstallUtils.getHelm3Path()).isEqualTo("helm3Path");
+    assertThat(InstallUtils.getHelm2Path()).isEqualTo("helm");
   }
 }

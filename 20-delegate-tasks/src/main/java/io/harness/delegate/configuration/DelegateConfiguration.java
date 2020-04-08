@@ -23,7 +23,6 @@ public class DelegateConfiguration {
   private String description;
 
   private String kubectlPath;
-  private String helmPath;
   private String ocPath;
   private String kustomizePath;
 
@@ -34,4 +33,7 @@ public class DelegateConfiguration {
   private boolean useCdn;
 
   private String cdnUrl;
+
+  private String helmPath;
+  private String helm3Path;
 }

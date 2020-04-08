@@ -165,7 +165,7 @@ for goversion in v0.2 v0.3; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
-for helmversion in v2.13.1 v3.0.2; do
+for helmversion in v2.13.1 v3.0.2 v3.1.2; do
     echo "Adding helmversion $helmversion"
     HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
     HELM_MAC_DIR="${IMAGES_DIR}/helm/darwin/$helmversion/"
