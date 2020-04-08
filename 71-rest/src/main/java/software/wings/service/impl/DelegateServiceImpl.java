@@ -65,6 +65,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.github.zafarkhaja.semver.Version;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
@@ -679,9 +680,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
-      logger.info("Upgrading delegate to version: {}", scriptParams.get(UPGRADE_VERSION));
-      delegateScripts.setDoUpgrade(true);
-      delegateScripts.setVersion(scriptParams.get(UPGRADE_VERSION));
+      String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
+      logger.info("Upgrading delegate to version: {}", upgradeToVersion);
+      boolean doUpgrade;
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+        doUpgrade = true;
+      } else {
+        doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(upgradeToVersion)));
+      }
+      delegateScripts.setDoUpgrade(doUpgrade);
+      delegateScripts.setVersion(upgradeToVersion);
 
       delegateScripts.setStartScript(processTemplate(scriptParams, "start.sh.ftl"));
       delegateScripts.setDelegateScript(processTemplate(scriptParams, "delegate.sh.ftl"));
