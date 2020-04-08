@@ -18,7 +18,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -29,6 +28,7 @@ import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -301,18 +301,18 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
-  public void testGetLoginTypeResponseForInvalidUserForOnPrem() {
+  public void testGetLoginTypeResponseForInvalidUserForOnPrem() throws IllegalAccessException {
     when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.ONPREM);
-    setInternalState(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION);
+    FieldUtils.writeDeclaredField(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION, true);
     testForInvalidUserInOnPrem();
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
-  public void getLoginTypeResponseForInvalidUserForKubernetesOnPrem() {
+  public void getLoginTypeResponseForInvalidUserForKubernetesOnPrem() throws IllegalAccessException {
     when(MAIN_CONFIGURATION.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
-    setInternalState(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION);
+    FieldUtils.writeDeclaredField(authenticationManager, "mainConfiguration", MAIN_CONFIGURATION, true);
     testForInvalidUserInOnPrem();
   }
 

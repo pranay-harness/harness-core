@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
@@ -40,8 +39,8 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   public void testShouldPerformStuckJobCheck() throws IllegalAccessException {
     assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
 
-    setInternalState(gitChangeSetRunnable, "lastTimestampForStuckJobCheck",
-        new AtomicLong(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(120)));
+    FieldUtils.writeDeclaredField(gitChangeSetRunnable, "lastTimestampForStuckJobCheck",
+        new AtomicLong(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(120)), true);
     assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
 
     FieldUtils.writeField(
