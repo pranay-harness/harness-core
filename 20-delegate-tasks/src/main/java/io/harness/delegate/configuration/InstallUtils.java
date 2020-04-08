@@ -36,9 +36,9 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.3";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String helm3Version = "v3.0.2";
+  static final String helm3Version = "v3.1.2";
 
-  private static final String helm2Version = "v2.13.1";
+  static final String helm2Version = "v2.13.1";
 
   private static final List<String> helmVersions = Arrays.asList(helm2Version, helm3Version);
 
@@ -425,10 +425,7 @@ public class InstallUtils {
 
   private static boolean installHelm(DelegateConfiguration configuration, String helmVersion) {
     try {
-      if (isNotEmpty(configuration.getHelmPath())) {
-        String helmPath = configuration.getHelmPath();
-        helmPaths.put(helmVersion, helmPath);
-        logger.info("Found user configured helm at {}. Skipping Install.", helmPath);
+      if (delegateConfigHasHelmPath(configuration, helmVersion)) {
         return true;
       }
 
@@ -835,5 +832,25 @@ public class InstallUtils {
       logger.error("Error checking kustomize", e);
       return false;
     }
+  }
+
+  @VisibleForTesting
+  static boolean delegateConfigHasHelmPath(DelegateConfiguration configuration, String helmVersion) {
+    if (helm2Version.equals(helmVersion)) {
+      if (isNotEmpty(configuration.getHelmPath())) {
+        String helmPath = configuration.getHelmPath();
+        helmPaths.put(helmVersion, helmPath);
+        logger.info("Found user configured helm2 at {}. Skipping Install.", helmPath);
+        return true;
+      }
+    } else if (helm3Version.equals(helmVersion)) {
+      if (isNotEmpty(configuration.getHelm3Path())) {
+        String helmPath = configuration.getHelm3Path();
+        helmPaths.put(helmVersion, helmPath);
+        logger.info("Found user configured helm3 at {}. Skipping Install.", helmPath);
+        return true;
+      }
+    }
+    return false;
   }
 }

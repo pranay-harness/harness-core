@@ -252,7 +252,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testIsHelm3() {
-    assertThat(helmDeployService.isHelm3("v3.0.2+g19e47ee")).isTrue();
+    assertThat(helmDeployService.isHelm3("v3.1.2+g19e47ee")).isTrue();
     assertThat(
         helmDeployService.isHelm3(
             "Client: &version.Version{SemVer:\"v2.13.1\", GitCommit:\"618447cbf203d147601b4b9bd7f8c37a5d39fbb4\", GitTreeState:\"clean\"}\n"
