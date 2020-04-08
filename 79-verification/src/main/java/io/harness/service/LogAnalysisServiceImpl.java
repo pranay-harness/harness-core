@@ -253,9 +253,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         return false;
       }
 
-      List<LogDataRecord> logDataRecords =
-          LogDataRecord.generateDataRecords(stateType, appId, cvConfigId, stateExecutionId, workflowId,
-              workflowExecutionId, serviceId, clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
+      List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(stateType, appId, cvConfigId,
+          stateExecutionId, workflowId, workflowExecutionId, serviceId, clusterLevel,
+          ClusterLevel.getHeartBeatLevel(clusterLevel), logData, accountId);
 
       if (!checkIfL0AlreadyPresent(appId, cvConfigId, logDataRecords, stateExecutionId)) {
         return true;
@@ -341,9 +341,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return false;
     }
     if (isNotEmpty(logData)) {
-      List<LogDataRecord> logDataRecords =
-          LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId, cvConfigId, null, null, null,
-              logsCVConfiguration.getServiceId(), clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
+      List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId,
+          cvConfigId, null, null, null, logsCVConfiguration.getServiceId(), clusterLevel,
+          ClusterLevel.getHeartBeatLevel(clusterLevel), logData, logsCVConfiguration.getAccountId());
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
       logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
           cvConfigId, logCollectionMinute, clusterLevel, host);
