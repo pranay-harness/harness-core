@@ -1110,7 +1110,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldGetAllDelegateTags() {
+  public void shouldGetAllDelegateSelectors() {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
@@ -1131,7 +1131,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .tags(ImmutableList.of("def"))
                    .build();
     wingsPersistence.save(delegate);
-    Set<String> tags = delegateService.getAllDelegateTags(ACCOUNT_ID);
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
     assertThat(tags.size()).isEqualTo(2);
     assertThat(tags).containsExactlyInAnyOrder("abc", "def");
   }
@@ -1139,8 +1139,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldGetAllDelegateTags_Empty() {
-    Set<String> tags = delegateService.getAllDelegateTags(ACCOUNT_ID);
+  public void shouldGetAllDelegateSelectors_Empty() {
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
     assertThat(tags.size()).isEqualTo(0);
   }
 

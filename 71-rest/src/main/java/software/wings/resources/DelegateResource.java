@@ -170,6 +170,22 @@ public class DelegateResource {
     }
   }
 
+  /*
+    Duplicated method in case of Rollback, soon as "delegate-selectors" is verified and tested from UI,
+    below method "delegate-tags" will be removed.
+  */
+  @GET
+  @Path("delegate-selectors")
+  @Timed
+  @ExceptionMetered
+  @Deprecated
+  public RestResponse<Set<String>> delegateSelectors(
+      @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getAllDelegateSelectors(accountId));
+    }
+  }
+
   @GET
   @Path("delegate-tags")
   @Timed
@@ -178,7 +194,7 @@ public class DelegateResource {
   public RestResponse<Set<String>> delegateTags(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getAllDelegateTags(accountId));
+      return new RestResponse<>(delegateService.getAllDelegateSelectors(accountId));
     }
   }
 

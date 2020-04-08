@@ -252,6 +252,23 @@ public class DelegateSetupResourceTest {
     verify(delegateService, atLeastOnce()).updateScopes(delegate);
   }
 
+  /*
+    Duplicated Test method in case of Rollback, soon as "delegate-selectors" is verified and tested from UI,
+    below method "shouldGetDelegateTags" will be removed.
+  */
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateSelectors() {
+    RestResponse<Set<String>> restResponse = RESOURCES.client()
+                                                 .target("/setup/delegates/delegate-selectors?accountId=" + ACCOUNT_ID)
+                                                 .request()
+                                                 .get(new GenericType<RestResponse<Set<String>>>() {});
+
+    verify(delegateService, atLeastOnce()).getAllDelegateSelectors(ACCOUNT_ID);
+  }
+
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
@@ -261,7 +278,7 @@ public class DelegateSetupResourceTest {
                                                  .request()
                                                  .get(new GenericType<RestResponse<Set<String>>>() {});
 
-    verify(delegateService, atLeastOnce()).getAllDelegateTags(ACCOUNT_ID);
+    verify(delegateService, atLeastOnce()).getAllDelegateSelectors(ACCOUNT_ID);
   }
 
   @Test
