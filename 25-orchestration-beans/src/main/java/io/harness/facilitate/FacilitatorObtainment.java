@@ -10,5 +10,5 @@ import lombok.Value;
 @Redesign
 public class FacilitatorObtainment {
   FacilitatorType type;
-  FacilitatorParameters facilitatorParameters;
+  FacilitatorParameters parameters;
 }
