@@ -43,8 +43,7 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
-import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE1_ENABLE;
-import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE;
+import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
 import static software.wings.beans.FeatureName.UPGRADE_JRE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -85,7 +84,6 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.CapabilityUtils;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
@@ -1706,23 +1704,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
   // TODO: either new CapabilityCheckController or existing ValidationClass is used.
   private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
-    boolean phase1Task = CapabilityUtils.isTaskTypeMigratedToCapabilityFrameworkPhase1(task.getData().getTaskType());
-    boolean phase2Task = CapabilityUtils.isTaskTypeMigratedToCapabilityFrameworkPhase2(task.getData().getTaskType());
-
-    if (!phase1Task && !phase2Task) {
-      logger.error("The capabilities are not enabled for task type {}", task.getData().getTaskType());
-      return;
-    }
-
     boolean check = featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK, task.getAccountId());
+    boolean enabled = featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, task.getAccountId());
 
-    boolean phase1Enabled =
-        phase1Task && featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE1_ENABLE, task.getAccountId());
-
-    boolean phase2Enabled =
-        phase2Task && featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE2_ENABLE, task.getAccountId());
-
-    if (!(check || phase1Enabled || phase2Enabled)) {
+    if (!(check || enabled)) {
       return;
     }
 
@@ -1739,7 +1724,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
       }
 
-      task.setCapabilityFrameworkEnabled(phase1Enabled || phase2Enabled);
+      task.setCapabilityFrameworkEnabled(enabled);
     } catch (RuntimeException exception) {
       logger.error("Exception while preparing the task capabilities", exception);
     }
