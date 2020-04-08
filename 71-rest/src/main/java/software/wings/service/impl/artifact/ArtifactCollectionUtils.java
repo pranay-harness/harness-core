@@ -265,10 +265,14 @@ public class ArtifactCollectionUtils {
     ImageDetails imageDetails = getDockerImageDetailsInternal(artifactStream, null);
     if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
-      return encodeBase64(format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
-          imageDetails.getUsername(), imageDetails.getPassword().replaceAll("\"", "\\\\\"")));
+      return encodeBase64(getDockerRegistryCredentials(imageDetails));
     }
     return "";
+  }
+
+  public static String getDockerRegistryCredentials(ImageDetails imageDetails) {
+    return format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(), imageDetails.getUsername(),
+        imageDetails.getPassword().replaceAll("\"", "\\\\\""));
   }
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,

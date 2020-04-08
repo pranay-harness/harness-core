@@ -131,6 +131,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
@@ -160,9 +161,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   public static final String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
   public static final String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
   @Transient private static final Pattern envVarPattern = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
-  @Transient
-  private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
-      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
   @Transient private static final String LOAD_BALANCER = "LoadBalancer";
   @Transient private static final String NODE_PORT = "NodePort";
   @Transient private static final String POLICY_LOCAL = "Local";
@@ -1439,8 +1437,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails,
       Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);
-    String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
-        imageDetails.getUsername(), imageDetails.getPassword());
+    String credentialData = ArtifactCollectionUtils.getDockerRegistryCredentials(imageDetails);
     Map<String, String> data = ImmutableMap.of(".dockercfg", encodeBase64(credentialData));
     return new SecretBuilder()
         .withNewMetadata()
