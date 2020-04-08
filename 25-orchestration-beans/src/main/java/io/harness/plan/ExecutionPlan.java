@@ -1,6 +1,7 @@
 package io.harness.plan;
 
 import io.harness.annotations.Redesign;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Singular;
@@ -48,8 +49,12 @@ public class ExecutionPlan implements PersistentEntity {
   }
 
   public ExecutionNode fetchNode(String nodeId) {
-    return nodes.get(Collections.binarySearch(
-        nodes, ExecutionNode.builder().uuid(nodeId).build(), Comparator.comparing(ExecutionNode::getUuid)));
+    int nodeIndex = Collections.binarySearch(
+        nodes, ExecutionNode.builder().uuid(nodeId).build(), Comparator.comparing(ExecutionNode::getUuid));
+    if (nodeIndex < 0) {
+      throw new InvalidRequestException("No node found with Id :" + nodeId);
+    }
+    return nodes.get(nodeIndex);
   }
 
   public static class ExecutionPlanBuilder {

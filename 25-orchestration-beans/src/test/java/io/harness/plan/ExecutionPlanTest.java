@@ -3,11 +3,13 @@ package io.harness.plan;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionPlan.ExecutionPlanKeys;
 import io.harness.rule.Owner;
@@ -50,6 +52,8 @@ public class ExecutionPlanTest extends OrchestrationBeansTest {
     ExecutionNode node2 = plan.fetchNode(dummyNode2Id);
     assertThat(node2).isNotNull();
     assertThat(node2.getName()).isEqualTo("Dummy Node 2");
+
+    assertThatThrownBy(() -> plan.fetchNode(generateUuid())).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
