@@ -1,4 +1,4 @@
-package io.harness.advise.registry;
+package io.harness.adviser.registry;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.advise.Advise;
-import io.harness.advise.Adviser;
-import io.harness.advise.AdviserObtainment;
-import io.harness.advise.AdviserParameters;
-import io.harness.advise.AdviserType;
-import io.harness.advise.AdvisingEvent;
+import io.harness.adviser.Advise;
+import io.harness.adviser.Adviser;
+import io.harness.adviser.AdviserObtainment;
+import io.harness.adviser.AdviserParameters;
+import io.harness.adviser.AdviserType;
+import io.harness.adviser.AdvisingEvent;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.state.execution.status.NodeExecutionStatus;

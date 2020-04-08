@@ -1,4 +1,4 @@
-package io.harness.advise;
+package io.harness.adviser;
 
 import io.harness.annotations.Redesign;
 
