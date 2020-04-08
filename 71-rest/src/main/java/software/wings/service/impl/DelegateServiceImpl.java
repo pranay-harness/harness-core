@@ -396,7 +396,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public Set<String> getAllDelegateTags(String accountId) {
+  public Set<String> getAllDelegateSelectors(String accountId) {
     Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
                                         .field(DelegateKeys.tags)
@@ -405,11 +405,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
       if (delegates.hasNext()) {
-        Set<String> tags = new HashSet<>();
+        Set<String> selectors = new HashSet<>();
         for (Delegate delegate : delegates) {
-          tags.addAll(delegate.getTags());
+          selectors.addAll(delegate.getTags());
         }
-        return tags;
+        return selectors;
       }
     }
     return emptySet();
