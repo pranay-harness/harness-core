@@ -86,10 +86,8 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
     String env = "qa";
     assertWatcherMetaDataFileExists(env, false);
     assertWatcherMetaDataFileExists(env, true);
-
     env = "dev";
     assertWatcherMetaDataFileExists(env, false);
-
     env = "pr";
     assertWatcherMetaDataFileExists(env, false);
   }

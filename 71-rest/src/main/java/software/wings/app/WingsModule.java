@@ -624,8 +624,8 @@ public class WingsModule extends DependencyModule {
   @Provides
   @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
-    String pathPrefix = System.getenv("CLUSTER_TYPE");
-    boolean isFreeCluster = StringUtils.equals(pathPrefix, "freeemium");
+    String clusterType = System.getenv("CLUSTER_TYPE");
+    boolean isFreeCluster = StringUtils.equals(clusterType, "freemium");
 
     return new CdnStorageUrlGenerator(configuration.getCdnConfig(), isFreeCluster);
   }
