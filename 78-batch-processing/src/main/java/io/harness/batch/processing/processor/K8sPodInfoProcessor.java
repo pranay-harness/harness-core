@@ -7,7 +7,7 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
-import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.processor.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Autowired private InstanceDataService instanceDataService;
-  @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private WorkloadRepository workloadRepository;
   private static String POD = "Pod";
   private static String KUBE_SYSTEM_NAMESPACE = "kube-system";
@@ -79,8 +79,10 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();
-    HarnessServiceInfo harnessServiceInfo =
-        k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(accountId, labelsMap).orElse(null);
+    HarnessServiceInfo harnessServiceInfo = harnessServiceInfoFetcher
+                                                .fetchHarnessServiceInfo(accountId, podInfo.getCloudProviderId(),
+                                                    podInfo.getNamespace(), podInfo.getPodName(), labelsMap)
+                                                .orElse(null);
 
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);

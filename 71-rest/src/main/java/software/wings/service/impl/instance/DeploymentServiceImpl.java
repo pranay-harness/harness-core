@@ -89,6 +89,15 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   @Override
+  public Optional<DeploymentSummary> getWithInfraMappingId(String accountId, String infraMappingId) {
+    Query<DeploymentSummary> query = wingsPersistence.createQuery(DeploymentSummary.class, excludeValidate)
+                                         .filter(DeploymentSummaryKeys.accountId, accountId)
+                                         .filter(DeploymentSummaryKeys.infraMappingId, infraMappingId)
+                                         .order(Sort.descending(DeploymentSummary.CREATED_AT_KEY));
+    return Optional.ofNullable(query.get());
+  }
+
+  @Override
   public List<DeploymentSummary> getDeploymentSummary(
       String accountId, String offset, Instant startTime, Instant endTime) {
     PageRequest<DeploymentSummary> pageRequest =

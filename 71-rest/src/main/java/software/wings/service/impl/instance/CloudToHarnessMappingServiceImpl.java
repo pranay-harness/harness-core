@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -8,6 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Sort;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
@@ -17,6 +19,8 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
@@ -41,7 +45,10 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
 
   @Override
   public Optional<HarnessServiceInfo> getHarnessServiceInfo(DeploymentSummary deploymentSummary) {
-    Optional<DeploymentSummary> summary = deploymentService.getWithAccountId(deploymentSummary);
+    return getHarnessServiceInfo(deploymentService.getWithAccountId(deploymentSummary));
+  }
+
+  private Optional<HarnessServiceInfo> getHarnessServiceInfo(Optional<DeploymentSummary> summary) {
     if (summary.isPresent()) {
       DeploymentSummary deploymentSummaryResponse = summary.get();
       InfrastructureMapping infrastructureMapping =
@@ -55,6 +62,23 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                 infrastructureMapping.getComputeProviderSettingId(), infrastructureMapping.getEnvId(),
                 deploymentSummaryResponse.getInfraMappingId(), deploymentSummaryResponse.getUuid()));
       }
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<HarnessServiceInfo> getHarnessServiceInfo(
+      String accountId, String computeProviderId, String namespace, String podName) {
+    Instance instance = persistence.createQuery(Instance.class, excludeValidate)
+                            .filter(InstanceKeys.accountId, accountId)
+                            .filter(InstanceKeys.computeProviderId, computeProviderId)
+                            .filter(InstanceKeys.instanceInfoNamespace, namespace)
+                            .filter(InstanceKeys.instanceInfoPodName, podName)
+                            .order(Sort.descending(InstanceKeys.createdAt))
+                            .get();
+
+    if (null != instance) {
+      return getHarnessServiceInfo(deploymentService.getWithInfraMappingId(accountId, instance.getInfraMappingId()));
     }
     return Optional.empty();
   }

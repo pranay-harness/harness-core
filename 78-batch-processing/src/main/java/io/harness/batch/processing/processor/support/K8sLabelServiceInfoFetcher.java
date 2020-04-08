@@ -5,6 +5,7 @@ import static io.harness.batch.processing.writer.constants.K8sCCMConstants.RELEA
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentSummary.DeploymentSummaryBuilder;
@@ -22,6 +23,7 @@ import java.util.Optional;
 /**
  * Maps k8s objects to harness services using labels.
  */
+@Slf4j
 @Component
 public class K8sLabelServiceInfoFetcher {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
@@ -45,7 +47,11 @@ public class K8sLabelServiceInfoFetcher {
       ContainerDeploymentKey containerDeploymentKey =
           ContainerDeploymentKey.builder().labels(Arrays.asList(label)).build();
       deploymentSummaryBuilder.containerDeploymentKey(containerDeploymentKey);
-      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummaryBuilder.build());
+      DeploymentSummary deploymentSummary = deploymentSummaryBuilder.build();
+      Optional<HarnessServiceInfo> harnessServiceInfo =
+          cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
+      logger.info("helm request deployment summary {} {}", deploymentSummary, harnessServiceInfo.isPresent());
+      return harnessServiceInfo;
     } else {
       return Optional.ofNullable(null);
     }
