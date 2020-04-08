@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -35,6 +36,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -122,154 +124,159 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
-    String correlationId = UUID.randomUUID().toString();
-    Logger activityLogger =
-        cvActivityLogService.getLoggerByStateExecutionId(executionContext.getStateExecutionInstanceId());
-    String delegateTaskId = null;
-    try {
-      renderedQuery = executionContext.renderExpression(query);
-      getLogger().info("Executing {}", getStateType());
-      cleanUpForRetry(executionContext);
-      AnalysisContext analysisContext = getLogAnalysisContext(executionContext, correlationId);
-      getLogger().info("context: {}", analysisContext);
+    try (VerificationLogContext ignored = new VerificationLogContext(executionContext.getAccountId(), null,
+             executionContext.getStateExecutionInstanceId(), StateType.valueOf(getStateType()), OVERRIDE_ERROR)) {
+      getLogger().info("Executing state {}", executionContext.getStateExecutionInstanceId());
+      String correlationId = UUID.randomUUID().toString();
+      Logger activityLogger =
+          cvActivityLogService.getLoggerByStateExecutionId(executionContext.getStateExecutionInstanceId());
+      String delegateTaskId = null;
+      try {
+        renderedQuery = executionContext.renderExpression(query);
+        cleanUpForRetry(executionContext);
+        AnalysisContext analysisContext = getLogAnalysisContext(executionContext, correlationId);
+        getLogger().info("context: {}", analysisContext);
 
-      if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()), StateType.valueOf(getStateType()),
-              executionContext.getStateExecutionInstanceId())) {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-            "Your license type does not support running this verification. Skipping Analysis");
-      }
-
-      if (unresolvedHosts(analysisContext)) {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "The expression " + hostnameTemplate + " could not be resolved for hosts");
-      }
-
-      saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
-
-      Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
-      if (isDemoPath(analysisContext)) {
-        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-        generateDemoActivityLogs(activityLogger, failedState);
-        generateDemoThirdPartyApiCallLogs(
-            analysisContext.getAccountId(), analysisContext.getStateExecutionId(), failedState);
-        return getDemoExecutionResponse(analysisContext);
-      }
-
-      if (isEmpty(canaryNewHostNames)) {
-        getLogger().warn("Could not find test nodes to compare the data");
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
-      }
-
-      Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
-      if (isEmpty(lastExecutionNodes)) {
-        if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
-          getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
+        if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()),
+                StateType.valueOf(getStateType()), executionContext.getStateExecutionInstanceId())) {
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-              "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
+              "Your license type does not support running this verification. Skipping Analysis");
         }
 
-        getLogger().warn(
-            "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
-      }
+        if (unresolvedHosts(analysisContext)) {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "The expression " + hostnameTemplate + " could not be resolved for hosts");
+        }
 
-      String responseMessage = "Log Verification running.";
-      String baselineWorkflowExecutionId = null;
-      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-        WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-        baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
-            analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
-            analysisContext.getServiceId());
-        if (isEmpty(baselineWorkflowExecutionId)) {
-          responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-          getLogger().info("{}", responseMessage);
-          baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
-              analysisContext.getStateExecutionId(), analysisContext.getStateType(), analysisContext.getAppId(),
-              analysisContext.getServiceId(), analysisContext.getWorkflowId(), analysisContext.getQuery(),
-              getPhaseInfraMappingId(executionContext), workflowStandardParams.getEnvId());
+        saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
+
+        Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
+        if (isDemoPath(analysisContext)) {
+          boolean failedState =
+              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+          generateDemoActivityLogs(activityLogger, failedState);
+          generateDemoThirdPartyApiCallLogs(
+              analysisContext.getAccountId(), analysisContext.getStateExecutionId(), failedState);
+          return getDemoExecutionResponse(analysisContext);
+        }
+
+        if (isEmpty(canaryNewHostNames)) {
+          getLogger().warn("Could not find test nodes to compare the data");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+        }
+
+        Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
+        if (isEmpty(lastExecutionNodes)) {
+          if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
+            getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+                "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
+          }
+
+          getLogger().warn(
+              "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
+        }
+
+        String responseMessage = "Log Verification running.";
+        String baselineWorkflowExecutionId = null;
+        if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
+          WorkflowStandardParams workflowStandardParams =
+              executionContext.getContextElement(ContextElementType.STANDARD);
+          baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+              analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
+              analysisContext.getServiceId());
+          if (isEmpty(baselineWorkflowExecutionId)) {
+            responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+            getLogger().info("{}", responseMessage);
+            baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+                analysisContext.getStateExecutionId(), analysisContext.getStateType(), analysisContext.getAppId(),
+                analysisContext.getServiceId(), analysisContext.getWorkflowId(), analysisContext.getQuery(),
+                getPhaseInfraMappingId(executionContext), workflowStandardParams.getEnvId());
+          } else {
+            responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
+            getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: {}",
+                analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+          }
+          if (baselineWorkflowExecutionId == null) {
+            responseMessage += " No previous execution found. This will be the baseline run.";
+            getLogger().warn("No previous execution found. This will be the baseline run");
+          }
+          getLogger().info(
+              "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+          analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+        }
+        activityLogger.info(responseMessage);
+
+        final VerificationStateAnalysisExecutionData executionData =
+            VerificationStateAnalysisExecutionData.builder()
+                .stateExecutionInstanceId(analysisContext.getStateExecutionId())
+                .baselineExecutionId(baselineWorkflowExecutionId)
+                .serverConfigId(getAnalysisServerConfigId())
+                .query(getRenderedQuery())
+                .canaryNewHostNames(canaryNewHostNames)
+                .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+                .correlationId(analysisContext.getCorrelationId())
+                .comparisonStrategy(getComparisonStrategy())
+                .build();
+
+        executionData.setStatus(ExecutionStatus.RUNNING);
+        executionData.setErrorMsg(responseMessage);
+
+        Set<String> hostsToBeCollected = new HashSet<>();
+        if (getComparisonStrategy() == COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
+          hostsToBeCollected.addAll(lastExecutionNodes);
+        }
+
+        hostsToBeCollected.addAll(canaryNewHostNames);
+        hostsToBeCollected.remove(null);
+        getLogger().info("triggering data collection for {} state", getStateType());
+
+        if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
+          getLogger().info("Data collection will be done with cv tasks.");
+          analysisContext.setDataCollectionInfov2(createDataCollectionInfo(executionContext, hostsToBeCollected));
+        } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
+          // In case of predictive the data collection will be handled as per 24x7 logic
+          // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
+          getLogger().info("Per Minute data collection will be done for triggering delegate task");
         } else {
-          responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
-          getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: {}",
-              analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
+          delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
+          getLogger().info("triggered data collection for {} state, delgateTaskId: {}", getStateType(), delegateTaskId);
         }
-        if (baselineWorkflowExecutionId == null) {
-          responseMessage += " No previous execution found. This will be the baseline run.";
-          getLogger().warn("No previous execution found. This will be the baseline run");
-        }
-        getLogger().info(
-            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
-        analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+        logDataCollectionTriggeredMessage(activityLogger);
+        // Set the rendered query into the analysis context which will be used during task analysis.
+        analysisContext.setQuery(getRenderedQuery());
+
+        scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+
+        return ExecutionResponse.builder()
+            .async(true)
+            .correlationIds(Collections.singletonList(analysisContext.getCorrelationId()))
+            .executionStatus(ExecutionStatus.RUNNING)
+            .errorMessage(responseMessage)
+            .stateExecutionData(executionData)
+            .delegateTaskId(delegateTaskId)
+            .build();
+      } catch (Exception ex) {
+        getLogger().error("log analysis state failed ", ex);
+        // set the CV Metadata status to ERROR as well.
+        activityLogger.error("Data collection failed: " + ex.getMessage());
+        continuousVerificationService.setMetaDataExecutionStatus(
+            executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
+
+        return ExecutionResponse.builder()
+            .async(false)
+            .correlationIds(Collections.singletonList(correlationId))
+            .executionStatus(ExecutionStatus.ERROR)
+            .errorMessage(ExceptionUtils.getMessage(ex))
+            .stateExecutionData(VerificationStateAnalysisExecutionData.builder()
+                                    .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                    .serverConfigId(getAnalysisServerConfigId())
+                                    .query(getRenderedQuery())
+                                    .comparisonStrategy(getComparisonStrategy())
+                                    .build())
+            .build();
       }
-      activityLogger.info(responseMessage);
-
-      final VerificationStateAnalysisExecutionData executionData =
-          VerificationStateAnalysisExecutionData.builder()
-              .stateExecutionInstanceId(analysisContext.getStateExecutionId())
-              .baselineExecutionId(baselineWorkflowExecutionId)
-              .serverConfigId(getAnalysisServerConfigId())
-              .query(getRenderedQuery())
-              .canaryNewHostNames(canaryNewHostNames)
-              .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-              .correlationId(analysisContext.getCorrelationId())
-              .comparisonStrategy(getComparisonStrategy())
-              .build();
-
-      executionData.setStatus(ExecutionStatus.RUNNING);
-      executionData.setErrorMsg(responseMessage);
-
-      Set<String> hostsToBeCollected = new HashSet<>();
-      if (getComparisonStrategy() == COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
-        hostsToBeCollected.addAll(lastExecutionNodes);
-      }
-
-      hostsToBeCollected.addAll(canaryNewHostNames);
-      hostsToBeCollected.remove(null);
-      getLogger().info("triggering data collection for {} state", getStateType());
-
-      if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
-        getLogger().info("Data collection will be done with cv tasks.");
-        analysisContext.setDataCollectionInfov2(createDataCollectionInfo(executionContext, hostsToBeCollected));
-      } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
-        // In case of predictive the data collection will be handled as per 24x7 logic
-        // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
-        getLogger().info("Per Minute data collection will be done for triggering delegate task");
-      } else {
-        delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
-        getLogger().info("triggered data collection for {} state, delgateTaskId: {}", getStateType(), delegateTaskId);
-      }
-      logDataCollectionTriggeredMessage(activityLogger);
-      // Set the rendered query into the analysis context which will be used during task analysis.
-      analysisContext.setQuery(getRenderedQuery());
-
-      scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-
-      return ExecutionResponse.builder()
-          .async(true)
-          .correlationIds(Collections.singletonList(analysisContext.getCorrelationId()))
-          .executionStatus(ExecutionStatus.RUNNING)
-          .errorMessage(responseMessage)
-          .stateExecutionData(executionData)
-          .delegateTaskId(delegateTaskId)
-          .build();
-    } catch (Exception ex) {
-      getLogger().error("log analysis state failed ", ex);
-      // set the CV Metadata status to ERROR as well.
-      activityLogger.error("Data collection failed: " + ex.getMessage());
-      continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
-
-      return ExecutionResponse.builder()
-          .async(false)
-          .correlationIds(Collections.singletonList(correlationId))
-          .executionStatus(ExecutionStatus.ERROR)
-          .errorMessage(ExceptionUtils.getMessage(ex))
-          .stateExecutionData(VerificationStateAnalysisExecutionData.builder()
-                                  .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                  .serverConfigId(getAnalysisServerConfigId())
-                                  .query(getRenderedQuery())
-                                  .comparisonStrategy(getComparisonStrategy())
-                                  .build())
-          .build();
     }
   }
 

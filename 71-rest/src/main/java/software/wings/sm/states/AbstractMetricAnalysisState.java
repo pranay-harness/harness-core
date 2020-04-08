@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
@@ -30,6 +31,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -116,188 +118,193 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId());
-    String corelationId = UUID.randomUUID().toString();
-    String delegateTaskId = null;
-    VerificationStateAnalysisExecutionData executionData;
-    try {
-      getLogger().info("Executing {} state", getStateType());
-      cleanUpForRetry(context);
-      AnalysisContext analysisContext = getAnalysisContext(context, corelationId);
-      getLogger().info("context: {}", analysisContext);
+    try (VerificationLogContext ignored = new VerificationLogContext(context.getAccountId(), null,
+             context.getStateExecutionInstanceId(), StateType.valueOf(getStateType()), OVERRIDE_ERROR)) {
+      getLogger().info("Executing state {}", context.getStateExecutionInstanceId());
+      Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId());
+      String corelationId = UUID.randomUUID().toString();
+      String delegateTaskId = null;
+      VerificationStateAnalysisExecutionData executionData;
+      try {
+        cleanUpForRetry(context);
+        AnalysisContext analysisContext = getAnalysisContext(context, corelationId);
+        getLogger().info("context: {}", analysisContext);
 
-      if (!checkLicense(appService.getAccountIdByAppId(context.getAppId()), StateType.valueOf(getStateType()),
-              context.getStateExecutionInstanceId())) {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-            "Your license type does not support running this verification. Skipping Analysis");
-      }
-
-      if (unresolvedHosts(analysisContext)) {
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "The expression " + hostnameTemplate + " could not be resolved for hosts");
-      }
-      if (analysisContext.isHistoricalDataCollection()) {
-        Map<String, String> testNodeMap = analysisContext.getTestNodes();
-        Map<String, String> controlNodeMap = analysisContext.getControlNodes();
-        testNodeMap.put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
-        analysisContext.setTestNodes(testNodeMap);
-
-        controlNodeMap.put(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
-        for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
-          controlNodeMap.put(CONTROL_HOST_NAME + "-" + i, DEFAULT_GROUP_NAME);
-        }
-        analysisContext.setControlNodes(controlNodeMap);
-      }
-      saveMetaDataForDashboard(analysisContext.getAccountId(), context);
-
-      if (isDemoPath(analysisContext)) {
-        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-        generateDemoActivityLogs(activityLogger, failedState);
-        generateDemoThirdPartyApiCallLogs(context.getAccountId(), context.getStateExecutionInstanceId(), failedState);
-        return getDemoExecutionResponse(analysisContext);
-      }
-
-      Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
-      if (isAwsLambdaState(context)) {
-        canaryNewHostNames.put(LAMBDA_HOST_NAME, DEFAULT_GROUP_NAME);
-      }
-
-      if (isAwsECSState(context)) {
-        CloudWatchState cloudWatchState = (CloudWatchState) this;
-        if (isNotEmpty(cloudWatchState.fetchEcsMetrics())) {
-          for (String clusterName : cloudWatchState.fetchEcsMetrics().keySet()) {
-            canaryNewHostNames.put(clusterName, DEFAULT_GROUP_NAME);
-          }
-        }
-      }
-      if (getStateType().equals(StateType.CLOUD_WATCH.name())) {
-        CloudWatchState cloudWatchState = (CloudWatchState) this;
-        if (isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())) {
-          for (String lbName : cloudWatchState.fetchLoadBalancerMetrics().keySet()) {
-            canaryNewHostNames.put(lbName, DEFAULT_GROUP_NAME);
-          }
-        }
-      }
-
-      if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
-        getLogger().warn(
-            "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
-      }
-
-      Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
-      if (isEmpty(lastExecutionNodes) && !isAwsLambdaState(context)) {
-        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-          getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
+        if (!checkLicense(appService.getAccountIdByAppId(context.getAppId()), StateType.valueOf(getStateType()),
+                context.getStateExecutionInstanceId())) {
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-              "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
+              "Your license type does not support running this verification. Skipping Analysis");
         }
 
-        getLogger().info("It seems that there is no successful run for this workflow yet. "
-            + "Metric data will be collected to be analyzed for next deployment run");
-      }
+        if (unresolvedHosts(analysisContext)) {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "The expression " + hostnameTemplate + " could not be resolved for hosts");
+        }
+        if (analysisContext.isHistoricalDataCollection()) {
+          Map<String, String> testNodeMap = analysisContext.getTestNodes();
+          Map<String, String> controlNodeMap = analysisContext.getControlNodes();
+          testNodeMap.put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+          analysisContext.setTestNodes(testNodeMap);
 
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-          && lastExecutionNodes.equals(canaryNewHostNames)) {
-        getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
-        return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
-            "Skipping analysis because both the new and old instances of the service and environment are same. Please check your setup.");
-      }
+          controlNodeMap.put(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
+          for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
+            controlNodeMap.put(CONTROL_HOST_NAME + "-" + i, DEFAULT_GROUP_NAME);
+          }
+          analysisContext.setControlNodes(controlNodeMap);
+        }
+        saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
-      String responseMessage = "Metric Verification running";
-      String baselineWorkflowExecutionId = null;
-      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-        baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
-            context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
-        if (isEmpty(baselineWorkflowExecutionId)) {
-          responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-          getLogger().info(responseMessage);
-          baselineWorkflowExecutionId =
-              metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(analysisContext.getStateType(),
-                  analysisContext.getAppId(), analysisContext.getWorkflowId(), analysisContext.getServiceId(),
-                  getPhaseInfraMappingId(context), workflowStandardParams.getEnv().getUuid());
+        if (isDemoPath(analysisContext)) {
+          boolean failedState =
+              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+          generateDemoActivityLogs(activityLogger, failedState);
+          generateDemoThirdPartyApiCallLogs(context.getAccountId(), context.getStateExecutionInstanceId(), failedState);
+          return getDemoExecutionResponse(analysisContext);
+        }
+
+        Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
+        if (isAwsLambdaState(context)) {
+          canaryNewHostNames.put(LAMBDA_HOST_NAME, DEFAULT_GROUP_NAME);
+        }
+
+        if (isAwsECSState(context)) {
+          CloudWatchState cloudWatchState = (CloudWatchState) this;
+          if (isNotEmpty(cloudWatchState.fetchEcsMetrics())) {
+            for (String clusterName : cloudWatchState.fetchEcsMetrics().keySet()) {
+              canaryNewHostNames.put(clusterName, DEFAULT_GROUP_NAME);
+            }
+          }
+        }
+        if (getStateType().equals(StateType.CLOUD_WATCH.name())) {
+          CloudWatchState cloudWatchState = (CloudWatchState) this;
+          if (isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())) {
+            for (String lbName : cloudWatchState.fetchLoadBalancerMetrics().keySet()) {
+              canaryNewHostNames.put(lbName, DEFAULT_GROUP_NAME);
+            }
+          }
+        }
+
+        if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
+          getLogger().warn(
+              "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "Could not find newly deployed instances. Please ensure that new workflow resulted in actual deployment.");
+        }
+
+        Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
+        if (isEmpty(lastExecutionNodes) && !isAwsLambdaState(context)) {
+          if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+            getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+                "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
+          }
+
+          getLogger().info("It seems that there is no successful run for this workflow yet. "
+              + "Metric data will be collected to be analyzed for next deployment run");
+        }
+
+        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+            && lastExecutionNodes.equals(canaryNewHostNames)) {
+          getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "Skipping analysis because both the new and old instances of the service and environment are same. Please check your setup.");
+        }
+
+        String responseMessage = "Metric Verification running";
+        String baselineWorkflowExecutionId = null;
+        if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
+          WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+          baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
+              context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
+          if (isEmpty(baselineWorkflowExecutionId)) {
+            responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+            getLogger().info(responseMessage);
+            baselineWorkflowExecutionId =
+                metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(analysisContext.getStateType(),
+                    analysisContext.getAppId(), analysisContext.getWorkflowId(), analysisContext.getServiceId(),
+                    getPhaseInfraMappingId(context), workflowStandardParams.getEnv().getUuid());
+          } else {
+            responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
+            getLogger().info("Baseline execution is {}", baselineWorkflowExecutionId);
+          }
+          if (baselineWorkflowExecutionId == null) {
+            responseMessage += " No previous execution found. This will be the baseline run";
+            getLogger().warn("No previous execution found. This will be the baseline run");
+          }
+          analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+        }
+
+        executionData =
+            VerificationStateAnalysisExecutionData.builder()
+                .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                .serverConfigId(getAnalysisServerConfigId())
+                .canaryNewHostNames(canaryNewHostNames.keySet())
+                .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : lastExecutionNodes.keySet())
+                .correlationId(analysisContext.getCorrelationId())
+                .canaryNewHostNames(analysisContext.getTestNodes().keySet())
+                .lastExecutionNodes(analysisContext.getControlNodes().keySet())
+                .baselineExecutionId(baselineWorkflowExecutionId)
+                .comparisonStrategy(getComparisonStrategy())
+                .build();
+        executionData.setErrorMsg(responseMessage);
+        executionData.setStatus(ExecutionStatus.RUNNING);
+        Map<String, String> hostsToCollect = new HashMap<>();
+        if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
+          hostsToCollect.putAll(canaryNewHostNames);
+
         } else {
-          responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
-          getLogger().info("Baseline execution is {}", baselineWorkflowExecutionId);
+          hostsToCollect.putAll(canaryNewHostNames);
+          hostsToCollect.putAll(lastExecutionNodes);
         }
-        if (baselineWorkflowExecutionId == null) {
-          responseMessage += " No previous execution found. This will be the baseline run";
-          getLogger().warn("No previous execution found. This will be the baseline run");
+
+        getLogger().info("triggering data collection for {} state", getStateType());
+        hostsToCollect.remove(null);
+        createAndSaveMetricGroups(context, hostsToCollect);
+        if (isCVTaskEnqueuingEnabled(context.getAccountId())) {
+          getLogger().info("Data collection will be done with cv tasks.");
+          analysisContext.setDataCollectionInfov2(createDataCollectionInfo(context, hostsToCollect));
+        } else if (isEligibleForPerMinuteTask(context.getAccountId())) {
+          getLogger().info("Per Minute data collection will be done for triggering delegate task");
+        } else {
+          delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
+          getLogger().info(
+              "triggered data collection for {} state, delegateTaskId: {}", getStateType(), delegateTaskId);
         }
-        analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+        logDataCollectionTriggeredMessage(activityLogger);
+        VerificationDataAnalysisResponse response =
+            VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+        response.setExecutionStatus(ExecutionStatus.RUNNING);
+        scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+        activityLogger.info(responseMessage);
+        return ExecutionResponse.builder()
+            .async(true)
+            .correlationIds(Collections.singletonList(executionData.getCorrelationId()))
+            .executionStatus(ExecutionStatus.RUNNING)
+            .errorMessage(responseMessage)
+            .stateExecutionData(executionData)
+            .build();
+      } catch (Exception ex) {
+        // set the CV Metadata status to ERROR as well.
+        activityLogger.error("Data collection failed: " + ex.getMessage());
+        getLogger().error("metric analysis state {} failed", context.getStateExecutionInstanceId(), ex);
+        continuousVerificationService.setMetaDataExecutionStatus(
+            context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
+        VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
+            VerificationStateAnalysisExecutionData.builder()
+                .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                .serverConfigId(getAnalysisServerConfigId())
+                .comparisonStrategy(getComparisonStrategy())
+                .build();
+        stateAnalysisExecutionData.setErrorMsg(ex.getMessage());
+        stateAnalysisExecutionData.setStatus(ExecutionStatus.ERROR);
+        return ExecutionResponse.builder()
+            .async(false)
+            .correlationIds(Collections.singletonList(corelationId))
+            .executionStatus(ExecutionStatus.ERROR)
+            .errorMessage(ExceptionUtils.getMessage(ex))
+            .stateExecutionData(stateAnalysisExecutionData)
+            .build();
       }
-
-      executionData =
-          VerificationStateAnalysisExecutionData.builder()
-              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .serverConfigId(getAnalysisServerConfigId())
-              .canaryNewHostNames(canaryNewHostNames.keySet())
-              .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : lastExecutionNodes.keySet())
-              .correlationId(analysisContext.getCorrelationId())
-              .canaryNewHostNames(analysisContext.getTestNodes().keySet())
-              .lastExecutionNodes(analysisContext.getControlNodes().keySet())
-              .baselineExecutionId(baselineWorkflowExecutionId)
-              .comparisonStrategy(getComparisonStrategy())
-              .build();
-      executionData.setErrorMsg(responseMessage);
-      executionData.setStatus(ExecutionStatus.RUNNING);
-      Map<String, String> hostsToCollect = new HashMap<>();
-      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-        hostsToCollect.putAll(canaryNewHostNames);
-
-      } else {
-        hostsToCollect.putAll(canaryNewHostNames);
-        hostsToCollect.putAll(lastExecutionNodes);
-      }
-
-      getLogger().info("triggering data collection for {} state", getStateType());
-      hostsToCollect.remove(null);
-      createAndSaveMetricGroups(context, hostsToCollect);
-      if (isCVTaskEnqueuingEnabled(context.getAccountId())) {
-        getLogger().info("Data collection will be done with cv tasks.");
-        analysisContext.setDataCollectionInfov2(createDataCollectionInfo(context, hostsToCollect));
-      } else if (isEligibleForPerMinuteTask(context.getAccountId())) {
-        getLogger().info("Per Minute data collection will be done for triggering delegate task");
-      } else {
-        delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
-        getLogger().info("triggered data collection for {} state, delegateTaskId: {}", getStateType(), delegateTaskId);
-      }
-      logDataCollectionTriggeredMessage(activityLogger);
-      VerificationDataAnalysisResponse response =
-          VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-      response.setExecutionStatus(ExecutionStatus.RUNNING);
-      scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-      activityLogger.info(responseMessage);
-      return ExecutionResponse.builder()
-          .async(true)
-          .correlationIds(Collections.singletonList(executionData.getCorrelationId()))
-          .executionStatus(ExecutionStatus.RUNNING)
-          .errorMessage(responseMessage)
-          .stateExecutionData(executionData)
-          .build();
-    } catch (Exception ex) {
-      // set the CV Metadata status to ERROR as well.
-      activityLogger.error("Data collection failed: " + ex.getMessage());
-      getLogger().error("metric analysis state {} failed", context.getStateExecutionInstanceId(), ex);
-      continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true, false);
-      VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
-          VerificationStateAnalysisExecutionData.builder()
-              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .serverConfigId(getAnalysisServerConfigId())
-              .comparisonStrategy(getComparisonStrategy())
-              .build();
-      stateAnalysisExecutionData.setErrorMsg(ex.getMessage());
-      stateAnalysisExecutionData.setStatus(ExecutionStatus.ERROR);
-      return ExecutionResponse.builder()
-          .async(false)
-          .correlationIds(Collections.singletonList(corelationId))
-          .executionStatus(ExecutionStatus.ERROR)
-          .errorMessage(ExceptionUtils.getMessage(ex))
-          .stateExecutionData(stateAnalysisExecutionData)
-          .build();
     }
   }
 
