@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 
 import com.google.common.base.Preconditions;
@@ -401,6 +400,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion) {
+    // We need to move the WorkflowDataCollectionJob to iterator
+    // Since this method is called for scheduling the data collection crons for minute based collection and since
+    // AnalysisContext can be marked as running by other iterators like WorkflowLogClusterJob the actual data collection
+    // cron schedule can be delayed by VERIFICATION_TASK_TIMEOUT which is 3 minutes. For now reducing the retry to be 30
+    // seconds. Since the cron doesn't get added again if it already exists, this change is harmless
     Query<AnalysisContext> query = wingsPersistence.createQuery(AnalysisContext.class)
                                        .filter(AnalysisContextKeys.version, serviceApiVersion)
                                        .field("retry")
@@ -408,7 +412,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
             query.criteria(AnalysisContext.LAST_UPDATED_AT_KEY)
-                .lessThan(System.currentTimeMillis() - VERIFICATION_TASK_TIMEOUT)));
+                .lessThan(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))));
     UpdateOperations<AnalysisContext> updateOperations =
         wingsPersistence.createUpdateOperations(AnalysisContext.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
