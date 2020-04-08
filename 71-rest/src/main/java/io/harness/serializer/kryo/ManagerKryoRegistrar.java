@@ -727,6 +727,8 @@ import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupExecutionSummary;
 import software.wings.sm.states.spotinst.SpotInstSetupStateExecutionData;
 import software.wings.sm.states.spotinst.SpotinstDeployExecutionSummary;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupExecutionData;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
@@ -1535,5 +1537,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SftpCapability.class, 7333);
     kryo.register(ScalyrConfig.class, 7334);
     kryo.register(EncryptedDataParent.class, 7335);
+    kryo.register(SpotinstTrafficShiftAlbSetupElement.class, 7336);
+    kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7337);
   }
 }

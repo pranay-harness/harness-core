@@ -4,25 +4,15 @@ import static com.google.api.client.util.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.spotinst.model.SpotInstConstants.CAPACITY;
-import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MAXIMUM_CONFIG_ELEMENT;
-import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFIG_ELEMENT;
-import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
-import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
-import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
-import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
-import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_USER_DATA_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.LAUNCH_SPECIFICATION;
 import static io.harness.spotinst.model.SpotInstConstants.LB_TYPE_TG;
 import static io.harness.spotinst.model.SpotInstConstants.LOAD_BALANCERS_CONFIG;
-import static io.harness.spotinst.model.SpotInstConstants.NAME_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
-import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
 import static io.harness.spotinst.model.SpotInstConstants.elastiGroupsToKeep;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -31,7 +21,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
@@ -220,13 +209,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
   @VisibleForTesting
   String generateFinalJson(SpotInstSetupTaskParameters setupTaskParameters, String newElastiGroupName) {
-    String elastiGroupJson = setupTaskParameters.getElastiGroupJson();
-    java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
-    Gson gson = new Gson();
-
-    // Map<"group": {...entire config...}>, this is elastiGroupConfig json that spotinst exposes
-    Map<String, Object> jsonConfigMap = gson.fromJson(elastiGroupJson, mapType);
-
+    Map<String, Object> jsonConfigMap = getJsonConfigMapFromElastigroupJson(setupTaskParameters.getElastiGroupJson());
     Map<String, Object> elastiGroupConfigMap = (Map<String, Object>) jsonConfigMap.get(GROUP_CONFIG_ELEMENT);
 
     removeUnsupportedFieldsForCreatingNewGroup(elastiGroupConfigMap);
@@ -234,38 +217,8 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     updateInitialCapacity(elastiGroupConfigMap);
     updateWithLoadBalancerAndImageConfig(setupTaskParameters.getAwsLoadBalancerConfigs(), elastiGroupConfigMap,
         setupTaskParameters.getImage(), setupTaskParameters.getUserData(), setupTaskParameters.isBlueGreen());
+    Gson gson = new Gson();
     return gson.toJson(jsonConfigMap);
-  }
-
-  @VisibleForTesting
-  void removeUnsupportedFieldsForCreatingNewGroup(Map<String, Object> elastiGroupConfigMap) {
-    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_ID)) {
-      elastiGroupConfigMap.remove(ELASTI_GROUP_ID);
-    }
-
-    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_CREATED_AT)) {
-      elastiGroupConfigMap.remove(ELASTI_GROUP_CREATED_AT);
-    }
-
-    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_UPDATED_AT)) {
-      elastiGroupConfigMap.remove(ELASTI_GROUP_UPDATED_AT);
-    }
-  }
-
-  private void updateName(Map<String, Object> elastiGroupConfigMap, String stageElastiGroupName) {
-    elastiGroupConfigMap.put(NAME_CONFIG_ELEMENT, stageElastiGroupName);
-  }
-
-  private void updateInitialCapacity(Map<String, Object> elastiGroupConfigMap) {
-    Map<String, Object> capacityConfig = (Map<String, Object>) elastiGroupConfigMap.get(CAPACITY);
-
-    capacityConfig.put(CAPACITY_MINIMUM_CONFIG_ELEMENT, 0);
-    capacityConfig.put(CAPACITY_TARGET_CONFIG_ELEMENT, 0);
-    capacityConfig.put(CAPACITY_MAXIMUM_CONFIG_ELEMENT, 0);
-
-    if (!capacityConfig.containsKey(CAPACITY_UNIT_CONFIG_ELEMENT)) {
-      capacityConfig.put(CAPACITY_UNIT_CONFIG_ELEMENT, UNIT_INSTANCE);
-    }
   }
 
   private void updateWithLoadBalancerAndImageConfig(List<LoadBalancerDetailsForBGDeployment> lbDetailList,

@@ -10,10 +10,12 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -296,5 +298,38 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
     assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isFalse();
     assertThat(spotInstStateHelper.isBlueGreenWorkflow(execContext)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetDataBag() {
+    SpotInstStateHelper helper = spy(SpotInstStateHelper.class);
+    InfrastructureMappingService mockInfraService = mock(InfrastructureMappingService.class);
+    SettingsService mockSettings = mock(SettingsService.class);
+    SecretManager mockSecret = mock(SecretManager.class);
+    on(helper).set("infrastructureMappingService", mockInfraService);
+    on(helper).set("settingsService", mockSettings);
+    on(helper).set("secretManager", mockSecret);
+    ExecutionContext mockContext = mock(ExecutionContext.class);
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(anApplication().appId(APP_ID).build()).when(mockParams).fetchRequiredApp();
+    doReturn(anEnvironment().uuid(ENV_ID).build()).when(mockParams).fetchRequiredEnv();
+    doReturn(anAwsAmiInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build())
+        .when(mockInfraService)
+        .get(anyString(), anyString());
+    doReturn(aSettingAttribute().withValue(AwsConfig.builder().build()).build())
+        .doReturn(aSettingAttribute().withValue(SpotInstConfig.builder().build()).build())
+        .when(mockSettings)
+        .get(anyString());
+    doReturn(emptyList()).when(mockSecret).getEncryptionDetails(any(), anyString(), anyString());
+    SpotinstTrafficShiftDataBag dataBag = helper.getDataBag(mockContext);
+    assertThat(dataBag).isNotNull();
+    assertThat(dataBag.getApp()).isNotNull();
+    assertThat(dataBag.getEnv()).isNotNull();
+    assertThat(dataBag.getInfrastructureMapping()).isNotNull();
+    assertThat(dataBag.getAwsConfig()).isNotNull();
+    assertThat(dataBag.getSpotinstConfig()).isNotNull();
   }
 }
