@@ -1,6 +1,6 @@
 package io.harness.plan;
 
-import io.harness.advise.AdviserObtainment;
+import io.harness.adviser.AdviserObtainment;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.refrences.RefObject;

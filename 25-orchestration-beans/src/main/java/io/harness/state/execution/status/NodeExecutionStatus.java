@@ -8,6 +8,7 @@ public enum NodeExecutionStatus {
   TASK_WAITING,
 
   // Final Statuses : All the final statuses named with ed in the end
+  SKIPPED,
   FAILED,
   SUCCEEDED
 

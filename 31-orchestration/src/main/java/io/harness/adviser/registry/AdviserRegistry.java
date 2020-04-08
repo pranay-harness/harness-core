@@ -1,10 +1,10 @@
-package io.harness.advise.registry;
+package io.harness.adviser.registry;
 
 import com.google.inject.Singleton;
 
-import io.harness.advise.Adviser;
-import io.harness.advise.AdviserObtainment;
-import io.harness.advise.AdviserType;
+import io.harness.adviser.Adviser;
+import io.harness.adviser.AdviserObtainment;
+import io.harness.adviser.AdviserType;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.Map;
