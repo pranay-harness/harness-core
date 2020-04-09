@@ -6,6 +6,7 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
@@ -44,7 +45,7 @@ import java.util.Map;
 
 @Value
 @Builder
-public class ShellScriptParameters implements TaskParameters, ExecutionCapabilityDemander {
+public class ShellScriptParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 
   private String accountId;

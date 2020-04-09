@@ -96,6 +96,7 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
@@ -1698,16 +1699,18 @@ public class DelegateServiceImpl implements DelegateService {
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
     Object[] parameters = taskData.getParameters();
     if (parameters.length == 1 && parameters[0] instanceof TaskParameters) {
+      if (parameters[0] instanceof ActivityAccess) {
+        activityId = ((ActivityAccess) parameters[0]).getActivityId();
+      }
+
       if (parameters[0] instanceof ShellScriptParameters) {
         // Shell Script
         ShellScriptParameters shellScriptParameters = (ShellScriptParameters) parameters[0];
-        activityId = shellScriptParameters.getActivityId();
         secrets.addAll(secretsFromMaskedVariables(
             shellScriptParameters.getServiceVariables(), shellScriptParameters.getSafeDisplayServiceVariables()));
       } else if (parameters[0] instanceof ShellScriptProvisionParameters) {
         // Shell Script Provision
         ShellScriptProvisionParameters shellScriptProvisionParameters = (ShellScriptProvisionParameters) parameters[0];
-        activityId = shellScriptProvisionParameters.getActivityId();
         Map<String, EncryptedDataDetail> encryptedVariables = shellScriptProvisionParameters.getEncryptedVariables();
         if (isNotEmpty(encryptedVariables)) {
           for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
