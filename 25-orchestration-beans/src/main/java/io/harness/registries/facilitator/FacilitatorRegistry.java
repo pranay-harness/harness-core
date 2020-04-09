@@ -1,4 +1,4 @@
-package io.harness.facilitate.registry;
+package io.harness.registries.facilitator;
 
 import com.google.inject.Singleton;
 
@@ -6,12 +6,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorType;
+import io.harness.registries.Registry;
+import io.harness.registries.RegistryType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
-public class FacilitatorRegistry {
+public class FacilitatorRegistry implements Registry {
   private Map<FacilitatorType, FacilitatorProducer> registry = new ConcurrentHashMap<>();
 
   public void register(FacilitatorType facilitatorType, FacilitatorProducer producer) {
@@ -27,5 +29,10 @@ public class FacilitatorRegistry {
       return producer.produce(facilitatorObtainment.getParameters());
     }
     throw new InvalidRequestException("No Adviser registered for type: " + facilitatorObtainment.getType());
+  }
+
+  @Override
+  public RegistryType getType() {
+    return RegistryType.FACILITATOR;
   }
 }
