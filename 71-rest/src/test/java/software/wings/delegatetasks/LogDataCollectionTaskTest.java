@@ -16,6 +16,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -101,6 +102,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("Ignored until this test is moved to not use ELK server")
   public void testFetchElkLogs() throws IOException, IllegalAccessException {
     // setup
 
@@ -144,6 +146,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("Ignored until this test is moved to not use ELK server")
   public void testFetchElkLogsRetry() throws IOException, IllegalAccessException {
     // setup
 
