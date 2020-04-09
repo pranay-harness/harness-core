@@ -15,10 +15,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
@@ -34,6 +31,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -63,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService {
   private static final int CANARY_DAYS_TO_COLLECT = 7;
-
+  @Inject private AwsHelperService awsHelperService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
@@ -76,14 +74,8 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
     encryptionService.decrypt(config, encryptionDetails);
-
     AmazonCloudWatchClient cloudWatchClient =
-        (AmazonCloudWatchClient) AmazonCloudWatchClientBuilder.standard()
-            .withRegion(setupTestNodeData.getRegion())
-            .withCredentials(new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(config.getAccessKey(), String.valueOf(config.getSecretKey()))))
-            .build();
-
+        awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config);
     // Fetch ELB Metrics
     if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
       setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(

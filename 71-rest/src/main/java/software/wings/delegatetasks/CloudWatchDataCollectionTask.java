@@ -10,11 +10,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -23,6 +19,7 @@ import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
@@ -51,7 +48,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private CloudWatchDataCollectionInfo dataCollectionInfo;
-
+  @Inject private AwsHelperService awsHelperService;
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
   @Inject private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
@@ -199,23 +196,12 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       return collectionMin;
     }
 
-    public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
+    public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      AmazonCloudWatchClientBuilder clientBuilder =
-          AmazonCloudWatchClientBuilder.standard().withRegion(dataCollectionInfo.getRegion());
-
-      if (dataCollectionInfo.getAwsConfig().isUseEc2IamCredentials()) {
-        logger.info("isUseEc2IamCredentials is true. Instantiating EC2ContainerCredentialsProviderWrapper");
-        clientBuilder.withCredentials(new EC2ContainerCredentialsProviderWrapper());
-      } else {
-        clientBuilder.withCredentials(
-            new AWSStaticCredentialsProvider(new BasicAWSCredentials(dataCollectionInfo.getAwsConfig().getAccessKey(),
-                String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))));
-      }
-
-      AmazonCloudWatchClient cloudWatchClient = (AmazonCloudWatchClient) clientBuilder.build();
+      AmazonCloudWatchClient cloudWatchClient =
+          awsHelperService.getAwsCloudWatchClient(dataCollectionInfo.getRegion(), dataCollectionInfo.getAwsConfig());
 
       Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
           dataCollectionInfo.getLambdaFunctionNames();
