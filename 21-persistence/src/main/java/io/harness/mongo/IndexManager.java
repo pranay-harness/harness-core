@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.join;
+import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofDays;
+import static java.time.Duration.ofHours;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -58,14 +61,20 @@ public class IndexManager {
   public static final String BACKGROUND = "background";
   public static final String NAME = "name";
   public static final String EXPIRE_AFTER_SECONDS = "expireAfterSeconds";
-  public static final String PARTIAL_FILTER_EXPRESSION = "partialFilterExpression";
+  public static final Duration SOAKING_PERIOD = ofDays(1);
+  // We do not want to drop temporary index before we created the new one. Make the soaking period smaller.
+  public static final Duration REBUILD_SOAKING_PERIOD = SOAKING_PERIOD.minus(ofHours(1));
 
   @Value
   @Builder
   public static class IndexCreator {
     private DBCollection collection;
-    private DBObject keys;
-    private DBObject options;
+    private BasicDBObject keys;
+    private BasicDBObject options;
+
+    public void create() {
+      collection.createIndex(keys, options);
+    }
   }
 
   @Value
@@ -116,13 +125,92 @@ public class IndexManager {
     return accessesMap;
   }
 
+  public static DBObject findIndexByFields(IndexCreator indexCreator) {
+    Set keysSet = indexCreator.getKeys().toMap().keySet();
+    List<DBObject> indexInfo = indexCreator.getCollection().getIndexInfo();
+    for (DBObject index : indexInfo) {
+      DBObject indexKeys = (DBObject) index.get("key");
+      Set indexKeysSet = indexKeys.toMap().keySet();
+      if (!indexKeysSet.containsAll(keysSet)) {
+        continue;
+      }
+      if (!keysSet.containsAll(indexKeysSet)) {
+        continue;
+      }
+
+      return index;
+    }
+    return null;
+  }
+
+  public static boolean isRebuildNeeded(IndexCreator indexCreator) {
+    // first make sure that we need to rename the index
+    DBObject indexByFields = findIndexByFields(indexCreator);
+    if (indexByFields == null) {
+      return false;
+    }
+
+    String name = (String) indexCreator.options.get(NAME);
+    String currentName = (String) indexByFields.get(NAME);
+
+    return !currentName.equals(name);
+  }
+
+  public static void rebuildIndex(IndexCreator indexCreator, Duration waitFor) {
+    DBObject indexByFields = findIndexByFields(indexCreator);
+    if (indexByFields == null) {
+      return;
+    }
+
+    String currentName = (String) indexByFields.get(NAME);
+
+    // Mongo does not support index updates - we have to recreate the index
+
+    // We do not want to have to make queries without an index. We cannot create another one though, because mongo
+    // will detect that we already have such with the same set of fields.
+    // We are going to add an extra dummy field. this is safe because fields at the end will not prevent the index to
+    // be used for other purposes.
+    BasicDBObject tempKeys = (BasicDBObject) indexCreator.keys.copy();
+    tempKeys.put("very_dummy_field", 1);
+
+    // We also have to pick another name
+    BasicDBObject tempOptions = (BasicDBObject) indexCreator.options.copy();
+    tempOptions.put(NAME, "TRI_" + currentTimeMillis());
+
+    IndexCreator tempCreator =
+        IndexCreator.builder().collection(indexCreator.getCollection()).keys(tempKeys).options(tempOptions).build();
+
+    // Lets see if we already have this one created from before
+    DBObject triIndex = findIndexByFields(tempCreator);
+    if (triIndex == null) {
+      tempCreator.create();
+      triIndex = findIndexByFields(tempCreator);
+      // that is unlikely but just in case
+      if (triIndex == null) {
+        return;
+      }
+    }
+
+    // Check if the temporary index soaked enough
+    long indexTime = Long.parseLong(triIndex.get(NAME).toString().substring(4));
+    if (indexTime + waitFor.toMillis() > currentTimeMillis()) {
+      return;
+    }
+
+    // now we are safe to drop the original
+    indexCreator.collection.dropIndex(currentName);
+
+    // Lets create the target index
+    indexCreator.create();
+  }
+
   // This for checks for unused indexes. It utilize the indexStat provided from mongo.
   // A good article on the topic:
   // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
   // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
   private static void checkForUnusedIndexes(DBCollection collection, Map<String, Accesses> accesses) {
-    long now = System.currentTimeMillis();
-    Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
+    long now = currentTimeMillis();
+    Date tooNew = new Date(now - ofDays(7).toMillis());
 
     List<DBObject> indexInfo = collection.getIndexInfo();
     Set<String> uniqueIndexes = indexInfo.stream()
@@ -305,7 +393,7 @@ public class IndexManager {
   }
 
   static Date tooNew() {
-    return new Date(System.currentTimeMillis() - Duration.ofDays(1).toMillis());
+    return new Date(currentTimeMillis() - SOAKING_PERIOD.toMillis());
   }
 
   static boolean isOkToDropIndexes(Date tooNew, Map<String, Accesses> accesses, List<DBObject> indexInfo) {
@@ -326,14 +414,20 @@ public class IndexManager {
       String name = creator.getKey();
       try (AutoLogContext ignore = new IndexLogContext(name, OVERRIDE_ERROR)) {
         IndexCreator indexCreator = creator.getValue();
-        indexCreator.collection.createIndex(indexCreator.getKeys(), indexCreator.getOptions());
-        created++;
-      } catch (MongoCommandException mex) {
-        // 86 - Index must have unique name.
-        if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
-          logger.error("Index already exists. Always use new name when modifying an index", mex);
-        } else {
-          logger.error("Failed to create index", mex);
+        try {
+          if (isRebuildNeeded(indexCreator)) {
+            rebuildIndex(indexCreator, REBUILD_SOAKING_PERIOD);
+          } else {
+            indexCreator.create();
+            created++;
+          }
+        } catch (MongoCommandException mex) {
+          // 86 - Index must have unique name.
+          if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
+            rebuildIndex(indexCreator, REBUILD_SOAKING_PERIOD);
+          } else {
+            logger.error("Failed to create index", mex);
+          }
         }
       } catch (DuplicateKeyException exception) {
         logger.error("Because of deployment, a new index with uniqueness flag was introduced. "
@@ -363,7 +457,7 @@ public class IndexManager {
         if (isEmpty(indexName)) {
           logger.error("Do not use default index name. WARNING: this index will not be created!!!");
         } else {
-          DBObject options = new BasicDBObject();
+          BasicDBObject options = new BasicDBObject();
           options.put(NAME, indexName);
           if (index.options().unique()) {
             options.put(UNIQUE, Boolean.TRUE);
@@ -377,31 +471,30 @@ public class IndexManager {
 
     // Read field level "Indexed" annotation
     for (MappedField mf : mc.getPersistenceFields()) {
-      if (mf.hasAnnotation(Indexed.class)) {
-        Indexed indexed = mf.getAnnotation(Indexed.class);
-
-        int direction = 1;
-        String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
-
-        String indexName = name + "_" + direction;
-        BasicDBObject dbObject = new BasicDBObject(name, direction);
-
-        DBObject options = new BasicDBObject();
-        options.put(NAME, indexName);
-        if (indexed.options().unique()) {
-          options.put(UNIQUE, Boolean.TRUE);
-        } else {
-          options.put(BACKGROUND, Boolean.TRUE);
-        }
-        if (indexed.options().expireAfterSeconds() != -1) {
-          options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
-        }
-        if (isNotEmpty(indexed.options().partialFilter())) {
-          options.put(PARTIAL_FILTER_EXPRESSION, indexed.options().partialFilter());
-        }
-
-        creators.put(indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
+      if (!mf.hasAnnotation(Indexed.class)) {
+        continue;
       }
+
+      Indexed indexed = mf.getAnnotation(Indexed.class);
+
+      int direction = 1;
+      String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
+
+      String indexName = name + "_" + direction;
+      BasicDBObject dbObject = new BasicDBObject(name, direction);
+
+      BasicDBObject options = new BasicDBObject();
+      options.put(NAME, indexName);
+      if (indexed.options().unique()) {
+        options.put(UNIQUE, Boolean.TRUE);
+      } else {
+        options.put(BACKGROUND, Boolean.TRUE);
+      }
+      if (indexed.options().expireAfterSeconds() != -1) {
+        options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
+      }
+
+      creators.put(indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
     }
 
     return creators;
