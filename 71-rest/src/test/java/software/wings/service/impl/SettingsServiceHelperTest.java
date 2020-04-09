@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -21,10 +22,21 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.BugsnagConfig;
+import software.wings.beans.DatadogConfig;
+import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InstanaConfig;
+import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SumoConfig;
+import software.wings.beans.config.LogzConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -73,11 +85,50 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     settingAttribute.setValue(SmtpConfig.builder().build());
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
 
-    settingAttribute.setValue(SplunkConfig.builder().build());
-    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
-
     settingAttribute.setCategory(CLOUD_PROVIDER);
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testHasReferencedSecretsVerificatonConnectors() {
+    SettingAttribute settingAttribute = aSettingAttribute().withCategory(CONNECTOR).withAccountId(ACCOUNT_ID).build();
+    settingAttribute.setValue(AppDynamicsConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(NewRelicConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(InstanaConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(DynaTraceConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(PrometheusConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(DatadogConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(BugsnagConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(ElkConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(SplunkConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(SumoConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(LogzConfig.builder().build());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
+
+    settingAttribute.setValue(new APMVerificationConfig());
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
   }
 
   @Test
@@ -95,10 +146,11 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     assertThat(azureArtifactsPATConfig.getEncryptedPat()).isNull();
     assertThat(azureArtifactsPATConfig.getPat()).isEqualTo(PAT.toCharArray());
 
-    SplunkConfig splunkConfig = SplunkConfig.builder().password(PAT.toCharArray()).build();
+    SplunkConfig splunkConfig = SplunkConfig.builder().password(RANDOM.toCharArray()).encryptedPassword(PAT).build();
     settingAttribute.setValue(splunkConfig);
     settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true);
-    verify(secretManager).maskEncryptedFields(splunkConfig);
+    assertThat(splunkConfig.getEncryptedPassword()).isNull();
+    assertThat(splunkConfig.getPassword()).isEqualTo(PAT.toCharArray());
   }
 
   @Test

@@ -41,6 +41,10 @@ public class SettingServiceHelper {
       return true;
     }
 
+    if (verificationProvider(settingAttribute.getValue())) {
+      return true;
+    }
+
     if (isConnectorCategory(settingAttribute.getCategory())) {
       SettingValue.SettingVariableTypes settingVariableTypes = settingAttribute.getValue().getSettingType();
       return isArtifactServer(settingVariableTypes) || isSourceRepoProvider(settingVariableTypes)
@@ -48,6 +52,31 @@ public class SettingServiceHelper {
     }
 
     return false;
+  }
+
+  private boolean verificationProvider(SettingValue settingValue) {
+    if (settingValue == null || settingValue.getSettingType() == null) {
+      return false;
+    }
+
+    switch (settingValue.getSettingType()) {
+      case APP_DYNAMICS:
+      case NEW_RELIC:
+      case INSTANA:
+      case DYNA_TRACE:
+      case PROMETHEUS:
+      case DATA_DOG:
+      case CLOUD_WATCH:
+      case DATA_DOG_LOG:
+      case BUG_SNAG:
+      case ELK:
+      case SPLUNK:
+      case SUMO:
+      case LOGZ:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public void updateEncryptedFieldsInResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
