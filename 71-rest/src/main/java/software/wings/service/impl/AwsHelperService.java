@@ -229,7 +229,7 @@ public class AwsHelperService {
     }
   }
 
-  private AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
+  public AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
     attachCredentials(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();
