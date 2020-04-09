@@ -16,6 +16,7 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
   private String scheme;
   private int port;
   private String path;
+  private String query;
 
   @Override
   public String fetchCapabilityBasis() {
@@ -33,6 +34,9 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
     }
     if (isNotBlank(path)) {
       builder.append('/').append(path);
+    }
+    if (isNotBlank(query)) {
+      builder.append('?').append(query);
     }
     return builder.toString();
   }

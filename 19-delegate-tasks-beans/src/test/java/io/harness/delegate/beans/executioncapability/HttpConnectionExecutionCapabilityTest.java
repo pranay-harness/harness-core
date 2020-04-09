@@ -29,8 +29,22 @@ public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
         HttpConnectionExecutionCapability.builder().scheme("http").host("domain").port(80).build();
     assertThat(noPath.fetchCapabilityBasis()).isEqualTo("http://domain:80");
 
-    HttpConnectionExecutionCapability all =
-        HttpConnectionExecutionCapability.builder().scheme("http").host("domain").port(80).path("path").build();
-    assertThat(all.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
+    HttpConnectionExecutionCapability all = HttpConnectionExecutionCapability.builder()
+                                                .scheme("http")
+                                                .host("domain")
+                                                .port(80)
+                                                .path("path")
+                                                .query("query=queryString")
+                                                .build();
+    assertThat(all.fetchCapabilityBasis()).isEqualTo("http://domain:80/path?query=queryString");
+
+    HttpConnectionExecutionCapability emptyQuery = HttpConnectionExecutionCapability.builder()
+                                                       .scheme("http")
+                                                       .host("domain")
+                                                       .port(80)
+                                                       .path("path")
+                                                       .query("")
+                                                       .build();
+    assertThat(emptyQuery.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
   }
 }

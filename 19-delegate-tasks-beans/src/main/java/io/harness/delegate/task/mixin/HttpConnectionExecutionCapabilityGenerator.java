@@ -10,22 +10,28 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 @UtilityClass
 @Slf4j
 public class HttpConnectionExecutionCapabilityGenerator {
   public static HttpConnectionExecutionCapability buildHttpConnectionExecutionCapability(String urlString) {
+    return buildHttpConnectionExecutionCapability(urlString, HttpCapabilityDetailsLevel.PATH);
+  }
+
+  public static HttpConnectionExecutionCapability buildHttpConnectionExecutionCapabilityForKms(String region) {
+    String kmsUrl = KmsUtils.generateKmsUrl(region);
+    return buildHttpConnectionExecutionCapability(kmsUrl);
+  }
+
+  public static HttpConnectionExecutionCapability buildHttpConnectionExecutionCapability(
+      String urlString, HttpCapabilityDetailsLevel level) {
     try {
       URI uri = new URI(DummySubstitutor.substitute(urlString));
 
       if (isNotBlank(uri.getScheme()) && isNotBlank(uri.getHost())) {
         HttpConnectionExecutionCapability httpConnectionExecutionCapability =
-            HttpConnectionExecutionCapability.builder()
-                .scheme(uri.getScheme())
-                .host(uri.getHost())
-                .port(uri.getPort())
-                .path(getPath(uri))
-                .build();
+            level.getHttpConnectionExecutionCapability(urlString);
         if (!httpConnectionExecutionCapability.fetchCapabilityBasis().contains(DummySubstitutor.DUMMY_UUID)) {
           return httpConnectionExecutionCapability;
         }
@@ -37,15 +43,33 @@ public class HttpConnectionExecutionCapabilityGenerator {
     return HttpConnectionExecutionCapability.builder().url(urlString).build();
   }
 
-  public static HttpConnectionExecutionCapability buildHttpConnectionExecutionCapabilityForKms(String region) {
-    String kmsUrl = KmsUtils.generateKmsUrl(region);
-    return buildHttpConnectionExecutionCapability(kmsUrl);
-  }
+  public enum HttpCapabilityDetailsLevel {
+    DOMAIN(false, false),
+    PATH(true, false),
+    QUERY(true, true);
+    private boolean usePath, useQuery;
 
-  private static String getPath(URI uri) {
-    if (isBlank(uri.getPath())) {
-      return null;
+    HttpCapabilityDetailsLevel(boolean usePath, boolean useQuery) {
+      this.usePath = usePath;
+      this.useQuery = useQuery;
     }
-    return uri.getPath().substring(1);
+
+    private HttpConnectionExecutionCapability getHttpConnectionExecutionCapability(String urlString)
+        throws URISyntaxException {
+      URI uri = new URI(DummySubstitutor.substitute(urlString));
+      return HttpConnectionExecutionCapability.builder()
+          .scheme(uri.getScheme())
+          .host(uri.getHost())
+          .port(uri.getPort())
+          .path(usePath ? getPath(uri) : null)
+          .query(useQuery ? uri.getQuery() : null)
+          .build();
+    }
+    private static String getPath(URI uri) {
+      if (isBlank(uri.getPath())) {
+        return null;
+      }
+      return uri.getPath().substring(1);
+    }
   }
 }

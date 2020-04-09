@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -51,7 +52,7 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
         CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
     executionCapabilities.addAll(
         Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            Utils.appendPathToBaseUrl(baseUrl, getUrl()))));
+            Utils.appendPathToBaseUrl(baseUrl, getUrl()), QUERY)));
     return executionCapabilities;
   }
 }

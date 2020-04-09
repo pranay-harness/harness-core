@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -171,7 +172,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        Utils.appendPathToBaseUrl(getUrl(), getValidationUrl())));
+        Utils.appendPathToBaseUrl(getUrl(), getValidationUrl()), QUERY));
   }
 
   @Data

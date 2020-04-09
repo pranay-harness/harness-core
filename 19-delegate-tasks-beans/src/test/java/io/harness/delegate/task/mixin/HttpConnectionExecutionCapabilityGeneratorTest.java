@@ -1,7 +1,11 @@
 package io.harness.delegate.task.mixin;
 
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.DOMAIN;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.PATH;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -43,5 +47,66 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
     HttpConnectionExecutionCapability expression = buildHttpConnectionExecutionCapability("http://${expression}");
     assertThat(expression.getUrl()).isNotNull();
     assertThat(expression.fetchCapabilityBasis()).isEqualTo("http://${expression}");
+    assertThat(expression.getQuery()).isNull();
+
+    HttpConnectionExecutionCapability withQuery =
+        buildHttpConnectionExecutionCapability("http://35.239.148.216:8080/api/v1/query?query=up");
+    assertThat(withQuery.getQuery()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapability_defaultHttpCapabilityDetailsLevel() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2");
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isEqualTo("path/1/2/3");
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelDomain() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", DOMAIN);
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isNull();
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelPath() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", PATH);
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isEqualTo("path/1/2/3");
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelQuery() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", QUERY);
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isEqualTo("path/1/2/3");
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isEqualTo("q1=1&q2=2");
   }
 }
