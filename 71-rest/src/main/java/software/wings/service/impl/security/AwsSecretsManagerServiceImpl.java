@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -34,7 +35,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AwsSecretsManagerConfig.AwsSecretsManagerConfigKeys;
@@ -270,11 +270,11 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Override
   public boolean deleteAwsSecretsManagerConfig(String accountId, String configId) {
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter(EncryptedDataKeys.kmsId, configId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.AWS_SECRETS_MANAGER)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.kmsId, configId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.AWS_SECRETS_MANAGER)
+                     .count(upToOne);
 
     if (count > 0) {
       String message =

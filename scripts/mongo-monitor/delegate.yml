@@ -9,7 +9,7 @@ metrics:
 
   - delegates_connected_count:
       check_interval:   10      # seconds
-      query:            "db.delegates.find({connected:true}).count()"
+      query:            "db.delegateConnections.distinct('delegateId').length"
 
   - delegate_tasks_count:
       check_interval:   10      # seconds

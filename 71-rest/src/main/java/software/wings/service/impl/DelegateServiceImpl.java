@@ -22,6 +22,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -287,7 +288,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private DelegateDao delegateDao;
@@ -370,12 +370,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public boolean isDelegateConnected(String delegateId) {
-    Delegate delegate = delegateDao.get(delegateId);
-    if (delegate == null || !delegate.isConnected() || delegateConnectionDao.list(delegate).isEmpty()) {
-      return false;
-    }
-    return true;
+  public boolean checkDelegateConnected(String delegateId) {
+    return wingsPersistence.createQuery(DelegateConnection.class)
+               .filter(DelegateConnectionKeys.delegateId, delegateId)
+               .count(upToOne)
+        > 0;
   }
 
   @Override
@@ -521,7 +520,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     setUnset(updateOperations, DelegateKeys.ip, delegate.getIp());
     setUnset(updateOperations, DelegateKeys.status, delegate.getStatus());
     setUnset(updateOperations, DelegateKeys.lastHeartBeat, delegate.getLastHeartBeat());
-    setUnset(updateOperations, DelegateKeys.connected, delegate.isConnected());
     setUnset(updateOperations, DelegateKeys.version, delegate.getVersion());
     setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
     setUnset(updateOperations, DelegateKeys.delegateProfileId, delegate.getDelegateProfileId());
@@ -544,9 +542,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, delegate.getAccountId())
                                 .filter(DelegateKeys.uuid, delegate.getUuid()),
-        wingsPersistence.createUpdateOperations(Delegate.class)
-            .set(DelegateKeys.lastHeartBeat, currentTimeMillis())
-            .set(DelegateKeys.connected, true));
+        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.lastHeartBeat, currentTimeMillis()));
     touchExecutingTasks(delegate);
 
     Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_VAULT;
@@ -19,7 +20,6 @@ import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.AzureVaultConfig.AzureVaultConfigKeys;
@@ -163,11 +163,11 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
   @Override
   public boolean deleteConfig(String accountId, String configId) {
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter(EncryptedDataKeys.kmsId, configId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.AZURE_VAULT)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.kmsId, configId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.AZURE_VAULT)
+                     .count(upToOne);
 
     if (count > 0) {
       String message =

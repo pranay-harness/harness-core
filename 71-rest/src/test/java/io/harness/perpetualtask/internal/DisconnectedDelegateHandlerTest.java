@@ -49,7 +49,7 @@ public class DisconnectedDelegateHandlerTest extends CategoryTest {
                  .delegateId(delegateId)
                  .build();
     when(delegateDao.get(eq(delegateId))).thenReturn(delegate);
-    when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(false);
+    when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(false);
     when(perpetualTaskService.resetTask(eq(accountId), eq(delegateId))).thenReturn(true);
   }
 

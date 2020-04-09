@@ -44,7 +44,7 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
 
   @Override
   public void handle(PerpetualTaskRecord pTask) {
-    if (!delegateService.isDelegateConnected(pTask.getDelegateId())) {
+    if (!delegateService.checkDelegateConnected(pTask.getDelegateId())) {
       logger.info("Resetting perpetual tasks assigned to disconnected delegate with id={}", pTask.getDelegateId());
       perpetualTaskService.resetTask(pTask.getAccountId(), pTask.getUuid());
     }

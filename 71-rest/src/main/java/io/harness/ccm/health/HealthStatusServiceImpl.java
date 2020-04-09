@@ -90,7 +90,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
         continue;
       }
-      if (!delegateService.isDelegateConnected(delegateId)) {
+      if (!delegateService.checkDelegateConnected(delegateId)) {
         errors.add(DELEGATE_NOT_AVAILABLE);
         continue;
       }

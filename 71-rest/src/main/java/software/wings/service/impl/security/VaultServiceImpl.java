@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -31,7 +32,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.SecretManagerConfig;
@@ -405,11 +405,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter(EncryptedDataKeys.kmsId, vaultConfigId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.kmsId, vaultConfigId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
+                     .count(upToOne);
 
     if (count > 0) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "

@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
@@ -23,7 +24,6 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpKmsConfig.GcpKmsConfigKeys;
@@ -173,9 +173,9 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   private void validateUserInput(GcpKmsConfig gcpKmsConfig, String accountId) {
     checkIfValidUser(accountId);
 
-    final Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
-    final Pattern keyValidator = Pattern.compile("^[0-9a-zA-Z-_]+$");
-    final Pattern locationValidator = Pattern.compile("^[0-9a-zA-Z-]+$");
+    Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
+    Pattern keyValidator = Pattern.compile("^[0-9a-zA-Z-_]+$");
+    Pattern locationValidator = Pattern.compile("^[0-9a-zA-Z-]+$");
 
     if (EmptyPredicate.isEmpty(gcpKmsConfig.getName()) || !nameValidator.matcher(gcpKmsConfig.getName()).find()) {
       String message =
@@ -248,11 +248,11 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Override
   public boolean deleteGcpKmsConfig(String accountId, String configId) {
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter(EncryptedDataKeys.kmsId, configId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.GCP_KMS)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.kmsId, configId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.GCP_KMS)
+                     .count(upToOne);
     if (count > 0) {
       String message = "Can not delete the GCP KMS configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";

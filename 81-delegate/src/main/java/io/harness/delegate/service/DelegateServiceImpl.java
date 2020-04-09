@@ -628,7 +628,6 @@ public class DelegateServiceImpl implements DelegateService {
       Delegate delegate = builder.build();
       delegate.setLastHeartBeat(clock.millis());
       delegate.setStatus(Status.ENABLED);
-      delegate.setConnected(true);
       socket.fire(delegate);
     } catch (IOException e) {
       logger.error("Error connecting", e);
@@ -1286,7 +1285,6 @@ public class DelegateServiceImpl implements DelegateService {
       updateBuilderIfEcsDelegate(builder);
       Delegate delegate = builder.build();
       delegate.setLastHeartBeat(clock.millis());
-      delegate.setConnected(true);
       delegate.setCurrentlyExecutingDelegateTasks(
           currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
 

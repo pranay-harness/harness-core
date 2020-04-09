@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -30,7 +31,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
@@ -254,11 +254,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Can not delete global KMS secret manager", USER);
     }
 
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(EncryptedDataKeys.accountId, accountId)
-                           .filter(EncryptedDataKeys.kmsId, kmsConfigId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.KMS)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(EncryptedDataKeys.accountId, accountId)
+                     .filter(EncryptedDataKeys.kmsId, kmsConfigId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.KMS)
+                     .count(upToOne);
 
     if (count > 0) {
       String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
