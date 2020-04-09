@@ -1,4 +1,4 @@
-package io.harness.adviser.registry;
+package io.harness.registries.adviser;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +40,11 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
   }
 
   private static class Type1AdviserProducer implements AdviserProducer {
+    @Override
+    public AdviserType getType() {
+      return AdviserType.builder().type("Type1").build();
+    }
+
     @Override
     public Adviser produce(AdviserParameters adviserParameters) {
       return Type1Adviser.builder().parameters((Type1AdviserParameters) adviserParameters).build();

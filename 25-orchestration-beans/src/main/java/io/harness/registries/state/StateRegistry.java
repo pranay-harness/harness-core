@@ -1,26 +1,27 @@
-package io.harness.state.registry;
+package io.harness.registries.state;
 
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.registries.Registry;
+import io.harness.registries.RegistryType;
 import io.harness.state.State;
-import io.harness.state.metadata.StateMetadata;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
-public class StateRegistry {
+public class StateRegistry implements Registry {
   Map<String, StateProducer> registry = new ConcurrentHashMap<>();
 
-  public void registerState(String stateType, StateProducer producer) {
+  public void register(String stateType, StateProducer producer) {
     if (registry.containsKey(stateType)) {
       throw new InvalidRequestException("State Already Registered with this type: " + stateType);
     }
     registry.put(stateType, producer);
   }
 
-  public State obtainState(String stateType) {
+  public State obtain(String stateType) {
     if (registry.containsKey(stateType)) {
       StateProducer producer = registry.get(stateType);
       return producer.produce();
@@ -28,11 +29,8 @@ public class StateRegistry {
     throw new InvalidRequestException("No State registered for type: " + stateType);
   }
 
-  public StateMetadata obtainMetadata(String stateType) {
-    if (registry.containsKey(stateType)) {
-      StateProducer producer = registry.get(stateType);
-      return producer.produceMetadata();
-    }
-    throw new InvalidRequestException("No State registered for type: " + stateType);
+  @Override
+  public RegistryType getType() {
+    return RegistryType.STATE;
   }
 }

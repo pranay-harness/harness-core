@@ -1,4 +1,4 @@
-package io.harness.facilitate.registry;
+package io.harness.registries.facilitator;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,8 +44,13 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
 
   private static class Type1FacilitatorProducer implements FacilitatorProducer {
     @Override
-    public Facilitator produce(FacilitatorParameters adviserParameters) {
+    public Type1Facilitator produce(FacilitatorParameters adviserParameters) {
       return Type1Facilitator.builder().parameters((Type1FacilitatorParameters) adviserParameters).build();
+    }
+
+    @Override
+    public FacilitatorType getType() {
+      return FacilitatorType.builder().type("Type1").build();
     }
   }
 

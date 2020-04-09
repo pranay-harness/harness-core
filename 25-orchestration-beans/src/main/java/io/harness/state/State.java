@@ -4,5 +4,6 @@ import io.harness.annotations.Redesign;
 
 @Redesign
 public interface State {
+  // MetaData management to the Designer
   String getStateType();
 }
