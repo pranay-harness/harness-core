@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationBeansTest;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
@@ -20,7 +20,7 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AdviserRegistryTest extends OrchestrationTest {
+public class AdviserRegistryTest extends OrchestrationBeansTest {
   @Inject private AdviserRegistry adviserRegistry;
 
   @Test
