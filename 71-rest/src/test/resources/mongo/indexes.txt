@@ -105,6 +105,7 @@ containerTasks { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1
 containerTasks { "name" : "service" , "unique" : true} { "serviceId" : 1 , "deploymentType" : 1}
 cvActivityLogs { "name" : "cvConfigId_1" , "background" : true} { "cvConfigId" : 1}
 cvActivityLogs { "name" : "dataCollectionMinute_1" , "background" : true} { "dataCollectionMinute" : 1}
+cvActivityLogs { "name" : "service_guard_idx" , "background" : true} { "cvConfigId" : 1 , "dataCollectionMinute" : -1 , "createdAt" : 1}
 cvActivityLogs { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
 cvActivityLogs { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 cvExecutionData { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
