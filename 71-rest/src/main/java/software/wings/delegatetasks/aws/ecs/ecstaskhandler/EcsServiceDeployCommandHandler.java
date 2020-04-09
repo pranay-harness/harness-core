@@ -50,13 +50,13 @@ public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
       injector.injectMembers(resizeCommandUnit);
       SettingAttribute settingAttribute = aSettingAttribute().withValue(request.getAwsConfig()).build();
       CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                            .withAccountId(request.getAccountId())
-                                                            .withAppId(request.getAppId())
-                                                            .withActivityId(request.getActivityId())
-                                                            .withCloudProviderSetting(settingAttribute)
-                                                            .withCloudProviderCredentials(encryptedDataDetails)
-                                                            .withContainerResizeParams(request.getEcsResizeParams())
-                                                            .withDeploymentType(DeploymentType.ECS.name())
+                                                            .accountId(request.getAccountId())
+                                                            .appId(request.getAppId())
+                                                            .activityId(request.getActivityId())
+                                                            .cloudProviderSetting(settingAttribute)
+                                                            .cloudProviderCredentials(encryptedDataDetails)
+                                                            .containerResizeParams(request.getEcsResizeParams())
+                                                            .deploymentType(DeploymentType.ECS.name())
                                                             .build();
       CommandExecutionStatus status = resizeCommandUnit.execute(commandExecutionContext);
       ResizeCommandUnitExecutionData commandExecutionData =

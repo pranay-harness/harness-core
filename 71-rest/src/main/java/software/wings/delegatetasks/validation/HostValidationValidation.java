@@ -104,13 +104,12 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
             }
           } else {
             try {
-              getSSHSession(
-                  createSshSessionConfig("HOST_CONNECTION_TEST",
-                      aCommandExecutionContext()
-                          .withHostConnectionAttributes(connectionSetting)
-                          .withExecutionCredential(executionCredential)
-                          .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
-                          .build()))
+              getSSHSession(createSshSessionConfig("HOST_CONNECTION_TEST",
+                                aCommandExecutionContext()
+                                    .hostConnectionAttributes(connectionSetting)
+                                    .executionCredential(executionCredential)
+                                    .host(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
+                                    .build()))
                   .disconnect();
               resultBuilder.validated(true);
             } catch (Exception e) {
@@ -129,8 +128,8 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
   }
 
   @VisibleForTesting
-  List<DelegateConnectionResult> prepareResult(final List<DelegateConnectionResult> delegateConnectionResults) {
-    final boolean anyValid = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
+  List<DelegateConnectionResult> prepareResult(List<DelegateConnectionResult> delegateConnectionResults) {
+    boolean anyValid = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
     if (anyValid) {
       //  mark all as valid
       delegateConnectionResults.forEach(delegateConnectionResult -> delegateConnectionResult.setValidated(true));
@@ -140,7 +139,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    final List<String> criteriaList = emptyIfNull((List<String>) getParameters()[2]);
+    List<String> criteriaList = emptyIfNull((List<String>) getParameters()[2]);
     return criteriaList.stream().map(this ::addPrefix).collect(toList());
   }
 

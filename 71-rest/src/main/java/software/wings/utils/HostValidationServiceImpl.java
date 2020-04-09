@@ -92,9 +92,9 @@ public class HostValidationServiceImpl implements HostValidationService {
       String hostName, SettingAttribute connectionSetting, ExecutionCredential executionCredential) {
     CommandExecutionContext commandExecutionContext =
         aCommandExecutionContext()
-            .withHostConnectionAttributes(connectionSetting)
-            .withExecutionCredential(executionCredential)
-            .withHost(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
+            .hostConnectionAttributes(connectionSetting)
+            .executionCredential(executionCredential)
+            .host(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())
             .build();
     SshSessionConfig sshSessionConfig = createSshSessionConfig("HOST_CONNECTION_TEST", commandExecutionContext);
 

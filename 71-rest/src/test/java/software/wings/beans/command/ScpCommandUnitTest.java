@@ -287,63 +287,63 @@ public class ScpCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext contextForS3 = new ShellCommandExecutionContext(
-      aCommandExecutionContext().withArtifactStreamAttributes(artifactStreamAttributesForS3).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForS3).build());
 
   @InjectMocks
   private ShellCommandExecutionContext contextForArtifactory = new ShellCommandExecutionContext(
-      aCommandExecutionContext().withArtifactStreamAttributes(artifactStreamAttributesForArtifactory).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForArtifactory).build());
 
   @InjectMocks
   private ShellCommandExecutionContext contextForArtifactoryRpm = new ShellCommandExecutionContext(
-      aCommandExecutionContext().withArtifactStreamAttributes(artifactStreamAttributesForArtifactoryRpmType).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForArtifactoryRpmType).build());
 
   @InjectMocks
   private ShellCommandExecutionContext contextForArtifactoryFeatureFlagDisabled = new ShellCommandExecutionContext(
       aCommandExecutionContext()
-          .withArtifactStreamAttributes(artifactStreamAttributesForArtifactoryFeatureFlagDisabled)
+          .artifactStreamAttributes(artifactStreamAttributesForArtifactoryFeatureFlagDisabled)
           .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForAzureArtifacts =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+                                           .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
+                                           .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
                                            .build());
   @InjectMocks
   ShellCommandExecutionContext contextForBambooArtifacts =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(bambooStreamAttributes)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
+                                           .artifactStreamAttributes(bambooStreamAttributes)
+                                           .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .build());
   @InjectMocks
   ShellCommandExecutionContext contextForBambooFFOff =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(bambooStreamAttributesFFOff)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
+                                           .artifactStreamAttributes(bambooStreamAttributesFFOff)
+                                           .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForJenkins =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForJenkins)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.JENKINS))
+                                           .artifactStreamAttributes(artifactStreamAttributesForJenkins)
+                                           .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForJenkinsOld =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForJenkinsOld)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.JENKINS))
-                                           .withAppId(APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(Host.Builder.aHost().withHostName(HOST_NAME).build())
+                                           .artifactStreamAttributes(artifactStreamAttributesForJenkinsOld)
+                                           .metadata(mockMetadata(ArtifactStreamType.JENKINS))
+                                           .appId(APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(Host.Builder.aHost().withHostName(HOST_NAME).build())
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForJenkinsFFOff =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForJenkinsFFOff)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.JENKINS))
+                                           .artifactStreamAttributes(artifactStreamAttributesForJenkinsFFOff)
+                                           .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .build());
 
   public ScpCommandUnitTest() throws URISyntaxException {}
@@ -351,15 +351,15 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @InjectMocks
   ShellCommandExecutionContext contextForNexusArtifacts =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForNexus)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .artifactStreamAttributes(artifactStreamAttributesForNexus)
+                                           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForNexusFFOff =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForNexusFFOff)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .artifactStreamAttributes(artifactStreamAttributesForNexusFFOff)
+                                           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .build());
 
   /**

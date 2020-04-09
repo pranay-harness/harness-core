@@ -66,12 +66,12 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
 
   private CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
-                                                .withAppId(APP_ID)
-                                                .withActivityId(ACTIVITY_ID)
-                                                .withRuntimePath(RUNTIME_PATH)
-                                                .withExecutionCredential(credential)
-                                                .withServiceTemplateId(TEMPLATE_ID)
-                                                .withHost(host)
+                                                .appId(APP_ID)
+                                                .activityId(ACTIVITY_ID)
+                                                .runtimePath(RUNTIME_PATH)
+                                                .executionCredential(credential)
+                                                .serviceTemplateId(TEMPLATE_ID)
+                                                .host(host)
                                                 .build();
 
   /**

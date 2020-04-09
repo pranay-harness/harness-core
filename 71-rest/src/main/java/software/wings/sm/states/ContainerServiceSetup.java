@@ -191,19 +191,18 @@ public abstract class ContainerServiceSetup extends State {
         }
       }
 
-      CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withEnvId(env.getUuid())
-              .withDeploymentType(deploymentType.name())
-              .withContainerSetupParams(containerSetupParams)
-              .withActivityId(activity.getUuid())
-              .withCloudProviderSetting(settingAttribute)
-              .withCloudProviderCredentials(encryptedDataDetails)
-              .withServiceVariables(serviceVariables)
-              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-              .build();
+      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                            .accountId(app.getAccountId())
+                                                            .appId(app.getUuid())
+                                                            .envId(env.getUuid())
+                                                            .deploymentType(deploymentType.name())
+                                                            .containerSetupParams(containerSetupParams)
+                                                            .activityId(activity.getUuid())
+                                                            .cloudProviderSetting(settingAttribute)
+                                                            .cloudProviderCredentials(encryptedDataDetails)
+                                                            .serviceVariables(serviceVariables)
+                                                            .safeDisplayServiceVariables(safeDisplayServiceVariables)
+                                                            .build();
 
       String delegateTaskId =
           delegateService.queueTask(DelegateTask.builder()

@@ -173,17 +173,16 @@ public abstract class ContainerServiceDeploy extends State {
       CommandStateExecutionData executionData = executionDataBuilder.build();
       executionData.setServiceCounts(params.getOriginalServiceCounts());
 
-      CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
-              .withAccountId(contextData.app.getAccountId())
-              .withAppId(contextData.app.getUuid())
-              .withEnvId(contextData.env.getUuid())
-              .withActivityId(activity.getUuid())
-              .withCloudProviderSetting(contextData.settingAttribute)
-              .withCloudProviderCredentials(contextData.encryptedDataDetails)
-              .withContainerResizeParams(params)
-              .withDeploymentType(deploymentType.name())
-              .build();
+      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                            .accountId(contextData.app.getAccountId())
+                                                            .appId(contextData.app.getUuid())
+                                                            .envId(contextData.env.getUuid())
+                                                            .activityId(activity.getUuid())
+                                                            .cloudProviderSetting(contextData.settingAttribute)
+                                                            .cloudProviderCredentials(contextData.encryptedDataDetails)
+                                                            .containerResizeParams(params)
+                                                            .deploymentType(deploymentType.name())
+                                                            .build();
 
       String waitId = UUID.randomUUID().toString();
       String delegateTaskId = delegateService.queueTask(
