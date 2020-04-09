@@ -105,7 +105,9 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
             .envId(stateExecutionData.getEnvId())
             .serviceId(stateExecutionData.getServiceId())
             .infraMappingId(stateExecutionData.getInfraMappingId())
-            .elastigroupNamePrefix(Misc.normalizeExpression(context.renderExpression(elastigroupNamePrefix)));
+            .elastigroupNamePrefix(Misc.normalizeExpression(context.renderExpression(elastigroupNamePrefix)))
+            .timeoutIntervalInMin(
+                spotinstStateHelper.renderCount(timeoutIntervalInMinExpr, context, defaultSteadyStateTimeout));
 
     if (ExecutionStatus.SUCCESS == executionStatus && spotinstTrafficShiftAlbSetupResponse != null) {
       ElastiGroup elastigroupOriginalConfig = stateExecutionData.getElastigroupOriginalConfig();

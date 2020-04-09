@@ -31,6 +31,7 @@ public class SpotinstTrafficShiftAlbSetupElement implements ContextElement {
   private ElastiGroup oldElastiGroupOriginalConfig;
   private List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups;
   private String elastigroupNamePrefix;
+  private int timeoutIntervalInMin;
 
   @Override
   public ContextElementType getElementType() {
