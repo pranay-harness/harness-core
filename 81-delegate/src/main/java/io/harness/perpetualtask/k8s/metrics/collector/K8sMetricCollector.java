@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableMap;
@@ -83,18 +84,20 @@ public class K8sMetricCollector {
   private void collectPodMetrics() {
     List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().inAnyNamespace().list().getItems();
     for (PodMetrics podMetrics : podMetricsList) {
-      long podCpuNano = 0;
-      long podMemoryBytes = 0;
-      for (PodMetrics.Container container : podMetrics.getContainers()) {
-        podCpuNano += K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
-        podMemoryBytes += K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
+      if (!isEmpty(podMetrics.getContainers())) {
+        long podCpuNano = 0;
+        long podMemoryBytes = 0;
+        for (PodMetrics.Container container : podMetrics.getContainers()) {
+          podCpuNano += K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
+          podMemoryBytes += K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
+        }
+        requireNonNull(podMetricsCache.get(CacheKey.builder()
+                                               .name(podMetrics.getMetadata().getName())
+                                               .namespace(podMetrics.getMetadata().getNamespace())
+                                               .build(),
+                           key -> new Aggregates(HDurations.parse(podMetrics.getWindow()))))
+            .update(podCpuNano, podMemoryBytes, podMetrics.getTimestamp());
       }
-      requireNonNull(podMetricsCache.get(CacheKey.builder()
-                                             .name(podMetrics.getMetadata().getName())
-                                             .namespace(podMetrics.getMetadata().getNamespace())
-                                             .build(),
-                         key -> new Aggregates(HDurations.parse(podMetrics.getWindow()))))
-          .update(podCpuNano, podMemoryBytes, podMetrics.getTimestamp());
     }
   }
 

@@ -41,7 +41,7 @@ class Aggregates {
   }
 
   void update(long cpuNano, long memoryBytes, String timestamp) {
-    if (!timestamp.equals(this.lastTimestamp)) {
+    if (timestamp != null && !timestamp.equals(this.lastTimestamp)) {
       cpu.update(cpuNano);
       memory.update(memoryBytes);
       this.lastTimestamp = timestamp;
