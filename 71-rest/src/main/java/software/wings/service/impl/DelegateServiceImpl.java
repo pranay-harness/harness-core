@@ -1867,7 +1867,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                 && assignDelegateService.isWhitelisted(delegateTask, delegateId))
             || assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
-          return resolvePreAssignmentExpressions(delegateTask);
+          return resolvePreAssignmentExpressions(delegateTask, SecretManagerFunctor.Mode.APPLY);
         } else if (!featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
             && assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
           // Directly assign task only when FF is off and task is already whitelisted.
@@ -2045,15 +2045,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
-  private DelegateTaskPackage resolvePreAssignmentExpressions(DelegateTask delegateTask) {
+  private DelegateTaskPackage resolvePreAssignmentExpressions(
+      DelegateTask delegateTask, SecretManagerFunctor.Mode mode) {
     logger.info("Entering resolvePreAssignmentExpressions");
 
     try {
       ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
-          new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
-              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtils,
-              delegateTask.getArtifactStreamId(), featureFlagService, managerDecryptionService, secretManager,
-              delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
+          new ManagerPreExecutionExpressionEvaluator(mode, serviceTemplateService, configService,
+              delegateTask.getAppId(), delegateTask.getEnvId(), delegateTask.getServiceTemplateId(),
+              artifactCollectionUtils, delegateTask.getArtifactStreamId(), featureFlagService, managerDecryptionService,
+              secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
       DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder().delegateTask(delegateTask);
@@ -2104,7 +2105,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private DelegateTaskPackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
-        return resolvePreAssignmentExpressions(delegateTask);
+        return resolvePreAssignmentExpressions(delegateTask, SecretManagerFunctor.Mode.DRY_RUN);
       } else {
         // TODO: Ideally we should not land here, as we should always be passing TaskParameter only for
         // TODO: delegate task. But for now, this is needed. (e.g. Tasks containing Jenkinsonfig, BambooConfig etc.)
@@ -2173,7 +2174,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.info("Task assigned to delegate");
       }
       task.getData().setParameters(delegateTask.getData().getParameters());
-      return resolvePreAssignmentExpressions(task);
+      return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
@@ -2189,7 +2190,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     task.getData().setParameters(delegateTask.getData().getParameters());
     logger.info("Returning previously assigned task to delegate");
-    return resolvePreAssignmentExpressions(task);
+    return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
   }
 
   @Override

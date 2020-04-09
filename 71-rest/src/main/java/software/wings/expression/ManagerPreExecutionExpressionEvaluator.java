@@ -14,11 +14,11 @@ import software.wings.service.intfc.security.SecretManager;
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
   private final ExpressionFunctor secretManagerFunctor;
 
-  public ManagerPreExecutionExpressionEvaluator(ServiceTemplateService serviceTemplateService,
-      ConfigService configService, String appId, String envId, String serviceTemplateId,
-      ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId, FeatureFlagService featureFlagService,
-      ManagerDecryptionService managerDecryptionService, SecretManager secretManager, String accountId,
-      String workflowExecutionId, int expressionFunctorToken) {
+  public ManagerPreExecutionExpressionEvaluator(SecretManagerFunctor.Mode mode,
+      ServiceTemplateService serviceTemplateService, ConfigService configService, String appId, String envId,
+      String serviceTemplateId, ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId,
+      FeatureFlagService featureFlagService, ManagerDecryptionService managerDecryptionService,
+      SecretManager secretManager, String accountId, String workflowExecutionId, int expressionFunctorToken) {
     addFunctor("configFile",
         ConfigFileFunctor.builder()
             .appId(appId)
@@ -36,6 +36,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
             .build());
 
     secretManagerFunctor = SecretManagerFunctor.builder()
+                               .mode(mode)
                                .featureFlagService(featureFlagService)
                                .managerDecryptionService(managerDecryptionService)
                                .secretManager(secretManager)

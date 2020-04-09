@@ -30,6 +30,11 @@ import java.util.stream.Collectors;
 @Value
 @Builder
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
+  public enum Mode {
+    APPLY,
+    DRY_RUN,
+  }
+  private Mode mode;
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
@@ -56,12 +61,19 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
     }
   }
 
+  private Object returnValue(String secretName, Object value) {
+    if (mode == Mode.DRY_RUN) {
+      return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
+    }
+    return value;
+  }
+
   private Object obtainInternal(String secretName) {
     if (evaluatedSecrets.containsKey(secretName)) {
-      return evaluatedSecrets.get(secretName);
+      return returnValue(secretName, evaluatedSecrets.get(secretName));
     }
     if (evaluatedDelegateSecrets.containsKey(secretName)) {
-      return evaluatedDelegateSecrets.get(secretName);
+      return returnValue(secretName, evaluatedDelegateSecrets.get(secretName));
     }
 
     EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
@@ -90,7 +102,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
       managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
       String value = new String(serviceVariable.getValue());
       evaluatedSecrets.put(secretName, value);
-      return value;
+      return returnValue(secretName, value);
     }
 
     List<EncryptedDataDetail> nonLocalEncryptedDetails =
@@ -116,6 +128,6 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
     secretDetails.put(secretDetailsUuid, secretDetail);
     evaluatedDelegateSecrets.put(
         secretName, "${secretDelegate.obtain(\"" + secretDetailsUuid + "\", " + expressionFunctorToken + ")}");
-    return evaluatedDelegateSecrets.get(secretName);
+    return returnValue(secretName, evaluatedDelegateSecrets.get(secretName));
   }
 }
