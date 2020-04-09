@@ -1,5 +1,7 @@
 package io.harness.state.registry;
 
+import com.google.inject.Singleton;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.state.State;
 import io.harness.state.metadata.StateMetadata;
@@ -7,6 +9,7 @@ import io.harness.state.metadata.StateMetadata;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Singleton
 public class StateRegistry {
   Map<String, StateProducer> registry = new ConcurrentHashMap<>();
 

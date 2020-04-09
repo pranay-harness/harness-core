@@ -1,4 +1,4 @@
-package io.harness.facilitators.registry;
+package io.harness.facilitate.registry;
 
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.io.FacilitatorParameters;

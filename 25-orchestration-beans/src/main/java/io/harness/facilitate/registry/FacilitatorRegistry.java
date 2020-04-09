@@ -1,4 +1,4 @@
-package io.harness.facilitators.registry;
+package io.harness.facilitate.registry;
 
 import com.google.inject.Singleton;
 

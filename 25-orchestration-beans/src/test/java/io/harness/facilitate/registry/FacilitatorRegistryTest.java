@@ -1,11 +1,11 @@
-package io.harness.facilitators.registry;
+package io.harness.facilitate.registry;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class FacilitatorRegistryTest extends OrchestrationTest {
+public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Inject private FacilitatorRegistry facilitatorRegistry;
 
   @Test
