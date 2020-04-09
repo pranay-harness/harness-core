@@ -447,10 +447,10 @@ function setupDelegateJars(){
     DELEGATE_VERSION=$(getProperty "version.properties" "DELEGATE_VERSION")
     WATCHER_VERSION=$(getProperty "version.properties" "WATCHER_VERSION")
 
-    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u131/
     mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
-    cp images/jre-8u131-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u131/
+    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
     cp images/jre-8u191-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
+    cp images/jre_x64_*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
 
     rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}
