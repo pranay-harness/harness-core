@@ -17,9 +17,13 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -32,6 +36,12 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Indexes({
+  @Index(fields = {
+    @Field("cvConfigId")
+    , @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field(value = "createdAt", type = IndexType.ASC)
+  }, options = @IndexOptions(name = "service_guard_idx"))
+})
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   @Indexed private String cvConfigId;
