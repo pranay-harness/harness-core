@@ -51,6 +51,8 @@ import java.util.Map;
           }),
       @Index(options = @IndexOptions(name = "accountId_usageStartTime", background = true), fields = {
         @Field(InstanceDataKeys.accountId), @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC)
+      }), @Index(options = @IndexOptions(name = "instanceId", background = true), fields = {
+        @Field(InstanceDataKeys.instanceId)
       })
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
