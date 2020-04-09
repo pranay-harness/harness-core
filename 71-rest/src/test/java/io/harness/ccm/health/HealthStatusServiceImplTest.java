@@ -101,7 +101,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
-    when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(true);
+    when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(true);
     when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(clusterId)))
         .thenReturn(
             LastReceivedPublishedMessage.builder().lastReceivedAt(Instant.now(fakeClock).toEpochMilli()).build());
@@ -120,7 +120,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldReturnUnhealthyWhenDelegateDisconnected() {
-    when(delegateService.isDelegateConnected(eq(delegateId))).thenReturn(false);
+    when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(false);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();
   }

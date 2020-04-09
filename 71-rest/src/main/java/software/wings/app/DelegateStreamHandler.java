@@ -64,7 +64,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
         Delegate delegate = delegateService.get(accountId, delegateId, true);
         delegate.setStatus(Status.ENABLED);
-        delegate.setConnected(true);
 
         updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 
@@ -80,7 +79,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           @Override
           public void onDisconnect(AtmosphereResourceEvent event) {
             Delegate delegate = delegateService.get(accountId, delegateId, true);
-            delegate.setConnected(false);
             delegateService.register(delegate);
             delegateService.removeDelegateConnection(accountId, delegateConnectionId);
           }

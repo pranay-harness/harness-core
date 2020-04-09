@@ -4,6 +4,7 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
@@ -22,7 +23,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.CommandCategory;
@@ -91,18 +91,18 @@ public class TemplateHelper {
                                .equal(templateType.name())
                                .field(Template.ID_KEY)
                                .in(templateUuids)
-                               .count(new CountOptions().limit(1));
+                               .count(upToOne);
     long linkedTemplates = wingsPersistence.createQuery(lookupEntityClass(templateType))
                                .field(lookupLinkedTemplateField(templateType))
                                .in(templateUuids)
-                               .count(new CountOptions().limit(1));
+                               .count(upToOne);
     long templatesReferencedInOtherTemplates;
     if (templateType == TemplateType.SSH) {
       templatesReferencedInOtherTemplates =
           wingsPersistence.createQuery(VersionedTemplate.class, excludeValidate)
               .field("templateObject.referencedTemplateList.templateReference.templateUuid")
               .in(templateUuids)
-              .count(new CountOptions().limit(1));
+              .count(upToOne);
       return templatesOfType != 0 && (linkedTemplates != 0 || templatesReferencedInOtherTemplates != 0);
     }
 

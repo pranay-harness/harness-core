@@ -9,6 +9,7 @@ import io.harness.health.HealthMonitor;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -107,6 +108,8 @@ public interface HPersistence extends HealthMonitor {
    * Close.
    */
   void close();
+
+  CountOptions upToOne = new CountOptions().limit(1);
 
   /**
    * Creates the query.

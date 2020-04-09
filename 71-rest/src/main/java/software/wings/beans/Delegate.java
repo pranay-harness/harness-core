@@ -38,7 +38,6 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware {
   @NotEmpty private String accountId;
   @Default private Status status = Status.ENABLED;
   private String description;
-  private boolean connected;
   private String ip;
   private String hostName;
   private String delegateGroupName;

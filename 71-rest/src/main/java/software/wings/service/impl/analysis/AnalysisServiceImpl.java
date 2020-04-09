@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -37,7 +38,6 @@ import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.annotation.EncryptableSetting;
@@ -474,7 +474,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       String stateExecutionId, CVCollaborationProviderParameters cvJiraParameters) {
     if (cvJiraParameters == null || isEmpty(cvJiraParameters.getCollaborationProviderConfigId())
         || cvJiraParameters.getJiraTaskParameters() == null) {
-      final String errMsg = String.format(
+      String errMsg = String.format(
           "Empty Jira parameters sent in createCollaborationFeedbackTicket for cvConfigId/StateExecutionId %s, %s",
           cvConfigId, stateExecutionId);
       logger.error(errMsg);
@@ -611,7 +611,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       boolean hasSuccessfulExecution = false;
       String lastSuccessFulExecution = null;
       while (cvMetaDateIterator.hasNext()) {
-        final ContinuousVerificationExecutionMetaData cvMetaData = cvMetaDateIterator.next();
+        ContinuousVerificationExecutionMetaData cvMetaData = cvMetaDateIterator.next();
         String workflowExecutionId = cvMetaData.getWorkflowExecutionId();
         WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
         if (execution != null) {
@@ -631,7 +631,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(LogDataRecordKeys.workflowExecutionId, cvMetaData.getWorkflowExecutionId())
                 .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
                 .filter(LogDataRecordKeys.query, query)
-                .count(new CountOptions().limit(1))
+                .count(upToOne)
             > 0) {
           logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
               cvMetaData.getWorkflowExecutionId(), stateExecutionId);
@@ -667,8 +667,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
-      final Map<Integer, LogMLFeedbackRecord> feedbackRecordMap =
-          userFeedbackMap.get(logMLFeedbackRecord.getClusterType());
+      Map<Integer, LogMLFeedbackRecord> feedbackRecordMap = userFeedbackMap.get(logMLFeedbackRecord.getClusterType());
 
       if (null != feedbackRecordMap) {
         feedbackRecordMap.put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
@@ -770,7 +769,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     LogMLClusterScores logMLClusterScores =
         analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
 
-    final LogMLAnalysisSummary analysisSummary =
+    LogMLAnalysisSummary analysisSummary =
         LogMLAnalysisSummary.builder()
             .query(analysisRecord.getQuery())
             .stateType(stateType)
@@ -787,10 +786,10 @@ public class AnalysisServiceImpl implements AnalysisService {
                 computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE))
             .build();
 
-    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
-                                                .filter("appId", appId)
-                                                .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                                .get();
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
+                                          .filter("appId", appId)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
 
     if (analysisContext != null) {
       analysisSummary.setAnalysisComparisonStrategy(analysisContext.getComparisonStrategy());
@@ -874,7 +873,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
           + " low risk anomalous cluster(s) found";
     } else if (unknownClusters > 0 || unknownFrequency > 0) {
-      final int totalAnomalies = unknownClusters + unknownFrequency;
+      int totalAnomalies = unknownClusters + unknownFrequency;
       analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
                                                : totalAnomalies + " anomalous clusters found";
     }
@@ -982,7 +981,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public void validateConfig(
-      final SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
+      SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
     SyncTaskContext taskContext = SyncTaskContext.builder()
                                       .accountId(settingAttribute.getAccountId())
                                       .appId(GLOBAL_APP_ID)
@@ -1017,7 +1016,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public Object getLogSample(
       String accountId, String analysisServerConfigId, String index, StateType stateType, int duration) {
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
@@ -1066,14 +1065,14 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Object getHostLogRecords(String accountId, String analysisServerConfigId, String index, ElkQueryType queryType,
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
       String hostName, StateType stateType) {
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
-    final ElkLogFetchRequest elkFetchRequest =
+    ElkLogFetchRequest elkFetchRequest =
         ElkLogFetchRequest.builder()
             .query(query)
             .indices(index)
@@ -1133,13 +1132,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (cluster == null) {
       return Collections.emptyList();
     }
-    final List<LogMLClusterSummary> analysisSummaries = new ArrayList<>();
+    List<LogMLClusterSummary> analysisSummaries = new ArrayList<>();
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : cluster.entrySet()) {
-      final LogMLClusterSummary clusterSummary = new LogMLClusterSummary();
+      LogMLClusterSummary clusterSummary = new LogMLClusterSummary();
       clusterSummary.setHostSummary(new HashMap<>());
       for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
-        final LogMLHostSummary hostSummary = new LogMLHostSummary();
-        final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
+        LogMLHostSummary hostSummary = new LogMLHostSummary();
+        SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
         hostSummary.setXCordinate(sprinkalizedCordinate(analysisCluster.getX()));
         hostSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
         hostSummary.setUnexpectedFreq(analysisCluster.isUnexpected_freq());
@@ -1196,6 +1195,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return frequencyMap;
   }
 
+  @Override
   public void updateClustersFrequencyMapV2(List<LogMLClusterSummary> clusterList) {
     clusterList.forEach(logMLClusterSummary -> {
       logMLClusterSummary.getHostSummary().forEach((host, logMlHostSummary) -> {
@@ -1247,7 +1247,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
       for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
-        final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
+        SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
         if (analysisCluster.isUnexpected_freq()) {
           unexpectedFrequency++;
           break;
@@ -1259,7 +1259,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   private double sprinkalizedCordinate(double coordinate) {
-    final int sprinkleRatio = random.nextInt() % 8;
+    int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
   }
@@ -1267,17 +1267,17 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public void createAndSaveSummary(
       StateType stateType, String appId, String stateExecutionId, String query, String message, String accountId) {
-    final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
-                                                   .logCollectionMinute(-1)
-                                                   .stateType(stateType)
-                                                   .accountId(accountId)
-                                                   .appId(appId)
-                                                   .stateExecutionId(stateExecutionId)
-                                                   .query(query)
-                                                   .analysisSummaryMessage(message)
-                                                   .control_events(Collections.emptyMap())
-                                                   .test_events(Collections.emptyMap())
-                                                   .build();
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .logCollectionMinute(-1)
+                                             .stateType(stateType)
+                                             .accountId(accountId)
+                                             .appId(appId)
+                                             .stateExecutionId(stateExecutionId)
+                                             .query(query)
+                                             .analysisSummaryMessage(message)
+                                             .control_events(Collections.emptyMap())
+                                             .test_events(Collections.emptyMap())
+                                             .build();
     analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(analysisRecord));
   }
@@ -1309,10 +1309,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         continue;
       }
       for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-        final InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
-        final HostElement hostElement = instanceElement.getHost();
+        InstanceElement instanceElement = instanceStatusSummary.getInstanceElement();
+        HostElement hostElement = instanceElement.getHost();
         if (hostElement != null && hostElement.getUuid() != null && hostElement.getEc2Instance() == null) {
-          final Host host = hostService.get(appId, workflowExecution.getEnvId(), hostElement.getUuid());
+          Host host = hostService.get(appId, workflowExecution.getEnvId(), hostElement.getUuid());
           if (host != null && host.getEc2Instance() != null) {
             hostElement.setEc2Instance(host.getEc2Instance());
           }
@@ -1332,24 +1332,23 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private Map<String, InstanceElement> getPcfHostsIfneccessary(WorkflowExecution workflowExecution) {
     Map<String, InstanceElement> rv = new HashMap<>();
-    final List<String> serviceIds = workflowExecution.getServiceIds();
+    List<String> serviceIds = workflowExecution.getServiceIds();
     if (isNotEmpty(serviceIds)) {
       serviceIds.forEach(serviceId -> {
-        final Service service = serviceResourceService.get(serviceId);
+        Service service = serviceResourceService.get(serviceId);
         if (service != null && DeploymentType.PCF == service.getDeploymentType()) {
           try (HIterator<StateExecutionInstance> iterator =
                    new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
                                        .filter(StateExecutionInstanceKeys.executionUuid, workflowExecution.getUuid())
                                        .fetch())) {
             while (iterator.hasNext()) {
-              final StateExecutionInstance stateExecutionInstance = iterator.next();
-              final LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+              StateExecutionInstance stateExecutionInstance = iterator.next();
+              LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
               if (isNotEmpty(contextElements)) {
                 contextElements.forEach(contextElement -> {
                   if (contextElement instanceof InstanceElementListParam) {
-                    final InstanceElementListParam instanceElementListParam = (InstanceElementListParam) contextElement;
-                    final List<PcfInstanceElement> pcfInstanceElements =
-                        instanceElementListParam.getPcfInstanceElements();
+                    InstanceElementListParam instanceElementListParam = (InstanceElementListParam) contextElement;
+                    List<PcfInstanceElement> pcfInstanceElements = instanceElementListParam.getPcfInstanceElements();
                     if (isNotEmpty(pcfInstanceElements)) {
                       pcfInstanceElements.forEach(pcfInstanceElement
                           -> rv.put(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex(),

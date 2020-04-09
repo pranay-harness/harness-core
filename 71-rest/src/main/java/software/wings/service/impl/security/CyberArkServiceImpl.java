@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -22,7 +23,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.CyberArkConfig.CyberArkConfigKeys;
@@ -192,11 +192,11 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
   @Override
   public boolean deleteConfig(String accountId, String configId) {
-    final long count = wingsPersistence.createQuery(EncryptedData.class)
-                           .filter(ACCOUNT_ID_KEY, accountId)
-                           .filter(EncryptedDataKeys.kmsId, configId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.CYBERARK)
-                           .count(new CountOptions().limit(1));
+    long count = wingsPersistence.createQuery(EncryptedData.class)
+                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.kmsId, configId)
+                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.CYBERARK)
+                     .count(upToOne);
 
     if (count > 0) {
       String message = "Can not delete the CyberArk configuration since there are secrets encrypted with this. "

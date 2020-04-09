@@ -496,7 +496,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid(DELEGATE_ID)
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
-                            .connected(true)
                             .build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -539,7 +538,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid(DELEGATE_ID)
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
-                            .connected(true)
                             .build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
