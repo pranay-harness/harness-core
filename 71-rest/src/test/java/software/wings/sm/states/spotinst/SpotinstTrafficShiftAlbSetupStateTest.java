@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -139,6 +140,9 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
     on(state).set("elastigroupNamePrefix", "foo");
     ActivityService mockActivityService = mock(ActivityService.class);
     on(state).set("activityService", mockActivityService);
+    SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
+    on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
+    doReturn(10).when(mockSpotinstStateHelper).renderCount(anyString(), any(), anyInt());
     SpotInstTaskExecutionResponse delegateResponse =
         SpotInstTaskExecutionResponse.builder()
             .delegateMetaInfo(DelegateMetaInfo.builder().build())

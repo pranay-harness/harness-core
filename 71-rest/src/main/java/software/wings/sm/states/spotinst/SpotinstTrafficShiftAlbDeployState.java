@@ -1,19 +1,56 @@
 package software.wings.sm.states.spotinst;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.context.ContextElementType.SPOTINST_SERVICE_SETUP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEPLOY_COMMAND;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+
+import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbDeployParameters;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
+import software.wings.beans.Activity;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AwsStateHelper;
 
+import java.util.List;
 import java.util.Map;
 
 @ToString
@@ -22,18 +59,142 @@ public class SpotinstTrafficShiftAlbDeployState extends State {
   @Getter @Setter private InstanceUnitType instanceUnitType = PERCENTAGE;
   @Getter @Setter private String instanceCountExpr = "100";
 
+  @Inject private AwsStateHelper awsStateHelper;
+  @Inject private DelegateService delegateService;
+  @Inject private ActivityService activityService;
+  @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+
   public SpotinstTrafficShiftAlbDeployState(String name) {
     super(name, StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
   }
 
+  @VisibleForTesting
+  SpotinstTrafficShiftAlbDeployState() {
+    super("stateName", StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    throw new InvalidRequestException("Not implemented yet.");
+    try {
+      return handleAsyncInternal(context, response);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+    String activityId = response.keySet().iterator().next();
+    SpotInstTaskExecutionResponse executionResponse =
+        (SpotInstTaskExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+
+    SpotinstTrafficShiftAlbDeployExecutionData stateExecutionData =
+        (SpotinstTrafficShiftAlbDeployExecutionData) context.getStateExecutionData();
+    stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+
+    SpotinstTrafficShiftAlbDeployResponse taskResponse =
+        (SpotinstTrafficShiftAlbDeployResponse) executionResponse.getSpotInstTaskResponse();
+    List<InstanceElement> instanceElements = newArrayList();
+    if (taskResponse != null) {
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
+          (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
+              stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
+      List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
+          taskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
+      if (isNotEmpty(newInstanceElements)) {
+        // These are newly launched instances, set NewInstance = true for verification service
+        newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
+        instanceElements.addAll(newInstanceElements);
+      }
+    }
+    InstanceElementListParam instanceElementListParam =
+        InstanceElementListParam.builder().instanceElements(instanceElements).build();
+    return ExecutionResponse.builder()
+        .executionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .stateExecutionData(stateExecutionData)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
+        .build();
   }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    throw new InvalidRequestException("Not implemented yet.");
+    try {
+      return executeInternal(context);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  private ExecutionResponse executeInternal(ExecutionContext context) {
+    ContextElement contextElement = context.getContextElement(SPOTINST_SERVICE_SETUP);
+    if (!(contextElement instanceof SpotinstTrafficShiftAlbSetupElement)) {
+      throw new InvalidRequestException("Did not find Setup element of class SpotinstTrafficShiftAlbSetupElement");
+    }
+    SpotinstTrafficShiftAlbSetupElement setupElement = (SpotinstTrafficShiftAlbSetupElement) contextElement;
+    SpotinstTrafficShiftDataBag dataBag = spotinstStateHelper.getDataBag(context);
+
+    Activity activity = spotinstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND,
+        CommandUnitDetails.CommandUnitType.SPOTINST_DEPLOY,
+        ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
+
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+
+    SpotinstTrafficShiftAlbDeployExecutionData stateExecutionData =
+        SpotinstTrafficShiftAlbDeployExecutionData.builder()
+            .activityId(activity.getUuid())
+            .serviceId(serviceElement.getUuid())
+            .envId(dataBag.getEnv().getUuid())
+            .appId(dataBag.getApp().getUuid())
+            .infraMappingId(dataBag.getInfrastructureMapping().getUuid())
+            .commandName(SPOTINST_DEPLOY_COMMAND)
+            .newElastigroupOriginalConfig(setupElement.getNewElastiGroupOriginalConfig())
+            .oldElastigroupOriginalConfig(setupElement.getOldElastiGroupOriginalConfig())
+            .build();
+
+    SpotinstTrafficShiftAlbDeployParameters parameters =
+        SpotinstTrafficShiftAlbDeployParameters.builder()
+            .appId(dataBag.getApp().getUuid())
+            .accountId(dataBag.getApp().getAccountId())
+            .activityId(activity.getUuid())
+            .commandName(SPOTINST_DEPLOY_COMMAND)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .timeoutIntervalInMin(setupElement.getTimeoutIntervalInMin())
+            .awsRegion(dataBag.getInfrastructureMapping().getRegion())
+            .newElastigroup(setupElement.getNewElastiGroupOriginalConfig())
+            .oldElastigroup(setupElement.getOldElastiGroupOriginalConfig())
+            .build();
+
+    SpotInstCommandRequest commandRequest = SpotInstCommandRequest.builder()
+                                                .spotInstTaskParameters(parameters)
+                                                .awsConfig(dataBag.getAwsConfig())
+                                                .spotInstConfig(dataBag.getSpotinstConfig())
+                                                .awsEncryptionDetails(dataBag.getAwsEncryptedDataDetails())
+                                                .spotinstEncryptionDetails(dataBag.getSpotinstEncryptedDataDetails())
+                                                .build();
+
+    DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(dataBag.getApp().getAccountId(),
+        dataBag.getApp().getUuid(), TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), dataBag.getEnv().getUuid(),
+        dataBag.getInfrastructureMapping().getUuid(), commandRequest);
+
+    delegateService.queueTask(delegateTask);
+
+    return ExecutionResponse.builder()
+        .correlationIds(singletonList(activity.getUuid()))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
+        .build();
   }
 
   @Override

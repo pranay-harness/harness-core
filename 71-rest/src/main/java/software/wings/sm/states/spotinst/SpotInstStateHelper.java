@@ -409,6 +409,7 @@ public class SpotInstStateHelper {
 
   SpotinstTrafficShiftDataBag getDataBag(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("Workflow Standard Params are null", workflowStandardParams);
     Application app = workflowStandardParams.fetchRequiredApp();
     Environment env = workflowStandardParams.fetchRequiredEnv();
     AwsAmiInfrastructureMapping infrastructureMapping =
