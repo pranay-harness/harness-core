@@ -355,7 +355,6 @@ logDataRecords { "name" : "cv_bump_idx" , "background" : true} { "cvConfigId" : 
 logDataRecords { "name" : "serviceId_1" , "background" : true} { "serviceId" : 1}
 logDataRecords { "name" : "stateBumpIdx" , "background" : true} { "stateExecutionId" : 1 , "clusterLevel" : 1 , "logCollectionMinute" : -1 , "host" : 1}
 logDataRecords { "name" : "stateHostIdx" , "background" : true} { "stateExecutionId" : 1 , "logCollectionMinute" : 1}
-logDataRecords { "name" : "statePrevExIdx" , "background" : true} { "workflowExecutionId" : 1 , "serviceId" : 1 , "stateType" : 1 , "query" : 1 , "clusterLevel" : 1 , "logCollectionMinute" : -1}
 logDataRecords { "name" : "state_Prev_Ex_Idx" , "background" : true} { "workflowExecutionId" : 1 , "clusterLevel" : 1 , "stateType" : 1}
 logDataRecords { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 logMlFeedbackRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}

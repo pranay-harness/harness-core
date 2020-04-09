@@ -54,10 +54,6 @@ import java.util.List;
         @Field("stateExecutionId")
         , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
       }, options = @IndexOptions(name = "stateBumpIdx")), @Index(fields = {
-        @Field("workflowExecutionId")
-        , @Field("serviceId"), @Field("stateType"), @Field("query"), @Field("clusterLevel"),
-            @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "statePrevExIdx")), @Index(fields = {
         @Field("workflowExecutionId"), @Field("clusterLevel"), @Field("stateType")
       }, options = @IndexOptions(name = "state_Prev_Ex_Idx")), @Index(fields = {
         @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
