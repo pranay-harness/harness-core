@@ -367,6 +367,8 @@ import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
+import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
+import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
@@ -1538,8 +1540,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SftpCapability.class, 7333);
     kryo.register(ScalyrConfig.class, 7334);
     kryo.register(EncryptedDataParent.class, 7335);
-    kryo.register(SpotinstTrafficShiftAlbSetupElement.class, 7336);
-    kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7337);
-    kryo.register(SpotinstTrafficShiftAlbDeployExecutionData.class, 7338);
+    kryo.register(HelmCommandCapability.class, 7336);
+    kryo.register(HelmInstallationCapability.class, 7337);
+    kryo.register(SpotinstTrafficShiftAlbSetupElement.class, 7338);
+    kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7339);
+    kryo.register(SpotinstTrafficShiftAlbDeployExecutionData.class, 7340);
   }
 }

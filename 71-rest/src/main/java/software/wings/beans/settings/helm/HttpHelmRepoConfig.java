@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.audit.ResourceType;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -63,7 +64,10 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
+    executionCapabilityList.add(HelmInstallationCapability.builder()
+                                    .version(HelmConstants.HelmVersion.V3)
+                                    .criteria("HTTP_HELM_REPO: " + getChartRepoUrl())
+                                    .build());
     executionCapabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(chartRepoUrl));
     return executionCapabilityList;

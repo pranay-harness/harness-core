@@ -2,6 +2,7 @@ package software.wings.beans.settings.helm;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import lombok.Builder;
@@ -10,7 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.audit.ResourceType;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.HelmRepoYaml;
@@ -53,10 +55,13 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMuseum(new ArrayList<>()));
+    executionCapabilityList.add(HelmInstallationCapability.builder()
+                                    .version(HelmConstants.HelmVersion.V3)
+                                    .criteria("AMAZON_S3_HELM_REPO: " + getBucketName() + ":" + getRegion())
+                                    .build());
     executionCapabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL));
+    executionCapabilityList.add(ChartMuseumCapability.builder().build());
     return executionCapabilityList;
   }
 
