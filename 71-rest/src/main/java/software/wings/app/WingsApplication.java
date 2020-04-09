@@ -183,7 +183,6 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheManager;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
-import software.wings.yaml.gitSync.GitSyncErrorHandler;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -702,7 +701,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
     injector.getInstance(BudgetHandler.class).registerIterators();
-    injector.getInstance(GitSyncErrorHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(EncryptedDataMigrationHandler.class).registerIterators();
   }
