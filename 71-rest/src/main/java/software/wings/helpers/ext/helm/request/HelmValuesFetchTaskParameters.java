@@ -5,8 +5,10 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -26,6 +28,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ExecutionC
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return helmChartConfigTaskParams.fetchRequiredExecutionCapabilities();
+    HelmInstallCommandRequest commandRequest = HelmInstallCommandRequest.builder()
+                                                   .commandFlags(getHelmCommandFlags())
+                                                   .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
+                                                   .build();
+    return Collections.singletonList(HelmCommandCapability.builder().commandRequest(commandRequest).build());
   }
 }

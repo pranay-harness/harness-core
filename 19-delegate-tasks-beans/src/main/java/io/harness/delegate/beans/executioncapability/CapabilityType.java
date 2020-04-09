@@ -11,7 +11,7 @@ public enum CapabilityType {
   AWS_REGION,
   SYSTEM_ENV,
   HTTP,
-  HELM,
+  HELM_INSTALL,
   CHART_MUSEUM,
   ALWAYS_FALSE,
   SMTP,
@@ -20,5 +20,6 @@ public enum CapabilityType {
   SFTP,
   PCF_AUTO_SCALAR,
   PCF_CONNECTIVITY,
-  POWERSHELL
+  POWERSHELL,
+  HELM_COMMAND
 }

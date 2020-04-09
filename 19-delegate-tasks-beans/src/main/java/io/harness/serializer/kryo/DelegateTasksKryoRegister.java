@@ -12,7 +12,6 @@ import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapabi
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
-import io.harness.delegate.beans.executioncapability.HelmCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -79,8 +78,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstSetupTaskResponse.class, 19016);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
-    kryo.register(HelmCapability.class, 19019);
-    kryo.register(ChartMuseumCapability.class, 19020);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
     kryo.register(ErrorNotifyResponseData.class, 5213);
@@ -99,5 +96,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(LbDetailsForAlbTrafficShift.class, 19037);
+    kryo.register(ChartMuseumCapability.class, 19038);
   }
 }

@@ -8,11 +8,12 @@ import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabil
 import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
-import io.harness.delegate.task.executioncapability.HelmCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.HelmInstallationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
@@ -27,8 +28,6 @@ public class CapabilityCheckFactory {
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
-  @Inject HelmCapabilityCheck helmCapabilityCheck;
-  @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
   @Inject SmtpCapabilityCheck smtpCapabilityCheck;
   @Inject AlwaysFalseValidationCapabilityCheck alwaysFalseValidationCapabilityCheck;
   @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
@@ -36,6 +35,9 @@ public class CapabilityCheckFactory {
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
   @Inject PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
   @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
+  @Inject HelmCommandCapabilityCheck helmCommandCapabilityCheck;
+  @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
+  @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -49,10 +51,6 @@ public class CapabilityCheckFactory {
         return systemEnvCapabilityCheck;
       case HTTP:
         return httpConnectionExecutionCapabilityCheck;
-      case HELM:
-        return helmCapabilityCheck;
-      case CHART_MUSEUM:
-        return chartMuseumCapabilityCheck;
       case SMTP:
         return smtpCapabilityCheck;
       case ALWAYS_FALSE:
@@ -67,6 +65,12 @@ public class CapabilityCheckFactory {
         return pcfConnectivityCapabilityCheck;
       case PCF_AUTO_SCALAR:
         return pcfAutoScalarCapabilityCheck;
+      case HELM_COMMAND:
+        return helmCommandCapabilityCheck;
+      case HELM_INSTALL:
+        return helmInstallationCapabilityCheck;
+      case CHART_MUSEUM:
+        return chartMuseumCapabilityCheck;
       default:
         return null;
     }

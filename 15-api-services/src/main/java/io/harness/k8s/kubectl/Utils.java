@@ -8,6 +8,7 @@ import org.zeroturnaround.exec.StartedProcess;
 
 import java.io.File;
 import java.io.OutputStream;
+import java.util.concurrent.TimeUnit;
 
 @UtilityClass
 public class Utils {
@@ -50,5 +51,16 @@ public class Utils {
       result = "\"" + result + "\"";
     }
     return result;
+  }
+
+  public static boolean executeCommand(String command, int timeoutMinutes) {
+    try {
+      ProcessExecutor processExecutor =
+          new ProcessExecutor().timeout(timeoutMinutes, TimeUnit.MINUTES).commandSplit(command).readOutput(true);
+      ProcessResult processResult = processExecutor.execute();
+      return processResult.getExitValue() == 0;
+    } catch (Exception ex) {
+      return false;
+    }
   }
 }

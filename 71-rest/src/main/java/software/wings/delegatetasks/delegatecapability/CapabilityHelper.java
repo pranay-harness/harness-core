@@ -9,10 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.beans.executioncapability.HelmCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -42,11 +40,6 @@ import javax.validation.constraints.NotNull;
 public class CapabilityHelper {
   public static final String TERRAFORM = "terraform";
   public static final String HELM = "helm";
-  public static final String CHART_MUSEUM = "chart-museum";
-
-  private static final String HELM_VERSION_COMMAND = "${HELM_PATH} version -c";
-
-  private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
 
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
@@ -286,34 +279,5 @@ public class CapabilityHelper {
     processExecutorArguments.add("terraform --version");
 
     return generateExecutionCapabilitiesForProcessExecutor(TERRAFORM, processExecutorArguments, encryptedDataDetails);
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForHelm(
-      List<EncryptedDataDetail> encryptedDataDetails) {
-    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(HelmCapability.builder().helmCommand(HELM_VERSION_COMMAND).build());
-
-    if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption =
-          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
-      if (isNotEmpty(capabilitiesForEncryption)) {
-        executionCapabilities.addAll(capabilitiesForEncryption);
-      }
-    }
-    return executionCapabilities;
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForChartMuseum(
-      List<EncryptedDataDetail> encryptedDataDetails) {
-    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(ChartMuseumCapability.builder().chartMuseumCommand(CHART_MUSEUM_VERSION_COMMAND).build());
-    if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption =
-          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
-      if (isNotEmpty(capabilitiesForEncryption)) {
-        executionCapabilities.addAll(capabilitiesForEncryption);
-      }
-    }
-    return executionCapabilities;
   }
 }

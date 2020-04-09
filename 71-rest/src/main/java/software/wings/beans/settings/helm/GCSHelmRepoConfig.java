@@ -2,6 +2,7 @@ package software.wings.beans.settings.helm;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.audit.ResourceType;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.HelmRepoYaml;
@@ -48,8 +50,11 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMuseum(new ArrayList<>()));
+    executionCapabilityList.add(HelmInstallationCapability.builder()
+                                    .version(HelmConstants.HelmVersion.V3)
+                                    .criteria(getType() + ":" + getBucketName())
+                                    .build());
+    executionCapabilityList.add(ChartMuseumCapability.builder().build());
     return executionCapabilityList;
   }
 

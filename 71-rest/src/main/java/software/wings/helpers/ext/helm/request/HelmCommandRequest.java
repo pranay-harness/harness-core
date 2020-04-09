@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
@@ -50,6 +51,7 @@ public class HelmCommandRequest implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     if (gitConfig != null) {
       executionCapabilities.addAll(gitConfig.fetchRequiredExecutionCapabilities());
     }
