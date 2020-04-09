@@ -20,14 +20,9 @@ import org.mongodb.morphia.annotations.Indexes;
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TestEntityKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "index"),
-      fields = { @Field(TestIndexEntity.TestEntityKeys.uuid)
-                 , @Field(TestIndexEntity.TestEntityKeys.test) })
-  ,
-      @Index(options = @IndexOptions(
-                 name = "partial", partialFilter = TestIndexEntity.TestEntityKeys.test + ": {$exists : true}"),
-          fields = { @Field(TestIndexEntity.TestEntityKeys.uuid)
-                     , @Field(TestIndexEntity.TestEntityKeys.test) })
+  @Index(options = @IndexOptions(name = "index"), fields = {
+    @Field(TestIndexEntity.TestEntityKeys.uuid), @Field(TestIndexEntity.TestEntityKeys.test)
+  })
 })
 class TestIndexEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
