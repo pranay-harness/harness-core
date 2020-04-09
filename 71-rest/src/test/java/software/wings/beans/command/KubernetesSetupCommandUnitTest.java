@@ -98,9 +98,9 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                   .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()
-                                                .withCloudProviderSetting(computeProvider)
-                                                .withContainerSetupParams(setupParams)
-                                                .withCloudProviderCredentials(emptyList())
+                                                .cloudProviderSetting(computeProvider)
+                                                .containerSetupParams(setupParams)
+                                                .cloudProviderCredentials(emptyList())
                                                 .build();
 
   /**

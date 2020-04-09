@@ -71,9 +71,9 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
           .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()
-                                                .withCloudProviderSetting(computeProvider)
-                                                .withContainerSetupParams(setupParams)
-                                                .withCloudProviderCredentials(emptyList())
+                                                .cloudProviderSetting(computeProvider)
+                                                .containerSetupParams(setupParams)
+                                                .cloudProviderCredentials(emptyList())
                                                 .build();
   private TaskDefinition taskDefinition;
 

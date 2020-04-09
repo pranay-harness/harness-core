@@ -38,9 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- * Created by peeyushaggarwal on 6/9/16.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class CommandExecutionContext implements ExecutionCapabilityDemander {
@@ -290,257 +287,255 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return new Builder();
     }
 
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
+    public Builder envId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public Builder withHost(Host host) {
+    public Builder host(Host host) {
       this.host = host;
       return this;
     }
 
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withActivityId(String activityId) {
+    public Builder activityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
-    public Builder withRuntimePath(String runtimePath) {
+    public Builder runtimePath(String runtimePath) {
       this.runtimePath = runtimePath;
       return this;
     }
 
-    public Builder withStagingPath(String stagingPath) {
+    public Builder stagingPath(String stagingPath) {
       this.stagingPath = stagingPath;
       return this;
     }
 
-    public Builder withBackupPath(String backupPath) {
+    public Builder backupPath(String backupPath) {
       this.backupPath = backupPath;
       return this;
     }
 
-    public Builder withWindowsRuntimePath(String windowsRuntimePath) {
+    public Builder windowsRuntimePath(String windowsRuntimePath) {
       this.windowsRuntimePath = windowsRuntimePath;
       return this;
     }
 
-    public Builder withServiceTemplateId(String serviceTemplateId) {
+    public Builder serviceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
-    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
+    public Builder executionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
       return this;
     }
 
-    public Builder withAppContainer(AppContainer appContainer) {
+    public Builder appContainer(AppContainer appContainer) {
       this.appContainer = appContainer;
       return this;
     }
 
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+    public Builder artifactFiles(List<ArtifactFile> artifactFiles) {
       this.artifactFiles = artifactFiles;
       return this;
     }
 
-    public Builder withServiceVariables(Map<String, String> serviceVariables) {
+    public Builder serviceVariables(Map<String, String> serviceVariables) {
       this.serviceVariables = serviceVariables;
       return this;
     }
 
-    public Builder withSafeDisplayServiceVariables(Map<String, String> safeDisplayServiceVariables) {
+    public Builder safeDisplayServiceVariables(Map<String, String> safeDisplayServiceVariables) {
       this.safeDisplayServiceVariables = safeDisplayServiceVariables;
       return this;
     }
 
-    public Builder withEnvVariables(Map<String, String> envVariables) {
+    public Builder envVariables(Map<String, String> envVariables) {
       this.envVariables = envVariables;
       return this;
     }
 
-    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
+    public Builder hostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
       this.hostConnectionAttributes = hostConnectionAttributes;
       return this;
     }
 
-    public Builder withHostConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+    public Builder hostConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
       hostConnectionCredentials = encryptedDataDetails;
       return this;
     }
 
-    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
+    public Builder bastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
       this.bastionConnectionAttributes = bastionConnectionAttributes;
       return this;
     }
 
-    public Builder withBastionConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+    public Builder bastionConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
       bastionConnectionCredentials = encryptedDataDetails;
       return this;
     }
 
-    public Builder withWinRmConnectionAttributes(WinRmConnectionAttributes winRmConnectionAttributes) {
+    public Builder winRmConnectionAttributes(WinRmConnectionAttributes winRmConnectionAttributes) {
       winrmConnectionAttributes = winRmConnectionAttributes;
       return this;
     }
 
-    public Builder withWinrmConnectionEncryptedDataDetails(
-        List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails) {
+    public Builder winrmConnectionEncryptedDataDetails(List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails) {
       this.winrmConnectionEncryptedDataDetails = winrmConnectionEncryptedDataDetails;
       return this;
     }
 
-    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+    public Builder artifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
       this.artifactStreamAttributes = artifactStreamAttributes;
       return this;
     }
 
-    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
+    public Builder cloudProviderSetting(SettingAttribute cloudProviderSetting) {
       this.cloudProviderSetting = cloudProviderSetting;
       return this;
     }
 
-    public Builder withCloudProviderCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+    public Builder cloudProviderCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
       cloudProviderCredentials = encryptedDataDetails;
       return this;
     }
 
-    public Builder withServiceName(String serviceName) {
+    public Builder serviceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
-    public Builder withCodeDeployParams(CodeDeployParams codeDeployParams) {
+    public Builder codeDeployParams(CodeDeployParams codeDeployParams) {
       this.codeDeployParams = codeDeployParams;
       return this;
     }
 
-    public Builder withContainerSetupParams(ContainerSetupParams containerSetupParams) {
+    public Builder containerSetupParams(ContainerSetupParams containerSetupParams) {
       this.containerSetupParams = containerSetupParams;
       return this;
     }
 
-    public Builder withContainerResizeParams(ContainerResizeParams containerResizeParams) {
+    public Builder containerResizeParams(ContainerResizeParams containerResizeParams) {
       this.containerResizeParams = containerResizeParams;
       return this;
     }
 
-    public Builder withMetadata(Map<String, String> metadata) {
+    public Builder metadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
-    public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
+    public Builder commandExecutionData(CommandExecutionData commandExecutionData) {
       this.commandExecutionData = commandExecutionData;
       return this;
     }
 
-    public Builder withTimeout(Integer timeout) {
+    public Builder timeout(Integer timeout) {
       this.timeout = timeout;
       return this;
     }
 
-    public Builder withDeploymentType(String deploymentType) {
+    public Builder deploymentType(String deploymentType) {
       this.deploymentType = deploymentType;
       return this;
     }
 
-    public Builder withArtifactServerEncryptedDataDetails(
-        List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
+    public Builder artifactServerEncryptedDataDetails(List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
       this.artifactServerEncryptedDataDetails = artifactServerEncryptedDataDetails;
       return this;
     }
 
-    public Builder withInlineSshCommand(boolean inlineSshCommand) {
+    public Builder inlineSshCommand(boolean inlineSshCommand) {
       this.inlineSshCommand = inlineSshCommand;
       return this;
     }
 
-    public Builder withExecuteOnDelegate(boolean executeOnDelegate) {
+    public Builder executeOnDelegate(boolean executeOnDelegate) {
       this.executeOnDelegate = executeOnDelegate;
       return this;
     }
 
-    public Builder withArtifactStreamAttributesMap(Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap) {
+    public Builder artifactStreamAttributesMap(Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap) {
       this.artifactStreamAttributesMap = artifactStreamAttributesMap;
       return this;
     }
 
-    public Builder withMultiArtifactMap(Map<String, Artifact> multiArtifactMap) {
+    public Builder multiArtifactMap(Map<String, Artifact> multiArtifactMap) {
       this.multiArtifactMap = multiArtifactMap;
       return this;
     }
 
-    public Builder withMultiArtifact(boolean multiArtifact) {
+    public Builder multiArtifact(boolean multiArtifact) {
       this.multiArtifact = multiArtifact;
       return this;
     }
 
-    public Builder withArtifactServerEncryptedDataDetailsMap(
+    public Builder artifactServerEncryptedDataDetailsMap(
         Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap) {
       this.artifactServerEncryptedDataDetailsMap = artifactServerEncryptedDataDetailsMap;
       return this;
     }
 
-    public Builder withArtifactFileName(String artifactFileName) {
+    public Builder artifactFileName(String artifactFileName) {
       this.artifactFileName = artifactFileName;
       return this;
     }
 
     public Builder but() {
       return aCommandExecutionContext()
-          .withAccountId(accountId)
-          .withEnvId(envId)
-          .withHost(host)
-          .withAppId(appId)
-          .withActivityId(activityId)
-          .withRuntimePath(runtimePath)
-          .withStagingPath(stagingPath)
-          .withBackupPath(backupPath)
-          .withWindowsRuntimePath(windowsRuntimePath)
-          .withServiceTemplateId(serviceTemplateId)
-          .withExecutionCredential(executionCredential)
-          .withAppContainer(appContainer)
-          .withArtifactFiles(artifactFiles)
-          .withServiceVariables(serviceVariables)
-          .withEnvVariables(envVariables)
-          .withHostConnectionAttributes(hostConnectionAttributes)
-          .withBastionConnectionAttributes(bastionConnectionAttributes)
-          .withHostConnectionCredentials(hostConnectionCredentials)
-          .withBastionConnectionCredentials(bastionConnectionCredentials)
-          .withWinRmConnectionAttributes(winrmConnectionAttributes)
-          .withWinrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
-          .withArtifactStreamAttributes(artifactStreamAttributes)
-          .withCloudProviderSetting(cloudProviderSetting)
-          .withCloudProviderCredentials(cloudProviderCredentials)
-          .withCodeDeployParams(codeDeployParams)
-          .withMetadata(metadata)
-          .withCommandExecutionData(commandExecutionData)
-          .withContainerSetupParams(containerSetupParams)
-          .withContainerResizeParams(containerResizeParams)
-          .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-          .withServiceName(serviceName)
-          .withTimeout(timeout)
-          .withDeploymentType(deploymentType)
-          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
-          .withInlineSshCommand(inlineSshCommand)
-          .withExecuteOnDelegate(executeOnDelegate)
-          .withArtifactStreamAttributesMap(artifactStreamAttributesMap)
-          .withMultiArtifactMap(multiArtifactMap)
-          .withMultiArtifact(multiArtifact)
-          .withArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
-          .withArtifactFileName(artifactFileName);
+          .accountId(accountId)
+          .envId(envId)
+          .host(host)
+          .appId(appId)
+          .activityId(activityId)
+          .runtimePath(runtimePath)
+          .stagingPath(stagingPath)
+          .backupPath(backupPath)
+          .windowsRuntimePath(windowsRuntimePath)
+          .serviceTemplateId(serviceTemplateId)
+          .executionCredential(executionCredential)
+          .appContainer(appContainer)
+          .artifactFiles(artifactFiles)
+          .serviceVariables(serviceVariables)
+          .envVariables(envVariables)
+          .hostConnectionAttributes(hostConnectionAttributes)
+          .bastionConnectionAttributes(bastionConnectionAttributes)
+          .hostConnectionCredentials(hostConnectionCredentials)
+          .bastionConnectionCredentials(bastionConnectionCredentials)
+          .winRmConnectionAttributes(winrmConnectionAttributes)
+          .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+          .artifactStreamAttributes(artifactStreamAttributes)
+          .cloudProviderSetting(cloudProviderSetting)
+          .cloudProviderCredentials(cloudProviderCredentials)
+          .codeDeployParams(codeDeployParams)
+          .metadata(metadata)
+          .commandExecutionData(commandExecutionData)
+          .containerSetupParams(containerSetupParams)
+          .containerResizeParams(containerResizeParams)
+          .safeDisplayServiceVariables(safeDisplayServiceVariables)
+          .serviceName(serviceName)
+          .timeout(timeout)
+          .deploymentType(deploymentType)
+          .artifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
+          .inlineSshCommand(inlineSshCommand)
+          .executeOnDelegate(executeOnDelegate)
+          .artifactStreamAttributesMap(artifactStreamAttributesMap)
+          .multiArtifactMap(multiArtifactMap)
+          .multiArtifact(multiArtifact)
+          .artifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
+          .artifactFileName(artifactFileName);
     }
 
     public CommandExecutionContext build() {

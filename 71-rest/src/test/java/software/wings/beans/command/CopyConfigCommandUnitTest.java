@@ -43,12 +43,12 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
   @InjectMocks
   private ShellCommandExecutionContext winRmContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withAccountId(WingsTestConstants.ACCOUNT_ID)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withEnvId(WingsTestConstants.ENV_ID)
-                                           .withServiceTemplateId(WingsTestConstants.SERVICE_TEMPLATE_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .accountId(WingsTestConstants.ACCOUNT_ID)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .envId(WingsTestConstants.ENV_ID)
+                                           .serviceTemplateId(WingsTestConstants.SERVICE_TEMPLATE_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @Test

@@ -128,7 +128,7 @@ public class AwsCodeDeployState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    if (StateType.AWS_CODEDEPLOY_ROLLBACK.name().equals(this.getStateType())) {
+    if (StateType.AWS_CODEDEPLOY_ROLLBACK.name().equals(getStateType())) {
       AwsCodeDeployRequestElement codeDeployRequestElement =
           context.getContextElement(ContextElementType.PARAM, AWS_CODE_DEPLOY_REQUEST_PARAM);
       if (codeDeployRequestElement == null || codeDeployRequestElement.getOldCodeDeployParams() == null) {
@@ -196,15 +196,15 @@ public class AwsCodeDeployState extends State {
 
     DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                          .withAccountId(app.getAccountId())
-                                                          .withAppId(app.getUuid())
-                                                          .withEnvId(envId)
-                                                          .withServiceName(service.getName())
-                                                          .withDeploymentType(deploymentType.name())
-                                                          .withActivityId(activity.getUuid())
-                                                          .withCloudProviderSetting(cloudProviderSetting)
-                                                          .withCloudProviderCredentials(encryptedDataDetails)
-                                                          .withCodeDeployParams(codeDeployParams)
+                                                          .accountId(app.getAccountId())
+                                                          .appId(app.getUuid())
+                                                          .envId(envId)
+                                                          .serviceName(service.getName())
+                                                          .deploymentType(deploymentType.name())
+                                                          .activityId(activity.getUuid())
+                                                          .cloudProviderSetting(cloudProviderSetting)
+                                                          .cloudProviderCredentials(encryptedDataDetails)
+                                                          .codeDeployParams(codeDeployParams)
                                                           .build();
 
     String delegateTaskId =
@@ -327,7 +327,7 @@ public class AwsCodeDeployState extends State {
                                       .instanceId(instance.getInstanceId())
                                       .build();
 
-        final Map<String, Object> contextMap = context.asMap();
+        Map<String, Object> contextMap = context.asMap();
         contextMap.put("host", hostElement);
         String hostName =
             awsHelperService.getHostnameFromConvention(contextMap, infrastructureMapping.getHostNameConvention());

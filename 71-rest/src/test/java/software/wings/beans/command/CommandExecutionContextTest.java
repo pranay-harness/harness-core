@@ -32,19 +32,19 @@ import java.util.List;
 public class CommandExecutionContextTest extends WingsBaseTest {
   CommandExecutionContext.Builder contextBuilder =
       aCommandExecutionContext()
-          .withAppId(APP_ID)
-          .withEnvId(ENV_ID)
-          .withAccountId(ACCOUNT_ID)
-          .withActivityId(ACTIVITY_ID)
-          .withHost(Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
+          .appId(APP_ID)
+          .envId(ENV_ID)
+          .accountId(ACCOUNT_ID)
+          .activityId(ACTIVITY_ID)
+          .host(Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesK8s() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.KUBERNETES.name())
-            .withCloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(false))
+        contextBuilder.deploymentType(DeploymentType.KUBERNETES.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(false))
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -57,8 +57,8 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesK8sWithDelegate() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.KUBERNETES.name())
-            .withCloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(true))
+        contextBuilder.deploymentType(DeploymentType.KUBERNETES.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(true))
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -71,8 +71,8 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesWinrm() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.WINRM.name())
-            .withCloudProviderSetting(SettingAttributeTestHelper.obtainWinrmSettingAttribute())
+        contextBuilder.deploymentType(DeploymentType.WINRM.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainWinrmSettingAttribute())
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -85,9 +85,9 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesSSH() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.SSH.name())
-            .withCloudProviderSetting(SettingAttributeTestHelper.obtainSshSettingAttribute())
-            .withExecutionCredential(aSSHExecutionCredential().withSshUser(USER_NAME).withSshPassword(PASSWORD).build())
+        contextBuilder.deploymentType(DeploymentType.SSH.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainSshSettingAttribute())
+            .executionCredential(aSSHExecutionCredential().withSshUser(USER_NAME).withSshPassword(PASSWORD).build())
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -100,8 +100,8 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesECSResize() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.ECS.name())
-            .withContainerResizeParams(SettingAttributeTestHelper.obtainECSResizeParams())
+        contextBuilder.deploymentType(DeploymentType.ECS.name())
+            .containerResizeParams(SettingAttributeTestHelper.obtainECSResizeParams())
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -114,8 +114,8 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesECSSetup() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.ECS.name())
-            .withContainerSetupParams(SettingAttributeTestHelper.obtainECSSetupParams())
+        contextBuilder.deploymentType(DeploymentType.ECS.name())
+            .containerSetupParams(SettingAttributeTestHelper.obtainECSSetupParams())
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
@@ -128,7 +128,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesAWSCodeDeploy() {
     CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build();
+        contextBuilder.deploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
     assertThat(executionCapabilities).hasSize(1);
@@ -139,7 +139,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesAMI() {
-    CommandExecutionContext executionContext = contextBuilder.withDeploymentType(DeploymentType.AMI.name()).build();
+    CommandExecutionContext executionContext = contextBuilder.deploymentType(DeploymentType.AMI.name()).build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
     assertThat(executionCapabilities).hasSize(0);
@@ -149,8 +149,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesLambda() {
-    CommandExecutionContext executionContext =
-        contextBuilder.withDeploymentType(DeploymentType.AWS_LAMBDA.name()).build();
+    CommandExecutionContext executionContext = contextBuilder.deploymentType(DeploymentType.AWS_LAMBDA.name()).build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
     assertThat(executionCapabilities).hasSize(0);

@@ -265,7 +265,7 @@ public class CommandState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    if (this.getTemplateUuid() != null) {
+    if (getTemplateUuid() != null) {
       return executeLinkedCommand(context);
     }
     return executeCommand(context);
@@ -370,21 +370,21 @@ public class CommandState extends State {
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
-              .withAppId(appId)
-              .withEnvId(envId)
-              .withDeploymentType(deploymentType.name())
-              .withBackupPath(backupPath)
-              .withRuntimePath(runtimePath)
-              .withStagingPath(stagingPath)
-              .withWindowsRuntimePath(windowsRuntimePath)
-              .withExecutionCredential(workflowStandardParams.getExecutionCredential())
-              .withServiceVariables(serviceVariables)
-              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-              .withHost(host)
-              .withServiceTemplateId(serviceTemplateId)
-              .withAppContainer(service.getAppContainer())
-              .withAccountId(accountId)
-              .withTimeout(getTimeoutMillis());
+              .appId(appId)
+              .envId(envId)
+              .deploymentType(deploymentType.name())
+              .backupPath(backupPath)
+              .runtimePath(runtimePath)
+              .stagingPath(stagingPath)
+              .windowsRuntimePath(windowsRuntimePath)
+              .executionCredential(workflowStandardParams.getExecutionCredential())
+              .serviceVariables(serviceVariables)
+              .safeDisplayServiceVariables(safeDisplayServiceVariables)
+              .host(host)
+              .serviceTemplateId(serviceTemplateId)
+              .appContainer(service.getAppContainer())
+              .accountId(accountId)
+              .timeout(getTimeoutMillis());
 
       getHostConnectionDetails(context, host, commandExecutionContextBuilder);
 
@@ -477,7 +477,7 @@ public class CommandState extends State {
 
       setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
       CommandExecutionContext commandExecutionContext =
-          commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
+          commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
 
       delegateTaskId = queueDelegateTask(
           activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
@@ -557,7 +557,7 @@ public class CommandState extends State {
       CommandExecutionContext.Builder commandExecutionContextBuilder) {
     logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
         context.getStateExecutionInstanceId());
-    commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
+    commandExecutionContextBuilder.metadata(artifact.getMetadata());
     // Observed NPE in alerts
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     if (artifactStream == null) {
@@ -579,7 +579,7 @@ public class CommandState extends State {
       artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
           (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
           context.getWorkflowExecutionId()));
-      commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+      commandExecutionContextBuilder.artifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
           (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
           context.getWorkflowExecutionId()));
     }
@@ -591,16 +591,16 @@ public class CommandState extends State {
       artifactStreamAttributes.setCopyArtifactEnabled(true);
     }
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
-    commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
+    commandExecutionContextBuilder.artifactStreamAttributes(artifactStreamAttributes);
 
-    commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
+    commandExecutionContextBuilder.artifactFiles(artifact.getArtifactFiles());
     executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
   }
 
   private void getMultiArtifactDetails(ExecutionContext context, CommandStateExecutionData.Builder executionDataBuilder,
       Service service, String accountId, Map<String, Artifact> map,
       CommandExecutionContext.Builder commandExecutionContextBuilder) {
-    commandExecutionContextBuilder.withMultiArtifactMap(map);
+    commandExecutionContextBuilder.multiArtifactMap(map);
     Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = new HashMap<>();
     Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap = new HashMap<>();
     if (isNotEmpty(map)) {
@@ -644,8 +644,8 @@ public class CommandState extends State {
 
         artifact.setArtifactFiles(artifactService.fetchArtifactFiles(artifact.getUuid()));
       }
-      commandExecutionContextBuilder.withArtifactStreamAttributesMap(artifactStreamAttributesMap);
-      commandExecutionContextBuilder.withArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
+      commandExecutionContextBuilder.artifactStreamAttributesMap(artifactStreamAttributesMap);
+      commandExecutionContextBuilder.artifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
       addArtifactFileNameToContext(map, artifactStreamAttributesMap, commandExecutionContextBuilder);
     }
   }
@@ -656,7 +656,7 @@ public class CommandState extends State {
     artifactFileName = resolveArtifactFileName(multiArtifactMap, artifactStreamAttributesMap);
     // add $ARTIFACT_FILE_NAME to context
     if (isNotEmpty(artifactFileName)) {
-      commandExecutionContextBuilder.withArtifactFileName(artifactFileName);
+      commandExecutionContextBuilder.artifactFileName(artifactFileName);
     }
   }
 
@@ -694,23 +694,23 @@ public class CommandState extends State {
       ExecutionContext context, Host host, CommandExecutionContext.Builder commandExecutionContextBuilder) {
     if (isNotEmpty(host.getHostConnAttr())) {
       SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
-      commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
-      commandExecutionContextBuilder.withHostConnectionCredentials(
+      commandExecutionContextBuilder.hostConnectionAttributes(hostConnectionAttribute);
+      commandExecutionContextBuilder.hostConnectionCredentials(
           secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
               context.getAppId(), context.getWorkflowExecutionId()));
     }
     if (isNotEmpty(host.getBastionConnAttr())) {
       SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
-      commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
-      commandExecutionContextBuilder.withBastionConnectionCredentials(
+      commandExecutionContextBuilder.bastionConnectionAttributes(bastionConnectionAttribute);
+      commandExecutionContextBuilder.bastionConnectionCredentials(
           secretManager.getEncryptionDetails((EncryptableSetting) bastionConnectionAttribute.getValue(),
               context.getAppId(), context.getWorkflowExecutionId()));
     }
     if (isNotEmpty(host.getWinrmConnAttr())) {
       WinRmConnectionAttributes winrmConnectionAttribute =
           (WinRmConnectionAttributes) settingsService.get(host.getWinrmConnAttr()).getValue();
-      commandExecutionContextBuilder.withWinRmConnectionAttributes(winrmConnectionAttribute);
-      commandExecutionContextBuilder.withWinrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
+      commandExecutionContextBuilder.winRmConnectionAttributes(winrmConnectionAttribute);
+      commandExecutionContextBuilder.winrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
           winrmConnectionAttribute, context.getAppId(), context.getWorkflowExecutionId()));
     }
   }
@@ -752,7 +752,7 @@ public class CommandState extends State {
           .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
           .withAppId(appId);
     } else {
-      if (this.getHost() == null) {
+      if (getHost() == null) {
         throw new ShellScriptException("Host cannot be empty", null, null, null);
       } else { // host can contain either ${instance.hostName} or some hostname/ip
         // take user provided value for host
@@ -775,7 +775,7 @@ public class CommandState extends State {
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
 
-          String hostName = context.renderExpression(this.getHost());
+          String hostName = context.renderExpression(getHost());
           host = Host.Builder.aHost()
                      .withHostName(hostName)
                      .withPublicDns(hostName)
@@ -808,7 +808,7 @@ public class CommandState extends State {
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
 
-          String hostName = context.renderExpression(this.getHost());
+          String hostName = context.renderExpression(getHost());
           host = Host.Builder.aHost()
                      .withHostName(hostName)
                      .withPublicDns(hostName)
@@ -828,7 +828,7 @@ public class CommandState extends State {
 
     String delegateTaskId;
     try {
-      Command command = getCommandFromTemplate(this.getTemplateUuid(), this.getTemplateVersion());
+      Command command = getCommandFromTemplate(getTemplateUuid(), getTemplateVersion());
       executionDataBuilder.withCommandName(command.getName());
 
       Application application = appService.get(appId);
@@ -866,35 +866,35 @@ public class CommandState extends State {
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
-              .withAppId(appId)
-              .withEnvId(envId)
-              .withBackupPath(backupPath)
-              .withRuntimePath(runtimePath)
-              .withStagingPath(stagingPath)
-              .withWindowsRuntimePath(windowsRuntimePath)
-              .withExecutionCredential(workflowStandardParams.getExecutionCredential())
-              .withServiceVariables(serviceVariables)
-              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-              .withServiceTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
-              .withAppContainer(service != null ? service.getAppContainer() : null)
-              .withHost(host)
-              .withAccountId(accountId)
-              .withTimeout(getTimeoutMillis())
-              .withExecuteOnDelegate(executeOnDelegate)
-              .withDeploymentType(deploymentType != null ? deploymentType.name() : null);
+              .appId(appId)
+              .envId(envId)
+              .backupPath(backupPath)
+              .runtimePath(runtimePath)
+              .stagingPath(stagingPath)
+              .windowsRuntimePath(windowsRuntimePath)
+              .executionCredential(workflowStandardParams.getExecutionCredential())
+              .serviceVariables(serviceVariables)
+              .safeDisplayServiceVariables(safeDisplayServiceVariables)
+              .serviceTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .appContainer(service != null ? service.getAppContainer() : null)
+              .host(host)
+              .accountId(accountId)
+              .timeout(getTimeoutMillis())
+              .executeOnDelegate(executeOnDelegate)
+              .deploymentType(deploymentType != null ? deploymentType.name() : null);
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
       }
 
-      String templateId = this.getTemplateUuid();
-      String templateVersion = this.getTemplateVersion();
+      String templateId = getTemplateUuid();
+      String templateVersion = getTemplateVersion();
       expandCommand(command, templateId, templateVersion, command.getName());
       Template template = templateService.get(templateId, templateVersion);
       if (template != null) {
         SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
         resolveTemplateVariablesInLinkedCommands(
-            command, sshCommandTemplate.getReferencedTemplateList(), this.getTemplateVariables());
+            command, sshCommandTemplate.getReferencedTemplateList(), getTemplateVariables());
       }
 
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -942,7 +942,7 @@ public class CommandState extends State {
           templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
       setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
       CommandExecutionContext commandExecutionContext =
-          commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
+          commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
 
       delegateTaskId = queueDelegateTask(
           activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
@@ -957,9 +957,9 @@ public class CommandState extends State {
   private void setPropertiesFromFeatureFlags(
       String accountId, CommandExecutionContext.Builder commandExecutionContextBuilder) {
     if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
-      commandExecutionContextBuilder.withInlineSshCommand(true);
+      commandExecutionContextBuilder.inlineSshCommand(true);
     }
-    commandExecutionContextBuilder.withMultiArtifact(
+    commandExecutionContextBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }
 
@@ -983,7 +983,7 @@ public class CommandState extends State {
   private Command getCommandFromTemplate(String templateId, String version) {
     Template template = templateService.get(templateId, version);
     Command commandEntity = aCommand().build();
-    if (this.getTemplateUuid() != null) {
+    if (getTemplateUuid() != null) {
       commandEntity.setTemplateVariables(getTemplateVariables());
     } else {
       commandEntity.setTemplateVariables(template.getVariables());
@@ -1227,7 +1227,7 @@ public class CommandState extends State {
 
   private Artifact findArtifact(String serviceId, ExecutionContext context) {
     if (isRollback()) {
-      final Artifact previousArtifact = serviceResourceService.findPreviousArtifact(
+      Artifact previousArtifact = serviceResourceService.findPreviousArtifact(
           context.getAppId(), context.getWorkflowExecutionId(), context.getContextElement(ContextElementType.INSTANCE));
       if (previousArtifact != null) {
         return previousArtifact;

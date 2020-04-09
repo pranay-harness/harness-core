@@ -70,7 +70,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                                                   .withResizeStrategy(ResizeStrategy.RESIZE_NEW_FIRST);
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext.Builder contextBuilder =
-      aCommandExecutionContext().withCloudProviderSetting(computeProvider).withCloudProviderCredentials(emptyList());
+      aCommandExecutionContext().cloudProviderSetting(computeProvider).cloudProviderCredentials(emptyList());
 
   @Before
   public void setup() {
@@ -110,7 +110,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                               .withInstanceUnitType(PERCENTAGE)
                                               .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParams).build();
     CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.FAILURE);
   }
@@ -292,7 +292,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                               .withMaxInstances(maxInstances)
                                               .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParams).build();
     CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
     ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
 
@@ -311,7 +311,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                               .withInstanceCount(1)
                                               .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParams).build();
     ContextData contextData = new ContextData(context);
     try {
       kubernetesResizeCommandUnit.postExecution(contextData, null, null);

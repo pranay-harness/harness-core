@@ -353,30 +353,30 @@ public class CommandStateTest extends WingsBaseTest {
                         .taskType(TaskType.COMMAND.name())
                         .parameters(new Object[] {COMMAND,
                             aCommandExecutionContext()
-                                .withAppId(APP_ID)
-                                .withBackupPath(BACKUP_PATH)
-                                .withRuntimePath(RUNTIME_PATH)
-                                .withStagingPath(STAGING_PATH)
-                                .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
-                                .withExecutionCredential(null)
-                                .withActivityId(ACTIVITY_ID)
-                                .withEnvId(ENV_ID)
-                                .withHost(HOST)
-                                .withServiceTemplateId(TEMPLATE_ID)
-                                .withHostConnectionAttributes(
+                                .appId(APP_ID)
+                                .backupPath(BACKUP_PATH)
+                                .runtimePath(RUNTIME_PATH)
+                                .stagingPath(STAGING_PATH)
+                                .windowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
+                                .executionCredential(null)
+                                .activityId(ACTIVITY_ID)
+                                .envId(ENV_ID)
+                                .host(HOST)
+                                .serviceTemplateId(TEMPLATE_ID)
+                                .hostConnectionAttributes(
                                     aSettingAttribute()
                                         .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
                                         .build())
-                                .withHostConnectionCredentials(Collections.emptyList())
-                                .withBastionConnectionAttributes(
+                                .hostConnectionCredentials(Collections.emptyList())
+                                .bastionConnectionAttributes(
                                     aSettingAttribute()
                                         .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
                                         .build())
-                                .withBastionConnectionCredentials(Collections.emptyList())
-                                .withServiceVariables(emptyMap())
-                                .withSafeDisplayServiceVariables(emptyMap())
-                                .withDeploymentType("ECS")
-                                .withAccountId(ACCOUNT_ID)
+                                .bastionConnectionCredentials(Collections.emptyList())
+                                .serviceVariables(emptyMap())
+                                .safeDisplayServiceVariables(emptyMap())
+                                .deploymentType("ECS")
+                                .accountId(ACCOUNT_ID)
                                 .build()})
                         .timeout(TimeUnit.MINUTES.toMillis(30))
                         .build())
@@ -469,14 +469,14 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
              aCommandExecutionContext()
-                 .withAppId(APP_ID)
-                 .withBackupPath(BACKUP_PATH)
-                 .withRuntimePath(RUNTIME_PATH)
-                 .withStagingPath(STAGING_PATH)
-                 .withExecutionCredential(null)
-                 .withActivityId(ACTIVITY_ID)
-                 .withArtifactStreamAttributes(artifactStreamAttributes)
-                 .withArtifactServerEncryptedDataDetails(new ArrayList<>())
+                 .appId(APP_ID)
+                 .backupPath(BACKUP_PATH)
+                 .runtimePath(RUNTIME_PATH)
+                 .stagingPath(STAGING_PATH)
+                 .executionCredential(null)
+                 .activityId(ACTIVITY_ID)
+                 .artifactStreamAttributes(artifactStreamAttributes)
+                 .artifactServerEncryptedDataDetails(new ArrayList<>())
                  .build()))
         .thenReturn(SUCCESS);
 
@@ -528,28 +528,28 @@ public class CommandStateTest extends WingsBaseTest {
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes, Command command) {
     CommandExecutionContext commandExecutionContext =
         aCommandExecutionContext()
-            .withAppId(APP_ID)
-            .withBackupPath(BACKUP_PATH)
-            .withRuntimePath(RUNTIME_PATH)
-            .withStagingPath(STAGING_PATH)
-            .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
-            .withExecutionCredential(null)
-            .withActivityId(ACTIVITY_ID)
-            .withEnvId(ENV_ID)
-            .withHost(HOST)
-            .withServiceTemplateId(TEMPLATE_ID)
-            .withServiceVariables(emptyMap())
-            .withHostConnectionAttributes(
+            .appId(APP_ID)
+            .backupPath(BACKUP_PATH)
+            .runtimePath(RUNTIME_PATH)
+            .stagingPath(STAGING_PATH)
+            .windowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
+            .executionCredential(null)
+            .activityId(ACTIVITY_ID)
+            .envId(ENV_ID)
+            .host(HOST)
+            .serviceTemplateId(TEMPLATE_ID)
+            .serviceVariables(emptyMap())
+            .hostConnectionAttributes(
                 aSettingAttribute().withValue(Builder.aHostConnectionAttributes().build()).build())
-            .withHostConnectionCredentials(Collections.emptyList())
-            .withBastionConnectionAttributes(
+            .hostConnectionCredentials(Collections.emptyList())
+            .bastionConnectionAttributes(
                 aSettingAttribute().withValue(Builder.aHostConnectionAttributes().build()).build())
-            .withBastionConnectionCredentials(Collections.emptyList())
-            .withSafeDisplayServiceVariables(emptyMap())
-            .withDeploymentType("ECS")
-            .withAccountId(ACCOUNT_ID)
-            .withArtifactStreamAttributes(artifactStreamAttributes)
-            .withArtifactServerEncryptedDataDetails(new ArrayList<>())
+            .bastionConnectionCredentials(Collections.emptyList())
+            .safeDisplayServiceVariables(emptyMap())
+            .deploymentType("ECS")
+            .accountId(ACCOUNT_ID)
+            .artifactStreamAttributes(artifactStreamAttributes)
+            .artifactServerEncryptedDataDetails(new ArrayList<>())
             .build();
     DelegateTaskBuilder builder = DelegateTask.builder()
                                       .appId(APP_ID)
@@ -689,7 +689,7 @@ public class CommandStateTest extends WingsBaseTest {
     on(commandState).set("templateUtils", templateUtils);
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
-    final Command command = createCommand();
+    Command command = createCommand();
     testRenderCommandString(commandState, commandStateExecutionData, command);
   }
 
@@ -743,7 +743,7 @@ public class CommandStateTest extends WingsBaseTest {
     }
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().withTemplateVariable(stateVariables).build();
-    final Command command = createCommand();
+    Command command = createCommand();
     testRenderCommandString(commandState, commandStateExecutionData, command);
   }
 
@@ -775,7 +775,7 @@ public class CommandStateTest extends WingsBaseTest {
     }
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().withTemplateVariable(stateVariables).build();
-    final Command command =
+    Command command =
         aCommand()
             .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
             .addCommandUnits(aCommand()
@@ -795,7 +795,7 @@ public class CommandStateTest extends WingsBaseTest {
     on(commandState).set("templateUtils", templateUtils);
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
-    final Command command = createCommand();
+    Command command = createCommand();
     testRenderCommandStringWithoutArtifact(commandState, commandStateExecutionData, command);
   }
 

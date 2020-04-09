@@ -273,100 +273,100 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForAmazonS3)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
+                                           .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3ContextFolder =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForAmazonS3)
-                                           .withMetadata(mockMetadataForS3Folder())
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
+                                           .metadata(mockMetadataForS3Folder())
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   private ShellCommandExecutionContext artifactoryContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForArtifactory)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(artifactStreamAttributesForArtifactory)
+                                           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext artifactoryContextAnon =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(streamAttributesAnon)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(streamAttributesAnon)
+                                           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext azureArtifactsContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
+                                           .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMaven =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(nexus2MavenStreamAttributes)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(nexus2MavenStreamAttributes)
+                                           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMavenAnon =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(nexus2MavenStreamAttributesAnon)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.NEXUS))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(nexus2MavenStreamAttributesAnon)
+                                           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext bambooContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(bambooStreamAttributes)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.BAMBOO))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(bambooStreamAttributes)
+                                           .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext jenkinsContext =
       new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .withArtifactStreamAttributes(jenkinsArtifactStreamAttributes)
-                                           .withMetadata(mockMetadata(ArtifactStreamType.JENKINS))
-                                           .withHostConnectionAttributes(hostConnectionAttributes)
-                                           .withAppId(WingsTestConstants.APP_ID)
-                                           .withActivityId(ACTIVITY_ID)
-                                           .withHost(host)
+                                           .artifactStreamAttributes(jenkinsArtifactStreamAttributes)
+                                           .metadata(mockMetadata(ArtifactStreamType.JENKINS))
+                                           .hostConnectionAttributes(hostConnectionAttributes)
+                                           .appId(WingsTestConstants.APP_ID)
+                                           .activityId(ACTIVITY_ID)
+                                           .host(host)
                                            .build());
 
   @Test
