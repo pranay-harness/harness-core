@@ -29,6 +29,7 @@
         <module>79-verification</module>
         <module>81-delegate</module>
         <module>82-watcher</module>
+        <module>72-ci-manager</module>
         <module>85-functional-test</module>
         <module>89-migration-job</module>
         <module>91-model-gen-tool</module>
