@@ -33,6 +33,8 @@ portal-gc-logs.gc
 portal.log
 event-server*.log
 batch-processing*.log
+ci-manager*.log
+delegate.log
 python/**/*-checkpoint.ipynb
 python/**/*.pyc
 python/**/.pyenv
