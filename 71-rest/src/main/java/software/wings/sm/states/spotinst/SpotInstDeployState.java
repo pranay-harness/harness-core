@@ -9,6 +9,7 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNI
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -119,6 +120,7 @@ public class SpotInstDeployState extends State {
 
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
+    notNullCheck("Env cant be null", env);
 
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
@@ -183,7 +185,8 @@ public class SpotInstDeployState extends State {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping, ExecutionContext context, Application app) {
     // Calculate upsize and downsize counts
     Integer upsizeUpdateCount = getUpsizeUpdateCount(spotInstSetupContextElement);
-    Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, spotInstSetupContextElement);
+    Integer downsizeUpdateCount =
+        getDownsizeUpdateCount(upsizeUpdateCount, spotInstSetupContextElement, context.getOrchestrationWorkflowType());
 
     // Generate DeployStateExecutionData
     SpotInstDeployStateExecutionData stateExecutionData =
@@ -364,11 +367,18 @@ public class SpotInstDeployState extends State {
   }
 
   @VisibleForTesting
-  protected Integer getDownsizeUpdateCount(Integer updateCount, SpotInstSetupContextElement setupContextElement) {
+  protected Integer getDownsizeUpdateCount(Integer updateCount, SpotInstSetupContextElement setupContextElement,
+      OrchestrationWorkflowType orchestrationWorkflowType) {
     ElastiGroup oldElastigroup = setupContextElement.getOldElastiGroupOriginalConfig();
     if (oldElastigroup == null) {
       return null;
     }
+
+    // for BG, we maintain capacity for existing elastiGroup, n
+    if (OrchestrationWorkflowType.BLUE_GREEN == orchestrationWorkflowType) {
+      return oldElastigroup.getCapacity().getTarget();
+    }
+
     int oldElastigroupTargetAtStart = oldElastigroup.getCapacity().getTarget();
     if (downsizeInstanceCount == null) {
       return Math.max(0, oldElastigroupTargetAtStart - updateCount);
