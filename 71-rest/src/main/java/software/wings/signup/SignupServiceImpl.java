@@ -178,7 +178,7 @@ public class SignupServiceImpl implements SignupService {
     templateModel.put("url", resetPasswordUrl);
     templateModel.put("name", userInvite.getName());
     templateModel.put("companyName", userInvite.getCompanyName());
-    List<String> toList = new ArrayList();
+    List<String> toList = new ArrayList<>();
     toList.add(userInvite.getEmail());
     EmailData emailData =
         EmailData.builder().to(toList).templateName(resetPasswordTemplateName).templateModel(templateModel).build();

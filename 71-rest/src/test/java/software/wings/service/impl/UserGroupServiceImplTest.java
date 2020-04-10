@@ -36,7 +36,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.TEMPLAT
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 import static software.wings.security.UserThreadLocal.userGuard;
-import static software.wings.service.impl.UserServiceImpl.ADD_GROUP_EMAIL_TEMPLATE_NAME;
+import static software.wings.service.impl.UserServiceImpl.ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -439,10 +439,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       assertThat(userGroup3.getMemberIds()).containsExactly(savedUser.getUuid());
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       emailsData = emailDataArgumentCaptor.getAllValues();
-      assertThat(emailsData.stream()
-                     .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
-                     .collect(toList())
-                     .size()
+      assertThat(
+          emailsData.stream()
+              .filter(emailData -> emailData.getTemplateName().equals(ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME))
+              .collect(toList())
+              .size()
           == 1)
           .isFalse();
     }
@@ -549,7 +550,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
       assertThat(2).isNotEqualTo(
           emailsData.stream()
-              .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
+              .filter(emailData -> emailData.getTemplateName().equals(ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME))
               .collect(toList())
               .size());
     }
