@@ -19,7 +19,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -280,12 +279,6 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     SettingAttribute settingAttribute = getSettingAttribute(analysisServerConfigId);
 
-    if (!validateFields().isEmpty()) {
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "ApplicationId : " + applicationId + " and TierId : " + tierId
-                  + " in AppDynamics setup must be valid numbers");
-    }
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
 
     List<AppdynamicsTier> dependentTiers = new ArrayList<>();

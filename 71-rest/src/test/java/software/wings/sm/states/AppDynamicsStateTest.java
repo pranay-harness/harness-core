@@ -23,6 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -31,16 +32,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -51,18 +55,23 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
+import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -71,6 +80,7 @@ import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState.AppDynamicsStateKeys;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -92,6 +102,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
   @Mock private AppdynamicsService appdynamicsService;
   @Mock private PhaseElement phaseElement;
+  @Mock private DelegateService delegateService;
 
   private AppDynamicsState appDynamicsState;
   private String infraMappingId;
@@ -472,7 +483,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAllTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -672,6 +683,124 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("No app found");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollectionExpression_whenOnlyConnectorTemplatized() throws IOException {
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl("appd-url")
+                                              .username("appd-user")
+                                              .password("appd-pwd".toCharArray())
+                                              .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("appd-config")
+                                            .withValue(appDynamicsConfig)
+                                            .build();
+    final String appdConfigId = wingsPersistence.save(settingAttribute);
+    appDynamicsState.setApplicationId("${appd.application}");
+    appDynamicsState.setTierId("${appd.tier}");
+
+    when(executionContext.renderExpression("${appd.application}")).thenReturn("appd-application");
+    when(executionContext.renderExpression("${appd.tier}")).thenReturn("appd-tier");
+    AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
+    when(appdynamicsService.getAppDynamicsApplicationByName(appdConfigId, "appd-application"))
+        .thenReturn(applicationId);
+    when(appdynamicsService.getTierByName(
+             eq(appdConfigId), eq(applicationId), eq("appd-tier"), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(tierId);
+    when(appdynamicsService.getTiers(
+             eq(appdConfigId), eq(Long.parseLong(applicationId)), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(Long.parseLong(tierId)).build()));
+
+    doReturn(asList(TemplateExpression.builder()
+                        .fieldName("analysisServerConfigId")
+                        .expression("${AppDynamics_Server}")
+                        .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                        .build()))
+        .when(spyAppDynamicsState)
+        .getTemplateExpressions();
+
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+
+    spyAppDynamicsState.triggerAnalysisDataCollection(executionContext, AnalysisContext.builder().build(),
+        VerificationStateAnalysisExecutionData.builder().build(), Collections.singletonMap("host", "groupName"));
+    ArgumentCaptor<DelegateTask> argument = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(argument.capture());
+    TaskData taskData = argument.getValue().getData();
+    Object parameters[] = taskData.getParameters();
+    assertThat(1).isEqualTo(parameters.length);
+    assertThat(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name()).isEqualTo(taskData.getTaskType());
+    AppdynamicsDataCollectionInfo appdynamicsDataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters[0];
+    assertThat(appdynamicsDataCollectionInfo.getAppDynamicsConfig().getUsername())
+        .isEqualTo(appDynamicsConfig.getUsername());
+    assertThat(appdynamicsDataCollectionInfo.getAppId()).isEqualTo(Long.parseLong(applicationId));
+    assertThat(appdynamicsDataCollectionInfo.getTierId()).isEqualTo(Long.parseLong(tierId));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testTriggerAnalysisDataCollectionExpression_whenConnectorAndApplicationTemplatized() throws IOException {
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl("appd-url")
+                                              .username("appd-user")
+                                              .password("appd-pwd".toCharArray())
+                                              .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("appd-config")
+                                            .withValue(appDynamicsConfig)
+                                            .build();
+    final String appdConfigId = wingsPersistence.save(settingAttribute);
+    appDynamicsState.setTierId("${appd.tier}");
+
+    when(executionContext.renderExpression("${appd.tier}")).thenReturn("appd-tier");
+    AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
+    when(appdynamicsService.getAppDynamicsApplicationByName(appdConfigId, "appd-application"))
+        .thenReturn(applicationId);
+    when(appdynamicsService.getTierByName(
+             eq(appdConfigId), eq(applicationId), eq("appd-tier"), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(tierId);
+    when(appdynamicsService.getTiers(
+             eq(appdConfigId), eq(Long.parseLong(applicationId)), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(Long.parseLong(tierId)).build()));
+
+    doReturn(asList(TemplateExpression.builder()
+                        .fieldName("analysisServerConfigId")
+                        .expression("${AppDynamics_Server}")
+                        .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                        .build(),
+                 TemplateExpression.builder()
+                     .fieldName("applicationId")
+                     .expression("${AppDynamics_App}")
+                     .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+                     .build()))
+        .when(spyAppDynamicsState)
+        .getTemplateExpressions();
+
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("appd-application");
+
+    spyAppDynamicsState.triggerAnalysisDataCollection(executionContext, AnalysisContext.builder().build(),
+        VerificationStateAnalysisExecutionData.builder().build(), Collections.singletonMap("host", "groupName"));
+    ArgumentCaptor<DelegateTask> argument = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(argument.capture());
+    TaskData taskData = argument.getValue().getData();
+    Object parameters[] = taskData.getParameters();
+    assertThat(1).isEqualTo(parameters.length);
+    assertThat(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name()).isEqualTo(taskData.getTaskType());
+    AppdynamicsDataCollectionInfo appdynamicsDataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters[0];
+    assertThat(appdynamicsDataCollectionInfo.getAppDynamicsConfig().getUsername())
+        .isEqualTo(appDynamicsConfig.getUsername());
+    assertThat(appdynamicsDataCollectionInfo.getAppId()).isEqualTo(Long.parseLong(applicationId));
+    assertThat(appdynamicsDataCollectionInfo.getTierId()).isEqualTo(Long.parseLong(tierId));
   }
 
   @Test
