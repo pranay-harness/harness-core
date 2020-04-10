@@ -620,6 +620,8 @@ public class UserServiceImpl implements UserService {
     model.put("name", user.getName());
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
+    model.put(
+        "subject", "You have been invited to the " + account.getCompanyName().toUpperCase() + " account at Harness");
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
     model.put("message", "You have been added to Harness Account: " + account.getAccountName());
@@ -1064,6 +1066,8 @@ public class UserServiceImpl implements UserService {
     model.put("name", user.getName());
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
+    model.put(
+        "subject", "You have been assigned new user groups in " + account.getCompanyName().toUpperCase() + " account");
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
     model.put("message", "You have been assigned new user groups: " + String.join(",", userGroupNamesList));

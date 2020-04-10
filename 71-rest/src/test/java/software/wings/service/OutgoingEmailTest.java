@@ -41,7 +41,6 @@ public class OutgoingEmailTest extends CategoryTest {
 
     verifyMailForAction(cfg, emailData, "invite");
     verifyMailForAction(cfg, emailData, "add_account");
-    verifyMailForAction(cfg, emailData, "add_group");
     verifyMailForAction(cfg, emailData, "reset_password");
     verifyMailForAction(cfg, emailData, "signup");
     verifyMailForAction(cfg, emailData, "reset_2fa");
