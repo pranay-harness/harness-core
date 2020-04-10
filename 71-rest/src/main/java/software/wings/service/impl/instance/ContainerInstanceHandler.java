@@ -761,7 +761,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       return ((EcsContainerInfo) containerInfo).getServiceName();
     }
     if (containerInfo instanceof K8sPodInfo) {
-      return "";
+      return null;
     } else {
       throw WingsException.builder()
           .message("Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName())
