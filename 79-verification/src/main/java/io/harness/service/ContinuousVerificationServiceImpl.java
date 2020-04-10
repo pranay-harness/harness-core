@@ -16,6 +16,7 @@ import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 import static software.wings.common.VerificationConstants.IS_EXPERIMENTAL;
+import static software.wings.common.VerificationConstants.SERVICE_GUARD_ANALYSIS_WINDOW_MINS;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
@@ -604,7 +605,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return logsCVConfiguration.getBaselineStartMinute();
     } else if (maxCvCollectionMinute == logsCVConfiguration.getBaselineEndMinute()) {
       // if baselineEnd is within the past 2 hours, then just continue to nextMinute. Else start from 2 hours ago.
-      if (!isBeforeTwoHours(logsCVConfiguration.getBaselineEndMinute())) {
+      if (!isBeforeTwoHours(logsCVConfiguration.getBaselineEndMinute(), false)) {
         logger.info("For {} baselineEnd was within the past 2 hours, continuing to the next minute {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
@@ -623,7 +624,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             "We are still collecting in the baseline window. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
-      } else if (!isBeforeTwoHours(maxCvCollectionMinute)) {
+      } else if (!isBeforeTwoHours(maxCvCollectionMinute, false)) {
         logger.info("All is as expected. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
@@ -653,9 +654,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return expectedStart;
   }
 
-  private boolean isBeforeTwoHours(long minuteToCheck) {
+  private boolean isBeforeTwoHours(long minuteToCheck, boolean includeBuffer) {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    return minuteToCheck + PREDECTIVE_HISTORY_MINUTES < currentMinute;
+    long boundaryMinute =
+        minuteToCheck + PREDECTIVE_HISTORY_MINUTES + (includeBuffer ? SERVICE_GUARD_ANALYSIS_WINDOW_MINS * 2 : 0);
+    return boundaryMinute < currentMinute;
   }
 
   @Override
@@ -832,7 +835,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   "For account {} and CV config {} name {} type {} We are currently doing L1 clustering in the baseline window.",
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                   cvConfiguration.getStateType());
-            } else if (isBeforeTwoHours(lastCVDataCollectionMinute) || isBeforeTwoHours(maxLogRecordMinute)) {
+            } else if (isBeforeTwoHours(lastCVDataCollectionMinute, true)
+                || isBeforeTwoHours(maxLogRecordMinute, false)) {
               logger.info(
                   "For account {} and CV config {} name {} type {} There has been no new data in the past 2 hours. Skipping L1 clustering",
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
@@ -840,7 +844,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               return;
             }
 
-            if (isBeforeTwoHours(minLogRecordMinute)) {
+            if (isBeforeTwoHours(minLogRecordMinute, false)) {
               if (minLogRecordMinute >= logsCVConfiguration.getBaselineStartMinute()
                   && minLogRecordMinute <= logsCVConfiguration.getBaselineEndMinute()) {
                 logger.info("For {} MinLogRecord minute is {} and it is within the baseline window",
@@ -1009,7 +1013,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       if (l2MinInBoundary >= logsCVConfiguration.getBaselineStartMinute()
           && l2MinInBoundary <= logsCVConfiguration.getBaselineEndMinute()) {
         logger.info("The returned L2minute is {} and it is within the baseline window", l2MinInBoundary);
-      } else if (isBeforeTwoHours(l2MinInBoundary)) {
+      } else if (isBeforeTwoHours(l2MinInBoundary, true)) {
         l2MinInBoundary = getFirstAnalysisMinuteInThePast2Hours(logsCVConfiguration, l2MinInBoundary);
       }
 
@@ -1434,7 +1438,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         long analysisEnd = lastCVAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
         analysisEndMinute = Optional.of(analysisEnd);
       } else {
-        if (isBeforeTwoHours(lastCVAnalysisMinute)) {
+        if (isBeforeTwoHours(lastCVAnalysisMinute, true)) {
           logger.info("The last analysis for {} was more than 2 hours ago. We are going to figure out the next minute",
               logsCVConfiguration.getUuid());
           // There are 2 possibilities here. One - The last analysisMin is the baselineEndMinute.
