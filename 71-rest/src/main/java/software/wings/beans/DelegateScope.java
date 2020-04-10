@@ -36,7 +36,9 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "DelegateScopeKeys")
 @Entity(value = "delegateScopes", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Indexes(@Index(options = @IndexOptions(name = "uniqueName", unique = true),
+// TODO: we should enforce name uniqueness, if we would like to use scopes long term, for the time being
+//       drop the uniqueness until we figure out what is the plan
+@Indexes(@Index(options = @IndexOptions(name = "uniqueName" /*, unique = true*/),
     fields = { @Field(value = DelegateScopeKeys.accountId)
                , @Field(value = DelegateScopeKeys.name) }))
 public class DelegateScope
