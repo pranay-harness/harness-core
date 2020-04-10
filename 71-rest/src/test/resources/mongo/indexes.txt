@@ -135,7 +135,7 @@ delegateConnections { "name" : "validUntil_1" , "background" : true , "expireAft
 delegateProfiles { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 delegateProfiles { "name" : "uniqueName" , "unique" : true} { "accountId" : 1 , "name" : 1}
 delegateScopes { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-delegateScopes { "name" : "uniqueName" , "unique" : true} { "accountId" : 1 , "name" : 1}
+delegateScopes { "name" : "uniqueName" , "background" : true} { "accountId" : 1 , "name" : 1}
 delegateSequenceConfig { "name" : "appId_1" , "background" : true} { "appId" : 1}
 delegateSequenceConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 delegateSequenceConfig { "name" : "uniqueDelegateSequenceIdx" , "unique" : true} { "accountId" : 1 , "hostName" : 1 , "sequenceNum" : 1}
