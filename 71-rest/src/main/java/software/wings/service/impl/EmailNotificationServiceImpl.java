@@ -71,11 +71,10 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       sendEmailNotSentAlert(emailData);
     } else if (isDefaultSMTPConfigValid) {
       mailSentSuccessFully = true;
-      if (!sendMail(defaultSMTPConfig, emailData)) {
-        if (!isFallBackSMTPConfigValid || !sendMail(fallBackSMTPConfig, emailData)) {
-          sendEmailNotSentAlert(emailData);
-          mailSentSuccessFully = false;
-        }
+      if (!sendMail(defaultSMTPConfig, emailData)
+          && (!isFallBackSMTPConfigValid || !sendMail(fallBackSMTPConfig, emailData))) {
+        sendEmailNotSentAlert(emailData);
+        mailSentSuccessFully = false;
       }
     } else if (isFallBackSMTPConfigValid) {
       mailSentSuccessFully = sendMail(fallBackSMTPConfig, emailData);

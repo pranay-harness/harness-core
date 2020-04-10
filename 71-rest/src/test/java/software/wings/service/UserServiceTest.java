@@ -18,9 +18,12 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -183,21 +186,21 @@ public class UserServiceTest extends WingsBaseTest {
    * The Update operations.
    */
   @Mock UpdateOperations<User> updateOperations;
+
   /**
    * The Query.
    */
   @Mock Query<User> query;
+
   /**
    * The End.
    */
   @Mock FieldEnd end;
+
   /**
    * The Verification query.
    */
   @Mock Query<EmailVerificationToken> verificationQuery;
-  /**
-   * The Verification query end.
-   */
 
   /**
    * The User invite query.
@@ -226,6 +229,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AuthenticationUtils authenticationUtils;
   @Mock private TOTPAuthHandler totpAuthHandler;
   @Mock private SSOSettingService ssoSettingService;
+
   @Spy @InjectMocks private SignupServiceImpl signupService;
 
   /**
@@ -246,7 +250,9 @@ public class UserServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(configuration.getSupportEmail()).thenReturn(SUPPORT_EMAIL);
-    doNothing().when(userServiceLimitChecker).limitCheck(Mockito.anyString(), Mockito.anyList(), Mockito.anySet());
+    doNothing()
+        .when(userServiceLimitChecker)
+        .limitCheck(Mockito.anyString(), anyListOf(User.class), anySetOf(String.class));
     when(cacheManager.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
@@ -267,6 +273,41 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(true);
     when(totpAuthHandler.generateOtpUrl(any(), any(), any())).thenReturn(StringUtils.EMPTY);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSendUserInvitationToOnlySsoAccountMail() {
+    Account account = anAccount()
+                          .withUuid(generateUuid())
+                          .withAccountName("account_name")
+                          .withCompanyName("company_name")
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .withAppId(generateUuid())
+                          .build();
+
+    User user = anUser()
+                    .uuid(generateUuid())
+                    .appId(generateUuid())
+                    .defaultAccountId(account.getUuid())
+                    .email("useremail@harness.io")
+                    .name("user_name")
+                    .build();
+
+    UserInvite userInvite = anUserInvite()
+                                .withGivenName("given-name")
+                                .withName("user_name")
+                                .withAccountId(account.getUuid())
+                                .withUuid(generateUuid())
+                                .withEmail("useremail@harness.io")
+                                .build();
+
+    when(emailDataNotificationService.send(any(EmailData.class))).thenReturn(true);
+    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn("base_url");
+
+    userService.sendUserInvitationToOnlySsoAccountMail(userInvite, account, user);
+    verify(emailDataNotificationService, atLeastOnce()).send(any(EmailData.class));
   }
 
   @Test
@@ -814,6 +855,9 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(emailDataNotificationService, times(2)).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
+    verify(auditServiceHelper, atLeastOnce())
+        .reportForAuditingUsingAccountId(
+            eq(userInvite.getAccountId()), eq(null), any(UserInvite.class), any(Type.class));
   }
 
   /**
@@ -874,6 +918,9 @@ public class UserServiceTest extends WingsBaseTest {
 
     try {
       userService.inviteUsers(userInvite);
+      verify(auditServiceHelper, atLeastOnce())
+          .reportForAuditingUsingAccountId(
+              eq(userInvite.getAccountId()), eq(null), any(UserInvite.class), any(Type.class));
       fail("Exception is expected when inviting with invalid user email");
     } catch (WingsException e) {
       // Ignore, exception expected here.
@@ -1169,7 +1216,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should resend the invitation email
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void resendInvitationEmail() {
     User user = userBuilder.uuid(USER_ID)
@@ -1278,5 +1325,30 @@ public class UserServiceTest extends WingsBaseTest {
     verify(authService, times(1)).invalidateToken(user.getToken());
 
     wingsPersistence.delete(user);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testSendAccountLockedNotificationMail() {
+    String token = "token";
+    String userName = "user_name";
+
+    Account account = getAccount(AccountType.PAID);
+    account.setUuid("accountId");
+
+    User user = anUser()
+                    .name(userName)
+                    .appId(generateUuid())
+                    .defaultAccountId(account.getUuid())
+                    .token(token)
+                    .accounts(Arrays.asList(account))
+                    .email("emailId")
+                    .emailVerified(true)
+                    .uuid("userId")
+                    .build();
+
+    userService.sendAccountLockedNotificationMail(user, 2);
+    verify(emailDataNotificationService, times(1)).send(any(EmailData.class));
   }
 }

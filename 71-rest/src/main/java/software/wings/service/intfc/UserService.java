@@ -275,6 +275,14 @@ public interface UserService extends OwnedByAccount {
   void sendNewInvitationMail(UserInvite userInvite, Account account, User user);
 
   /**
+   * Send login invitation email
+   *
+   * @param userInvite  user invite
+   * @param account     account
+   */
+  void sendUserInvitationToOnlySsoAccountMail(UserInvite userInvite, Account account, User user);
+
+  /**
    * Send added new role email
    *
    * @param user        user

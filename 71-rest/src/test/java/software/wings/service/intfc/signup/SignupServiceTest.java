@@ -1,6 +1,7 @@
 package software.wings.service.intfc.signup;
 
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -20,6 +21,28 @@ public class SignupServiceTest extends WingsBaseTest {
   public static final String EMAIL = "test@harness.io";
   @Inject SignupService signupService;
   @Inject UserService userService;
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testInvalidEmail() {
+    try {
+      signupService.checkIfEmailIsValid("abc@example.com");
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testInvalidEmailNegative() {
+    try {
+      signupService.checkIfEmailIsValid("example");
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+    }
+  }
 
   @Test
   @Owner(developers = AMAN)
