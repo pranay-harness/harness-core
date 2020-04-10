@@ -1448,13 +1448,13 @@ public class DelegateServiceImpl implements DelegateService {
         .ifPresent(future -> future.cancel(true));
     currentlyValidatingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     currentlyValidatingFutures.remove(delegateTaskEvent.getDelegateTaskId());
-    logger.info("Removed {} from validating futures on abort", delegateTaskEvent.getDelegateTaskId());
+    logger.info("Removed from validating futures on abort");
 
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
     currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
     if (currentlyExecutingFutures.remove(delegateTaskEvent.getDelegateTaskId()) != null) {
-      logger.info("Removed {} from executing futures on abort", delegateTaskEvent.getDelegateTaskId());
+      logger.info("Removed from executing futures on abort");
     }
   }
 
@@ -1463,13 +1463,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (!acquireTasks.get()) {
-      logger.info(
-          "[Old] Upgraded process is running. Won't acquire task {} while completing other tasks", delegateTaskId);
+      logger.info("[Old] Upgraded process is running. Won't acquire task while completing other tasks");
       return;
     }
 
     if (upgradePending.get() && !delegateTaskEvent.isSync()) {
-      logger.info("[Old] Upgrade pending, won't acquire async task {}", delegateTaskId);
+      logger.info("[Old] Upgrade pending, won't acquire async task");
       return;
     }
 
@@ -1489,13 +1488,12 @@ public class DelegateServiceImpl implements DelegateService {
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
-      logger.info("Try to acquire DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
+      logger.info("Try to acquire DelegateTask - accountId: {}", accountId);
 
       DelegateTaskPackage delegateTaskPackage =
           execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getDelegateTask() == null) {
-        logger.info(
-            "DelegateTask not available - uuid: {}, accountId: {}", delegateTaskId, delegateTaskEvent.getAccountId());
+        logger.info("DelegateTask not available - accountId: {}", delegateTaskEvent.getAccountId());
         return;
       }
 
@@ -1545,12 +1543,12 @@ public class DelegateServiceImpl implements DelegateService {
         }
 
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
-        logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
+        logger.info("Task submitted for validation");
 
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         applyDelegateSecretFunctor(delegateTaskPackage);
         // Whitelisted. Proceed immediately.
-        logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
+        logger.info("Delegate {} whitelisted for task and accountId: {}", delegateId, accountId);
         executeTask(delegateTaskPackage);
       }
     } catch (IOException e) {
@@ -1621,38 +1619,38 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       currentlyValidatingTasks.remove(taskId);
       currentlyValidatingFutures.remove(taskId);
-      logger.info("Removed {} from validating futures on post validation", taskId);
+      logger.info("Removed from validating futures on post validation");
       List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
-      logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
+      logger.info("Validation {} for task", validated ? "succeeded" : "failed");
       try {
         DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
             delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
 
         if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
             && delegateId.equals(delegateTaskPackage.getDelegateTask().getDelegateId())) {
-          logger.info("Got the go-ahead to proceed for task {}.", taskId);
+          logger.info("Got the go-ahead to proceed for task.");
           applyDelegateSecretFunctor(delegateTaskPackage);
           executeTask(delegateTaskPackage);
         } else {
-          logger.info("Did not get the go-ahead to proceed for task {}", taskId);
+          logger.info("Did not get the go-ahead to proceed for task");
           if (validated) {
-            logger.info("Task {} validated but was not assigned", taskId);
+            logger.info("Task validated but was not assigned");
           } else {
             int delay = POLL_INTERVAL_SECONDS + 3;
-            logger.info("Waiting {} seconds to give other delegates a chance to validate task {}", delay, taskId);
+            logger.info("Waiting {} seconds to give other delegates a chance to validate task", delay);
             sleep(ofSeconds(delay));
             try {
-              logger.info("Manager check whether to fail task {}", taskId);
+              logger.info("Manager check whether to fail task");
               execute(
                   managerClient.failIfAllDelegatesFailed(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
             } catch (IOException e) {
-              logger.error("Unable to tell manager to check whether to fail for task {}", taskId, e);
+              logger.error("Unable to tell manager to check whether to fail for task", e);
             }
           }
         }
       } catch (IOException e) {
-        logger.error("Unable to report validation results. Task {}", taskId, e);
+        logger.error("Unable to report validation results for task", e);
       }
     };
   }
@@ -1661,11 +1659,10 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
 
     if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-      logger.info("Already executing task {}", delegateTask.getUuid());
+      logger.info("Already executing task");
       return;
     }
-    logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
-        delegateTask.getData().getTaskType());
+    logger.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, delegateTask.getData().getTaskType());
     Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTaskPackage);
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
@@ -1678,13 +1675,12 @@ public class DelegateServiceImpl implements DelegateService {
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = selectExecutorService(delegateTask);
     Future taskFuture = executorService.submit(delegateRunnableTask);
-    logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
-        taskFuture.isCancelled());
+    logger.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
     timeoutEnforcement.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
-    logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
+    logger.info("Task submitted for execution");
   }
 
   private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTaskPackage delegateTaskPackage) {
@@ -1771,9 +1767,9 @@ public class DelegateServiceImpl implements DelegateService {
   private Supplier<Boolean> getPreExecutionFunction(
       @NotNull DelegateTaskPackage delegateTaskPackage, LogSanitizer sanitizer) {
     return () -> {
-      logger.info("Starting pre-execution for task {}", delegateTaskPackage.getDelegateTaskId());
+      logger.info("Starting pre-execution for task");
       if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
-        logger.info("Adding task {} to executing tasks", delegateTaskPackage.getDelegateTaskId());
+        logger.info("Adding task to executing tasks");
         currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxExecutingTasksCount, currentlyExecutingTasks.size());
         if (sanitizer != null) {
@@ -1781,7 +1777,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         return true;
       } else {
-        logger.info("Task {} is already being executed", delegateTaskPackage.getDelegateTaskId());
+        logger.info("Task is already being executed");
         return false;
       }
     };
@@ -1795,7 +1791,7 @@ public class DelegateServiceImpl implements DelegateService {
     return taskResponse -> {
       Response<ResponseBody> response = null;
       try {
-        logger.info("Sending response for task {} to manager", taskId);
+        logger.info("Sending response for task to manager");
         response = timeLimiter.callWithTimeout(() -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
@@ -1822,7 +1818,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
-          logger.info("Removed {} from executing futures on post execution", taskId);
+          logger.info("Removed from executing futures on post execution");
         }
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
@@ -2089,7 +2085,7 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
     if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
         && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
-      logger.info("Applying DelegateExpression Evaluator for delegateTask {}", delegateTask.getUuid());
+      logger.info("Applying DelegateExpression Evaluator for delegateTask");
       ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
           value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
