@@ -3334,6 +3334,63 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task).isNull();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysis_within2hourWindowWithBuffer() throws Exception {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfigurationKeys.stateType, StateType.SUMO)
+                                     .get();
+
+    LogsCVConfiguration logConfig = (LogsCVConfiguration) sumoConfig;
+    logConfig.setBaselineStartMinute(getFlooredTime(currentMinute - 300, 0, true));
+    logConfig.setBaselineEndMinute(getFlooredTime(currentMinute - 270, 0, true));
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Arrays.asList(sumoConfig));
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
+        .thenReturn(managerFeatureFlagCall);
+
+    LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                             .cvConfigId(sumoConfig.getUuid())
+                                             .accountId(accountId)
+                                             .logCollectionMinute((int) logConfig.getBaselineEndMinute() + 150)
+                                             .build();
+    analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(analysisRecord);
+
+    // save some L2 records
+    for (long time = logConfig.getBaselineEndMinute() + 1; time < currentMinute; time++) {
+      LogDataRecord record = LogDataRecord.builder()
+                                 .cvConfigId(sumoConfig.getUuid())
+                                 .clusterLevel(ClusterLevel.L2)
+                                 .logCollectionMinute(time)
+                                 .build();
+
+      LogDataRecord record2 = LogDataRecord.builder()
+                                  .cvConfigId(sumoConfig.getUuid())
+                                  .clusterLevel(ClusterLevel.H2)
+                                  .logCollectionMinute(time)
+                                  .build();
+      wingsPersistence.save(Arrays.asList(record, record2));
+    }
+
+    continuousVerificationService.triggerLogDataAnalysis(accountId);
+
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getAnalysis_minute()).isEqualTo(analysisRecord.getLogCollectionMinute() + 15);
+    assertThat(task.getTest_input_url()).isNotNull();
+    assertThat(task.getPriority()).isEqualTo(1);
+  }
+
   private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
     int tryCount = 0;
     long numOfAlerts;
