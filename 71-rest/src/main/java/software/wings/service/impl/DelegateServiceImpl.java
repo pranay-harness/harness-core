@@ -2053,7 +2053,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
-      DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder().delegateTask(delegateTask);
+      DelegateTaskPackageBuilder delegateTaskPackageBuilder =
+          DelegateTaskPackage.builder().delegateTaskId(delegateTask.getUuid()).delegateTask(delegateTask);
 
       if (delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
@@ -2108,7 +2109,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         Map<String, EncryptionConfig> encryptionConfigMap =
             CapabilityHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
 
-        return DelegateTaskPackage.builder().delegateTask(delegateTask).encryptionConfigs(encryptionConfigMap).build();
+        return DelegateTaskPackage.builder()
+            .delegateTaskId(delegateTask.getUuid())
+            .delegateTask(delegateTask)
+            .encryptionConfigs(encryptionConfigMap)
+            .build();
       }
     } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
