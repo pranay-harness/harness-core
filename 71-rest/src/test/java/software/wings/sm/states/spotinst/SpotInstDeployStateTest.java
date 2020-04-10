@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
@@ -194,5 +195,23 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
     Map<String, String> fieldMap = stateLocal.validateFields();
     assertThat(fieldMap).isNotNull();
     assertThat(fieldMap.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetDownsizeUpdateCount() {
+    SpotInstDeployState stateLocal = new SpotInstDeployState("stateName_" + System.currentTimeMillis());
+    stateLocal.setDownsizeInstanceCount(100);
+    stateLocal.setDownsizeInstanceUnitType(PERCENTAGE);
+    ElastiGroupCapacity elastiGroupCapacity = ElastiGroupCapacity.builder().target(2).maximum(3).minimum(1).build();
+    SpotInstSetupContextElement setupContextElement =
+        SpotInstSetupContextElement.builder()
+            .oldElastiGroupOriginalConfig(ElastiGroup.builder().capacity(elastiGroupCapacity).build())
+            .build();
+
+    Integer downsizeUpdateCount =
+        stateLocal.getDownsizeUpdateCount(4, setupContextElement, OrchestrationWorkflowType.BLUE_GREEN);
+    assertThat(downsizeUpdateCount).isEqualTo(2);
   }
 }
