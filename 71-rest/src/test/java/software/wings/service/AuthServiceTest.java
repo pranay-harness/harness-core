@@ -192,8 +192,12 @@ public class AuthServiceTest extends WingsBaseTest {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
     User user = userBuilder.but().roles(asList(role)).build();
     String appId = null;
-    authService.authorize(
-        ACCOUNT_ID, appId, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
+    try {
+      authService.authorize(
+          ACCOUNT_ID, appId, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+    }
   }
 
   @Test
@@ -360,7 +364,7 @@ public class AuthServiceTest extends WingsBaseTest {
     String authTokenUuid = jwt.getClaim("authToken").asString();
     when(cache.get(Matchers.any(), Matchers.matches(authTokenUuid))).thenReturn(authToken);
     when(authTokenCache.get(authTokenUuid)).thenReturn(authToken);
-    assertThat(user.getToken().length() > 32);
+    assertThat(user.getToken().length()).isGreaterThan(32);
     authService.validateToken(user.getToken());
   }
 
