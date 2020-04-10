@@ -17,6 +17,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 public class DelegateTaskPackage {
+  private String delegateTaskId;
   private DelegateTask delegateTask;
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();

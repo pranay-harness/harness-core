@@ -273,8 +273,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
-  private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
-  private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private final Map<String, DelegateTaskPackage> currentlyValidatingTasks = new ConcurrentHashMap<>();
+  private final Map<String, DelegateTaskPackage> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
 
@@ -1286,7 +1286,7 @@ public class DelegateServiceImpl implements DelegateService {
       Delegate delegate = builder.build();
       delegate.setLastHeartBeat(clock.millis());
       delegate.setCurrentlyExecutingDelegateTasks(
-          currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
+          currentlyExecutingTasks.values().stream().map(DelegateTaskPackage::getDelegateTaskId).collect(toList()));
 
       try {
         timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
@@ -1330,7 +1330,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegate.setKeepAlivePacket(false);
       delegate.setPolllingModeEnabled(true);
       delegate.setCurrentlyExecutingDelegateTasks(
-          currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
+          currentlyExecutingTasks.values().stream().map(DelegateTaskPackage::getDelegateTaskId).collect(toList()));
 
       lastHeartbeatSentAt.set(clock.millis());
       RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegate));
@@ -1507,7 +1507,7 @@ public class DelegateServiceImpl implements DelegateService {
         // applyDelegateSecretFunctor(delegatePackage);
         DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
         injector.injectMembers(delegateValidateTask);
-        currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
+        currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = selectExecutorService(delegateTask);
 
@@ -1671,7 +1671,7 @@ public class DelegateServiceImpl implements DelegateService {
         TaskType.valueOf(delegateTask.getData().getTaskType())
             .getDelegateRunnableTask(delegateId, delegateTask,
                 getPostExecutionFunction(delegateTask.getUuid(), sanitizer.orElse(null)),
-                getPreExecutionFunction(delegateTask, sanitizer.orElse(null)));
+                getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null)));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
@@ -1768,19 +1768,20 @@ public class DelegateServiceImpl implements DelegateService {
     return secrets;
   }
 
-  private Supplier<Boolean> getPreExecutionFunction(@NotNull DelegateTask delegateTask, LogSanitizer sanitizer) {
+  private Supplier<Boolean> getPreExecutionFunction(
+      @NotNull DelegateTaskPackage delegateTaskPackage, LogSanitizer sanitizer) {
     return () -> {
-      logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
-      if (!currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
-        logger.info("Adding task {} to executing tasks", delegateTask.getUuid());
-        currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+      logger.info("Starting pre-execution for task {}", delegateTaskPackage.getDelegateTaskId());
+      if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
+        logger.info("Adding task {} to executing tasks", delegateTaskPackage.getDelegateTaskId());
+        currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxExecutingTasksCount, currentlyExecutingTasks.size());
         if (sanitizer != null) {
           delegateLogService.registerLogSanitizer(sanitizer);
         }
         return true;
       } else {
-        logger.info("Task {} is already being executed", delegateTask.getUuid());
+        logger.info("Task {} is already being executed", delegateTaskPackage.getDelegateTaskId());
         return false;
       }
     };

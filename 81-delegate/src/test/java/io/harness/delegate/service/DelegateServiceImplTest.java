@@ -59,6 +59,7 @@ public class DelegateServiceImplTest extends CategoryTest {
     String delegateTaskId = UUIDGenerator.generateUuid();
 
     DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .delegateTaskId(delegateTaskId)
                                                   .delegateTask(DelegateTask.builder()
                                                                     .async(true)
                                                                     .uuid(delegateTaskId)
@@ -90,6 +91,7 @@ public class DelegateServiceImplTest extends CategoryTest {
     secretDetails.put("SECRET_UUID", secretDetail);
 
     DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .delegateTaskId(delegateTaskId)
                                                   .delegateTask(DelegateTask.builder()
                                                                     .async(true)
                                                                     .uuid(delegateTaskId)
