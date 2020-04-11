@@ -6,10 +6,11 @@ import lombok.Singular;
 import lombok.Value;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
 @Redesign
 public class AsyncExecutableResponse {
-  @Singular List<String> callbackIds;
+  @NotNull @Singular List<String> callbackIds;
 }
