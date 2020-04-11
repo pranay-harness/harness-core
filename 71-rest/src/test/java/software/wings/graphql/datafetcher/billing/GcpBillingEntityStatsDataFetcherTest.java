@@ -13,9 +13,9 @@ import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.graphql.BillingAggregate;
 import io.harness.ccm.billing.graphql.BillingIdFilter;
 import io.harness.ccm.billing.graphql.BillingTimeFilter;
-import io.harness.ccm.billing.graphql.GcpBillingEntityGroupby;
-import io.harness.ccm.billing.graphql.GcpBillingFilter;
-import io.harness.ccm.billing.graphql.GcpBillingGroupby;
+import io.harness.ccm.billing.graphql.OutOfClusterBillingFilter;
+import io.harness.ccm.billing.graphql.OutOfClusterEntityGroupBy;
+import io.harness.ccm.billing.graphql.OutOfClusterGroupBy;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +44,8 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
   private static final String BILLING_ACCOUNT_ID = "billingAccountId";
 
   private List<BillingAggregate> billingAggregates = new ArrayList<>();
-  private List<GcpBillingFilter> filters = new ArrayList<>();
-  private List<GcpBillingGroupby> groupBy = new ArrayList<>();
+  private List<OutOfClusterBillingFilter> filters = new ArrayList<>();
+  private List<OutOfClusterGroupBy> groupBy = new ArrayList<>();
 
   @Before
   public void setup() {
@@ -92,88 +92,91 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
     return BillingAggregate.builder().operationType(QLCCMAggregateOperation.SUM).columnName(columnName).build();
   }
 
-  private GcpBillingFilter getStartTimeGcpBillingFilter(Long filterTime) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setStartTime(BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
-    return gcpBillingFilter;
+  private OutOfClusterBillingFilter getStartTimeGcpBillingFilter(Long filterTime) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setStartTime(
+        BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingFilter getEndTimeGcpBillingFilter(Long filterTime) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setEndTime(BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
-    return gcpBillingFilter;
+  private OutOfClusterBillingFilter getEndTimeGcpBillingFilter(Long filterTime) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setEndTime(
+        BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingFilter getProductGcpBillingFilter(String[] product) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setProduct(BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
-    return gcpBillingFilter;
+  private OutOfClusterBillingFilter getProductGcpBillingFilter(String[] product) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setProduct(
+        BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingFilter getProjectGcpBillingFilter(String[] project) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setProject(BillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
-    return gcpBillingFilter;
+  private OutOfClusterBillingFilter getProjectGcpBillingFilter(String[] project) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setProject(BillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingFilter getSkuGcpBillingFilter(String[] sku) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setSku(BillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
-    return gcpBillingFilter;
+  private OutOfClusterBillingFilter getSkuGcpBillingFilter(String[] sku) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setSku(BillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingFilter getBillingAccountIdGcpBillingFilter(String[] billingAccountId) {
-    GcpBillingFilter gcpBillingFilter = new GcpBillingFilter();
-    gcpBillingFilter.setBillingAccountId(
+  private OutOfClusterBillingFilter getBillingAccountIdGcpBillingFilter(String[] billingAccountId) {
+    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
+    outOfClusterBillingFilter.setBillingAccountId(
         BillingIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(billingAccountId).build());
-    return gcpBillingFilter;
+    return outOfClusterBillingFilter;
   }
 
-  private GcpBillingGroupby getProductGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.product);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getProductGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.product);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getProjectGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.project);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getProjectGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.project);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getProjectIdGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.projectId);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getProjectIdGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.projectId);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getProjectNumberGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.projectNumber);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getProjectNumberGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.projectNumber);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getSkuGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.sku);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getSkuGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.sku);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getSkuIdGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.skuId);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getSkuIdGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.skuId);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getUsageAmountGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.usageAmount);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getUsageAmountGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.usageAmount);
+    return outOfClusterGroupBy;
   }
 
-  private GcpBillingGroupby getUsageUnitGroupBy() {
-    GcpBillingGroupby gcpBillingGroupby = new GcpBillingGroupby();
-    gcpBillingGroupby.setEntityGroupBy(GcpBillingEntityGroupby.usageUnit);
-    return gcpBillingGroupby;
+  private OutOfClusterGroupBy getUsageUnitGroupBy() {
+    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
+    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.usageUnit);
+    return outOfClusterGroupBy;
   }
 }

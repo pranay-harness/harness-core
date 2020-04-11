@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.BillingAggregate;
-import io.harness.ccm.billing.graphql.GcpBillingFilter;
-import io.harness.ccm.billing.graphql.GcpBillingGroupby;
+import io.harness.ccm.billing.graphql.OutOfClusterBillingFilter;
+import io.harness.ccm.billing.graphql.OutOfClusterGroupBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -21,13 +21,13 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class GcpBillingEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<BillingAggregate,
-    GcpBillingFilter, GcpBillingGroupby, QLBillingSortCriteria> {
+    OutOfClusterBillingFilter, OutOfClusterGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, List<BillingAggregate> aggregateFunction, List<GcpBillingFilter> filters,
-      List<GcpBillingGroupby> groupBy, List<QLBillingSortCriteria> sort) {
+  protected QLData fetch(String accountId, List<BillingAggregate> aggregateFunction,
+      List<OutOfClusterBillingFilter> filters, List<OutOfClusterGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     return gcpBillingService.getGcpBillingEntityStats(Optional.ofNullable(aggregateFunction)
                                                           .map(Collection::stream)
                                                           .orElseGet(Stream::empty)
@@ -36,12 +36,12 @@ public class GcpBillingEntityStatsDataFetcher extends AbstractStatsDataFetcherWi
         Optional.ofNullable(groupBy)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(GcpBillingGroupby::toGroupbyObject)
+            .map(OutOfClusterGroupBy::toGroupbyObject)
             .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(GcpBillingFilter::toCondition)
+            .map(OutOfClusterBillingFilter::toCondition)
             .collect(Collectors.toList()));
   }
 
@@ -51,8 +51,8 @@ public class GcpBillingEntityStatsDataFetcher extends AbstractStatsDataFetcherWi
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<GcpBillingGroupby> groupByList, List<BillingAggregate> aggregations,
-      List<QLBillingSortCriteria> sort, QLData qlData) {
+  protected QLData postFetch(String accountId, List<OutOfClusterGroupBy> groupByList,
+      List<BillingAggregate> aggregations, List<QLBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
 }

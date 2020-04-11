@@ -1,6 +1,6 @@
 package io.harness.ccm.billing;
 
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_STARTTIME;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_STARTTIME;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -5,6 +5,7 @@ import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
@@ -15,6 +16,8 @@ public class BillingAggregate {
   // ideally, gcp specific constants should be organized in a constant class.
   public static final String BILLING_GCP_COST = "cost";
   public static final String BILLING_GCP_CREDITS = "discount";
+  public static final String AWS_UN_BLENDED_COST = "unblendedCost";
+  public static final String AWS_BLENDED_COST = "blendedCost";
 
   QLCCMAggregateOperation operationType;
   String columnName;
@@ -52,6 +55,12 @@ public class BillingAggregate {
         break;
       case BILLING_GCP_CREDITS:
         functionCall.addColumnParams(GcpBillingTableSchema.creditsAmount);
+        break;
+      case AWS_UN_BLENDED_COST:
+        functionCall.addColumnParams(PreAggregatedTableSchema.unBlendedCost);
+        break;
+      case AWS_BLENDED_COST:
+        functionCall.addColumnParams(PreAggregatedTableSchema.blendedCost);
         break;
       default:
         break;

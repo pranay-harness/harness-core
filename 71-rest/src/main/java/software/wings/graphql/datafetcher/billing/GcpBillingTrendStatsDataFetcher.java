@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.BillingAggregate;
-import io.harness.ccm.billing.graphql.GcpBillingFilter;
-import io.harness.ccm.billing.graphql.GcpBillingGroupby;
+import io.harness.ccm.billing.graphql.OutOfClusterBillingFilter;
+import io.harness.ccm.billing.graphql.OutOfClusterGroupBy;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class GcpBillingTrendStatsDataFetcher
-    extends AbstractStatsDataFetcher<BillingAggregate, GcpBillingFilter, GcpBillingGroupby, QLBillingSortCriteria> {
+public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<BillingAggregate,
+    OutOfClusterBillingFilter, OutOfClusterGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
 
   private static final String BILLING_GCP_TOTAL_COST_LABEL = "Total Cost";
@@ -37,27 +37,29 @@ public class GcpBillingTrendStatsDataFetcher
   private static final String BILLING_GCP_FORECAST_COST_DESCRIPTION = "of %s - %s";
 
   @Override
-  protected QLData fetch(String accountId, BillingAggregate aggregateFunction, List<GcpBillingFilter> filters,
-      List<GcpBillingGroupby> groupBy, List<QLBillingSortCriteria> sort) {
+  protected QLData fetch(String accountId, BillingAggregate aggregateFunction, List<OutOfClusterBillingFilter> filters,
+      List<OutOfClusterGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
     // find the start date from the conditions
-    Optional<GcpBillingFilter> startTimeFilter = filters.stream().filter(f -> f.getStartTime() != null).findFirst();
+    Optional<OutOfClusterBillingFilter> startTimeFilter =
+        filters.stream().filter(f -> f.getStartTime() != null).findFirst();
     if (!startTimeFilter.isPresent() || startTimeFilter.get().getStartTime() == null) {
       throw new IllegalArgumentException("Missing filters on start date.");
     }
     Date startDate = new Date(startTimeFilter.get().getStartTime().getValue().longValue());
     // find the end date from the conditions
-    Optional<GcpBillingFilter> endTimeFilter = filters.stream().filter(f -> f.getEndTime() != null).findFirst();
+    Optional<OutOfClusterBillingFilter> endTimeFilter =
+        filters.stream().filter(f -> f.getEndTime() != null).findFirst();
     if (!endTimeFilter.isPresent() || endTimeFilter.get().getEndTime() == null) {
       throw new IllegalArgumentException("Missing filters on end date.");
     }
     Date endDate = new Date(endTimeFilter.get().getEndTime().getValue().longValue());
 
     BigDecimal totalCost = gcpBillingService.getTotalCost(
-        filters.stream().map(GcpBillingFilter::toCondition).collect(Collectors.toList()));
+        filters.stream().map(OutOfClusterBillingFilter::toCondition).collect(Collectors.toList()));
 
     SimpleRegression regression = gcpBillingService.getSimpleRegression(
-        filters.stream().map(GcpBillingFilter::toCondition).collect(Collectors.toList()), startDate, endDate);
+        filters.stream().map(OutOfClusterBillingFilter::toCondition).collect(Collectors.toList()), startDate, endDate);
 
     BigDecimal costTrend = gcpBillingService.getCostTrend(regression, startDate, endDate);
     // get the start and end date of the forecast period
@@ -90,7 +92,7 @@ public class GcpBillingTrendStatsDataFetcher
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<GcpBillingGroupby> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<OutOfClusterGroupBy> groupByList, QLData qlData) {
     return null;
   }
 
