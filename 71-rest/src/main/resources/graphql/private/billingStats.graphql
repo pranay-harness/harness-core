@@ -39,9 +39,9 @@ extend type Query {
   ): BillingEntityData @dataFetcher(name: billingStatsEntity)
 
   gcpBillingEntityData(
-    filters: [GcpBillingFilter]
+    filters: [OutOfClusterBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [GcpBillingGroupBy]
+    groupBy: [OutOfClusterGroupBy]
   ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
 
   billingStatsFilterValues(
@@ -90,33 +90,6 @@ input CCMGroupBy {
   timeAggregation: CCMTimeSeriesAggregation
   tagAggregation: BillingDataTagAggregation
   labelAggregation: BillingDataLabelAggregation
-}
-
-input GcpBillingFilter {
-  startTime: TimeFilter
-  endTime: TimeFilter
-  billingAccountId: IdFilter
-  project: IdFilter
-  product: IdFilter
-  sku: IdFilter
-}
-
-input GcpBillingGroupBy {
-  entityGroupBy: GcpBillingEntityGroupBy
-  timeTruncGroupby: CETimeTruncGroupby
-}
-
-enum GcpBillingEntityGroupBy {
-  billingAccountId
-  project
-  projectId
-  projectNumber
-  product
-  sku
-  skuId
-  region
-  usageAmount
-  usageUnit
 }
 
 enum CCMEntityGroupBy {

@@ -1,9 +1,14 @@
 package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_PRODUCT;
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_PROJECT;
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_SKU;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_INSTANCE_TYPE;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_REGION;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_SERVICE;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_USAGE_TYPE;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_PRODUCT;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_PROJECT;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_SKU;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -12,6 +17,7 @@ import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.schema.type.aggregation.Filter;
@@ -51,6 +57,21 @@ public class BillingIdFilter implements Filter {
         break;
       case BILLING_GCP_BILLING_ACCOUNT_ID:
         dbColumn = GcpBillingTableSchema.billingAccountId;
+        break;
+      case BILLING_AWS_REGION:
+        dbColumn = PreAggregatedTableSchema.region;
+        break;
+      case BILLING_AWS_SERVICE:
+        dbColumn = PreAggregatedTableSchema.serviceCode;
+        break;
+      case BILLING_AWS_USAGE_TYPE:
+        dbColumn = PreAggregatedTableSchema.usageType;
+        break;
+      case BILLING_AWS_INSTANCE_TYPE:
+        dbColumn = PreAggregatedTableSchema.instanceType;
+        break;
+      case BILLING_AWS_LINKED_ACCOUNT:
+        dbColumn = PreAggregatedTableSchema.usageAccountId;
         break;
       default:
         return null;

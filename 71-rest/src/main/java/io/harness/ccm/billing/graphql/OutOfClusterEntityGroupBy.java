@@ -2,14 +2,9 @@ package io.harness.ccm.billing.graphql;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
-// TODO: Remove Old/New Set of GroupBy's (Adding new groupBy's in lower case to maintain consistency)
-public enum GcpBillingEntityGroupby {
-  BILLING_ACCOUNT_ID(GcpBillingTableSchema.billingAccountId),
-  PROJECT(GcpBillingTableSchema.projectName),
-  SERVICE_ID(GcpBillingTableSchema.serviceId),
-  SERVICE_DESCRIPTION(GcpBillingTableSchema.serviceDescription),
-  SKU_ID(GcpBillingTableSchema.skuId),
+public enum OutOfClusterEntityGroupBy {
   project(GcpBillingTableSchema.projectName),
   projectId(GcpBillingTableSchema.projectId),
   projectNumber(GcpBillingTableSchema.projectAncestryNumbers),
@@ -19,10 +14,15 @@ public enum GcpBillingEntityGroupby {
   region(GcpBillingTableSchema.locationRegion),
   billingAccountId(GcpBillingTableSchema.billingAccountId),
   usageAmount(GcpBillingTableSchema.usageAmountInPricingUnits),
-  usageUnit(GcpBillingTableSchema.usagePricingUnit);
+  usageUnit(GcpBillingTableSchema.usagePricingUnit),
+  awsRegion(PreAggregatedTableSchema.region),
+  likedAccount(PreAggregatedTableSchema.usageAccountId),
+  usageType(PreAggregatedTableSchema.usageType),
+  instanceType(PreAggregatedTableSchema.instanceType),
+  service(PreAggregatedTableSchema.serviceCode);
 
   private DbColumn dbColumn;
-  GcpBillingEntityGroupby(DbColumn dbColumn) {
+  OutOfClusterEntityGroupBy(DbColumn dbColumn) {
     this.dbColumn = dbColumn;
   }
 

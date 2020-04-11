@@ -19,6 +19,8 @@ import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
+import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
+import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -831,6 +833,7 @@ public class WingsModule extends DependencyModule {
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
+    bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

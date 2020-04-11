@@ -1,7 +1,8 @@
 package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_ENDTIME;
-import static io.harness.ccm.billing.graphql.GcpBillingFilter.BILLING_GCP_STARTTIME;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_STARTTIME;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_ENDTIME;
+import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_STARTTIME;
 
 import com.google.cloud.Timestamp;
 
@@ -10,6 +11,7 @@ import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
@@ -42,6 +44,8 @@ public class BillingTimeFilter implements Filter {
       dbColumn = GcpBillingTableSchema.usageStartTime;
     } else if (variable.equals(BILLING_GCP_ENDTIME)) {
       dbColumn = GcpBillingTableSchema.usageEndTime;
+    } else if (variable.equals(BILLING_AWS_STARTTIME)) {
+      dbColumn = PreAggregatedTableSchema.startTime;
     } else {
       throw new InvalidRequestException("Invalid time filter.");
     }
