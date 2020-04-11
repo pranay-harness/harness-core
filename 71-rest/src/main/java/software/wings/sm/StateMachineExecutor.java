@@ -1020,6 +1020,10 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
+      if (stateExecutionInstance.getStateTimeout() != null && stateExecutionInstance.getStateTimeout() > 0) {
+        stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + stateExecutionInstance.getStateTimeout());
+      }
+
       updated = updateStateExecutionData(
           stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
 
