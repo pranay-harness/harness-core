@@ -14,6 +14,7 @@ import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.beans.template.TemplateFolder.GALLERY_ID_KEY;
 import static software.wings.beans.template.TemplateFolder.NAME_KEY;
 import static software.wings.beans.template.TemplateFolder.NodeType.FOLDER;
+import static software.wings.beans.template.TemplateGallery.IMPORTED_TEMPLATE_GALLERY_NAME;
 import static software.wings.common.TemplateConstants.GENERIC_COMMANDS;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.HTTP_VERIFICATION;
@@ -69,7 +70,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class TemplateFolderServiceImpl implements TemplateFolderService {
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
-  private static final String IMPORTED_TEMPLATE_FOLDER = "Imported Templates";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGalleryService templateGalleryService;
@@ -113,7 +113,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     }
     templateFolder.setKeywords(getKeywords(templateFolder));
     TemplateFolder savedTemplateFolder = saveStrategy.apply(templateFolder);
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
+
     auditServiceHelper.reportForAuditingUsingAccountId(
         savedTemplateFolder.getAccountId(), null, savedTemplateFolder, Type.CREATE);
     return savedTemplateFolder;
@@ -545,30 +545,19 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
-  public TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId) {
-    TemplateFolder rootLevelFolder = getRootLevelFolder(accountId, galleryId);
-    List<TemplateFolder> childFolders = wingsPersistence.createQuery(TemplateFolder.class)
-                                            .filter(TemplateFolderKeys.accountId, accountId)
-                                            .filter(TemplateFolderKeys.parentId, rootLevelFolder.getUuid())
-                                            .filter(TemplateFolderKeys.appId, appId)
-                                            .asList();
-    // Expecting imported template folder to be directly under root folder.
-    for (TemplateFolder childFolder : childFolders) {
-      if (childFolder.getName().equals(IMPORTED_TEMPLATE_FOLDER)) {
-        return childFolder;
-      }
-    }
-    return saveAndGetImportedFolder(galleryId, accountId, rootLevelFolder, appId);
+  public TemplateFolder createRootImportedTemplateFolder(String accountId, String galleryId) {
+    TemplateFolder templateFolder = TemplateFolder.builder()
+                                        .galleryId(galleryId)
+                                        .accountId(accountId)
+                                        .appId(GLOBAL_APP_ID)
+                                        .name(IMPORTED_TEMPLATE_GALLERY_NAME)
+                                        .build();
+    templateFolder.setKeywords(getKeywords(templateFolder));
+    return wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder);
   }
 
-  private TemplateFolder saveAndGetImportedFolder(
-      String galleryId, String accountId, TemplateFolder rootFolder, String appId) {
-    TemplateFolder templateFolder = TemplateFolder.builder()
-                                        .accountId(accountId)
-                                        .appId(appId)
-                                        .name(IMPORTED_TEMPLATE_FOLDER)
-                                        .parentId(rootFolder.getUuid())
-                                        .build();
-    return saveSafelyAndGet(templateFolder);
+  @Override
+  public TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId) {
+    return getRootLevelFolder(accountId, galleryId);
   }
 }

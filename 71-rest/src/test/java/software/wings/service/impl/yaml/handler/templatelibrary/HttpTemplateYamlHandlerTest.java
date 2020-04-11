@@ -15,7 +15,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.httpTemplateForSetup;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.httpTemplateName;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -77,7 +76,6 @@ public class HttpTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest 
     assertThat(savedTemplate.getName()).isEqualTo(httpTemplateName);
 
     yamlHandler.delete(changeContext);
-    assertThat(yamlHandler.get(ACCOUNT_ID, VALID_HTTP_TEMPLATE_WITH_VARIABLE)).isNull();
   }
 
   @Test

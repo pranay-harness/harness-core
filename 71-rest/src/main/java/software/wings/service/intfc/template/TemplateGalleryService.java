@@ -43,6 +43,8 @@ public interface TemplateGalleryService extends OwnedByAccount {
    */
   TemplateGallery get(@NotEmpty String uuid);
 
+  TemplateGallery.GalleryKey getAccountGalleryKey();
+
   /**
    * Get template galleries by accountId
    *
@@ -68,9 +70,13 @@ public interface TemplateGalleryService extends OwnedByAccount {
    */
   TemplateGallery saveHarnessGallery();
 
+  void saveCommandLibraryGalleryToAccount(String accountId, String accountName);
+
   void copyHarnessTemplatesToAccount(@NotEmpty String accountId, @NotEmpty String accountName);
 
   void copyHarnessTemplatesToAccountV2(@NotEmpty String accountId, @NotEmpty String accountName);
+
+  void createCommandLibraryGallery();
 
   void deleteAccountGalleryByName(String accountId, String galleryName);
 

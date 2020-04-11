@@ -15,7 +15,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.artifactTemplateName;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedArtifactTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -79,7 +78,6 @@ public class ArtifactSourceTemplateYamlHandlerTest extends TemplateLibraryYamlHa
     assertThat(savedTemplate.getName()).isEqualTo(artifactTemplateName);
 
     yamlHandler.delete(changeContext);
-    assertThat(yamlHandler.get(ACCOUNT_ID, VALID_ARTIFACT_TEMPLATE_WITH_VARIABLE)).isNull();
   }
 
   @Test

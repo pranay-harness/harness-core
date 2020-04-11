@@ -16,7 +16,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedReturnCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -79,7 +78,6 @@ public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTe
     assertThat(savedTemplate.getName()).isEqualTo(commandTemplateName);
 
     yamlHandler.delete(changeContext);
-    assertThat(yamlHandler.get(ACCOUNT_ID, VALID_COMMAND_TEMPLATE_WITHOUT_VARIABLE)).isNull();
   }
 
   @Test

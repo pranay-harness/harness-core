@@ -531,16 +531,19 @@ systemCatalogs { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1
 tagLinks { "name" : "entityTagIdx" , "unique" : true} { "accountId" : 1 , "entityId" : 1 , "key" : 1}
 tagLinks { "name" : "tagValueIdx" , "background" : true} { "accountId" : 1 , "key" : 1 , "value" : 1}
 tags { "name" : "tagIdx" , "unique" : true} { "accountId" : 1 , "key" : 1}
+templateFolders { "name" : "account_gallery_app_idx" , "background" : true} { "accountId" : 1 , "galleryId" : 1 , "appId" : 1}
 templateFolders { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templateFolders { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 templateFolders { "name" : "duplicateKey" , "unique" : true} { "accountId" : 1 , "name" : 1 , "pathId" : 1 , "appId" : 1}
+templateGalleries { "name" : "account_gallery_key_idx" , "background" : true} { "accountId" : 1 , "galleryKey" : 1}
 templateGalleries { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templateGalleries { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-templateGalleries { "name" : "yaml" , "unique" : true} { "name" : 1 , "accountId" : 1}
+templateGalleries { "name" : "yaml" , "background" : true} { "name" : 1 , "accountId" : 1}
 templateVersions { "name" : "account_template_version" , "background" : true} { "accountId" : 1 , "templateUuid" : 1 , "version" : -1}
 templateVersions { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templateVersions { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 templateVersions { "name" : "yaml" , "unique" : true} { "templateUuid" : 1 , "version" : 1}
+templates { "name" : "account_gallery_app_idx" , "background" : true} { "accountId" : 1 , "galleryId" : 1 , "appId" : 1}
 templates { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templates { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 templates { "name" : "folderId_1" , "background" : true} { "folderId" : 1}

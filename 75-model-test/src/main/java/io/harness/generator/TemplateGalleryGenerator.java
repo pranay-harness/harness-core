@@ -62,12 +62,16 @@ public class TemplateGalleryGenerator {
     }
 
     builder.appId(GLOBAL_APP_ID);
+    if (templateGallery != null && templateGallery.getGalleryKey() != null) {
+      builder.galleryKey(templateGallery.getGalleryKey());
+    } else {
+      builder.galleryKey(templateGalleryService.getAccountGalleryKey().name());
+    }
 
     TemplateGallery existing = exists(builder.build());
     if (existing != null) {
       return existing;
     }
-
     final TemplateGallery finalTemplateGallery = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(

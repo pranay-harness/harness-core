@@ -33,9 +33,15 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
-    fields = { @Field("accountId")
-               , @Field("name"), @Field("folderId"), @Field("appId") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true),
+      fields = { @Field("accountId")
+                 , @Field("name"), @Field("folderId"), @Field("appId") })
+  ,
+      @Index(options = @IndexOptions(name = "account_gallery_app_idx"), fields = {
+        @Field("accountId"), @Field("galleryId"), @Field("appId")
+      })
+})
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

@@ -37,9 +37,15 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-@Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
-    fields = { @Field("accountId")
-               , @Field("name"), @Field("pathId"), @Field("appId") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "duplicateKey", unique = true),
+      fields = { @Field("accountId")
+                 , @Field("name"), @Field("pathId"), @Field("appId") })
+  ,
+      @Index(options = @IndexOptions(name = "account_gallery_app_idx"), fields = {
+        @Field("accountId"), @Field("galleryId"), @Field("appId")
+      })
+})
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)
 @HarnessEntity(exportable = true)
