@@ -33,17 +33,22 @@ public class WorkflowExecutionController {
                            .put(QLExecutionQueryParametersKeys.executionId, workflowExecution.getPipelineExecutionId())
                            .build())
               .build();
-    } else if (workflowExecution.getTriggeredBy() != null) {
-      cause = QLExecutedByUser.builder()
-                  .user(UserController.populateUser(workflowExecution.getTriggeredBy()))
-                  .using(QLExecuteOptions.WEB_UI)
-                  .build();
-    } else if (workflowExecution.getDeploymentTriggerId() != null) {
-      cause = QLExecutedByTrigger.builder()
-                  .context(ImmutableMap.<String, Object>builder()
-                               .put(QLTriggerQueryParametersKeys.triggerId, workflowExecution.getDeploymentTriggerId())
-                               .build())
-                  .build();
+    } else {
+      if (workflowExecution.getDeploymentTriggerId() != null) {
+        cause =
+            QLExecutedByTrigger.builder()
+                .context(ImmutableMap.<String, Object>builder()
+                             .put(QLTriggerQueryParametersKeys.triggerId, workflowExecution.getDeploymentTriggerId())
+                             .build())
+                .build();
+      }
+
+      if (workflowExecution.getTriggeredBy() != null) {
+        cause = QLExecutedByUser.builder()
+                    .user(UserController.populateUser(workflowExecution.getTriggeredBy()))
+                    .using(QLExecuteOptions.WEB_UI)
+                    .build();
+      }
     }
 
     builder.id(workflowExecution.getUuid())
