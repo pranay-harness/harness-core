@@ -2,6 +2,7 @@ package software.wings.utils;
 
 public interface TemplateTestConstants {
   String TEMPLATE_GALLERY = "My Gallery";
+  String TEMPLATE_GALLERY_IMPORTED = "My Imported Gallery";
   String TEMPLATE_GALLERY_DESC = "An awesome harness gallery!!";
   String TEMPLATE_GALLERY_DESC_CHANGED = "Super awesome harness gallery!!";
   String TEMPLATE_NAME = "Template Name";

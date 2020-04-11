@@ -286,7 +286,6 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, HARNESS_GALLERY);
-
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
@@ -303,16 +302,17 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldLoadTomcatStandardInstallCommand() {
-    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    templateGalleryService.save(TemplateGallery.builder()
-                                    .name(TEMPLATE_GALLERY)
-                                    .accountId(ACCOUNT_ID)
-                                    .description(TEMPLATE_GALLERY_DESC)
-                                    .appId(GLOBAL_APP_ID)
-                                    .keywords(ImmutableSet.of("CD"))
-                                    .build());
+    TemplateGallery accountGallery =
+        templateGalleryService.save(TemplateGallery.builder()
+                                        .name(TEMPLATE_GALLERY)
+                                        .accountId(ACCOUNT_ID)
+                                        .description(TEMPLATE_GALLERY_DESC)
+                                        .appId(GLOBAL_APP_ID)
+                                        .galleryKey(templateGalleryService.getAccountGalleryKey().name())
+                                        .keywords(ImmutableSet.of("CD"))
+                                        .build());
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, TEMPLATE_GALLERY);
+    templateFolderService.copyHarnessTemplateFolders(accountGallery.getUuid(), ACCOUNT_ID, TEMPLATE_GALLERY);
     templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, ACCOUNT_ID, TEMPLATE_GALLERY);
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(ACCOUNT_ID, "Install", Arrays.asList(SSH.name()));

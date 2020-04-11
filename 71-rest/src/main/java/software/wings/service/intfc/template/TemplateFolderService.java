@@ -39,5 +39,7 @@ public interface TemplateFolderService {
 
   Map<String, String> fetchTemplateFolderNames(@NotEmpty String accountId, List<String> folderUuids);
 
+  TemplateFolder createRootImportedTemplateFolder(String accountId, String galleryId);
+
   TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId);
 }

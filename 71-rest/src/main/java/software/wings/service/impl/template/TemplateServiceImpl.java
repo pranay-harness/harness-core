@@ -242,16 +242,6 @@ public class TemplateServiceImpl implements TemplateService {
         .build();
   }
 
-  private void populateTemplateFolderInCopiedTemplate(Template template) {
-    // Stub Code.
-    // value of folder may depend on design later.
-    // For now saving it at root level.
-    template.setFolderId(templateFolderService
-                             .getRootLevelFolder(template.getAccountId(),
-                                 templateGalleryService.getByAccount(template.getAccountId()).getUuid())
-                             .getUuid());
-  }
-
   private VersionedTemplate buildTemplateDetails(Template template, String templateUuid) {
     VersionedTemplateBuilder builder = VersionedTemplate.builder();
     builder.templateId(templateUuid)

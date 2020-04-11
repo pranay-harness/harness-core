@@ -15,7 +15,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedPcfCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedPcfCommandTemplateWithoutVariable;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -82,7 +81,6 @@ public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandle
     assertThat(savedTemplate.getName()).isEqualTo(templateName);
 
     yamlHandler.delete(changeContext);
-    assertThat(yamlHandler.get(ACCOUNT_ID, VALID_PCF_COMMAND_TEMPLATE_WITH_VARIABLE)).isNull();
   }
 
   @Test

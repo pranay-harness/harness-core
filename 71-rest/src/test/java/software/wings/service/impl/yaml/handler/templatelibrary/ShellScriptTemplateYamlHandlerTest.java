@@ -17,7 +17,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedTemplateWithoutVariable;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.templateForSetup;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -85,7 +84,6 @@ public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandl
     assertThat(savedTemplate.getName()).isEqualTo(templateName);
 
     yamlHandler.delete(changeContext);
-    assertThat(yamlHandler.get(ACCOUNT_ID, VALID_SHELL_SCRIPT_TEMPLATE_WITH_VARIABLE)).isNull();
   }
 
   @Test

@@ -5,6 +5,9 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -84,7 +87,7 @@ public class YamlHelperTest extends WingsBaseTest {
                                         .name("Harness")
                                         .children(Arrays.asList(TemplateFolder.builder().name("Children").build()))
                                         .build();
-    when(templateService.getTemplateTree(any(), any(), any(), any())).thenReturn(templateFolder);
+    doReturn(templateFolder).when(templateService).getTemplateTree(anyString(), anyString(), anyString(), anyList());
     TemplateFolder returnTemplateFolder = yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID,
         "Setup/Template Library/" + templateFolder.getName() + "/" + templateFolder.getChildren().get(0).getName()
             + "/test.yaml",

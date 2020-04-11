@@ -51,6 +51,7 @@ import migrations.all.DropExistingIndexForGitFileActivityMigration;
 import migrations.all.DropMongoGcsFileIdMappingCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
+import migrations.all.DropUniqueIndexOnTemplateGallery;
 import migrations.all.DropYamlGitSyncCollectionMigration;
 import migrations.all.DuplicateGlobalAccountMigration;
 import migrations.all.EntityNameValidationMigration_All_00;
@@ -65,6 +66,7 @@ import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.HelmValuesYamlToManifestFileMigration;
+import migrations.all.ImportedTemplateGalleryMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
@@ -323,6 +325,8 @@ public class MigrationList {
         .add(Pair.of(302, DropExistingIndexForGitFileActivityMigration.class))
         .add(Pair.of(303, DeleteCVCronMigration.class))
         .add(Pair.of(304, DeleteGitActivityWithoutProcCommitIdMigration.class))
+        .add(Pair.of(305, ImportedTemplateGalleryMigration.class))
+        .add(Pair.of(306, DropUniqueIndexOnTemplateGallery.class))
         .build();
   }
 }

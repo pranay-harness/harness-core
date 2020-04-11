@@ -9,6 +9,10 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.template.TemplateGallery.ACCOUNT_ID_KEY;
+import static software.wings.beans.template.TemplateGallery.GALLERY_KEY;
+import static software.wings.beans.template.TemplateGallery.GalleryKey;
+import static software.wings.beans.template.TemplateGallery.IMPORTED_TEMPLATE_GALLERY_NAME;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -92,13 +96,17 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
+  public GalleryKey getAccountGalleryKey() {
+    return GalleryKey.ACCOUNT_TEMPLATE_GALLERY;
+  }
+
+  @Override
   public TemplateGallery getByAccount(String accountId) {
-    List<TemplateGallery> templateGalleries =
-        wingsPersistence.createQuery(TemplateGallery.class).filter(TemplateGallery.ACCOUNT_ID_KEY, accountId).asList();
-    if (isNotEmpty(templateGalleries)) {
-      return templateGalleries.get(0);
-    }
-    return null;
+    // Hardcoding account template for now. Have to make it more generic later.
+    return wingsPersistence.createQuery(TemplateGallery.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(GALLERY_KEY, getAccountGalleryKey())
+        .get();
   }
 
   @Override
@@ -163,6 +171,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
             .accountId(GLOBAL_ACCOUNT_ID)
             .global(true)
             .appId(GLOBAL_APP_ID)
+            .galleryKey(getAccountGalleryKey().name())
             .build());
   }
 
@@ -173,6 +182,16 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
       if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
         deleteByAccountId(account.getUuid());
         copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
+      }
+    }
+  }
+
+  @Override
+  public void createCommandLibraryGallery() {
+    List<Account> accounts = accountService.listAllAccounts();
+    for (Account account : accounts) {
+      if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
+        saveCommandLibraryGalleryToAccount(account.getUuid(), account.getAccountName());
       }
     }
   }
@@ -202,6 +221,20 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
+  public void saveCommandLibraryGalleryToAccount(String accountId, String accountName) {
+    logger.info("Creating command library gallery for the account {}", accountName);
+    TemplateGallery templateGallery = save(TemplateGallery.builder()
+                                               .name(IMPORTED_TEMPLATE_GALLERY_NAME)
+                                               .appId(GLOBAL_APP_ID)
+                                               .accountId(accountId)
+                                               .galleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name())
+                                               .build());
+    templateFolderService.createRootImportedTemplateFolder(accountId, templateGallery.getUuid());
+    logger.info(
+        "Created command library gallery for account {} with galleryId {}", accountName, templateGallery.getUuid());
+  }
+
+  @Override
   public void copyHarnessTemplatesToAccount(String accountId, String accountName) {
     logger.info("Copying Harness templates for the account {}", accountName);
 
@@ -215,9 +248,10 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                                               .name(accountName)
                                               .appId(GLOBAL_APP_ID)
                                               .accountId(accountId)
+                                              .galleryKey(getAccountGalleryKey().name())
                                               .referencedGalleryId(harnessTemplateGallery.getUuid())
                                               .build());
-    logger.info("Creating Account gallery success");
+    logger.info("Creating Account gallery success with galleryId {}", accountGallery.getUuid());
     logger.info("Copying harness template folders to account {}", accountName);
     templateFolderService.copyHarnessTemplateFolders(accountGallery.getUuid(), accountId, accountName);
     logger.info("Copying harness template folders to account {} success", accountName);
@@ -242,6 +276,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                                               .name(accountName)
                                               .appId(GLOBAL_APP_ID)
                                               .accountId(accountId)
+                                              .galleryKey(getAccountGalleryKey().name())
                                               .referencedGalleryId(harnessTemplateGallery.getUuid())
                                               .build());
     logger.info("Creating Account gallery success");

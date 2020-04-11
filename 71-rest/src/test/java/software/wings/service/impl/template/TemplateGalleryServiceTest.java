@@ -299,6 +299,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
         .name(TEMPLATE_GALLERY)
         .accountId(ACCOUNT_ID)
         .description(TEMPLATE_GALLERY_DESC)
+        .galleryKey(templateGalleryService.getAccountGalleryKey().name())
         .appId(GLOBAL_APP_ID)
         .keywords(ImmutableSet.of("CD"))
         .build();
