@@ -12,7 +12,7 @@ import lombok.Value;
 @Builder
 public class IgnoreAdviser implements Adviser {
   IgnoreAdviserParameters parameters;
-  AdviserType type = AdviserType.builder().type(AdviserType.IGNORE).build();
+  @Builder.Default AdviserType type = AdviserType.builder().type(AdviserType.IGNORE).build();
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {

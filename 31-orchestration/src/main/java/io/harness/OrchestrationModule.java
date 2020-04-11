@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
+import com.google.inject.matcher.Matchers;
 
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
@@ -29,11 +30,12 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   @Override
   protected void configure() {
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
+    bindListener(Matchers.any(), new RegistryListener());
   }
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(WaiterModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(WaiterModule.getInstance(), OrchestrationBeansModule.getInstance());
   }
 
   @Override
