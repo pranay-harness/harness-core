@@ -15,6 +15,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -142,6 +143,19 @@ public class LogMLAnalysisGenerator implements Runnable {
           + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
           + "&stateType=" + context.getStateType();
 
+      String feedback_url = "";
+
+      boolean isNewFeedbacksEnabled =
+          managerClientHelper
+              .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
+              .getResource();
+      if (!isNewFeedbacksEnabled
+          && (logAnalysisMinute == 0 || logAnalysisMinute == context.getStartDataCollectionMinute())) {
+        feedback_url = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
+            + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId
+            + "&workflowId=" + workflowId + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+      }
+
       if (createExperiment) {
         final String experimentalLogAnalysisSaveUrl = "/verification/learning-exp"
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
@@ -165,6 +179,9 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                 .stateType(context.getStateType());
 
+        if (!isEmpty(feedback_url)) {
+          experimentalAnalysisTaskBuilder.feedback_url(feedback_url);
+        }
         if (isBaselineCreated) {
           experimentalAnalysisTaskBuilder.control_input_url(controlInputUrl)
               .test_input_url(testInputUrl)
@@ -212,6 +229,10 @@ public class LogMLAnalysisGenerator implements Runnable {
                                 .priority(0)
                                 .stateType(context.getStateType())
                                 .analysis_failure_url(failureUrl);
+
+      if (!isEmpty(feedback_url)) {
+        analysisTaskBuilder.feedback_url(feedback_url);
+      }
 
       if (isBaselineCreated) {
         analysisTaskBuilder.control_input_url(controlInputUrl)

@@ -43,6 +43,15 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
 
   @Override
   public void handle(AnalysisContext analysisContext) {
+    if (!managerClientHelper
+             .callManagerWithRetry(
+                 managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, analysisContext.getAccountId()))
+             .getResource()) {
+      logger.info("The feature CV_FEEDBACKS is not enabled for the account {}."
+              + " Will not execute handle() in WorkflowFeedbackAnalysisJob",
+          analysisContext.getAccountId());
+      return;
+    }
     logger.info(
         "Handling the feedback for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
     try {

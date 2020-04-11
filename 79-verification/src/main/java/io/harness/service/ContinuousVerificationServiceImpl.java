@@ -1201,6 +1201,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
+    if (!isFeatureFlagEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+      logger.info(
+          "CV Feedbacks feature flag is not enabled for account {}, not going to create a feedback task", accountId);
+      return;
+    }
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
     cvConfigurations.stream()

@@ -816,27 +816,27 @@ public class AnalysisServiceImpl implements AnalysisService {
         : analysisRecord.getAnalysisSummaryMessage();
 
     // Update with the feedback clusters
+    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+      boolean isDemoPath = featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
+      List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId, isDemoPath);
+      Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
+      feedbackRecords.forEach(cvFeedbackRecord -> {
+        if (isNotEmpty(cvFeedbackRecord.getStateExecutionId())
+            && cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
+          CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
+          if (!clusterTypeRecordMap.containsKey(type)) {
+            clusterTypeRecordMap.put(type, new HashMap<>());
+          }
 
-    boolean isDemoPath = featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
-    List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId, isDemoPath);
-    Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
-    feedbackRecords.forEach(cvFeedbackRecord -> {
-      if (isNotEmpty(cvFeedbackRecord.getStateExecutionId())
-          && cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
-        CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
-        if (!clusterTypeRecordMap.containsKey(type)) {
-          clusterTypeRecordMap.put(type, new HashMap<>());
+          clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
+              .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
         }
+      });
 
-        clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
-            .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
-      }
-    });
-
-    updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
-    updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
-    updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
-
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
+    }
     //----------------------------
     int unknownClusters = 0;
     int highRiskClusters = 0;

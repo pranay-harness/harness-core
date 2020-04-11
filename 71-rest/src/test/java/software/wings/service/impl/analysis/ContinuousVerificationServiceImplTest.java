@@ -53,6 +53,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -75,8 +76,10 @@ import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
@@ -138,6 +141,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private AppService appService;
 
   private Logger logger = mock(Logger.class);
 
@@ -165,6 +170,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     when(cvActivityLogService.getLoggerByStateExecutionId(any())).thenReturn(logger);
 
+    when(featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)).thenReturn(true);
+
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(accountId);
+
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
     FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     FieldUtils.writeField(continuousVerificationService, "settingsService", settingsService, true);
@@ -172,6 +181,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     FieldUtils.writeField(continuousVerificationService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(continuousVerificationService, "cvActivityLogService", cvActivityLogService, true);
     FieldUtils.writeField(continuousVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(continuousVerificationService, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(continuousVerificationService, "appService", appService, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
