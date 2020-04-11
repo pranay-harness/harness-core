@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
@@ -247,6 +248,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
+    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
@@ -307,6 +309,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testGetAnalysisSummaryFeedbackData() throws Exception {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
+    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);

@@ -1,7 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import static software.wings.beans.FeatureName.OUTAGE_CV_DISABLE;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -19,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -127,7 +126,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
           return -1L;
         }
 
-        if (managerClientHelper.isFeatureFlagEnabled(OUTAGE_CV_DISABLE, context.getAccountId())) {
+        if (managerClientHelper.isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, context.getAccountId())) {
           cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
               .info("Continuous Verification is disabled for your account. Please contact harness support.");
           completeCron = true;
@@ -203,15 +202,29 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
         logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
       } finally {
         try {
-          // delete cron.
+          // send notification to state manager and delete cron.
           if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-            logger.info("delete cron with error : {} errorMsg : {}", error, errorMsg);
             try {
-              if (jobExecutionContext.isPresent()) {
-                jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
+              logger.info(
+                  "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
+              if (!managerClientHelper
+                       .callManagerWithRetry(
+                           managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
+                       .getResource()) {
+                new LogMLAnalysisGenerator(context, logAnalysisMinute, false, analysisService, learningEngineService,
+                    managerClient, managerClientHelper, MLAnalysisType.LOG_ML)
+                    .sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
+                try {
+                  if (jobExecutionContext.isPresent()) {
+                    jobExecutionContext.get().getScheduler().deleteJob(
+                        jobExecutionContext.get().getJobDetail().getKey());
+                  }
+                } catch (Exception e) {
+                  logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
+                }
               }
             } catch (Exception e) {
-              logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
+              logger.error("Send notification failed for {} log analysis manager", context.getStateExecutionId(), e);
             }
           }
         } catch (Exception ex) {

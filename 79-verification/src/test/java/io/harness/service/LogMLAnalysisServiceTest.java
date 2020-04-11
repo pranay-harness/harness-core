@@ -189,8 +189,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
     when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerCallFeedbacks);
 
     when(appService.getAccountIdByAppId(appId)).thenReturn(accountId);
+    when(featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)).thenReturn(false);
 
     FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
     FieldUtils.writeDeclaredField(learningEngineService, "managerClient", verificationManagerClient, true);
