@@ -538,7 +538,6 @@ templateFolders { "name" : "duplicateKey" , "unique" : true} { "accountId" : 1 ,
 templateGalleries { "name" : "account_gallery_key_idx" , "background" : true} { "accountId" : 1 , "galleryKey" : 1}
 templateGalleries { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templateGalleries { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-templateGalleries { "name" : "yaml" , "background" : true} { "name" : 1 , "accountId" : 1}
 templateVersions { "name" : "account_template_version" , "background" : true} { "accountId" : 1 , "templateUuid" : 1 , "version" : -1}
 templateVersions { "name" : "appId_1" , "background" : true} { "appId" : 1}
 templateVersions { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
