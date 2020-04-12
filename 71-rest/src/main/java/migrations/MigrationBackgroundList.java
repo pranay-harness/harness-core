@@ -166,8 +166,10 @@ public class MigrationBackgroundList {
         .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
         .add(Pair.of(96, AddCommitTimeToGitSyncError.class))
         .add(Pair.of(97, BaseMigration.class))
-        .add(Pair.of(98, AddAccountIdToLogAnalysisRecordsMigration.class))
-        .add(Pair.of(99, AddAccountIdToLogDataRecordsMigration.class))
+        .add(Pair.of(98, BaseMigration.class))
+        .add(Pair.of(99, BaseMigration.class))
+        .add(Pair.of(100, AddAccountIdToLogAnalysisRecordsMigration.class))
+        .add(Pair.of(101, AddAccountIdToLogDataRecordsMigration.class))
         .build();
   }
 }
