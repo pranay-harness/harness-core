@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import java.util.Map;
 @Slf4j
 public abstract class AddAccountIdToCollectionUsingAppIdMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private AppService appService;
 
   @Override
   public void migrate() {
@@ -36,7 +34,7 @@ public abstract class AddAccountIdToCollectionUsingAppIdMigration implements Mig
   private String getAccountIdForAppId(Map<String, String> appIdToAccountIdMap, String appId) {
     if (!appIdToAccountIdMap.containsKey(appId)) {
       logger.info("Fetching account for app id {} and collection {}", appId, getCollectionName());
-      Application application = appService.get(appId, false);
+      Application application = wingsPersistence.get(Application.class, appId);
       if (application == null) {
         appIdToAccountIdMap.put(appId, "dummy_account_id");
       } else {
