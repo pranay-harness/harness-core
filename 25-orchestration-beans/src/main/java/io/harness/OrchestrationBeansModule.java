@@ -3,6 +3,7 @@ package io.harness;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.govern.DependencyModule;
+import io.harness.registries.RegistryModule;
 
 import java.util.Set;
 
@@ -23,6 +24,6 @@ public class OrchestrationBeansModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of();
+    return ImmutableSet.of(RegistryModule.getInstance());
   }
 }

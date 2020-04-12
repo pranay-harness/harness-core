@@ -28,7 +28,7 @@ public class FacilitatorRegistry implements Registry {
       FacilitatorProducer producer = registry.get(facilitatorObtainment.getType());
       return producer.produce(facilitatorObtainment.getParameters());
     }
-    throw new InvalidRequestException("No Adviser registered for type: " + facilitatorObtainment.getType());
+    throw new InvalidRequestException("No Facilitator registered for type: " + facilitatorObtainment.getType());
   }
 
   @Override
