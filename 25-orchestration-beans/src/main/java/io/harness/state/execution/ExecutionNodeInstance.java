@@ -14,6 +14,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ExecutionNodeInstanceKeys")
@@ -22,8 +24,9 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   // Immutable
   @Id String uuid;
   @Indexed long createdAt;
-  Ambiance ambiance;
-  ExecutionNode node;
+  @NotNull Ambiance ambiance;
+  @NotNull ExecutionNode node;
+  @Indexed @NotNull String executionInstanceId;
 
   // Mutable
   long lastUpdatedAt;

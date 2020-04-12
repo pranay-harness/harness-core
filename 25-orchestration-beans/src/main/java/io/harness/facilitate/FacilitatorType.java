@@ -9,7 +9,7 @@ import lombok.Value;
 @Redesign
 public class FacilitatorType {
   // Provided From the orchestration layer system facilitators
-  public static final String SYNC = "ASYNC";
+  public static final String SYNC = "SYNC";
   public static final String ASYNC = "ASYNC";
 
   String type;
