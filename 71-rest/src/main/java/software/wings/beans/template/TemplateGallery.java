@@ -21,9 +21,7 @@ import software.wings.beans.entityinterface.KeywordsAware;
 import java.util.Set;
 
 @Indexes({
-  @Index(fields = { @Field("name")
-                    , @Field("accountId") }, options = @IndexOptions(name = "yaml"))
-  , @Index(options = @IndexOptions(name = "account_gallery_key_idx"), fields = {
+  @Index(options = @IndexOptions(name = "account_gallery_key_idx"), fields = {
     @Field("accountId"), @Field("galleryKey")
   })
 })
