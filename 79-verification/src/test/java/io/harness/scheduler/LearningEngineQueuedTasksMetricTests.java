@@ -10,21 +10,8 @@ import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -42,6 +29,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+
+import java.util.HashSet;
 
 public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   @Inject private ServiceGuardAccountPoller serviceGuardAccountPoller;
@@ -63,7 +52,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
 
-    verify(harnessMetricRegistry, times(15))
+    verify(harnessMetricRegistry, times(24))
         .recordGaugeValue(taskCaptorName.capture(), taskCaptorParams.capture(), taskCaptorValue.capture());
 
     verifyMetricsPublished(taskCaptorName);
@@ -94,21 +83,24 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
                               .is24x7Task(true)
                               .build());
     wingsPersistence.save(LearningEngineAnalysisTask.builder()
-                              .cvConfigId(generateUuid())
                               .executionStatus(ExecutionStatus.QUEUED)
                               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                               .is24x7Task(false)
                               .build());
     wingsPersistence.save(LearningEngineExperimentalAnalysisTask.builder()
-                              .cvConfigId(generateUuid())
                               .executionStatus(ExecutionStatus.QUEUED)
                               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                               .is24x7Task(false)
                               .build());
     wingsPersistence.save(LearningEngineAnalysisTask.builder()
-                              .cvConfigId(generateUuid())
                               .executionStatus(ExecutionStatus.QUEUED)
                               .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                              .is24x7Task(false)
+                              .build());
+    wingsPersistence.save(LearningEngineAnalysisTask.builder()
+                              .cvConfigId(generateUuid())
+                              .executionStatus(ExecutionStatus.QUEUED)
+                              .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
                               .is24x7Task(false)
                               .build());
 
@@ -119,7 +111,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
 
-    verify(harnessMetricRegistry, times(15))
+    verify(harnessMetricRegistry, times(24))
         .recordGaugeValue(taskCaptorName.capture(), taskCaptorParams.capture(), taskCaptorValue.capture());
 
     verifyMetricsPublished(taskCaptorName);
@@ -128,21 +120,26 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   private void verifyMetricsPublished(ArgumentCaptor<String> taskCaptorName) {
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues())
-        .contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT);
-    assertThat(taskCaptorName.getAllValues())
-        .contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS);
-    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_WORKFLOW_TASK_COUNT);
+    assertThat(new HashSet<>(taskCaptorName.getAllValues()))
+        .isEqualTo(new HashSet<>(Lists.newArrayList("learning_engine_task_queued_time_in_seconds",
+            "learning_engine_task_queued_count", "learning_engine_analysis_task_queued_time_in_seconds",
+            "learning_engine_analysis_task_queued_count", "learning_engine_clustering_task_queued_time_in_seconds",
+            "learning_engine_clustering_task_queued_count", "learning_engine_feedback_task_queued_time_in_seconds",
+            "learning_engine_feedback_task_queued_count", "learning_engine_workflow_task_queued_time_in_seconds",
+            "learning_engine_workflow_task_queued_count",
+            "learning_engine_workflow_analysis_task_queued_time_in_seconds",
+            "learning_engine_workflow_analysis_task_queued_count",
+            "learning_engine_workflow_clustering_task_queued_time_in_seconds",
+            "learning_engine_workflow_clustering_task_queued_count",
+            "learning_engine_workflow_feedback_task_queued_time_in_seconds",
+            "learning_engine_workflow_feedback_task_queued_count",
+            "learning_engine_service_guard_task_queued_time_in_seconds",
+            "learning_engine_service_guard_task_queued_count",
+            "learning_engine_service_guard_analysis_task_queued_time_in_seconds",
+            "learning_engine_service_guard_analysis_task_queued_count",
+            "learning_engine_service_guard_clustering_task_queued_time_in_seconds",
+            "learning_engine_service_guard_clustering_task_queued_count",
+            "learning_engine_service_guard_feedback_task_queued_time_in_seconds",
+            "learning_engine_service_guard_feedback_task_queued_count")));
   }
 }

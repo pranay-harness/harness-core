@@ -12,21 +12,6 @@ import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTE
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
-import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
 import com.google.common.collect.Lists;
@@ -95,6 +80,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo.LicenseInfoKeys;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -255,21 +241,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initMetrics() {
-    registerGaugeMetric(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT, null);
-    registerGaugeMetric(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT, null);
-    registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT, null);
-    registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT, null);
-    registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
-    registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_TASK_COUNT, null);
-    registerGaugeMetric(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT, null);
+    VerificationConstants.LEARNING_ENGINE_TASKS_METRIC_LIST.forEach(
+        metricName -> registerGaugeMetric(metricName, null));
     registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);
     registerGaugeMetric(IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS);
   }
