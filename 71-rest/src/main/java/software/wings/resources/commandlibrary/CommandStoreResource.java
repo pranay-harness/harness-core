@@ -19,10 +19,13 @@ import io.harness.beans.SearchFilter;
 import io.harness.commandlibrary.api.dto.CommandDTO;
 import io.harness.commandlibrary.api.dto.CommandDTO.CommandDTOBuilder;
 import io.harness.commandlibrary.api.dto.CommandStoreDTO;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.network.SafeHttpCall;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.query.Sort;
+import retrofit2.Call;
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO.EnrichedCommandVersionDTOBuilder;
 import software.wings.beans.commandlibrary.CommandEntity;
@@ -32,6 +35,7 @@ import software.wings.beans.commandlibrary.CommandVersionEntity.CommandVersionsK
 import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.AuthRule;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +54,17 @@ public class CommandStoreResource {
   public static final String HARNESS = "harness";
 
   @Inject WingsPersistence wingsPersistence;
+  @Inject CommandLibraryServiceHttpClient commandLibraryServiceHttpClient;
 
+  @GET
+  @Path("test")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<String> test() throws IOException {
+    final Call<RestResponse<String>> call = commandLibraryServiceHttpClient.getHelloWorld();
+    return SafeHttpCall.execute(call);
+  }
   @GET
   @Timed
   @ExceptionMetered

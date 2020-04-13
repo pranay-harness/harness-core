@@ -22,6 +22,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.ccm.setup.config.CESetUpConfig;
+import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
@@ -140,6 +141,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("migrateToJre") private String migrateToJre;
   @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
   @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
+  @JsonProperty("commandLibraryServiceConfig") private CommandLibraryServiceConfig commandLibraryServiceConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

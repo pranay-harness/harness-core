@@ -35,4 +35,10 @@ public class InvalidRequestException extends WingsException {
     super(message, null, errorCode, Level.ERROR, reportTargets, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public InvalidRequestException(
+      String message, Throwable cause, ErrorCode errorCode, EnumSet<ReportTarget> reportTargets) {
+    super(message, cause, errorCode, Level.ERROR, reportTargets, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

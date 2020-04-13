@@ -443,3 +443,6 @@ cdnConfig:
   cdnJreTarPaths:
     oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
     openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
+commandLibraryServiceConfig:
+  baseUrl: https://localhost:5050/command-library-service/

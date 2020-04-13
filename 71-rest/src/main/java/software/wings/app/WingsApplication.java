@@ -52,6 +52,7 @@ import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
@@ -352,6 +353,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         return configuration.getPublisherConfiguration();
       }
     });
+
+    modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
 
     Injector injector = Guice.createInjector(modules);
 
