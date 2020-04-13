@@ -5,11 +5,11 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install apt-utils curl un
 
 RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
-COPY dockerization/delegate/apt-source-list /etc/apt/sources.list.d/kubernetes.list
+COPY apt-source-list /etc/apt/sources.list.d/kubernetes.list
 
 RUN apt-get update && apt-get install -y kubectl
 
-COPY dockerization/delegate/scripts /opt/harness-delegate/
+COPY scripts /opt/harness-delegate/
 
 RUN chmod +x /opt/harness-delegate/*.sh
 
