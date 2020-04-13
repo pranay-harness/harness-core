@@ -11,6 +11,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -53,7 +54,7 @@ import javax.annotation.Nullable;
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class UserGroup extends Base implements NotificationReceiverInfo {
+public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";

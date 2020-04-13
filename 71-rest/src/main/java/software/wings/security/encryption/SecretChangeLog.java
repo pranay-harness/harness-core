@@ -2,6 +2,7 @@ package software.wings.security.encryption;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
   }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
 })
 @FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
-public class SecretChangeLog extends Base {
+public class SecretChangeLog extends Base implements AccountAccess {
   @NotEmpty private String accountId;
 
   @NotEmpty private String encryptedDataId;

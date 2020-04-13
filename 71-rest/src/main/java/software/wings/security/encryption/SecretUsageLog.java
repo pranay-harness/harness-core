@@ -3,6 +3,7 @@ package software.wings.security.encryption;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +39,7 @@ import java.util.Date;
     @Field("accountId"), @Field("encryptedDataId")
   }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
 })
-public class SecretUsageLog extends Base {
+public class SecretUsageLog extends Base implements AccountAccess {
   @NotEmpty private String encryptedDataId;
 
   @NotEmpty private String accountId;

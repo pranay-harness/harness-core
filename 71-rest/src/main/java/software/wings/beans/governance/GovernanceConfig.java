@@ -8,6 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
@@ -33,7 +34,7 @@ import javax.annotation.Nonnull;
 @FieldNameConstants(innerTypeName = "GovernanceConfigKeys")
 @Entity(value = "governanceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByAware {
+public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess {
   @Id private String uuid;
 
   @Indexed private String accountId;

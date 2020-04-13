@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Value;
@@ -33,7 +34,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Indexes(@Index(fields = @Field("accountId"), options = @IndexOptions(name = "account_id_idx")))
 @FieldNameConstants(innerTypeName = "PipelineGovernanceConfigKeys")
 @ParametersAreNonnullByDefault
-public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
+public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess, AccountAccess {
   @Id private String uuid;
   @Nonnull private String accountId;
   @Nonnull private String name;

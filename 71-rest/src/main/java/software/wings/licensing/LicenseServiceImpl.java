@@ -547,7 +547,6 @@ public class LicenseServiceImpl implements LicenseService {
     if (licenseInfo == null) {
       throw new InvalidRequestException("license Info not present");
     }
-
     if (licenseInfo.getExpiryTime() > 0 && System.currentTimeMillis() > licenseInfo.getExpiryTime()) {
       licenseProvider.get(account.getLicenseId());
     } else {

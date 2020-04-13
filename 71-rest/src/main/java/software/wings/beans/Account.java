@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -51,7 +52,7 @@ import javax.validation.constraints.NotNull;
           fields = { @Field("gitSyncExpiryCheckIteration") })
 })
 
-public class Account extends Base implements PersistentRegularIterable {
+public class Account extends Base implements PersistentRegularIterable, AccountAccess {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
@@ -416,6 +417,11 @@ public class Account extends Base implements PersistentRegularIterable {
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public String getAccountId() {
+    return getUuid();
   }
 
   public static final class Builder {

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessEntity;
 import io.harness.event.model.EventType;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
@@ -23,7 +24,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "notifications")
 @HarnessEntity(exportable = false)
 @JsonTypeInfo(use = Id.NAME, property = "notificationType", include = As.EXISTING_PROPERTY)
-public abstract class Notification extends Base {
+public abstract class Notification extends Base implements AccountAccess {
   private String environmentId;
   private String entityId;
   private EntityType entityType;

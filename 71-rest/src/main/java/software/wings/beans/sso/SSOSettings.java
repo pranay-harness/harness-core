@@ -4,6 +4,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -18,7 +19,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 @Entity(value = "ssoSettings")
 @HarnessEntity(exportable = true)
-public abstract class SSOSettings extends Base {
+public abstract class SSOSettings extends Base implements AccountAccess {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
   @NotEmpty protected String url;

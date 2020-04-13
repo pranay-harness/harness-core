@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -49,7 +50,7 @@ import java.util.List;
 @Entity(value = "vaultConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "VaultConfigKeys")
-public class VaultLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
+public class VaultLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander, AccountAccess {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "Vault Url", required = true) private String vaultUrl;

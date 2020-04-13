@@ -3,6 +3,7 @@ package software.wings.beans.loginSettings;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
@@ -21,7 +22,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "LoginSettingKeys")
 @Entity(value = "loginSettings")
 @HarnessEntity(exportable = true)
-public class LoginSettings implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware {
+public class LoginSettings implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id @NotNull @SchemaIgnore private String uuid;
 
   @NotNull private String accountId;

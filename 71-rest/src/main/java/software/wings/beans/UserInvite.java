@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.persistence.AccountAccess;
 import io.harness.validation.Update;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,7 +35,7 @@ import java.util.List;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("email") }, options = @IndexOptions(name = "accountId_email_1")))
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
-public class UserInvite extends Base {
+public class UserInvite extends Base implements AccountAccess {
   public static final String UUID_KEY = "uuid";
 
   private String accountId;

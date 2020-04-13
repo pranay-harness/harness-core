@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -66,7 +67,8 @@ import javax.validation.constraints.NotNull;
                       , @Field("kmsId") }, options = @IndexOptions(name = "acctKmsIdx"))
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable {
+public class EncryptedData
+    extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess {
   @Inject @SchemaIgnore @Transient private static FeatureFlagService featureFlagService;
 
   @NotEmpty @Indexed private String name;

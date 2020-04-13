@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,7 +36,7 @@ import software.wings.beans.Preference.PreferenceKeys;
 @Entity(value = "preferences")
 @HarnessEntity(exportable = true)
 
-public abstract class Preference extends Base {
+public abstract class Preference extends Base implements AccountAccess {
   @NotEmpty private String name;
   @NotEmpty private String accountId;
   @NotEmpty private String userId;

@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "alertNotificationRules", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class AlertNotificationRule extends Base {
+public class AlertNotificationRule extends Base implements AccountAccess {
   public static final String ALERT_CATEGORY = "alertCategory";
 
   @Indexed @Setter String accountId;

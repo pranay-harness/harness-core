@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -25,7 +26,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class DelegateSequenceConfig extends Base {
+public class DelegateSequenceConfig extends Base implements AccountAccess {
   @NotEmpty private String accountId;
   @NotEmpty private String hostName;
   @NotEmpty private Integer sequenceNum;

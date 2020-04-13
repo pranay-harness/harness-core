@@ -3,6 +3,7 @@ package io.harness.limits;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.limits.lib.Limit;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import javax.validation.constraints.NotNull;
                       , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)
-public class ConfiguredLimit<T extends Limit> implements PersistentEntity {
+public class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private ObjectId id;
 
   private String accountId;
