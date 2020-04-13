@@ -56,9 +56,6 @@ public enum FeatureName {
   WEEKLY_WINDOW,
   SWITCH_GLOBAL_TO_GCP_KMS,
   SIDE_NAVIGATION,
-  /* This is marked deprecated as this feature is not used anywhere except a migration. Waiting for all the customers
-   * for migration to run before removing the feature flag.*/
-  @Deprecated TEMPLATE_YAML_SUPPORT,
   CUSTOM_APM_CV_TASK,
   CUSTOM_APM_24_X_7_CV_TASK,
   VANITY_URL,
