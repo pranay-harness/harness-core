@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 
 import com.google.common.collect.Lists;
 
@@ -26,9 +27,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.utils.ResourceTestRule;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +43,7 @@ import javax.ws.rs.core.MediaType;
  */
 public class GitSyncResourceTest extends WingsBaseTest {
   private static final GitSyncService GIT_SYNC_SERVICE = mock(GitSyncService.class);
+  private static final GitSyncErrorService GIT_SYNC_ERROR_SERVICE = mock(GitSyncErrorService.class);
 
   @Captor private ArgumentCaptor<PageRequest<GitSyncError>> pageRequestArgumentCaptor;
 
@@ -47,13 +51,19 @@ public class GitSyncResourceTest extends WingsBaseTest {
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new GitSyncResource(GIT_SYNC_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new GitSyncResource(GIT_SYNC_SERVICE, GIT_SYNC_ERROR_SERVICE))
+          .addProvider(WingsExceptionMapper.class)
+          .build();
+  private static final GitToHarnessErrorDetails gitToHarnessErrorDetails =
+      GitToHarnessErrorDetails.builder().gitCommitId("gitCommitId1").yamlContent("yamlContent").build();
 
-  private static final GitSyncError GIT_SYNC_ERROR =
-      GitSyncError.builder().accountId(ACCOUNT_ID).yamlFilePath("yamlFilePath").gitCommitId("gitCommitId").build();
+  private static final GitSyncError GIT_SYNC_ERROR = GitSyncError.builder()
+                                                         .accountId(ACCOUNT_ID)
+                                                         .gitSyncDirection(GIT_TO_HARNESS.toString())
+                                                         .yamlFilePath("yamlFilePath")
+                                                         .build();
 
   /**
    * Should list git sync errors.
@@ -63,7 +73,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListErrors() {
     PageResponse<GitSyncError> pageResponse = aPageResponse().withResponse(Lists.newArrayList(GIT_SYNC_ERROR)).build();
-    when(GIT_SYNC_SERVICE.fetchErrors(any(PageRequest.class))).thenReturn(pageResponse);
+    when(GIT_SYNC_ERROR_SERVICE.fetchErrors(any(PageRequest.class))).thenReturn(pageResponse);
 
     RestResponse<PageResponse<GitSyncError>> restResponse =
         RESOURCES.client()
@@ -72,7 +82,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
             .get(new GenericType<RestResponse<PageResponse<GitSyncError>>>() {});
 
     log().info(JsonUtils.asJson(restResponse));
-    verify(GIT_SYNC_SERVICE).fetchErrors(pageRequestArgumentCaptor.capture());
+    verify(GIT_SYNC_ERROR_SERVICE).fetchErrors(pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);
   }
@@ -87,12 +97,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
     RestResponse restResponse = RESOURCES.client()
                                     .target(format("/git-sync/errors/_discard?accountId=%s", ACCOUNT_ID))
                                     .request()
-                                    .post(entity(Arrays.asList(GitSyncError.builder()
-                                                                   .accountId(ACCOUNT_ID)
-                                                                   .yamlFilePath("yamlFilePath")
-                                                                   .gitCommitId("gitCommitId")
-                                                                   .build()),
-                                              MediaType.APPLICATION_JSON),
+                                    .post(entity(Arrays.asList("errorId"), MediaType.APPLICATION_JSON),
                                         new GenericType<RestResponse<List<GitSyncError>>>() {});
 
     assertThat(restResponse).isNotNull();

@@ -29,6 +29,7 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -104,19 +105,32 @@ public class YamlGitServiceTest extends WingsBaseTest {
     String firstCommitName = "commit1";
     String secondCommitName = "commit2";
     String firstCommitUpdatedName = "updated-commit1";
-    GitSyncError gitSyncError = GitSyncError.builder().accountId(ACCOUNT_ID).gitCommitId(firstCommitName).build();
+
+    GitSyncError gitSyncError =
+        GitSyncError.builder()
+            .accountId(ACCOUNT_ID)
+            .additionalErrorDetails(GitToHarnessErrorDetails.builder().gitCommitId(firstCommitName).build())
+            .build();
     wingsPersistence.save(gitSyncError);
-    wingsPersistence.save(GitSyncError.builder().accountId(ACCOUNT_ID).gitCommitId(secondCommitName).build());
+    wingsPersistence.save(
+        GitSyncError.builder()
+            .accountId(ACCOUNT_ID)
+            .additionalErrorDetails(GitToHarnessErrorDetails.builder().gitCommitId(secondCommitName).build())
+            .build());
 
     RestResponse<List<GitSyncError>> response = yamlGitService.listGitSyncErrors(ACCOUNT_ID);
-    assertThat(response.getResource().get(0).getGitCommitId()).isEqualTo(firstCommitName);
-    assertThat(response.getResource().get(1).getGitCommitId()).isEqualTo(secondCommitName);
+    assertThat(((GitToHarnessErrorDetails) response.getResource().get(0).getAdditionalErrorDetails()).getGitCommitId())
+        .isEqualTo(firstCommitName);
+    assertThat(((GitToHarnessErrorDetails) response.getResource().get(1).getAdditionalErrorDetails()).getGitCommitId())
+        .isEqualTo(secondCommitName);
 
-    gitSyncError.setGitCommitId(firstCommitUpdatedName);
+    ((GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails()).setGitCommitId(firstCommitUpdatedName);
     wingsPersistence.save(gitSyncError);
 
     response = yamlGitService.listGitSyncErrors(ACCOUNT_ID);
-    assertThat(response.getResource().get(0).getGitCommitId()).isEqualTo(firstCommitUpdatedName);
-    assertThat(response.getResource().get(1).getGitCommitId()).isEqualTo(secondCommitName);
+    assertThat(((GitToHarnessErrorDetails) response.getResource().get(0).getAdditionalErrorDetails()).getGitCommitId())
+        .isEqualTo(firstCommitUpdatedName);
+    assertThat(((GitToHarnessErrorDetails) response.getResource().get(1).getAdditionalErrorDetails()).getGitCommitId())
+        .isEqualTo(secondCommitName);
   }
 }

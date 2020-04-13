@@ -111,7 +111,7 @@ public class GitChangeSetProcesser {
       gitFileChange.setProcessingCommitId(processingCommitId);
       gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
       if (!isChangeFromAnotherCommitFlagSet(gitFileChange)) {
-        gitFileChange.setChangeFromAnotherCommit(gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
+        gitFileChange.setChangeFromAnotherCommit(!gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
       }
     });
   }

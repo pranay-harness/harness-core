@@ -6,7 +6,6 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -15,27 +14,6 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import java.util.List;
 
 public interface GitSyncService {
-  /**
-   *
-   * @param req
-   * @return
-   */
-  PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req);
-
-  /**
-   *
-   * @param req
-   * @return
-   */
-
-  /**
-   *
-   * @param errors
-   * @param status
-   * @param accountId
-   */
-  void deleteGitSyncErrorAndLogFileActivity(List<GitSyncError> errors, Status status, String accountId);
-
   /**
    *
    * @param accountId
@@ -109,20 +87,7 @@ public interface GitSyncService {
    * @param req
    * @return
    */
-  PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName);
-  /**
-   *
-   * @param req
-   * @return
-   */
-  PageResponse<GitSyncError> fetchErrorsInEachCommits(
-      PageRequest<GitSyncError> req, String gitCommitId, String accountId);
-
-  /**
-   *
-   * @param req
-   * @return
-   */
   PageResponse<GitProcessingError> fetchGitProcessingErrors(PageRequest<GitProcessingError> req, String accountId);
+
+  List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
 }

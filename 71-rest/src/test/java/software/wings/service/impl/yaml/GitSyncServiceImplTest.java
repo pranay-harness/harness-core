@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +26,9 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
@@ -41,6 +42,7 @@ import java.util.List;
 public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
   @Inject private WingsPersistence wingsPersistence;
+  @InjectMocks @Inject private GitSyncErrorService gitSyncErrorService;
   private String accountId = generateUuid();
   private String uuid = generateUuid();
 
@@ -48,17 +50,19 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Owner(developers = VARDAN_BANSAL)
   @Category(UnitTests.class)
   public void test_shouldListErrors() {
+    GitToHarnessErrorDetails gitToHarnessErrorDetails =
+        GitToHarnessErrorDetails.builder().gitCommitId("gitCommitId1").yamlContent("yamlContent").build();
+    GitToHarnessErrorDetails gitToHarnessErrorDetails1 =
+        GitToHarnessErrorDetails.builder().gitCommitId("gitCommitId2").yamlContent("yamlContent").build();
     final GitSyncError gitSyncError1 = GitSyncError.builder()
-                                           .gitCommitId("gitCommitId1")
                                            .yamlFilePath("yamlFilePath1")
-                                           .yamlContent("yamlContent1")
+                                           .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .accountId(accountId)
                                            .build();
 
     final GitSyncError gitSyncError2 = GitSyncError.builder()
-                                           .gitCommitId("gitCommitId2")
                                            .yamlFilePath("yamlFilePath2")
-                                           .yamlContent("yamlContent2")
+                                           .additionalErrorDetails(gitToHarnessErrorDetails1)
                                            .accountId(accountId)
                                            .build();
 
@@ -66,25 +70,8 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     final PageRequest pageRequest = aPageRequest().withOffset("0").withLimit("2").build();
 
-    final PageResponse<GitSyncError> errorList = gitSyncService.fetchErrors(pageRequest);
+    final PageResponse<GitSyncError> errorList = gitSyncErrorService.fetchErrors(pageRequest);
     assertThat(errorList.size()).isEqualTo(2);
-  }
-
-  @Test
-  @Owner(developers = VARDAN_BANSAL)
-  @Category(UnitTests.class)
-  public void test_discardGitSyncErrorsForGivenIds() {
-    final GitSyncError gitSyncError = GitSyncError.builder()
-                                          .gitCommitId("gitCommitId")
-                                          .yamlFilePath("yamlFilePath")
-                                          .yamlContent("yamlContent")
-                                          .accountId(accountId)
-                                          .build();
-
-    wingsPersistence.save(gitSyncError);
-    gitSyncService.deleteGitSyncErrorAndLogFileActivity(
-        Arrays.asList(gitSyncError), GitFileActivity.Status.DISCARDED, accountId);
-    assertThat(wingsPersistence.get(GitSyncError.class, gitSyncError.getUuid())).isEqualTo(null);
   }
 
   @Test
@@ -315,41 +302,6 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     assertThat(gitCommit).isNotNull();
     assertThat(gitCommit.getFileProcessingSummary()).isNotNull();
-  }
-  @Owner(developers = DEEPAK)
-  @Category(UnitTests.class)
-  public void test_fetchGitToHarnessErrors() {
-    final String commitId = "gitCommitId";
-    // Saving GitSyncError
-    final GitSyncError gitSyncError =
-        GitSyncError.builder().accountId(accountId).fullSyncPath(false).gitCommitId(commitId).build();
-    gitSyncError.setCreatedAt(System.currentTimeMillis());
-    String id = wingsPersistence.save(gitSyncError);
-
-    PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
-    List<GitToHarnessErrorCommitStats> errorsList =
-        gitSyncService.fetchGitToHarnessErrors(req, accountId, null, null).getResponse();
-    assertThat(errorsList.size()).isEqualTo(1);
-    GitToHarnessErrorCommitStats error = errorsList.get(0);
-    assertThat(error.getFailedCount()).isEqualTo(1);
-  }
-
-  @Test
-  @Owner(developers = DEEPAK)
-  @Category(UnitTests.class)
-  public void test_fetchGitToHarnessErrorsCommitWise() {
-    final String commitId = "gitCommitId";
-    // Saving GitSyncError
-    final GitSyncError gitSyncError =
-        GitSyncError.builder().accountId(accountId).fullSyncPath(false).gitCommitId(commitId).build();
-    gitSyncError.setCreatedAt(System.currentTimeMillis());
-    String id = wingsPersistence.save(gitSyncError);
-
-    PageRequest<GitSyncError> req = aPageRequest().withLimit("2").withOffset("0").build();
-    List<GitSyncError> errorsList = gitSyncService.fetchErrorsInEachCommits(req, commitId, accountId).getResponse();
-    assertThat(errorsList.size()).isEqualTo(1);
-    GitSyncError error = errorsList.get(0);
-    assertThat(error.equals(gitSyncError)).isTrue();
   }
 
   @Test

@@ -721,6 +721,8 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
+import software.wings.yaml.errorhandling.HarnessToGitErrorDetails;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -1506,5 +1508,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put(smss + "SpotinstTrafficShiftAlbSetupElement", SpotinstTrafficShiftAlbSetupElement.class);
     w.put(smss + "SpotinstTrafficShiftAlbSetupExecutionData", SpotinstTrafficShiftAlbSetupExecutionData.class);
     w.put(smss + "SpotinstTrafficShiftAlbDeployExecutionData", SpotinstTrafficShiftAlbDeployExecutionData.class);
+    w.put("yaml.errorhandling.GitToHarnessErrorDetails", GitToHarnessErrorDetails.class);
+    w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
   }
 }

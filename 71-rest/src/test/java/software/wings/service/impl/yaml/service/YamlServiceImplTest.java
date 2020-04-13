@@ -144,7 +144,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
             .withChangeType(DELETE)
             .build();
     final ArrayList<Change> changeList = Lists.newArrayList(change1, change2, change3, change4);
-    yamlService.computeProcessingOrder(changeList);
+    yamlService.sortByProcessingOrder(changeList);
     assertThat(changeList).isEqualTo(Arrays.asList(change4, change2, change3, change1));
   }
 }

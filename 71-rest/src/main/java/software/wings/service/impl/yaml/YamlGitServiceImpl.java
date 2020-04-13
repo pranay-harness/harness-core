@@ -11,17 +11,14 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
-import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -51,7 +48,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.fabric8.utils.Strings;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -68,7 +64,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -77,7 +72,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -92,7 +86,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.trigger.WebhookSource;
-import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommitRequest;
@@ -118,6 +111,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
@@ -135,18 +129,14 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
-import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -169,8 +159,6 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                                               .add(GitCommit.Status.FAILED)
                                                                               .add(GitCommit.Status.SKIPPED)
                                                                               .build();
-  private static final List<String> NULL_AND_EMPTY = Arrays.asList(null, "");
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private YamlDirectoryService yamlDirectoryService;
@@ -189,6 +177,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private WebhookEventUtils webhookEventUtils;
   @Inject private FeatureFlagService featureFlagService;
   @Inject GitSyncService gitSyncService;
+  @Inject GitSyncErrorService gitSyncErrorService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -873,6 +862,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
     return false;
   }
+
   private List<GitCommit.Status> getProcessedGitCommitStatusList(String accountId) {
     return GIT_COMMIT_PROCESSED_STATUS;
   }
@@ -904,7 +894,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       String accountId, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, boolean gitToHarness) {
     if (failedYamlFileChangeMap.size() > 0) {
       failedYamlFileChangeMap.values().forEach(changeWithErrorMsg
-          -> upsertGitSyncErrors(changeWithErrorMsg.getChange(), changeWithErrorMsg.getErrorMsg(), false));
+          -> gitSyncErrorService.upsertGitSyncErrors(
+              changeWithErrorMsg.getChange(), changeWithErrorMsg.getErrorMsg(), false, gitToHarness));
       alertService.openAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }
@@ -943,95 +934,6 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private GitConnectionErrorAlert getGitConnectionErrorAlert(String accountId, String message) {
     return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
-  }
-
-  @Override
-  public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
-    Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
-                                          .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
-                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
-    GitFileChange failedGitFileChange = (GitFileChange) failedChange;
-    String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
-    final Long failedCommitTime =
-        failedGitFileChange.getCommitTimeMs() != null ? failedGitFileChange.getCommitTimeMs() : 0L;
-    String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
-    logger.info(String.format("Upsert git sync issue for file: %s", failedChange.getFilePath()));
-
-    UpdateOperations<GitSyncError> failedUpdateOperations =
-        wingsPersistence.createUpdateOperations(GitSyncError.class)
-            .setOnInsert(GitSyncError.ID_KEY, generateUuid())
-            .set(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
-            .set("yamlFilePath", failedChange.getFilePath())
-            .set("gitCommitId", failedCommitId)
-            .set("changeType", failedChange.getChangeType().name())
-            .set("failureReason",
-                errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info")
-            .set("fullSyncPath", fullSyncPath)
-            .set(APP_ID_KEY, appId)
-            .set(GitSyncErrorKeys.commitTime, failedCommitTime);
-
-    final YamlGitConfig yamlGitConfig = failedGitFileChange.getYamlGitConfig() != null
-        ? failedGitFileChange.getYamlGitConfig()
-        : fetchYamlGitConfig(appId, failedChange.getAccountId());
-
-    populateGitDetails(failedUpdateOperations, yamlGitConfig);
-
-    final GitSyncError gitSyncError = failedQuery.get();
-
-    // git sync error already exists
-    if (gitSyncError != null) {
-      // if fix got triggered from Git, it will come in through a new and valid commit id
-      if (StringUtils.isNotBlank(failedCommitId)) {
-        failedUpdateOperations.set("yamlContent", failedChange.getFileContent());
-        failedUpdateOperations.unset("lastAttemptedYaml");
-      }
-      // if fix got triggered from UI, commit id will remain the same
-      else {
-        failedUpdateOperations.set("lastAttemptedYaml", failedChange.getFileContent());
-      }
-    }
-    // if it's a new git sync error
-    else {
-      failedUpdateOperations.set("yamlContent", failedChange.getFileContent());
-    }
-
-    failedQuery.project(GitSyncError.ID_KEY, true);
-    wingsPersistence.upsert(failedQuery, failedUpdateOperations, upsertReturnNewOptions);
-  }
-
-  private YamlGitConfig fetchYamlGitConfig(String appId, String accountId) {
-    if (isNotEmpty(appId) && isNotEmpty(accountId)) {
-      final String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
-      final EntityType entityType = GLOBAL_APP_ID.equals(appId) ? ACCOUNT : APPLICATION;
-      return get(accountId, entityId, entityType);
-    }
-    return null;
-  }
-
-  private void populateGitDetails(UpdateOperations<GitSyncError> failedUpdateOperations, YamlGitConfig yamlGitConfig) {
-    if (yamlGitConfig != null) {
-      final String gitConnectorId = Strings.emptyIfNull(yamlGitConfig.getGitConnectorId());
-      final String branchName = Strings.emptyIfNull(yamlGitConfig.getBranchName());
-      failedUpdateOperations.set(GitSyncErrorKeys.gitConnectorId, gitConnectorId);
-      failedUpdateOperations.set(GitSyncErrorKeys.branchName, branchName);
-      failedUpdateOperations.set(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfig.getUuid());
-    }
-  }
-
-  private String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {
-    String appId = GLOBAL_APP_ID;
-
-    // Fetch appName from yamlPath, e.g. Setup/Applications/App1/Services/S1/index.yaml -> App1,
-    // Setup/Artifact Servers/server.yaml -> null
-    String appName = yamlHelper.getAppName(yamlFilePath);
-    if (StringUtils.isNotBlank(appName)) {
-      Application app = appService.getAppByName(accountId, appName);
-      if (app != null) {
-        appId = app.getUuid();
-      }
-    }
-
-    return appId;
   }
 
   @Override
@@ -1101,9 +1003,9 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public RestResponse discardGitSyncErrorForFullSync(String accountId, String appId) {
-    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
+    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class).disableValidation();
     query.filter("accountId", accountId);
-    query.filter("fullSyncPath", true);
+    query.filter(GitSyncErrorKeys.fullSyncPath, true);
     query.filter(APP_ID_KEY, appId);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
@@ -1275,57 +1177,5 @@ public class YamlGitServiceImpl implements YamlGitService {
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
-  }
-
-  @Override
-  public List<GitSyncError> getActiveGitToHarnessSyncErrors(
-      String accountId, String gitConnectorId, String branchName, long fromTimestamp) {
-    //  get all app ids sharing same repo and branch name
-    final Set<String> allowedAppIdSet = appIdsSharingRepoBranch(accountId, gitConnectorId, branchName);
-    if (isEmpty(allowedAppIdSet)) {
-      return Collections.emptyList();
-    }
-    final Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
-                                          .filter(ACCOUNT_ID_KEY, accountId)
-                                          .field(GitSyncErrorKeys.gitCommitId)
-                                          .notIn(NULL_AND_EMPTY)
-                                          .filter(GitSyncErrorKeys.branchName, branchName)
-                                          .filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId)
-                                          .field(CreatedAtAware.CREATED_AT_KEY)
-                                          .greaterThan(fromTimestamp);
-
-    query.or(query.criteria(GitSyncErrorKeys.status).doesNotExist(),
-        query.criteria(GitSyncErrorKeys.status).equal(GitSyncErrorStatus.ACTIVE));
-
-    final List<GitSyncError> gitSyncErrorList = emptyIfNull(query.asList());
-
-    return gitSyncErrorList.stream()
-        .filter(gitSyncError -> errorOfAllowedApp(gitSyncError, allowedAppIdSet) || isNewAppError(gitSyncError))
-        .collect(toList());
-  }
-
-  private boolean isNewAppError(GitSyncError error) {
-    return GLOBAL_APP_ID.equals(error.getAppId())
-        && error.getYamlFilePath().startsWith(SETUP_FOLDER + PATH_DELIMITER + APPLICATIONS_FOLDER);
-  }
-  private boolean errorOfAllowedApp(GitSyncError error, Set<String> allowedAppIdSet) {
-    return allowedAppIdSet.contains(error.getAppId());
-  }
-
-  private Set<String> appIdsSharingRepoBranch(String accountId, String gitConnectorId, String branchName) {
-    final List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
-                                                      .project(YamlGitConfigKeys.entityId, true)
-                                                      .project(YamlGitConfigKeys.entityType, true)
-                                                      .filter(ACCOUNT_ID_KEY, accountId)
-                                                      .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
-                                                      .filter(YamlGitConfigKeys.gitConnectorId, gitConnectorId)
-                                                      .filter(YamlGitConfigKeys.branchName, branchName)
-                                                      .asList();
-
-    return emptyIfNull(yamlGitConfigList)
-        .stream()
-        .map(
-            yamlGitConfig -> yamlGitConfig.getEntityType() == APPLICATION ? yamlGitConfig.getEntityId() : GLOBAL_APP_ID)
-        .collect(Collectors.toSet());
   }
 }
