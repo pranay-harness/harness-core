@@ -10,7 +10,9 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STAT
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +56,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -236,6 +239,15 @@ public class SpotInstDeployState extends State {
         // These are newly launched instances, set NewInstance = true for verification service
         newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
         instanceElements.addAll(newInstanceElements);
+
+        List<InstanceStatusSummary> newInstanceStatusSummaries = newInstanceElements.stream()
+                                                                     .map(instanceElement
+                                                                         -> anInstanceStatusSummary()
+                                                                                .withInstanceElement(instanceElement)
+                                                                                .withStatus(executionStatus)
+                                                                                .build())
+                                                                     .collect(toList());
+        stateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
       }
 
       List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(

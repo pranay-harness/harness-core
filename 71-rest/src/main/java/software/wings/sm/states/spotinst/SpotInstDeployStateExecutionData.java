@@ -9,8 +9,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -36,6 +39,7 @@ public class SpotInstDeployStateExecutionData extends StateExecutionData impleme
   private ElastiGroup oldElastiGroupOriginalConfig;
 
   private SpotInstCommandRequest spotinstCommandRequest;
+  @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
