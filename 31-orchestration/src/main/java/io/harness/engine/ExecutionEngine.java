@@ -12,6 +12,8 @@ import com.google.inject.name.Named;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineResumeExecutor;
@@ -65,23 +67,26 @@ public class ExecutionEngine implements Engine {
 
   @Inject EngineStatusHelper engineStatusHelper;
 
-  public void startExecution(@Valid ExecutionPlan executionPlan) {
+  public ExecutionInstance startExecution(@Valid ExecutionPlan executionPlan, EmbeddedUser createdBy) {
     ExecutionInstance instance = ExecutionInstance.builder()
                                      .uuid(generateUuid())
                                      .executionPlan(executionPlan)
                                      .status(ExecutionInstanceStatus.QUEUED)
+                                     .createdBy(createdBy)
+                                     .startTs(System.currentTimeMillis())
                                      .build();
     hPersistence.save(instance);
     ExecutionNode executionNode = executionPlan.fetchStartingNode();
     if (executionNode == null) {
       logger.warn("Cannot Start Execution for empty plan");
-      return;
+      return null;
     }
     Ambiance ambiance = Ambiance.builder()
                             .setupAbstractions(executionPlan.getSetupAbstractions())
                             .setupAbstraction("executionInstanceId", instance.getUuid())
                             .build();
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(this).build());
+    return instance;
   }
 
   public void startExecution(Ambiance ambiance) {
@@ -104,6 +109,7 @@ public class ExecutionEngine implements Engine {
         ExecutionNodeInstance.builder()
             .uuid(generateUuid())
             .node(executionNode)
+            .ambiance(ambiance)
             .executionInstanceId(ambiance.getSetupAbstractions().get("executionInstanceId"))
             .status(NodeExecutionStatus.QUEUED)
             .build();
@@ -144,7 +150,10 @@ public class ExecutionEngine implements Engine {
   private void invokeState(
       Ambiance ambiance, FacilitatorResponse facilitatorResponse, ExecutionNodeInstance nodeInstance) {
     ExecutionNode node = nodeInstance.getNode();
-    State currentState = stateRegistry.obtain(node.getStateType());
+    State currentState = engineObtainmentHelper.obtainState(node.getStateType());
+    if (currentState == null) {
+      throw new InvalidRequestException("Cannot find state for state type: " + node.getStateType());
+    }
     injector.injectMembers(currentState);
     List<StateTransput> inputs = engineObtainmentHelper.obtainInputs(node.getRefObjects());
     switch (facilitatorResponse.getExecutionMode()) {
@@ -174,7 +183,9 @@ public class ExecutionEngine implements Engine {
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
     if (isEmpty(advisers)) {
-      logger.info("No advisers present should end execution");
+      engineStatusHelper.updateExecutionInstanceStatus(
+          nodeInstance.getAmbiance().getSetupAbstractions().get("executionInstanceId"),
+          ExecutionInstanceStatus.SUCCEEDED);
       return;
     }
     Advise advise = null;
@@ -184,17 +195,20 @@ public class ExecutionEngine implements Engine {
         break;
       }
     }
-    if (advise == null) {
-      logger.info("End Execution");
-      return;
-    }
-    handleAdvise(advise);
+    handleAdvise(nodeInstance.getAmbiance(), advise);
   }
 
-  private void handleAdvise(Advise advise) {
+  private void handleAdvise(Ambiance ambiance, Advise advise) {
     if (advise != null) {
-      logger.info("Advise Received with nextNodeId: {}", advise);
+      if ("ON_SUCCESS".equals(advise.getType())) {
+        OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
+        startNodeExecution(ambiance,
+            engineObtainmentHelper.fetchExecutionNode(
+                onSuccessAdvise.getNextNodeId(), ambiance.getSetupAbstractions().get("executionInstanceId")));
+      }
     }
+    // End Execution
+    logger.info("Advise is null ending execution");
   }
 
   private void handleAsyncExecutableResponse(
@@ -217,7 +231,7 @@ public class ExecutionEngine implements Engine {
     ExecutionNodeInstance nodeInstance =
         engineStatusHelper.updateNodeInstanceStatus(nodeInstanceId, NodeExecutionStatus.RUNNING);
     ExecutionNode node = nodeInstance.getNode();
-    State currentState = stateRegistry.obtain(node.getStateType());
+    State currentState = engineObtainmentHelper.obtainState(node.getStateType());
     injector.injectMembers(currentState);
     if (nodeInstance.getStatus() != NodeExecutionStatus.RUNNING) {
       logger.warn(

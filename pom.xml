@@ -22,6 +22,7 @@
         <module>64-events-framework</module>
         <module>65-delegate-beans</module>
         <module>71-rest</module>
+        <module>72-ci-manager</module>
         <module>72-event-server</module>
         <module>75-model-test</module>
         <module>76-graphql-test</module>
@@ -30,7 +31,6 @@
         <module>81-delegate</module>
         <module>82-watcher</module>
         <module>84-command-library-server</module>
-        <module>72-ci-manager</module>
         <module>85-functional-test</module>
         <module>89-migration-job</module>
         <module>91-model-gen-tool</module>

@@ -14,5 +14,6 @@ import java.util.Map;
 public interface AsyncExecutable {
   AsyncExecutableResponse executeAsync(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
-  StateResponse handleAsyncResponse(Ambiance ambiance, Map<String, ResponseData> responseDataMap);
+  StateResponse handleAsyncResponse(
+      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap);
 }
