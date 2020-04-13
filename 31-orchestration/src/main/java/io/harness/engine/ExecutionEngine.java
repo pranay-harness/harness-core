@@ -32,7 +32,6 @@ import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
 import io.harness.state.execution.status.NodeExecutionStatus;
-import io.harness.state.io.StateExecutionPackage;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
@@ -147,21 +146,18 @@ public class ExecutionEngine implements Engine {
     ExecutionNode node = nodeInstance.getNode();
     State currentState = stateRegistry.obtain(node.getStateType());
     injector.injectMembers(currentState);
-    StateExecutionPackage stateExecutionPackage = StateExecutionPackage.builder()
-                                                      .ambiance(ambiance)
-                                                      .inputs(engineObtainmentHelper.obtainInputs(node.getRefObjects()))
-                                                      .stateParameter(node.getStateParameters())
-                                                      .build();
+    List<StateTransput> inputs = engineObtainmentHelper.obtainInputs(node.getRefObjects());
     switch (facilitatorResponse.getExecutionMode()) {
       case SYNC:
         SyncExecutable syncExecutable = (SyncExecutable) currentState;
-        StateResponse stateResponse =
-            syncExecutable.executeSync(stateExecutionPackage, facilitatorResponse.getPassThroughData());
+        StateResponse stateResponse = syncExecutable.executeSync(
+            ambiance, node.getStateParameters(), inputs, facilitatorResponse.getPassThroughData());
         handleStateResponse(nodeInstance.getUuid(), stateResponse);
         break;
       case ASYNC:
         AsyncExecutable asyncExecutable = (AsyncExecutable) currentState;
-        AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(stateExecutionPackage);
+        AsyncExecutableResponse asyncExecutableResponse =
+            asyncExecutable.executeAsync(ambiance, node.getStateParameters(), inputs);
         handleAsyncExecutableResponse(nodeInstance, asyncExecutableResponse);
         break;
       default:

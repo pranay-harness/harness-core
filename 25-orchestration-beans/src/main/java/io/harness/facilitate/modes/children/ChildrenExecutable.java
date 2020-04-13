@@ -1,14 +1,17 @@
 package io.harness.facilitate.modes.children;
 
 import io.harness.delegate.beans.ResponseData;
-import io.harness.state.io.StateExecutionPackage;
+import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
+import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ChildrenExecutable {
-  ChildrenExecutableResponse obtainChildren(StateExecutionPackage stateExecutionPackage);
+  ChildrenExecutableResponse obtainChildren(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
-  StateResponse handleAsyncResponse(Ambiance ambiance, Map<String, ResponseData> responseDataMap);
+  StateResponse handleAsyncResponse(
+      Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap);
 }
