@@ -79,7 +79,7 @@ public class ChronicleEventAppenderTest extends CategoryTest {
             @Singleton
             @Named("tailer")
             BackoffScheduler backoffScheduler() {
-              Duration delay = Duration.ofSeconds(1);
+              Duration delay = Duration.ofMillis(50);
               return new BackoffScheduler(ChronicleEventTailer.class.getSimpleName(), delay, delay);
             }
           }));
