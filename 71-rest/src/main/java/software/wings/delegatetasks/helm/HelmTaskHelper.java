@@ -17,6 +17,7 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -260,7 +261,7 @@ public class HelmTaskHelper {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e);
-    } catch (TimeoutException e) {
+    } catch (TimeoutException | UncheckedTimeoutException e) {
       throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
     }
   }

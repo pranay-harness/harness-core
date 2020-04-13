@@ -14,6 +14,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -41,6 +42,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InfraMappingElement;
@@ -138,6 +140,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,10 +220,12 @@ public class HelmDeployState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     boolean valuesInGit = false;
     boolean valuesInHelmChartRepo = false;
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
     if (HELM_DEPLOY.name().equals(this.getStateType())) {
       appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+      helmOverrideManifestMap = applicationManifestUtils.getApplicationManifests(context, HELM_CHART_OVERRIDE);
       valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
       valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
     }
@@ -228,13 +233,13 @@ public class HelmDeployState extends State {
     Activity activity = createActivity(context, getCommandUnits(valuesInGit, valuesInHelmChartRepo));
 
     if (valuesInHelmChartRepo) {
-      return executeHelmValuesFetchTask(context, activity.getUuid());
+      return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap);
     }
     if (valuesInGit) {
       return executeGitTask(context, activity.getUuid(), appManifestMap);
     }
 
-    return executeHelmTask(context, activity.getUuid(), appManifestMap);
+    return executeHelmTask(context, activity.getUuid(), appManifestMap, helmOverrideManifestMap);
   }
 
   protected List<CommandUnit> getCommandUnits(boolean valuesInGit, boolean valuesInHelmChartRepo) {
@@ -253,7 +258,7 @@ public class HelmDeployState extends State {
     return commandUnits;
   }
 
-  protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
+  protected ImageDetails getImageDetails(ExecutionContext context, Artifact artifact) {
     return artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
   }
 
@@ -284,12 +289,12 @@ public class HelmDeployState extends State {
 
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
-      String accountId, String appId, String activityId, ImageDetails imageDetails,
-      ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
-    List<String> helmValueOverridesYamlFilesEvaluated = getValuesYamlOverrides(
-        context, containerServiceParams, appId, imageDetails, infrastructureMapping, appManifestMap);
+      String accountId, String appId, String activityId, ImageDetails imageDetails, String repoName,
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags,
+      K8sDelegateManifestConfig repoConfig, Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+      HelmVersion helmVersion) {
+    List<String> helmValueOverridesYamlFilesEvaluated =
+        getValuesYamlOverrides(context, containerServiceParams, imageDetails, appManifestMap);
 
     steadyStateTimeout = steadyStateTimeout > 0 ? steadyStateTimeout : DEFAULT_STEADY_STATE_TIMEOUT;
 
@@ -461,12 +466,14 @@ public class HelmDeployState extends State {
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.VALUES);
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap =
+        applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
 
     boolean valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
     if (valuesInGit) {
       return executeGitTask(context, activityId, appManifestMap);
     } else {
-      return executeHelmTask(context, activityId, appManifestMap);
+      return executeHelmTask(context, activityId, appManifestMap, helmOverrideManifestMap);
     }
   }
 
@@ -475,7 +482,11 @@ public class HelmDeployState extends State {
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    /*
+    Nothing to do in case of abort
+     */
+  }
 
   protected Activity createActivity(ExecutionContext executionContext, List<CommandUnit> commandUnits) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
@@ -661,12 +672,13 @@ public class HelmDeployState extends State {
   }
 
   private ExecutionResponse executeHelmTask(ExecutionContext context, String activityId,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) throws InterruptedException {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) throws InterruptedException {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
-    Application app = appService.get(context.getAppId());
-    Environment env = workflowStandardParams.getEnv();
+    final Application app = appService.get(context.getAppId());
+    final Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
 
@@ -718,6 +730,7 @@ public class HelmDeployState extends State {
 
           break;
         case HelmChartRepo:
+          applicationManifestUtils.applyEnvGlobalHelmChartOverride(appManifest, helmOverrideManifestMap);
           if (appManifest.getHelmChartConfig() == null) {
             helmChartSpecification = null;
           } else if (isBlank(appManifest.getHelmChartConfig().getConnectorId())) {
@@ -738,7 +751,7 @@ public class HelmDeployState extends State {
           break;
 
         default:
-          throw new WingsException("Unsupported store type: " + appManifest.getStoreType());
+          throw new InvalidRequestException("Unsupported store type: " + appManifest.getStoreType(), USER);
       }
     }
 
@@ -767,7 +780,7 @@ public class HelmDeployState extends State {
 
     ImageDetails imageDetails = null;
     if (artifact != null) {
-      imageDetails = getImageDetails(context, app, artifact);
+      imageDetails = getImageDetails(context, artifact);
     }
 
     String repoName = getRepoName(app.getName(), serviceElement.getName());
@@ -797,8 +810,8 @@ public class HelmDeployState extends State {
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
         encryptedDataDetails, cmdFlags, helmVersion);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
-        releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
-        gitConfig, encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
+        releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, repoName, gitConfig,
+        encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
 
     List<String> tags = new ArrayList<>();
     tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
@@ -892,7 +905,7 @@ public class HelmDeployState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
     HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData != null) {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
@@ -1000,14 +1013,16 @@ public class HelmDeployState extends State {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
     helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap =
+        applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
 
-    return executeHelmTask(context, activityId, helmDeployStateExecutionData.getAppManifestMap());
+    return executeHelmTask(
+        context, activityId, helmDeployStateExecutionData.getAppManifestMap(), helmOverrideManifestMap);
   }
 
   private List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,
-      String appId, ImageDetails imageDetails, ContainerInfrastructureMapping infrastructureMapping,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+      ImageDetails imageDetails, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
 
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
@@ -1024,7 +1039,7 @@ public class HelmDeployState extends State {
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
-              .filter(yamlFileContent -> isNotBlank(yamlFileContent))
+              .filter(StringUtils::isNotBlank)
               .map(yamlFileContent -> {
                 if (imageDetails != null) {
                   if (isNotBlank(imageDetails.getTag())) {
@@ -1070,10 +1085,11 @@ public class HelmDeployState extends State {
     return valuesList;
   }
 
-  public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId) {
+  public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId,
+      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
     Application app = appService.get(context.getAppId());
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
-        getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId);
+        getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId, helmOverrideManifestMap);
 
     List<String> tags = new ArrayList<>();
     if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
@@ -1112,8 +1128,8 @@ public class HelmDeployState extends State {
         .build();
   }
 
-  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(
-      ExecutionContext context, String appId, String activityId) {
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String appId,
+      String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 
@@ -1143,6 +1159,8 @@ public class HelmDeployState extends State {
     if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
       return helmValuesFetchTaskParameters;
     }
+
+    applicationManifestUtils.applyEnvGlobalHelmChartOverride(applicationManifest, helmOverrideManifestMap);
 
     helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
         helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));

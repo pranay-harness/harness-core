@@ -6,11 +6,13 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ApplicationManifestService extends OwnedByService, OwnedByEnvironment {
   ApplicationManifest create(ApplicationManifest applicationManifest);
@@ -53,6 +55,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   AppManifestSource getAppManifestType(ApplicationManifest applicationManifest);
 
   List<ApplicationManifest> getAllByEnvId(String appId, String envId);
+
+  List<ApplicationManifest> getAllByConnectorId(String accountId, String connectorId, Set<StoreType> storeTypes);
 
   void deleteManifestFile(String appId, ManifestFile manifestFile);
 

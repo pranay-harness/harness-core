@@ -112,6 +112,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -474,6 +475,24 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       services = serviceResourceService.list(pageRequest, false, false, false, null);
     }
     return services;
+  }
+
+  @Override
+  @Nonnull
+  public List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> envIds) {
+    if (isEmpty(envIds)) {
+      return Collections.emptyList();
+    }
+    return wingsPersistence.createQuery(Environment.class)
+        .field(EnvironmentKeys.accountId)
+        .equal(accountId)
+        .field(EnvironmentKeys.uuid)
+        .in(envIds)
+        .project(EnvironmentKeys.name, true)
+        .asList()
+        .stream()
+        .map(Environment::getName)
+        .collect(Collectors.toList());
   }
 
   private void ensureEnvironmentSafeToDelete(Environment environment) {

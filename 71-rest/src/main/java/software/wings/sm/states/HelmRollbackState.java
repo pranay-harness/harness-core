@@ -9,7 +9,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -49,8 +48,7 @@ public class HelmRollbackState extends HelmDeployState {
   @Override
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
-      String accountId, String appId, String activityId, ImageDetails imageTag,
-      ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
+      String accountId, String appId, String activityId, ImageDetails imageTag, String repoName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
     Integer previousReleaseRevision = null;
@@ -82,7 +80,7 @@ public class HelmRollbackState extends HelmDeployState {
   }
 
   @Override
-  protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
+  protected ImageDetails getImageDetails(ExecutionContext context, Artifact artifact) {
     return null;
   }
 

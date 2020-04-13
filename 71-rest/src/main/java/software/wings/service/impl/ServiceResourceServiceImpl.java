@@ -84,6 +84,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -923,6 +924,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service get(String appId, String serviceId) {
     return get(appId, serviceId, false);
+  }
+
+  @Override
+  @NonNull
+  public List<String> getNames(String accountId, List<String> serviceIds) {
+    if (isEmpty(serviceIds)) {
+      return Collections.emptyList();
+    }
+    return wingsPersistence.createQuery(Service.class)
+        .field(ServiceKeys.accountId)
+        .equal(accountId)
+        .field(ServiceKeys.uuid)
+        .in(serviceIds)
+        .project(ServiceKeys.name, true)
+        .asList()
+        .stream()
+        .map(Service::getName)
+        .collect(toList());
   }
 
   @Override
