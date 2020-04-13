@@ -9,6 +9,9 @@ import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUS
 import static software.wings.beans.yaml.GitCommand.GitCommandType.DIFF;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitTimeOfError;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
@@ -44,6 +47,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Utils;
@@ -83,7 +87,8 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient @Inject private YamlDirectoryService yamlDirectoryService;
   @Transient @Inject private WingsPersistence wingsPersistence;
   @Transient @Inject private transient GitChangeSetProcesser gitChangeSetProcesser;
-  @Inject GitSyncService gitSyncService;
+  @Transient @Inject GitSyncService gitSyncService;
+  @Transient @Inject private GitSyncErrorService gitSyncErrorService;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
@@ -171,7 +176,7 @@ public class GitCommandCallback implements NotifyCallback {
 
   private List<GitFileChange> getActiveGitSyncErrorFiles(String accountId, String branchName, String gitConnectorId) {
     final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
-    return yamlGitService.getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, _30_days_millis)
+    return gitSyncErrorService.getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, _30_days_millis)
         .stream()
         .map(this ::convertToGitFileChange)
         .collect(Collectors.toList());
@@ -180,13 +185,13 @@ public class GitCommandCallback implements NotifyCallback {
   private GitFileChange convertToGitFileChange(GitSyncError gitSyncError) {
     return aGitFileChange()
         .withFilePath(gitSyncError.getYamlFilePath())
-        .withFileContent(gitSyncError.getYamlContent())
+        .withFileContent(getYamlContentOfError(gitSyncError))
         .withAccountId(gitSyncError.getAccountId())
         .withChangeType(Utils.getEnumFromString(ChangeType.class, gitSyncError.getChangeType()))
         .withSyncFromGit(true)
-        .withCommitId(gitSyncError.getGitCommitId())
+        .withCommitId(getCommitIdOfError(gitSyncError))
         .withChangeFromAnotherCommit(Boolean.TRUE)
-        .withCommitTimeMs(gitSyncError.getCommitTime())
+        .withCommitTimeMs(getCommitTimeOfError(gitSyncError))
         .build();
   }
   @VisibleForTesting

@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
@@ -19,6 +18,7 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -47,10 +47,12 @@ import javax.ws.rs.QueryParam;
 @Slf4j
 public class GitSyncResource {
   private GitSyncService gitSyncService;
+  private GitSyncErrorService gitSyncErrorService;
 
   @Inject
-  public GitSyncResource(GitSyncService gitSyncService) {
+  public GitSyncResource(GitSyncService gitSyncService, GitSyncErrorService gitSyncErrorService) {
     this.gitSyncService = gitSyncService;
+    this.gitSyncErrorService = gitSyncErrorService;
   }
 
   /**
@@ -65,7 +67,7 @@ public class GitSyncResource {
   public RestResponse<PageResponse<GitSyncError>> listErrors(
       @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
-    PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrors(pageRequest);
+    PageResponse<GitSyncError> pageResponse = gitSyncErrorService.fetchErrors(pageRequest);
     return new RestResponse<>(pageResponse);
   }
 
@@ -84,7 +86,7 @@ public class GitSyncResource {
       @QueryParam("branchName") String branchName) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
     PageResponse<GitToHarnessErrorCommitStats> pageResponse =
-        gitSyncService.fetchGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
+        gitSyncErrorService.fetchGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
     return new RestResponse<>(pageResponse);
   }
 
@@ -99,8 +101,10 @@ public class GitSyncResource {
   @Path("errors/gitToHarness/{commitId}")
   public RestResponse<PageResponse<GitSyncError>> listGitToHarnessErrorsForACommit(
       @BeanParam PageRequest<GitSyncError> pageRequest, @PathParam("commitId") String commitId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrorsInEachCommits(pageRequest, commitId, accountId);
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("includeData") List<String> includeDataList,
+      @QueryParam("yamlFilePathPattern") String yamlFilePathPattern) {
+    PageResponse<GitSyncError> pageResponse = gitSyncErrorService.fetchErrorsInEachCommits(
+        pageRequest, commitId, accountId, includeDataList, yamlFilePathPattern);
     return new RestResponse<>(pageResponse);
   }
 
@@ -116,16 +120,8 @@ public class GitSyncResource {
   public RestResponse<PageResponse<GitSyncError>> listHarnessToGitErrors(
       @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("gitConnectorId") String gitConnectorId, @QueryParam("branchName") String branchName) {
-    pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
-    pageRequest.addFilter(GitSyncErrorKeys.gitCommitId, EQ, "");
-    if (isNotEmpty(gitConnectorId)) {
-      pageRequest.addFilter(GitSyncErrorKeys.gitConnectorId, EQ, gitConnectorId);
-    }
-
-    if (isNotEmpty(branchName)) {
-      pageRequest.addFilter(GitSyncErrorKeys.branchName, EQ, branchName);
-    }
-    PageResponse<GitSyncError> pageResponse = gitSyncService.fetchErrors(pageRequest);
+    PageResponse<GitSyncError> pageResponse =
+        gitSyncErrorService.fetchHarnessToGitErrors(pageRequest, accountId, gitConnectorId, branchName);
     return new RestResponse<>(pageResponse);
   }
 
@@ -168,23 +164,8 @@ public class GitSyncResource {
    */
   @POST
   @Path("errors/_discard")
-  public RestResponse discardGitSyncErrorV2(@QueryParam("accountId") String accountId, List<GitSyncError> errors) {
-    gitSyncService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
-    return RestResponse.Builder.aRestResponse().build();
-  }
-
-  // TODO remove this later on when UI starts consuming new endpoint : /errors/_discard
-  // adding this for backward compatibility with UI
-  /**
-   *
-   * @param accountId
-   * @param errors
-   * @return
-   */
-  @POST
-  @Path("discard")
-  public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<GitSyncError> errors) {
-    gitSyncService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
+  public RestResponse discardGitSyncErrorV2(@QueryParam("accountId") String accountId, List<String> errors) {
+    gitSyncErrorService.deleteGitSyncErrorAndLogFileActivity(errors, Status.DISCARDED, accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 

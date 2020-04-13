@@ -225,7 +225,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     changeList = filterInvalidFilePaths(changeList);
 
     // compute the order of processing
-    computeProcessingOrder(changeList);
+    sortByProcessingOrder(changeList);
 
     // validate
     ChangeContextErrorMap validationResponseMap = validate(changeList);
@@ -411,8 +411,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    *
    * @param changeList
    */
-  @VisibleForTesting
-  void computeProcessingOrder(List<Change> changeList) {
+  @Override
+  public void sortByProcessingOrder(List<Change> changeList) {
     changeList.sort(new FilePathComparator());
   }
 

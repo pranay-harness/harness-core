@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.all.RefactorTheFieldsInGitSyncError;
 import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.TemplateLibraryYamlOnPrimaryManagerMigration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,6 +16,7 @@ public class OnPrimaryManagerMigrationList {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends OnPrimaryManagerMigration>>>()
         .add(Pair.of(1, SyncNewFolderForConfigFiles.class))
         .add(Pair.of(2, TemplateLibraryYamlOnPrimaryManagerMigration.class))
+        .add(Pair.of(3, RefactorTheFieldsInGitSyncError.class))
         .build();
   }
 }

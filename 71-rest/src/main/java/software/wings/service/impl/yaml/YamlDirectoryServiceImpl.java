@@ -145,6 +145,7 @@ import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
@@ -211,6 +212,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private TemplateService templateService;
   @Inject private AuthService authService;
+  @Inject private GitSyncErrorService gitSyncErrorService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -410,7 +412,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                                           .build();
 
         if (gitSyncPath) {
-          yamlGitService.upsertGitSyncErrors(gitFileChange, message, true);
+          gitSyncErrorService.upsertGitSyncErrors(gitFileChange, message, true, false);
 
           // createAlert of type HarnessToGitFullSyncError
           alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError,

@@ -38,8 +38,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.Application;
-import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFileChange;
@@ -51,7 +49,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -59,7 +56,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -226,151 +222,5 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     verify(waitNotifyEngine, times(1)).waitForAllOn(eq(GENERAL), any(GitCommandCallback.class), anyString());
     verify(yamlChangeSetService, times(0))
         .updateStatus(eq(ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
-  public void test_getActiveGitToHarnessSyncErrors() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withAccountId(ACCOUNT_ID)
-            .withUuid(SETTING_ID)
-            .withName("gitconnectorid")
-            .withValue(GitConfig.builder().accountId(ACCOUNT_ID).webhookToken(WEBHOOK_TOKEN).build())
-            .build();
-    wingsPersistence.save(settingAttribute);
-
-    YamlGitConfig yamlGitConfig1 = YamlGitConfig.builder()
-                                       .entityType(EntityType.APPLICATION)
-                                       .entityId("appid")
-                                       .accountId(ACCOUNT_ID)
-                                       .gitConnectorId(SETTING_ID)
-                                       .branchName("branchName")
-                                       .enabled(true)
-                                       .build();
-
-    YamlGitConfig yamlGitConfig2 = YamlGitConfig.builder()
-                                       .entityType(EntityType.ACCOUNT)
-                                       .entityId(ACCOUNT_ID)
-                                       .accountId(ACCOUNT_ID)
-                                       .gitConnectorId(SETTING_ID)
-                                       .branchName("branchName")
-                                       .enabled(true)
-                                       .build();
-
-    YamlGitConfig yamlGitConfig3 = YamlGitConfig.builder()
-                                       .entityType(EntityType.APPLICATION)
-                                       .entityId("appid1")
-                                       .accountId(ACCOUNT_ID)
-                                       .gitConnectorId(SETTING_ID)
-                                       .branchName("branchName123")
-                                       .enabled(true)
-                                       .build();
-    yamlGitConfig1.setAppId("appid");
-    wingsPersistence.save(yamlGitConfig1);
-    wingsPersistence.save(yamlGitConfig2);
-    wingsPersistence.save(yamlGitConfig3);
-
-    final GitSyncError gitSyncError1 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index123.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError1.setAppId("appid");
-    gitSyncError1.setStatus(GitSyncErrorStatus.ACTIVE);
-    final String savedGitSyncError1 = wingsPersistence.save(gitSyncError1);
-
-    final GitSyncError gitSyncError2 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index456.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError2.setAppId(Application.GLOBAL_APP_ID);
-    gitSyncError2.setStatus(null);
-    final String savedGitSyncError2 = wingsPersistence.save(gitSyncError2);
-
-    final GitSyncError gitSyncError3 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index789.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError3.setAppId(Application.GLOBAL_APP_ID);
-    final String savedGitSyncError3 = wingsPersistence.save(gitSyncError3);
-
-    final GitSyncError gitSyncError4 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index101112.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError4.setAppId("appid1");
-
-    wingsPersistence.save(gitSyncError4);
-
-    final GitSyncError gitSyncError5 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index131415.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError5.setStatus(GitSyncErrorStatus.EXPIRED);
-    wingsPersistence.save(gitSyncError5);
-
-    final GitSyncError gitSyncError6 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index789456.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .gitCommitId("")
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError6.setAppId(Application.GLOBAL_APP_ID);
-    wingsPersistence.save(gitSyncError6);
-
-    final GitSyncError gitSyncError7 = GitSyncError.builder()
-                                           .yamlFilePath("Setup/index789456565.yaml")
-                                           .yamlContent("ds")
-                                           .accountId(ACCOUNT_ID)
-                                           .changeType("MODIFY")
-                                           .gitCommitId(null)
-                                           .branchName("branchName")
-                                           .gitConnectorId(SETTING_ID)
-                                           .build();
-    gitSyncError7.setAppId(Application.GLOBAL_APP_ID);
-    wingsPersistence.save(gitSyncError7);
-
-    final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
-
-    final List<GitSyncError> activeGitToHarnessSyncErrors =
-        yamlGitService.getActiveGitToHarnessSyncErrors(ACCOUNT_ID, SETTING_ID, "branchName", _30_days_millis);
-
-    assertThat(activeGitToHarnessSyncErrors.stream().map(GitSyncError::getUuid))
-        .contains(savedGitSyncError1, savedGitSyncError2, savedGitSyncError3);
-    assertThat(activeGitToHarnessSyncErrors).hasSize(3);
   }
 }

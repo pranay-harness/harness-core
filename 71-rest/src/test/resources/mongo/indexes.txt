@@ -246,10 +246,13 @@ gitFileActivity { "name" : "accountId_procCommitId_filePath_status" , "backgroun
 gitFileActivity { "name" : "accountId_procCommitId_status" , "background" : true} { "accountId" : 1 , "processingCommitId" : 1 , "status" : 1}
 gitFileActivity { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitFileActivity { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+gitSyncError { "name" : "account_filepath_direction_idx" , "unique" : true} { "accountId" : 1 , "yamlFilePath" : 1 , "gitSyncDirection" : 1}
 gitSyncError { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitSyncError { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+gitSyncError { "name" : "gitCommitId_idx" , "background" : true} { "accountId" : 1 , "gitSyncDirection" : 1 , "additionalErrorDetails.gitCommitId" : 1}
+gitSyncError { "name" : "git_repo_selection_idx" , "background" : true} { "accountId" : 1 , "gitConnectorId" : 1 , "branchName" : 1 , "gitSyncDirection" : 1}
 gitSyncError { "name" : "nextIteration_1" , "background" : true} { "nextIteration" : 1}
-gitSyncError { "name" : "uniqueIdx" , "unique" : true} { "accountId" : 1 , "yamlFilePath" : 1}
+gitSyncError { "name" : "previousErrors_idx" , "background" : true} { "accountId" : 1 , "gitSyncDirection" : 1 , "additionalErrorDetails.previousCommitIdsWithError" : 1}
 gitSyncWebhook { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gitSyncWebhook { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 governanceConfig { "name" : "accountId_1" , "background" : true} { "accountId" : 1}

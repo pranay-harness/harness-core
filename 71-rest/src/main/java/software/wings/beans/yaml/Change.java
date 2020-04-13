@@ -71,10 +71,6 @@ public class Change {
       return this;
     }
 
-    public Builder withCommitId(String commitId) {
-      return this;
-    }
-
     public Builder but() {
       return aFileChange()
           .withFilePath(change.getFilePath())

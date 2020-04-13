@@ -17,7 +17,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -47,7 +49,9 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -63,6 +67,8 @@ public class GitCommandCallbackTest extends CategoryTest {
 
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitService;
+  @Mock private GitSyncErrorService gitSyncErrorService;
+
   @InjectMocks
   private GitCommandCallback commandCallback =
       new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH);
@@ -185,24 +191,23 @@ public class GitCommandCallbackTest extends CategoryTest {
         GitDiffResult.builder().yamlGitConfig(yamlGitConfig).gitFileChanges(Lists.newArrayList()).build();
     gitDiffResult.addChangeFile(gitFileChange1);
     gitDiffResult.addChangeFile(gitFileChange2);
+    GitToHarnessErrorDetails gitToHarnessErrorDetails =
+        GitToHarnessErrorDetails.builder().gitCommitId("commitid-1").yamlContent("error_content").build();
     final GitSyncError gitSyncError1 = GitSyncError.builder()
                                            .yamlFilePath("Setup/index.yaml")
-                                           .yamlContent("ds")
                                            .accountId(ACCOUNT_ID)
                                            .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
+                                           .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .build();
     final GitSyncError gitSyncError2 = GitSyncError.builder()
                                            .yamlFilePath("Setup/Applications/app1/index.yaml")
-                                           .yamlContent("ds")
+                                           .gitSyncDirection(GIT_TO_HARNESS.toString())
+                                           .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .accountId(ACCOUNT_ID)
                                            .changeType("MODIFY")
-                                           .fullSyncPath(false)
-                                           .gitCommitId("commitid")
                                            .build();
     doReturn(Arrays.asList(gitSyncError1, gitSyncError2))
-        .when(yamlGitService)
+        .when(gitSyncErrorService)
         .getActiveGitToHarnessSyncErrors(eq(ACCOUNT_ID), eq("gitconnectorid"), eq("branchname"), anyLong());
 
     diffCommandCallback.addActiveGitSyncErrorsToProcessAgain(gitDiffResult, ACCOUNT_ID);
@@ -217,7 +222,7 @@ public class GitCommandCallbackTest extends CategoryTest {
             .findFirst()
             .get();
     assertThat(gitFileChange3.getFilePath().equals(gitSyncError1.getYamlFilePath())).isTrue();
-    assertThat(gitFileChange3.getFileContent().equals(gitSyncError1.getYamlContent())).isTrue();
+    assertThat(gitFileChange3.getFileContent().equals(getYamlContentOfError(gitSyncError1))).isTrue();
   }
 
   @Test

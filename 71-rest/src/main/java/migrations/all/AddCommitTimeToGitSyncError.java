@@ -14,6 +14,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 
@@ -24,6 +25,8 @@ import java.util.List;
 public class AddCommitTimeToGitSyncError implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   private static final List<String> NULL_AND_EMPTY = Arrays.asList(null, "");
+  @Inject private GitSyncErrorService gitSyncErrorService;
+
   private Table<String, String, GitCommit> gitCommitTable = HashBasedTable.create();
 
   @Override

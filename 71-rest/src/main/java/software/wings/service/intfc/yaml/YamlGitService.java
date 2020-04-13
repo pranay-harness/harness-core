@@ -15,7 +15,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -170,8 +169,6 @@ public interface YamlGitService {
 
   void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData);
 
-  <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath);
-
   RestResponse discardGitSyncErrorForFullSync(String accountId, String appId);
 
   RestResponse discardGitSyncErrorForFilePath(String accountId, String yamlFilePath);
@@ -208,7 +205,4 @@ public interface YamlGitService {
       String accountId, List<String> gitConnectorsToRetain);
 
   RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
-
-  List<GitSyncError> getActiveGitToHarnessSyncErrors(
-      String accountId, String gitConnectorId, String branchName, long fromTimestamp);
 }
