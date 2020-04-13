@@ -28,6 +28,8 @@ import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
+import io.harness.commandlibrary.common.service.CommandLibraryService;
+import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
@@ -808,6 +810,7 @@ public class WingsModule extends DependencyModule {
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
+    bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
 
     requestStaticInjection(EncryptedData.class);
 

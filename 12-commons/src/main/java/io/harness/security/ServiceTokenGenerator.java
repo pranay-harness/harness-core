@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 
 import java.io.UnsupportedEncodingException;
@@ -24,10 +25,17 @@ public class ServiceTokenGenerator {
   public String getVerificationServiceToken() {
     Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
         "could not read verification secret from system or env properties");
-    return getToken(VERIFICATION_SERVICE_SECRET.get());
+    return createNewToken(VERIFICATION_SERVICE_SECRET.get());
   }
 
-  private String getToken(String serviceSecret) {
+  public String getServiceToken(String secretKey) {
+    if (isNotEmpty(secretKey)) {
+      return createNewToken(secretKey);
+    }
+    throw new InvalidArgumentsException("secretKey cannot be empty", null);
+  }
+
+  private String createNewToken(String serviceSecret) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(serviceSecret);
 
