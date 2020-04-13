@@ -245,10 +245,12 @@ public class SettingValidationService {
       newRelicService.validateAPMConfig(
           settingAttribute, ((BugsnagConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof APMVerificationConfig) {
+      final boolean enabledConnectorsRefSecrets =
+          featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId());
       newRelicService.validateAPMConfig(settingAttribute,
           ((APMVerificationConfig) settingAttribute.getValue())
-              .createAPMValidateCollectorConfig(secretManager, encryptionService));
-      ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager);
+              .createAPMValidateCollectorConfig(secretManager, encryptionService, enabledConnectorsRefSecrets));
+      ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager, enabledConnectorsRefSecrets);
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, encryptedDataDetails);
     } else if (settingValue instanceof InstanaConfig) {

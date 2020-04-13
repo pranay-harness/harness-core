@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -116,12 +117,19 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   }
 
   public APMValidateCollectorConfig createAPMValidateCollectorConfig(
-      SecretManager secretManager, EncryptionService encryptionService) {
+      SecretManager secretManager, EncryptionService encryptionService, boolean enabledConnectorsRefSecrets) {
     try {
       Map<String, String> headers = new HashMap<>();
       if (!isEmpty(headersList)) {
         for (KeyValues keyValue : headersList) {
-          if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
+          if (enabledConnectorsRefSecrets && keyValue.encrypted) {
+            final Optional<EncryptedDataDetail> encryptedDataDetail =
+                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value);
+            if (!encryptedDataDetail.isPresent()) {
+              throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
+            }
+            headers.put(keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get())));
+          } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             headers.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
                     secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
@@ -134,7 +142,14 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       Map<String, String> options = new HashMap<>();
       if (!isEmpty(optionsList)) {
         for (KeyValues keyValue : optionsList) {
-          if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
+          if (enabledConnectorsRefSecrets && keyValue.encrypted) {
+            final Optional<EncryptedDataDetail> encryptedDataDetail =
+                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value);
+            if (!encryptedDataDetail.isPresent()) {
+              throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
+            }
+            options.put(keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get())));
+          } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             options.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
                     secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
@@ -236,14 +251,15 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   }
 
   // TODO won't work for vault
-  public void encryptFields(SecretManager secretManager) {
+  public void encryptFields(SecretManager secretManager, boolean enabledConnectorsRefSecrets) {
     if (headersList != null) {
       headersList.stream()
           .filter(header -> header.encrypted)
           .filter(header -> !header.value.equals(MASKED_STRING))
           .forEach(header -> {
-            header.encryptedValue = secretManager.encrypt(accountId, header.value, null);
-            header.value = MASKED_STRING;
+            header.encryptedValue =
+                enabledConnectorsRefSecrets ? header.value : secretManager.encrypt(accountId, header.value, null);
+            header.value = enabledConnectorsRefSecrets ? header.value : MASKED_STRING;
           });
     }
 
@@ -252,8 +268,9 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           .filter(option -> option.encrypted)
           .filter(option -> !option.value.equals(MASKED_STRING))
           .forEach(option -> {
-            option.encryptedValue = secretManager.encrypt(accountId, option.value, null);
-            option.value = MASKED_STRING;
+            option.encryptedValue =
+                enabledConnectorsRefSecrets ? option.value : secretManager.encrypt(accountId, option.value, null);
+            option.value = enabledConnectorsRefSecrets ? option.value : MASKED_STRING;
           });
     }
   }
