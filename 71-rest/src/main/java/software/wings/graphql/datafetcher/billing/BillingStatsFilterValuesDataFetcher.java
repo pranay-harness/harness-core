@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -34,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -41,9 +44,11 @@ public class BillingStatsFilterValuesDataFetcher
     extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction, QLBillingDataFilter, QLCCMGroupBy,
         QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
+  @Inject InstanceDataServiceImpl instanceDataService;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -65,13 +70,31 @@ public class BillingStatsFilterValuesDataFetcher
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
-    queryData = billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByEntityList);
+    List<QLCCMEntityGroupBy> groupByNodeAndPodList = new ArrayList<>();
+    List<QLCCMEntityGroupBy> groupByEntityListExcludingNodeAndPod = new ArrayList<>();
+
+    groupByEntityList.forEach(entityGroupBy -> {
+      if (entityGroupBy == QLCCMEntityGroupBy.Node || entityGroupBy == QLCCMEntityGroupBy.Pod) {
+        groupByNodeAndPodList.add(entityGroupBy);
+      } else {
+        groupByEntityListExcludingNodeAndPod.add(entityGroupBy);
+      }
+    });
+
+    Set<String> instanceIds = new HashSet<>();
+    if (!groupByNodeAndPodList.isEmpty()) {
+      instanceIds = getInstanceIdValues(accountId,
+          getFiltersForInstanceIdQuery(filters, isGroupByPodPresent(groupByNodeAndPodList)), groupByNodeAndPodList);
+      filters = getFiltersExcludingInstanceTypeFilter(filters);
+    }
+
+    queryData = billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByEntityListExcludingNodeAndPod);
     logger.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateFilterValuesData(queryData, resultSet, accountId);
+      return generateFilterValuesData(queryData, resultSet, instanceIds, accountId);
     } catch (SQLException e) {
       logger.error("BillingStatsFilterValuesDataFetcher Error exception", e);
     } finally {
@@ -80,8 +103,38 @@ public class BillingStatsFilterValuesDataFetcher
     return null;
   }
 
-  private QLFilterValuesListData generateFilterValuesData(
-      BillingDataQueryMetadata queryData, ResultSet resultSet, String accountId) throws SQLException {
+  private Set<String> getInstanceIdValues(
+      String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupByNodeAndPodList) {
+    ResultSet resultSet = null;
+    BillingDataQueryMetadata queryData =
+        billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByNodeAndPodList);
+    logger.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
+    Set<String> instanceIds = new HashSet<>();
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(queryData.getQuery());
+      while (resultSet != null && resultSet.next()) {
+        for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+          switch (field) {
+            case INSTANCEID:
+              instanceIds.add(resultSet.getString(field.getFieldName()));
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      return instanceIds;
+    } catch (SQLException e) {
+      logger.error("BillingStatsFilterValuesDataFetcher Error exception", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+    return instanceIds;
+  }
+
+  private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet,
+      Set<String> instanceIds, String accountId) throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -93,6 +146,7 @@ public class BillingStatsFilterValuesDataFetcher
     Set<String> cloudProviders = new HashSet<>();
     Set<String> serviceIds = new HashSet<>();
     List<QLEntityData> clusters = new ArrayList<>();
+    List<QLEntityData> instances = new ArrayList<>();
     List<QLK8sLabel> k8sLabels = new ArrayList<>();
 
     while (resultSet != null && resultSet.next()) {
@@ -108,9 +162,10 @@ public class BillingStatsFilterValuesDataFetcher
             taskIds.add(resultSet.getString(field.getFieldName()));
             break;
           case CLUSTERID:
+            String entityId = resultSet.getString(field.getFieldName());
             clusters.add(QLEntityData.builder()
-                             .name(statsHelper.getEntityName(field, resultSet.getString(field.getFieldName())))
-                             .id(resultSet.getString(field.getFieldName()))
+                             .name(statsHelper.getEntityName(field, entityId))
+                             .id(entityId)
                              .type(resultSet.getString(BillingDataMetaDataFields.CLUSTERTYPE.getFieldName()))
                              .build());
             break;
@@ -145,6 +200,26 @@ public class BillingStatsFilterValuesDataFetcher
               workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]))));
     }
 
+    if (!instanceIds.isEmpty()) {
+      List<QLBillingDataFilter> filters = queryData.getFilters();
+      String clusterId = BillingStatsDefaultKeys.CLUSTERID;
+      for (QLBillingDataFilter filter : filters) {
+        if (filter.getCluster() != null) {
+          clusterId = filter.getCluster().getValues()[0];
+        }
+      }
+      if (!clusterId.equals(BillingStatsDefaultKeys.CLUSTERID)) {
+        List<InstanceData> instanceData = instanceDataService.fetchInstanceDataForGivenInstances(
+            accountId, clusterId, instanceIds.stream().collect(Collectors.toList()));
+        instanceData.forEach(entry
+            -> instances.add(QLEntityData.builder()
+                                 .name(entry.getInstanceName())
+                                 .id(entry.getInstanceId())
+                                 .type(BillingDataMetaDataFields.INSTANCEID.getFieldName())
+                                 .build()));
+      }
+    }
+
     filterValuesDataBuilder.cloudServiceNames(getEntity(BillingDataMetaDataFields.CLOUDSERVICENAME, cloudServiceNames))
         .taskIds(getEntity(BillingDataMetaDataFields.TASKID, taskIds))
         .launchTypes(getEntity(BillingDataMetaDataFields.LAUNCHTYPE, launchTypes))
@@ -155,7 +230,8 @@ public class BillingStatsFilterValuesDataFetcher
         .environments(getEntity(BillingDataMetaDataFields.ENVID, environmentIds))
         .services(getEntity(BillingDataMetaDataFields.SERVICEID, serviceIds))
         .cloudProviders(getEntity(BillingDataMetaDataFields.CLOUDPROVIDERID, cloudProviders))
-        .k8sLabels(k8sLabels);
+        .k8sLabels(k8sLabels)
+        .instances(instances);
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
@@ -198,6 +274,40 @@ public class BillingStatsFilterValuesDataFetcher
       builder.namespace(QLIdFilter.builder().operator(QLIdOperator.IN).values(namespaces).build());
     }
     return builder.build();
+  }
+
+  private List<QLBillingDataFilter> getFiltersExcludingInstanceTypeFilter(List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> filtersExcludingInstanceTypeFilter = new ArrayList<>();
+    filters.forEach(filter -> {
+      if (filter.getInstanceType() == null) {
+        filtersExcludingInstanceTypeFilter.add(filter);
+      }
+    });
+    return filtersExcludingInstanceTypeFilter;
+  }
+
+  private List<QLBillingDataFilter> getFiltersForInstanceIdQuery(
+      List<QLBillingDataFilter> filters, boolean isGroupByPodPresent) {
+    if (isGroupByPodPresent) {
+      return filters;
+    }
+    List<QLBillingDataFilter> filtersForInstanceIdQuery = new ArrayList<>();
+    filters.forEach(filter -> {
+      if (filter.getInstanceType() != null || filter.getCluster() != null || filter.getStartTime() != null
+          || filter.getEndTime() != null) {
+        filtersForInstanceIdQuery.add(filter);
+      }
+    });
+    return filtersForInstanceIdQuery;
+  }
+
+  private boolean isGroupByPodPresent(List<QLCCMEntityGroupBy> groupByNodeAndPodList) {
+    for (QLCCMEntityGroupBy entityGroupBy : groupByNodeAndPodList) {
+      if (entityGroupBy == QLCCMEntityGroupBy.Pod) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

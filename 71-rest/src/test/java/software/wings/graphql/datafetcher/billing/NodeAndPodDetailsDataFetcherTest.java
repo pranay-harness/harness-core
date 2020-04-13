@@ -83,7 +83,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String INSTANCE_TYPE_NODE = "K8S_NODE";
   private static final String INSTANCE_TYPE_PODS = "K8S_POD";
   private static final String NAMESPACE = "namespace";
-  private static final String WORKLOAD = "workload";
+  private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
 
   @Before

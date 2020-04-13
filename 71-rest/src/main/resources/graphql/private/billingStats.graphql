@@ -231,6 +231,7 @@ type BillingFilterDataPoint {
   environments: [EntityData]
   services: [EntityData]
   clusters: [EntityData]
+  instances: [EntityData]
   k8sLabels: [K8sLabel]
 }
 

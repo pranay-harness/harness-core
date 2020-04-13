@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,7 +11,9 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
+import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -49,6 +52,7 @@ import java.util.Map;
 public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
+  @Mock InstanceDataServiceImpl instanceDataService;
   @Inject @InjectMocks BillingStatsFilterValuesDataFetcher billingStatsFilterValuesDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
 
@@ -273,6 +277,80 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForNodes() {
+    when(instanceDataService.fetchInstanceDataForGivenInstances(anyString(), anyString(), anyList()))
+        .thenReturn(Collections.singletonList(mockInstanceData(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1)));
+
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
+    String[] namespaceValues = new String[] {NAMESPACE1};
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeWorkloadNameFilter(workloadNameValues));
+    filters.add(makeNamespaceFilter(namespaceValues));
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeNodeEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
+    assertThat(data.getData().get(0).getInstances().get(0).getName()).isEqualTo(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForPods() {
+    when(instanceDataService.fetchInstanceDataForGivenInstances(anyString(), anyString(), anyList()))
+        .thenReturn(Collections.singletonList(mockInstanceData(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1)));
+
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
+    String[] namespaceValues = new String[] {NAMESPACE1};
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeWorkloadNameFilter(workloadNameValues));
+    filters.add(makeNamespaceFilter(namespaceValues));
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makePodEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
+    assertThat(data.getData().get(0).getInstances().get(0).getName()).isEqualTo(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getCloudProviders().size()).isEqualTo(0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
@@ -337,6 +415,16 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     return QLCCMGroupBy.builder().entityGroupBy(environmentGroupBy).build();
   }
 
+  public QLCCMGroupBy makeNodeEntityGroupBy() {
+    QLCCMEntityGroupBy nodeGroupBy = QLCCMEntityGroupBy.Node;
+    return QLCCMGroupBy.builder().entityGroupBy(nodeGroupBy).build();
+  }
+
+  public QLCCMGroupBy makePodEntityGroupBy() {
+    QLCCMEntityGroupBy podGroupBy = QLCCMEntityGroupBy.Pod;
+    return QLCCMGroupBy.builder().entityGroupBy(podGroupBy).build();
+  }
+
   public QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
@@ -388,6 +476,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getString("CLOUDSERVICENAME"))
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
+    when(resultSet.getString("INSTANCEID"))
+        .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     returnResultSet(5);
   }
 
@@ -397,6 +487,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         count[0]++;
         return true;
       }
+      count[0] = 0;
       return false;
     });
   }
@@ -404,5 +495,16 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   private void resetValues() {
     count[0] = 0;
     doubleVal[0] = 0;
+  }
+
+  private InstanceData mockInstanceData(String instanceId) {
+    return InstanceData.builder()
+        .instanceId(instanceId)
+        .instanceName(instanceId)
+        .accountId(ACCOUNT1_ID)
+        .settingId(SETTING_ID1)
+        .clusterName(CLUSTER1_NAME)
+        .clusterId(CLUSTER1_ID)
+        .build();
   }
 }

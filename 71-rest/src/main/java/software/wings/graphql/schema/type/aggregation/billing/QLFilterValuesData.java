@@ -27,5 +27,6 @@ public class QLFilterValuesData implements QLData {
   List<QLEntityData> environments;
   List<QLEntityData> services;
   List<QLEntityData> clusters;
+  List<QLEntityData> instances;
   List<QLK8sLabel> k8sLabels;
 }
