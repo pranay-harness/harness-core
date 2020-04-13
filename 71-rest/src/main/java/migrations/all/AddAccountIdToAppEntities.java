@@ -24,11 +24,12 @@ import java.util.stream.Collectors;
 
 /**
  * Add accountId to app child entities like service/env/provisioner/workflow/pipeline.
+ *
  * @author rktummala on 02/26/19
  */
 @Slf4j
 public class AddAccountIdToAppEntities implements Migration {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject protected WingsPersistence wingsPersistence;
 
   @Override
   public void migrate() {
@@ -49,7 +50,7 @@ public class AddAccountIdToAppEntities implements Migration {
     }
   }
 
-  private <T extends Base> void bulkSetAccountId(String accountId, Class<T> clazz, Set<String> appIdSet) {
+  protected <T extends Base> void bulkSetAccountId(String accountId, Class<T> clazz, Set<String> appIdSet) {
     final DBCollection collection = wingsPersistence.getCollection(clazz);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
