@@ -172,6 +172,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(101, BaseMigration.class))
         .add(Pair.of(102, AddAccountIdToLogAnalysisRecordsMigration.class))
         .add(Pair.of(103, AddAccountIdToLogDataRecordsMigration.class))
+        .add(Pair.of(104, BaseMigration.class))
         .build();
   }
 }
