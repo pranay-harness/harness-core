@@ -3,8 +3,12 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.all.AddAccountIdToCloudFormationRollBackConfig;
+import migrations.all.AddAccountIdToDeploymentEntities;
+import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
+import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
@@ -173,6 +177,10 @@ public class MigrationBackgroundList {
         .add(Pair.of(102, AddAccountIdToLogAnalysisRecordsMigration.class))
         .add(Pair.of(103, AddAccountIdToLogDataRecordsMigration.class))
         .add(Pair.of(104, BaseMigration.class))
+        .add(Pair.of(105, AddAccountIdToDeploymentEntities.class))
+        .add(Pair.of(106, AddAccountIdToTerraformConfig.class))
+        .add(Pair.of(107, AddAccountIdToCloudFormationRollBackConfig.class))
+        .add(Pair.of(108, AddAccountIdToInfraDefinition.class))
         .build();
   }
 }
