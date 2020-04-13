@@ -267,6 +267,7 @@ import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
+import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
@@ -2978,6 +2979,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
               (AwsAmiDeployStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
+        } else if (nextStateType == StateType.SPOTINST_DEPLOY
+            && next.fetchStateExecutionData() instanceof SpotInstDeployStateExecutionData) {
+          SpotInstDeployStateExecutionData spotInstDeployStateExecutionData =
+              (SpotInstDeployStateExecutionData) next.fetchStateExecutionData();
+          instanceStatusSummaries.addAll(spotInstDeployStateExecutionData.getNewInstanceStatusSummaries());
         } else if (nextStateType == StateType.HELM_DEPLOY) {
           StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof HelmDeployStateExecutionData) {
