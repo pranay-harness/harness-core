@@ -69,6 +69,7 @@ public class BillingStatsEntityDataFetcher
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
+    groupByEntityList = getReorderedGroupByEntityList(groupByEntityList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
     List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
@@ -163,9 +164,11 @@ public class BillingStatsEntityDataFetcher
             break;
           case CLOUDSERVICENAME:
             cloudServiceName = resultSet.getString(field.getFieldName());
+            entityId = cloudServiceName;
             break;
           case LAUNCHTYPE:
             launchType = resultSet.getString(field.getFieldName());
+            entityId = launchType;
             break;
           case WORKLOADNAME:
             workloadName = resultSet.getString(field.getFieldName());
@@ -231,16 +234,6 @@ public class BillingStatsEntityDataFetcher
 
       if (unallocatedCostForCluster.containsKey(clusterId)) {
         unallocatedCost = unallocatedCostForCluster.get(clusterId);
-      }
-
-      // To check if we are grouping by cluster, in that case unallocated cost gets included in idle cost
-      // So removing unallocated cost from idle cost
-      if (queryData.getGroupByFields().contains(BillingDataMetaDataFields.CLUSTERID)) {
-        idleCost = billingDataHelper.getRoundedDoubleValue(idleCost - unallocatedCost);
-        if (idleCost < 0) {
-          idleCost = 0.0;
-          logger.info("Idle cost updated to 0.0 as (idleCost - unallocatedCost) < 0");
-        }
       }
 
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();
@@ -319,6 +312,44 @@ public class BillingStatsEntityDataFetcher
       unallocatedCostForClusters.put(clusterId, unallocatedCost);
     }
     return unallocatedCostForClusters;
+  }
+
+  // This is to reorder group by entity list if group by cloudServiceName/launchType/task is present
+  // to obtain relevant ID in response
+  private List<QLCCMEntityGroupBy> getReorderedGroupByEntityList(List<QLCCMEntityGroupBy> groupByEntityList) {
+    List<QLCCMEntityGroupBy> reorderedGroupByList = new ArrayList<>();
+    boolean isCloudServiceNamePresent = false;
+    boolean isLaunchTypePresent = false;
+    boolean isTaskIdPresent = false;
+
+    for (QLCCMEntityGroupBy entityGroupBy : groupByEntityList) {
+      switch (entityGroupBy) {
+        case LaunchType:
+          isLaunchTypePresent = true;
+          break;
+        case CloudServiceName:
+          isCloudServiceNamePresent = true;
+          break;
+        case TaskId:
+          isTaskIdPresent = true;
+          break;
+        default:
+          reorderedGroupByList.add(entityGroupBy);
+          break;
+      }
+    }
+
+    if (isLaunchTypePresent) {
+      reorderedGroupByList.add(QLCCMEntityGroupBy.LaunchType);
+    }
+    if (isCloudServiceNamePresent) {
+      reorderedGroupByList.add(QLCCMEntityGroupBy.CloudServiceName);
+    }
+    if (isTaskIdPresent) {
+      reorderedGroupByList.add(QLCCMEntityGroupBy.TaskId);
+    }
+
+    return reorderedGroupByList;
   }
 
   @Override
