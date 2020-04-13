@@ -139,7 +139,16 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    List<String> criteriaList = emptyIfNull((List<String>) getParameters()[2]);
+    Object[] parameters = getParameters();
+    final List<String> criteriaList;
+
+    if (!(parameters[0] instanceof HostValidationTaskParameters)) {
+      criteriaList = emptyIfNull((List<String>) getParameters()[2]);
+    } else {
+      HostValidationTaskParameters hostValidationTaskParameters = (HostValidationTaskParameters) getParameters()[0];
+      criteriaList = emptyIfNull(hostValidationTaskParameters.getHostNames());
+    }
+
     return criteriaList.stream().map(this ::addPrefix).collect(toList());
   }
 

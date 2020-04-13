@@ -179,6 +179,7 @@ import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.InstanceUnitType;
@@ -1545,5 +1546,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbSetupElement.class, 7338);
     kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7339);
     kryo.register(SpotinstTrafficShiftAlbDeployExecutionData.class, 7340);
+    kryo.register(HostValidationTaskParameters.class, 7341);
   }
 }
