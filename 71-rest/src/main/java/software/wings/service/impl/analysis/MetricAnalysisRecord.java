@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,7 +40,7 @@ import java.util.Map;
     of = {"stateType", "workflowExecutionId", "stateExecutionId", "analysisMinute", "groupName", "baseLineExecutionId",
         "cvConfigId", "tag"})
 @FieldNameConstants(innerTypeName = "MetricAnalysisRecordKeys")
-public class MetricAnalysisRecord extends Base implements Comparable<MetricAnalysisRecord> {
+public class MetricAnalysisRecord extends Base implements Comparable<MetricAnalysisRecord>, AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowExecutionId;
@@ -76,6 +77,8 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
   private boolean shouldFailFast;
 
   private String failFastErrorMsg;
+
+  @Indexed private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
