@@ -31,6 +31,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 
 /**
@@ -108,7 +109,17 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the service
    */
   Service getWithDetails(@NotEmpty String appId, @NotEmpty String serviceId);
+
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * Gets the names of services
+   *
+   * @param accountId  the accountId
+   * @param serviceIds the serviceIds
+   * @return List of service names
+   */
+  List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> serviceIds);
 
   /**
    * Gets the.

@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "HelmChartConfigKeys")
 public class HelmChartConfig {
   @Trimmed private String connectorId;
   @Trimmed private String chartName;

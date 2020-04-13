@@ -20,6 +20,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -166,6 +167,13 @@ public interface EnvironmentService extends OwnedByApplication {
    * @return
    */
   List<Service> getServicesWithOverrides(@NotEmpty String appId, @NotEmpty String envId);
+
+  /**
+   * @param accountId the accountId
+   * @param envIds    the list of environmentIds
+   * @return list of names of environments
+   */
+  List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> envIds);
 
   Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
 

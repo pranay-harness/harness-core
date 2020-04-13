@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "GitFileConfigKeys")
 public class GitFileConfig {
   @Trimmed private String connectorId;
   @Trimmed private String commitId;

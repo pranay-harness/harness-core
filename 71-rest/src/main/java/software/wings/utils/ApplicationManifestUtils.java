@@ -56,6 +56,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -83,7 +84,7 @@ public class ApplicationManifestUtils {
     Application app = appService.get(context.getAppId());
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
     ApplicationManifest applicationManifest =
         applicationManifestService.getByServiceId(context.getAppId(), serviceElement.getUuid(), appManifestKind);
@@ -209,9 +210,11 @@ public class ApplicationManifestUtils {
         getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
     ApplicationManifest applicationManifest = null;
 
+    // Priority: service override in env > global override in env > service
     if (manifestsMap.containsKey(K8sValuesLocation.Environment)) {
       applicationManifest = manifestsMap.get(K8sValuesLocation.Environment);
     } else {
+      applyEnvGlobalHelmChartOverride(manifestAtService, manifestsMap);
       applicationManifest = manifestAtService;
     }
 
@@ -225,6 +228,16 @@ public class ApplicationManifestUtils {
     }
 
     return applicationManifest;
+  }
+
+  public void applyEnvGlobalHelmChartOverride(
+      ApplicationManifest manifestAtService, Map<K8sValuesLocation, ApplicationManifest> manifestsMap) {
+    if (manifestsMap.containsKey(K8sValuesLocation.EnvironmentGlobal)
+        && HelmChartRepo == manifestAtService.getStoreType()) {
+      ApplicationManifest appManifestEnvGlobal = manifestsMap.get(K8sValuesLocation.EnvironmentGlobal);
+      // only override helm connector
+      manifestAtService.getHelmChartConfig().setConnectorId(appManifestEnvGlobal.getHelmChartConfig().getConnectorId());
+    }
   }
 
   private String getManifestFormatName(StoreType storeType) {
@@ -244,7 +257,7 @@ public class ApplicationManifestUtils {
     GitFetchFilesFromMultipleRepoResult gitCommandResult =
         (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
 
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
     if (gitCommandResult == null || isEmpty(gitCommandResult.getFilesFromMultipleRepo())) {
       return valuesFiles;
     }
@@ -295,8 +308,8 @@ public class ApplicationManifestUtils {
       return new ArrayList<>();
     }
 
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
     ApplicationManifest serviceAppManifest =
         applicationManifestService.getByServiceId(appId, serviceTemplate.getServiceId(), AppManifestKind.VALUES);
@@ -346,7 +359,7 @@ public class ApplicationManifestUtils {
 
   public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(
       ExecutionContext context, AppManifestKind appManifestKind) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
     ApplicationManifest serviceAppManifest = getApplicationManifestForService(context);
     if (serviceAppManifest != null) {

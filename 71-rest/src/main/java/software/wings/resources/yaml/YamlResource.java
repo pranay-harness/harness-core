@@ -298,7 +298,7 @@ public class YamlResource {
   @Path("/application-manifests/{applicationManifestId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<YamlPayload> updateApplicationManifest(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
       @PathParam("applicationManifestId") String applicationManifestId, YamlPayload yamlPayload) {

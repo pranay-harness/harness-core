@@ -1427,7 +1427,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         // ------------------- END PCF OVERRIDE SECTION -----------------------
 
         // ------------------- HELM OVERRIDE SECTION -----------------------
-        FolderNode helmServiceOverridesFolder = generateEnvServiceHelmOverridesFolder(accountId, environment, envPath);
+        FolderNode helmServiceOverridesFolder = generateEnvHelmOverridesFolder(accountId, environment, envPath);
         if (helmServiceOverridesFolder != null) {
           envFolder.addChild(helmServiceOverridesFolder);
         }
@@ -1489,7 +1489,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @VisibleForTesting
-  FolderNode generateEnvServiceHelmOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
+  FolderNode generateEnvHelmOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), HELM_CHART_OVERRIDE);
 
@@ -1499,12 +1499,20 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     FolderNode helmOverridesFolder =
         getEnvOverrideFolderNode(envPath, accountId, env.getAppId(), HELM_CHART_OVERRIDE_FOLDER);
+    ApplicationManifest envHelmChartOverride =
+        applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), HELM_CHART_OVERRIDE);
+    if (envHelmChartOverride != null) {
+      helmOverridesFolder.addChild(
+          new EnvLevelYamlNode(accountId, envHelmChartOverride.getUuid(), env.getAppId(), env.getUuid(), INDEX_YAML,
+              ApplicationManifest.class, helmOverridesFolder.getDirectoryPath().clone().add(INDEX_YAML),
+              yamlGitSyncService, Type.APPLICATION_MANIFEST));
+    }
 
     // Fetch service specific environment overrides
-    FolderNode serviceSpecificoverridesFolder = generateEnvServiceSpecificHelmOverridesFolder(
+    FolderNode serviceSpecificOverridesFolder = generateEnvServiceSpecificHelmOverridesFolder(
         accountId, env, helmOverridesFolder.getDirectoryPath(), applicationManifests);
-    if (serviceSpecificoverridesFolder != null) {
-      helmOverridesFolder.addChild(serviceSpecificoverridesFolder);
+    if (serviceSpecificOverridesFolder != null) {
+      helmOverridesFolder.addChild(serviceSpecificOverridesFolder);
     }
 
     return helmOverridesFolder;
@@ -1589,7 +1597,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     FolderNode overridesServicesFolder = getOverrideServiceFolder(valuesPath, accountId, env.getAppId());
     for (ApplicationManifest appManifest : applicationManifests) {
-      // Helm override for all services is not allowed, ignore
       if (isBlank(appManifest.getServiceId())) {
         continue;
       }
@@ -2213,7 +2220,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
-            .append(fetchManifestEnvServiceOverrideFolderName(applicationManifest))
+            .append(fetchManifestEnvOverrideFolderName(applicationManifest))
             .append(PATH_DELIMITER)
             .append(SERVICES_FOLDER)
             .append(PATH_DELIMITER)
@@ -2223,7 +2230,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
-            .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
+            .append(fetchManifestEnvOverrideFolderName(applicationManifest))
             .toString();
       case SERVICE:
         notNullCheck("Service not found", service);
@@ -2244,11 +2251,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private boolean isPcfOverrideAppManifest(ApplicationManifest applicationManifest) {
-    return AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind();
-  }
-
-  String fetchManifestEnvServiceOverrideFolderName(ApplicationManifest applicationManifest) {
+  String fetchManifestEnvOverrideFolderName(ApplicationManifest applicationManifest) {
     String folderName;
     switch (applicationManifest.getKind()) {
       case PCF_OVERRIDE:

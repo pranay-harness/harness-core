@@ -101,6 +101,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -116,6 +118,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -144,6 +147,7 @@ import software.wings.utils.CryptoUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -194,6 +198,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private AlertService alertService;
   @Inject private SettingServiceHelper settingServiceHelper;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
@@ -989,7 +994,8 @@ public class SettingsServiceImpl implements SettingsService {
     delete(appId, settingAttributeId, true, syncFromGit);
   }
 
-  private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
+  @VisibleForTesting
+  void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
     if (settingAttribute.getCategory() == SettingCategory.CLOUD_PROVIDER) {
       ensureCloudProviderSafeToDelete(settingAttribute);
     } else if (settingAttribute.getCategory() == SettingCategory.CONNECTOR) {
@@ -998,7 +1004,50 @@ public class SettingsServiceImpl implements SettingsService {
       ensureSettingSafeToDelete(settingAttribute);
     } else if (settingAttribute.getCategory() == SettingCategory.AZURE_ARTIFACTS) {
       ensureAzureArtifactsConnectorSafeToDelete(settingAttribute);
+    } else if (settingAttribute.getCategory() == SettingCategory.HELM_REPO) {
+      ensureHelmConnectorSafeToDelete(settingAttribute);
     }
+  }
+
+  private void ensureHelmConnectorSafeToDelete(SettingAttribute settingAttribute) {
+    final int entityNamesLimit = 5;
+    final String accountId = settingAttribute.getAccountId();
+    final List<ApplicationManifest> manifestsWithConnector = applicationManifestService.getAllByConnectorId(
+        settingAttribute.getAccountId(), settingAttribute.getUuid(), EnumSet.of(StoreType.HelmChartRepo));
+
+    if (isNotEmpty(manifestsWithConnector)) {
+      final List<String> serviceIds =
+          manifestsWithConnector.stream()
+              .filter(manifest -> isNotBlank(manifest.getServiceId()) && isBlank(manifest.getEnvId()))
+              .map(ApplicationManifest::getServiceId)
+              .collect(Collectors.toList());
+      final List<String> envIds = manifestsWithConnector.stream()
+                                      .filter(manifest -> isNotBlank(manifest.getEnvId()))
+                                      .map(ApplicationManifest::getEnvId)
+                                      .collect(Collectors.toList());
+      final List<String> serviceNames = serviceResourceService.getNames(accountId, serviceIds);
+      final List<String> envNames = envService.getNames(accountId, envIds);
+      final StringBuilder errorMsgBuilder = new StringBuilder(64);
+      errorMsgBuilder.append(format("Helm Connector [%s] is referenced ", settingAttribute.getName()));
+      if (isNotEmpty(serviceNames)) {
+        errorMsgBuilder.append(
+            format("by [%d] service(s) %s ", serviceNames.size(), trimList(serviceNames, entityNamesLimit)));
+        errorMsgBuilder.append(serviceNames.size() > entityNamesLimit
+                ? format(" and [%d] more..", serviceNames.size() - entityNamesLimit)
+                : "");
+      }
+      if (isNotEmpty(envNames)) {
+        errorMsgBuilder.append(format(
+            "and by [%d] override in environment(s) %s ", envNames.size(), trimList(envNames, entityNamesLimit)));
+        errorMsgBuilder.append(
+            envNames.size() > entityNamesLimit ? format("and [%d] more..", envNames.size() - entityNamesLimit) : "");
+      }
+      throw new InvalidRequestException(errorMsgBuilder.toString(), USER);
+    }
+  }
+
+  private List<String> trimList(List<String> strings, int n) {
+    return strings.stream().limit(n).collect(toList());
   }
 
   private void ensureSettingSafeToDelete(SettingAttribute settingAttribute) {

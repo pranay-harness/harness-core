@@ -1,6 +1,10 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -8,29 +12,40 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
-import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.common.TemplateConstants;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion;
@@ -40,23 +55,27 @@ import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class YamlDirectoryServiceImplTest extends CategoryTest {
+public class YamlDirectoryServiceImplTest extends WingsBaseTest {
   @Mock private YamlGitService yamlGitSyncService;
   @Mock private TemplateService templateService;
   @Mock private AppService appService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ApplicationManifestService applicationManifestService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService = new YamlDirectoryServiceImpl();
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
   }
+
   @Test
-  @Owner(developers = OwnerRule.ROHIT_KUMAR)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_doTemplateLibraryForApp() {
     final String accountid = "accountid";
@@ -69,7 +88,7 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
         .getTemplateTree(anyString(), anyString(), anyString(), eq(TemplateConstants.TEMPLATE_TYPES_WITH_YAML_SUPPORT));
     final Template template1 = Template.builder().name("template1").folderId("root_folder").type(SHELL_SCRIPT).build();
     final Template template2 = Template.builder().folderId("root_folder").name("template2").type(SHELL_SCRIPT).build();
-    PageResponse<Template> pageResponse = aPageResponse().withResponse(Arrays.asList(template1, template2)).build();
+    PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
     doReturn(pageResponse).when(templateService).list(any(PageRequest.class));
 
     final FolderNode folderNode = yamlDirectoryService.doTemplateLibraryForApp(application, directoryPath);
@@ -92,7 +111,7 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.ROHIT_KUMAR)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_doTemplateLibraryForApp_GLOBAL() {
     final String accountid = "accountid";
@@ -101,7 +120,7 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
     final Template template1 = Template.builder().name("template1").folderId("root_folder").type(SHELL_SCRIPT).build();
     final Template template2 =
         Template.builder().folderId("child_folder").name("child_folder_template").type(SHELL_SCRIPT).build();
-    PageResponse<Template> pageResponse = aPageResponse().withResponse(Arrays.asList(template1, template2)).build();
+    PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
     doReturn(pageResponse).when(templateService).list(any(PageRequest.class));
 
     TemplateFolder childFolder = TemplateFolder.builder().uuid("child_folder").name("child_folder_1").build();
@@ -139,7 +158,7 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.ABHINAV)
+  @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testGetRootByTemplate() {
     Template template = Template.builder().appId(GLOBAL_APP_ID).build();
@@ -154,5 +173,120 @@ public class YamlDirectoryServiceImplTest extends CategoryTest {
     assertThat(yamlDirectoryService.getRootPathByTemplate(template))
         .isEqualTo(yamlDirectoryService.getRootPathByApp(mockApp) + PATH_DELIMITER + APPLICATION_TEMPLATE_LIBRARY_FOLDER
             + PATH_DELIMITER + folderName);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateEnvHelmOverridesFolder() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    testHelmOverrideFolderIfNonePresent(env, dirPath);
+    testHelmOverrideFolderIfOnlyServiceOverridePresent(env, dirPath);
+    testHelmOverrideFolderIfOnlyGlobalOverridePresent(env, dirPath);
+    testHelmOverrideFolderIfAllTypeOfOverridesPresent(env, dirPath);
+  }
+
+  private void testHelmOverrideFolderIfNonePresent(Environment env, DirectoryPath dirPath) {
+    doReturn(null)
+        .doReturn(Collections.emptyList())
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(null)
+        .when(applicationManifestService)
+        .getByEnvId(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+
+    assertThat(yamlDirectoryService.generateEnvHelmOverridesFolder(ACCOUNT_ID, env, dirPath)).isNull();
+    assertThat(yamlDirectoryService.generateEnvHelmOverridesFolder(ACCOUNT_ID, env, dirPath)).isNull();
+  }
+
+  private void testHelmOverrideFolderIfOnlyServiceOverridePresent(Environment env, DirectoryPath dirPath) {
+    ApplicationManifest serviceManifest1 =
+        ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).serviceId("sid-1").build();
+    ApplicationManifest serviceManifest2 =
+        ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).serviceId("sid-2").build();
+
+    doReturn(asList(serviceManifest1, serviceManifest2))
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(null)
+        .when(applicationManifestService)
+        .getByEnvId(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(Service.builder().name("s-1").uuid("sid-1").appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, "sid-1", false);
+    doReturn(Service.builder().name("s-2").uuid("sid-2").appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, "sid-2", false);
+
+    final FolderNode folder = yamlDirectoryService.generateEnvHelmOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(getFolderStructure(folder))
+        .containsExactly("Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-1",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-1/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-2",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-2/Index.yaml");
+  }
+
+  private void testHelmOverrideFolderIfOnlyGlobalOverridePresent(Environment env, DirectoryPath dirPath) {
+    ApplicationManifest globalManifest = ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).build();
+
+    doReturn(asList(globalManifest))
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(globalManifest)
+        .when(applicationManifestService)
+        .getByEnvId(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+
+    final FolderNode folder = yamlDirectoryService.generateEnvHelmOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(getFolderStructure(folder))
+        .containsExactly("Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services");
+  }
+
+  private void testHelmOverrideFolderIfAllTypeOfOverridesPresent(Environment env, DirectoryPath dirPath) {
+    ApplicationManifest serviceManifest1 =
+        ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).serviceId("sid-1").build();
+    ApplicationManifest serviceManifest2 =
+        ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).serviceId("sid-2").build();
+    ApplicationManifest globalManifest = ApplicationManifest.builder().envId(ENV_ID).storeType(HelmChartRepo).build();
+
+    doReturn(asList(serviceManifest1, serviceManifest2, globalManifest))
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(globalManifest)
+        .when(applicationManifestService)
+        .getByEnvId(anyString(), anyString(), eq(AppManifestKind.HELM_CHART_OVERRIDE));
+    doReturn(Service.builder().name("s-1").uuid("sid-1").appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, "sid-1", false);
+    doReturn(Service.builder().name("s-2").uuid("sid-2").appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, "sid-2", false);
+
+    final FolderNode folder = yamlDirectoryService.generateEnvHelmOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(getFolderStructure(folder))
+        .containsExactly("Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-1",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-1/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-2",
+            "Setup/Applications/Test/Environments/Dev/Helm Chart Overrides/Services/s-2/Index.yaml");
+  }
+
+  private List<String> getFolderStructure(FolderNode fn) {
+    List<String> structure = new ArrayList<>();
+    CollectionUtils.emptyIfNull(fn.getChildren()).forEach(child -> {
+      if (child instanceof FolderNode) {
+        structure.add(child.getDirectoryPath().getPath());
+        structure.addAll(getFolderStructure((FolderNode) child));
+      } else {
+        structure.add(child.getDirectoryPath().getPath());
+      }
+    });
+    return structure;
   }
 }

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -36,6 +37,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Event;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.dl.WingsPersistence;
@@ -86,6 +88,29 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     applicationManifest.setStoreType(Local);
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
+
+    verifyAppManifestHelmChartOverrideForEnv();
+  }
+
+  private void verifyAppManifestHelmChartOverrideForEnv() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().kind(AppManifestKind.HELM_CHART_OVERRIDE).storeType(HelmChartRepo).build();
+
+    applicationManifest.setServiceId(null);
+    applicationManifest.setEnvId("envId");
+    applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(Local);
+    verifyExceptionForValidateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(Remote);
+    verifyExceptionForValidateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(HelmSourceRepo);
+    verifyExceptionForValidateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(KustomizeSourceRepo);
+    verifyExceptionForValidateAppManifestForEnvironment(applicationManifest);
   }
 
   @Test
@@ -111,11 +136,55 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testValidateHelmChartRepoAppManifestForAllServiceOverride() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                  .storeType(HelmChartRepo)
+                                                  .envId("envId")
+                                                  .build();
+
+    applicationManifest.setGitFileConfig(GitFileConfig.builder().build());
+    // No GitConfig
+    verifyInvalidRequestExceptionWithMessage(applicationManifest, "gitFileConfig cannot be used with HelmChartRepo");
+
+    HelmChartConfig helmChartConfig = helmChartConfigWithConnector().build();
+    applicationManifest.setGitFileConfig(null);
+    applicationManifest.setHelmChartConfig(helmChartConfig);
+
+    applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+
+    helmChartConfig.setConnectorId(null);
+    verifyInvalidRequestExceptionWithMessage(applicationManifest, "Helm repository cannot be empty");
+
+    helmChartConfig = helmChartConfigWithConnector().chartName("stable").build();
+    applicationManifest.setHelmChartConfig(helmChartConfig);
+    verifyInvalidRequestExceptionWithMessage(applicationManifest, "Helm chart name cannot be given");
+
+    helmChartConfig = helmChartConfigWithConnector().chartUrl("http://helm-repo").build();
+    applicationManifest.setHelmChartConfig(helmChartConfig);
+    verifyInvalidRequestExceptionWithMessage(applicationManifest, "Helm chart url cannot be given");
+
+    helmChartConfig = helmChartConfigWithConnector().chartVersion("1.1").build();
+    applicationManifest.setHelmChartConfig(helmChartConfig);
+    verifyInvalidRequestExceptionWithMessage(applicationManifest, "Helm chart version cannot be given");
+  }
+
+  private HelmChartConfigBuilder helmChartConfigWithConnector() {
+    return HelmChartConfig.builder().connectorId("foo");
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testValidateHelmChartRepoAppManifest() {
-    ApplicationManifest applicationManifest =
-        ApplicationManifest.builder().kind(AppManifestKind.HELM_CHART_OVERRIDE).storeType(HelmChartRepo).build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                  .storeType(HelmChartRepo)
+                                                  .serviceId("serviceId")
+                                                  .envId("envId")
+                                                  .build();
     applicationManifest.setGitFileConfig(GitFileConfig.builder().build());
     // No GitConfig
     verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
@@ -278,6 +347,12 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     } catch (Exception e) {
       assertThat(e instanceof InvalidRequestException).isTrue();
     }
+  }
+
+  private void verifyInvalidRequestExceptionWithMessage(ApplicationManifest applicationManifest, String msg) {
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
+        .withMessageContaining(msg);
   }
 
   private void verifyExceptionForValidateAppManifestForEnvironment(ApplicationManifest applicationManifest) {

@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -15,11 +16,14 @@ import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRI
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
+import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
+import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -40,7 +44,9 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.GitFileConfig.GitFileConfigKeys;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmChartConfig.HelmChartConfigKeys;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -69,6 +75,7 @@ import software.wings.yaml.directory.DirectoryPath;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +83,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -93,6 +101,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
+
+  private static final Set<StoreType> STORE_TYPES_WITH_GIT_CONNECTOR =
+      EnumSet.of(Remote, HelmSourceRepo, KustomizeSourceRepo);
+  private static final Set<StoreType> STORE_TYPES_WITH_HELM_CONNECTOR = EnumSet.of(HelmChartRepo);
 
   @Override
   public ApplicationManifest create(ApplicationManifest applicationManifest) {
@@ -181,6 +193,23 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                            .filter(ApplicationKeys.appId, appId)
                                            .filter(ApplicationManifestKeys.envId, envId);
     return query.asList();
+  }
+
+  @Override
+  @Nonnull
+  public List<ApplicationManifest> getAllByConnectorId(
+      @Nonnull String accountId, @Nonnull String connectorId, @Nonnull Set<StoreType> storeTypes) {
+    Query<ApplicationManifest> query =
+        wingsPersistence.createQuery(ApplicationManifest.class).filter(ApplicationManifestKeys.accountId, accountId);
+    if (!Sets.intersection(STORE_TYPES_WITH_GIT_CONNECTOR, storeTypes).isEmpty()) {
+      query.filter(join(".", ApplicationManifestKeys.gitFileConfig, GitFileConfigKeys.connectorId), connectorId);
+    } else if (!Sets.intersection(STORE_TYPES_WITH_HELM_CONNECTOR, storeTypes).isEmpty()) {
+      query.filter(join(".", ApplicationManifestKeys.helmChartConfig, HelmChartConfigKeys.connectorId), connectorId);
+    }
+    return query.project(ApplicationManifestKeys.accountId, true)
+        .project(ApplicationManifestKeys.envId, true)
+        .project(ApplicationManifestKeys.serviceId, true)
+        .asList();
   }
 
   @Override
@@ -496,9 +525,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
     if (isNotBlank(appManifest.getEnvId())) {
       if (HELM_CHART_OVERRIDE == appManifest.getKind()) {
-        validateStoreTypeForHelmChartOverride(appManifest.getStoreType());
+        validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
-        if (StoreType.Local != appManifest.getStoreType() && StoreType.Remote != appManifest.getStoreType()) {
+        if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()) {
           throw new InvalidRequestException(
               "Only local and remote store types are allowed for values.yaml in environment");
         }
@@ -506,8 +535,13 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  void validateStoreTypeForHelmChartOverride(StoreType storeType) {
-    if (HelmChartRepo != storeType && HelmSourceRepo != storeType) {
+  void validateStoreTypeForHelmChartOverride(StoreType storeType, AppManifestSource appManifestSource) {
+    if (appManifestSource == AppManifestSource.ENV) {
+      if (HelmChartRepo != storeType) {
+        throw new InvalidRequestException(
+            "Only HelmChartRepo store type are allowed for Helm Chart Override for all Services in environment");
+      }
+    } else if (HelmChartRepo != storeType && HelmSourceRepo != storeType) {
       throw new InvalidRequestException(
           "Only HelmChartRepo and HelmSourceRepo store types are allowed for Helm Chart Override in environment");
     }
@@ -520,12 +554,45 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
           "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
     }
 
+    if (isEnvOverrideForAllServices(applicationManifest)) {
+      validateHelmChartAppManifestForAllServiceOverride(applicationManifest);
+      return;
+    }
+
     if (shouldValidateHelmChartRepoAppManifestForK8sv2(applicationManifest)) {
       validateHelmChartRepoAppManifestForK8sv2Service(applicationManifest);
       return;
     }
 
     validateHelmChartRepoAppManifestForHelmService(applicationManifest);
+  }
+
+  private void validateHelmChartAppManifestForAllServiceOverride(ApplicationManifest applicationManifest) {
+    HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
+    notNullCheck("helmChartConfig has to be specified for HelmChartRepo.", helmChartConfig, USER);
+    if (isBlank(helmChartConfig.getConnectorId())) {
+      throw new InvalidRequestException("Helm repository cannot be empty.", USER);
+    }
+
+    /*
+    For Helm Chart override in environment for all services, only the helm connector should be present
+     */
+    if (isNotBlank(helmChartConfig.getChartName())) {
+      throw new InvalidRequestException("Helm chart name cannot be given for all services helm chart override", USER);
+    }
+
+    if (isNotBlank(helmChartConfig.getChartUrl())) {
+      throw new InvalidRequestException("Helm chart url cannot be given for all services helm chart override", USER);
+    }
+
+    if (isNotBlank(helmChartConfig.getChartVersion())) {
+      throw new InvalidRequestException(
+          "Helm chart version cannot be given for all services helm chart override", USER);
+    }
+  }
+
+  private boolean isEnvOverrideForAllServices(ApplicationManifest applicationManifest) {
+    return AppManifestSource.ENV == getAppManifestType(applicationManifest);
   }
 
   private boolean shouldValidateHelmChartRepoAppManifestForK8sv2(ApplicationManifest applicationManifest) {
@@ -598,6 +665,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
+
     validateGitFileConfigForRemoteManifest(applicationManifest.getGitFileConfig());
   }
 
@@ -659,11 +727,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       default:
         unhandled(applicationManifest.getStoreType());
     }
-
-    // Special validation for HELM_CHART_OVERRIDE
-    if (HELM_CHART_OVERRIDE == applicationManifest.getKind() && isBlank(applicationManifest.getServiceId())) {
-      throw new InvalidRequestException("Override For all Services is not Applicable for HELM_CHART_OVERRIDE", USER);
-    }
   }
 
   @VisibleForTesting
@@ -719,7 +782,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Application manifest doesn't exist with id " + appManifestId, USER);
     }
 
-    if (StoreType.Remote != appManifest.getStoreType()) {
+    if (Remote != appManifest.getStoreType()) {
       throw new InvalidRequestException(
           "Manifest files from git should only be requested when store type is remote", USER);
     }

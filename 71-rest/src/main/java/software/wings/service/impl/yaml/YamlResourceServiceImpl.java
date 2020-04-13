@@ -12,6 +12,7 @@ import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
@@ -809,6 +810,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yamlType = APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
     } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
       yamlType = APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
+    } else if (AppManifestKind.HELM_CHART_OVERRIDE == applicationManifest.getKind()) {
+      yamlType = APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
     } else {
       throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
     }

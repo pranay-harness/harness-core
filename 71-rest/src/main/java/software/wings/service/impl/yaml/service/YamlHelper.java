@@ -245,7 +245,9 @@ public class YamlHelper {
 
     kind = extractParentEntityName(
         YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    if (isNotBlank(kind)) {
+    kind2 = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind) || isNotBlank(kind2)) {
       return HELM_CHART_OVERRIDE;
     }
 
