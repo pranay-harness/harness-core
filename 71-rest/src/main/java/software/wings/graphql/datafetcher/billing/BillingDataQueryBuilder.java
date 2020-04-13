@@ -187,13 +187,14 @@ public class BillingDataQueryBuilder {
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
+    if (isValidGroupBy(groupBy)) {
+      decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
+      decorateQueryWithNodeOrPodGroupBy(fieldNames, selectQuery, groupBy, groupByFields, filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
-    }
-
-    if (isValidGroupBy(groupBy)) {
-      decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
     }
 
     addAccountFilter(selectQuery, accountId);
@@ -309,7 +310,7 @@ public class BillingDataQueryBuilder {
         fieldNames.add(BillingDataMetaDataFields.IDLECOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getUnallocatedCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
-            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getIdleCost()),
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getUnallocatedCost()),
                 BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.UNALLOCATEDCOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getCpuIdleCost().getColumnNameSQL())) {

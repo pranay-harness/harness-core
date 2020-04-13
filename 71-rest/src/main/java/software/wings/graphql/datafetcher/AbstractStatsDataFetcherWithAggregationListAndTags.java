@@ -270,7 +270,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       }
       QLBillingDataPoint existingDataPoint = tagNameDataPointMap.get(tagName);
       if (existingDataPoint != null) {
-        existingDataPoint.setValue(existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue());
+        existingDataPoint.setValue(billingDataHelper.getRoundedDoubleValue(
+            existingDataPoint.getValue().doubleValue() + dataPoint.getValue().doubleValue()));
         return true;
       }
 

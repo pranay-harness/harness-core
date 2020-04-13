@@ -35,7 +35,6 @@ import javax.validation.constraints.NotNull;
 public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
-  @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
   @Inject InstanceDataServiceImpl instanceDataService;
@@ -45,7 +44,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
   private static final String INSTANCE_TYPE_NODE = "K8S_NODE";
   private static final String INSTANCE_TYPE_PODS = "K8S_POD";
   private static final String NAMESPACE = "namespace";
-  private static final String WORKLOAD = "workload";
+  private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
 
   @Override
@@ -145,25 +144,35 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
       instanceIds.add(entry.getId());
     });
 
+    List<InstanceData> instanceData =
+        instanceDataService.fetchInstanceDataForGivenInstances(accountId, getClusterId(filters), instanceIds);
+    Map<String, InstanceData> instanceIdToInstanceData = new HashMap<>();
+    instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
+
     String instanceType = getInstanceType(filters);
 
     if (instanceType.equals(INSTANCE_TYPE_NODE)) {
-      List<InstanceData> instanceData =
-          instanceDataService.fetchInstanceDataForGivenInstances(accountId, getClusterId(filters), instanceIds);
-      return QLNodeAndPodDetailsTableData.builder().data(getDataForNodes(instanceIdToCostData, instanceData)).build();
+      return QLNodeAndPodDetailsTableData.builder()
+          .data(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIds))
+          .build();
     } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
-      List<InstanceData> instanceData =
-          instanceDataService.fetchInstanceDataForGivenInstances(accountId, getClusterId(filters), instanceIds);
-      return QLNodeAndPodDetailsTableData.builder().data(getDataForPods(instanceIdToCostData, instanceData)).build();
+      return QLNodeAndPodDetailsTableData.builder()
+          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIds))
+          .build();
     }
 
     return null;
   }
 
   private List<QLNodeAndPodDetailsTableRow> getDataForNodes(
-      Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData, List<InstanceData> instanceData) {
+      Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData, Map<String, InstanceData> instanceIdToInstanceData,
+      List<String> instanceIds) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
-    instanceData.forEach(entry -> {
+    instanceIds.forEach(instanceId -> {
+      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)) {
+        return;
+      }
+      InstanceData entry = instanceIdToInstanceData.get(instanceId);
       QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(entry.getInstanceId());
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(entry.getInstanceName())
@@ -172,8 +181,8 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
-          .cpuAllocatable(entry.getTotalResource().getCpuUnits())
-          .memoryAllocatable(entry.getTotalResource().getMemoryMb())
+          .cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
+          .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
           .machineType(entry.getMetaData().get(OPERATING_SYSTEM))
           .instanceCategory(entry.getMetaData().get(INSTANCE_CATEGORY))
           .createTime(entry.getUsageStartTime().toEpochMilli());
@@ -186,22 +195,27 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
   }
 
   private List<QLNodeAndPodDetailsTableRow> getDataForPods(
-      Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData, List<InstanceData> instanceData) {
+      Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData, Map<String, InstanceData> instanceIdToInstanceData,
+      List<String> instanceIds) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
-    instanceData.forEach(entry -> {
+    instanceIds.forEach(instanceId -> {
+      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)) {
+        return;
+      }
+      InstanceData entry = instanceIdToInstanceData.get(instanceId);
       QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(entry.getInstanceId());
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(entry.getInstanceName())
           .id(entry.getInstanceId())
           .namespace(entry.getMetaData().get(NAMESPACE))
           .workload(entry.getMetaData().get(WORKLOAD))
-          .node(statsHelper.getInstanceName(entry.getMetaData().get(PARENT_RESOURCE_ID)))
+          .node(entry.getMetaData().get(PARENT_RESOURCE_ID))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
-          .cpuRequested(entry.getTotalResource().getCpuUnits())
-          .memoryRequested(entry.getTotalResource().getMemoryMb())
+          .cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
+          .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
           .createTime(entry.getUsageStartTime().toEpochMilli());
       if (entry.getUsageStopTime() != null) {
         builder.deleteTime(entry.getUsageStopTime().toEpochMilli());

@@ -6,6 +6,8 @@ import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -13,6 +15,7 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -29,19 +32,26 @@ public class QLBillingStatsHelper {
   @Inject ClusterRecordService clusterRecordService;
   @Inject SettingsService settingsService;
   @Inject InstanceDataServiceImpl instanceDataService;
+  private static final long CACHE_SIZE = 10000;
+
+  private LoadingCache<CacheKey, String> entityIdToNameCache =
+      Caffeine.newBuilder().maximumSize(CACHE_SIZE).build(key -> fetchEntityName(key.getField(), key.getEntityId()));
+
+  @Value
+  protected static class CacheKey {
+    private String entityId;
+    private BillingDataMetaDataFields field;
+  }
 
   public String getEntityName(BillingDataMetaDataFields field, String entityId) {
     switch (field) {
       case APPID:
-        return getApplicationName(entityId);
       case ENVID:
-        return getEnvironmentName(entityId);
       case SERVICEID:
-        return getServiceName(entityId);
       case CLUSTERID:
-        return getClusterName(entityId);
       case CLOUDPROVIDERID:
-        return getCloudProviderName(entityId);
+        CacheKey cacheKey = new CacheKey(entityId, field);
+        return entityIdToNameCache.get(cacheKey);
       case INSTANCEID:
         return getInstanceName(entityId);
       case REGION:
@@ -53,6 +63,23 @@ public class QLBillingStatsHelper {
       case NAMESPACE:
       case CLUSTERNAME:
         return entityId;
+      default:
+        throw new InvalidRequestException("Invalid EntityType " + field);
+    }
+  }
+
+  private String fetchEntityName(BillingDataMetaDataFields field, String entityId) {
+    switch (field) {
+      case APPID:
+        return getApplicationName(entityId);
+      case ENVID:
+        return getEnvironmentName(entityId);
+      case SERVICEID:
+        return getServiceName(entityId);
+      case CLUSTERID:
+        return getClusterName(entityId);
+      case CLOUDPROVIDERID:
+        return getCloudProviderName(entityId);
       default:
         throw new InvalidRequestException("Invalid EntityType " + field);
     }
