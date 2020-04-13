@@ -231,6 +231,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     mlAnalysisResponse.setGroupName(groupName);
     mlAnalysisResponse.setCvConfigId(cvConfigId);
+    mlAnalysisResponse.setAccountId(accountId);
 
     if (isEmpty(mlAnalysisResponse.getGroupName())) {
       mlAnalysisResponse.setGroupName(DEFAULT_GROUP_NAME);

@@ -217,6 +217,7 @@ experimentalLogMessageComparisonResult { "name" : "cvConfigId_1" , "background" 
 experimentalLogMessageComparisonResult { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
 experimentalTimeSeriesAnalysisRecords { "name" : "ExperimentalMetricListIdx" , "background" : true} { "analysisMinute" : 1 , "mismatched" : 1 , "createdAt" : -1}
 experimentalTimeSeriesAnalysisRecords { "name" : "MetricAnalysisUniqueIdx" , "unique" : true} { "workflowExecutionId" : 1 , "stateExecutionId" : 1 , "analysisMinute" : 1 , "groupName" : 1}
+experimentalTimeSeriesAnalysisRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 experimentalTimeSeriesAnalysisRecords { "name" : "analysisMinStateExecutionIdIndex" , "background" : true} { "analysisMinute" : 1 , "stateExecutionId" : 1}
 experimentalTimeSeriesAnalysisRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}
 experimentalTimeSeriesAnalysisRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
@@ -555,6 +556,7 @@ terraformConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 
 terraformConfig { "name" : "entityId_1" , "background" : true} { "entityId" : 1}
 thirdPartyApiCallLog { "name" : "queryIdx" , "background" : true} { "stateExecutionId" : 1 , "createdAt" : -1}
 thirdPartyApiCallLog { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+timeSeriesAnalysisRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 timeSeriesAnalysisRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeSeriesAnalysisRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeSeriesAnalysisRecords { "name" : "service_guard_idx" , "background" : true} { "cvConfigId" : 1 , "analysisMinute" : -1}

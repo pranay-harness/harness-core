@@ -9,6 +9,7 @@ import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToTerraformConfig;
+import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
@@ -181,6 +182,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(106, AddAccountIdToTerraformConfig.class))
         .add(Pair.of(107, AddAccountIdToCloudFormationRollBackConfig.class))
         .add(Pair.of(108, AddAccountIdToInfraDefinition.class))
+        .add(Pair.of(109, AddAccountIdToTimeSeriesAnalysisRecords.class))
         .build();
   }
 }
