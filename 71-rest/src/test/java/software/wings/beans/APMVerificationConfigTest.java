@@ -1,6 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -15,11 +17,13 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.APMVerificationConfig.KeyValues;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,13 +38,13 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void encryptFields() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
-    apmVerificationConfig.encryptFields(secretManager);
+    apmVerificationConfig.encryptFields(secretManager, false);
 
     assertThat(apmVerificationConfig.getHeadersList()).hasSize(2);
     assertThat(apmVerificationConfig.getHeadersList().get(0).getValue()).isEqualTo("*****");
@@ -49,22 +53,48 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testEncryptFields_whenSecretRefEnabled() {
+    String headerSecretRef = generateUuid();
+    String optionSecretRef = generateUuid();
+    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value(headerSecretRef).encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+
+    List<KeyValues> options = new ArrayList<>();
+    options.add(KeyValues.builder().key("option_key").value(optionSecretRef).encrypted(true).build());
+    options.add(KeyValues.builder().key("option_key_plain").value("321").encrypted(false).build());
+
+    apmVerificationConfig.setHeadersList(headers);
+    apmVerificationConfig.setOptionsList(options);
+    apmVerificationConfig.setAccountId("111");
+    apmVerificationConfig.encryptFields(secretManager, true);
+
+    assertThat(apmVerificationConfig.getHeadersList()).hasSize(2);
+    assertThat(apmVerificationConfig.getHeadersList().get(0).getValue()).isEqualTo(headerSecretRef);
+    assertThat(apmVerificationConfig.getHeadersList().get(0).getEncryptedValue()).isEqualTo(headerSecretRef);
+    assertThat(apmVerificationConfig.getHeadersList().get(1).getValue()).isEqualTo("123");
+
+    assertThat(apmVerificationConfig.getOptionsList()).hasSize(2);
+    assertThat(apmVerificationConfig.getOptionsList().get(0).getValue()).isEqualTo(optionSecretRef);
+    assertThat(apmVerificationConfig.getOptionsList().get(0).getEncryptedValue()).isEqualTo(optionSecretRef);
+    assertThat(apmVerificationConfig.getOptionsList().get(1).getValue()).isEqualTo("321");
+  }
+
+  @Test
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void encryptFieldsMasked() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
-    headers.add(APMVerificationConfig.KeyValues.builder()
-                    .key("api_key")
-                    .value("*****")
-                    .encrypted(true)
-                    .encryptedValue("xyz")
-                    .build());
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value("*****").encrypted(true).encryptedValue("xyz").build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
-    apmVerificationConfig.encryptFields(secretManager);
+    apmVerificationConfig.encryptFields(secretManager, false);
     verifyZeroInteractions(secretManager);
   }
 
@@ -73,13 +103,13 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void encryptDataDetails() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
-    apmVerificationConfig.encryptFields(secretManager);
+    apmVerificationConfig.encryptFields(secretManager, false);
 
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
@@ -94,13 +124,13 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void encryptFieldsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> params = new ArrayList<>();
+    params.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    params.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setOptionsList(params);
     apmVerificationConfig.setAccountId("111");
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
-    apmVerificationConfig.encryptFields(secretManager);
+    apmVerificationConfig.encryptFields(secretManager, false);
 
     assertThat(apmVerificationConfig.getOptionsList()).hasSize(2);
     assertThat(apmVerificationConfig.getOptionsList().get(0).getValue()).isEqualTo("*****");
@@ -114,13 +144,13 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void encryptDataDetailsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> params = new ArrayList<>();
+    params.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    params.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setOptionsList(params);
     apmVerificationConfig.setAccountId("111");
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
-    apmVerificationConfig.encryptFields(secretManager);
+    apmVerificationConfig.encryptFields(secretManager, false);
 
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
@@ -135,15 +165,10 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void createAPMValidateCollectorConfig() throws IOException {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
-    headers.add(APMVerificationConfig.KeyValues.builder()
-                    .key("api_key_2")
-                    .value("*****")
-                    .encryptedValue("abc")
-                    .encrypted(true)
-                    .build());
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    headers.add(KeyValues.builder().key("api_key_2").value("*****").encryptedValue("abc").encrypted(true).build());
 
     Optional<EncryptedDataDetail> encryptedDataDetail =
         Optional.of(EncryptedDataDetail.builder().fieldName("api_key_2").build());
@@ -155,7 +180,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.setUrl("base");
     apmVerificationConfig.setValidationUrl("suffix");
     APMValidateCollectorConfig apmValidateCollectorConfig =
-        apmVerificationConfig.createAPMValidateCollectorConfig(secretManager, encryptionService);
+        apmVerificationConfig.createAPMValidateCollectorConfig(secretManager, encryptionService, false);
     assertThat(apmValidateCollectorConfig.getBaseUrl()).isEqualTo("base");
     assertThat(apmValidateCollectorConfig.getUrl()).isEqualTo("suffix");
     assertThat(apmVerificationConfig.getHeadersList()).isEqualTo(headers);
@@ -163,13 +188,61 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCreateAPMValidateCollectorConfig_whenSecretRefEnabled() throws IOException {
+    String headerSecretRef = generateUuid();
+    String optionSecretRef = generateUuid();
+    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value(headerSecretRef).encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+
+    List<KeyValues> options = new ArrayList<>();
+    options.add(KeyValues.builder().key("option_key").value(optionSecretRef).encrypted(true).build());
+    options.add(KeyValues.builder().key("option_key_plain").value("321").encrypted(false).build());
+    Optional<EncryptedDataDetail> headerEncryptedDataDetail =
+        Optional.of(EncryptedDataDetail.builder().fieldName("api_key_2").build());
+    Optional<EncryptedDataDetail> optionEncryptedDataDetail =
+        Optional.of(EncryptedDataDetail.builder().fieldName("option_key_2").build());
+
+    when(secretManager.encryptedDataDetails("111", "api_key", headerSecretRef)).thenReturn(headerEncryptedDataDetail);
+    when(secretManager.encryptedDataDetails("111", "option_key", optionSecretRef))
+        .thenReturn(optionEncryptedDataDetail);
+    when(encryptionService.getDecryptedValue(headerEncryptedDataDetail.get()))
+        .thenReturn("decryptedHeader".toCharArray());
+    when(encryptionService.getDecryptedValue(optionEncryptedDataDetail.get()))
+        .thenReturn("decryptedOption".toCharArray());
+    apmVerificationConfig.setHeadersList(headers);
+    apmVerificationConfig.setOptionsList(options);
+    apmVerificationConfig.setAccountId("111");
+    apmVerificationConfig.setUrl("base");
+    apmVerificationConfig.setValidationUrl("suffix");
+    APMValidateCollectorConfig apmValidateCollectorConfig =
+        apmVerificationConfig.createAPMValidateCollectorConfig(secretManager, encryptionService, true);
+    assertThat(apmValidateCollectorConfig.getBaseUrl()).isEqualTo("base");
+    assertThat(apmValidateCollectorConfig.getUrl()).isEqualTo("suffix");
+
+    Map<String, String> expeectedHeaders = new HashMap<>();
+    expeectedHeaders.put("api_key", "decryptedHeader");
+    expeectedHeaders.put("api_key_plain", "123");
+
+    Map<String, String> expectedOptions = new HashMap<>();
+    expectedOptions.put("option_key", "decryptedOption");
+    expectedOptions.put("option_key_plain", "321");
+
+    assertThat(apmValidateCollectorConfig.getHeaders()).isEqualTo(expeectedHeaders);
+    assertThat(apmValidateCollectorConfig.getOptions()).isEqualTo(expectedOptions);
+  }
+
+  @Test
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void collectionHeaders() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> headers = new ArrayList<>();
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    headers.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
     apmVerificationConfig.setUrl("base");
@@ -185,9 +258,9 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void collectionParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    List<APMVerificationConfig.KeyValues> params = new ArrayList<>();
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key").value("123").encrypted(true).build());
-    params.add(APMVerificationConfig.KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+    List<KeyValues> params = new ArrayList<>();
+    params.add(KeyValues.builder().key("api_key").value("123").encrypted(true).build());
+    params.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
     apmVerificationConfig.setOptionsList(params);
     apmVerificationConfig.setAccountId("111");
     apmVerificationConfig.setUrl("base");
