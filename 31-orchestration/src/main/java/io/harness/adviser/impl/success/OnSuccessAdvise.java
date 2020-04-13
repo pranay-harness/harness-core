@@ -8,4 +8,5 @@ import lombok.Value;
 @Builder
 public class OnSuccessAdvise implements Advise {
   String nextNodeId;
+  @Builder.Default String type = "ON_SUCCESS";
 }

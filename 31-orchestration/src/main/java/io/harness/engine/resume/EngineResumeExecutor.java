@@ -41,9 +41,10 @@ public class EngineResumeExecutor implements Runnable {
         return;
       }
 
-      ExecutionNode nodeDefinition = executionNodeInstance.getNode();
-      AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(nodeDefinition.getStateType());
-      StateResponse stateResponse = asyncExecutable.handleAsyncResponse(executionNodeInstance.getAmbiance(), response);
+      ExecutionNode node = executionNodeInstance.getNode();
+      AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
+      StateResponse stateResponse =
+          asyncExecutable.handleAsyncResponse(executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
       executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
     } catch (Exception ex) {
       logger.error(ex.getMessage());
