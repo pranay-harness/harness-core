@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -44,7 +45,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "alerts")
 @HarnessEntity(exportable = false)
-public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
+public class Alert
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private long createdAt;

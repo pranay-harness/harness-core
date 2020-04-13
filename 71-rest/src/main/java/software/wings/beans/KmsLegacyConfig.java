@@ -9,6 +9,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -45,7 +46,7 @@ import java.util.List;
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
-public class KmsLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
+public class KmsLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander, AccountAccess {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true)

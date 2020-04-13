@@ -1,6 +1,7 @@
 package software.wings.beans.peronalization;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -27,7 +28,7 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "PersonalizationKeys")
 @Entity(value = "personalization", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Personalization implements PersistentEntity {
+public class Personalization implements PersistentEntity, AccountAccess {
   @Id private ObjectId id;
 
   private String accountId;

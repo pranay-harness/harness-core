@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
@@ -35,7 +36,7 @@ import javax.validation.constraints.NotNull;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
-public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware {
+public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
   @NotNull private long lastUpdatedAt;

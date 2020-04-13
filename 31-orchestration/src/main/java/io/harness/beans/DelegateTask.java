@@ -9,6 +9,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -48,7 +49,7 @@ import javax.validation.constraints.NotNull;
     @Field(DelegateTaskKeys.status), @Field(DelegateTaskKeys.expiry)
   })
 })
-public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 

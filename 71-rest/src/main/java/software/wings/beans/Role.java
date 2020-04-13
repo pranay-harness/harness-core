@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -27,7 +28,7 @@ import java.util.List;
     fields = { @Field("roleType")
                , @Field("accountId") }, options = @IndexOptions(name = "roleType_accountId_1")))
 @FieldNameConstants(innerTypeName = "RoleKeys")
-public class Role extends Base {
+public class Role extends Base implements AccountAccess {
   @NotEmpty private String name;
   private String description;
   @NotEmpty private String accountId;

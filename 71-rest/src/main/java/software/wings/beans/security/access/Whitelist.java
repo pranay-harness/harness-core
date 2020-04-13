@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import software.wings.beans.Base;
 @FieldNameConstants(innerTypeName = "WhitelistKeys")
 @Entity(value = "whitelist", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Whitelist extends Base {
+public class Whitelist extends Base implements AccountAccess {
   @Indexed @NotEmpty private String accountId;
   private String description;
   @NotEmpty private WhitelistStatus status = WhitelistStatus.ACTIVE;

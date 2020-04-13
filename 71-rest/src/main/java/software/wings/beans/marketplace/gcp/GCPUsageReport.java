@@ -3,6 +3,7 @@ package software.wings.beans.marketplace.gcp;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAccess;
@@ -29,7 +30,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "gcpUsageReport", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 
-public class GCPUsageReport implements PersistentEntity, UuidAccess, CreatedAtAccess, UpdatedAtAccess {
+public class GCPUsageReport implements PersistentEntity, UuidAccess, CreatedAtAccess, UpdatedAtAccess, AccountAccess {
   @Id private String uuid;
   @NonFinal private String accountId;
   @NonFinal private String consumerId;

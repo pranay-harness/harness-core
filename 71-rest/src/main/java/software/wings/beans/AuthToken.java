@@ -4,6 +4,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -20,7 +21,7 @@ import java.util.Date;
 @FieldNameConstants(innerTypeName = "AuthTokenKeys")
 @Entity(value = "authTokens", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class AuthToken extends Base {
+public class AuthToken extends Base implements AccountAccess {
   @Transient private User user;
   private String accountId;
   private String userId;

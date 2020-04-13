@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,8 +28,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "marketPlaces", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class MarketPlace
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                    UpdatedByAware, AccountAccess {
   private MarketPlaceType type;
 
   @Indexed(options = @IndexOptions(unique = true)) private String customerIdentificationCode;

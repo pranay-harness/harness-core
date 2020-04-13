@@ -6,6 +6,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -50,7 +51,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
 public abstract class SecretManagerConfig
     implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-               UpdatedByAware, PersistentRegularIterable {
+               UpdatedByAware, PersistentRegularIterable, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;

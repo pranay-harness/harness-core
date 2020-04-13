@@ -2,6 +2,7 @@ package software.wings.audit;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -32,7 +33,8 @@ import javax.validation.constraints.NotNull;
     @Field(AuditRecordKeys.auditHeaderId), @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC),
   }, options = @IndexOptions(name = "entityRecordIndex_1"))
 })
-public class AuditRecord implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable {
+public class AuditRecord
+    implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable, AccountAccess {
   @Id @NotNull private String uuid;
   @NotEmpty String auditHeaderId;
   @NotNull EntityAuditRecord entityAuditRecord;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +41,7 @@ import javax.validation.constraints.NotNull;
                                                                              , @Field("name") }))
 @HarnessEntity(exportable = true)
 @Deprecated
-public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess {
+public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {
   public static final String NAME_KEY = "name";
 
   @NotEmpty private String accountId;

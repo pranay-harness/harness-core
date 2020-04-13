@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
     @Field(DelegateConnectionKeys.accountId), @Field(DelegateConnectionKeys.delegateId)
   }, options = @IndexOptions(name = "index"))
 })
-public class DelegateConnection implements PersistentEntity, UuidAware {
+public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
   public static final int DEFAULT_EXPIRY_TIME_IN_MINUTES = 5;
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
