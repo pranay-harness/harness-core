@@ -24,7 +24,7 @@ public class OnSuccessAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
-    return null;
+    return OnSuccessAdvise.builder().nextNodeId(onSuccessAdviserParameters.getNextNodeId()).build();
   }
 
   @Override
