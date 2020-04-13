@@ -1,6 +1,7 @@
 package software.wings.scim;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.GROUP;
 
 import com.google.inject.Inject;
@@ -317,16 +318,18 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   private List<String> getMembersOfUserGroup(ScimGroup scimGroup) {
     List<String> newMemberIds = new ArrayList<>();
-    scimGroup.getMembers().forEach(member -> {
-      if (!newMemberIds.contains(member.getValue())) {
-        User user = wingsPersistence.get(User.class, member.getValue());
-        if (user != null) {
-          newMemberIds.add(member.getValue());
-        } else {
-          logger.info("SCIM: No user exists in the db with the id {}", member.getValue());
+    if (isNotEmpty(scimGroup.getMembers())) {
+      scimGroup.getMembers().forEach(member -> {
+        if (!newMemberIds.contains(member.getValue())) {
+          User user = wingsPersistence.get(User.class, member.getValue());
+          if (user != null) {
+            newMemberIds.add(member.getValue());
+          } else {
+            logger.info("SCIM: No user exists in the db with the id {}", member.getValue());
+          }
         }
-      }
-    });
+      });
+    }
     return newMemberIds;
   }
 }
