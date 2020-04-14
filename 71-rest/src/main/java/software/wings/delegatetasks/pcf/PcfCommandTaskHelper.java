@@ -2,7 +2,10 @@ package software.wings.delegatetasks.pcf;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_INFRA_STATE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACKS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACK_MANIFEST_YML_ELEMENT;
@@ -38,6 +41,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
@@ -76,6 +80,7 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.helpers.ext.pcf.InvalidPcfStateException;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
@@ -773,13 +778,27 @@ public class PcfCommandTaskHelper {
 
     // For existing
     ApplicationSummary activeApplication = previousReleases.get(previousReleases.size() - 1);
+    List<ApplicationSummary> activeVersions = new ArrayList<>();
     for (int i = previousReleases.size() - 1; i >= 0; i--) {
       ApplicationSummary applicationSummary = previousReleases.get(i);
       pcfRequestConfig.setApplicationName(applicationSummary.getName());
+
       if (pcfDeploymentManager.isActiveApplication(pcfRequestConfig, executionLogCallback)) {
         activeApplication = applicationSummary;
-        break;
+        activeVersions.add(applicationSummary);
       }
+    }
+
+    if (isNotEmpty(activeVersions) && activeVersions.size() > 1) {
+      StringBuilder msgBuilder =
+          new StringBuilder(256)
+              .append("Invalid PCF Deployment State. Found Multiple applications having Env variable as ")
+              .append(HARNESS__STATUS__INDENTIFIER)
+              .append(
+                  ": ACTIVE' identifier. Cant Determine actual active version.\n Only 1 is expected to have this Status. Active versions found are: \n");
+      activeVersions.forEach(activeVersion -> msgBuilder.append(activeVersion.getName()).append(' '));
+      executionLogCallback.saveExecutionLog(msgBuilder.toString(), ERROR);
+      throw new InvalidPcfStateException(msgBuilder.toString(), INVALID_INFRA_STATE, USER_SRE);
     }
 
     return activeApplication;

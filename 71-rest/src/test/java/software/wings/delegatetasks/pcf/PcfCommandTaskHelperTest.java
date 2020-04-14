@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.RIHAZ;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -40,6 +41,7 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.helpers.ext.pcf.InvalidPcfStateException;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
@@ -671,16 +673,16 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat(currentActiveApplication).isNull();
 
     doReturn(false).when(pcfDeploymentManager).isActiveApplication(any(), any());
-    List<ApplicationSummary> previousReleases = Arrays.asList(ApplicationSummary.builder()
-                                                                  .name("a_s_e__4")
-                                                                  .diskQuota(1)
-                                                                  .requestedState(RUNNING)
-                                                                  .id("1")
-                                                                  .urls(new String[] {"url1", "url2"})
-                                                                  .instances(2)
-                                                                  .memoryLimit(1)
-                                                                  .runningInstances(0)
-                                                                  .build(),
+    final List<ApplicationSummary> previousReleases = Arrays.asList(ApplicationSummary.builder()
+                                                                        .name("a_s_e__4")
+                                                                        .diskQuota(1)
+                                                                        .requestedState(RUNNING)
+                                                                        .id("1")
+                                                                        .urls(new String[] {"url1", "url2"})
+                                                                        .instances(2)
+                                                                        .memoryLimit(1)
+                                                                        .runningInstances(0)
+                                                                        .build(),
         ApplicationSummary.builder()
             .name("a_s_e__5")
             .diskQuota(1)
@@ -699,16 +701,16 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat(currentActiveApplication.getUrls()).containsExactly("url3", "url4");
 
     doReturn(true).when(pcfDeploymentManager).isActiveApplication(any(), any());
-    previousReleases = Arrays.asList(ApplicationSummary.builder()
-                                         .name("a_s_e__6")
-                                         .diskQuota(1)
-                                         .requestedState(RUNNING)
-                                         .id("1")
-                                         .urls(new String[] {"url5", "url6"})
-                                         .instances(2)
-                                         .memoryLimit(1)
-                                         .runningInstances(0)
-                                         .build(),
+    final List<ApplicationSummary> previousReleases1 = Arrays.asList(ApplicationSummary.builder()
+                                                                         .name("a_s_e__6")
+                                                                         .diskQuota(1)
+                                                                         .requestedState(RUNNING)
+                                                                         .id("1")
+                                                                         .urls(new String[] {"url5", "url6"})
+                                                                         .instances(2)
+                                                                         .memoryLimit(1)
+                                                                         .runningInstances(0)
+                                                                         .build(),
         ApplicationSummary.builder()
             .name("a_s_e__7")
             .diskQuota(1)
@@ -720,23 +722,22 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
             .runningInstances(0)
             .build());
 
-    currentActiveApplication = pcfCommandTaskHelper.findCurrentActiveApplication(
-        previousReleases, PcfRequestConfig.builder().build(), executionLogCallback);
-    assertThat(currentActiveApplication).isNotNull();
-    assertThat(currentActiveApplication.getName()).isEqualTo("a_s_e__7");
-    assertThat(currentActiveApplication.getUrls()).containsExactly("url7", "url8");
+    assertThatThrownBy(()
+                           -> pcfCommandTaskHelper.findCurrentActiveApplication(
+                               previousReleases1, PcfRequestConfig.builder().build(), executionLogCallback))
+        .isInstanceOf(InvalidPcfStateException.class);
 
     doReturn(false).doReturn(true).when(pcfDeploymentManager).isActiveApplication(any(), any());
-    previousReleases = Arrays.asList(ApplicationSummary.builder()
-                                         .name("a_s_e__6")
-                                         .diskQuota(1)
-                                         .requestedState(RUNNING)
-                                         .id("1")
-                                         .urls(new String[] {"url5", "url6"})
-                                         .instances(2)
-                                         .memoryLimit(1)
-                                         .runningInstances(0)
-                                         .build(),
+    final List<ApplicationSummary> previousReleases2 = Arrays.asList(ApplicationSummary.builder()
+                                                                         .name("a_s_e__6")
+                                                                         .diskQuota(1)
+                                                                         .requestedState(RUNNING)
+                                                                         .id("1")
+                                                                         .urls(new String[] {"url5", "url6"})
+                                                                         .instances(2)
+                                                                         .memoryLimit(1)
+                                                                         .runningInstances(0)
+                                                                         .build(),
         ApplicationSummary.builder()
             .name("a_s_e__7")
             .diskQuota(1)
@@ -749,7 +750,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
             .build());
 
     currentActiveApplication = pcfCommandTaskHelper.findCurrentActiveApplication(
-        previousReleases, PcfRequestConfig.builder().build(), executionLogCallback);
+        previousReleases2, PcfRequestConfig.builder().build(), executionLogCallback);
     assertThat(currentActiveApplication).isNotNull();
     assertThat(currentActiveApplication.getName()).isEqualTo("a_s_e__6");
     assertThat(currentActiveApplication.getUrls()).containsExactly("url5", "url6");
