@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -20,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,6 +72,10 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
+import software.wings.api.artifact.ServiceArtifactElement;
+import software.wings.api.artifact.ServiceArtifactElements;
+import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -186,7 +192,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldfetchNoArtifacts() {
+  public void shouldFetchNoArtifacts() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
     injector.injectMembers(context);
@@ -203,6 +209,84 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     context.pushContextElement(std);
 
     assertThat(context.getArtifacts()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldFetchArtifactsFromSweepingOutput() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    doReturn(asList(ServiceArtifactElements.builder()
+                        .artifactElements(asList(ServiceArtifactElement.builder().uuid("u1").build(),
+                            ServiceArtifactElement.builder().uuid("u2").build()))
+                        .build(),
+                 ServiceArtifactElements.builder().artifactElements(emptyList()).build(),
+                 ServiceArtifactElements.builder()
+                     .artifactElements(asList(ServiceArtifactElement.builder().uuid("u3").build(),
+                         ServiceArtifactElement.builder().uuid("u4").build()))
+                     .build()))
+        .when(sweepingOutputService)
+        .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    injector.injectMembers(context);
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    Reflect.on(context).set("artifactService", artifactService);
+    Reflect.on(context).set("featureFlagService", featureFlagService);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    context.getArtifacts();
+    verify(artifactService).get(eq("u1"));
+    verify(artifactService).get(eq("u2"));
+    verify(artifactService).get(eq("u3"));
+    verify(artifactService).get(eq("u4"));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldFetchArtifactVariablesFromSweepingOutputFFOn() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    doReturn(asList(ServiceArtifactVariableElements.builder()
+                        .artifactVariableElements(asList(ServiceArtifactVariableElement.builder().uuid("u1").build(),
+                            ServiceArtifactVariableElement.builder().uuid("u2").build()))
+                        .build(),
+                 ServiceArtifactVariableElements.builder().artifactVariableElements(emptyList()).build(),
+                 ServiceArtifactVariableElements.builder()
+                     .artifactVariableElements(asList(ServiceArtifactVariableElement.builder().uuid("u3").build(),
+                         ServiceArtifactVariableElement.builder().uuid("u4").build()))
+                     .build()))
+        .when(sweepingOutputService)
+        .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    injector.injectMembers(context);
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    Reflect.on(context).set("artifactService", artifactService);
+    Reflect.on(context).set("featureFlagService", featureFlagService);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    context.getArtifacts();
+    verify(artifactService).get(eq("u1"));
+    verify(artifactService).get(eq("u2"));
+    verify(artifactService).get(eq("u3"));
+    verify(artifactService).get(eq("u4"));
   }
 
   @Test
@@ -236,7 +320,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldfetchNoArtifactsForService() {
+  public void shouldFetchNoArtifactsForService() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
     injector.injectMembers(context);
@@ -246,11 +330,47 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
-    std.setArtifactIds(asList(ARTIFACT_ID));
     injector.injectMembers(std);
     context.pushContextElement(std);
 
     assertThat(context.getArtifactForService(SERVICE_ID)).isNull();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldFetchArtifactForServiceFromSweepingOutput() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    doReturn(asList(ServiceArtifactElements.builder()
+                        .artifactElements(singletonList(
+                            ServiceArtifactElement.builder().uuid("u1").serviceIds(asList("s1", "s2")).build()))
+                        .build(),
+                 ServiceArtifactElements.builder()
+                     .artifactElements(singletonList(
+                         ServiceArtifactElement.builder().uuid("u2").serviceIds(singletonList("s3")).build()))
+                     .build()))
+        .when(sweepingOutputService)
+        .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    injector.injectMembers(context);
+    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    Reflect.on(context).set("artifactService", artifactService);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    context.getArtifactForService("s2");
+    verify(artifactService, times(1)).get(eq("u1"));
+    verify(artifactService, never()).get(eq("u2"));
+
+    context.getArtifactForService("s3");
+    verify(artifactService, times(1)).get(eq("u1"));
+    verify(artifactService, times(1)).get(eq("u2"));
   }
 
   private ExecutionContextImpl prepareContext(StateExecutionInstance stateExecutionInstance) {

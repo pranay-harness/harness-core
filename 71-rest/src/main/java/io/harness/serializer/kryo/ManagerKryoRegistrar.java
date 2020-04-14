@@ -80,8 +80,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.api.SelectedNodeExecutionData;
-import software.wings.api.ServiceArtifactElement;
-import software.wings.api.ServiceArtifactVariableElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -100,6 +98,10 @@ import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
+import software.wings.api.artifact.ServiceArtifactElement;
+import software.wings.api.artifact.ServiceArtifactElements;
+import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.ecs.EcsBGSetupData;
@@ -1547,5 +1549,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7339);
     kryo.register(SpotinstTrafficShiftAlbDeployExecutionData.class, 7340);
     kryo.register(HostValidationTaskParameters.class, 7341);
+    kryo.register(ServiceArtifactElements.class, 7342);
+    kryo.register(ServiceArtifactVariableElements.class, 7343);
   }
 }

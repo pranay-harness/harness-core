@@ -1,4 +1,4 @@
-package software.wings.api;
+package software.wings.api.artifact;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 

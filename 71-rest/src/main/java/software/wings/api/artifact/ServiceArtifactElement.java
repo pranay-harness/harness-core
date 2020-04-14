@@ -1,4 +1,4 @@
-package software.wings.api;
+package software.wings.api.artifact;
 
 import io.harness.context.ContextElementType;
 import lombok.Builder;

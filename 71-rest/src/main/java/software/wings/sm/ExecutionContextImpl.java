@@ -59,9 +59,12 @@ import software.wings.api.InfraMappingElement.Kubernetes;
 import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.api.ServiceArtifactElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.artifact.ServiceArtifactElement;
+import software.wings.api.artifact.ServiceArtifactElements;
+import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
@@ -99,6 +102,7 @@ import software.wings.service.impl.WorkflowExecutionLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -131,14 +135,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
-  private static final SecureRandom random = new SecureRandom();
-
   public static final String PHASE_PARAM = "PHASE_PARAM";
-
+  private static final SecureRandom random = new SecureRandom();
   private static final Pattern wildCharPattern = Pattern.compile("[-+*/\\\\ &$\"'.|]");
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
 
@@ -159,6 +162,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private transient StateExecutionService stateExecutionService;
+  @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -338,23 +342,23 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
     String accountId = workflowStandardParams.fetchRequiredApp().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
-      if (isEmpty(contextElementList)) {
+      List<ServiceArtifactElement> artifactElements = getArtifactElements();
+      if (isEmpty(artifactElements)) {
         return workflowStandardParams.getArtifacts();
       }
       List<Artifact> list = new ArrayList<>();
-      for (ContextElement contextElement : contextElementList) {
-        list.add(artifactService.get(contextElement.getUuid()));
+      for (ServiceArtifactElement artifactElement : artifactElements) {
+        list.add(artifactService.get(artifactElement.getUuid()));
       }
       return list;
     } else {
-      List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT_VARIABLE);
-      if (isEmpty(contextElementList)) {
+      List<ServiceArtifactVariableElement> artifactVariableElements = getArtifactVariableElements();
+      if (isEmpty(artifactVariableElements)) {
         return workflowStandardParams.getArtifacts();
       }
       List<Artifact> list = new ArrayList<>();
-      for (ContextElement contextElement : contextElementList) {
-        list.add(artifactService.get(contextElement.getUuid()));
+      for (ServiceArtifactVariableElement artifactVariableElement : artifactVariableElements) {
+        list.add(artifactService.get(artifactVariableElement.getUuid()));
       }
       return list;
     }
@@ -362,24 +366,88 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Artifact getArtifactForService(String serviceId) {
-    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
+    Optional<ServiceArtifactElement> artifactElement = getArtifactElement(serviceId);
+    if (artifactElement.isPresent()) {
+      return artifactService.get(artifactElement.get().getUuid());
+    } else {
+      WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
+      return workflowStandardParams.getArtifactForService(serviceId);
+    }
+  }
+
+  private List<ServiceArtifactElement> getArtifactElements() {
+    List<ServiceArtifactElement> artifactElements = getArtifactElementsFromSweepingOutput();
+    artifactElements.addAll(getArtifactElementsFromContext());
+    return artifactElements;
+  }
+
+  private Optional<ServiceArtifactElement> getArtifactElement(String serviceId) {
+    List<ServiceArtifactElement> artifactElementsList = getArtifactElements();
+    if (isEmpty(artifactElementsList)) {
+      return Optional.empty();
+    }
+
+    return artifactElementsList.stream()
+        .filter(element -> element.getServiceIds() != null && element.getServiceIds().contains(serviceId))
+        .findFirst();
+  }
+
+  private List<ServiceArtifactElement> getArtifactElementsFromSweepingOutput() {
+    List<ServiceArtifactElements> artifactElementsList = sweepingOutputService.findSweepingOutputsWithNamePrefix(
+        prepareSweepingOutputInquiryBuilder().name(ServiceArtifactElements.SWEEPING_OUTPUT_NAME).build(),
+        Scope.PIPELINE);
+    if (artifactElementsList == null) {
+      return new ArrayList<>();
+    }
+
+    return artifactElementsList.stream()
+        .flatMap(serviceArtifactElements
+            -> serviceArtifactElements.getArtifactElements() == null
+                ? Stream.empty()
+                : serviceArtifactElements.getArtifactElements().stream())
+        .collect(toList());
+  }
+
+  private List<ServiceArtifactElement> getArtifactElementsFromContext() {
     List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
     if (contextElementList == null) {
-      return workflowStandardParams.getArtifactForService(serviceId);
+      return new ArrayList<>();
     }
 
-    Optional<ContextElement> contextElementOptional =
-        contextElementList.stream()
-            .filter(art
-                -> ((ServiceArtifactElement) art).getServiceIds() != null
-                    && ((ServiceArtifactElement) art).getServiceIds().contains(serviceId))
-            .findFirst();
+    return contextElementList.stream().map(element -> (ServiceArtifactElement) element).collect(toList());
+  }
 
-    if (contextElementOptional.isPresent()) {
-      return artifactService.get(contextElementOptional.get().getUuid());
-    } else {
-      return workflowStandardParams.getArtifactForService(serviceId);
+  @Override
+  public List<ServiceArtifactVariableElement> getArtifactVariableElements() {
+    List<ServiceArtifactVariableElement> artifactElements = getArtifactVariableElementsFromSweepingOutput();
+    artifactElements.addAll(getArtifactVariableElementsFromContext());
+    return artifactElements;
+  }
+
+  private List<ServiceArtifactVariableElement> getArtifactVariableElementsFromSweepingOutput() {
+    List<ServiceArtifactVariableElements> artifactVariableElementsList =
+        sweepingOutputService.findSweepingOutputsWithNamePrefix(
+            prepareSweepingOutputInquiryBuilder().name(ServiceArtifactVariableElements.SWEEPING_OUTPUT_NAME).build(),
+            Scope.PIPELINE);
+    if (artifactVariableElementsList == null) {
+      return new ArrayList<>();
     }
+
+    return artifactVariableElementsList.stream()
+        .flatMap(serviceArtifactVariableElements
+            -> serviceArtifactVariableElements.getArtifactVariableElements() == null
+                ? Stream.empty()
+                : serviceArtifactVariableElements.getArtifactVariableElements().stream())
+        .collect(toList());
+  }
+
+  private List<ServiceArtifactVariableElement> getArtifactVariableElementsFromContext() {
+    List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT_VARIABLE);
+    if (contextElementList == null) {
+      return new ArrayList<>();
+    }
+
+    return contextElementList.stream().map(element -> (ServiceArtifactVariableElement) element).collect(toList());
   }
 
   private Map<String, Artifact> getArtifactMapForPhase() {

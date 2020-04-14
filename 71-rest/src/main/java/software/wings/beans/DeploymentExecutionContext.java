@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.beans.artifact.Artifact;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
@@ -11,6 +12,8 @@ public interface DeploymentExecutionContext extends ExecutionContext {
   WorkflowStandardParams fetchWorkflowStandardParamsFromContext();
 
   List<Artifact> getArtifacts();
+
+  List<ServiceArtifactVariableElement> getArtifactVariableElements();
 
   Artifact getArtifactForService(String serviceId);
 
