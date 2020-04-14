@@ -16,4 +16,5 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLFilterValuesListData implements QLData {
   List<QLFilterValuesData> data;
+  boolean isHourlyDataPresent;
 }

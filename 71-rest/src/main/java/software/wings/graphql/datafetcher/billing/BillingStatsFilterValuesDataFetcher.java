@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import io.harness.ccm.cluster.BatchJobIntervalServiceImpl;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
@@ -49,6 +50,9 @@ public class BillingStatsFilterValuesDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
   @Inject InstanceDataServiceImpl instanceDataService;
+  @Inject BatchJobIntervalServiceImpl batchJobIntervalService;
+
+  private static String BATCH_JOB_TYPE = "INSTANCE_BILLING";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -235,7 +239,10 @@ public class BillingStatsFilterValuesDataFetcher
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
-    return QLFilterValuesListData.builder().data(filterValuesDataList).build();
+    return QLFilterValuesListData.builder()
+        .data(filterValuesDataList)
+        .isHourlyDataPresent(batchJobIntervalService.isIntervalUnitHours(accountId, BATCH_JOB_TYPE))
+        .build();
   }
 
   private List<QLEntityData> getEntity(BillingDataMetaDataFields field, Set<String> entityIds) {

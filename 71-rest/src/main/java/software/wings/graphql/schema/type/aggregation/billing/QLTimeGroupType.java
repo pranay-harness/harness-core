@@ -1,3 +1,3 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
-public enum QLTimeGroupType { DAY, MONTH }
+public enum QLTimeGroupType { HOUR, DAY, WEEK, MONTH }

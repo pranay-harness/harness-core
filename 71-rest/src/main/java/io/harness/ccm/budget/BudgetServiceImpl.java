@@ -218,6 +218,9 @@ public class BudgetServiceImpl implements BudgetService {
   private QLBudgetDataList generateBudgetData(
       ResultSet resultSet, BillingDataQueryMetadata queryData, Double budgetedAmount) throws SQLException {
     List<QLBudgetData> budgetTableDataList = new ArrayList<>();
+    if (budgetedAmount == null) {
+      budgetedAmount = 0.0;
+    }
 
     Double actualCost = BudgetDefaultKeys.ACTUAL_COST;
     long time = BudgetDefaultKeys.TIME;

@@ -123,7 +123,9 @@ input CCMTimeSeriesAggregation {
 }
 
 enum TimeGroupType {
+  HOUR
   DAY
+  WEEK
   MONTH
 }
 
@@ -243,6 +245,7 @@ type EntityData {
 
 type BillingFilterData {
   data: [BillingFilterDataPoint]
+  isHourlyDataPresent: Boolean
 }
 
 type BillingStatsData {

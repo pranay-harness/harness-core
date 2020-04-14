@@ -71,6 +71,7 @@ barrierInstances { "name" : "next" , "background" : true} { "state" : 1 , "nextI
 barrierInstances { "name" : "search2" , "unique" : true} { "name" : 1 , "pipeline.executionId" : 1 , "pipeline.parallelIndex" : 1}
 barrierInstances { "name" : "state_1" , "background" : true} { "state" : 1}
 barrierInstances { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+batchJobInterval { "name" : "accountId_batchJobType" , "unique" : true} { "accountId" : 1 , "batchJobType" : 1}
 budgets { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 budgets { "name" : "alertIteration_1" , "background" : true} { "alertIteration" : 1}
 cache { "name" : "commutativeIdx" , "unique" : true} { "_id" : 1 , "contextValue" : 1}
