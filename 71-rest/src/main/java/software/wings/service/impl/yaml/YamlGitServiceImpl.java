@@ -59,6 +59,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
@@ -100,6 +101,7 @@ import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.EntityTypeLogContext;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -602,8 +604,10 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                 .build())
                                       .build();
 
-      waitNotifyEngine.waitForAllOn(
-          GENERAL, new GitCommandCallback(accountId, yamlChangeSetId, GitCommandType.COMMIT_AND_PUSH), waitId);
+      waitNotifyEngine.waitForAllOn(GENERAL,
+          new GitCommandCallback(accountId, yamlChangeSetId, GitCommandType.COMMIT_AND_PUSH,
+              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranchName()),
+          waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
         logger.info(
@@ -812,8 +816,10 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                 .build())
                                       .build();
 
-      waitNotifyEngine.waitForAllOn(
-          GENERAL, new GitCommandCallback(accountId, yamlChangeSet.getUuid(), GitCommandType.DIFF), waitId);
+      waitNotifyEngine.waitForAllOn(GENERAL,
+          new GitCommandCallback(accountId, yamlChangeSet.getUuid(), GitCommandType.DIFF,
+              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranchName()),
+          waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
         logger.info(
@@ -902,16 +908,17 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String errorMessage) {
-    if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
+  public void raiseAlertForGitFailure(
+      String accountId, String appId, GitSyncFailureAlertDetails gitSyncFailureAlertDetails) {
+    if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == gitSyncFailureAlertDetails.getErrorCode()) {
       return;
     }
-    if (ErrorCode.GIT_CONNECTION_ERROR == errorCode) {
-      alertService.openAlert(
-          accountId, appId, AlertType.GitConnectionError, getGitConnectionErrorAlert(accountId, errorMessage));
+    if (ErrorCode.GIT_CONNECTION_ERROR == gitSyncFailureAlertDetails.getErrorCode()) {
+      alertService.openAlert(accountId, appId, AlertType.GitConnectionError,
+          getGitConnectionErrorAlert(accountId, gitSyncFailureAlertDetails));
     } else {
-      alertService.openAlert(
-          accountId, appId, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, errorMessage, false));
+      alertService.openAlert(accountId, appId, AlertType.GitSyncError,
+          getGitSyncErrorAlert(accountId, gitSyncFailureAlertDetails.getErrorMessage(), false));
     }
   }
 
@@ -932,8 +939,17 @@ public class YamlGitServiceImpl implements YamlGitService {
     return GitSyncErrorAlert.builder().accountId(accountId).message(errorMessage).gitToHarness(gitToHarness).build();
   }
 
-  private GitConnectionErrorAlert getGitConnectionErrorAlert(String accountId, String message) {
-    return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
+  private GitConnectionErrorAlert getGitConnectionErrorAlert(
+      String accountId, GitSyncFailureAlertDetails gitFailureDetails) {
+    if (gitFailureDetails == null) {
+      throw new UnexpectedException("The git error detials supplied for the connection error is empty");
+    }
+    return GitConnectionErrorAlert.builder()
+        .accountId(accountId)
+        .gitConnectorId(gitFailureDetails.getGitConnectorId())
+        .branchName(gitFailureDetails.getBranchName())
+        .message(gitFailureDetails.getErrorMessage())
+        .build();
   }
 
   @Override
@@ -955,11 +971,6 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                 .build();
     PageResponse<GitSyncError> response = wingsPersistence.query(GitSyncError.class, pageRequest);
     return RestResponse.Builder.aRestResponse().withResource(response.getResponse()).build();
-  }
-
-  @Override
-  public long getGitSyncErrorCount(String accountId) {
-    return wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
   }
 
   @Override
@@ -1013,7 +1024,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private void closeAlertIfApplicable(String accountId, boolean gitToHarness) {
-    if (getGitSyncErrorCount(accountId) == 0) {
+    if (gitSyncErrorService.getGitSyncErrorCount(accountId) == 0) {
       alertService.closeAlert(
           accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }

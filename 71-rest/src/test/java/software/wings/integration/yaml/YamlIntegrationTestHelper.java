@@ -1,5 +1,6 @@
 package software.wings.integration.yaml;
 
+import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -10,14 +11,11 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.integration.yaml.YamlIntegrationTestConstants.DESCRIPTION;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -45,6 +43,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.GitConnectionDelegateException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -136,9 +135,7 @@ public class YamlIntegrationTestHelper {
 
       encryptionService.decrypt(gitConfig, encryptionDetails);
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask, decryption of git config failed: ", ex);
-      throw new WingsException("Decryption of git config failed: " + ex.getMessage(), USER_ADMIN)
-          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
+      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, null, null, USER_ADMIN);
     }
   }
 

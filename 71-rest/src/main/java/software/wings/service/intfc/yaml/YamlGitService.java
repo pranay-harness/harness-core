@@ -2,7 +2,6 @@ package software.wings.service.intfc.yaml;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
 import io.harness.rest.RestResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -17,6 +16,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -149,14 +149,6 @@ public interface YamlGitService {
   RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId);
 
   /**
-   * Gets git sync error count.
-   *
-   * @param accountId the account id
-   * @return the git sync error count
-   */
-  long getGitSyncErrorCount(String accountId);
-
-  /**
    * Discard git sync error rest response.
    *
    * @param accountId    the account id
@@ -165,7 +157,7 @@ public interface YamlGitService {
    */
   RestResponse discardGitSyncError(String accountId, String errorId);
 
-  void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String message);
+  void raiseAlertForGitFailure(String accountId, String appId, GitSyncFailureAlertDetails gitSyncFailureAlertDetails);
 
   void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData);
 

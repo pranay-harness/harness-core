@@ -1,13 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
@@ -39,17 +32,14 @@ import software.wings.beans.GitDetail;
 import software.wings.beans.GitDetail.GitDetailBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
-import software.wings.beans.alert.Alert;
-import software.wings.beans.alert.Alert.AlertKeys;
-import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.AlertsUtils;
-import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityBuilder;
@@ -80,6 +70,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AlertsUtils alertsUtils;
   @Inject private GitSyncErrorService gitSyncErrorService;
+  @Inject private SettingsService settingsService;
 
   @Override
   public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req) {
@@ -318,34 +309,6 @@ public class GitSyncServiceImpl implements GitSyncService {
     } catch (Exception ex) {
       logger.error(String.format("Error while saving git file processing summary for commitId: %s", commitId), ex);
     }
-  }
-
-  private GitProcessingError getGitProcessingError(Alert alert) {
-    return GitProcessingError.builder()
-        .message(alert.getTitle())
-        .accountId(alert.getAccountId())
-        .createdAt(alert.getCreatedAt())
-        .build();
-  }
-
-  @Override
-  public PageResponse<GitProcessingError> fetchGitProcessingErrors(
-      PageRequest<GitProcessingError> req, String accountId) {
-    PageRequest<Alert> gitAlertRequest = aPageRequest()
-                                             .withLimit(req.getLimit())
-                                             .withOffset(req.getOffset())
-                                             .addFilter(AlertKeys.accountId, EQ, accountId)
-                                             .addFilter(AlertKeys.type, EQ, AlertType.GitConnectionError)
-                                             .addFilter(AlertKeys.status, EQ, Open)
-                                             .addOrder(GitCommitKeys.createdAt, DESC)
-                                             .build();
-    List<Alert> gitProcessingAlerts = wingsPersistence.query(Alert.class, gitAlertRequest).getResponse();
-    if (isEmpty(gitProcessingAlerts)) {
-      return aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build();
-    }
-    List<GitProcessingError> gitProcessingErrors =
-        gitProcessingAlerts.stream().map(this ::getGitProcessingError).collect(toList());
-    return aPageResponse().withTotal(gitProcessingErrors.size()).withResponse(gitProcessingErrors).build();
   }
 
   public void markRemainingFilesAsSkipped(String commitId, String accountId) {

@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_YAML_ERROR;
+import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
@@ -16,7 +17,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
@@ -162,8 +162,7 @@ public class GitClientHelper {
     // repo, like invalid authorization and invalid repo
     if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException
         || ex instanceof RepositoryNotFoundException || ex instanceof JGitInternalException) {
-      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ExceptionUtils.getMessage(ex), USER_ADMIN)
-          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
+      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
     }
   }
 

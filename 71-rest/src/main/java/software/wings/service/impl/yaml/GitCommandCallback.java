@@ -42,6 +42,7 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.gitdiff.GitChangeSetProcesser;
+import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -69,13 +70,18 @@ public class GitCommandCallback implements NotifyCallback {
   private String accountId;
   private String changeSetId;
   private GitCommandType gitCommandType;
+  private String gitConnectorId;
+  private String branchName;
 
   public GitCommandCallback() {}
 
-  public GitCommandCallback(String accountId, String changeSetId, GitCommandType gitCommandType) {
+  public GitCommandCallback(
+      String accountId, String changeSetId, GitCommandType gitCommandType, String gitConnectorId, String branchName) {
     this.accountId = accountId;
     this.changeSetId = changeSetId;
     this.gitCommandType = gitCommandType;
+    this.gitConnectorId = gitConnectorId;
+    this.branchName = branchName;
   }
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
@@ -110,8 +116,9 @@ public class GitCommandCallback implements NotifyCallback {
             handleDiffCommandFailure(gitCommandExecutionResponse.getErrorCode(), accountId);
           }
           // raise alert if GitConnectionErrorAlert is not already open
-          yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
-              gitCommandExecutionResponse.getErrorMessage());
+
+          yamlGitService.raiseAlertForGitFailure(
+              accountId, GLOBAL_APP_ID, getGitFailureDetailsFromGitResponse(gitCommandExecutionResponse));
 
           return;
         }
@@ -172,6 +179,16 @@ public class GitCommandCallback implements NotifyCallback {
         updateChangeSetFailureStatusSafely();
       }
     }
+  }
+
+  private GitSyncFailureAlertDetails getGitFailureDetailsFromGitResponse(
+      GitCommandExecutionResponse gitCommandExecutionResponse) {
+    return GitSyncFailureAlertDetails.builder()
+        .errorCode(gitCommandExecutionResponse.getErrorCode())
+        .errorMessage(gitCommandExecutionResponse.getErrorMessage())
+        .gitConnectorId(gitConnectorId)
+        .branchName(branchName)
+        .build();
   }
 
   private List<GitFileChange> getActiveGitSyncErrorFiles(String accountId, String branchName, String gitConnectorId) {

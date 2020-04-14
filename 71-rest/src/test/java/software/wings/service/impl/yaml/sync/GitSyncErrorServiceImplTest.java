@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
@@ -25,13 +26,18 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
+import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
@@ -421,5 +427,43 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     GitToHarnessErrorDetails gitToHarnessErrorDetails =
         (GitToHarnessErrorDetails) updatedGitSyncError.getAdditionalErrorDetails();
     assertThat(gitToHarnessErrorDetails.getPreviousErrors().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_fetchGitConnectivityIssues() {
+    String branchName = "branchName";
+    String errorMessage = "errorMessage";
+    String settingName = "Setting Attribute";
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withCategory(CONNECTOR)
+                                            .withName(settingName)
+                                            .withValue(GitConfig.builder().branch(branchName).build())
+                                            .build();
+    String connectorId = wingsPersistence.save(settingAttribute);
+
+    Alert gitConnectionAlert = Alert.builder()
+                                   .accountId(accountId)
+                                   .status(AlertStatus.Open)
+                                   .type(AlertType.GitConnectionError)
+                                   .title(errorMessage)
+                                   .alertData(GitConnectionErrorAlert.builder()
+                                                  .message(errorMessage)
+                                                  .branchName(branchName)
+                                                  .gitConnectorId(connectorId)
+                                                  .build())
+                                   .build();
+    wingsPersistence.save(gitConnectionAlert);
+    PageRequest<GitProcessingError> req = aPageRequest().build();
+    List<GitProcessingError> gitErrors = gitSyncErrorService.fetchGitConnectivityIssues(req, accountId);
+    assertThat(gitErrors).isNotEmpty();
+    GitProcessingError error = gitErrors.get(0);
+    assertThat(error.getGitConnectorId()).isEqualTo(connectorId);
+    assertThat(error.getBranchName()).isEqualTo(branchName);
+    assertThat(error.getAccountId()).isEqualTo(accountId);
+    assertThat(error.getConnectorName()).isEqualTo(settingName);
+    assertThat(error.getMessage()).isEqualTo(errorMessage);
   }
 }

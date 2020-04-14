@@ -55,6 +55,14 @@ public class GitSyncResource {
     this.gitSyncErrorService = gitSyncErrorService;
   }
 
+  @GET
+  @Path("errors/count")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Long> gitSyncErrorCount(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(gitSyncErrorService.getTotalGitErrorsCount(accountId));
+  }
+
   /**
    * List errors
    *
@@ -133,10 +141,11 @@ public class GitSyncResource {
    * @return the rest response
    */
   @GET
-  @Path("errors/processingErrors")
-  public RestResponse<PageResponse<GitProcessingError>> listGitProcessingErrors(
+  @Path("errors/connectivityIssue")
+  public RestResponse<PageResponse<GitProcessingError>> listGitConnectivityIssues(
       @BeanParam PageRequest<GitProcessingError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<GitProcessingError> processingErrors = gitSyncService.fetchGitProcessingErrors(pageRequest, accountId);
+    PageResponse<GitProcessingError> processingErrors =
+        gitSyncErrorService.fetchGitConnectivityIssues(pageRequest, accountId);
     return new RestResponse<>(processingErrors);
   }
 
