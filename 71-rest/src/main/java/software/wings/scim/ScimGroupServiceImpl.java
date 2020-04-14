@@ -171,7 +171,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     }
 
     List<String> existingMemberIds =
-        existingGroup.getMemberIds() != null ? existingGroup.getMemberIds() : new ArrayList<>();
+        isNotEmpty(existingGroup.getMemberIds()) ? existingGroup.getMemberIds() : new ArrayList<>();
     Set<String> newMemberIds = new HashSet<>(existingMemberIds);
     String newGroupName = null;
 
@@ -285,7 +285,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       scimGroup.setDisplayName(userGroup.getName());
       List<Member> memberList = new ArrayList<>();
 
-      if (userGroup.getMembers() != null) {
+      if (isNotEmpty(userGroup.getMembers())) {
         userGroup.getMembers().forEach(member -> {
           Member member1 = new Member();
           member1.setValue(member.getUuid());

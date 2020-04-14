@@ -37,8 +37,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserGroupService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ScimGroupServiceTest extends WingsBaseTest {
@@ -351,6 +353,92 @@ public class ScimGroupServiceTest extends WingsBaseTest {
 
     scimGroupService.deleteGroup(userGroup.getUuid(), account.getUuid());
     verify(wingsPersistence, times(1)).delete(account.getUuid(), UserGroup.class, userGroup.getUuid());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testCreateGroupWithNoMembers() {
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("ACCOUNT_NAME");
+
+    ScimGroup scimGroup = new ScimGroup();
+    scimGroup.setDisplayName("display-name");
+    scimGroup.setMembers(null);
+
+    UserGroup userGroup = UserGroup.builder()
+                              .uuid(generateUuid())
+                              .name("display-name")
+                              .accountId(account.getUuid())
+                              .memberIds(Collections.emptyList())
+                              .build();
+
+    when(userGroupService.get(eq(account.getUuid()), anyString())).thenReturn(userGroup);
+
+    ScimGroup scimGroupCreated = scimGroupService.createGroup(scimGroup, account.getUuid());
+    assertThat(scimGroupCreated).isNotNull();
+    assertThat(scimGroup.getMembers()).isNull();
+    assertThat(scimGroup.getDisplayName()).isEqualTo(scimGroupCreated.getDisplayName());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testCreateGroupWithMembers() {
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("ACCOUNT_NAME");
+
+    Member member1 = new Member();
+    member1.setDisplay("display1");
+    member1.setValue("value1");
+
+    Member member2 = new Member();
+    member2.setDisplay("display2");
+    member2.setValue("value2");
+
+    List<Member> members = new ArrayList<>();
+    members.add(member1);
+    members.add(member2);
+
+    List<String> memberIds = new ArrayList<>();
+    memberIds.add("userId1");
+    memberIds.add("userId2");
+
+    ScimGroup scimGroup = new ScimGroup();
+    scimGroup.setDisplayName("display-name");
+    scimGroup.setMembers(members);
+
+    User user1 = new User();
+    user1.setUuid("userId1");
+
+    User user2 = new User();
+    user2.setUuid("userId2");
+
+    List<User> userGroupMembers = new ArrayList<>();
+    userGroupMembers.add(user1);
+    userGroupMembers.add(user2);
+
+    UserGroup userGroup = UserGroup.builder()
+                              .uuid(generateUuid())
+                              .name("display-name")
+                              .accountId(account.getUuid())
+                              .memberIds(memberIds)
+                              .members(userGroupMembers)
+                              .build();
+    User user = new User();
+    user.setUuid(generateUuid());
+
+    when(userGroupService.get(eq(account.getUuid()), anyString())).thenReturn(userGroup);
+    when(wingsPersistence.get(eq(User.class), anyString())).thenReturn(user);
+
+    ScimGroup scimGroupCreated = scimGroupService.createGroup(scimGroup, account.getUuid());
+
+    assertThat(scimGroupCreated).isNotNull();
+    assertThat(scimGroupCreated.getMembers()).isNotNull();
+    assertThat(scimGroupCreated.getMembers().size()).isEqualTo(members.size());
+    assertThat(scimGroupCreated.getDisplayName()).isEqualTo(scimGroup.getDisplayName());
   }
 
   private PatchRequest getOktaReplaceOperation() {
