@@ -28,6 +28,5 @@ public interface ImportedTemplateService {
 
   ImportedTemplate get(String commandId, String commandStoreId, String accountId);
 
-  Template getAndSaveImportedTemplate(
-      String token, String version, String commandId, String commandStoreId, String accountId);
+  Template getAndSaveImportedTemplate(String version, String commandId, String commandStoreId, String accountId);
 }

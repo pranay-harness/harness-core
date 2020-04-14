@@ -143,6 +143,7 @@ public class TemplateServiceImpl implements TemplateService {
     saveOrUpdate(template);
     processTemplate(template);
 
+    template.setVersion(1L);
     // Client side keyword generation.
     template.setKeywords(getKeywords(template));
 
