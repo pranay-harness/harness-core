@@ -260,20 +260,20 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case KMS:
-          final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId, KMS);
+          KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId, KMS);
           rv = kmsService.encrypt(secret, accountId, kmsConfig);
           rv.setKmsId(kmsConfig.getUuid());
           break;
 
         case VAULT:
-          final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId, VAULT);
+          VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId, VAULT);
           encryptedData.setKmsId(vaultConfig.getUuid());
           rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
           rv.setKmsId(vaultConfig.getUuid());
           break;
 
         case AWS_SECRETS_MANAGER:
-          final AwsSecretsManagerConfig secretsManagerConfig =
+          AwsSecretsManagerConfig secretsManagerConfig =
               (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId, AWS_SECRETS_MANAGER);
           encryptedData.setKmsId(secretsManagerConfig.getUuid());
           rv = secretsManagerService.encrypt(
@@ -282,21 +282,21 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case GCP_KMS:
-          final GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) getSecretManager(accountId, kmsId, GCP_KMS);
+          GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) getSecretManager(accountId, kmsId, GCP_KMS);
           encryptedData.setKmsId(gcpKmsConfig.getUuid());
           rv = gcpKmsService.encrypt(toEncrypt, accountId, gcpKmsConfig, encryptedData);
           rv.setKmsId(gcpKmsConfig.getUuid());
           break;
 
         case AZURE_VAULT:
-          final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId, AZURE_VAULT);
+          AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId, AZURE_VAULT);
           encryptedData.setKmsId(azureConfig.getUuid());
           rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
           rv.setKmsId(azureConfig.getUuid());
           break;
 
         case CYBERARK:
-          final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId, CYBERARK);
+          CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId, CYBERARK);
           encryptedData.setKmsId(cyberArkConfig.getUuid());
           if (isNotEmpty(encryptedData.getPath())) {
             // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is
@@ -431,7 +431,7 @@ public class SecretManagerImpl implements SecretManager {
               getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
-          final EncryptedRecordData encryptedRecordData;
+          EncryptedRecordData encryptedRecordData;
           if (encryptionConfig.isGlobalKms()) {
             logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {}",
                 encryptedData.getUuid());
@@ -467,9 +467,9 @@ public class SecretManagerImpl implements SecretManager {
                                             .encryptedDataId(encryptedData.getUuid())
                                             .workflowExecutionId(workflowExecutionId)
                                             .accountId(encryptedData.getAccountId())
+                                            .appId(workflowExecution.getAppId())
                                             .envId(workflowExecution.getEnvId())
                                             .build();
-              usageLog.setAppId(workflowExecution.getAppId());
               wingsPersistence.save(usageLog);
             }
           }
@@ -515,7 +515,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId,
       String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
+    List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
     // PL-3298: Some setting attribute doesn't have encrypted fields and therefore no secret Ids associated with it.
     // E.g. PHYSICAL_DATA_CENTER config. An empty response will be returned.
     if (isEmpty(secretIds)) {
@@ -539,13 +539,13 @@ public class SecretManagerImpl implements SecretManager {
 
   private Map<String, Long> getUsageLogSizes(
       String accountId, Collection<String> entityIds, SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
+    List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
     Query<SecretUsageLog> query = wingsPersistence.createQuery(SecretUsageLog.class)
                                       .filter(ACCOUNT_ID_KEY, accountId)
                                       .field(SecretChangeLogKeys.encryptedDataId)
                                       .in(secretIds);
 
-    final AggregationPipeline aggregationPipeline =
+    AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(SecretUsageLog.class)
             .createAggregation(SecretUsageLog.class)
             .match(query)
@@ -572,7 +572,7 @@ public class SecretManagerImpl implements SecretManager {
 
   private List<SecretChangeLog> getChangeLogsInternal(String accountId, String entityId, EncryptedData encryptedData,
       SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
+    List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
     List<SecretChangeLog> secretChangeLogs = wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
                                                  .filter(ACCOUNT_ID_KEY, accountId)
                                                  .field(SecretChangeLogKeys.encryptedDataId)
@@ -598,13 +598,13 @@ public class SecretManagerImpl implements SecretManager {
 
   private Map<String, Long> getChangeLogSizes(
       String accountId, Collection<String> entityIds, SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
+    List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
     Query<SecretChangeLog> query = wingsPersistence.createQuery(SecretChangeLog.class)
                                        .filter(ACCOUNT_ID_KEY, accountId)
                                        .field(SecretChangeLogKeys.encryptedDataId)
                                        .in(secretIds);
 
-    final AggregationPipeline aggregationPipeline =
+    AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(SecretChangeLog.class)
             .createAggregation(SecretChangeLog.class)
             .match(query)
@@ -1829,7 +1829,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     if (inputStream.getSize() > 0 && fileSize > inputStream.getSize()) {
-      final Map<String, String> params = new HashMap<>();
+      Map<String, String> params = new HashMap<>();
       params.put("size", inputStream.getSize() / (1024 * 1024) + " MB");
       throw new SecretManagementException(
           ErrorCode.FILE_SIZE_EXCEEDS_LIMIT, null, USER, Collections.unmodifiableMap(params));
@@ -1840,7 +1840,7 @@ public class SecretManagerImpl implements SecretManager {
     String savedFileId = null;
     EncryptedData encryptedData = null;
     EncryptedData oldEntityData = null;
-    final EncryptionType encryptionType;
+    EncryptionType encryptionType;
 
     if (containsIllegalCharacters(name)) {
       throw new SecretManagementException(
@@ -2126,12 +2126,12 @@ public class SecretManagerImpl implements SecretManager {
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
 
     int batchOffset = pageRequest.getStart();
-    final int batchPageSize;
+    int batchPageSize;
 
     // Increase the batch fetch page size to 2 times the requested, just in case some of the data
     // are filtered out based on usage restrictions. Or decrease the batch fetch size to 1000 if
     // the requested page size is too big (>1000);
-    final int inputPageSize = pageRequest.getPageSize();
+    int inputPageSize = pageRequest.getPageSize();
     if (2 * inputPageSize > PageRequest.DEFAULT_UNLIMITED) {
       batchPageSize = PageRequest.DEFAULT_UNLIMITED;
     } else {
@@ -2302,7 +2302,7 @@ public class SecretManagerImpl implements SecretManager {
 
   private List<String> getSecretIds(String accountId, Collection<String> entityIds, SettingVariableTypes variableType)
       throws IllegalAccessException {
-    final List<String> secretIds = new ArrayList<>();
+    List<String> secretIds = new ArrayList<>();
     switch (variableType) {
       case SERVICE_VARIABLE:
         ServiceVariable serviceVariable = wingsPersistence.createQuery(ServiceVariable.class)
@@ -2537,7 +2537,7 @@ public class SecretManagerImpl implements SecretManager {
 
     @Override
     public int compareTo(EncryptionDetail o) {
-      return this.encryptionType.compareTo(o.encryptionType);
+      return encryptionType.compareTo(o.encryptionType);
     }
   }
 
