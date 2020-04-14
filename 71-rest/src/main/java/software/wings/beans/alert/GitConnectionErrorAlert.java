@@ -8,10 +8,19 @@ import lombok.Data;
 public class GitConnectionErrorAlert implements AlertData {
   private String accountId;
   private String message;
+  private String gitConnectorId;
+  private String branchName;
 
   @Override
   public boolean matches(AlertData alertData) {
-    return accountId.equals(((GitConnectionErrorAlert) alertData).accountId);
+    try {
+      GitConnectionErrorAlert gitConnectionErrorAlert = (GitConnectionErrorAlert) alertData;
+      return accountId.equals(gitConnectionErrorAlert.accountId)
+          && gitConnectorId.equals(gitConnectionErrorAlert.gitConnectorId)
+          && branchName.equals(gitConnectionErrorAlert.branchName);
+    } catch (Exception ex) {
+      return false;
+    }
   }
 
   @Override

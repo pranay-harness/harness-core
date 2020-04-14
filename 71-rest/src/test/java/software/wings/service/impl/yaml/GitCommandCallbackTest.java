@@ -64,6 +64,8 @@ import java.util.Map;
 
 public class GitCommandCallbackTest extends CategoryTest {
   private static final String CHANGESET_ID = "changesetId";
+  private static final String gitConnectorId = "gitConnectorId";
+  private static final String branchName = "branchName";
 
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitService;
@@ -71,12 +73,12 @@ public class GitCommandCallbackTest extends CategoryTest {
 
   @InjectMocks
   private GitCommandCallback commandCallback =
-      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH);
+      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH, gitConnectorId, branchName);
 
   @InjectMocks
   @Spy
   private GitCommandCallback diffCommandCallback =
-      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF);
+      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF, gitConnectorId, branchName);
 
   @Before
   public void setup() {
@@ -94,12 +96,12 @@ public class GitCommandCallbackTest extends CategoryTest {
                                           .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
-    doNothing().when(yamlGitService).raiseAlertForGitFailure(anyString(), anyString(), any(), anyString());
+    doNothing().when(yamlGitService).raiseAlertForGitFailure(anyString(), anyString(), any());
     Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
-    verify(yamlGitService, times(1)).raiseAlertForGitFailure(anyString(), anyString(), any(), anyString());
+    verify(yamlGitService, times(1)).raiseAlertForGitFailure(anyString(), anyString(), any());
   }
 
   @Test

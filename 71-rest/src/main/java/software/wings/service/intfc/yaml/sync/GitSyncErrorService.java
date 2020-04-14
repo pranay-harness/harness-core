@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.yaml.Change;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
+import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 
@@ -28,4 +29,10 @@ public interface GitSyncErrorService {
   PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req);
 
   void deleteGitSyncErrorAndLogFileActivity(List<String> errorIds, GitFileActivity.Status status, String accountId);
+
+  long getGitSyncErrorCount(String accountId);
+
+  PageResponse<GitProcessingError> fetchGitConnectivityIssues(PageRequest<GitProcessingError> req, String accountId);
+
+  long getTotalGitErrorsCount(String accountId);
 }

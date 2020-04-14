@@ -5,12 +5,14 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -18,17 +20,20 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
+import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 
@@ -51,6 +56,12 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -60,12 +71,14 @@ import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats.GitToHarnessErrorCommitStatsKeys;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.AlertsUtils;
 import software.wings.utils.Utils;
+import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
@@ -100,11 +113,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private YamlService yamlService;
   private GitSyncService gitSyncService;
   private AlertsUtils alertsUtils;
+  private SettingsService settingsService;
 
   @Inject
   public GitSyncErrorServiceImpl(WingsPersistence wingsPersistence, YamlGitService yamlGitService,
       YamlHelper yamlHelper, AppService appService, YamlService yamlService, GitSyncService gitSyncService,
-      AlertsUtils alertsUtils) {
+      AlertsUtils alertsUtils, SettingsService settingsService) {
     this.wingsPersistence = wingsPersistence;
     this.yamlGitService = yamlGitService;
     this.yamlHelper = yamlHelper;
@@ -112,6 +126,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     this.yamlService = yamlService;
     this.gitSyncService = gitSyncService;
     this.alertsUtils = alertsUtils;
+    this.settingsService = settingsService;
   }
 
   private Query<GitSyncError> addGitToHarnessErrorFilter(Query<GitSyncError> gitSyncErrorQuery) {
@@ -120,6 +135,18 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private Query<GitSyncError> addHarnessToGitErrorFilter(Query<GitSyncError> gitSyncErrorQuery) {
     return gitSyncErrorQuery.filter(GitSyncErrorKeys.gitSyncDirection, HARNESS_TO_GIT.name());
+  }
+
+  @Override
+  public long getTotalGitErrorsCount(String accountId) {
+    List<Alert> alerts = getGitConnectionAlert(accountId);
+    long connectivityIssueCount = alerts == null ? 0 : alerts.size();
+    return getGitSyncErrorCount(accountId) + connectivityIssueCount;
+  }
+
+  @Override
+  public long getGitSyncErrorCount(String accountId) {
+    return wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
   }
 
   @Override
@@ -557,5 +584,87 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     query.field(ID_KEY).in(errorIds);
     wingsPersistence.delete(query);
     alertsUtils.closeAlertIfApplicable(accountId, false);
+  }
+
+  private GitProcessingError getGitProcessingError(Alert alert) {
+    GitConnectionErrorAlert alertData = (GitConnectionErrorAlert) alert.getAlertData();
+    if (alertData == null) {
+      throw new UnexpectedException("The alert data is null in the  alert with id " + alert.getUuid());
+    }
+    return GitProcessingError.builder()
+        .message(alert.getTitle())
+        .accountId(alert.getAccountId())
+        .createdAt(alert.getCreatedAt())
+        .branchName(alertData.getBranchName())
+        .gitConnectorId(alertData.getGitConnectorId())
+        .build();
+  }
+
+  private Map<String, String> getConnectorIdNameMap(List<String> connectorIds, String accountId) {
+    if (isEmpty(connectorIds)) {
+      return Collections.emptyMap();
+    }
+    PageRequest<SettingAttribute> settingAttributeQuery = aPageRequest()
+                                                              .addFilter(SettingAttributeKeys.accountId, EQ, accountId)
+                                                              .addFilter(SettingAttributeKeys.category, EQ, CONNECTOR)
+                                                              .addFilter(SettingAttributeKeys.valueType, EQ, GIT)
+                                                              .addFilter(ID_KEY, IN, connectorIds.toArray())
+                                                              .build();
+    List<SettingAttribute> settingAttributeList = settingsService.list(settingAttributeQuery, null, null);
+    if (isEmpty(settingAttributeList)) {
+      return Collections.emptyMap();
+    }
+    return settingAttributeList.stream().collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+  }
+
+  private GitProcessingError getGitProcessingErrorWithConnectorName(
+      GitProcessingError gitProcessingError, Map<String, String> connectorNameIdMap) {
+    if (gitProcessingError == null) {
+      return null;
+    }
+    String gitConnectorId = gitProcessingError.getGitConnectorId();
+    if (isBlank(gitProcessingError.getGitConnectorId()) || !connectorNameIdMap.containsKey(gitConnectorId)) {
+      gitProcessingError.setConnectorName(null);
+      gitProcessingError.setBranchName(null);
+    } else {
+      gitProcessingError.setConnectorName(connectorNameIdMap.get(gitConnectorId));
+    }
+    return gitProcessingError;
+  }
+
+  private void populateTheConnectorName(
+      List<GitProcessingError> gitProcessingErrors, Map<String, String> connectorNameIdMap) {
+    if (isEmpty(gitProcessingErrors)) {
+      return;
+    }
+    // We need to filter because maybe someone deleted the connector and
+    // alert still uses that gitconnectorId
+    gitProcessingErrors.forEach(e -> getGitProcessingErrorWithConnectorName(e, connectorNameIdMap));
+  }
+
+  private List<Alert> getGitConnectionAlert(String accountId) {
+    PageRequest<Alert> gitAlertRequest = aPageRequest()
+                                             .addFilter(AlertKeys.accountId, EQ, accountId)
+                                             .addFilter(AlertKeys.type, EQ, AlertType.GitConnectionError)
+                                             .addFilter(AlertKeys.status, EQ, Open)
+                                             .addOrder(AlertKeys.createdAt, DESC)
+                                             .build();
+    return wingsPersistence.query(Alert.class, gitAlertRequest).getResponse();
+  }
+
+  @Override
+  public PageResponse<GitProcessingError> fetchGitConnectivityIssues(
+      PageRequest<GitProcessingError> req, String accountId) {
+    List<Alert> gitProcessingAlerts = getGitConnectionAlert(accountId);
+    if (isEmpty(gitProcessingAlerts)) {
+      return aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build();
+    }
+    List<GitProcessingError> gitProcessingErrors =
+        gitProcessingAlerts.stream().map(this ::getGitProcessingError).collect(toList());
+    List<String> connectorIds =
+        gitProcessingErrors.stream().map(GitProcessingError::getGitConnectorId).distinct().collect(toList());
+    Map<String, String> connectorNameIdMap = getConnectorIdNameMap(connectorIds, accountId);
+    populateTheConnectorName(gitProcessingErrors, connectorNameIdMap);
+    return aPageResponse().withTotal(gitProcessingErrors.size()).withResponse(gitProcessingErrors).build();
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,6 +30,7 @@ import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.service.impl.yaml.GitConnectionDelegateException;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -150,7 +152,6 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                                                        .gitCommandStatus(GitCommandStatus.FAILURE)
                                                        .errorMessage(ex.getMessage())
                                                        .errorCode(getErrorCode(ex));
-
       return builder.build();
     }
   }
@@ -158,8 +159,8 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   private ErrorCode getErrorCode(Exception ex) {
     if (ex instanceof WingsException) {
       final WingsException we = (WingsException) ex;
-      if (we.getParams().containsKey(ErrorCode.GIT_CONNECTION_ERROR.name())) {
-        return ErrorCode.GIT_CONNECTION_ERROR;
+      if (GIT_CONNECTION_ERROR == we.getCode()) {
+        return GIT_CONNECTION_ERROR;
       } else if (GIT_DIFF_COMMIT_NOT_IN_ORDER == we.getCode()) {
         return GIT_DIFF_COMMIT_NOT_IN_ORDER;
       }
@@ -188,9 +189,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
     try {
       encryptionService.decrypt(gitConfig, encryptionDetails);
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask, decryption of git config failed: ", ex);
-      throw new WingsException("Decryption of git config failed: " + ex.getMessage(), USER_ADMIN)
-          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
+      throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
     }
   }
 }

@@ -6,7 +6,6 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.yaml.errorhandling.GitProcessingError;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
@@ -81,13 +80,6 @@ public interface GitSyncService {
    * @param accountId
    */
   void markRemainingFilesAsSkipped(String commitId, String accountId);
-
-  /**
-   *
-   * @param req
-   * @return
-   */
-  PageResponse<GitProcessingError> fetchGitProcessingErrors(PageRequest<GitProcessingError> req, String accountId);
 
   List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
 }
