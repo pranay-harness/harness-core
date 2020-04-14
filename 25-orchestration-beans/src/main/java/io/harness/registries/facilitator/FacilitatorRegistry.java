@@ -2,6 +2,7 @@ package io.harness.registries.facilitator;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
@@ -12,6 +13,7 @@ import io.harness.registries.RegistryType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Redesign
 @Singleton
 public class FacilitatorRegistry implements Registry {
   private Map<FacilitatorType, FacilitatorProducer> registry = new ConcurrentHashMap<>();

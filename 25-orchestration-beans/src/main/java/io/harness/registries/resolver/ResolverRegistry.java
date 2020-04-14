@@ -2,6 +2,7 @@ package io.harness.registries.resolver;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.refrences.RefType;
 import io.harness.registries.Registry;
@@ -11,6 +12,7 @@ import io.harness.resolvers.Resolver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Redesign
 @Singleton
 public class ResolverRegistry implements Registry {
   private Map<RefType, ResolverProducer> registry = new ConcurrentHashMap<>();

@@ -4,8 +4,10 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.AdviserType;
 import io.harness.annotations.ProducesAdviser;
+import io.harness.annotations.Redesign;
 import io.harness.registries.adviser.AdviserProducer;
 
+@Redesign
 @ProducesAdviser
 public class IgnoreAdviserProducer implements AdviserProducer {
   @Override

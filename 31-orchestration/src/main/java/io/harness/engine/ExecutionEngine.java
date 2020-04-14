@@ -13,6 +13,7 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -47,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
 
 @Slf4j
+@Redesign
 public class ExecutionEngine implements Engine {
   // For database needs
   @Inject @Named("enginePersistence") private HPersistence hPersistence;

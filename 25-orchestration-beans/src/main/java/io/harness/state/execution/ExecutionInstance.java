@@ -1,5 +1,6 @@
 package io.harness.state.execution;
 
+import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
@@ -20,6 +21,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
+@Redesign
 @FieldNameConstants(innerTypeName = "ExecutionInstanceKeys")
 @Entity(value = "executionInstances", noClassnameStored = true)
 public class ExecutionInstance implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,

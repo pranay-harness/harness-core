@@ -1,6 +1,7 @@
 package io.harness.adviser.impl.retry;
 
 import io.harness.adviser.AdviserParameters;
+import io.harness.annotations.Redesign;
 import io.harness.exception.FailureType;
 import lombok.Builder;
 import lombok.Value;
@@ -10,6 +11,7 @@ import java.util.Set;
 
 @Value
 @Builder
+@Redesign
 public class RetryAdviserParameters implements AdviserParameters {
   List<Integer> waitInterval;
   int retryCount;

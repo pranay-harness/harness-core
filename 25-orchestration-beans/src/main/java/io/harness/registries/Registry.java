@@ -1,3 +1,8 @@
 package io.harness.registries;
 
-public interface Registry { RegistryType getType(); }
+import io.harness.annotations.Redesign;
+
+@Redesign
+public interface Registry {
+  RegistryType getType();
+}
