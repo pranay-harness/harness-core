@@ -44,7 +44,7 @@ public class TomcatInstallCommandMigration implements SeedDataMigration {
         return;
       }
 
-      Template globalInstallTemplate = templateService.fetchTemplateByKeywords(
+      Template globalInstallTemplate = templateService.fetchTemplateByKeywordsForAccountGallery(
           GLOBAL_ACCOUNT_ID, new HashSet<>(asList("ssh", "war", "install", "tomcat")));
       if (globalInstallTemplate != null) {
         logger.info("Migrating Default Tomcat Install Command to new format in account [{}]", GLOBAL_ACCOUNT_ID);

@@ -33,6 +33,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
    * @param galleryName
    * @return
    */
+  //  @Deprecated should not be used in future code,
   TemplateGallery get(@NotEmpty String accountId, @NotEmpty String galleryName);
 
   /**
@@ -49,9 +50,12 @@ public interface TemplateGalleryService extends OwnedByAccount {
    * Get template galleries by accountId
    *
    * @param accountId
+   * @param galleryKey
    * @return
    */
-  TemplateGallery getByAccount(@NotEmpty String accountId);
+  TemplateGallery getByAccount(@NotEmpty String accountId, TemplateGallery.GalleryKey galleryKey);
+
+  TemplateGallery getByAccount(@NotEmpty String accountId, String galleryId);
 
   /**
    * Loads default harness gallery with the
@@ -70,7 +74,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
    */
   TemplateGallery saveHarnessGallery();
 
-  void saveCommandLibraryGalleryToAccount(String accountId, String accountName);
+  void saveHarnessCommandLibraryGalleryToAccount(String accountId, String accountName);
 
   void copyHarnessTemplatesToAccount(@NotEmpty String accountId, @NotEmpty String accountName);
 
@@ -78,13 +82,14 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   void createCommandLibraryGallery();
 
+  //  @Deprecated should not be used in future code,
   void deleteAccountGalleryByName(String accountId, String galleryName);
 
   void copyHarnessTemplateFromGalleryToAccounts(
       String sourceFolderPath, TemplateType templateType, String templateName, String yamlFilePath);
 
   void copyHarnessTemplateFromGalleryToAccount(String sourceFolderPath, TemplateType templateType, String templateName,
-      String yamlFilePath, String accountId, String accountName);
+      String yamlFilePath, String accountId, String accountName, String galleryId);
 
   void copyNewVersionFromGlobalToAllAccounts(Template template, String keyword);
 

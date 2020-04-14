@@ -47,6 +47,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.dl.WingsPersistence;
@@ -70,7 +71,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void shouldLoadDefaultTemplates() {
     templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "shellscript");
+    Template template = templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, "shellscript");
     assertThat(template).isNull();
   }
 
@@ -78,7 +79,10 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldSaveShellScriptTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo ${var1}\n"
@@ -105,7 +109,10 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateShellScriptTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
 
     Template savedTemplate = templateService.save(template);
@@ -161,7 +168,10 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
 
     Template savedTemplate = templateService.save(template);
@@ -228,7 +238,10 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createShellScriptTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
 
     Template savedTemplate = templateService.save(template);

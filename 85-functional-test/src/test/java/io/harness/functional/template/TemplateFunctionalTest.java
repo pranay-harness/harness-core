@@ -527,11 +527,13 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     newTemplateFolder.setParentId(templateFolder.getParentId());
     newTemplateFolder.setGalleryId(templateFolder.getGalleryId());
 
-    assertThatThrownBy(() -> templateFolderService.save(newTemplateFolder)).hasMessageContaining("Duplicate");
+    assertThatThrownBy(() -> templateFolderService.save(newTemplateFolder, templateFolder.getGalleryId()))
+        .hasMessageContaining("Duplicate");
   }
 
   private void checkSaveSafelyAndGet(TemplateFolder templateFolder) {
-    TemplateFolder savedTemplateFolder = templateFolderService.saveSafelyAndGet(templateFolder);
+    TemplateFolder savedTemplateFolder =
+        templateFolderService.saveSafelyAndGet(templateFolder, templateFolder.getGalleryId());
 
     assertThat(savedTemplateFolder).isEqualTo(templateFolder);
   }

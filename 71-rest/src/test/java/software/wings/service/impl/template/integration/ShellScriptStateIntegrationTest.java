@@ -19,10 +19,12 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.rules.Integration;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.template.TemplateFolderService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
 import java.util.Arrays;
@@ -33,14 +35,17 @@ import java.util.UUID;
 public class ShellScriptStateIntegrationTest extends WingsBaseTest {
   @Inject private TemplateFolderService templateFolderService;
   @Inject private TemplateService templateService;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   @Test(expected = WingsException.class)
   @Owner(developers = AADITI)
   @Category(DeprecatedIntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateUpdateDeleteShellScriptTemplate() {
-    // Create template
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType("BASH")
                                                   .scriptString("echo ${var}\n export A=\"aaa\"\n export B=\"bbb\"\n")

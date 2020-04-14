@@ -22,6 +22,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
@@ -52,8 +53,10 @@ public class YamlGitServiceTest extends WingsBaseTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testSyncForTemplates() {
-    TemplateFolder rootLevelFolder = templateFolderService.getRootLevelFolder(
-        GLOBAL_ACCOUNT_ID, templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID).getUuid());
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder rootLevelFolder =
+        templateFolderService.getRootLevelFolder(GLOBAL_ACCOUNT_ID, templateGallery.getUuid());
 
     TemplateFolder templateFolder = TemplateFolder.builder()
                                         .appId(GLOBAL_APP_ID)
@@ -61,7 +64,7 @@ public class YamlGitServiceTest extends WingsBaseTest {
                                         .parentId(rootLevelFolder.getUuid())
                                         .name("test folder")
                                         .build();
-    templateFolder = templateFolderService.save(templateFolder);
+    templateFolder = templateFolderService.save(templateFolder, templateGallery.getUuid());
 
     BaseTemplate baseTemplate = SshCommandTemplate.builder().build();
     Template template = Template.builder()

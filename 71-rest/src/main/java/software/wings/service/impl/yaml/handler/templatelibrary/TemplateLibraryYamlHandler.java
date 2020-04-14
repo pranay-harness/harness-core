@@ -17,11 +17,13 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
 import software.wings.yaml.templatelibrary.TemplateLibraryYaml.TemplateVariableYaml;
@@ -35,6 +37,7 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
   @Inject private YamlHelper yamlHelper;
   @Inject private TemplateService templateService;
   @Inject private AppService appService;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   public static List<TemplateVariableYaml> variablesToTemplateVariableYaml(List<Variable> variables) {
     return ListUtils.emptyIfNull(variables)
@@ -86,7 +89,10 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
   public Template get(String accountId, String yamlFilePath) {
     final String appId = getApplicationId(accountId, yamlFilePath);
     String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
-    TemplateFolder templateFolder = yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder templateFolder =
+        yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId, templateGallery.getUuid());
     return templateService.findByFolder(templateFolder, templateName, appId);
   }
 
@@ -102,7 +108,10 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
     String accountId = changeContext.getChange().getAccountId();
     final String appId = getApplicationId(accountId, yamlFilePath);
     String templateName = yamlHelper.extractTemplateLibraryName(yamlFilePath, appId);
-    TemplateFolder templateFolder = yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder templateFolder =
+        yamlHelper.ensureTemplateFolder(accountId, yamlFilePath, appId, templateGallery.getUuid());
     Template template = templateService.findByFolder(templateFolder, templateName, appId);
     if (template != null) {
       return updateTemplate(template, changeContext, changeSetContext);

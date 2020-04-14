@@ -9,11 +9,13 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
+import static software.wings.beans.template.Template.GALLERY_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
-import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V4_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
@@ -205,8 +207,9 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Override
   public void loadDefaultTemplates(String accountId, String accountName) {
-    super.loadDefaultTemplates(asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH,
-                                   POWER_SHELL_IIS_INSTALL_PATH, GENERIC_JSON_PATH),
+    super.loadDefaultTemplates(
+        asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH, GENERIC_JSON_PATH,
+            POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH, POWER_SHELL_IIS_APP_V4_INSTALL_PATH),
         accountId, accountName);
   }
 
@@ -265,6 +268,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
                                               .filter(TemplateKeys.accountId, template.getAccountId())
                                               .filter(TYPE_KEY, template.getType())
                                               .filter(FOLDER_ID_KEY, template.getFolderId())
+                                              .filter(GALLERY_ID_KEY, template.getGalleryId())
                                               .filter(NAME_KEY, referenceId);
           Template referencedTemplate = templateQuery.get();
           if (referencedTemplate != null) {

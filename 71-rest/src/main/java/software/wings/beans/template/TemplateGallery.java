@@ -35,7 +35,7 @@ public class TemplateGallery extends Base implements KeywordsAware {
   public static final String NAME_KEY = "name";
   public static final String GALLERY_KEY = "galleryKey";
 
-  public static final String IMPORTED_TEMPLATE_GALLERY_NAME = "Saved Templates";
+  public static final String IMPORTED_TEMPLATE_GALLERY_NAME = "Imported Templates";
 
   @NotEmpty private String name;
   @NotEmpty private String accountId;

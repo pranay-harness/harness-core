@@ -119,7 +119,9 @@ public class TemplateFolderGenerator {
     final TemplateFolder finalTemplateFolder = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(
-        () -> templateFolderService.save(finalTemplateFolder), () -> exists(finalTemplateFolder));
+        ()
+            -> templateFolderService.save(finalTemplateFolder, templateFolder.getGalleryId()),
+        () -> exists(finalTemplateFolder));
   }
 
   public TemplateFolder exists(TemplateFolder template) {

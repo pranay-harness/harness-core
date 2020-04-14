@@ -336,9 +336,18 @@ public class AccountServiceImpl implements AccountService {
     loginSettingsService.createDefaultLoginSettings(account);
     notificationRuleService.createDefaultRule(account.getUuid());
 
-    executorService.submit(
-        () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));
-    // TODO: Add default saving of imported gallery.
+    executorService.submit(() -> {
+      try {
+        templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName());
+      } catch (Exception e) {
+        logger.error("Failed to load default templates", e);
+      }
+      try {
+        templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(account.getUuid(), account.getAccountName());
+      } catch (Exception e) {
+        logger.error("Failed to load harness gallery", e);
+      }
+    });
 
     enableFeatureFlags(account, fromDataGen);
     sampleDataProviderService.createK8sV2SampleApp(account);

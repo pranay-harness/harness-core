@@ -154,7 +154,6 @@ public class DataGenService {
     dropDBAndEnsureIndexes();
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplates();
-    // TODO: Add datagen to createcommandlibrary
 
     {
       final Seed seed = new Seed(0);

@@ -730,7 +730,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       Template template;
       switch (artifactType) {
         case IIS:
-          template = templateService.fetchTemplateByKeyword(accountId, IISWEBSITE_KEYWORD);
+          template = templateService.fetchTemplateByKeywordForAccountGallery(accountId, IISWEBSITE_KEYWORD);
           command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template, EntityType.COMMAND);
           if (command != null) {
             if (template.getName().equals(INSTALL_IIS_WEBSITE_TEMPLATE_NAME)) {
@@ -741,7 +741,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           break;
         case IIS_APP:
         case IIS_VirtualDirectory:
-          template = templateService.fetchTemplateByKeyword(accountId, IISAPP_KEYWORD);
+          template = templateService.fetchTemplateByKeywordForAccountGallery(accountId, IISAPP_KEYWORD);
           command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template, EntityType.COMMAND);
           if (command != null) {
             if (template.getName().equals(INSTALL_IIS_APPLICATION_TEMPLATE_NAME)) {

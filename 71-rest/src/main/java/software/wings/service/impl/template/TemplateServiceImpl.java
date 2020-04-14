@@ -88,6 +88,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -127,7 +128,7 @@ public class TemplateServiceImpl implements TemplateService {
   @ValidationGroups(Create.class)
   public Template saveReferenceTemplate(Template template) {
     validateTemplateVariables(template.getVariables());
-    setTemplateFolder(template);
+    setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
 
@@ -151,7 +152,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Update.class)
   public Template updateReferenceTemplate(Template template) {
-    setTemplateFolder(template);
+    setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
     template.setImported(true);
@@ -257,14 +258,16 @@ public class TemplateServiceImpl implements TemplateService {
     TemplateFolder templateFolder;
     String galleryId = template.getGalleryId();
     if (isEmpty(galleryId)) {
-      TemplateGallery templateGallery = templateGalleryService.getByAccount(template.getAccountId());
+      TemplateGallery templateGallery =
+          templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
       notNullCheck("Template gallery does not exist", templateGallery, USER);
       galleryId = templateGallery.getUuid();
     }
     template.setGalleryId(galleryId);
     if (isEmpty(template.getFolderId())) {
       notNullCheck("Template Folder Path", template.getFolderPath());
-      templateFolder = templateFolderService.getByFolderPath(template.getAccountId(), template.getFolderPath());
+      templateFolder =
+          templateFolderService.getByFolderPath(template.getAccountId(), template.getFolderPath(), galleryId);
       notNullCheck(template.getFolderPath() + " does not exist", templateFolder, USER);
     } else {
       templateFolder = templateFolderService.get(template.getFolderId());
@@ -369,10 +372,11 @@ public class TemplateServiceImpl implements TemplateService {
     template.setVersion(newVersionedTemplate.getVersion());
   }
 
-  private void setTemplateFolder(Template template) {
+  private void setTemplateFolderForImportedTemplate(Template template) {
     String galleryId = template.getGalleryId();
     if (isEmpty(galleryId)) {
-      TemplateGallery templateGallery = templateGalleryService.getByAccount(template.getAccountId());
+      TemplateGallery templateGallery =
+          templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
       notNullCheck("Template gallery does not exist", templateGallery, USER);
       galleryId = templateGallery.getUuid();
     }
@@ -514,12 +518,16 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public TemplateFolder getTemplateTree(String accountId, String keyword, List<String> templateTypes) {
-    return templateFolderService.getTemplateTree(accountId, keyword, templateTypes);
+    String galleryId =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
+    return templateFolderService.getTemplateTree(accountId, keyword, templateTypes, galleryId);
   }
 
   @Override
   public TemplateFolder getTemplateTree(String accountId, String appId, String keyword, List<String> templateTypes) {
-    return templateFolderService.getTemplateTree(accountId, appId, keyword, templateTypes);
+    String galleryId =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
+    return templateFolderService.getTemplateTree(accountId, appId, keyword, templateTypes, galleryId);
   }
 
   @Override
@@ -614,6 +622,7 @@ public class TemplateServiceImpl implements TemplateService {
                                    .contains(templateFolder.getUuid())
                                    .field(NAME_KEY)
                                    .equal(templateName)
+                                   .filter(Template.GALLERY_ID_KEY, templateFolder.getGalleryId())
                                    .asList();
     if (templates.size() == 1) {
       return templates.get(0);
@@ -631,7 +640,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     List<String> folderUuids = Arrays.stream(template.getFolderPathId().split("/")).collect(Collectors.toList());
     Map<String, String> templateUuidNameMap =
-        templateFolderService.fetchTemplateFolderNames(template.getAccountId(), folderUuids);
+        templateFolderService.fetchTemplateFolderNames(template.getAccountId(), folderUuids, template.getGalleryId());
     int i = 0;
     for (String folderId : folderUuids) {
       templateFolderPath = templateFolderPath.append(templateUuidNameMap.get(folderId));
@@ -664,11 +673,14 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public String fetchTemplateIdFromUri(String accountId, String appId, String templateUri) {
     String folderPath = obtainTemplateFolderPath(templateUri);
+    // TODO: Making account gallery as default for now for uri. Make it generic to make galleryId aware.
+    String galleryId =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
     if (folderPath.contains("/")) { // app level folder
-      templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath);
+      templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
     } else { // root level folder
-      templateFolder = templateFolderService.getByFolderPath(accountId, folderPath);
+      templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
     }
 
     if (templateFolder == null) {
@@ -683,6 +695,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, appId)
+                            .filter(TemplateKeys.galleryId, galleryId)
                             .get();
     if (template == null) {
       throw new WingsException("No template found for the uri [" + templateUri + "]");
@@ -693,11 +706,14 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public Template fetchTemplateFromUri(String templateUri, String accountId, String appId) {
     String folderPath = obtainTemplateFolderPath(templateUri);
+    // TODO: Making account gallery as default for now for uri. Make it generic to make galleryId aware.
+    String galleryId =
+        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
     if (folderPath.contains("/")) { // app level folder
-      templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath);
+      templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
     } else { // root level folder
-      templateFolder = templateFolderService.getByFolderPath(accountId, folderPath);
+      templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
     }
 
     if (templateFolder == null) {
@@ -710,6 +726,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, appId)
+                            .filter(TemplateKeys.galleryId, galleryId)
                             .get();
     if (template == null) {
       return null;
@@ -738,13 +755,14 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId) {
+  public String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId, String galleryId) {
     Template template = wingsPersistence.createQuery(Template.class)
                             .project(NAME_KEY, true)
                             .project(Template.ACCOUNT_ID_KEY, true)
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, name)
                             .filter(Template.FOLDER_ID_KEY, folderId)
+                            .filter(Template.GALLERY_ID_KEY, galleryId)
                             .get();
     if (template == null) {
       throw new WingsException("No template found with name [" + name + "]");
@@ -809,12 +827,18 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword) {
+  public Template fetchTemplateByKeywordForAccountGallery(@NotEmpty String accountId, String keyword) {
     Template template = null;
     if (isNotEmpty(keyword)) {
+      String galleryId =
+          Optional
+              .ofNullable(templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()))
+              .map(TemplateGallery::getUuid)
+              .orElse(null);
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                           .filter(TemplateKeys.accountId, accountId)
                                           .filter(TemplateKeys.appId, GLOBAL_APP_ID)
+                                          .filter(TemplateKeys.galleryId, galleryId)
                                           .field(TemplateKeys.keywords)
                                           .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
@@ -829,12 +853,20 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword) {
+  public Template fetchTemplateByKeywordForAccountGallery(
+      @NotEmpty String accountId, @NotEmpty String appId, String keyword) {
     Template template = null;
     if (isNotEmpty(keyword)) {
+      String galleryId =
+          Optional
+              .ofNullable(templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()))
+              .map(TemplateGallery::getUuid)
+              .orElse(null);
+
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                           .filter(TemplateKeys.accountId, accountId)
                                           .filter(TemplateKeys.appId, appId)
+                                          .filter(TemplateKeys.galleryId, galleryId)
                                           .field(TemplateKeys.keywords)
                                           .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
@@ -849,13 +881,16 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
-  public Template fetchTemplateByKeywords(@NotEmpty String accountId, Set<String> keywords) {
+  public Template fetchTemplateByKeywordsForAccountGallery(@NotEmpty String accountId, Set<String> keywords) {
     Template template = null;
     if (isNotEmpty(keywords)) {
+      TemplateGallery templateGallery =
+          templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey());
       Query<Template> templateQuery =
           wingsPersistence.createQuery(Template.class)
               .filter(TemplateKeys.accountId, accountId)
               .filter(TemplateKeys.appId, GLOBAL_APP_ID)
+              .filter(TemplateKeys.galleryId, templateGallery.getUuid())
               .field(Template.KEYWORDS_KEY)
               .hasAllOf(keywords.stream().map(String::toLowerCase).collect(Collectors.toList()));
       List<Template> templates = templateQuery.asList();

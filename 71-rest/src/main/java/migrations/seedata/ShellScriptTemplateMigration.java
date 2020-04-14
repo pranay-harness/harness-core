@@ -50,7 +50,7 @@ public class ShellScriptTemplateMigration implements SeedDataMigration {
           templateFolderService.getRootLevelFolder(GLOBAL_ACCOUNT_ID, templateGallery.getUuid());
       if (templateFolder != null) {
         TemplateFolder shellScriptsTemplateFolder = constructTemplateBuilder(templateFolder, SHELL_SCRIPTS);
-        templateFolderService.save(shellScriptsTemplateFolder);
+        templateFolderService.save(shellScriptsTemplateFolder, templateGallery.getUuid());
         success = true;
       } else {
         logger.error("Folder [{}] does not exist for account [{}]", HARNESS_GALLERY, GLOBAL_ACCOUNT_ID);

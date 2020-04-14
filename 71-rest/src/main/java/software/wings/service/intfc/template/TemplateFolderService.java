@@ -10,11 +10,12 @@ import java.util.Map;
 import javax.validation.Valid;
 
 public interface TemplateFolderService {
+  //  @Deprecated should not be used in future code,
   PageResponse<TemplateFolder> list(PageRequest<TemplateFolder> pageRequest);
 
-  TemplateFolder save(@Valid TemplateFolder templateFolder);
+  TemplateFolder save(@Valid TemplateFolder templateFolder, String galleryId);
 
-  TemplateFolder saveSafelyAndGet(@Valid TemplateFolder templateFolder);
+  TemplateFolder saveSafelyAndGet(@Valid TemplateFolder templateFolder, String galleryId);
 
   TemplateFolder update(@Valid TemplateFolder templateFolder);
 
@@ -26,18 +27,20 @@ public interface TemplateFolderService {
 
   void loadDefaultTemplateFolders();
 
-  TemplateFolder getTemplateTree(@NotEmpty String accountId, String keyword, List<String> templateTypes);
+  TemplateFolder getTemplateTree(
+      @NotEmpty String accountId, String keyword, List<String> templateTypes, String galleryId);
 
   TemplateFolder getTemplateTree(
-      @NotEmpty String accountId, @NotEmpty String appId, String keyword, List<String> templateTypes);
+      @NotEmpty String accountId, @NotEmpty String appId, String keyword, List<String> templateTypes, String galleryId);
 
   void copyHarnessTemplateFolders(@NotEmpty String galleryId, @NotEmpty String accountId, @NotEmpty String accountName);
 
-  TemplateFolder getByFolderPath(@NotEmpty String accountId, @NotEmpty String folderPath);
+  TemplateFolder getByFolderPath(@NotEmpty String accountId, @NotEmpty String folderPath, String galleryId);
 
-  TemplateFolder getByFolderPath(@NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String folderPath);
+  TemplateFolder getByFolderPath(
+      @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String folderPath, String galleryId);
 
-  Map<String, String> fetchTemplateFolderNames(@NotEmpty String accountId, List<String> folderUuids);
+  Map<String, String> fetchTemplateFolderNames(@NotEmpty String accountId, List<String> folderUuids, String galleryId);
 
   TemplateFolder createRootImportedTemplateFolder(String accountId, String galleryId);
 

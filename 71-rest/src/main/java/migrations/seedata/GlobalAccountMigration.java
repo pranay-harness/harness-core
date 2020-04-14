@@ -52,11 +52,11 @@ public class GlobalAccountMigration implements SeedDataMigration {
     globalTemplate.setAppId(GLOBAL_APP_ID);
     globalTemplate.setAccountId(GLOBAL_ACCOUNT_ID);
     logger.info("Folder path for global account id: " + globalTemplate.getFolderPath());
-    TemplateFolder destTemplateFolder =
-        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, globalTemplate.getFolderPath());
+    TemplateFolder destTemplateFolder = templateFolderService.getByFolderPath(
+        GLOBAL_ACCOUNT_ID, globalTemplate.getFolderPath(), harnessTemplateGallery.getUuid());
     if (destTemplateFolder != null) {
       logger.info("Template folder found for global account");
-      Template existingTemplate = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+      Template existingTemplate = templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, "iis");
       if (existingTemplate != null) {
         logger.info("IIS Install template found in Global account");
         globalTemplate.setUuid(existingTemplate.getUuid());

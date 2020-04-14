@@ -48,6 +48,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -66,7 +67,10 @@ public class PcfCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldSavePcfCommandTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     PcfCommandTemplate pcfCommandTemplate = PcfCommandTemplate.builder()
                                                 .scriptString("echo ${var1}\n"
                                                     + "export A=\"aaa\"\n"
@@ -91,7 +95,11 @@ public class PcfCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdatePcfCommandTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
     Template savedTemplate = templateService.save(template);
     assertSavedTemplate(template, savedTemplate);
@@ -119,7 +127,11 @@ public class PcfCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
     Template savedTemplate = templateService.save(template);
 

@@ -47,7 +47,8 @@ public class ArtifactSourceTemplateYamlHandlerTest extends TemplateLibraryYamlHa
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCRUDAndGetForTemplate() throws IOException {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, ARTIFACT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, ARTIFACT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, artifactTemplateName, GLOBAL_APP_ID))
         .thenReturn(artifactTemplateForSetup);

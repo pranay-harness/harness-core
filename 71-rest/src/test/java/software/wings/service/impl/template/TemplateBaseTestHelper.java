@@ -2,6 +2,7 @@ package software.wings.service.impl.template;
 
 import static java.util.Arrays.asList;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -9,6 +10,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -36,6 +38,7 @@ public class TemplateBaseTestHelper extends WingsBaseTest {
   @Before
   public void setUp() {
     templateGalleryService.loadHarnessGallery();
+    templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(GLOBAL_ACCOUNT_ID, ACCOUNT_NAME);
   }
 
   protected Workflow generateWorkflow(Template savedTemplate, GraphNode step) {
