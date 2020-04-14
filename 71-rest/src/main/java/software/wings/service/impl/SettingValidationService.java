@@ -222,7 +222,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {
-      validatePcfConfig((PcfConfig) settingValue);
+      validatePcfConfig((PcfConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
@@ -328,8 +328,8 @@ public class SettingValidationService {
     }
   }
 
-  private void validatePcfConfig(PcfConfig pcfConfig) {
-    pcfHelperService.validate(pcfConfig);
+  private void validatePcfConfig(PcfConfig pcfConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    pcfHelperService.validate(pcfConfig, encryptedDataDetails);
   }
 
   private boolean validateKubernetesClusterConfig(

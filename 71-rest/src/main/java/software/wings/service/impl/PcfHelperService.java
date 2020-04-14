@@ -44,7 +44,7 @@ public class PcfHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
 
-  public void validate(PcfConfig pcfConfig) {
+  public void validate(PcfConfig pcfConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
 
     try {
@@ -60,7 +60,7 @@ public class PcfHelperService {
                                                       .pcfCommandType(PcfCommandType.VALIDATE)
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
-                            null})
+                            encryptedDataDetails})
                         .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());

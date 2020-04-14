@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -36,7 +37,10 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.template.Template;
@@ -288,5 +292,18 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
       }
     });
     return structure;
+  }
+
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testPathForSpotInstAndPcfConfig() {
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withValue(PcfConfig.builder().build()).build();
+    String path = yamlDirectoryService.getRootPathBySettingAttribute(settingAttribute);
+    assertThat(path).isEqualTo("Setup/Cloud Providers");
+
+    settingAttribute.setValue(SpotInstConfig.builder().build());
+    yamlDirectoryService.getRootPathBySettingAttribute(settingAttribute);
+    assertThat(path).isEqualTo("Setup/Cloud Providers");
   }
 }
