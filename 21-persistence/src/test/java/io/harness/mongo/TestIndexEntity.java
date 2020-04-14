@@ -20,11 +20,16 @@ import org.mongodb.morphia.annotations.Indexes;
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TestEntityKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "index"), fields = {
-    @Field(TestIndexEntity.TestEntityKeys.uuid), @Field(TestIndexEntity.TestEntityKeys.test)
-  })
+  @Index(options = @IndexOptions(name = "index"),
+      fields = { @Field(TestIndexEntity.TestEntityKeys.uuid)
+                 , @Field(TestIndexEntity.TestEntityKeys.test) })
+  ,
+      @Index(options = @IndexOptions(name = "sparse_index", sparse = true), fields = {
+        @Field(TestIndexEntity.TestEntityKeys.uuid), @Field(TestIndexEntity.TestEntityKeys.sparseTest)
+      })
 })
 class TestIndexEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   @Indexed private String test;
+  @Indexed(options = @IndexOptions(sparse = true)) private String sparseTest;
 }

@@ -46,6 +46,7 @@ import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -278,12 +279,17 @@ public class PipelineResumeUtils {
       return new ArrayList<>();
     }
 
-    return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter(WorkflowExecutionKeys.appId, appId)
-        .filter(WorkflowExecutionKeys.pipelineResumeId, pipelineResumeId)
-        .project(WorkflowExecutionKeys.stateMachine, false)
-        .order(WorkflowExecutionKeys.createdAt)
-        .asList();
+    List<WorkflowExecution> workflowExecutions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                     .filter(WorkflowExecutionKeys.appId, appId)
+                                                     .filter(WorkflowExecutionKeys.pipelineResumeId, pipelineResumeId)
+                                                     .project(WorkflowExecutionKeys.stateMachine, false)
+                                                     .asList();
+    if (isEmpty(workflowExecutions)) {
+      return workflowExecutions;
+    }
+
+    workflowExecutions.sort(Comparator.comparingLong(WorkflowExecution::getCreatedAt));
+    return workflowExecutions;
   }
 
   @VisibleForTesting
