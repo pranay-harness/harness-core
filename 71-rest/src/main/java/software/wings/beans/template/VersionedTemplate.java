@@ -42,6 +42,7 @@ public class VersionedTemplate extends Base {
 
   private String templateId;
   private Long version;
+  private String importedTemplateVersion;
   private String accountId;
   private String galleryId;
   @NotNull private BaseTemplate templateObject;

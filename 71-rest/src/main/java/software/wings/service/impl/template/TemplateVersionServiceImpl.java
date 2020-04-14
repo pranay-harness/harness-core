@@ -46,7 +46,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                              .filter(TemplateVersionKeys.accountId, accountId)
                              .filter(TemplateVersionKeys.templateUuid, template.getUuid())
                              .filter(TemplateVersionKeys.changeType, IMPORTED)
-                             .order(Sort.ascending(TemplateVersionKeys.version))
+                             .order(Sort.ascending(TemplateVersionKeys.importedTemplateVersion))
                              .asList();
     }
     return importedTemplateService.makeImportedCommandObject(
@@ -65,7 +65,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                                                  .field(TemplateVersionKeys.templateUuid)
                                                  .in(templateUuids)
                                                  .filter(TemplateVersionKeys.changeType, IMPORTED)
-                                                 .order(Sort.descending(TemplateVersionKeys.version))
+                                                 .order(Sort.descending(TemplateVersionKeys.importedTemplateVersion))
                                                  .asList();
     Map<String, TemplateVersion> templateUuidLatestVersionMap = new HashMap<>();
     // Since versions are sorted descending first template will be latest.
@@ -88,8 +88,8 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   }
 
   @Override
-  public TemplateVersion newReferencedTemplateVersion(String accountId, String galleryId, String templateUuid,
-      String templateType, String templateName, Long version, String versionDetails) {
+  public TemplateVersion newImportedTemplateVersion(String accountId, String galleryId, String templateUuid,
+      String templateType, String templateName, String commandVersion, String versionDetails) {
     TemplateVersion templateVersion = TemplateVersion.builder()
                                           .accountId(accountId)
                                           .galleryId(galleryId)
@@ -97,22 +97,23 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                                           .templateName(templateName)
                                           .templateType(templateType)
                                           .changeType(IMPORTED.name())
-                                          .version(version)
+                                          .importedTemplateVersion(commandVersion)
                                           .versionDetails(versionDetails)
                                           .build();
 
-    if (!checkIfAlreadyExists(accountId, templateUuid, version)) {
-      String templateVersionUuid = wingsPersistence.save(templateVersion);
-      return wingsPersistence.get(TemplateVersion.class, templateVersionUuid);
+    if (!checkIfAlreadyExists(accountId, templateUuid, commandVersion)) {
+      setVersionAndSave(templateVersion, templateUuid, accountId);
+      return templateVersion;
     }
     throw new InvalidRequestException("Template already exists.", USER);
   }
 
-  private boolean checkIfAlreadyExists(String accountId, String templateUuid, Long version) {
+  private boolean checkIfAlreadyExists(String accountId, String templateUuid, String version) {
     TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
                                           .filter(TemplateVersionKeys.accountId, accountId)
                                           .filter(TemplateVersionKeys.templateUuid, templateUuid)
                                           .filter(TemplateVersionKeys.version, version)
+                                          .filter(TemplateVersionKeys.importedTemplateVersion, version)
                                           .get();
     return templateVersion != null;
   }
@@ -128,6 +129,12 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                                           .templateType(templateType)
                                           .changeType(changeType.name())
                                           .build();
+
+    setVersionAndSave(templateVersion, templateUuid, accountId);
+    return templateVersion;
+  }
+
+  private void setVersionAndSave(TemplateVersion templateVersion, String templateUuid, String accountId) {
     int i = 0;
     boolean done = false;
     do {
@@ -147,7 +154,5 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         templateVersion.setCreatedAt(0);
       }
     } while (!done && i < 3);
-
-    return templateVersion;
   }
 }

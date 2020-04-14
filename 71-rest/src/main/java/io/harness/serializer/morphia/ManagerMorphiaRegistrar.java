@@ -403,7 +403,7 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.beans.template.ImportedCommandTemplate;
+import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -1007,7 +1007,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(K8sYaml.class);
     set.add(CommandEntity.class);
     set.add(CommandVersionEntity.class);
-    set.add(ImportedCommandTemplate.class);
+    set.add(ImportedTemplate.class);
     set.add(CeExceptionRecord.class);
   }
 
