@@ -26,10 +26,10 @@ public class CommandLibraryServiceImpl implements CommandLibraryService {
   @Override
   public String getSecretForClient(String clientId) {
     final ServiceType clientServiceType = getServiceTypeForClient(clientId);
-    return wingsPersistence.createQuery(ServiceSecretKey.class)
-        .filter(ServiceSecretKeyKeys.serviceType, clientServiceType)
-        .get()
-        .getServiceSecret();
+    final ServiceSecretKey serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class)
+                                                  .filter(ServiceSecretKeyKeys.serviceType, clientServiceType)
+                                                  .get();
+    return serviceSecretKey != null ? serviceSecretKey.getServiceSecret() : null;
   }
 
   private ServiceType getServiceTypeForClient(String clientId) {

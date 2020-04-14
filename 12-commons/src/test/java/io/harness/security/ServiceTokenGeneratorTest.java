@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ServiceTokenGeneratorTest extends CategoryTest {
-  public static final String SECRETKEY = "secretkey";
+  public static final String SECRETKEY = "a611aa13eb1d5e77bc3295517ebe65ff";
 
   @Test(expected = Test.None.class)
   @Owner(developers = ROHIT_KUMAR)

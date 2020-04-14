@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.security.annotations.PublicApi;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -36,6 +39,8 @@ public class CommandLibraryServerAuthenticationFilter implements ContainerReques
   @Context ResourceInfo resourceInfo;
 
   @Inject private CommandLibraryService commandLibraryService;
+  private final Supplier<String> secretKeyForManageSupplier =
+      Suppliers.memoizeWithExpiration(this ::getServiceSecretForManager, 1, TimeUnit.MINUTES);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -76,7 +81,7 @@ public class CommandLibraryServerAuthenticationFilter implements ContainerReques
   }
 
   private void validateManagerServiceToken(String managerServiceToken) {
-    final String managerServiceSecret = getServiceSecretForManager();
+    final String managerServiceSecret = secretKeyForManageSupplier.get();
     validateTokenUsingSecret(managerServiceToken, managerServiceSecret);
   }
 

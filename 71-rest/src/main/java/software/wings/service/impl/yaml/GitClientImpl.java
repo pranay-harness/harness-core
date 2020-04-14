@@ -394,6 +394,7 @@ public class GitClientImpl implements GitClient {
                                 .setAll(true)
                                 .setMessage(commitMessage.toString())
                                 .call();
+
       return GitCommitResult.builder().commitId(revCommit.getName()).commitTime(revCommit.getCommitTime()).build();
 
     } catch (IOException | GitAPIException ex) {

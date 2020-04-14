@@ -10,6 +10,12 @@ import com.google.inject.name.Names;
 
 import io.harness.commandlibrary.common.service.CommandLibraryService;
 import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
+import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
+import io.harness.commandlibrary.server.service.impl.CommandStoreServiceImpl;
+import io.harness.commandlibrary.server.service.impl.CommandVersionServiceImpl;
+import io.harness.commandlibrary.server.service.intfc.CommandService;
+import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
+import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -20,9 +26,11 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
+import software.wings.service.impl.analysis.VerificationServiceImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
@@ -51,6 +59,10 @@ public class CommandLibraryServerModule extends AbstractModule {
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+    bind(CommandStoreService.class).to(CommandStoreServiceImpl.class);
+    bind(CommandService.class).to(CommandServiceImpl.class);
+    bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);
+    bind(VerificationService.class).to(VerificationServiceImpl.class);
 
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
