@@ -41,6 +41,7 @@ public class DashboardSettings
   @Transient private boolean isShared;
   @Transient private boolean canUpdate;
   @Transient private boolean canDelete;
+  @Transient private boolean canManage;
   private List<DashboardAccessPermissions> permissions;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 }

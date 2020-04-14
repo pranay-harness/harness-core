@@ -167,6 +167,10 @@ public interface WingsTestConstants {
 
   String USER_ID = "USER_ID";
 
+  String USER1_ID = "USER1_ID";
+
+  String DASHBOARD1_ID = "DASHBOARD1_ID";
+
   String NEW_USER_EMAIL = "user1@harness.io";
 
   String NEW_USER_NAME = "user1";

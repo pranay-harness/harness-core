@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class DashboardAuthHandler {
   @Inject private WingsPersistence wingsPersistence;
-  private Set<Action> allActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE);
+  private Set<Action> allActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.MANAGE);
 
   public Map<String, Set<Action>> getDashboardAccessPermissions(
       User user, String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroups) {
@@ -129,7 +129,8 @@ public class DashboardAuthHandler {
         // If user canUpdate/canDelete from account admin privilege. It should not be taken away because of
         // shared dashboard settings.
         dashboardSettings.setCanUpdate(dashboardSettings.isCanUpdate() || actions.contains(Action.UPDATE));
-        dashboardSettings.setCanDelete(dashboardSettings.isCanDelete() || actions.contains(Action.DELETE));
+        dashboardSettings.setCanDelete(dashboardSettings.isCanManage() || actions.contains(Action.MANAGE));
+        dashboardSettings.setCanManage(dashboardSettings.isCanManage() || actions.contains(Action.MANAGE));
         // PL-3325: Should single out explicitly shared custom dashboads, it's shared if not owner when
         // it got permissions from shared user groups.
         dashboardSettings.setShared(!dashboardSettings.isOwner());
