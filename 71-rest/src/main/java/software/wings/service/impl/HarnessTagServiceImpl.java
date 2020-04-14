@@ -123,7 +123,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private static final Set<Character> ALLOWED_CHARS_SET_WITH_EXPRESSIONS =
       Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS_WITH_EXPRESSIONS));
   private static final String SYSTEM_TAG_PREFIX = "system/";
-  private static final String HARNESS_TAG_PREFIX = "harness.io/";
+  public static final String HARNESS_TAG_PREFIX = "harness.io/";
 
   private static final Pattern workflowVariablesPattern = Pattern.compile("\\$\\{workflow\\.variables\\.([^.{}]+)[}]");
   private static final Pattern workflowDefaultsPattern = Pattern.compile("\\$\\{workflow\\.([^.{}]+)[}]");

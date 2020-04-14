@@ -101,6 +101,8 @@ public interface EnvironmentService extends OwnedByApplication {
    */
   @ValidationGroups(Create.class) Environment save(@Valid Environment environment);
 
+  void setEnvironmentTypeTag(Environment environment);
+
   /**
    * Update.
    *

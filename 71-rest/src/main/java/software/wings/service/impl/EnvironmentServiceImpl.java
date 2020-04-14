@@ -24,6 +24,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.FeatureName.HARNESS_TAGS;
 import static software.wings.beans.Service.ServiceKeys;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
@@ -69,6 +70,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -157,6 +159,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private CVConfigurationService cvConfigurationService;
+
+  private interface Keys { String EnvironmentType = "environmentType"; }
 
   /**
    * {@inheritDoc}
@@ -285,10 +289,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
 
+    if (featureFlagService.isEnabled(HARNESS_TAGS, accountId)) {
+      setEnvironmentTypeTag(savedEnvironment);
+    }
     // Mark this create op into GlobalAuditContext so nested entity creation can be related to it
     auditServiceHelper.addEntityOperationIdentifierDataToAuditContext(
         generateEntityOperationIdentity(savedEnvironment));
-
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
     sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     yamlPushService.pushYamlChangeSet(
@@ -318,6 +324,21 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .notificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
+  }
+
+  @Override
+  public void setEnvironmentTypeTag(Environment environment) {
+    HarnessTagLink tagLink =
+        HarnessTagLink.builder()
+            .key(Keys.EnvironmentType)
+            .value(environment.getEnvironmentType() != null ? environment.getEnvironmentType().name() : "")
+            .appId(environment.getAppId())
+            .entityId(environment.getUuid())
+            .entityType(EntityType.ENVIRONMENT)
+            .entityName(environment.getName())
+            .accountId(environment.getAccountId())
+            .build();
+    harnessTagService.attachTag(tagLink);
   }
 
   @Override

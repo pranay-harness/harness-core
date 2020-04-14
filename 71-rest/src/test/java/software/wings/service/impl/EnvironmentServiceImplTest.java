@@ -1,10 +1,15 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 
 import com.google.inject.Inject;
 
@@ -17,22 +22,26 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTagLink;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock AppService appService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
-
+  @Inject private HarnessTagService harnessTagService;
   @InjectMocks @Inject EnvironmentServiceImpl environmentService;
 
   @Test
@@ -86,5 +95,25 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
     Environment environment = environmentPageResponse.getResponse().get(0);
     assertThat(environment.getInfrastructureDefinitions()).isNull();
     assertThat(environment.getInfraDefinitionsCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void shouldSetServiceDeploymentTypeAndArtifactTypeTag() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
+    Environment env1 = Environment.Builder.anEnvironment()
+                           .uuid(ENV_ID)
+                           .name(ENV_NAME)
+                           .appId(APP_ID)
+                           .environmentType(EnvironmentType.PROD)
+                           .build();
+    Environment savedEnv = environmentService.save(env1);
+    List<HarnessTagLink> tagLinksWithEntityId =
+        harnessTagService.getTagLinksWithEntityId(ACCOUNT_ID, savedEnv.getUuid());
+    assertThat(tagLinksWithEntityId).hasSize(1);
+    assertTrue(tagLinksWithEntityId.stream().anyMatch(
+        tagLink -> tagLink.getKey().equals("environmentType") && tagLink.getValue().equals("PROD")));
   }
 }

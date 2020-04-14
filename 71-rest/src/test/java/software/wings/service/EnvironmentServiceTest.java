@@ -114,6 +114,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -158,6 +159,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private PersistentLocker persistentLocker;
   @Mock private AcquiredLock acquiredLock;
+  @Mock private HarnessTagService harnessTagService;
 
   @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -277,6 +279,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   private void cloneEnvironmentWithInfraMapping(boolean differentApp, InfrastructureMapping infrastructureMapping) {
+    doNothing().when(harnessTagService).attachTag(any());
     if (differentApp) {
       when(appService.get(APP_ID)).thenReturn(application);
     }
