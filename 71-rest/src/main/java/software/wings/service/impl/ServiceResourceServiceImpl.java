@@ -38,6 +38,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.valueOf;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.FeatureName.HARNESS_TAGS;
 import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
@@ -108,6 +109,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -242,6 +244,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static String default_k8s_values_yaml;
   private static String default_pcf_manifest_yml;
   private static String default_pcf_vars_yml;
+
+  private interface Keys {
+    String DeploymentType = "deploymentType";
+    String ArtifactType = "artifactType";
+  }
 
   static {
     try {
@@ -466,6 +473,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       createDefaultK8sManifests(savedService, service.isSyncFromGit());
       createDefaultPCFManifestsIfApplicable(savedService, service.isSyncFromGit());
 
+      if (featureFlagService.isEnabled(HARNESS_TAGS, accountId)) {
+        setDeploymentTypeTag(savedService);
+        setArtifactTypeTag(savedService);
+      }
+
       sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
       yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
@@ -476,6 +488,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
       return savedService;
     });
+  }
+
+  @Override
+  public void setArtifactTypeTag(Service service) {
+    HarnessTagLink tagLink = HarnessTagLink.builder()
+                                 .key(Keys.ArtifactType)
+                                 .value(service.getArtifactType() != null ? service.getArtifactType().name() : "")
+                                 .appId(service.getAppId())
+                                 .entityId(service.getUuid())
+                                 .entityType(EntityType.SERVICE)
+                                 .entityName(service.getName())
+                                 .accountId(service.getAccountId())
+                                 .build();
+    harnessTagService.attachTag(tagLink);
+  }
+
+  @Override
+  public void setDeploymentTypeTag(Service service) {
+    HarnessTagLink tagLink = HarnessTagLink.builder()
+                                 .key(Keys.DeploymentType)
+                                 .value(service.getDeploymentType() != null ? service.getDeploymentType().name() : "")
+                                 .appId(service.getAppId())
+                                 .entityId(service.getUuid())
+                                 .entityType(EntityType.SERVICE)
+                                 .entityName(service.getName())
+                                 .accountId(service.getAccountId())
+                                 .build();
+    harnessTagService.attachTag(tagLink);
   }
 
   private void updateGlobalContextWithServiceCreationEvent(Service savedService) {
