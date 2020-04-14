@@ -1,0 +1,87 @@
+extend type Query {
+  cloudTimeSeriesStats(
+    limit: Int
+    offset: Int
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudTimeSeriesStats @dataFetcher(name: cloudTimeSeriesStats)
+
+  cloudEntityStats(
+    limit: Int
+    offset: Int
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudEntityStats @dataFetcher(name: cloudEntityStats)
+}
+
+type CloudTimeSeriesStats {
+  stats: [TimeSeriesDataPoints]
+}
+
+type CloudEntityStats {
+  stats: [CloudEntityData]
+}
+
+type CloudEntityData {
+  awsRegion: String
+  awsLinkedAccount: String
+  awsUsageType: String
+  awsInstanceType: String
+  awsService: String
+  awsBlendedCost: Number
+  awsUnblendedCost: Number
+}
+
+input CloudBillingFilter {
+  startTime: TimeFilter
+  endTime: TimeFilter
+  preAggregatedTableStartTime: TimeFilter
+  billingAccountId: IdFilter
+  project: IdFilter
+  product: IdFilter
+  sku: IdFilter
+  awsRegion: IdFilter
+  awsLinkedAccount: IdFilter
+  awsUsageType: IdFilter
+  awsInstanceType: IdFilter
+  awsService: IdFilter
+  cloudProvider: IdFilter
+}
+
+input CloudGroupBy {
+  entityGroupBy: CloudEntityGroupBy
+  timeTruncGroupby: CETimeTruncGroupby
+}
+
+enum CloudEntityGroupBy {
+  billingAccountId
+  project
+  projectId
+  projectNumber
+  product
+  sku
+  skuId
+  region
+  usageAmount
+  usageUnit
+  awsRegion
+  awsLikedAccount
+  awsUsageType
+  awsInstanceType
+  awsService
+}
+
+input CloudSortCriteria {
+  sortType: CloudSortType
+  sortOrder: SortOrder
+}
+
+enum CloudSortType {
+  Time
+  awsBlendedCost
+  awsUnblendedCost
+}

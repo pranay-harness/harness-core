@@ -1,11 +1,20 @@
 package io.harness.ccm.billing.preaggregated;
 
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
+
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableResult;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 
@@ -17,6 +26,7 @@ import io.harness.ccm.billing.bigquery.AliasExpression;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
 import io.harness.ccm.billing.bigquery.ConstExpression;
 import io.harness.ccm.billing.bigquery.TruncExpression;
+import io.harness.ccm.billing.preaggregated.PreAggregateBillingEntityDataPoint.PreAggregateBillingEntityDataPointBuilder;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint.QLBillingDataPointBuilder;
@@ -93,11 +103,12 @@ public class PreAggregatedBillingDataHelper {
         .collect(Collectors.toList());
   }
 
-  public String getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions) {
+  public String getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions,
+      List<SqlObject> sort) {
     Preconditions.checkNotNull(groupByObjects, "Queries to Pre-Aggregated Tables need at least one groupBy");
     List<Object> selectObjects = new ArrayList<>();
     List<Object> sqlGroupByObjects = new ArrayList<>();
-    List<Object> sortObjects = new ArrayList<>();
+    List<Object> sortObjects = new ArrayList<>(sort);
 
     groupByObjects.stream().filter(g -> g instanceof DbColumn).forEach(sqlGroupByObjects::add);
 
@@ -143,5 +154,62 @@ public class PreAggregatedBillingDataHelper {
         selectObjects.add(new AliasExpression(columnNameSQL, alias));
       }
     }
+  }
+
+  public PreAggregateBillingEntityStatsDTO convertToPreAggregatesEntityData(TableResult result) {
+    if (PreconditionsValidation(result)) {
+      return null;
+    }
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+    List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
+    for (FieldValueList row : result.iterateAll()) {
+      ProcessDataPointAndAppendToList(fields, row, dataPointList);
+    }
+    return PreAggregateBillingEntityStatsDTO.builder().stats(dataPointList).build();
+  }
+
+  @VisibleForTesting
+  boolean PreconditionsValidation(TableResult result) {
+    Preconditions.checkNotNull(result);
+    if (result.getTotalRows() == 0) {
+      logger.warn("No result from convertToPreAggregatesEntityData query");
+      return true;
+    }
+    return false;
+  }
+
+  @VisibleForTesting
+  void ProcessDataPointAndAppendToList(
+      FieldList fields, FieldValueList row, List<PreAggregateBillingEntityDataPoint> dataPointList) {
+    PreAggregateBillingEntityDataPointBuilder dataPointBuilder = PreAggregateBillingEntityDataPoint.builder();
+    for (Field field : fields) {
+      switch (field.getName()) {
+        case entityConstantAwsRegion:
+          dataPointBuilder.awsRegion(fetchStringValue(row, field));
+          break;
+        case entityConstantAwsLinkedAccount:
+          dataPointBuilder.awsLinkedAccount(fetchStringValue(row, field));
+          break;
+        case entityConstantAwsService:
+          dataPointBuilder.awsService(fetchStringValue(row, field));
+          break;
+        case entityConstantAwsUsageType:
+          dataPointBuilder.awsUsageType(fetchStringValue(row, field));
+          break;
+        case entityConstantAwsInstanceType:
+          dataPointBuilder.awsInstanceType(fetchStringValue(row, field));
+          break;
+        case entityConstantAwsBlendedCost:
+          dataPointBuilder.awsBlendedCost(row.get(field.getName()).getDoubleValue());
+          break;
+        case entityConstantAwsUnBlendedCost:
+          dataPointBuilder.awsUnblendedCost(row.get(field.getName()).getDoubleValue());
+          break;
+        default:
+          break;
+      }
+    }
+    dataPointList.add(dataPointBuilder.build());
   }
 }

@@ -23,6 +23,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Mock BigQuery bigQuery;
   @Mock TableResult tableResult;
@@ -32,22 +35,62 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   private static final String TABLE_NAME = "tableName";
+  private static final String SERVICE_NAME = "service";
+  private static final Double COST = 1.0;
 
   @Before
   public void setup() throws InterruptedException {
     when(bigQueryService.get()).thenReturn(bigQuery);
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
-    when(dataHelper.getQuery(anyList(), anyList(), anyList())).thenReturn(PreAggregatedTableSchema.defaultTableName);
+    when(dataHelper.getQuery(anyList(), anyList(), anyList(), anyList()))
+        .thenReturn(PreAggregatedTableSchema.defaultTableName);
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
+    when(dataHelper.convertToPreAggregatesEntityData(tableResult))
+        .thenReturn(
+            PreAggregateBillingEntityStatsDTO.builder()
+                .stats(Arrays.asList(
+                    PreAggregateBillingEntityDataPoint.builder().awsService(SERVICE_NAME).awsBlendedCost(COST).build()))
+                .build());
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getPreAggregateBillingTimeSeriesStats() {
-    PreAggregateBillingTimeSeriesStatsDTO stats =
-        preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(null, null, null, TABLE_NAME);
+    PreAggregateBillingTimeSeriesStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
+        null, null, null, Collections.emptyList(), TABLE_NAME);
     assertThat(stats.getStats()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateEntitySeriesStats() {
+    PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
+        null, null, null, Collections.emptyList(), TABLE_NAME);
+    assertThat(stats.getStats()).isNotNull();
+    assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
+    assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateEntitySeriesStatsNegativeCase() throws InterruptedException {
+    when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
+    PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
+        null, null, null, Collections.emptyList(), TABLE_NAME);
+    assertThat(stats).isNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateBillingTimeSeriesStatsNegativeCase() throws InterruptedException {
+    when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
+    PreAggregateBillingTimeSeriesStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
+        null, null, null, Collections.emptyList(), TABLE_NAME);
+    assertThat(stats).isNull();
   }
 }

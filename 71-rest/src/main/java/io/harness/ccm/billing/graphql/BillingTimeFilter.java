@@ -1,8 +1,8 @@
 package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_STARTTIME;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_ENDTIME;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_STARTTIME;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_STARTTIME;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_ENDTIME;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_STARTTIME;
 
 import com.google.cloud.Timestamp;
 

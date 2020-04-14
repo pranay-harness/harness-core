@@ -10,7 +10,8 @@ enum DataFetcherEnum {
   gcpBillingEntityStats
   gcpBillingTimeSeriesStats
   gcpBillingTrendStats
-  outOfClusterTimeSeriesStats
+  cloudEntityStats
+  cloudTimeSeriesStats
   budget
   budgetList
   budgetTrendStats

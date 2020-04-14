@@ -9,10 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @NoArgsConstructor
 @Slf4j
-public class OutOfClusterBillingFilter {
+public class CloudBillingFilter {
   public static final String BILLING_GCP_STARTTIME = "billing/gcp/starttime";
   public static final String BILLING_GCP_ENDTIME = "billing/gcp/endtime";
-  public static final String BILLING_AWS_STARTTIME = "billing/gcp/starttime";
+  public static final String BILLING_AWS_STARTTIME = "billing/aws/starttime";
   public static final String BILLING_GCP_PROJECT = "billing/gcp/project";
   public static final String BILLING_GCP_PRODUCT = "billing/gcp/product";
   public static final String BILLING_GCP_SKU = "billing/gcp/sku";
@@ -27,16 +27,16 @@ public class OutOfClusterBillingFilter {
 
   BillingTimeFilter startTime;
   BillingTimeFilter endTime;
-  BillingTimeFilter awsStartTime;
+  BillingTimeFilter preAggregatedTableStartTime;
   BillingIdFilter project;
   BillingIdFilter product;
   BillingIdFilter sku;
   BillingIdFilter billingAccountId;
   BillingIdFilter awsRegion;
-  BillingIdFilter linkedAccount;
-  BillingIdFilter usageType;
-  BillingIdFilter instanceType;
-  BillingIdFilter service;
+  BillingIdFilter awsLinkedAccount;
+  BillingIdFilter awsUsageType;
+  BillingIdFilter awsInstanceType;
+  BillingIdFilter awsService;
   BillingIdFilter cloudProvider;
 
   public BillingTimeFilter getStartTime() {
@@ -60,13 +60,13 @@ public class OutOfClusterBillingFilter {
   }
 
   public BillingTimeFilter getAwsStartTime() {
-    if (awsStartTime == null) {
+    if (preAggregatedTableStartTime == null) {
       return null;
     }
-    Preconditions.checkNotNull(awsStartTime.getValue(), AWS_TIME_FILTER_ERROR);
-    Preconditions.checkNotNull(awsStartTime.getOperator(), AWS_TIME_FILTER_ERROR);
-    awsStartTime.setVariable(BILLING_AWS_STARTTIME);
-    return awsStartTime;
+    Preconditions.checkNotNull(preAggregatedTableStartTime.getValue(), AWS_TIME_FILTER_ERROR);
+    Preconditions.checkNotNull(preAggregatedTableStartTime.getOperator(), AWS_TIME_FILTER_ERROR);
+    preAggregatedTableStartTime.setVariable(BILLING_AWS_STARTTIME);
+    return preAggregatedTableStartTime;
   }
 
   public BillingIdFilter getProject() {
@@ -95,23 +95,23 @@ public class OutOfClusterBillingFilter {
   }
 
   public BillingIdFilter getService() {
-    service.setVariable(BILLING_AWS_SERVICE);
-    return service;
+    awsService.setVariable(BILLING_AWS_SERVICE);
+    return awsService;
   }
 
   public BillingIdFilter getUsageType() {
-    usageType.setVariable(BILLING_AWS_USAGE_TYPE);
-    return usageType;
+    awsUsageType.setVariable(BILLING_AWS_USAGE_TYPE);
+    return awsUsageType;
   }
 
   public BillingIdFilter getInstanceType() {
-    instanceType.setVariable(BILLING_AWS_INSTANCE_TYPE);
-    return instanceType;
+    awsInstanceType.setVariable(BILLING_AWS_INSTANCE_TYPE);
+    return awsInstanceType;
   }
 
   public BillingIdFilter getLinkedAccount() {
-    linkedAccount.setVariable(BILLING_AWS_LINKED_ACCOUNT);
-    return linkedAccount;
+    awsLinkedAccount.setVariable(BILLING_AWS_LINKED_ACCOUNT);
+    return awsLinkedAccount;
   }
 
   public Condition toCondition() {
@@ -136,19 +136,19 @@ public class OutOfClusterBillingFilter {
     if (awsRegion != null) {
       return getAwsRegion().toCondition();
     }
-    if (service != null) {
+    if (awsService != null) {
       return getService().toCondition();
     }
-    if (usageType != null) {
+    if (awsUsageType != null) {
       return getUsageType().toCondition();
     }
-    if (instanceType != null) {
+    if (awsInstanceType != null) {
       return getInstanceType().toCondition();
     }
-    if (linkedAccount != null) {
+    if (awsLinkedAccount != null) {
       return getLinkedAccount().toCondition();
     }
-    if (awsStartTime != null) {
+    if (preAggregatedTableStartTime != null) {
       return getAwsStartTime().toCondition();
     }
     return null;

@@ -13,9 +13,9 @@ import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.graphql.BillingAggregate;
 import io.harness.ccm.billing.graphql.BillingIdFilter;
 import io.harness.ccm.billing.graphql.BillingTimeFilter;
-import io.harness.ccm.billing.graphql.OutOfClusterBillingFilter;
-import io.harness.ccm.billing.graphql.OutOfClusterEntityGroupBy;
-import io.harness.ccm.billing.graphql.OutOfClusterGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
+import io.harness.ccm.billing.graphql.CloudGroupBy;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +44,8 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
   private static final String BILLING_ACCOUNT_ID = "billingAccountId";
 
   private List<BillingAggregate> billingAggregates = new ArrayList<>();
-  private List<OutOfClusterBillingFilter> filters = new ArrayList<>();
-  private List<OutOfClusterGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingFilter> filters = new ArrayList<>();
+  private List<CloudGroupBy> groupBy = new ArrayList<>();
 
   @Before
   public void setup() {
@@ -92,91 +92,90 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
     return BillingAggregate.builder().operationType(QLCCMAggregateOperation.SUM).columnName(columnName).build();
   }
 
-  private OutOfClusterBillingFilter getStartTimeGcpBillingFilter(Long filterTime) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setStartTime(
+  private CloudBillingFilter getStartTimeGcpBillingFilter(Long filterTime) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setStartTime(
         BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
-    return outOfClusterBillingFilter;
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterBillingFilter getEndTimeGcpBillingFilter(Long filterTime) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setEndTime(
+  private CloudBillingFilter getEndTimeGcpBillingFilter(Long filterTime) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setEndTime(
         BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
-    return outOfClusterBillingFilter;
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterBillingFilter getProductGcpBillingFilter(String[] product) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setProduct(
-        BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
-    return outOfClusterBillingFilter;
+  private CloudBillingFilter getProductGcpBillingFilter(String[] product) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setProduct(BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterBillingFilter getProjectGcpBillingFilter(String[] project) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setProject(BillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
-    return outOfClusterBillingFilter;
+  private CloudBillingFilter getProjectGcpBillingFilter(String[] project) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setProject(BillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterBillingFilter getSkuGcpBillingFilter(String[] sku) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setSku(BillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
-    return outOfClusterBillingFilter;
+  private CloudBillingFilter getSkuGcpBillingFilter(String[] sku) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setSku(BillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterBillingFilter getBillingAccountIdGcpBillingFilter(String[] billingAccountId) {
-    OutOfClusterBillingFilter outOfClusterBillingFilter = new OutOfClusterBillingFilter();
-    outOfClusterBillingFilter.setBillingAccountId(
+  private CloudBillingFilter getBillingAccountIdGcpBillingFilter(String[] billingAccountId) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setBillingAccountId(
         BillingIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(billingAccountId).build());
-    return outOfClusterBillingFilter;
+    return cloudBillingFilter;
   }
 
-  private OutOfClusterGroupBy getProductGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.product);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getProductGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.product);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getProjectGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.project);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getProjectGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.project);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getProjectIdGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.projectId);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getProjectIdGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectId);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getProjectNumberGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.projectNumber);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getProjectNumberGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectNumber);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getSkuGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.sku);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getSkuGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.sku);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getSkuIdGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.skuId);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getSkuIdGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.skuId);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getUsageAmountGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.usageAmount);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getUsageAmountGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.usageAmount);
+    return cloudGroupBy;
   }
 
-  private OutOfClusterGroupBy getUsageUnitGroupBy() {
-    OutOfClusterGroupBy outOfClusterGroupBy = new OutOfClusterGroupBy();
-    outOfClusterGroupBy.setEntityGroupBy(OutOfClusterEntityGroupBy.usageUnit);
-    return outOfClusterGroupBy;
+  private CloudGroupBy getUsageUnitGroupBy() {
+    CloudGroupBy cloudGroupBy = new CloudGroupBy();
+    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.usageUnit);
+    return cloudGroupBy;
   }
 }

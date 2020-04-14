@@ -10,7 +10,7 @@ import lombok.experimental.UtilityClass;
 @Value
 @UtilityClass
 public class PreAggregatedTableSchema {
-  public static final String defaultTableName = "<Project>.<DataSet>.<TableName>_<Date>";
+  public static final String defaultTableName = "<Project>.<DataSet>.<TableName>";
   public static final DbSpec spec;
   public static final DbSchema schema;
   public static final DbTable table;
