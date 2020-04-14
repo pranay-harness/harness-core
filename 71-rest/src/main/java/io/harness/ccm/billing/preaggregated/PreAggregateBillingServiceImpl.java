@@ -25,9 +25,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   @Override
-  public PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(
-      List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, String tableName) {
-    String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions);
+  public PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName) {
+    String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
     // Replacing the Default Table with the Table in the context
     timeSeriesDataQuery = timeSeriesDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, tableName);
     logger.info("getPreAggregateBillingTimeSeriesStats Query {}", timeSeriesDataQuery);
@@ -41,5 +41,24 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       return null;
     }
     return dataHelper.convertToPreAggregatesTimeSeriesData(result);
+  }
+
+  @Override
+  public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
+    String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
+    // Replacing the Default Table with the Table in the context
+    entityDataQuery = entityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    logger.info("getPreAggregateBillingEntityStats Query {}", entityDataQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(entityDataQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertToPreAggregatesEntityData(result);
   }
 }

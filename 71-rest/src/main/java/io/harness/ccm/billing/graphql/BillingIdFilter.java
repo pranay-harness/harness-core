@@ -1,14 +1,14 @@
 package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_INSTANCE_TYPE;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_REGION;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_SERVICE;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_AWS_USAGE_TYPE;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_PRODUCT;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_PROJECT;
-import static io.harness.ccm.billing.graphql.OutOfClusterBillingFilter.BILLING_GCP_SKU;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_INSTANCE_TYPE;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_REGION;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_SERVICE;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_USAGE_TYPE;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PRODUCT;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PROJECT;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_SKU;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;

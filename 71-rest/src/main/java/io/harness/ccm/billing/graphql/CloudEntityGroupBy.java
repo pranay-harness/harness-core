@@ -4,7 +4,7 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.GcpBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
-public enum OutOfClusterEntityGroupBy {
+public enum CloudEntityGroupBy {
   project(GcpBillingTableSchema.projectName),
   projectId(GcpBillingTableSchema.projectId),
   projectNumber(GcpBillingTableSchema.projectAncestryNumbers),
@@ -16,13 +16,13 @@ public enum OutOfClusterEntityGroupBy {
   usageAmount(GcpBillingTableSchema.usageAmountInPricingUnits),
   usageUnit(GcpBillingTableSchema.usagePricingUnit),
   awsRegion(PreAggregatedTableSchema.region),
-  likedAccount(PreAggregatedTableSchema.usageAccountId),
-  usageType(PreAggregatedTableSchema.usageType),
-  instanceType(PreAggregatedTableSchema.instanceType),
-  service(PreAggregatedTableSchema.serviceCode);
+  awsLikedAccount(PreAggregatedTableSchema.usageAccountId),
+  awsUsageType(PreAggregatedTableSchema.usageType),
+  awsInstanceType(PreAggregatedTableSchema.instanceType),
+  awsService(PreAggregatedTableSchema.serviceCode);
 
   private DbColumn dbColumn;
-  OutOfClusterEntityGroupBy(DbColumn dbColumn) {
+  CloudEntityGroupBy(DbColumn dbColumn) {
     this.dbColumn = dbColumn;
   }
 

@@ -6,6 +6,9 @@ import com.healthmarketscience.sqlbuilder.SqlObject;
 import java.util.List;
 
 public interface PreAggregateBillingService {
-  PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(
-      List<SqlObject> aggregateFunction, List<Object> groupbyObjects, List<Condition> conditions, String tableName);
+  PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName);
+
+  PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName);
 }

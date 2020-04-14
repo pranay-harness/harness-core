@@ -7,8 +7,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.BillingAggregate;
 import io.harness.ccm.billing.graphql.BillingTimeFilter;
-import io.harness.ccm.billing.graphql.OutOfClusterBillingFilter;
-import io.harness.ccm.billing.graphql.OutOfClusterGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudGroupBy;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,8 +32,8 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
 
   private String accountId = "ACCOUNT_ID";
   private BillingAggregate aggregate = BillingAggregate.builder().build();
-  private List<OutOfClusterBillingFilter> filters = new ArrayList<>();
-  private List<OutOfClusterGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingFilter> filters = new ArrayList<>();
+  private List<CloudGroupBy> groupBy = new ArrayList<>();
 
   private static Calendar calendar1;
   private static Calendar calendar2;
@@ -43,12 +43,12 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
     calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
 
-    OutOfClusterBillingFilter startTimeFilter = new OutOfClusterBillingFilter();
+    CloudBillingFilter startTimeFilter = new CloudBillingFilter();
     startTimeFilter.setStartTime(
         BillingTimeFilter.builder().value(calendar1.getTime().getTime()).operator(QLTimeOperator.AFTER).build());
     filters.add(startTimeFilter);
 
-    OutOfClusterBillingFilter endTimeFilter = new OutOfClusterBillingFilter();
+    CloudBillingFilter endTimeFilter = new CloudBillingFilter();
     endTimeFilter.setEndTime(
         BillingTimeFilter.builder().value(calendar2.getTime().getTime()).operator(QLTimeOperator.BEFORE).build());
     filters.add(endTimeFilter);

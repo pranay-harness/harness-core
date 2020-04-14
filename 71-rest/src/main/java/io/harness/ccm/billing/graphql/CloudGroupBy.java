@@ -4,8 +4,8 @@ import io.harness.ccm.billing.GcpBillingTableSchema;
 import lombok.Data;
 
 @Data
-public class OutOfClusterGroupBy {
-  private OutOfClusterEntityGroupBy entityGroupBy;
+public class CloudGroupBy {
+  private CloudEntityGroupBy entityGroupBy;
   private TimeTruncGroupby timeTruncGroupby;
 
   // convert groupBy from QL context to SQL context

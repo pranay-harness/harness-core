@@ -10,7 +10,7 @@ import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
-import io.harness.ccm.billing.graphql.OutOfClusterEntityGroupBy;
+import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class BigQuerySQLTest {
         GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()), Timestamp.of(calendar2.getTime()));
     conditions.add(condition);
 
-    Object groupbyObject = OutOfClusterEntityGroupBy.product;
+    Object groupbyObject = CloudEntityGroupBy.product;
 
     FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost);
     BigQuerySQL bigQuerySQL =
