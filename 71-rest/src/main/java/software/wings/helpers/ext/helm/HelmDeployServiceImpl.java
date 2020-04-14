@@ -172,7 +172,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throw e;
     } catch (Exception e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
-      String msg = format("Exception in deploying helm chart " + exceptionMessage);
+      String msg = "Exception in deploying helm chart:" + exceptionMessage;
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return HelmInstallCommandResponse.builder()
@@ -190,11 +190,16 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private List<Pod> getExistingPods(HelmCommandRequest commandRequest) {
-    final ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
-    final KubernetesConfig kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
-    return containerDeploymentDelegateHelper.getExistingPodsByLabels(
-        containerServiceParams, kubernetesConfig, ImmutableMap.of("release", commandRequest.getReleaseName()));
+    try {
+      final ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
+      final KubernetesConfig kubernetesConfig =
+          containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
+      return containerDeploymentDelegateHelper.getExistingPodsByLabels(
+          containerServiceParams, kubernetesConfig, ImmutableMap.of("release", commandRequest.getReleaseName()));
+    } catch (Exception ex) {
+      logger.error("Could not get existing pods using release name label:" + commandRequest.getReleaseName(), ex);
+      return new ArrayList<>();
+    }
   }
 
   private void prepareRepoAndCharts(HelmInstallCommandRequest commandRequest) throws Exception {
