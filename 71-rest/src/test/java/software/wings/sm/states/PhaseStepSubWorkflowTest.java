@@ -64,7 +64,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
     phaseStepSubWorkflow.populateInfraMapping(executionContext);
 
-    verify(infrastructureDefinitionService, never()).getInfraMapping(any(), any(), any(), any());
+    verify(infrastructureDefinitionService, never()).renderAndSaveInfraMapping(any(), any(), any(), any());
   }
 
   @Test
@@ -83,7 +83,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     InfrastructureMapping infraMapping = GcpKubernetesInfrastructureMapping.builder().uuid(INFRA_MAPPING_ID).build();
     doReturn(infraMapping)
         .when(infrastructureDefinitionService)
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
     doNothing()
         .when(phaseStepSubWorkflow)
         .updateInfraMappingDependencies(executionContext, phaseElement, APP_ID, infraMapping);
@@ -91,7 +91,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     phaseStepSubWorkflow.populateInfraMapping(executionContext);
 
     verify(infrastructureDefinitionService, times(1))
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
   }
 
   @Test
@@ -114,7 +114,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     phaseStepSubWorkflow.populateInfraMapping(executionContext);
 
     verify(infrastructureDefinitionService, never())
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
   }
 
   @Test
@@ -136,7 +136,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     InfrastructureMapping infraMapping = GcpKubernetesInfrastructureMapping.builder().uuid(INFRA_MAPPING_ID).build();
     doReturn(infraMapping)
         .when(infrastructureDefinitionService)
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
     doNothing()
         .when(phaseStepSubWorkflow)
         .updateInfraMappingDependencies(executionContext, phaseElement, APP_ID, infraMapping);
@@ -144,7 +144,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     phaseStepSubWorkflow.populateInfraMapping(executionContext);
 
     verify(infrastructureDefinitionService, times(1))
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
   }
 
   @Test
@@ -159,6 +159,6 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     phaseStepSubWorkflow.populateInfraMapping(executionContext);
 
     verify(infrastructureDefinitionService, never())
-        .getInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+        .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
   }
 }

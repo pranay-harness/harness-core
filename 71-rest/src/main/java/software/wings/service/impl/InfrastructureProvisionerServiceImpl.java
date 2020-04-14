@@ -679,8 +679,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
               resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
           ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
               .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
-          InfrastructureMapping infrastructureMapping =
-              infrastructureDefinitionService.getInfrastructureMapping(getServiceId(context), infrastructureDefinition);
+          InfrastructureMapping infrastructureMapping = infrastructureDefinitionService.saveInfrastructureMapping(
+              getServiceId(context), infrastructureDefinition);
           PhaseElement phaseElement =
               context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
           infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
