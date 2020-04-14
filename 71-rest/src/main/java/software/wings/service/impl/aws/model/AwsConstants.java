@@ -15,4 +15,7 @@ public interface AwsConstants {
   // Alb Traffic Shift Constants
   int MAX_TRAFFIC_SHIFT_WEIGHT = 100;
   int MIN_TRAFFIC_SHIFT_WEIGHT = 0;
+
+  // Main Ecs Container Name
+  String MAIN_ECS_CONTAINER_NAME_TAG = "HARNESS_DEPLOYED_MAIN_CONTAINER";
 }

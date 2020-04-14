@@ -1,10 +1,14 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
@@ -13,18 +17,22 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import com.amazonaws.regions.Regions;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
@@ -36,14 +44,18 @@ import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
-  @Inject InfrastructureMappingServiceImpl infrastructureMappingService;
   InfrastructureMappingServiceImpl spyInfrastructureMappingService = spy(new InfrastructureMappingServiceImpl());
   @Mock ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Mock SettingsService settingsService;
+  @Inject @InjectMocks InfrastructureMappingServiceImpl infrastructureMappingService;
 
   private static final String DEFAULT = "default";
   private static final String USER_INPUT_NAMESPACE = "USER_INPUT_NAMESPACE";
@@ -351,5 +363,86 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
 
     assertThat(sgList.size()).isEqualTo(1);
     assertThat(sgList.get(0)).isEqualTo(sgId);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testValidateEcsInfraMapping() {
+    doReturn(aSettingAttribute().build()).when(settingsService).get(anyString());
+
+    final EcsInfrastructureMapping ecsInfrastructureMapping =
+        EcsInfrastructureMapping.builder().clusterName("c1").region(Regions.US_EAST_1.getName()).build();
+
+    ecsInfrastructureMapping.setLaunchType("FARGATE");
+    ecsInfrastructureMapping.setVpcId("vpc");
+    ecsInfrastructureMapping.setSecurityGroupIds(Arrays.asList("a1", "a2"));
+    ecsInfrastructureMapping.setSubnetIds(Arrays.asList("a1", "a2"));
+    ecsInfrastructureMapping.setExecutionRole("ex");
+    infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping);
+
+    // if region is null, will be defaulted to "us-east-1"
+    ecsInfrastructureMapping.setRegion(null);
+    infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping);
+    ecsInfrastructureMapping.setRegion("");
+    infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping);
+
+    ecsInfrastructureMapping.setRegion(Regions.US_EAST_1.getName());
+    ecsInfrastructureMapping.setClusterName(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setClusterName("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setClusterName("c1");
+
+    ecsInfrastructureMapping.setLaunchType(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setLaunchType("random");
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setLaunchType("FARGATE");
+
+    ecsInfrastructureMapping.setVpcId(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setVpcId("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setVpcId("vpc");
+
+    ecsInfrastructureMapping.setExecutionRole(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setExecutionRole("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+
+    ecsInfrastructureMapping.setSubnetIds(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setSubnetIds(Collections.EMPTY_LIST);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setSubnetIds(Arrays.asList("a1", "a2"));
+
+    ecsInfrastructureMapping.setSecurityGroupIds(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setSecurityGroupIds(Collections.EMPTY_LIST);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setSecurityGroupIds(Arrays.asList("a1", "a2"));
+
+    ecsInfrastructureMapping.setExecutionRole(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setExecutionRole("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    ecsInfrastructureMapping.setExecutionRole("exe");
+
+    infrastructureMappingService.validateEcsInfraMapping(ecsInfrastructureMapping);
   }
 }

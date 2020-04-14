@@ -10,6 +10,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.Log.LogColor.Yellow;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
+import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -27,6 +31,7 @@ import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ecs.model.Cluster;
+import com.amazonaws.services.ecs.model.Container;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
@@ -48,8 +53,10 @@ import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
+import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.ecs.model.TaskDefinitionField;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -58,12 +65,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -73,8 +79,6 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerDetails.EcsContainerDetailsBuilder;
-import software.wings.cloudprovider.aws.TaskMetadata.Container;
-import software.wings.cloudprovider.aws.TaskMetadata.Network;
 import software.wings.service.impl.AwsHelperService;
 
 import java.io.IOException;
@@ -99,7 +103,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Inject private TimeLimiter timeLimiter;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-  private static final String CONTAINER_METADATA_FORMAT_STRING = "http://%s:51678/v1/tasks";
 
   /**
    * Create cluster.
@@ -1110,6 +1113,45 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return StringUtils.EMPTY;
   }
 
+  @VisibleForTesting
+  Container getMainHarnessDeployedContainer(
+      Task task, String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    Container mainContainer = null;
+    if (isEmpty(task.getContainers())) {
+      return mainContainer;
+    }
+
+    mainContainer = task.getContainers().get(0);
+
+    if (task.getContainers().size() > 1) {
+      DescribeTaskDefinitionRequest describeTaskDefinitionRequest = new DescribeTaskDefinitionRequest()
+                                                                        .withTaskDefinition(task.getTaskDefinitionArn())
+                                                                        .withInclude(TaskDefinitionField.TAGS);
+      DescribeTaskDefinitionResult taskDefinitionResult = awsHelperService.describeTaskDefinition(
+          region, awsConfig, encryptedDataDetails, describeTaskDefinitionRequest);
+      List<Tag> taskDefinitionTags = taskDefinitionResult.getTags();
+
+      if (isNotEmpty(taskDefinitionTags)) {
+        Optional<Tag> tag = taskDefinitionTags.stream()
+                                .filter(currentTag -> MAIN_ECS_CONTAINER_NAME_TAG.equals(currentTag.getKey()))
+                                .findFirst();
+
+        if (tag.isPresent()) {
+          Optional<Container> mainContainerOptional =
+              task.getContainers()
+                  .stream()
+                  .filter(container -> container.getName().equals(tag.get().getValue()))
+                  .findFirst();
+          if (mainContainerOptional.isPresent()) {
+            mainContainer = mainContainerOptional.get();
+          }
+        }
+      }
+    }
+
+    return mainContainer;
+  }
+
   @Override
   public List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
@@ -1125,74 +1167,68 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     // Handle fargate tasks
     if (CollectionUtils.isNotEmpty(fargateTasks)) {
       logger.warn("For Fargate tasks, AWS does not expose Container instances and EC2 instances, "
-          + "so there is no way to fetch dockerContainerId. Verification steps using containerId may not work");
+          + "so those details will not be available");
+      for (Task fargateTask : tasks) {
+        Container mainContainer = getMainHarnessDeployedContainer(fargateTask, region, awsConfig, encryptedDataDetails);
+        EcsContainerDetailsBuilder ecsContainerDetailsBuilder =
+            getEcsContainerDetailsBuilder(fargateTask, mainContainer);
 
-      tasks.forEach(ecsTask -> ecsTask.getContainers().forEach(container -> {
-        EcsContainerDetailsBuilder ecsContainerDetailsBuilder = getEcsContainerDetailsBuilder(ecsTask, container);
+        String privateIpv4AddressForENI = StringUtils.EMPTY;
+        if (mainContainer != null) {
+          privateIpv4AddressForENI = mainContainer.getNetworkInterfaces()
+                                         .stream()
+                                         .findFirst()
+                                         .map(NetworkInterface::getPrivateIpv4Address)
+                                         .orElse(StringUtils.EMPTY);
+        }
 
-        // Read private Ip of ENI (all container will have same private IP as all containers within task use same ENI)
-        String privateIpv4AddressForENI = container.getNetworkInterfaces()
-                                              .stream()
-                                              .findFirst()
-                                              .map(NetworkInterface::getPrivateIpv4Address)
-                                              .orElse(StringUtils.EMPTY);
-
+        String dockerId =
+            mainContainer == null ? StringUtils.EMPTY : StringUtils.substring(mainContainer.getRuntimeId(), 0, 12);
         ContainerInfo containerInfo = ContainerInfo.builder()
                                           .status(Status.SUCCESS)
-                                          .containerId(StringUtils.substring(container.getRuntimeId(), 0, 12))
-                                          .hostName(privateIpv4AddressForENI)
+                                          .containerId(dockerId)
+                                          .hostName(dockerId)
                                           .ecsContainerDetails(ecsContainerDetailsBuilder.build())
                                           .ip(privateIpv4AddressForENI)
-                                          .newContainer(!originalTaskArns.contains(ecsTask.getTaskArn()))
+                                          .newContainer(!originalTaskArns.contains(fargateTask.getTaskArn()))
+                                          .containerTasksReachable(mainContainer != null)
                                           .build();
         containerInfos.add(containerInfo);
-      }));
+      }
     }
 
     // Handle EC2 tasks
     if (CollectionUtils.isNotEmpty(ec2Tasks)) {
-      List<String> containerInstances =
-          tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
-      logger.info("Container Instances = " + containerInstances);
-      Map<String, String> containerTaskArns = new HashMap<>();
+      Map<String, Task> containerTaskArns = new HashMap<>();
       for (Task task : tasks) {
-        containerTaskArns.put(task.getContainerInstanceArn(), task.getTaskArn());
+        containerTaskArns.put(task.getContainerInstanceArn(), task);
       }
-
       List<ContainerInstance> containerInstanceList =
-          awsHelperService
-              .describeContainerInstances(region, awsConfig, encryptedDataDetails,
-                  new DescribeContainerInstancesRequest()
-                      .withCluster(clusterName)
-                      .withContainerInstances(containerInstances))
-              .getContainerInstances();
+          fetchContainerInstancesForTasks(tasks, clusterName, region, encryptedDataDetails, awsConfig);
 
-      containerInstanceList.forEach(containerInstance -> {
-        EcsContainerDetailsBuilder ecsContainerDetailsBuilder = EcsContainerDetails.builder();
+      com.amazonaws.services.ec2.model.Instance ec2Instance = null;
+      for (ContainerInstance containerInstance : containerInstanceList) {
         String containerInstanceArn = containerInstance.getContainerInstanceArn();
-        ecsContainerDetailsBuilder.containerInstanceArn(containerInstanceArn);
-        ecsContainerDetailsBuilder.containerInstanceId(getIdFromArn(containerInstanceArn));
-        String taskArn = containerTaskArns.get(containerInstanceArn);
-        if (isNotEmpty(taskArn)) {
-          ecsContainerDetailsBuilder.taskArn(taskArn);
-          ecsContainerDetailsBuilder.taskId(getIdFromArn(taskArn));
-          Optional<Task> taskOptional = ec2Tasks.stream().filter(task -> taskArn.equals(task.getTaskArn())).findFirst();
-          if (taskOptional.isPresent()) {
-            List<com.amazonaws.services.ecs.model.Container> containers = taskOptional.get().getContainers();
-            if (isNotEmpty(containers)) {
-              ecsContainerDetailsBuilder.containerId(getIdFromArn(containers.get(0).getContainerArn()));
-            }
-          }
+        Task taskForContainerInstance = containerTaskArns.get(containerInstanceArn);
+        if (taskForContainerInstance == null) {
+          continue;
         }
 
-        com.amazonaws.services.ec2.model.Instance ec2Instance =
-            awsHelperService
-                .describeEc2Instances(awsConfig, encryptedDataDetails, region,
-                    new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
-                .getReservations()
-                .get(0)
-                .getInstances()
-                .get(0);
+        // ContainerInfo.ecsContainerDetails
+        Container mainContainer =
+            getMainHarnessDeployedContainer(taskForContainerInstance, region, awsConfig, encryptedDataDetails);
+        EcsContainerDetailsBuilder ecsContainerDetailsBuilder =
+            initEcsContainerDetailsBuilder(taskForContainerInstance, mainContainer);
+
+        String dockerId =
+            mainContainer == null ? StringUtils.EMPTY : StringUtils.substring(mainContainer.getRuntimeId(), 0, 12);
+        ec2Instance = awsHelperService
+                          .describeEc2Instances(awsConfig, encryptedDataDetails, region,
+                              new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
+                          .getReservations()
+                          .get(0)
+                          .getInstances()
+                          .get(0);
 
         String ipAddress = ec2Instance.getPrivateIpAddress();
 
@@ -1203,158 +1239,64 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           ipAddress = StringUtils.EMPTY;
         }
 
-        String uri = generateTaskMetadataEndpointUrl(ec2Instance, executionLogCallback);
-        if (isNotEmpty(uri)) {
-          try {
-            if (executionLogCallback != null) {
-              executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
-            }
-            logger.info("requesting data from {}", uri);
-            TaskMetadata taskMetadata =
-                JsonUtils.asObject(Http.getResponseStringFromUrl(uri, 30, 30), TaskMetadata.class);
-            Optional<TaskMetadata.Task> optionalTask =
-                taskMetadata.getTasks().stream().filter(task -> taskArns.contains(task.getArn())).findFirst();
+        if (mainContainer != null && isNotEmpty(mainContainer.getNetworkInterfaces())) {
+          String privateIpv4AddressForENI = mainContainer.getNetworkInterfaces()
+                                                .stream()
+                                                .findFirst()
+                                                .map(NetworkInterface::getPrivateIpv4Address)
+                                                .orElse(ipAddress);
 
-            if (optionalTask.isPresent() && isNotEmpty(optionalTask.get().getContainers())) {
-              TaskMetadata.Task task = optionalTask.get();
-              Container container = task.getContainers().get(0);
-              ecsContainerDetailsBuilder.dockerId(container.getDockerId());
-              String containerId = StringUtils.substring(container.getDockerId(), 0, 12);
-
-              if (containerId == null) {
-                containerId = ipAddress;
-                if (executionLogCallback != null) {
-                  executionLogCallback.saveExecutionLog("Failed to get DockerId. Received as NULL. "
-                      + "Verification steps using containerId may not work");
-                }
-
-              } else if (executionLogCallback != null) {
-                executionLogCallback.saveExecutionLog("Successfully fetched dockerId");
-              }
-
-              ipAddress = getIp(ipAddress, container);
-              ContainerInfo containerInfo = ContainerInfo.builder()
-                                                .hostName(containerId)
-                                                .ip(ipAddress)
-                                                .containerId(containerId)
-                                                .ecsContainerDetails(ecsContainerDetailsBuilder.build())
-                                                .ec2Instance(ec2Instance)
-                                                .status(Status.SUCCESS)
-                                                .newContainer(!originalTaskArns.contains(task.getArn()))
-                                                .containerTasksReachable(true)
-                                                .build();
-
-              containerInfos.add(containerInfo);
-            } else {
-              logger.warn("Metadata tasks {} not found in taskArns {}",
-                  taskMetadata.getTasks().stream().map(TaskMetadata.Task::getArn).collect(toList()), taskArns);
-              if (executionLogCallback != null) {
-                executionLogCallback.saveExecutionLog(
-                    "Could not find container meta data. Verification steps using containerId may not work",
-                    LogLevel.WARN);
-              }
-              containerInfos.add(ContainerInfo.builder()
-                                     .hostName(ipAddress)
-                                     .ip(ipAddress)
-                                     .containerId(ipAddress)
-                                     .ec2Instance(ec2Instance)
-                                     .status(Status.SUCCESS)
-                                     .ecsContainerDetails(ecsContainerDetailsBuilder.build())
-                                     .newContainer(!originalTaskArns.contains(
-                                         containerTaskArns.get(containerInstance.getContainerInstanceArn())))
-                                     .build());
-            }
-          } catch (IOException ex) {
-            if (executionLogCallback != null) {
-              executionLogCallback.saveExecutionLog(
-                  "Could not fetch container meta data. Verification steps using containerId may not work",
-                  LogLevel.WARN);
-            }
-            logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
-            containerInfos.add(ContainerInfo.builder()
-                                   .hostName(ipAddress)
-                                   .ip(ipAddress)
-                                   .containerId(ipAddress)
-                                   .ec2Instance(ec2Instance)
-                                   .status(Status.SUCCESS)
-                                   .ecsContainerDetails(ecsContainerDetailsBuilder.build())
-                                   .newContainer(!originalTaskArns.contains(
-                                       containerTaskArns.get(containerInstance.getContainerInstanceArn())))
-                                   .build());
-          } catch (Exception e) {
-            throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
-          }
-        } else {
-          logger.warn("Could not connect to {}", uri);
-          if (executionLogCallback != null) {
-            executionLogCallback.saveExecutionLog("Could not fetch container meta data. "
-                    + "Verification steps using containerId may not work",
-                LogLevel.WARN);
-          }
-          containerInfos.add(ContainerInfo.builder()
-                                 .hostName(ipAddress)
-                                 .ip(ipAddress)
-                                 .containerId(ipAddress)
-                                 .ec2Instance(ec2Instance)
-                                 .status(Status.SUCCESS)
-                                 .ecsContainerDetails(ecsContainerDetailsBuilder.build())
-                                 .newContainer(!originalTaskArns.contains(
-                                     containerTaskArns.get(containerInstance.getContainerInstanceArn())))
-                                 .build());
+          ipAddress = privateIpv4AddressForENI;
         }
-      });
+
+        containerInfos.add(ContainerInfo.builder()
+                               .hostName(dockerId)
+                               .ip(ipAddress)
+                               .containerId(dockerId)
+                               .ecsContainerDetails(ecsContainerDetailsBuilder.build())
+                               .ec2Instance(ec2Instance)
+                               .status(Status.SUCCESS)
+                               .newContainer(!originalTaskArns.contains(taskForContainerInstance.getTaskArn()))
+                               .containerTasksReachable(mainContainer != null)
+                               .build());
+      }
     }
 
     return containerInfos;
   }
 
-  EcsContainerDetailsBuilder getEcsContainerDetailsBuilder(
-      Task ecsTask, com.amazonaws.services.ecs.model.Container container) {
+  @NotNull
+  EcsContainerDetailsBuilder initEcsContainerDetailsBuilder(Task taskForContainerInstance, Container mainContainer) {
+    EcsContainerDetailsBuilder ecsContainerDetailsBuilder = EcsContainerDetails.builder();
+    ecsContainerDetailsBuilder.containerInstanceArn(taskForContainerInstance.getContainerInstanceArn());
+    ecsContainerDetailsBuilder.containerInstanceId(getIdFromArn(taskForContainerInstance.getContainerInstanceArn()));
+    ecsContainerDetailsBuilder.taskArn(taskForContainerInstance.getTaskArn());
+    ecsContainerDetailsBuilder.taskId(getIdFromArn(taskForContainerInstance.getTaskArn()));
+    if (mainContainer != null) {
+      ecsContainerDetailsBuilder.containerId(getIdFromArn(mainContainer.getContainerArn()));
+      ecsContainerDetailsBuilder.dockerId(StringUtils.substring(mainContainer.getRuntimeId(), 0, 12));
+      ecsContainerDetailsBuilder.completeDockerId(mainContainer.getRuntimeId());
+    }
+    return ecsContainerDetailsBuilder;
+  }
+
+  private List<ContainerInstance> fetchContainerInstancesForTasks(List<Task> tasks, String clusterName, String region,
+      List<EncryptedDataDetail> encryptedDataDetails, AwsConfig awsConfig) {
+    List<String> containerInstances =
+        tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
+    logger.info("Container Instances = " + containerInstances);
+    return awsHelperService
+        .describeContainerInstances(region, awsConfig, encryptedDataDetails,
+            new DescribeContainerInstancesRequest().withCluster(clusterName).withContainerInstances(containerInstances))
+        .getContainerInstances();
+  }
+
+  EcsContainerDetailsBuilder getEcsContainerDetailsBuilder(Task ecsTask, Container container) {
     return EcsContainerDetails.builder()
         .taskArn(ecsTask.getTaskArn())
         .taskId(getIdFromArn(ecsTask.getTaskArn()))
-        .dockerId(StringUtils.substring(container.getRuntimeId(), 0, 12));
-  }
-
-  @VisibleForTesting
-  String getIp(String ipAddress, Container container) {
-    String ipAddressForContainer = ipAddress;
-
-    if (isNotEmpty(container.getNetworks())) {
-      Network network = container.getNetworks().get(0);
-      if (network.getNetworkMode().equalsIgnoreCase("awsvpc") && isNotEmpty(network.getIPv4Addresses())) {
-        ipAddressForContainer = network.getIPv4Addresses().get(0);
-      }
-    }
-
-    return ipAddressForContainer;
-  }
-
-  // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-introspection.html
-  private String generateTaskMetadataEndpointUrl(
-      com.amazonaws.services.ec2.model.Instance ec2Instance, ExecutionLogCallback logCallback) {
-    logger.info("Ec2 Instance details :" + ec2Instance);
-    String url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateDnsName());
-    if (logCallback != null) {
-      logCallback.saveExecutionLog(format("Testing private Dns: [%s] for connectivity", url));
-    }
-    if (Http.connectableHttpUrl(url)) {
-      if (logCallback != null) {
-        logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
-      }
-      return url;
-    }
-    url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateIpAddress());
-    if (logCallback != null) {
-      logCallback.saveExecutionLog(format("Testing private ip: [%s] for connectivity", url));
-    }
-    if (Http.connectableHttpUrl(url)) {
-      if (logCallback != null) {
-        logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
-      }
-      return url;
-    }
-    return StringUtils.EMPTY;
+        .dockerId(container != null ? StringUtils.substring(container.getRuntimeId(), 0, 12) : StringUtils.EMPTY)
+        .completeDockerId(container != null ? container.getRuntimeId() : StringUtils.EMPTY);
   }
 
   /**
@@ -1466,7 +1408,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     events.forEach(event
         -> executionLogCallback.saveExecutionLog(
-            new StringBuilder(128).append("AWS Event: ").append(event.getMessage()).toString()));
+            color(new StringBuilder(128).append("# AWS Event: ").append(event.getMessage()).toString(), Yellow, Bold)));
 
     eventsAlreadyProcessed.addAll(events);
   }
