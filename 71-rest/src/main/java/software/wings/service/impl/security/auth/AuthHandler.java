@@ -136,6 +136,8 @@ public class AuthHandler {
       "Non-production Support members have access to override configuration, "
       + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
 
+  private static final String USER_NOT_AUTHORIZED = "User not authorized";
+
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -1624,23 +1626,23 @@ public class AuthHandler {
       UserRequestContext userRequestContext, List<PermissionAttribute> requiredPermissionAttributes) {
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
     if (userPermissionInfo == null) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
 
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
     if (accountPermissionSummary == null) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
 
     Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
     if (accountPermissions == null) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
 
     if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
       return;
     } else {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
   }
 
@@ -1656,20 +1658,20 @@ public class AuthHandler {
 
     ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
     if (apiKeyEntry == null) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
 
     UserPermissionInfo userPermissionInfo = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
 
-    logger.info("SCIM permissions: {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
+    logger.info("SCIM: Permissions {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
     if (!userPermissionInfo.getAccountPermissionSummary().getPermissions().contains(USER_PERMISSION_MANAGEMENT)) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
   }
 
   private String getToken(String authorizationHeader, String prefix) {
     if (!authorizationHeader.contains(prefix)) {
-      throw new InvalidRequestException("User not authorized", USER);
+      throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
     return authorizationHeader.substring(prefix.length()).trim();
   }
