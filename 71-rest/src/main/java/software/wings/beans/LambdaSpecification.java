@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -48,7 +47,7 @@ public class LambdaSpecification extends DeploymentSpecification {
   @Data
   @Builder
   public static class DefaultSpecification {
-    @NotBlank private String runtime;
+    private String runtime;
     private Integer memorySize = 128;
     private Integer timeout = 3;
     public String getRuntime() {
@@ -75,11 +74,11 @@ public class LambdaSpecification extends DeploymentSpecification {
   @Data
   @Builder
   public static class FunctionSpecification {
-    @NotBlank private String runtime;
+    private String runtime;
     private Integer memorySize = 128;
     private Integer timeout = 3;
-    @NotBlank private String functionName;
-    @NotBlank private String handler;
+    private String functionName;
+    private String handler;
 
     public String getRuntime() {
       return trim(runtime);
