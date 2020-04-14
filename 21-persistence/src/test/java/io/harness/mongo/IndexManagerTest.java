@@ -124,7 +124,9 @@ public class IndexManagerTest extends PersistenceTest {
 
     Map<String, IndexCreator> creators = IndexManager.indexCreators(mappedClass, collection);
 
-    assertThat(creators).hasSize(2);
+    assertThat(creators).hasSize(4);
+    assertThat(creators.get("sparse_index").getOptions().get(IndexManager.SPARSE)).isEqualTo(Boolean.TRUE);
+    assertThat(creators.get("sparseTest_1").getOptions().get(IndexManager.SPARSE)).isEqualTo(Boolean.TRUE);
     assertThat(IndexManager.createNewIndexes(creators)).isEqualTo(creators.size());
     Date afterCreatingIndexes = new Date();
 

@@ -200,7 +200,7 @@ public class WorkflowExecution
   // pipelineResumeId is the pipeline execution id of the very first execution.
   // It makes getting the history very simple. Just filter by the same
   // pipelineResumeId and sort by createdAt.
-  @Indexed private String pipelineResumeId;
+  @Indexed(options = @IndexOptions(sparse = true)) private String pipelineResumeId;
   // latestPipelineResume is true only for the latest resumed execution.
   // It is required to make the list execution call efficient to fetch only
   // the latest execution.

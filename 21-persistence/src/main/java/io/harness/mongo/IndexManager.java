@@ -59,6 +59,7 @@ import java.util.Set;
 public class IndexManager {
   public static final String UNIQUE = "unique";
   public static final String BACKGROUND = "background";
+  public static final String SPARSE = "sparse";
   public static final String NAME = "name";
   public static final String EXPIRE_AFTER_SECONDS = "expireAfterSeconds";
   public static final Duration SOAKING_PERIOD = ofDays(1);
@@ -464,6 +465,9 @@ public class IndexManager {
           } else {
             options.put(BACKGROUND, Boolean.TRUE);
           }
+          if (index.options().sparse()) {
+            options.put(SPARSE, Boolean.TRUE);
+          }
           creators.put(indexName, IndexCreator.builder().collection(collection).keys(keys).options(options).build());
         }
       });
@@ -489,6 +493,9 @@ public class IndexManager {
         options.put(UNIQUE, Boolean.TRUE);
       } else {
         options.put(BACKGROUND, Boolean.TRUE);
+      }
+      if (indexed.options().sparse()) {
+        options.put(SPARSE, Boolean.TRUE);
       }
       if (indexed.options().expireAfterSeconds() != -1) {
         options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
