@@ -48,9 +48,16 @@ import javax.annotation.Nullable;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("memberIds") },
-    options = @IndexOptions(name = "accountAndMemberIds", background = true)))
+@Indexes({
+  @Index(fields = { @Field("accountId")
+                    , @Field("importedByScim") },
+      options = @IndexOptions(name = "accountIdAndImportedByScim", background = true))
+
+  ,
+      @Index(fields = {
+        @Field("accountId"), @Field("memberIds")
+      }, options = @IndexOptions(name = "accountAndMemberIds", background = true))
+})
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)

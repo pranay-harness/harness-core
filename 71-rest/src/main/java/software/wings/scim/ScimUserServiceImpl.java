@@ -179,7 +179,12 @@ public class ScimUserServiceImpl implements ScimUserService {
   }
 
   private List<ScimUser> searchUserByUserName(String accountId, String searchQuery, Integer count, Integer startIndex) {
-    Query<User> userQuery = wingsPersistence.createQuery(User.class).field(UserKeys.accounts).hasThisOne(accountId);
+    Query<User> userQuery = wingsPersistence.createQuery(User.class)
+                                .field(UserKeys.accounts)
+                                .hasThisOne(accountId)
+                                .field(UserKeys.imported)
+                                .equal(true);
+
     if (StringUtils.isNotEmpty(searchQuery)) {
       userQuery.field(UserKeys.email).equal(searchQuery);
     }
