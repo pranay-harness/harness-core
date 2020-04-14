@@ -19,6 +19,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
 import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
 import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
+import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -199,6 +200,10 @@ public class EcsSetupCommandTaskHelper {
             .withNetworkMode(taskDefinition.getNetworkMode())
             .withPlacementConstraints(taskDefinition.getPlacementConstraints())
             .withVolumes(taskDefinition.getVolumes());
+
+    if (taskDefinition.getContainerDefinitions().size() > 1) {
+      registerTaskDefinitionRequest.withTags(new Tag().withKey(MAIN_ECS_CONTAINER_NAME_TAG).withValue(containerName));
+    }
 
     if (isNotEmpty(taskDefinition.getExecutionRoleArn())) {
       registerTaskDefinitionRequest.withExecutionRoleArn(taskDefinition.getExecutionRoleArn());

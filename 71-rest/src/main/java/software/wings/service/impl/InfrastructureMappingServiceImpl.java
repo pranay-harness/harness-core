@@ -14,6 +14,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -49,6 +50,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
@@ -904,27 +906,42 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setName(name);
   }
 
-  @VisibleForTesting
   public void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
-    String clusterName = infraMapping.getClusterName();
-    String region = infraMapping.getRegion();
 
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    if (isEmpty(infraMapping.getRegion())) {
+      throw new InvalidRequestException("Region is required.");
+    }
+    if (isEmpty(infraMapping.getClusterName())) {
+      throw new InvalidRequestException("Cluster Name is required.");
+    }
+    if (isEmpty(infraMapping.getLaunchType())) {
+      throw new InvalidRequestException("Launch Type can't be empty");
+    }
 
-    SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
-    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                        .settingAttribute(settingAttribute)
-                                                        .encryptionDetails(encryptionDetails)
-                                                        .clusterName(clusterName)
-                                                        .region(region)
-                                                        .build();
-    try {
-      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
-    } catch (Exception e) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    Set<String> launchTypeAllowedValues = Arrays.stream(LaunchType.values()).map(Enum::name).collect(toSet());
+    if (!launchTypeAllowedValues.contains(infraMapping.getLaunchType())) {
+      throw new InvalidRequestException("Invalid LaunchType. Allowed values are FARGATE or EC2");
+    }
+
+    if (LaunchType.FARGATE.toString().equals(infraMapping.getLaunchType())) {
+      validateFargateSpecificRequiredFields(infraMapping);
+    }
+  }
+
+  private void validateFargateSpecificRequiredFields(EcsInfrastructureMapping infraMapping) {
+    if (isEmpty(infraMapping.getExecutionRole())) {
+      throw new InvalidRequestException("execution role is required with Fargate Launch Type.");
+    }
+    if (isEmpty(infraMapping.getVpcId())) {
+      throw new InvalidRequestException("vpc-id is required with Fargate Launch Type.");
+    }
+    if (isEmpty(infraMapping.getSecurityGroupIds())) {
+      throw new InvalidRequestException("security-groupIds are required with Fargate Launch Type.");
+    }
+    if (isEmpty(infraMapping.getSubnetIds())) {
+      throw new InvalidRequestException("subnet-ids are required with Fargate Launch Type.");
     }
   }
 

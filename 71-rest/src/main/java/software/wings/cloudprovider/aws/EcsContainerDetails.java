@@ -9,6 +9,7 @@ public class EcsContainerDetails {
   private String taskId;
   private String taskArn;
   private String dockerId;
+  private String completeDockerId;
   private String containerId;
   private String containerInstanceId;
   private String containerInstanceArn;
