@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -87,6 +88,7 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -95,6 +97,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.sm.StateType;
@@ -208,6 +211,9 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldSaveAccount() {
+    AccountCrudObserver accountCrudObserver = mock(AccountCrudObserver.class);
+    ((AccountServiceImpl) accountService).getAccountCrudSubject().register(accountCrudObserver);
+
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
@@ -216,6 +222,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .build(),
         false);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
+    verify(accountCrudObserver).onAccountCreated(account);
   }
 
   private Account getAccount() {

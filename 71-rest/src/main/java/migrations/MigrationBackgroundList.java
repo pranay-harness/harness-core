@@ -25,6 +25,7 @@ import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
+import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
@@ -183,6 +184,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(107, AddAccountIdToCloudFormationRollBackConfig.class))
         .add(Pair.of(108, AddAccountIdToInfraDefinition.class))
         .add(Pair.of(109, AddAccountIdToTimeSeriesAnalysisRecords.class))
+        .add(Pair.of(110, DelegatesWithoutProfileMigration.class))
         .build();
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
@@ -16,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateProfile;
@@ -23,8 +25,10 @@ import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
+import software.wings.service.intfc.account.AccountCrudObserver;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -33,7 +37,10 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-public class DelegateProfileServiceImpl implements DelegateProfileService {
+public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
+  public static final String PRIMARY_PROFILE_NAME = "Primary";
+  public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuditServiceHelper auditServiceHelper;
 
@@ -48,6 +55,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
         .filter(DelegateProfileKeys.uuid, delegateProfileId)
         .filter(DelegateProfileKeys.accountId, accountId)
         .get();
+  }
+
+  @Override
+  public DelegateProfile fetchPrimaryProfile(String accountId) {
+    Optional<DelegateProfile> primaryProfile =
+        Optional.ofNullable(wingsPersistence.createQuery(DelegateProfile.class)
+                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.accountId, accountId)
+                                .get());
+
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId)));
   }
 
   @Override
@@ -95,6 +113,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
   }
 
   private void ensureProfileSafeToDelete(String accountId, DelegateProfile delegateProfile) {
+    if (delegateProfile.isPrimary()) {
+      throw new InvalidRequestException("Primary Delegate Profile cannot be deleted.", USER);
+    }
+
     String delegateProfileId = delegateProfile.getUuid();
     List<Delegate> delegates =
         wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
@@ -107,5 +129,31 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
           delegateProfile.getName(), String.join(", ", delegateNames));
       throw new InvalidRequestException(message, USER);
     }
+  }
+
+  @Override
+  public void onAccountCreated(Account account) {
+    logger.info("AccountCreated event received.");
+
+    if (!account.isForImport()) {
+      DelegateProfile delegateProfile = buildPrimaryDelegateProfile(account.getUuid());
+      add(delegateProfile);
+
+      logger.info("Primary Delegate Profile added.");
+
+      return;
+    }
+
+    logger.info("Account is marked as ForImport and creation of Primary Delegate Profile has been skipped.");
+  }
+
+  private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
+    return DelegateProfile.builder()
+        .uuid(generateUuid())
+        .accountId(accountId)
+        .name(PRIMARY_PROFILE_NAME)
+        .description(PRIMARY_PROFILE_DESCRIPTION)
+        .primary(true)
+        .build();
   }
 }

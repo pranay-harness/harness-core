@@ -151,11 +151,13 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.encryption.migration.EncryptedDataMigrationHandler;
+import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.BarrierServiceImpl;
 import software.wings.service.impl.DelayEventListener;
+import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
@@ -170,8 +172,10 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.trigger.ScheduleTriggerHandler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -662,6 +666,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         (ArtifactStreamServiceImpl) injector.getInstance(Key.get(ArtifactStreamService.class));
     artifactStreamService.getSubject().register(
         injector.getInstance(Key.get(ArtifactStreamPerpetualTaskManager.class)));
+
+    AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
+    accountService.getAccountCrudSubject().register(
+        (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
+
     registerSharedObservers(injector);
   }
 

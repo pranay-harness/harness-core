@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
@@ -56,11 +57,15 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.network.Http;
+import io.harness.observer.Subject;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -143,6 +148,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -245,6 +251,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private GovernanceFeature governanceFeature;
   private Map<String, UrlInfo> techStackDocLinks;
 
+  @Getter private Subject<AccountCrudObserver> accountCrudSubject = new Subject<>();
+
   @Override
   public Account save(@Valid Account account, boolean fromDataGen) {
     // Validate if account/company name is valid.
@@ -266,20 +274,24 @@ public class AccountServiceImpl implements AccountService {
 
     wingsPersistence.save(account);
 
-    // When an account is just created for import, no need to create default account entities.
-    // As the import process will do all these instead.
-    if (account.isForImport()) {
-      logger.info("Creating the account '{}' for import only, no default account entities will be created",
-          account.getAccountName());
-    } else {
-      createDefaultAccountEntities(account, fromDataGen);
-      // Schedule default account level jobs.
-      scheduleAccountLevelJobs(account.getUuid());
+    try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
+      accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
+
+      // When an account is just created for import, no need to create default account entities.
+      // As the import process will do all these instead.
+      if (account.isForImport()) {
+        logger.info("Creating the account for import only, no default account entities will be created");
+      } else {
+        createDefaultAccountEntities(account, fromDataGen);
+        // Schedule default account level jobs.
+        scheduleAccountLevelJobs(account.getUuid());
+      }
+
+      publishAccountChangeEvent(account);
+
+      logger.info("Successfully created account.");
     }
 
-    publishAccountChangeEvent(account);
-
-    logger.info("Successfully created account with id {}", account.getUuid());
     return account;
   }
 
