@@ -12,7 +12,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
@@ -26,6 +25,11 @@
         <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
