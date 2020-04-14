@@ -47,6 +47,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
+import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -54,6 +55,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Arrays;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -63,6 +65,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Mock private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @Mock private QLBillingStatsHelper statsHelper;
   @Mock private BillingDataHelper billingDataHelper;
+  @Mock EnvironmentServiceImpl environmentService;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -70,6 +73,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   private String applicationId1 = "APPLICATION_ID_1";
   private String applicationId2 = "APPLICATION_ID_2";
   private String[] applicationIds = {applicationId1, applicationId2};
+  private String environment1 = "ENVIRONMENT_ID_1";
+  private String[] environmentIds = {environment1};
   private String[] clusterIds = {"CLUSTER_ID"};
   private String budgetId = "BUDGET_ID";
   private String budgetName = "BUDGET_NAME";
@@ -111,6 +116,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
              any(QLCCMTimeSeriesAggregation.class), anyList()))
         .thenReturn(queryData);
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), anyString())).thenReturn(Arrays.asList(environmentIds));
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
