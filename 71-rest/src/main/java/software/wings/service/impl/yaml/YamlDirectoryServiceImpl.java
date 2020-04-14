@@ -2436,6 +2436,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case AZURE:
       case KUBERNETES_CLUSTER:
       case PHYSICAL_DATA_CENTER:
+      case SPOT_INST:
+      case PCF:
         sb.append(CLOUD_PROVIDERS_FOLDER);
         if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
           sb.append(PATH_DELIMITER);

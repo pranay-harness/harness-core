@@ -36,6 +36,8 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
     }
     PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
     PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
+    encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
     try {
       pcfDeploymentManager.getOrganizations(
