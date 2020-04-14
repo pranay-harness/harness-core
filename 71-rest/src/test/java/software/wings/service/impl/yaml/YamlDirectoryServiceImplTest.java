@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -50,6 +52,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion;
@@ -70,7 +73,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ServiceResourceService serviceResourceService;
-
+  @Mock private TemplateGalleryService templateGalleryService;
   @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService = new YamlDirectoryServiceImpl();
 
   @Before
@@ -93,7 +96,8 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     final Template template1 = Template.builder().name("template1").folderId("root_folder").type(SHELL_SCRIPT).build();
     final Template template2 = Template.builder().folderId("root_folder").name("template2").type(SHELL_SCRIPT).build();
     PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
-    doReturn(pageResponse).when(templateService).list(any(PageRequest.class));
+    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString());
+    doReturn(GalleryKey.ACCOUNT_TEMPLATE_GALLERY).when(templateGalleryService).getAccountGalleryKey();
 
     final FolderNode folderNode = yamlDirectoryService.doTemplateLibraryForApp(application, directoryPath);
     assertThat(folderNode.getName()).isEqualTo(APPLICATION_TEMPLATE_LIBRARY_FOLDER);
@@ -125,7 +129,8 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     final Template template2 =
         Template.builder().folderId("child_folder").name("child_folder_template").type(SHELL_SCRIPT).build();
     PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
-    doReturn(pageResponse).when(templateService).list(any(PageRequest.class));
+    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString());
+    doReturn(GalleryKey.ACCOUNT_TEMPLATE_GALLERY).when(templateGalleryService).getAccountGalleryKey();
 
     TemplateFolder childFolder = TemplateFolder.builder().uuid("child_folder").name("child_folder_1").build();
     TemplateFolder templateFolder = TemplateFolder.builder()

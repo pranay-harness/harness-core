@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -41,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -124,7 +126,16 @@ public class TemplateServiceImpl implements TemplateService {
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
-  public PageResponse<Template> list(PageRequest<Template> pageRequest) {
+  public PageResponse<Template> list(PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId) {
+    if (galleryKeys != null) {
+      List<String> galleryIds =
+          galleryKeys.stream()
+              .map(galleryKey -> templateGalleryHelper.getGalleryByGalleryKey(galleryKey, accountId).getUuid())
+              .collect(Collectors.toList());
+      SearchFilter searchFilter =
+          SearchFilter.builder().fieldName(TemplateKeys.galleryId).op(IN).fieldValues(galleryIds.toArray()).build();
+      pageRequest.addFilter(searchFilter);
+    }
     PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
     for (Template template : pageResponse.getResponse()) {
       setDetailsOfTemplate(template, null);

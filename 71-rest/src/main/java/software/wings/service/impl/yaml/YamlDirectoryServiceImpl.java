@@ -137,6 +137,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -213,6 +214,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private TemplateService templateService;
   @Inject private AuthService authService;
   @Inject private GitSyncErrorService gitSyncErrorService;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -2125,14 +2127,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     final TemplateFolder templateTree =
         templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
     // get all the templates and group them by folderId
-    final List<Template> templates =
-        ListUtils.emptyIfNull(templateService
-                                  .list(aPageRequest()
-                                            .addFilter(Template.APP_ID_KEY, Operator.EQ, appId)
-                                            .addFilter(Template.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                            .withLimit(UNLIMITED)
-                                            .build())
-                                  .getResponse());
+    final List<Template> templates = ListUtils.emptyIfNull(
+        templateService
+            .list(aPageRequest()
+                      .addFilter(Template.APP_ID_KEY, Operator.EQ, appId)
+                      .addFilter(Template.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                      .withLimit(UNLIMITED)
+                      .build(),
+                Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId)
+            .getResponse());
 
     final Map<String, List<Template>> folderIdTemplateMap =
         templates.stream().collect(Collectors.groupingBy(Template::getFolderId));

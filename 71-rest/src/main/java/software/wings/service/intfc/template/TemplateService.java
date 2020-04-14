@@ -22,7 +22,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface TemplateService extends OwnedByAccount, OwnedByApplication {
-  PageResponse<Template> list(PageRequest<Template> pageRequest);
+  PageResponse<Template> list(PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId);
 
   @ValidationGroups(Create.class) Template saveReferenceTemplate(Template template);
 
