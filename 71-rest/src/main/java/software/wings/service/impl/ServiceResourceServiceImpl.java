@@ -2111,6 +2111,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void validateLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    validateDefaultsInLambdaSpec(lambdaSpecification.getDefaults());
+    validateFunctionsInLambdaSpec(lambdaSpecification.getFunctions());
+
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
     if (isNotEmpty(duplicateFunctionName)) {
@@ -2118,27 +2121,61 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           "Function name should be unique. Duplicate function names: [" + join(",", duplicateFunctionName) + "]");
     }
 
-    LambdaSpecification.DefaultSpecification defaultSpec = lambdaSpecification.getDefaults();
-    if (defaultSpec != null && defaultSpec.getTimeout() != null && defaultSpec.getTimeout() <= 0) {
-      throw new InvalidRequestException("Default function execution timeout must be greater than 0", USER);
+    /** Removed validation to check for duplicate handler names as part of HAR-3209 */
+  }
+
+  private boolean nullOrLessThanZero(Integer val) {
+    return val == null || val <= 0;
+  }
+
+  private void validateFunctionsInLambdaSpec(List<FunctionSpecification> functions) {
+    if (isEmpty(functions)) {
+      throw new InvalidRequestException("Lambda Specification must contain atleast 1 function", USER);
     }
 
-    List<FunctionSpecification> functions = lambdaSpecification.getFunctions();
-    if (isNotEmpty(functions)) {
-      List<String> functionsWithNegativeTimeout =
-          functions.stream()
-              .filter(functionSpec -> functionSpec.getTimeout() != null && functionSpec.getTimeout() <= 0)
-              .map(FunctionSpecification::getFunctionName)
-              .collect(toList());
+    for (FunctionSpecification function : functions) {
+      if (isBlank(function.getFunctionName())) {
+        throw new InvalidRequestException("Function name must not be empty", USER);
+      }
 
-      if (isNotEmpty(functionsWithNegativeTimeout)) {
-        throw new InvalidRequestException("Function execution timeout must be greater than 0 for following functions: "
-                + String.join(",", functionsWithNegativeTimeout),
-            USER);
+      if (isBlank(function.getHandler())) {
+        throw new InvalidRequestException("Handler must not be empty for function " + function.getFunctionName(), USER);
+      }
+
+      if (isBlank(function.getRuntime())) {
+        throw new InvalidRequestException("Runtime must not be empty for function " + function.getFunctionName(), USER);
+      }
+
+      if (nullOrLessThanZero(function.getMemorySize())) {
+        throw new InvalidRequestException(
+            "Memory Size must be greater than 0 for function " + function.getFunctionName(), USER);
+      }
+
+      if (nullOrLessThanZero(function.getTimeout())) {
+        throw new InvalidRequestException(
+            "Execution Timeout must be greater than 0 for function " + function.getFunctionName(), USER);
       }
     }
+  }
 
-    /** Removed validation to check for duplicate handler names as part of HAR-3209 */
+  private void validateDefaultsInLambdaSpec(LambdaSpecification.DefaultSpecification defaultSpec) {
+    if (defaultSpec == null) {
+      throw new InvalidRequestException("Defaults must exist in Lambda Specification", USER);
+    }
+
+    if (isBlank(defaultSpec.getRuntime())) {
+      throw new InvalidRequestException("Runtime in Defaults for Lambda Specification must not be empty", USER);
+    }
+
+    if (nullOrLessThanZero(defaultSpec.getMemorySize())) {
+      throw new InvalidRequestException(
+          "Memory Size in Defaults for Lambda Specification must be greater than 0", USER);
+    }
+
+    if (nullOrLessThanZero(defaultSpec.getTimeout())) {
+      throw new InvalidRequestException(
+          "Execution Timeout in Defaults for Lambda Specification must be greater than 0", USER);
+    }
   }
 
   private List<String> getFunctionAttributeDuplicateValues(

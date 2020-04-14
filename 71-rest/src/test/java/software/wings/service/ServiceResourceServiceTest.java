@@ -1995,63 +1995,99 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence, times(1)).getWithAppId(Service.class, APP_ID, SERVICE_ID);
   }
 
-  private FunctionSpecification createFunctionSpecification(String functionName, Integer timeout) {
+  private FunctionSpecification createFunctionSpecification(String functionName, Integer timeout, Integer memorySize) {
     return FunctionSpecification.builder()
         .runtime("TestRunTime")
         .functionName(functionName)
         .handler("TestHandler")
         .timeout(timeout)
+        .memorySize(memorySize)
         .build();
+  }
+
+  private void verifyLambdaSpec(LambdaSpecification lambdaSpecification, String expectedMessage) {
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should not reach here");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage()).isEqualTo(expectedMessage);
+    }
   }
 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testLambdaTimeoutValidation() {
-    FunctionSpecification func1 = createFunctionSpecification("func1", -1);
-    LambdaSpecification lambdaSpecification =
-        LambdaSpecification.builder().serviceId("TestServiceID").functions(asList(func1)).build();
+    LambdaSpecification lambdaSpecification = LambdaSpecification.builder().serviceId("TestServiceID").build();
     lambdaSpecification.setAppId(APP_ID);
 
-    try {
-      srs.updateLambdaSpecification(lambdaSpecification);
-      fail("Should not reach here");
-    } catch (InvalidRequestException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1");
-    }
+    lambdaSpecification.setDefaults(null);
+    verifyLambdaSpec(lambdaSpecification, "Defaults must exist in Lambda Specification");
 
-    FunctionSpecification func2 = createFunctionSpecification("func2", -1);
-    lambdaSpecification.setFunctions(asList(func1, func2));
-    try {
-      srs.updateLambdaSpecification(lambdaSpecification);
-      fail("Should not reach here");
-    } catch (InvalidRequestException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1,func2");
-    }
+    LambdaSpecification.DefaultSpecification defaultSpecification =
+        LambdaSpecification.DefaultSpecification.builder().build();
+    lambdaSpecification.setDefaults(defaultSpecification);
 
-    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(-1).build());
-    try {
-      srs.updateLambdaSpecification(lambdaSpecification);
-      fail("Should not reach here");
-    } catch (InvalidRequestException e) {
-      assertThat(e.getMessage()).isEqualTo("Default function execution timeout must be greater than 0");
-    }
+    defaultSpecification.setRuntime(null);
+    verifyLambdaSpec(lambdaSpecification, "Runtime in Defaults for Lambda Specification must not be empty");
+    defaultSpecification.setRuntime("  ");
+    verifyLambdaSpec(lambdaSpecification, "Runtime in Defaults for Lambda Specification must not be empty");
+    defaultSpecification.setRuntime("runTime");
 
-    lambdaSpecification.setFunctions(asList(func1));
-    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(1).build());
-    try {
-      srs.updateLambdaSpecification(lambdaSpecification);
-      fail("Should not reach here");
-    } catch (InvalidRequestException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("Function execution timeout must be greater than 0 for following functions: func1");
-    }
+    defaultSpecification.setMemorySize(-128);
+    verifyLambdaSpec(lambdaSpecification, "Memory Size in Defaults for Lambda Specification must be greater than 0");
+    defaultSpecification.setMemorySize(0);
+    verifyLambdaSpec(lambdaSpecification, "Memory Size in Defaults for Lambda Specification must be greater than 0");
+    defaultSpecification.setMemorySize(12);
 
-    func1.setTimeout(2);
-    lambdaSpecification.setFunctions(asList(func1));
-    lambdaSpecification.setDefaults(LambdaSpecification.DefaultSpecification.builder().timeout(1).build());
+    defaultSpecification.setTimeout(null);
+    verifyLambdaSpec(
+        lambdaSpecification, "Execution Timeout in Defaults for Lambda Specification must be greater than 0");
+    defaultSpecification.setTimeout(-1);
+    verifyLambdaSpec(
+        lambdaSpecification, "Execution Timeout in Defaults for Lambda Specification must be greater than 0");
+    defaultSpecification.setTimeout(0);
+    verifyLambdaSpec(
+        lambdaSpecification, "Execution Timeout in Defaults for Lambda Specification must be greater than 0");
+    defaultSpecification.setTimeout(1);
+
+    FunctionSpecification function = FunctionSpecification.builder().build();
+    verifyLambdaSpec(lambdaSpecification, "Lambda Specification must contain atleast 1 function");
+    lambdaSpecification.setFunctions(asList(function));
+
+    function.setFunctionName(" ");
+    verifyLambdaSpec(lambdaSpecification, "Function name must not be empty");
+    function.setFunctionName(null);
+    verifyLambdaSpec(lambdaSpecification, "Function name must not be empty");
+    function.setFunctionName("func1");
+
+    function.setHandler(null);
+    verifyLambdaSpec(lambdaSpecification, "Handler must not be empty for function func1");
+    function.setHandler("  ");
+    verifyLambdaSpec(lambdaSpecification, "Handler must not be empty for function func1");
+    function.setHandler("handler");
+
+    function.setRuntime(null);
+    verifyLambdaSpec(lambdaSpecification, "Runtime must not be empty for function func1");
+    function.setRuntime("  ");
+    verifyLambdaSpec(lambdaSpecification, "Runtime must not be empty for function func1");
+    function.setRuntime("runTime");
+
+    function.setMemorySize(null);
+    verifyLambdaSpec(lambdaSpecification, "Memory Size must be greater than 0 for function func1");
+    function.setMemorySize(0);
+    verifyLambdaSpec(lambdaSpecification, "Memory Size must be greater than 0 for function func1");
+    function.setMemorySize(-1);
+    verifyLambdaSpec(lambdaSpecification, "Memory Size must be greater than 0 for function func1");
+    function.setMemorySize(2);
+
+    function.setTimeout(null);
+    verifyLambdaSpec(lambdaSpecification, "Execution Timeout must be greater than 0 for function func1");
+    function.setTimeout(0);
+    verifyLambdaSpec(lambdaSpecification, "Execution Timeout must be greater than 0 for function func1");
+    function.setTimeout(-1);
+    verifyLambdaSpec(lambdaSpecification, "Execution Timeout must be greater than 0 for function func1");
+    function.setTimeout(2);
 
     when(mockWingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification))
         .thenReturn(lambdaSpecification);
@@ -2067,11 +2103,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                       .runtime("TestRunTime")
                                                       .functionName("TestFunctionName")
                                                       .handler("TestHandler")
+                                                      .timeout(2)
+                                                      .memorySize(23)
                                                       .build();
-    LambdaSpecification lambdaSpecification = LambdaSpecification.builder()
-                                                  .serviceId("TestServiceID")
-                                                  .functions(asList(functionSpecification, functionSpecification))
-                                                  .build();
+    LambdaSpecification lambdaSpecification =
+        LambdaSpecification.builder()
+            .defaults(
+                LambdaSpecification.DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
+            .serviceId("TestServiceID")
+            .functions(asList(functionSpecification, functionSpecification))
+            .build();
     lambdaSpecification.setAppId("TestAppID");
     try {
       srs.updateLambdaSpecification(lambdaSpecification);
@@ -2084,11 +2125,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                        .runtime("TestRunTime")
                                                        .functionName("TestFunctionName2")
                                                        .handler("TestHandler")
+                                                       .timeout(2)
+                                                       .memorySize(23)
                                                        .build();
-    lambdaSpecification = LambdaSpecification.builder()
-                              .serviceId("TestServiceID")
-                              .functions(asList(functionSpecification, functionSpecification2))
-                              .build();
+    lambdaSpecification =
+        LambdaSpecification.builder()
+            .serviceId("TestServiceID")
+            .defaults(
+                LambdaSpecification.DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
+            .functions(asList(functionSpecification, functionSpecification2))
+            .build();
     lambdaSpecification.setAppId("TestAppID");
     when(mockWingsPersistence.saveAndGet(Mockito.any(Class.class), Mockito.any(LambdaSpecification.class)))
         .thenReturn(lambdaSpecification);
