@@ -9,6 +9,7 @@ import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.BudgetScope;
 import io.harness.ccm.budget.entities.BudgetScopeType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -29,6 +32,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
+import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -38,6 +42,7 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -52,11 +57,17 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject private BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
+  @Inject EnvironmentServiceImpl environmentService;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-DD-YYYY hh:mm a";
+  private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
+  private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
+  private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
+      "Error in creating budget. The budget amount should be positive and less than " + BUDGET_AMOUNT_UPPER_LIMIT;
 
   @Override
   public String create(Budget budget) {
+    validateBudget(budget);
     return budgetDao.save(budget);
   }
 
@@ -77,6 +88,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public void update(String budgetId, Budget budget) {
+    validateBudget(budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -135,6 +147,9 @@ public class BudgetServiceImpl implements BudgetService {
   public double getForecastCost(Budget budget) {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
+    if (isApplicationScopePresent(budget)) {
+      addEnvironmentIdFilter(budget, filters);
+    }
     filters.add(getEndTimeFilterForCurrentBillingCycle());
     List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
     aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
@@ -154,6 +169,9 @@ public class BudgetServiceImpl implements BudgetService {
     Preconditions.checkNotNull(budget.getAccountId());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
+    if (isApplicationScopePresent(budget)) {
+      addEnvironmentIdFilter(budget, filters);
+    }
     filters.add(getFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
@@ -180,7 +198,7 @@ public class BudgetServiceImpl implements BudgetService {
   public QLBudgetTableData getBudgetDetails(Budget budget) {
     List<Double> alertAt = new ArrayList<>();
     List<String> notificationMessages = new ArrayList<>();
-    if (budget.getAlertThresholds() != null) {
+    if (budget.getAlertThresholds() != null && budget.getBudgetAmount() != null) {
       for (AlertThreshold alertThreshold : budget.getAlertThresholds()) {
         alertAt.add(alertThreshold.getPercentage());
         if (alertThreshold.getAlertsSent() != 0) {
@@ -334,5 +352,32 @@ public class BudgetServiceImpl implements BudgetService {
       entityIds = scope.getBudgetScopeFilter().getApplication().getValues();
     }
     return entityIds;
+  }
+
+  private void addEnvironmentIdFilter(Budget budget, List<QLBillingDataFilter> filters) {
+    ApplicationBudgetScope scope = (ApplicationBudgetScope) budget.getScope();
+    String[] appIds = scope.getApplicationIds();
+    List<String> envIds =
+        environmentService.getEnvIdsByAppsAndType(Arrays.asList(appIds), scope.getEnvironmentType().toString());
+    filters.add(
+        QLBillingDataFilter.builder()
+            .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
+            .build());
+  }
+
+  private void validateBudget(Budget budget) {
+    if (budget.getBudgetAmount() == null) {
+      throw new InvalidRequestException(NO_BUDGET_AMOUNT_EXCEPTION);
+    }
+    if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
+      throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
+    }
+  }
+
+  private boolean isApplicationScopePresent(Budget budget) {
+    if (budget != null && budget.getScope().getBudgetScopeFilter().getApplication() != null) {
+      return true;
+    }
+    return false;
   }
 }

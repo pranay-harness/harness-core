@@ -198,4 +198,6 @@ public interface EnvironmentService extends OwnedByApplication {
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
 
   Environment deleteHelmValueYaml(String appId, String envId, String serviceTemplateId);
+
+  List<String> getEnvIdsByAppsAndType(List<String> appIds, String environmentType);
 }

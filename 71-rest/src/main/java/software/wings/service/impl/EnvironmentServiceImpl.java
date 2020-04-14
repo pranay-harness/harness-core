@@ -1146,4 +1146,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           format("No valid application manifest exists for environment: %s and service: %s", envId, serviceId));
     }
   }
+
+  @Override
+  public List<String> getEnvIdsByAppsAndType(List<String> appIds, String environmentType) {
+    List<Environment> environments = wingsPersistence.createQuery(Environment.class)
+                                         .field(EnvironmentKeys.appId)
+                                         .in(appIds)
+                                         .filter(EnvironmentKeys.environmentType, environmentType)
+                                         .asList();
+    return environments.stream().map(Environment::getUuid).collect(Collectors.toList());
+  }
 }
