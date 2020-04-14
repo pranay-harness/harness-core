@@ -166,6 +166,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance;
@@ -1762,7 +1763,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<PipelineStage> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
+  public List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
     String accountId = prevWorkflowExecution.getAccountId();
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {

@@ -1,7 +1,9 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.GE;
-import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -21,6 +23,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
@@ -38,7 +41,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
-import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
@@ -155,7 +158,13 @@ public class ExecutionResource {
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
     if (featureFlagService.isEnabled(FeatureName.PIPELINE_RESUME, accountId)) {
-      pageRequest.addFilter(WorkflowExecutionKeys.latestPipelineResume, NOT_EQ, Boolean.FALSE);
+      pageRequest.addFilter("", OR,
+          SearchFilter.builder().fieldName(WorkflowExecutionKeys.pipelineResumeId).op(NOT_EXISTS).build(),
+          SearchFilter.builder()
+              .fieldName(WorkflowExecutionKeys.latestPipelineResume)
+              .op(EQ)
+              .fieldValues(new Object[] {Boolean.TRUE})
+              .build());
     }
 
     final PageResponse<WorkflowExecution> workflowExecutions =
@@ -256,7 +265,7 @@ public class ExecutionResource {
   @ExceptionMetered
   @Path("resumeStages")
   @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
-  public RestResponse<List<PipelineStage>> getResumeStages(
+  public RestResponse<List<PipelineStageGroupedInfo>> getResumeStages(
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     requireWorkflowExecution(workflowExecutionId, workflowExecution);

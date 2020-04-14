@@ -3,6 +3,7 @@ package software.wings.service.impl.pipeline.resume;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -12,6 +13,7 @@ import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +28,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.PipelineStageGroupedInfo;
+import software.wings.beans.PipelineStageGroupedInfo.PipelineStageGroupedInfoBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -38,12 +42,17 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -97,6 +106,9 @@ public class PipelineResumeUtils {
       }
 
       PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
+      // Check for compatibility.
+      checkStageAndStageExecution(pipelineStage, stageExecution);
+
       int workflowExecutionIndex = -1;
       boolean foundResumeStage = false;
       for (PipelineStageElement pse : pipelineStageElements) {
@@ -182,7 +194,7 @@ public class PipelineResumeUtils {
     prevWorkflowExecution.setLatestPipelineResume(false);
   }
 
-  public List<PipelineStage> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
+  public List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
     checkPipelineResumeAvailable(prevWorkflowExecution);
     authorizeReadPipelineResume(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
@@ -205,7 +217,8 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
 
-    List<PipelineStage> stages = new ArrayList<>();
+    boolean foundFailedStage = false;
+    List<PipelineStageGroupedInfoBuilder> groupedInfoBuilders = new ArrayList<>();
     for (int i = 0; i < pipelineStages.size(); i++) {
       if (pipelineStageExecutions.size() <= i) {
         // Previous pipeline execution did not have enough stages.
@@ -213,14 +226,48 @@ public class PipelineResumeUtils {
       }
 
       PipelineStage pipelineStage = pipelineStages.get(i);
-      stages.add(pipelineStage);
+
       PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
+      // Check for compatibility.
+      checkStageAndStageExecution(pipelineStage, stageExecution);
+
+      if (foundFailedStage) {
+        if (!pipelineStage.isParallel()) {
+          // We already found a failed stage and the new stage is not parallel with previous ones. So we stop our
+          // iteration.
+          break;
+        }
+      }
+
+      List<String> newPipelineStageElementNames = pipelineStage.getPipelineStageElements() == null
+          ? Collections.emptyList()
+          : pipelineStage.getPipelineStageElements()
+                .stream()
+                .map(PipelineStageElement::getName)
+                .collect(Collectors.toList());
+      if (pipelineStage.isParallel() && isNotEmpty(groupedInfoBuilders)) {
+        // The stage is parallel to the previous one. Just append the new element names to the last group info.
+        groupedInfoBuilders.get(groupedInfoBuilders.size() - 1).pipelineStageElementNames(newPipelineStageElementNames);
+      } else {
+        // The stage is not parallel the to previous one. We have to construct a new group info with the correct name
+        // and parallel index.
+        PipelineStageGroupedInfoBuilder builder = PipelineStageGroupedInfo.builder()
+                                                      .name(pipelineStage.getName())
+                                                      .pipelineStageElementNames(newPipelineStageElementNames);
+        if (isNotEmpty(pipelineStage.getPipelineStageElements())) {
+          builder.parallelIndex(pipelineStage.getPipelineStageElements().get(0).getParallelIndex());
+        }
+        groupedInfoBuilders.add(builder);
+      }
+
       if (stageExecution.getStatus() != SUCCESS) {
-        break;
+        // Found a successful stage. We will now continue only till we find a stages which are parallel with the current
+        // one.
+        foundFailedStage = true;
       }
     }
 
-    return stages;
+    return groupedInfoBuilders.stream().map(PipelineStageGroupedInfoBuilder::build).collect(Collectors.toList());
   }
 
   public List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution prevWorkflowExecution) {
@@ -239,6 +286,7 @@ public class PipelineResumeUtils {
         .asList();
   }
 
+  @VisibleForTesting
   public void authorizeTriggerPipelineResume(String appId, WorkflowExecution workflowExecution) {
     String pipelineId = workflowExecution.getWorkflowId();
     List<PermissionAttribute> permissionAttributeList =
@@ -246,6 +294,7 @@ public class PipelineResumeUtils {
     authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
   }
 
+  @VisibleForTesting
   public void authorizeReadPipelineResume(String appId, WorkflowExecution workflowExecution) {
     String pipelineId = workflowExecution.getWorkflowId();
     List<PermissionAttribute> permissionAttributeList =
@@ -253,6 +302,7 @@ public class PipelineResumeUtils {
     authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
   }
 
+  @VisibleForTesting
   public void checkPipelineResumeAvailable(WorkflowExecution prevWorkflowExecution) {
     if (!featureFlagService.isEnabled(PIPELINE_RESUME, prevWorkflowExecution.getAccountId())) {
       throw new InvalidRequestException("Pipeline resume feature is unavailable");
@@ -272,6 +322,7 @@ public class PipelineResumeUtils {
     }
   }
 
+  @VisibleForTesting
   public void checkPipelineResumeHistoryAvailable(WorkflowExecution prevWorkflowExecution) {
     if (!featureFlagService.isEnabled(PIPELINE_RESUME, prevWorkflowExecution.getAccountId())) {
       throw new InvalidRequestException("Pipeline resume feature is unavailable");
@@ -280,5 +331,51 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
     }
+  }
+
+  /***
+   * checkStageAndStageExecution checks if the stage and stageExecution contain the same workflows/executions with the
+   * same workflow ids. If a new workflow is introduced or an old one removed from a pipeline, the stage executions will
+   * differ.
+   */
+  @VisibleForTesting
+  public void checkStageAndStageExecution(PipelineStage stage, PipelineStageExecution stageExecution) {
+    List<PipelineStageElement> stageElements = emptyIfNull(stage.getPipelineStageElements())
+                                                   .stream()
+                                                   .filter(pse -> ENV_STATE.name().equals(pse.getType()))
+                                                   .collect(Collectors.toList());
+    List<WorkflowExecution> workflowExecutions = emptyIfNull(stageExecution.getWorkflowExecutions());
+
+    Set<String> newWorkflowIds = stageElements.stream()
+                                     .map(pse -> (String) pse.getProperties().get(EnvStateKeys.workflowId))
+                                     .filter(Objects::nonNull)
+                                     .collect(Collectors.toSet());
+    Set<String> oldWorkflowIds = workflowExecutions.stream()
+                                     .map(WorkflowExecution::getWorkflowId)
+                                     .filter(Objects::nonNull)
+                                     .collect(Collectors.toSet());
+
+    Set<String> diff = new HashSet<>(newWorkflowIds);
+    diff.removeAll(oldWorkflowIds);
+    if (isNotEmpty(diff)) {
+      throwWorkflowAddedException(stage.getName(), diff.iterator().next());
+    }
+
+    oldWorkflowIds.removeAll(newWorkflowIds);
+    if (isNotEmpty(oldWorkflowIds)) {
+      throwWorkflowRemovedException(stage.getName(), oldWorkflowIds.iterator().next());
+    }
+  }
+
+  private void throwWorkflowRemovedException(String stageName, String workflowId) {
+    throw new InvalidRequestException(format(
+        "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
+        stageName, workflowId));
+  }
+
+  private void throwWorkflowAddedException(String stageName, String workflowId) {
+    throw new InvalidRequestException(format(
+        "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
+        stageName, workflowId));
   }
 }
