@@ -1,40 +1,41 @@
 package software.wings.service.impl.template;
 
-import static io.harness.network.Http.getUnsafeOkHttpClient;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.commandlibrary.api.dto.CommandDTO;
-import io.harness.commandlibrary.api.dto.CommandVersionDTO;
+import io.harness.commandlibrary.client.CommandLibraryServiceClientUtils;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
 import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.ImportedTemplate.ImportedTemplateKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGallery.GalleryKey;
+import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommand.ImportedCommandBuilder;
 import software.wings.beans.template.dto.ImportedCommandVersion;
 import software.wings.beans.template.dto.ImportedCommandVersion.ImportedCommandVersionBuilder;
+import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
+import software.wings.yaml.BaseYaml;
+import software.wings.yaml.YamlHelper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +50,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   @Inject TemplateService templateService;
   @Inject TemplateVersionService templateVersionService;
   @Inject TemplateGalleryService templateGalleryService;
+  @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject TemplateGalleryHelper templateGalleryHelper;
+  private CommandLibraryServiceHttpClient serviceHttpClient;
 
   @Override
   public boolean isImported(String templateId, String accountId) {
@@ -151,15 +155,25 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
       List<TemplateVersion> templateVersions, String accountId, Template template) {
     ImportedTemplate importedTemplate = get(commandId, commandStoreId, accountId);
     List<ImportedCommandVersion> importedCommandVersionList = new ArrayList<>();
+    if (template == null) {
+      return null;
+    }
+    BaseYamlHandler yamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.GLOBAL_TEMPLATE_LIBRARY, template.getType());
     if (templateVersions != null) {
       templateVersions.forEach(templateVersion -> {
+        Template templateWithDetails = templateService.get(template.getUuid());
+        BaseYaml yaml = yamlHandler.toYaml(templateWithDetails, templateWithDetails.getAppId());
         ImportedCommandVersionBuilder importedCommandVersionBuilder =
             ImportedCommandVersion.builder()
                 .commandId(commandId)
                 .commandStoreId(commandStoreId)
                 .createdAt(String.valueOf(templateVersion.getCreatedAt()))
                 .version(templateVersion.getImportedTemplateVersion())
-                .versionDetails(templateVersion.getVersionDetails())
+                .description(templateVersion.getVersionDetails())
+                .templateObject(templateWithDetails.getTemplateObject())
+                .variables(templateWithDetails.getVariables())
+                .yamlContent(YamlHelper.toYamlString(yaml))
                 .templateId(templateVersion.getTemplateUuid());
         if (templateVersion.getCreatedBy() != null) {
           importedCommandVersionBuilder.createdBy(templateVersion.getCreatedBy().getName());
@@ -170,12 +184,11 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
     ImportedCommandBuilder importedCommandBuilder = ImportedCommand.builder()
                                                         .commandId(commandId)
                                                         .importedCommandVersionList(importedCommandVersionList)
-                                                        .commandStoreId(commandStoreId);
-    if (template != null) {
-      importedCommandBuilder.name(template.getName())
-          .description(template.getDescription())
-          .templateId(template.getUuid());
-    }
+                                                        .commandStoreId(commandStoreId)
+                                                        .name(template.getName())
+                                                        .description(template.getDescription())
+                                                        .templateId(template.getUuid());
+
     if (importedTemplate != null) {
       importedCommandBuilder.commandStoreName(importedTemplate.getCommandStoreName());
     }
@@ -193,68 +206,14 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
 
   @Override
   public Template getAndSaveImportedTemplate(
-      String token, String version, String commandId, String commandStoreId, String accountId) {
-    String commandHost = getCommandDownloadHost(commandStoreId);
-    String commandInformationUrl = commandHost + constructCommandDetailsUrl(commandId, commandStoreId, accountId);
-    String commandVersionUrl =
-        commandHost + constructCommandVersionDetailsUrl(commandId, commandStoreId, version, accountId);
-
-    CommandDTO commandDTO = downloadAndGetCommandDTO(commandInformationUrl, token);
+      String version, String commandId, String commandStoreId, String accountId) {
+    CommandDTO commandDTO = downloadAndGetCommandDTO(commandStoreId, commandId);
     ImportedTemplate importedTemplate = getImportedTemplate(commandDTO, accountId);
-    Template template = null;
     if (importedTemplate == null) {
-      template = saveNewCommand(token, version, commandVersionUrl, accountId, commandDTO);
+      return saveNewCommand(version, commandId, commandStoreId, accountId, commandDTO);
     } else {
-      template = downloadAndSaveNewCommandVersion(token, version, commandVersionUrl, accountId, importedTemplate);
+      return downloadAndSaveVersionOfExistingCommand(version, commandId, commandStoreId, accountId, importedTemplate);
     }
-
-    return template;
-  }
-
-  private String getCommandDownloadHost(String commandStoreId) {
-    // This is a stub. Will change later.
-    return "https://localhost:9090";
-  }
-
-  private String constructCommandDetailsUrl(String commandId, String commandStoreId, String accountId) {
-    return "/api/command-stores/" + commandStoreId + "/commands/" + commandId + "/?accountId=" + accountId;
-  }
-
-  private String constructCommandVersionDetailsUrl(
-      String commandId, String commandStoreId, String version, String accountId) {
-    return "/api/command-stores/" + commandStoreId + "/commands/" + commandId + "/versions/" + version
-        + "/?accountId=" + accountId;
-  }
-
-  private String downloadFromUrl(String url, String token) {
-    OkHttpClient httpClient = getUnsafeOkHttpClient(url);
-    try {
-      okhttp3.Response response = httpClient.newCall(getRequestForMakingCalls(url, token)).execute();
-      if (response.isSuccessful()) {
-        String bodyString = (null != response.body()) ? response.body().string() : "null";
-        if (bodyString != null) {
-          logger.info("Response successful for url {}. Response body: {}", url, bodyString);
-          return bodyString;
-        }
-      }
-    } catch (IOException e) {
-      throw new InvalidRequestException("Cannot download command.", e, WingsException.USER);
-    }
-    return null;
-  }
-
-  private Request getRequestForMakingCalls(String url, String token) {
-    return new Request.Builder()
-        .method("GET", null)
-        .url(url)
-        .addHeader("Authorization", token)
-        .addHeader("Content-Type", "application/json")
-        .addHeader("Accept", "*/*")
-        .addHeader("Cache-Control", "no-cache")
-        .addHeader("cache-control", "no-cache")
-        .addHeader("Connection", "close")
-        .addHeader("Accept-Encoding", "identity")
-        .build();
   }
 
   private ImportedTemplate getImportedTemplate(CommandDTO commandDTO, String accountId) {
@@ -262,7 +221,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   private Template saveNewCommand(
-      String token, String version, String commandversionUrl, String accountId, CommandDTO commandDTO) {
+      String version, String commandId, String commandStoreId, String accountId, CommandDTO commandDTO) {
     ImportedTemplate importedTemplate = ImportedTemplate.builder()
                                             .commandStoreId(commandDTO.getCommandStoreId())
                                             .commandId(commandDTO.getId())
@@ -274,54 +233,39 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                                             .imageUrl(commandDTO.getImageUrl())
                                             .build();
     Template template =
-        downloadAndSaveNewCommandVersion(token, version, commandversionUrl, accountId, importedTemplate);
+        downloadAndSaveNewCommandVersion(version, commandId, commandStoreId, accountId, importedTemplate);
     importedTemplate.setTemplateId(template.getUuid());
     wingsPersistence.save(importedTemplate);
     return template;
   }
 
   private Template downloadAndSaveNewCommandVersion(
-      String token, String version, String commandVersionUrl, String accountId, ImportedTemplate importedTemplate) {
-    Template template;
-    if (importedTemplate.getTemplateId() == null) {
-      CommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandVersionUrl, token);
-      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate);
-      template = templateService.saveReferenceTemplate(template);
-    } else {
-      throwExceptionIfCommandVersionAlreadyDownloaded(version, importedTemplate);
-      CommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandVersionUrl, token);
-      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate);
-      template = templateService.updateReferenceTemplate(template);
-    }
-    return template;
+      String version, String commandId, String commandStoreId, String accountId, ImportedTemplate importedTemplate) {
+    EnrichedCommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandStoreId, commandId, version);
+    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId);
+    return templateService.saveReferenceTemplate(template);
+  }
+
+  private Template downloadAndSaveVersionOfExistingCommand(
+      String version, String commandId, String commandStoreId, String accountId, ImportedTemplate importedTemplate) {
+    throwExceptionIfCommandVersionAlreadyDownloaded(version, importedTemplate);
+    EnrichedCommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandStoreId, commandId, version);
+    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId);
+    return templateService.updateReferenceTemplate(template);
   }
 
   @VisibleForTesting
-  CommandVersionDTO downloadAndGetCommandVersionDTO(String commandVersionUrl, String token) {
-    String payload = downloadFromUrl(commandVersionUrl, token);
-    ObjectMapper objectMapper = new ObjectMapper();
-    CommandVersionDTO commandVersionDTO = null;
-    try {
-      RestResponse<CommandVersionDTO> commandDTORestResponse = objectMapper.readValue(payload, RestResponse.class);
-      commandVersionDTO = objectMapper.convertValue(commandDTORestResponse.getResource(), CommandVersionDTO.class);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Cannot download command.", e, WingsException.USER);
-    }
-    return commandVersionDTO;
+  EnrichedCommandVersionDTO downloadAndGetCommandVersionDTO(String commandStoreId, String commandId, String version) {
+    return CommandLibraryServiceClientUtils
+        .executeHttpRequest(serviceHttpClient.getVersionDetails(commandStoreId, commandId, version))
+        .getResource();
   }
 
   @VisibleForTesting
-  CommandDTO downloadAndGetCommandDTO(String commandInformationUrl, String token) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    String payload = downloadFromUrl(commandInformationUrl, token);
-    CommandDTO commandDTO;
-    try {
-      RestResponse<CommandDTO> commandDTORestResponse = objectMapper.readValue(payload, RestResponse.class);
-      commandDTO = objectMapper.convertValue(commandDTORestResponse.getResource(), CommandDTO.class);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Cannot download command.", e, WingsException.USER);
-    }
-    return commandDTO;
+  CommandDTO downloadAndGetCommandDTO(String commandStoreId, String commandId) {
+    return CommandLibraryServiceClientUtils
+        .executeHttpRequest(serviceHttpClient.getCommandDetails(commandStoreId, commandId))
+        .getResource();
   }
 
   private void throwExceptionIfCommandVersionAlreadyDownloaded(String version, ImportedTemplate importedTemplate) {
@@ -339,21 +283,21 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   @VisibleForTesting
-  Template createTemplateFromCommandVersionDTO(CommandVersionDTO commandVersionDTO, ImportedTemplate importedTemplate) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    Template template;
-    try {
-      template = objectMapper.readValue(commandVersionDTO.getYamlContent(), Template.class);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Cannot map value correctly", e);
-    }
+  Template createTemplateFromCommandVersionDTO(
+      EnrichedCommandVersionDTO commandVersionDTO, ImportedTemplate importedTemplate, String accountId) {
+    Template template = Template.builder()
+                            .templateObject(commandVersionDTO.getTemplateObject())
+                            .variables(commandVersionDTO.getVariables())
+                            .build();
     template.setAppId(GLOBAL_APP_ID);
-    template.setAccountId(importedTemplate.getAccountId());
+    template.setAccountId(accountId);
     template.setVersionDetails(commandVersionDTO.getDescription());
-    TemplateGallery templateGallery = templateGalleryService.getByAccount(
-        importedTemplate.getAccountId(), GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY);
+    // TODO: Assuming only harness command gallery. May have to maintain a mapping for store ID to Gallery.
+    TemplateGallery templateGallery =
+        templateGalleryHelper.getGalleryByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), accountId);
     template.setGalleryId(templateGallery.getUuid());
+    template.setName(importedTemplate.getName());
+    template.setDescription(importedTemplate.getDescription());
     HarnessImportedTemplateDetails harnessImportedTemplateDetails =
         HarnessImportedTemplateDetails.builder()
             .importedCommandVersion(commandVersionDTO.getVersion())

@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
-import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1054,12 +1053,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     templateService.save(getSshCommandTemplate());
     ImportedCommand importedCommand =
         templateVersionService.listImportedTemplateVersions("COMMANDID", "COMMANDSTOREID", GLOBAL_ACCOUNT_ID);
-    assertThat(importedCommand)
-        .isEqualTo(ImportedCommand.builder()
-                       .commandId("COMMANDID")
-                       .commandStoreId("COMMANDSTOREID")
-                       .importedCommandVersionList(EMPTY_LIST)
-                       .build());
+    assertThat(importedCommand).isNull();
   }
 
   @Test
@@ -1099,7 +1093,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     template.setImportedTemplateDetails(harnessImportedTemplateDetails);
     template.setGalleryId(
         templateGalleryHelper
-            .getGalleryIdByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GLOBAL_ACCOUNT_ID)
+            .getGalleryByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GLOBAL_ACCOUNT_ID)
             .getUuid());
     template = templateService.saveReferenceTemplate(template);
     ImportedTemplate importedTemplate = ImportedTemplate.builder()
