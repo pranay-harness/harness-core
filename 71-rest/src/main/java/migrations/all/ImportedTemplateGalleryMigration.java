@@ -33,8 +33,10 @@ public class ImportedTemplateGalleryMigration implements Migration {
             wingsPersistence.createUpdateOperations(TemplateGallery.class)
                 .set(GALLERY_KEY, templateGalleryService.getAccountGalleryKey());
 
-        Query<TemplateGallery> query =
-            wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID_KEY, account.getUuid());
+        Query<TemplateGallery> query = wingsPersistence.createQuery(TemplateGallery.class)
+                                           .filter(ACCOUNT_ID_KEY, account.getUuid())
+                                           .field(GALLERY_KEY)
+                                           .doesNotExist();
         UpdateResults result = wingsPersistence.update(query, updateOperations);
         logger.info("Updated account gallery to have gallery type for account %s ");
         logger.info(DEBUG_LINE + "Gallery type update for already existing gallery for account {} resulted in {}",

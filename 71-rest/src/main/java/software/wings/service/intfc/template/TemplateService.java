@@ -40,6 +40,7 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   boolean delete(String accountId, String templateUuid);
 
+  //  @Deprecated should not be used in future code,
   void loadDefaultTemplates(TemplateType templateType, @NotEmpty String accountId, @NotEmpty String accountName);
 
   Template loadYaml(TemplateType templateType, String yamlFilePath, String accountId, String accountName);
@@ -66,15 +67,15 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String templateUri);
 
-  String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId);
+  String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId, String galleryId);
 
   VersionedTemplate getVersionedTemplate(@NotEmpty String accountId, @NotEmpty String templateUuid, Long version);
 
-  Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword);
+  Template fetchTemplateByKeywordForAccountGallery(@NotEmpty String accountId, String keyword);
 
-  Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword);
+  Template fetchTemplateByKeywordForAccountGallery(@NotEmpty String accountId, @NotEmpty String appId, String keyword);
 
-  Template fetchTemplateByKeywords(@NotEmpty String accountId, Set<String> keywords);
+  Template fetchTemplateByKeywordsForAccountGallery(@NotEmpty String accountId, Set<String> keywords);
 
   List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId);
 

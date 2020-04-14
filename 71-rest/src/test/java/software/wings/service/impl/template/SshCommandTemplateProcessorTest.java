@@ -51,6 +51,7 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
@@ -96,7 +97,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "install");
+    Template template = templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, "install");
     assertThat(template).isNotNull();
   }
 
@@ -145,7 +146,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template getSshCommandTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(anExecCommandUnit()
@@ -333,8 +337,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
     Template myStop = createMyStopCommand();
     Template myStart = createMyStartCommand();
     Template myAnotherCommand = createMyAnotherCommand();
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
     // Create command MyInstall composed of other commands from template library
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     List<Variable> myStopVariables =
         asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build());
     List<Variable> myStartVariables =
@@ -385,8 +392,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
     Template myStop = createMyStopCommand();
     Template myStart = createMyStartCommand();
     Template myAnotherCommand = createMyAnotherCommand();
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
     // Create command MyInstall composed of other commands from template library
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     List<Variable> myStopVariables =
         asList(aVariable().name("V3").value("hello3").build(), aVariable().name("V4").value("world4").build());
     List<Variable> myStartVariables =
@@ -429,7 +439,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createMyStopCommand(String appId) {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
                                              .commandUnits(asList(anExecCommandUnit()
                                                                       .withName("EXEC-1")
@@ -462,7 +475,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createMyStartCommand() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
                                              .commandUnits(asList(anExecCommandUnit()
                                                                       .withName("EXEC-1")
@@ -495,7 +511,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createMyAnotherCommand() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate = SshCommandTemplate.builder()
                                              .commandUnits(asList(anExecCommandUnit()
                                                                       .withName("EXEC-1")
@@ -521,7 +540,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createInstallCommand(Template myStop, Template myStart, Template myAnotherCommand) {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,
@@ -559,8 +581,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
     // Create individual commands like MyStart, MyStop
     Template myStop = createMyStopCommand(APP_ID);
     Template myStart = createMyStartCommand();
-
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,
@@ -595,7 +619,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
     // Create individual commands like MyStop with ANOTHER_APP_ID
     Template myStop = createMyStopCommand(ANOTHER_APP_ID);
 
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,
@@ -643,7 +670,10 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   private Template linkAccountLevelToAppLevelAndValidate() {
     Template myStop = createMyStopCommand();
 
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     SshCommandTemplate commandTemplate =
         SshCommandTemplate.builder()
             .commandUnits(asList(createCommand(myStop,

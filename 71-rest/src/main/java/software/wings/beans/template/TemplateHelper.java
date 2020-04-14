@@ -35,6 +35,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.command.CommandHelper;
@@ -274,6 +275,7 @@ public class TemplateHelper {
                                         .filter(ApplicationKeys.appId, appId)
                                         .filter(FOLDER_ID_KEY, template.getFolderId())
                                         .filter(TYPE_KEY, template.getType())
+                                        .filter(TemplateKeys.galleryId, template.getGalleryId())
                                         .field(NAME_KEY)
                                         .notEqual(template.getName());
 

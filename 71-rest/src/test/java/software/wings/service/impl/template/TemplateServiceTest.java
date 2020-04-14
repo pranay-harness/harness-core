@@ -68,6 +68,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.ImportedCommandTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
@@ -352,7 +353,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteByFolder() {
-    TemplateFolder templateFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, "Harness/Tomcat Commands");
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder templateFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, "Harness/Tomcat Commands", templateGallery.getUuid());
 
     Template httpTemplate =
         Template.builder()
@@ -628,7 +632,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template template = getSshCommandTemplate();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
-    Template template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
+    Template template1 =
+        templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
     assertThat(template1.getUuid()).isEqualTo(savedTemplate.getUuid());
   }
 
@@ -707,14 +712,18 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldAllowSameTemplateNameInAccountAndApplication() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     TemplateFolder accountLevelFolder = templateFolderService.save(TemplateFolder.builder()
                                                                        .name(TEMPLATE_FOLDER_NAME)
                                                                        .description(TEMPLATE_FOLDER_DEC)
                                                                        .parentId(parentFolder.getUuid())
                                                                        .appId(GLOBAL_APP_ID)
                                                                        .accountId(GLOBAL_ACCOUNT_ID)
-                                                                       .build());
+                                                                       .build(),
+        templateGallery.getUuid());
     assertThat(accountLevelFolder).isNotNull();
     assertThat(accountLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
     assertThat(accountLevelFolder.getAppId()).isEqualTo(GLOBAL_APP_ID);
@@ -737,7 +746,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                                                    .parentId(parentFolder.getUuid())
                                                                    .appId(APP_ID)
                                                                    .accountId(GLOBAL_ACCOUNT_ID)
-                                                                   .build());
+                                                                   .build(),
+        templateGallery.getUuid());
     assertThat(appLevelFolder).isNotNull();
     assertThat(appLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
     assertThat(appLevelFolder.getAppId()).isEqualTo(APP_ID);
@@ -762,9 +772,11 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
-    Template template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
+    Template template1 =
+        templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
     assertThat(template1).isNull();
-    template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, APP_ID, TEMPLATE_CUSTOM_KEYWORD);
+    template1 =
+        templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, APP_ID, TEMPLATE_CUSTOM_KEYWORD);
     assertThat(template1.getUuid()).isEqualTo(savedTemplate.getUuid());
   }
 
@@ -827,14 +839,18 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDeleteApplicationLevelTemplatesByFolder() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     TemplateFolder appLevelFolder = templateFolderService.save(TemplateFolder.builder()
                                                                    .name(TEMPLATE_FOLDER_NAME)
                                                                    .description(TEMPLATE_FOLDER_DEC)
                                                                    .parentId(parentFolder.getUuid())
                                                                    .appId(APP_ID)
                                                                    .accountId(GLOBAL_ACCOUNT_ID)
-                                                                   .build());
+                                                                   .build(),
+        templateGallery.getUuid());
     assertThat(appLevelFolder).isNotNull();
     assertThat(appLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
     assertThat(appLevelFolder.getAppId()).isEqualTo(APP_ID);
@@ -913,7 +929,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotSaveTemplateWithDuplicateVariables() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     HttpTemplate httpTemplate =
         HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
     Template template = Template.builder()
@@ -932,7 +951,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotUpdateTemplateWithDuplicateVariables() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     HttpTemplate httpTemplate =
         HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
     Template template = Template.builder()

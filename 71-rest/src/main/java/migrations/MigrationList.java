@@ -8,6 +8,7 @@ import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
 import migrations.all.AddDuplicateFieldToCVFeedbacks;
+import migrations.all.AddHarnessCommandLibraryToAccount;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
@@ -327,6 +328,7 @@ public class MigrationList {
         .add(Pair.of(304, DeleteGitActivityWithoutProcCommitIdMigration.class))
         .add(Pair.of(305, ImportedTemplateGalleryMigration.class))
         .add(Pair.of(306, DropUniqueIndexOnTemplateGallery.class))
+        .add(Pair.of(307, AddHarnessCommandLibraryToAccount.class))
         .build();
   }
 }

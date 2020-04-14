@@ -12,7 +12,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.ACCOUNT_ID_KEY;
 import static software.wings.beans.template.TemplateGallery.GALLERY_KEY;
 import static software.wings.beans.template.TemplateGallery.GalleryKey;
-import static software.wings.beans.template.TemplateGallery.IMPORTED_TEMPLATE_GALLERY_NAME;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -83,6 +82,8 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
+  //  @Deprecated
+  // Gallery Name should be replaced by gallery key.
   public TemplateGallery get(String accountId, String galleryName) {
     return wingsPersistence.createQuery(TemplateGallery.class)
         .filter(TemplateGallery.ACCOUNT_ID_KEY, accountId)
@@ -101,11 +102,18 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
-  public TemplateGallery getByAccount(String accountId) {
-    // Hardcoding account template for now. Have to make it more generic later.
+  public TemplateGallery getByAccount(String accountId, GalleryKey galleryKey) {
     return wingsPersistence.createQuery(TemplateGallery.class)
         .filter(ACCOUNT_ID_KEY, accountId)
-        .filter(GALLERY_KEY, getAccountGalleryKey())
+        .filter(GALLERY_KEY, galleryKey.name())
+        .get();
+  }
+
+  @Override
+  public TemplateGallery getByAccount(String accountId, String galleryId) {
+    return wingsPersistence.createQuery(TemplateGallery.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(ID_KEY, galleryId)
         .get();
   }
 
@@ -191,12 +199,14 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
       if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
-        saveCommandLibraryGalleryToAccount(account.getUuid(), account.getAccountName());
+        saveHarnessCommandLibraryGalleryToAccount(account.getUuid(), account.getAccountName());
       }
     }
   }
 
   @Override
+  //  @Deprecated
+  // Deleting gallery by name is not safe.
   public void deleteAccountGalleryByName(String accountId, String galleryName) {
     TemplateGallery accountGallery = get(accountId, galleryName);
     if (accountGallery != null) {
@@ -221,14 +231,15 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
-  public void saveCommandLibraryGalleryToAccount(String accountId, String accountName) {
+  public void saveHarnessCommandLibraryGalleryToAccount(String accountId, String accountName) {
     logger.info("Creating command library gallery for the account {}", accountName);
-    TemplateGallery templateGallery = save(TemplateGallery.builder()
-                                               .name(IMPORTED_TEMPLATE_GALLERY_NAME)
-                                               .appId(GLOBAL_APP_ID)
-                                               .accountId(accountId)
-                                               .galleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name())
-                                               .build());
+    TemplateGallery templateGallery =
+        save(TemplateGallery.builder()
+                 .name(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name()) /* Setting name as gallery key*/
+                 .appId(GLOBAL_APP_ID)
+                 .accountId(accountId)
+                 .galleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name())
+                 .build());
     templateFolderService.createRootImportedTemplateFolder(accountId, templateGallery.getUuid());
     logger.info(
         "Created command library gallery for account {} with galleryId {}", accountName, templateGallery.getUuid());
@@ -291,9 +302,11 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
             POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH, POWER_SHELL_IIS_APP_V4_INSTALL_PATH),
         accountId, accountName);
     templateGalleryService.copyHarnessTemplateFromGalleryToAccount(POWER_SHELL_COMMANDS, TemplateType.SSH,
-        "Install IIS Application", POWER_SHELL_IIS_APP_V4_INSTALL_PATH, accountId, accountName);
+        "Install IIS Application", POWER_SHELL_IIS_APP_V4_INSTALL_PATH, accountId, accountName,
+        accountGallery.getUuid());
     templateGalleryService.copyHarnessTemplateFromGalleryToAccount(POWER_SHELL_COMMANDS, TemplateType.SSH,
-        "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH, accountId, accountName);
+        "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH, accountId, accountName,
+        accountGallery.getUuid());
     logger.info("Copying default templates for account {} success", accountName);
   }
   private Set<String> getKeywords(TemplateGallery templateGallery) {
@@ -303,8 +316,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TemplateGallery.class).filter(TemplateGallery.ACCOUNT_ID_KEY, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID_KEY, accountId));
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolder.ACCOUNT_ID_KEY, accountId));
     wingsPersistence.delete(wingsPersistence.createQuery(Template.class).filter(Template.ACCOUNT_ID_KEY, accountId));
@@ -329,17 +341,15 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     for (Account account : accounts) {
       try {
         logger.info("Copying template [{}] started for account [{}]", templateName, account.getUuid());
-        boolean templateGalleryExists = wingsPersistence.createQuery(TemplateGallery.class)
-                                            .field(TemplateGallery.NAME_KEY)
-                                            .equal(account.getAccountName())
-                                            .field("accountId")
-                                            .equal(account.getUuid())
-                                            .getKey()
-            != null;
-        if (templateGalleryExists) {
+        TemplateGallery templateGallery = wingsPersistence.createQuery(TemplateGallery.class)
+                                              .filter(GALLERY_KEY, GalleryKey.ACCOUNT_TEMPLATE_GALLERY)
+                                              .field("accountId")
+                                              .equal(account.getUuid())
+                                              .get();
+        if (templateGallery != null) {
           if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
             TemplateFolder destTemplateFolder = templateFolderService.getByFolderPath(
-                account.getUuid(), account.getAccountName() + "/" + sourceFolderPath);
+                account.getUuid(), account.getAccountName() + "/" + sourceFolderPath, templateGallery.getUuid());
             if (destTemplateFolder != null) {
               templateService.loadYaml(templateType, yamlFilePath, account.getUuid(), account.getAccountName());
               logger.info("Template copied to account [{}]", account.getUuid());
@@ -356,7 +366,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void copyHarnessTemplateFromGalleryToAccount(String sourceFolderPath, TemplateType templateType,
-      String templateName, String yamlFilePath, String accountId, String accountName) {
+      String templateName, String yamlFilePath, String accountId, String accountName, String galleryId) {
     logger.info("Copying Harness template [{}] from global account to all accounts", templateName);
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -367,17 +377,15 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
     try {
       logger.info("Copying template [{}] started for account [{}]", templateName, accountId);
-      boolean templateGalleryExists = wingsPersistence.createQuery(TemplateGallery.class)
-                                          .field(TemplateGallery.NAME_KEY)
-                                          .equal(accountName)
-                                          .field("accountId")
-                                          .equal(accountId)
-                                          .getKey()
-          != null;
-      if (templateGalleryExists) {
+      TemplateGallery templateGallery = wingsPersistence.createQuery(TemplateGallery.class)
+                                            .filter(GALLERY_KEY, GalleryKey.ACCOUNT_TEMPLATE_GALLERY)
+                                            .field(ACCOUNT_ID_KEY)
+                                            .equal(accountId)
+                                            .get();
+      if (templateGallery != null) {
         if (!GLOBAL_ACCOUNT_ID.equals(accountId)) {
-          TemplateFolder destTemplateFolder =
-              templateFolderService.getByFolderPath(accountId, accountId + "/" + sourceFolderPath);
+          TemplateFolder destTemplateFolder = templateFolderService.getByFolderPath(
+              accountId, accountId + "/" + sourceFolderPath, templateGallery.getUuid());
           if (destTemplateFolder != null) {
             templateService.loadYaml(templateType, yamlFilePath, accountId, accountName);
           }
@@ -396,7 +404,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
       if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
-        Template existingTemplate = templateService.fetchTemplateByKeyword(account.getUuid(), keyword);
+        Template existingTemplate = templateService.fetchTemplateByKeywordForAccountGallery(account.getUuid(), keyword);
         if (existingTemplate != null) {
           existingTemplate.setReferencedTemplateVersion(globalTemplate.getVersion());
           existingTemplate.setReferencedTemplateId(globalTemplate.getUuid());
@@ -434,7 +442,8 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
               templateFolderService.getRootLevelFolder(account.getUuid(), templateGallery.getUuid());
           if (templateFolder != null) {
             TemplateFolder newTemplateFolder = constructTemplateBuilder(templateFolder, sourceFolderPath);
-            TemplateFolder destTemplateFolder = templateFolderService.save(newTemplateFolder);
+            TemplateFolder destTemplateFolder =
+                templateFolderService.save(newTemplateFolder, templateGallery.getUuid());
             if (destTemplateFolder != null) {
               for (String path : yamlFilePaths) {
                 templateService.loadYaml(templateType, path, account.getUuid(), account.getAccountName());

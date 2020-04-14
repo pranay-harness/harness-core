@@ -55,7 +55,8 @@ public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandl
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testRUDAndGetForExistingTemplate() throws Exception {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, templateName, GLOBAL_APP_ID)).thenReturn(templateForSetup);
     when(templateService.update(expectedTemplate)).thenReturn(expectedTemplate);
@@ -90,7 +91,8 @@ public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandl
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCreateForNewTemplate() throws Exception {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, SHELL_SCRIPT_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, templateName, GLOBAL_APP_ID)).thenReturn(null);
     when(templateService.save(expectedTemplateWithoutVariable)).thenReturn(expectedTemplateWithoutVariable);

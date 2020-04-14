@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -51,7 +53,8 @@ public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandle
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testRUDAndGetForExistingTemplate() throws Exception {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, templateName, GLOBAL_APP_ID))
         .thenReturn(PCfCommandTemplateForSetup);
@@ -87,7 +90,8 @@ public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandle
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testCreateForNewTemplate() throws Exception {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             eq(GLOBAL_ACCOUNT_ID), eq(PCF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH), eq(GLOBAL_APP_ID), anyString()))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, templateName, GLOBAL_APP_ID)).thenReturn(null);
     when(templateService.save(expectedPcfCommandTemplateWithoutVariable))

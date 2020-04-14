@@ -125,7 +125,14 @@ public class TemplateGalleryResource {
     if (EmptyPredicate.isEmpty(templateFolder.getParentId())) {
       throw new WingsException("Root folder can not be added. Only one root folder supported ", WingsException.USER);
     }
-    return new RestResponse<>(templateFolderService.save(templateFolder));
+    // TODO: UI needs to send gallery ID while saving folder. For now making account gallery as default if not set.
+    String galleryId = templateFolder.getGalleryId();
+    if (galleryId == null) {
+      TemplateGallery templateGallery =
+          templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey());
+      galleryId = templateGallery.getUuid();
+    }
+    return new RestResponse<>(templateFolderService.save(templateFolder, galleryId));
   }
 
   /**

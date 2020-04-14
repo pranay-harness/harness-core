@@ -47,6 +47,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
@@ -70,7 +71,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void shouldLoadDefaultHttpTemplates() {
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
     assertThat(template).isNotNull();
     assertThat(template.getTemplateObject()).isNotNull();
@@ -80,7 +84,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveHttpTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     HttpTemplate httpTemplate =
         HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
     Template template = Template.builder()
@@ -103,7 +110,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
 
     Template savedTemplate = templateService.save(template);
@@ -190,7 +200,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   private Template createHttpTemplate() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
 
     Template savedTemplate = templateService.save(template);
@@ -232,7 +245,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder);
     assertThat(template).isNotNull();
     updateLinkedEntities(template);
@@ -242,7 +258,10 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesWhenLinkedAppTemplateUpdated() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     Template template = getTemplate(parentFolder, APP_ID);
     assertThat(template).isNotNull();
     updateLinkedEntities(template);

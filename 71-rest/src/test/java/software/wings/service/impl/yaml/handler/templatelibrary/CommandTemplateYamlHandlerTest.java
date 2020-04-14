@@ -50,7 +50,8 @@ public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTe
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCRUDAndGetForExistingTemplate() throws Exception {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, commandTemplateName, GLOBAL_APP_ID))
         .thenReturn(commandTemplateForSetup);

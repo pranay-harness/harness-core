@@ -47,7 +47,8 @@ public class HttpTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTest 
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCRUDAndGetFoTemplate() throws IOException {
-    when(yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID, HTTP_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID))
+    when(yamlHelper.ensureTemplateFolder(
+             GLOBAL_ACCOUNT_ID, HTTP_TEMPLATE_VALID_YAML_FILE_PATH, GLOBAL_APP_ID, TEMPLATE_GALLERY_UUID))
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, httpTemplateName, GLOBAL_APP_ID))
         .thenReturn(httpTemplateForSetup);

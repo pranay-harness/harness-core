@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
@@ -16,6 +17,7 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.command.CommandType.INSTALL;
 import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
+import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V2_INSTALL_PATH;
@@ -26,8 +28,10 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC_CHANGED;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_IMPORTED;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
 import com.google.common.collect.ImmutableSet;
@@ -163,8 +167,22 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     assertThat(savedTemplateGallery).isNotNull();
     assertThat(savedTemplateGallery.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
 
-    TemplateGallery templateGallery = templateGalleryService.getByAccount(savedTemplateGallery.getAccountId());
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(savedTemplateGallery.getAccountId(), savedTemplateGallery.getUuid());
     assertTemplateGallery(templateGallery);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldGetImportedTemplateGalleryByAccount() {
+    TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareImportedTemplateGallery());
+    assertThat(savedTemplateGallery).isNotNull();
+    assertThat(savedTemplateGallery.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(savedTemplateGallery.getAccountId(), savedTemplateGallery.getUuid());
+    assertThat(templateGallery).isEqualTo(savedTemplateGallery);
   }
 
   @Test
@@ -204,7 +222,8 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   public void shouldLoadHarnessGallery() {
     templateGalleryService.loadHarnessGallery();
 
-    TemplateGallery templateGallery = templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
     assertThat(templateGallery).isNotNull();
     assertThat(templateGallery.getName()).isEqualTo(HARNESS_GALLERY);
     assertThat(templateGallery.isGlobal()).isTrue();
@@ -256,7 +275,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     assertAccountGallery();
 
     templateGalleryService.deleteByAccountId(ACCOUNT_ID);
-    assertThat(templateGalleryService.getByAccount(ACCOUNT_ID)).isNull();
+    assertThat(templateGalleryService.getByAccount(ACCOUNT_ID, templateGalleryService.getAccountGalleryKey())).isNull();
   }
 
   @Test
@@ -266,6 +285,21 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
     assertAccountGallery();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldCreateImportedTemplateGalleryInAccount() {
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(ACCOUNT_NAME)
+                          .withCompanyName(COMPANY_NAME)
+                          .withUuid(ACCOUNT_ID)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    wingsPersistence.save(account);
+    templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(ACCOUNT_ID, ACCOUNT_NAME);
+    assertThat(templateGalleryService.getByAccount(ACCOUNT_ID, GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY)).isNotNull();
   }
 
   private void assertAccountGallery() {
@@ -305,6 +339,17 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
         .build();
   }
 
+  private TemplateGallery prepareImportedTemplateGallery() {
+    return TemplateGallery.builder()
+        .name(TEMPLATE_GALLERY_IMPORTED)
+        .accountId(ACCOUNT_ID)
+        .description(TEMPLATE_GALLERY_DESC)
+        .galleryKey(templateGalleryService.getAccountGalleryKey().name())
+        .appId(GLOBAL_APP_ID)
+        .keywords(ImmutableSet.of("CD"))
+        .build();
+  }
+
   private void assertTemplateGallery(TemplateGallery templateGallery) {
     assertThat(templateGallery).isNotNull().extracting("uuid").isNotNull();
     assertThat(templateGallery.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
@@ -330,7 +375,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
         POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Website", POWER_SHELL_IIS_WEBSITE_INSTALL_PATH);
-    Template createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iiswebsite");
+    Template createdTemplate = templateService.fetchTemplateByKeywordForAccountGallery(ACCOUNT_ID, "iiswebsite");
     assertThat(createdTemplate).isNotNull();
   }
 
@@ -348,7 +393,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
         POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH);
-    Template createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iiswebsite");
+    Template createdTemplate = templateService.fetchTemplateByKeywordForAccountGallery(ACCOUNT_ID, "iiswebsite");
     assertThat(createdTemplate).isNotNull();
 
     // Yaml V2 of IIS Application
@@ -358,7 +403,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
         POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Application", POWER_SHELL_IIS_APP_V2_INSTALL_PATH);
-    createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iisapp");
+    createdTemplate = templateService.fetchTemplateByKeywordForAccountGallery(ACCOUNT_ID, "iisapp");
     assertThat(createdTemplate).isNotNull();
   }
 
@@ -396,7 +441,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
     templateGalleryService.copyNewVersionFromGlobalToAllAccounts(template, "iis");
 
-    Template template1 = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iis");
+    Template template1 = templateService.fetchTemplateByKeywordForAccountGallery(ACCOUNT_ID, "iis");
     assertThat(template1).isNotNull();
     assertThat(template1.getVersion()).isEqualTo(2L);
   }

@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
@@ -138,7 +139,10 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   }
 
   private Template constructCustomArtifactTemplateEntity() {
-    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
     List<AttributeMapping> attributeMapping = new ArrayList<>();
     attributeMapping.add(
         AttributeMapping.builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());

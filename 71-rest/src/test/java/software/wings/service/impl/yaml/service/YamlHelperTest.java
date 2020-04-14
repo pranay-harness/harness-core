@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -91,17 +92,17 @@ public class YamlHelperTest extends WingsBaseTest {
     TemplateFolder returnTemplateFolder = yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID,
         "Setup/Template Library/" + templateFolder.getName() + "/" + templateFolder.getChildren().get(0).getName()
             + "/test.yaml",
-        GLOBAL_APP_ID);
+        GLOBAL_APP_ID, "random");
     assertThat(returnTemplateFolder.getName()).isEqualTo(templateFolder.getChildren().get(0).getName());
 
     // Case 2: When folder is to be created.
     String newFolderName = "newFolder";
     TemplateFolder expectedTemplateFolder = TemplateFolder.builder().name(newFolderName).appId(GLOBAL_APP_ID).build();
-    when(templateFolderService.saveSafelyAndGet(expectedTemplateFolder)).thenReturn(expectedTemplateFolder);
+    when(templateFolderService.saveSafelyAndGet(anyObject(), anyString())).thenReturn(expectedTemplateFolder);
     TemplateFolder returnTemplateFolderCase2 = yamlHelper.ensureTemplateFolder(GLOBAL_ACCOUNT_ID,
         "Setup/Template Library/" + templateFolder.getName() + "/" + templateFolder.getChildren().get(0).getName() + "/"
             + newFolderName + "/test.yaml",
-        GLOBAL_APP_ID);
+        GLOBAL_APP_ID, "random");
     assertThat(returnTemplateFolderCase2.getName()).isEqualTo(newFolderName);
   }
 }
