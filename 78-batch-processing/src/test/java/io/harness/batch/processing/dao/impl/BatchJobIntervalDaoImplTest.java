@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobInterval;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,12 +30,13 @@ public class BatchJobIntervalDaoImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchBatchJobInterval() {
     batchJobIntervalDao.create(batchJobInterval(INTERVAL_UNIT, INTERVAL));
-    BatchJobInterval batchJobInterval = batchJobIntervalDao.fetchBatchJobInterval(ACCOUNT_ID, BatchJobType.K8S_EVENT);
+    BatchJobInterval batchJobInterval =
+        batchJobIntervalDao.fetchBatchJobInterval(ACCOUNT_ID, BatchJobType.K8S_EVENT.name());
     assertThat(batchJobInterval.getInterval()).isEqualTo(INTERVAL);
     assertThat(batchJobInterval.getIntervalUnit()).isEqualTo(INTERVAL_UNIT);
   }
 
   private BatchJobInterval batchJobInterval(ChronoUnit intervalUnit, long interval) {
-    return new BatchJobInterval(ACCOUNT_ID, BatchJobType.K8S_EVENT, intervalUnit, interval);
+    return new BatchJobInterval(ACCOUNT_ID, BatchJobType.K8S_EVENT.name(), intervalUnit, interval);
   }
 }

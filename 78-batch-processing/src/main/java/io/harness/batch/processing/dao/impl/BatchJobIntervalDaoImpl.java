@@ -2,10 +2,9 @@ package io.harness.batch.processing.dao.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobIntervalDao;
-import io.harness.batch.processing.entities.BatchJobInterval;
-import io.harness.batch.processing.entities.BatchJobInterval.BatchJobIntervalKeys;
+import io.harness.ccm.cluster.entities.BatchJobInterval;
+import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ public class BatchJobIntervalDaoImpl implements BatchJobIntervalDao {
   }
 
   @Override
-  public BatchJobInterval fetchBatchJobInterval(String accountId, BatchJobType batchJobType) {
+  public BatchJobInterval fetchBatchJobInterval(String accountId, String batchJobType) {
     return hPersistence.createQuery(BatchJobInterval.class)
         .filter(BatchJobIntervalKeys.accountId, accountId)
         .filter(BatchJobIntervalKeys.batchJobType, batchJobType)

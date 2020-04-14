@@ -1,10 +1,7 @@
-package io.harness.batch.processing.entities;
-
-import static io.harness.event.app.EventServiceApplication.EVENTS_DB;
+package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobInterval.BatchJobIntervalKeys;
+import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -31,17 +28,17 @@ import java.time.temporal.ChronoUnit;
 })
 @FieldNameConstants(innerTypeName = "BatchJobIntervalKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@StoreIn(EVENTS_DB)
+@StoreIn("events")
 public class BatchJobInterval implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;
-  BatchJobType batchJobType;
+  String batchJobType;
   ChronoUnit intervalUnit;
   long interval;
   long createdAt;
   long lastUpdatedAt;
 
-  public BatchJobInterval(String accountId, BatchJobType batchJobType, ChronoUnit intervalUnit, long interval) {
+  public BatchJobInterval(String accountId, String batchJobType, ChronoUnit intervalUnit, long interval) {
     this.accountId = accountId;
     this.batchJobType = batchJobType;
     this.intervalUnit = intervalUnit;

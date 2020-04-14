@@ -752,8 +752,14 @@ public class BillingDataQueryBuilder {
   public String getGroupByTimeQueryWithDateTrunc(QLCCMTimeSeriesAggregation groupByTime, String dbFieldName) {
     String unit;
     switch (groupByTime.getTimeGroupType()) {
+      case HOUR:
+        unit = "hour";
+        break;
       case DAY:
         unit = "day";
+        break;
+      case WEEK:
+        unit = "week";
         break;
       case MONTH:
         unit = "month";
