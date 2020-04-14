@@ -59,6 +59,7 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
@@ -235,7 +236,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     assertThat(harnessTemplateFolder.getName()).isEqualTo(HARNESS_GALLERY);
 
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
-    assertTemplates(pageRequest);
+    assertTemplates(pageRequest, GLOBAL_ACCOUNT_ID);
   }
 
   @Test
@@ -310,11 +311,12 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
     PageRequest<Template> pageRequest =
         aPageRequest().addFilter(ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).addFilter(APP_ID_KEY, EQ, GLOBAL_APP_ID).build();
-    assertTemplates(pageRequest);
+    assertTemplates(pageRequest, ACCOUNT_ID);
   }
 
-  private void assertTemplates(PageRequest<Template> pageRequest) {
-    List<Template> templates = templateService.list(pageRequest);
+  private void assertTemplates(PageRequest<Template> pageRequest, String accountId) {
+    List<Template> templates = templateService.list(
+        pageRequest, Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId);
 
     assertThat(templates).isNotEmpty();
     assertThat(templates.stream()

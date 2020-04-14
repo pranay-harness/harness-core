@@ -81,6 +81,7 @@ import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
 
@@ -213,7 +214,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     saveTemplate();
 
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
-    List<Template> templates = templateService.list(pageRequest);
+    List<Template> templates = templateService.list(pageRequest,
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
 
     assertThat(templates).isNotEmpty();
     Template template = templates.stream().findFirst().get();
@@ -698,7 +700,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     saveTemplate(MY_START_COMMAND, APP_ID);
 
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
-    List<Template> templates = templateService.list(pageRequest);
+    List<Template> templates = templateService.list(pageRequest,
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
 
     assertThat(templates).isNotEmpty();
     Template template = templates.stream().findFirst().get();
@@ -1082,6 +1085,67 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
         asList(commandId, commandId_1), commandStoreId, GLOBAL_ACCOUNT_ID);
     assertThat(importedTemplateLatestVersions.get(0).getHighestVersion()).isEqualTo("3.1");
     assertThat(importedTemplateLatestVersions.get(1).getHighestVersion()).isEqualTo("2.1");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testList() {
+    final String commandId = "COMMAND_ID";
+    final String commandStoreId = "COMMAND_STORE_ID";
+    Template importedTemplate = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1");
+    Template accountTemplate = saveTemplate();
+
+    // Case 1: null as input
+    PageRequest<Template> pageRequest_1 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+    List<Template> templates_1 = templateService.list(pageRequest_1, null, GLOBAL_ACCOUNT_ID);
+
+    assertThat(templates_1).isNotEmpty();
+    assertThat(templates_1.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(importedTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+    assertThat(templates_1.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(accountTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+
+    // Case 2: Single filter as input.
+    PageRequest<Template> pageRequest_2 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+    List<Template> templates_2 = templateService.list(pageRequest_2,
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
+
+    assertThat(templates_2).isNotEmpty();
+    assertThat(templates_2.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(accountTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+
+    // Case 3: Multiple filter as input.
+    PageRequest<Template> pageRequest_3 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+    List<Template> templates_3 = templateService.list(pageRequest_3,
+        Arrays.asList(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GalleryKey.ACCOUNT_TEMPLATE_GALLERY.name()),
+        GLOBAL_ACCOUNT_ID);
+
+    assertThat(templates_3).isNotEmpty();
+    assertThat(templates_3.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(importedTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+    assertThat(templates_3.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(accountTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
   }
 
   private Template saveImportedTemplate(Template template, String commandId, String commandStoreId, String version) {
