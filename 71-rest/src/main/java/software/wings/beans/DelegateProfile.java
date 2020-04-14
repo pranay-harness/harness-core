@@ -45,6 +45,8 @@ public class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAw
   @NotEmpty private String name;
   private String description;
 
+  private boolean primary;
+
   private String startupScript;
 
   @SchemaIgnore private EmbeddedUser createdBy;

@@ -36,6 +36,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
+import static software.wings.beans.DelegateProfile.DelegateProfileBuilder;
+import static software.wings.beans.DelegateProfile.builder;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -205,6 +207,10 @@ public class DelegateServiceTest extends WingsBaseTest {
   private Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
 
+  private DelegateProfileBuilder createDelegateProfileBuilder() {
+    return DelegateProfile.builder().name("DELEGATE_PROFILE_NAME").description("DELEGATE_PROFILE_DESC");
+  }
+
   @Before
   public void setUp() {
     CdnConfig cdnConfig = new CdnConfig();
@@ -325,7 +331,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAdd() {
     Delegate delegate = BUILDER.build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
     delegate = delegateService.add(delegate);
+
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
@@ -338,7 +351,15 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldNotAddMoreThanAllowedDelegates() {
     int maxDelegatesAllowed = 1;
     when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(maxDelegatesAllowed);
-    IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(BUILDER.build()));
+
+    Delegate delegate = BUILDER.build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(delegate));
     try {
       delegateService.add(BUILDER.build());
       fail("");
@@ -360,7 +381,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegister() {
-    Delegate delegate = delegateService.register(BUILDER.build());
+    Delegate delegate = BUILDER.build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    delegate = delegateService.register(delegate);
     Delegate delegateFromDb = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
@@ -369,7 +397,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegisterExistingDelegate() {
-    Delegate delegate = delegateService.add(BUILDER.build());
+    Delegate delegate = BUILDER.build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    delegate = delegateService.add(delegate);
     delegateService.register(delegate);
     Delegate registeredDelegate = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
     assertThat(registeredDelegate).isEqualTo(delegate);
@@ -379,14 +414,22 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotRegisterExistingDelegateForDeletedAccount() {
-    Delegate delegate = delegateService.add(Delegate.builder()
-                                                .accountId(ACCOUNT_ID)
-                                                .ip("127.0.0.1")
-                                                .hostName("localhost")
-                                                .version(VERSION)
-                                                .status(Status.ENABLED)
-                                                .lastHeartBeat(System.currentTimeMillis())
-                                                .build());
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("localhost")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    delegate = delegateService.add(delegate);
     when(licenseService.isAccountDeleted(ACCOUNT_ID)).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
@@ -910,8 +953,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profile1").build();
     wingsPersistence.save(delegate);
-    DelegateProfile profile =
-        DelegateProfile.builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
+    DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
     profile.setUuid("profile1");
     profile.setLastUpdatedAt(100L);
     when(delegateProfileService.get(ACCOUNT_ID, "profile1")).thenReturn(profile);
@@ -961,7 +1003,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profileSecret").build();
     wingsPersistence.save(delegate);
-    DelegateProfile profile = DelegateProfile.builder()
+    DelegateProfile profile = builder()
                                   .accountId(ACCOUNT_ID)
                                   .name("A Secret Profile")
                                   .startupScript("A secret: ${secrets.getValue(\"My Secret\")}")

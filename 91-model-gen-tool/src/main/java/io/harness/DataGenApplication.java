@@ -6,6 +6,7 @@ import static software.wings.utils.CacheManager.USER_CACHE;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -46,6 +47,10 @@ import software.wings.app.YamlModule;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.AccountServiceImpl;
+import software.wings.service.impl.DelegateProfileServiceImpl;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.utils.CacheManager;
 
 import java.lang.management.ManagementFactory;
@@ -144,6 +149,8 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
+    registerObservers(injector);
+
     registerStores(injector);
 
     environment.lifecycle().addServerLifecycleListener(server -> {
@@ -210,5 +217,11 @@ public class DataGenApplication extends Application<MainConfiguration> {
   private void registerStores(Injector injector) {
     final HPersistence persistence = injector.getInstance(HPersistence.class);
     persistence.registerUserProvider(new ThreadLocalUserProvider());
+  }
+
+  private void registerObservers(Injector injector) {
+    AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
+    accountService.getAccountCrudSubject().register(
+        (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
   }
 }

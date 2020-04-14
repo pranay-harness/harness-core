@@ -1250,6 +1250,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public Delegate add(Delegate delegate) {
     Delegate savedDelegate;
     String accountId = delegate.getAccountId();
+
+    if (isBlank(delegate.getDelegateProfileId())) {
+      DelegateProfile primaryDelegateProfile = delegateProfileService.fetchPrimaryProfile(accountId);
+      delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    }
+
     int maxUsageAllowed = delegatesFeature.getMaxUsageAllowedForAccount(accountId);
     if (maxUsageAllowed != Integer.MAX_VALUE) {
       try (AcquiredLock ignored =
