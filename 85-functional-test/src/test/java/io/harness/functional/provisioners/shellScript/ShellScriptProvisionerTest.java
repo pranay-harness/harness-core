@@ -160,7 +160,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
 
   private void checkHosts() {
     InfrastructureMapping infrastructureMapping =
-        infrastructureDefinitionService.getInfrastructureMapping(service.getUuid(), infrastructureDefinition);
+        infrastructureDefinitionService.saveInfrastructureMapping(service.getUuid(), infrastructureDefinition);
     List<Host> hosts = infrastructureMappingService.listHosts(application.getUuid(), infrastructureMapping.getUuid());
     if (hosts == null) {
       throw new InvalidRequestException("Host is null for Infra Mapping");

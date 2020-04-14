@@ -41,10 +41,10 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   Map<DeploymentType, List<SettingVariableTypes>> getDeploymentTypeCloudProviderOptions();
 
-  InfrastructureMapping getInfraMapping(
+  InfrastructureMapping renderAndSaveInfraMapping(
       String appId, String serviceId, String infraDefinitionId, ExecutionContext context);
 
-  InfrastructureMapping getInfrastructureMapping(String serviceId, InfrastructureDefinition infrastructureDefinition);
+  InfrastructureMapping saveInfrastructureMapping(String serviceId, InfrastructureDefinition infrastructureDefinition);
 
   boolean isDynamicInfrastructure(String appId, String infraDefinitionId);
 

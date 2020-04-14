@@ -680,7 +680,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public InfrastructureMapping getInfraMapping(
+  public InfrastructureMapping renderAndSaveInfraMapping(
       String appId, String serviceId, String infraDefinitionId, ExecutionContext context) {
     validateInputs(appId, serviceId, infraDefinitionId);
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
@@ -699,11 +699,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
      * for already saved infraDef, could remove setDef() after DB migration
      * */
     setMissingValues(infrastructureDefinition);
-    return getInfrastructureMapping(serviceId, infrastructureDefinition);
+    return saveInfrastructureMapping(serviceId, infrastructureDefinition);
   }
 
   @Override
-  public InfrastructureMapping getInfrastructureMapping(
+  public InfrastructureMapping saveInfrastructureMapping(
       String serviceId, InfrastructureDefinition infrastructureDefinition) {
     Service service = serviceResourceService.get(infrastructureDefinition.getAppId(), serviceId);
     InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
@@ -1520,7 +1520,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
 
     InfrastructureMapping infrastructureMapping =
-        infrastructureDefinitionService.getInfraMapping(appId, serviceId, infraDefinitionId, null);
+        infrastructureDefinitionService.renderAndSaveInfraMapping(appId, serviceId, infraDefinitionId, null);
     notNullCheck("Infrastructure Mapping does not exist", infrastructureDefinition);
     return awsAsgHelperServiceManager.getCurrentlyRunningInstanceCount(
         awsConfig, encryptionDetails, region, infrastructureMapping.getUuid(), appId);

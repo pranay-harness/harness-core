@@ -184,7 +184,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         }
       }
 
-      InfrastructureMapping infraMapping = infrastructureDefinitionService.getInfraMapping(
+      InfrastructureMapping infraMapping = infrastructureDefinitionService.renderAndSaveInfraMapping(
           appId, phaseElement.getServiceElement().getUuid(), infraDefinitionId, context);
 
       updateInfraMappingDependencies(context, phaseElement, appId, infraMapping);
