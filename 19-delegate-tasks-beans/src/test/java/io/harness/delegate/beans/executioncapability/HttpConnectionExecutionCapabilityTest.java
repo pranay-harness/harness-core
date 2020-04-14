@@ -46,5 +46,26 @@ public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
                                                        .query("")
                                                        .build();
     assertThat(emptyQuery.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
+
+    HttpConnectionExecutionCapability urlEncodedQuery = HttpConnectionExecutionCapability.builder()
+                                                            .scheme("http")
+                                                            .host("domain")
+                                                            .port(80)
+                                                            .path("path")
+                                                            .query("query=query string require url encoding")
+                                                            .build();
+    assertThat(urlEncodedQuery.fetchCapabilityBasis())
+        .isEqualTo("http://domain:80/path?query=query%20string%20require%20url%20encoding");
+
+    assertThat(emptyQuery.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
+
+    HttpConnectionExecutionCapability urlEncodedQueryWithoutPath = HttpConnectionExecutionCapability.builder()
+                                                                       .scheme("http")
+                                                                       .host("domain")
+                                                                       .port(80)
+                                                                       .query("query=query string require url encoding")
+                                                                       .build();
+    assertThat(urlEncodedQueryWithoutPath.fetchCapabilityBasis())
+        .isEqualTo("http://domain:80?query=query%20string%20require%20url%20encoding");
   }
 }

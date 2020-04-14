@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.Builder;
 import lombok.Value;
+import org.apache.http.client.utils.URIBuilder;
 
 @Value
 @Builder
@@ -23,21 +24,20 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
     if (url != null) {
       return url;
     }
-
-    StringBuilder builder = new StringBuilder(128);
+    URIBuilder uriBuilder = new URIBuilder();
     if (isNotBlank(scheme)) {
-      builder.append(scheme).append("://");
+      uriBuilder.setScheme(scheme);
     }
-    builder.append(host);
+    uriBuilder.setHost(host);
     if (port != -1) {
-      builder.append(':').append(port);
+      uriBuilder.setPort(port);
     }
     if (isNotBlank(path)) {
-      builder.append('/').append(path);
+      uriBuilder.setPath('/' + path);
     }
     if (isNotBlank(query)) {
-      builder.append('?').append(query);
+      uriBuilder.setCustomQuery(query);
     }
-    return builder.toString();
+    return uriBuilder.toString();
   }
 }
