@@ -66,7 +66,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     List<ScimGroup> groupList = new ArrayList<>();
 
     try {
-      groupList = searchUserGroupByName(accountId, searchQuery, count, startIndex);
+      groupList = searchUserGroupByGroupName(accountId, searchQuery, count, startIndex);
       groupList.forEach(searchGroupResponse::resource);
     } catch (WingsException ex) {
       logger.info("SCIM: Search query: {}, account: {}", searchQuery, accountId, ex);
@@ -78,10 +78,14 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     return searchGroupResponse;
   }
 
-  private List<ScimGroup> searchUserGroupByName(
+  private List<ScimGroup> searchUserGroupByGroupName(
       String accountId, String searchQuery, Integer count, Integer startIndex) {
-    Query<UserGroup> userGroupQuery =
-        wingsPersistence.createQuery(UserGroup.class).field(UserGroupKeys.accountId).equal(accountId);
+    Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
+                                          .field(UserGroupKeys.accountId)
+                                          .equal(accountId)
+                                          .field(UserGroupKeys.importedByScim)
+                                          .equal(true);
+
     if (StringUtils.isNotEmpty(searchQuery)) {
       userGroupQuery.field(UserGroupKeys.name).equal(searchQuery);
     }
