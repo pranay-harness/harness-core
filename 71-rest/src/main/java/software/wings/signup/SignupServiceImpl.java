@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
+import static io.harness.eraro.ErrorCode.PASSWORD_STRENGTH_CHECK_FAILED;
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -14,7 +15,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import io.harness.exception.InvalidArgumentsException;
+import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +26,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WeakPasswordException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
@@ -197,15 +199,18 @@ public class SignupServiceImpl implements SignupService {
   @Override
   public void validatePassword(char[] password) {
     if (isEmpty(password)) {
-      throw new InvalidArgumentsException("Password cannot be empty.", USER);
+      throw new WeakPasswordException(
+          "Password cannot be empty.", null, PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
     }
 
     if (password.length < 8) {
-      throw new InvalidArgumentsException("Password should at least be 8 characters.", USER);
+      throw new WeakPasswordException(
+          "Password should at least be 8 characters.", null, PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
     }
 
     if (password.length > 64) {
-      throw new InvalidArgumentsException("Password should be less than or equal to 64 characters.", USER);
+      throw new WeakPasswordException("Password should be less than or equal to 64 characters.", null,
+          PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
     }
 
     if (!mainConfiguration.isPwnedPasswordsAllowed()) {
@@ -218,8 +223,9 @@ public class SignupServiceImpl implements SignupService {
       }
 
       if (isPasswordPwned) {
-        throw new InvalidArgumentsException(
-            "Please choose a stronger password. Don't use common patterns like password, abcdef, or 123456.", USER);
+        throw new WeakPasswordException(
+            "Please choose a stronger password. Don't use common patterns like password, abcdef, or 123456.", null,
+            PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
       }
     }
   }

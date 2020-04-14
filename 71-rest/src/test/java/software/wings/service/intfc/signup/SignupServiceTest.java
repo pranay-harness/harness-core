@@ -1,8 +1,10 @@
 package software.wings.service.intfc.signup;
 
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
@@ -13,6 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.exception.WeakPasswordException;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
@@ -77,6 +80,15 @@ public class SignupServiceTest extends WingsBaseTest {
     } catch (SignupException ex) {
       logger.info("Test behaved as expected");
     }
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testValidatePasswordThrowsWeakPasswordException() {
+    final String weakPassword = "abc";
+    assertThatThrownBy(() -> signupService.validatePassword(weakPassword.toCharArray()))
+        .isInstanceOf(WeakPasswordException.class);
   }
 
   private void fail() {
