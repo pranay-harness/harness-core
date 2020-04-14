@@ -28,6 +28,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -186,6 +187,9 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<AwsRoute53HostedZoneData> listHostedZones(String appId, String infraMappingId);
 
   Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression);
+
+  @Nonnull
+  String getContainerRunningInstances(String serviceNameExpression, InfrastructureMapping infrastructureMapping);
 
   AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(String infraMappingId, String appId);
 

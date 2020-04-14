@@ -187,6 +187,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -2091,7 +2092,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public String getContainerRunningInstances(String appId, String infraMappingId, String serviceNameExpression) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    return getContainerRunningInstances(serviceNameExpression, infrastructureMapping);
+  }
 
+  @Override
+  @Nonnull
+  public String getContainerRunningInstances(
+      String serviceNameExpression, InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping == null) {
       return "0";
     }
@@ -2174,7 +2181,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .envId(infrastructureMapping.getEnvId())
-            .infrastructureMappingId(infraMappingId)
+            .infrastructureMappingId(infrastructureMapping.getUuid())
             .infraStructureDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
             .build();
