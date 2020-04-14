@@ -27,6 +27,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Variable;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 
 import java.util.List;
 import java.util.Set;
@@ -58,7 +59,6 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String TYPE_KEY = "type";
   public static final String VERSION_KEY = "version";
   public static final String REFERENCED_TEMPLATE_ID_KEY = "referencedTemplateId";
-  public static final String REFERENCED_TEMPLATE_STORE_ID_KEY = "referencedTemplateStoreId";
   public static final String APP_ID_KEY = "appId";
 
   @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
@@ -77,18 +77,17 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   private String galleryId;
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
-  private String referencedTemplateStoreId;
+  private transient ImportedTemplateDetails importedTemplateDetails;
   private transient String referencedTemplateUri;
   @SchemaIgnore private Set<String> keywords;
-  private boolean isImported;
 
   @Builder
   public Template(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String accountId, String type,
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
-      String referencedTemplateId, Long referencedTemplateVersion, boolean isImported, String versionDetails,
-      String referencedTemplateStoreId) {
+      String referencedTemplateId, Long referencedTemplateVersion, String versionDetails,
+      ImportedTemplateDetails importedTemplateDetails) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
@@ -106,8 +105,8 @@ public class Template extends Base implements KeywordsAware, NameAccess {
     this.referencedTemplateId = referencedTemplateId;
     this.referencedTemplateVersion = referencedTemplateVersion;
     this.keywords = keywords;
-    this.isImported = isImported;
-    this.referencedTemplateStoreId = referencedTemplateStoreId;
+    this.versionDetails = versionDetails;
+    this.importedTemplateDetails = importedTemplateDetails;
   }
 
   @Override

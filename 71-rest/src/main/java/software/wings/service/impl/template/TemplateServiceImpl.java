@@ -17,6 +17,7 @@ import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
+import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
@@ -33,7 +34,6 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -56,11 +56,13 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
+import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
@@ -72,9 +74,12 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -113,6 +118,9 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private YamlPushService yamlPushService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ImportedTemplateService importedTemplateService;
+  @Inject private TemplateGalleryHelper templateGalleryHelper;
+
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
@@ -127,18 +135,22 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Create.class)
   public Template saveReferenceTemplate(Template template) {
+    if (template.getGalleryId() == null) {
+      throw new InvalidRequestException("Gallery ID must be set to save imported template.");
+    }
     validateTemplateVariables(template.getVariables());
     setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
 
-    template.setImported(true);
     // Client side keyword generation.
     template.setKeywords(getKeywords(template));
 
     String templateUuid =
         PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
-    getReferencedTemplateVersion(template, templateUuid);
+
+    getTemplateVersionForCommand(template, templateUuid,
+        getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
 
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
 
@@ -152,13 +164,14 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Update.class)
   public Template updateReferenceTemplate(Template template) {
+    if (template.getGalleryId() == null) {
+      throw new InvalidRequestException("Gallery ID must be set to save imported template.");
+    }
     setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
-    template.setImported(true);
 
-    Template oldTemplate = getReferencedTemplate(
-        template.getReferencedTemplateId(), template.getReferencedTemplateStoreId(), template.getAccountId());
+    Template oldTemplate = getOldTemplate(template.getImportedTemplateDetails(), template.getAccountId());
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     template.setUuid(oldTemplate.getUuid());
 
@@ -184,8 +197,10 @@ public class TemplateServiceImpl implements TemplateService {
 
     boolean templateDetailsChanged = false;
     if (templateObjectChanged || templateVariablesChanged) {
-      TemplateVersion templateVersion = getReferencedTemplateVersion(template, template.getUuid());
+      TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
+          getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
       newVersionedTemplate.setVersion(templateVersion.getVersion());
+      newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
       saveVersionedTemplate(template, newVersionedTemplate);
       templateDetailsChanged = true;
     }
@@ -226,23 +241,6 @@ public class TemplateServiceImpl implements TemplateService {
     return savedTemplate;
   }
 
-  @VisibleForTesting
-  Template createLocalTemplateObject(Template downloadedTemplate, String accountId, String appId) {
-    return Template.builder()
-        .type(downloadedTemplate.getType())
-        .name(downloadedTemplate.getName())
-        .accountId(accountId)
-        .appId(appId)
-        .variables(downloadedTemplate.getVariables())
-        .templateObject(downloadedTemplate.getTemplateObject())
-        .referencedTemplateId(downloadedTemplate.getUuid())
-        .referencedTemplateVersion(downloadedTemplate.getVersion())
-        .versionDetails(downloadedTemplate.getVersionDetails())
-        .version(downloadedTemplate.getVersion())
-        .description(downloadedTemplate.getDescription())
-        .build();
-  }
-
   private VersionedTemplate buildTemplateDetails(Template template, String templateUuid) {
     VersionedTemplateBuilder builder = VersionedTemplate.builder();
     builder.templateId(templateUuid)
@@ -251,6 +249,8 @@ public class TemplateServiceImpl implements TemplateService {
         .templateObject(template.getTemplateObject())
         .galleryId(template.getGalleryId())
         .variables(template.getVariables());
+    builder.importedTemplateVersion(
+        getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
     return builder.build();
   }
 
@@ -284,7 +284,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   @ValidationGroups(Update.class)
   public Template update(Template template) {
-    if (template.isImported()) {
+    if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
       throw new InvalidRequestException("Imported template cannot be updated.", USER);
     }
     saveOrUpdate(template);
@@ -392,9 +392,9 @@ public class TemplateServiceImpl implements TemplateService {
         template.getAccountId(), template.getGalleryId(), uuid, templateType, templateName, updated);
   }
 
-  private TemplateVersion getReferencedTemplateVersion(Template template, String uuid) {
-    return templateVersionService.newReferencedTemplateVersion(template.getAccountId(), template.getGalleryId(), uuid,
-        template.getType(), template.getName(), template.getVersion(), template.getVersionDetails());
+  private TemplateVersion getTemplateVersionForCommand(Template template, String uuid, String commandVersion) {
+    return templateVersionService.newImportedTemplateVersion(template.getAccountId(), template.getGalleryId(), uuid,
+        template.getType(), template.getName(), commandVersion, template.getVersionDetails());
   }
 
   @Override
@@ -421,11 +421,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId) {
-    return wingsPersistence.createQuery(Template.class)
-        .filter(TemplateKeys.referencedTemplateStoreId, commandStoreId)
-        .filter(TemplateKeys.referencedTemplateId, commandId)
-        .filter(TemplateKeys.accountId, accountId)
-        .get();
+    return importedTemplateService.getTemplateByCommandId(commandId, commandStoreId, accountId);
   }
 
   @Override
@@ -449,6 +445,21 @@ public class TemplateServiceImpl implements TemplateService {
     setTemplateDetails(template, version);
     TemplateVersion templateVersion = getTemplateVersionObject(template.getUuid(), template.getVersion());
     template.setVersionDetails(templateVersion.getVersionDetails());
+    template.setImportedTemplateDetails(setImportedDetailsOfTemplate(template, templateVersion));
+  }
+
+  private ImportedTemplateDetails setImportedDetailsOfTemplate(Template template, TemplateVersion templateVersion) {
+    if (GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(
+            templateGalleryHelper.getGalleryKeyNameByGalleryId(template.getGalleryId()))) {
+      ImportedTemplate importedCommandDetails =
+          importedTemplateService.getCommandByTemplateId(template.getUuid(), template.getAccountId());
+      return HarnessImportedTemplateDetails.builder()
+          .importedCommandId(importedCommandDetails.getCommandId())
+          .importedCommandVersion(templateVersion.getImportedTemplateVersion())
+          .importedCommandStoreId(importedCommandDetails.getCommandStoreId())
+          .build();
+    }
+    return null;
   }
 
   @Override
@@ -611,6 +622,31 @@ public class TemplateServiceImpl implements TemplateService {
         .field(Template.ID_KEY)
         .in(templateUuids)
         .asList();
+  }
+
+  private String getImportedTemplateVersion(ImportedTemplateDetails importedTemplateDetails, String accountId) {
+    if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
+      HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
+      return templateDetails.getImportedCommandVersion();
+    }
+    return null;
+  }
+
+  private Template getOldTemplate(ImportedTemplateDetails importedTemplateDetails, String accountId) {
+    // TODO: Refactor implementation.
+    if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
+      HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
+      return getReferencedTemplate(
+          templateDetails.getImportedCommandId(), templateDetails.getImportedCommandStoreId(), accountId);
+    }
+    return null;
+  }
+
+  private Class getImportedCommandDetailClass(ImportedTemplateDetails importedTemplateDetails) {
+    if (importedTemplateDetails instanceof HarnessImportedTemplateDetails) {
+      return HarnessImportedTemplateDetails.class;
+    }
+    return null;
   }
 
   @Override
@@ -819,7 +855,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private void setDetailsOfTemplate(Template template, String version) {
-    if (template.isImported()) {
+    if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
       setReferencedTemplateDetails(template, version);
     } else {
       setTemplateDetails(template, version);

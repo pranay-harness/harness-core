@@ -31,6 +31,7 @@ import static software.wings.beans.command.CommandUnitType.PORT_CHECK_LISTENING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -53,7 +54,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
@@ -65,14 +65,16 @@ import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.template.ImportedCommandTemplate;
+import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommandVersion;
 import software.wings.service.intfc.template.TemplateVersionService;
@@ -93,7 +95,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateServiceImpl templateServiceImpl;
-
+  @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -1022,42 +1024,13 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void shouldSaveAndGetReferencedTemplate() {
-    Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
-    Template refTemplate = saveReferencedTemplate(savedTemplate);
-
-    assertThat(refTemplate.isImported()).isEqualTo(true);
-    assertThat(refTemplate.getReferencedTemplateId()).isEqualTo(savedTemplate.getUuid());
-    assertThat(refTemplate.getReferencedTemplateVersion()).isEqualTo(savedTemplate.getVersion());
-    getTemplateAndValidate(savedTemplate, APP_ID);
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void shouldNotUpdateImportedTemplate() {
-    Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
-    Template refTemplate = saveReferencedTemplate(savedTemplate);
-    refTemplate.setName("new name");
-    Assertions.assertThatThrownBy(() -> templateService.update(refTemplate))
-        .isInstanceOf(InvalidRequestException.class);
-  }
-
-  private Template saveReferencedTemplate(Template savedImportedTemplate) {
-    Template refTemplate = templateServiceImpl.createLocalTemplateObject(
-        savedImportedTemplate, savedImportedTemplate.getAccountId(), savedImportedTemplate.getAppId());
-    return templateService.saveReferenceTemplate(refTemplate);
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
   public void shouldListVersionsOfImportedTemplate() {
     final String commandId = "COMMAND_ID";
     final String commandStoreId = "COMMAND_STORE_ID";
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2");
     TemplateVersion newVersion = TemplateVersion.builder()
-                                     .version(3L)
+                                     .version(2L)
+                                     .importedTemplateVersion("1.3")
                                      .accountId(template.getAccountId())
                                      .changeType(TemplateVersion.ChangeType.IMPORTED.name())
                                      .galleryId(template.getGalleryId())
@@ -1071,7 +1044,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                 .stream()
                                 .map(ImportedCommandVersion::getVersion)
                                 .collect(toList());
-    assertThat(versions).isEqualTo(Arrays.asList("1", "3"));
+    assertThat(versions).isEqualTo(Arrays.asList("1.2", "1.3"));
   }
 
   @Test
@@ -1097,9 +1070,11 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandId_1 = "COMMAND_ID_1";
     final String commandStoreId = "COMMAND_STORE_ID";
 
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1");
+
     TemplateVersion newVersion = TemplateVersion.builder()
-                                     .version(3L)
+                                     .version(2L)
+                                     .importedTemplateVersion("3.1")
                                      .accountId(template.getAccountId())
                                      .changeType(TemplateVersion.ChangeType.IMPORTED.name())
                                      .galleryId(template.getGalleryId())
@@ -1107,29 +1082,34 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                      .templateType(SSH)
                                      .build();
     wingsPersistence.save(newVersion);
-    saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandId_1, commandStoreId);
+    saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandId_1, commandStoreId, "2.1");
 
     List<ImportedCommand> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
         asList(commandId, commandId_1), commandStoreId, GLOBAL_ACCOUNT_ID);
-    assertThat(importedTemplateLatestVersions.get(0).getHighestVersion()).isEqualTo("3");
-    assertThat(importedTemplateLatestVersions.get(1).getHighestVersion()).isEqualTo("1");
+    assertThat(importedTemplateLatestVersions.get(0).getHighestVersion()).isEqualTo("3.1");
+    assertThat(importedTemplateLatestVersions.get(1).getHighestVersion()).isEqualTo("2.1");
   }
 
-  private Template saveImportedTemplate(Template template, String commandId, String commandStoreId) {
-    template.setImported(true);
-    template.setVersion(Long.valueOf(1));
-    template.setReferencedTemplateId(commandId);
-    template.setReferencedTemplateStoreId(commandStoreId);
-    template.setReferencedTemplateVersion(1L);
+  private Template saveImportedTemplate(Template template, String commandId, String commandStoreId, String version) {
+    HarnessImportedTemplateDetails harnessImportedTemplateDetails = HarnessImportedTemplateDetails.builder()
+                                                                        .importedCommandId(commandId)
+                                                                        .importedCommandStoreId(commandStoreId)
+                                                                        .importedCommandVersion(version)
+                                                                        .build();
+    template.setImportedTemplateDetails(harnessImportedTemplateDetails);
+    template.setGalleryId(
+        templateGalleryHelper
+            .getGalleryIdByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GLOBAL_ACCOUNT_ID)
+            .getUuid());
     template = templateService.saveReferenceTemplate(template);
-    ImportedCommandTemplate importedCommandTemplate = ImportedCommandTemplate.builder()
-                                                          .accountId(GLOBAL_ACCOUNT_ID)
-                                                          .appId(GLOBAL_APP_ID)
-                                                          .commandId(commandId)
-                                                          .commandStoreId(commandStoreId)
-                                                          .templateId(template.getUuid())
-                                                          .build();
-    wingsPersistence.save(importedCommandTemplate);
+    ImportedTemplate importedTemplate = ImportedTemplate.builder()
+                                            .accountId(GLOBAL_ACCOUNT_ID)
+                                            .appId(GLOBAL_APP_ID)
+                                            .commandId(commandId)
+                                            .commandStoreId(commandStoreId)
+                                            .templateId(template.getUuid())
+                                            .build();
+    wingsPersistence.save(importedTemplate);
     return template;
   }
 }

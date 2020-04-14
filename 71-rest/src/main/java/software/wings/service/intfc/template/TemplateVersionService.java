@@ -20,8 +20,8 @@ public interface TemplateVersionService {
 
   TemplateVersion lastTemplateVersion(@NotEmpty String accountId, @NotEmpty String templateUuid);
 
-  TemplateVersion newReferencedTemplateVersion(String accountId, String galleryId, String templateUuid,
-      String templateType, String templateName, Long version, String versionDetails);
+  TemplateVersion newImportedTemplateVersion(String accountId, String galleryId, String templateUuid,
+      String templateType, String templateName, String commandVersion, String versionDetails);
 
   TemplateVersion newTemplateVersion(@NotEmpty String accountId, @NotEmpty String galleryId,
       @NotEmpty String templateUuid, @NotEmpty String templateType, @NotEmpty String templateName,

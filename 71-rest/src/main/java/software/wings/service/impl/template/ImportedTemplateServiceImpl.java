@@ -16,17 +16,21 @@ import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import software.wings.beans.template.ImportedCommandTemplate;
-import software.wings.beans.template.ImportedCommandTemplate.ImportedCommandTemplateKeys;
+import software.wings.beans.template.ImportedTemplate;
+import software.wings.beans.template.ImportedTemplate.ImportedTemplateKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommand.ImportedCommandBuilder;
 import software.wings.beans.template.dto.ImportedCommandVersion;
 import software.wings.beans.template.dto.ImportedCommandVersion.ImportedCommandVersionBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.ImportedTemplateService;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 
@@ -36,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,13 +48,34 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   @Inject WingsPersistence wingsPersistence;
   @Inject TemplateService templateService;
   @Inject TemplateVersionService templateVersionService;
+  @Inject TemplateGalleryService templateGalleryService;
+
+  @Override
+  public boolean isImported(String templateId, String accountId) {
+    // TODO: When copy is implemented we will have to query templateversion and check if template is imported.
+    return wingsPersistence.createQuery(ImportedTemplate.class)
+               .filter(ImportedTemplateKeys.templateId, templateId)
+               .filter(ImportedTemplateKeys.accountId, accountId)
+               .get()
+        != null;
+  }
 
   @Override
   public List<Template> getTemplatesByCommandIds(List<String> commandIds, String commandStoreId, String accountId) {
+    List<String> templateIds = wingsPersistence.createQuery(ImportedTemplate.class)
+                                   .filter(ImportedTemplateKeys.commandStoreId, commandStoreId)
+                                   .field(ImportedTemplateKeys.commandId)
+                                   .in(commandIds)
+                                   .filter(ImportedTemplateKeys.accountId, accountId)
+                                   .project(ImportedTemplateKeys.templateId, true)
+                                   .asList()
+                                   .stream()
+                                   .map(ImportedTemplate::getTemplateId)
+                                   .collect(Collectors.toList());
+
     return wingsPersistence.createQuery(Template.class)
-        .filter(TemplateKeys.referencedTemplateStoreId, commandStoreId)
-        .field(TemplateKeys.referencedTemplateId)
-        .in(commandIds)
+        .field(TemplateKeys.uuid)
+        .in(templateIds)
         .filter(TemplateKeys.accountId, accountId)
         .asList();
   }
@@ -68,13 +94,22 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   @Override
+  public ImportedTemplate getCommandByTemplateId(String templateId, String accountId) {
+    return wingsPersistence.createQuery(ImportedTemplate.class)
+        .filter(ImportedTemplateKeys.templateId, templateId)
+        .filter(ImportedTemplateKeys.accountId, accountId)
+        .get();
+  }
+
+  @Override
   public Map<String, Template> getCommandIdTemplateMap(
       List<String> commandIds, String commandStoreId, String accountId) {
     List<Template> templates = getTemplatesByCommandIds(commandIds, commandStoreId, accountId);
     if (templates == null) {
       return null;
     }
-    return templates.stream().collect(Collectors.toMap(Template::getReferencedTemplateId, template -> template));
+    return commandIds.stream().collect(Collectors.toMap(
+        Function.identity(), commandId -> getTemplateByCommandId(commandId, commandStoreId, accountId)));
   }
 
   @Override
@@ -91,11 +126,11 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
             return null;
           }
           String latestVersion =
-              String.valueOf(templateUuidLatestTemplateVersionMap.get(template.getUuid()).getVersion());
-          ImportedCommandTemplate importedCommandTemplate = get(commandId, commandStoreId, accountId);
+              String.valueOf(templateUuidLatestTemplateVersionMap.get(template.getUuid()).getImportedTemplateVersion());
+          ImportedTemplate importedTemplate = get(commandId, commandStoreId, accountId);
           String commandStoreName = null;
-          if (importedCommandTemplate != null) {
-            commandStoreName = importedCommandTemplate.getCommandStoreName();
+          if (importedTemplate != null) {
+            commandStoreName = importedTemplate.getCommandStoreName();
           }
           return ImportedCommand.builder()
               .commandId(commandId)
@@ -114,7 +149,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   @Override
   public ImportedCommand makeImportedCommandObject(String commandId, String commandStoreId,
       List<TemplateVersion> templateVersions, String accountId, Template template) {
-    ImportedCommandTemplate importedCommandTemplate = get(commandId, commandStoreId, accountId);
+    ImportedTemplate importedTemplate = get(commandId, commandStoreId, accountId);
     List<ImportedCommandVersion> importedCommandVersionList = new ArrayList<>();
     if (templateVersions != null) {
       templateVersions.forEach(templateVersion -> {
@@ -123,7 +158,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                 .commandId(commandId)
                 .commandStoreId(commandStoreId)
                 .createdAt(String.valueOf(templateVersion.getCreatedAt()))
-                .version(String.valueOf(templateVersion.getVersion()))
+                .version(templateVersion.getImportedTemplateVersion())
                 .versionDetails(templateVersion.getVersionDetails())
                 .templateId(templateVersion.getTemplateUuid());
         if (templateVersion.getCreatedBy() != null) {
@@ -141,18 +176,18 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
           .description(template.getDescription())
           .templateId(template.getUuid());
     }
-    if (importedCommandTemplate != null) {
-      importedCommandBuilder.commandStoreName(importedCommandTemplate.getCommandStoreName());
+    if (importedTemplate != null) {
+      importedCommandBuilder.commandStoreName(importedTemplate.getCommandStoreName());
     }
     return importedCommandBuilder.build();
   }
 
   @Override
-  public ImportedCommandTemplate get(String commandId, String commandStoreId, String accountId) {
-    return wingsPersistence.createQuery(ImportedCommandTemplate.class)
-        .filter(ImportedCommandTemplateKeys.commandId, commandId)
-        .filter(ImportedCommandTemplateKeys.accountId, accountId)
-        .filter(ImportedCommandTemplateKeys.commandStoreId, commandStoreId)
+  public ImportedTemplate get(String commandId, String commandStoreId, String accountId) {
+    return wingsPersistence.createQuery(ImportedTemplate.class)
+        .filter(ImportedTemplateKeys.commandId, commandId)
+        .filter(ImportedTemplateKeys.accountId, accountId)
+        .filter(ImportedTemplateKeys.commandStoreId, commandStoreId)
         .get();
   }
 
@@ -165,13 +200,12 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
         commandHost + constructCommandVersionDetailsUrl(commandId, commandStoreId, version, accountId);
 
     CommandDTO commandDTO = downloadAndGetCommandDTO(commandInformationUrl, token);
-    ImportedCommandTemplate importedCommandTemplate = getImportedTemplate(commandDTO, accountId);
+    ImportedTemplate importedTemplate = getImportedTemplate(commandDTO, accountId);
     Template template = null;
-    if (importedCommandTemplate == null) {
+    if (importedTemplate == null) {
       template = saveNewCommand(token, version, commandVersionUrl, accountId, commandDTO);
     } else {
-      template =
-          downloadAndSaveNewCommandVersion(token, version, commandVersionUrl, accountId, importedCommandTemplate);
+      template = downloadAndSaveNewCommandVersion(token, version, commandVersionUrl, accountId, importedTemplate);
     }
 
     return template;
@@ -223,41 +257,40 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
         .build();
   }
 
-  private ImportedCommandTemplate getImportedTemplate(CommandDTO commandDTO, String accountId) {
+  private ImportedTemplate getImportedTemplate(CommandDTO commandDTO, String accountId) {
     return get(commandDTO.getId(), commandDTO.getCommandStoreId(), accountId);
   }
 
   private Template saveNewCommand(
       String token, String version, String commandversionUrl, String accountId, CommandDTO commandDTO) {
-    ImportedCommandTemplate importedCommandTemplate = ImportedCommandTemplate.builder()
-                                                          .commandStoreId(commandDTO.getCommandStoreId())
-                                                          .commandId(commandDTO.getId())
-                                                          .accountId(accountId)
-                                                          .appId(GLOBAL_APP_ID)
-                                                          .templateId(null)
-                                                          .description(commandDTO.getDescription())
-                                                          .name(commandDTO.getName())
-                                                          .imageUrl(commandDTO.getImageUrl())
-                                                          .build();
-    wingsPersistence.save(importedCommandTemplate);
+    ImportedTemplate importedTemplate = ImportedTemplate.builder()
+                                            .commandStoreId(commandDTO.getCommandStoreId())
+                                            .commandId(commandDTO.getId())
+                                            .accountId(accountId)
+                                            .appId(GLOBAL_APP_ID)
+                                            .templateId(null)
+                                            .description(commandDTO.getDescription())
+                                            .name(commandDTO.getName())
+                                            .imageUrl(commandDTO.getImageUrl())
+                                            .build();
     Template template =
-        downloadAndSaveNewCommandVersion(token, version, commandversionUrl, accountId, importedCommandTemplate);
-    importedCommandTemplate.setTemplateId(template.getUuid());
-    wingsPersistence.save(importedCommandTemplate);
+        downloadAndSaveNewCommandVersion(token, version, commandversionUrl, accountId, importedTemplate);
+    importedTemplate.setTemplateId(template.getUuid());
+    wingsPersistence.save(importedTemplate);
     return template;
   }
 
-  private Template downloadAndSaveNewCommandVersion(String token, String version, String commandVersionUrl,
-      String accountId, ImportedCommandTemplate importedCommandTemplate) {
+  private Template downloadAndSaveNewCommandVersion(
+      String token, String version, String commandVersionUrl, String accountId, ImportedTemplate importedTemplate) {
     Template template;
-    if (importedCommandTemplate.getTemplateId() == null) {
+    if (importedTemplate.getTemplateId() == null) {
       CommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandVersionUrl, token);
-      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedCommandTemplate);
+      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate);
       template = templateService.saveReferenceTemplate(template);
     } else {
-      throwExceptionIfCommandAlreadyDownloaded(version, importedCommandTemplate);
+      throwExceptionIfCommandVersionAlreadyDownloaded(version, importedTemplate);
       CommandVersionDTO commandVersionDTO = downloadAndGetCommandVersionDTO(commandVersionUrl, token);
-      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedCommandTemplate);
+      template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate);
       template = templateService.updateReferenceTemplate(template);
     }
     return template;
@@ -291,11 +324,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
     return commandDTO;
   }
 
-  private void throwExceptionIfCommandAlreadyDownloaded(
-      String version, ImportedCommandTemplate importedCommandTemplate) {
-    ImportedCommand importedCommand =
-        templateVersionService.listImportedTemplateVersions(importedCommandTemplate.getCommandId(),
-            importedCommandTemplate.getCommandStoreId(), importedCommandTemplate.getAccountId());
+  private void throwExceptionIfCommandVersionAlreadyDownloaded(String version, ImportedTemplate importedTemplate) {
+    ImportedCommand importedCommand = templateVersionService.listImportedTemplateVersions(
+        importedTemplate.getCommandId(), importedTemplate.getCommandStoreId(), importedTemplate.getAccountId());
     boolean present = importedCommand.getImportedCommandVersionList()
                           .stream()
                           .filter(importedCommandVersion -> importedCommandVersion.getVersion().equals(version))
@@ -308,8 +339,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   @VisibleForTesting
-  Template createTemplateFromCommandVersionDTO(
-      CommandVersionDTO commandVersionDTO, ImportedCommandTemplate importedCommandTemplate) {
+  Template createTemplateFromCommandVersionDTO(CommandVersionDTO commandVersionDTO, ImportedTemplate importedTemplate) {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     Template template;
@@ -318,13 +348,19 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot map value correctly", e);
     }
-    template.setVersion(Long.valueOf(commandVersionDTO.getVersion()));
-    template.setReferencedTemplateId(importedCommandTemplate.getCommandId());
-    template.setReferencedTemplateStoreId(importedCommandTemplate.getCommandStoreId());
-    template.setReferencedTemplateVersion(Long.valueOf(commandVersionDTO.getVersion()));
     template.setAppId(GLOBAL_APP_ID);
-    template.setAccountId(importedCommandTemplate.getAccountId());
+    template.setAccountId(importedTemplate.getAccountId());
     template.setVersionDetails(commandVersionDTO.getDescription());
+    TemplateGallery templateGallery = templateGalleryService.getByAccount(
+        importedTemplate.getAccountId(), GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY);
+    template.setGalleryId(templateGallery.getUuid());
+    HarnessImportedTemplateDetails harnessImportedTemplateDetails =
+        HarnessImportedTemplateDetails.builder()
+            .importedCommandVersion(commandVersionDTO.getVersion())
+            .importedCommandStoreId(commandVersionDTO.getCommandStoreId())
+            .importedCommandId(commandVersionDTO.getCommandId())
+            .build();
+    template.setImportedTemplateDetails(harnessImportedTemplateDetails);
     return template;
   }
 }

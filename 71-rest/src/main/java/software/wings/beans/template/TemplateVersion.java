@@ -44,6 +44,7 @@ public class TemplateVersion extends Base {
 
   private Long version;
   private String versionDetails;
+  private String importedTemplateVersion;
   @NotEmpty private String accountId;
   private String galleryId;
 

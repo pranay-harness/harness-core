@@ -29,11 +29,11 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@FieldNameConstants(innerTypeName = "ImportedCommandTemplateKeys")
+@FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class ImportedCommandTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                                UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                         UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Indexed @NotNull protected String appId;
@@ -56,9 +56,9 @@ public class ImportedCommandTemplate implements PersistentEntity, UuidAware, Cre
   @NotEmpty private String accountId;
 
   @Builder(toBuilder = true)
-  public ImportedCommandTemplate(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String name, String commandStoreName, String commandStoreId,
-      String commandId, String templateId, String description, String imageUrl, String accountId) {
+  public ImportedTemplate(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
+      long lastUpdatedAt, String name, String commandStoreName, String commandStoreId, String commandId,
+      String templateId, String description, String imageUrl, String accountId) {
     this.uuid = uuid;
     this.appId = appId;
     this.createdBy = createdBy;
