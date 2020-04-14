@@ -46,6 +46,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
@@ -57,10 +58,10 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalResumeState.ApprovalResumeStateKeys;
 import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
@@ -82,24 +83,34 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetPipelineForResume() {
+    String wfId2 = generateUuid();
+    String wfId3 = generateUuid();
     PipelineStage stage1 =
         PipelineStage.builder()
             .name("ps1")
             .pipelineStageElements(Collections.singletonList(
                 PipelineStageElement.builder().type(APPROVAL.name()).name("pse1").parallelIndex(1).build()))
             .build();
-    PipelineStage stage2 =
-        PipelineStage.builder()
-            .name("ps2")
-            .pipelineStageElements(Collections.singletonList(
-                PipelineStageElement.builder().type(ENV_STATE.name()).name("pse2").parallelIndex(2).build()))
-            .build();
-    PipelineStage stage3 =
-        PipelineStage.builder()
-            .name("ps3")
-            .pipelineStageElements(Collections.singletonList(
-                PipelineStageElement.builder().type(ENV_STATE.name()).name("pse3").parallelIndex(3).build()))
-            .build();
+    PipelineStage stage2 = PipelineStage.builder()
+                               .name("ps2")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder()
+                                       .type(ENV_STATE.name())
+                                       .name("pse2")
+                                       .properties(Collections.singletonMap(EnvStateKeys.workflowId, wfId2))
+                                       .parallelIndex(2)
+                                       .build()))
+                               .build();
+    PipelineStage stage3 = PipelineStage.builder()
+                               .name("ps3")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder()
+                                       .type(ENV_STATE.name())
+                                       .name("pse3")
+                                       .properties(Collections.singletonMap(EnvStateKeys.workflowId, wfId3))
+                                       .parallelIndex(3)
+                                       .build()))
+                               .build();
     PipelineStage stage4 =
         PipelineStage.builder()
             .name("ps4")
@@ -127,20 +138,22 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
             .put("pse3", instance3)
             .build();
 
-    String wfId2 = generateUuid();
-    String wfId3 = generateUuid();
+    String wfExecutionId2 = generateUuid();
+    String wfExecutionId3 = generateUuid();
     Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage2, stage3, stage4)).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
     PipelineStageExecution stageExecution2 =
         PipelineStageExecution.builder()
             .status(ExecutionStatus.SUCCESS)
-            .workflowExecutions(Collections.singletonList(WorkflowExecution.builder().uuid(wfId2).build()))
+            .workflowExecutions(
+                Collections.singletonList(WorkflowExecution.builder().uuid(wfExecutionId2).workflowId(wfId2).build()))
             .build();
     PipelineStageExecution stageExecution3 =
         PipelineStageExecution.builder()
             .status(ExecutionStatus.FAILED)
-            .workflowExecutions(Collections.singletonList(WorkflowExecution.builder().uuid(wfId3).build()))
+            .workflowExecutions(
+                Collections.singletonList(WorkflowExecution.builder().uuid(wfExecutionId3).workflowId(wfId3).build()))
             .build();
     PipelineStageExecution stageExecution4 = PipelineStageExecution.builder().build();
     workflowExecution.setPipelineExecution(
@@ -167,7 +180,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     assertThat(pse.getProperties().get(EnvResumeStateKeys.prevStateExecutionId)).isEqualTo(instanceId2);
     assertThat(pse.getProperties().get(EnvResumeStateKeys.prevPipelineExecutionId)).isEqualTo(pipelineId);
     assertThat((List<String>) (pse.getProperties().get(EnvResumeStateKeys.prevWorkflowExecutionIds)))
-        .containsExactly(wfId2);
+        .containsExactly(wfExecutionId2);
 
     pse = resumePipeline.getPipelineStages().get(2).getPipelineStageElements().get(0);
     assertThat(pse.getType()).isEqualTo(ENV_STATE.name());
@@ -206,7 +219,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).put("pse2", instance2).build();
 
     Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage2)).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
@@ -235,7 +248,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).build();
 
     Pipeline pipeline = Pipeline.builder().pipelineStages(Collections.singletonList(stage1)).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
@@ -248,7 +261,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetPipelineForResumeEmptyPipeline() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(null);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
   }
@@ -258,7 +271,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetPipelineForResumeEmptyPipelineStages() {
     Pipeline pipeline = Pipeline.builder().build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
   }
@@ -269,7 +282,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   public void testGetPipelineForResumeEmptyPipelineStageExecutions() {
     Pipeline pipeline =
         Pipeline.builder().pipelineStages(Collections.singletonList(PipelineStage.builder().build())).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineExecution(aPipelineExecution().build());
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
@@ -285,13 +298,13 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     UpdateOperations<WorkflowExecution> updateOperations = mock(UpdateOperations.class);
     when(mockWingsPersistence.createUpdateOperations(eq(WorkflowExecution.class))).thenReturn(updateOperations);
 
-    WorkflowExecution currWorkflowExecution = prepareWorkflowExecution();
-    WorkflowExecution prevWorkflowExecution = prepareWorkflowExecution();
+    WorkflowExecution currWorkflowExecution = prepareFailedPipelineExecution();
+    WorkflowExecution prevWorkflowExecution = prepareFailedPipelineExecution();
     verifyUpdatePipelineExecutionsAfterResume(pipelineId, currWorkflowExecution, prevWorkflowExecution);
     verify(mockWingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
 
-    currWorkflowExecution = prepareWorkflowExecution();
-    prevWorkflowExecution = prepareLatestResumedWorkflowExecution();
+    currWorkflowExecution = prepareFailedPipelineExecution();
+    prevWorkflowExecution = prepareLatestResumedFailedPipelineExecution();
     verifyUpdatePipelineExecutionsAfterResume(pipelineResumeId, currWorkflowExecution, prevWorkflowExecution);
     verify(mockWingsPersistence, times(4)).update(any(Query.class), any(UpdateOperations.class));
   }
@@ -309,34 +322,80 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetResumeStages() {
-    PipelineStage stage1 = PipelineStage.builder().name("ps1").build();
-    PipelineStage stage2 = PipelineStage.builder().name("ps2").build();
-    PipelineStage stage3 = PipelineStage.builder().name("ps3").build();
-    Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage2, stage3)).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    PipelineStage stage1 = PipelineStage.builder()
+                               .name("ps1")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder().name("pse1").parallelIndex(1).build()))
+                               .build();
+    PipelineStage stage21 =
+        PipelineStage.builder()
+            .name("ps2")
+            .pipelineStageElements(asList(PipelineStageElement.builder().name("pse211").parallelIndex(2).build(),
+                PipelineStageElement.builder().name("pse212").parallelIndex(2).build()))
+            .build();
+    PipelineStage stage22 = PipelineStage.builder()
+                                .name("ps2")
+                                .pipelineStageElements(Collections.singletonList(
+                                    PipelineStageElement.builder().name("pse22").parallelIndex(2).build()))
+                                .parallel(true)
+                                .build();
+    PipelineStage stage23 = PipelineStage.builder()
+                                .name("ps2")
+                                .pipelineStageElements(Collections.singletonList(
+                                    PipelineStageElement.builder().name("pse23").parallelIndex(2).build()))
+                                .parallel(true)
+                                .build();
+    PipelineStage stage3 = PipelineStage.builder()
+                               .name("ps3")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder().name("pse3").parallelIndex(2).build()))
+                               .build();
+    Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage21, stage22, stage23, stage3)).build();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
-    PipelineStageExecution stageExecution2 = PipelineStageExecution.builder().status(ExecutionStatus.FAILED).build();
+    PipelineStageExecution stageExecution21 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
+    PipelineStageExecution stageExecution22 = PipelineStageExecution.builder().status(ExecutionStatus.FAILED).build();
+    PipelineStageExecution stageExecution23 = PipelineStageExecution.builder().status(ExecutionStatus.FAILED).build();
     PipelineStageExecution stageExecution3 = PipelineStageExecution.builder().build();
-    workflowExecution.setPipelineExecution(
-        aPipelineExecution()
-            .withPipelineStageExecutions(asList(stageExecution1, stageExecution2, stageExecution3))
-            .build());
+    workflowExecution.setPipelineExecution(aPipelineExecution()
+                                               .withPipelineStageExecutions(asList(stageExecution1, stageExecution21,
+                                                   stageExecution22, stageExecution23, stageExecution3))
+                                               .build());
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
-    List<PipelineStage> stages = pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
-    assertThat(stages).isNotNull();
-    assertThat(stages.size()).isEqualTo(2);
-    assertThat(stages.stream().map(PipelineStage::getName).collect(Collectors.toList())).containsExactly("ps1", "ps2");
+    List<PipelineStageGroupedInfo> groupedInfoList = pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
+    assertThat(groupedInfoList).isNotNull();
+    assertThat(groupedInfoList.size()).isEqualTo(2);
+    PipelineStageGroupedInfo groupedInfo1 = groupedInfoList.get(0);
+    assertThat(groupedInfo1.getName()).isEqualTo("ps1");
+    assertThat(groupedInfo1.getPipelineStageElementNames()).containsExactly("pse1");
+    assertThat(groupedInfo1.getParallelIndex()).isEqualTo(1);
+    PipelineStageGroupedInfo groupedInfo2 = groupedInfoList.get(1);
+    assertThat(groupedInfo2.getName()).isEqualTo("ps2");
+    assertThat(groupedInfo2.getPipelineStageElementNames()).containsExactly("pse211", "pse212", "pse22", "pse23");
+    assertThat(groupedInfo2.getParallelIndex()).isEqualTo(2);
   }
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetResumeStagesInsufficientStageExecutions() {
-    PipelineStage stage1 = PipelineStage.builder().name("ps1").build();
-    PipelineStage stage2 = PipelineStage.builder().name("ps2").build();
-    PipelineStage stage3 = PipelineStage.builder().name("ps3").build();
+    PipelineStage stage1 = PipelineStage.builder()
+                               .name("ps1")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder().name("pse1").parallelIndex(1).build()))
+                               .build();
+    PipelineStage stage2 = PipelineStage.builder()
+                               .name("ps2")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder().name("pse2").parallelIndex(1).build()))
+                               .build();
+    PipelineStage stage3 = PipelineStage.builder()
+                               .name("ps3")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder().name("pse3").parallelIndex(1).build()))
+                               .build();
     Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage2, stage3)).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
@@ -348,7 +407,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetResumeStagesEmptyPipeline() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(null);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
@@ -358,7 +417,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetResumeStagesEmptyPipelineStages() {
     Pipeline pipeline = Pipeline.builder().build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
@@ -369,7 +428,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   public void testGetResumeStagesEmptyPipelineStageExecutions() {
     Pipeline pipeline =
         Pipeline.builder().pipelineStages(Collections.singletonList(PipelineStage.builder().build())).build();
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineExecution(aPipelineExecution().build());
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
@@ -385,20 +444,20 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     when(query.project(any(), anyBoolean())).thenReturn(query);
     when(query.order(anyString())).thenReturn(query);
     when(query.asList())
-        .thenReturn(asList(prepareWorkflowExecution(), prepareNonLatestResumedWorkflowExecution(),
-            prepareLatestResumedWorkflowExecution()));
+        .thenReturn(asList(prepareFailedPipelineExecution(), prepareNonLatestResumedFailedPipelineExecution(),
+            prepareLatestResumedFailedPipelineExecution()));
 
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     List<WorkflowExecution> history = pipelineResumeUtils.getResumeHistory(APP_ID, workflowExecution);
     assertThat(history).isNotNull();
     assertThat(history).isEmpty();
 
-    workflowExecution = prepareNonLatestResumedWorkflowExecution();
+    workflowExecution = prepareNonLatestResumedFailedPipelineExecution();
     history = pipelineResumeUtils.getResumeHistory(APP_ID, workflowExecution);
     assertThat(history).isNotNull();
     assertThat(history.size()).isEqualTo(3);
 
-    workflowExecution = prepareLatestResumedWorkflowExecution();
+    workflowExecution = prepareLatestResumedFailedPipelineExecution();
     history = pipelineResumeUtils.getResumeHistory(APP_ID, workflowExecution);
     assertThat(history).isNotNull();
     assertThat(history.size()).isEqualTo(3);
@@ -409,7 +468,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAuthorizeTriggerPipelineResume() {
     authorizeExecuteDeployments();
-    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareWorkflowExecution());
+    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareFailedPipelineExecution());
   }
 
   @Test(expected = Exception.class)
@@ -417,7 +476,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAuthorizeTriggerPipelineResumeFailure() {
     authorizeReadDeployments();
-    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareWorkflowExecution());
+    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareFailedPipelineExecution());
   }
 
   @Test(expected = Test.None.class)
@@ -425,7 +484,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAuthorizeReadPipelineResume() {
     authorizeReadDeployments();
-    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareWorkflowExecution());
+    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareFailedPipelineExecution());
   }
 
   @Test(expected = Exception.class)
@@ -433,17 +492,17 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAuthorizeReadPipelineResumeFailure() {
     authorizeExecuteDeployments();
-    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareWorkflowExecution());
+    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareFailedPipelineExecution());
   }
 
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailable() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
 
-    workflowExecution = prepareLatestResumedWorkflowExecution();
+    workflowExecution = prepareLatestResumedFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 
@@ -452,7 +511,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForFFOff() {
     when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 
@@ -460,7 +519,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForSuccessfulExecution() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
@@ -469,7 +528,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForNonLatestExecution() {
-    WorkflowExecution workflowExecution = prepareNonLatestResumedWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareNonLatestResumedFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 
@@ -477,7 +536,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForTypeWorkflow() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution(WorkflowType.ORCHESTRATION);
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 
@@ -485,13 +544,13 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeHistoryAvailable() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
 
-    workflowExecution = prepareLatestResumedWorkflowExecution();
+    workflowExecution = prepareLatestResumedFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
 
-    workflowExecution = prepareNonLatestResumedWorkflowExecution();
+    workflowExecution = prepareNonLatestResumedFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
   }
 
@@ -500,7 +559,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCheckPipelineResumeHistoryAvailableForFFOff() {
     when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
   }
 
@@ -508,8 +567,70 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeHistoryAvailableForTypeWorkflow() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution(WorkflowType.ORCHESTRATION);
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecution() {
+    PipelineStage stage = PipelineStage.builder().build();
+    PipelineStageExecution stageExecution = PipelineStageExecution.builder().build();
+    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+
+    stage = PipelineStage.builder()
+                .pipelineStageElements(asList(prepareEnvStatePipelineStageElement(1),
+                    prepareApprovalPipelineStageElement(), prepareEnvStatePipelineStageElement(2)))
+                .build();
+    stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(asList(prepareSimpleWorkflowExecution(1), prepareSimpleWorkflowExecution(2)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionDifferentWorkflowIds() {
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(1)))
+                              .build();
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionInsufficientStageElement() {
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(1)))
+                              .build();
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(asList(prepareSimpleWorkflowExecution(1), prepareSimpleWorkflowExecution(2)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionInsufficientWorkflowExecutions() {
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(asList(
+                                  prepareEnvStatePipelineStageElement(1), prepareEnvStatePipelineStageElement(2)))
+                              .build();
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(1)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
   }
 
   private void authorizeReadDeployments() {
@@ -535,7 +656,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     });
   }
 
-  private WorkflowExecution prepareWorkflowExecution(WorkflowType workflowType) {
+  private WorkflowExecution prepareFailedPipelineExecution(WorkflowType workflowType) {
     return WorkflowExecution.builder()
         .uuid(pipelineId)
         .accountId(ACCOUNT_ID)
@@ -545,21 +666,43 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         .build();
   }
 
-  private WorkflowExecution prepareWorkflowExecution() {
-    return prepareWorkflowExecution(WorkflowType.PIPELINE);
+  private WorkflowExecution prepareFailedPipelineExecution() {
+    return prepareFailedPipelineExecution(WorkflowType.PIPELINE);
   }
 
-  private WorkflowExecution prepareLatestResumedWorkflowExecution() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+  private WorkflowExecution prepareLatestResumedFailedPipelineExecution() {
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineResumeId(pipelineResumeId);
     workflowExecution.setLatestPipelineResume(true);
     return workflowExecution;
   }
 
-  private WorkflowExecution prepareNonLatestResumedWorkflowExecution() {
-    WorkflowExecution workflowExecution = prepareWorkflowExecution();
+  private WorkflowExecution prepareNonLatestResumedFailedPipelineExecution() {
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineResumeId(pipelineResumeId);
     workflowExecution.setLatestPipelineResume(false);
     return workflowExecution;
+  }
+
+  private PipelineStageElement prepareEnvStatePipelineStageElement(int workflowIdx) {
+    return PipelineStageElement.builder()
+        .type(ENV_STATE.name())
+        .properties(Collections.singletonMap(EnvStateKeys.workflowId, "wf" + workflowIdx))
+        .build();
+  }
+
+  private PipelineStageElement prepareApprovalPipelineStageElement() {
+    return PipelineStageElement.builder().type(APPROVAL.name()).build();
+  }
+
+  private WorkflowExecution prepareSimpleWorkflowExecution(int workflowIdx) {
+    return WorkflowExecution.builder()
+        .uuid(pipelineId)
+        .accountId(ACCOUNT_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .workflowId("wf" + workflowIdx)
+        .status(ExecutionStatus.SUCCESS)
+        .executionArgs(new ExecutionArgs())
+        .build();
   }
 }
