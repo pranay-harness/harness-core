@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -44,6 +45,7 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.intfc.ActivityService;
@@ -230,12 +232,30 @@ public class PcfDeployState extends State {
     Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
     downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
 
-    Integer runningInstanceCount = setupSweepingOutputPcf.getDesiredActualFinalCount();
+    Integer existingAppInstanceCount = getInstanceCountForExistingApp(setupSweepingOutputPcf);
 
+    Integer runningInstanceCount = existingAppInstanceCount != null
+        ? existingAppInstanceCount
+        : setupSweepingOutputPcf.getDesiredActualFinalCount();
     downsizeUpdateCount =
         getInstanceCountToBeUpdated(runningInstanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);
 
     return downsizeUpdateCount;
+  }
+
+  private Integer getInstanceCountForExistingApp(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    List<PcfAppSetupTimeDetails> appDetailsToBeDownsized = setupSweepingOutputPcf.getAppDetailsToBeDownsized();
+    PcfAppSetupTimeDetails existingAppDetails = null;
+    if (isNotEmpty(appDetailsToBeDownsized)) {
+      existingAppDetails = appDetailsToBeDownsized.get(0);
+    }
+
+    if (existingAppDetails != null && existingAppDetails.getInitialInstanceCount() != null
+        && existingAppDetails.getInitialInstanceCount().intValue() > 0) {
+      return existingAppDetails.getInitialInstanceCount();
+    }
+
+    return null;
   }
 
   private Integer getInstanceCountToBeUpdated(
@@ -257,11 +277,11 @@ public class PcfDeployState extends State {
     } else {
       if (upsize) {
         // if use inputs 5, means count after this phase deployment should be 5
-        updateCount = instanceCountValue;
+        updateCount = Math.min(maxInstanceCount, instanceCountValue);
       } else {
         // if use inputs 5, means count after this phase deployment for old apps should be,
         // so manxInstances - 5 should be downsized
-        updateCount = maxInstanceCount - instanceCountValue;
+        updateCount = Math.max(0, maxInstanceCount - instanceCountValue);
       }
     }
     return updateCount;
