@@ -1,5 +1,6 @@
 package io.harness.state.execution;
 
+import io.harness.annotations.Redesign;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -18,6 +19,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
+@Redesign
 @FieldNameConstants(innerTypeName = "ExecutionNodeInstanceKeys")
 @Entity(value = "executionNodeInstances", noClassnameStored = true)
 public class ExecutionNodeInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {

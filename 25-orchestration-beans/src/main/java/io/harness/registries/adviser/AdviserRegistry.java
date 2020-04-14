@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
+import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
@@ -12,6 +13,7 @@ import io.harness.registries.RegistryType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Redesign
 @Singleton
 public class AdviserRegistry implements Registry {
   private Map<AdviserType, AdviserProducer> registry = new ConcurrentHashMap<>();

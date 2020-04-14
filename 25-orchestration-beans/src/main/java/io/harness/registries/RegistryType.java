@@ -1,3 +1,5 @@
 package io.harness.registries;
 
-public enum RegistryType { STATE, ADVISER, RESOLVER, FACILITATOR }
+import io.harness.annotations.Redesign;
+
+@Redesign public enum RegistryType { STATE, ADVISER, RESOLVER, FACILITATOR }

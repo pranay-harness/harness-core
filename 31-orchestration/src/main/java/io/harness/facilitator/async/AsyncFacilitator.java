@@ -1,5 +1,6 @@
 package io.harness.facilitator.async;
 
+import io.harness.annotations.Redesign;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.FacilitatorType;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Value
 @Builder
+@Redesign
 public class AsyncFacilitator implements Facilitator {
   @Override
   public FacilitatorType getType() {

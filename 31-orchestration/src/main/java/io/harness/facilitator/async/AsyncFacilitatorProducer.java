@@ -1,11 +1,13 @@
 package io.harness.facilitator.async;
 
 import io.harness.annotations.ProducesFacilitator;
+import io.harness.annotations.Redesign;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.facilitate.io.FacilitatorParameters;
 import io.harness.registries.facilitator.FacilitatorProducer;
 
+@Redesign
 @ProducesFacilitator
 public class AsyncFacilitatorProducer implements FacilitatorProducer {
   @Override

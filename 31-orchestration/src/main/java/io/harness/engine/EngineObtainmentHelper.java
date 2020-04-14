@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
+import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Redesign
 public class EngineObtainmentHelper {
   @Inject private HPersistence hPersistence;
   @Inject private StateRegistry stateRegistry;

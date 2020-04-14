@@ -1,5 +1,8 @@
 package io.harness.state.execution.status;
 
+import io.harness.annotations.Redesign;
+
+@Redesign
 public enum NodeExecutionStatus {
 
   // In Progress statuses : All the in progress statuses named with ing in the end
