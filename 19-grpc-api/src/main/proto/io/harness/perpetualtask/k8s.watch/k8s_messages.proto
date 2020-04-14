@@ -51,7 +51,7 @@ message PodEvent {
   enum EventType {
     EVENT_TYPE_INVALID = 0;
     EVENT_TYPE_SCHEDULED = 1;
-    EVENT_TYPE_DELETED = 2;
+    EVENT_TYPE_TERMINATED = 2;
   }
   EventType type = 4;
   google.protobuf.Timestamp timestamp = 5;

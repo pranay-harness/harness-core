@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
@@ -277,6 +278,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
   private Pod getPod(String podUid) {
     Pod firstPod = new Pod();
     firstPod.setMetadata(getObjectMeta(podUid));
+    firstPod.setStatus(new PodStatusBuilder().withPhase("Running").build());
     return firstPod;
   }
 

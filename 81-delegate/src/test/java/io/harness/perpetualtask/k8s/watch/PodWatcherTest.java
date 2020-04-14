@@ -1,8 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -187,7 +187,7 @@ public class PodWatcherTest extends CategoryTest {
 
   private void deletedMessageAssertions(PodEvent podEvent) {
     assertThat(podEvent.getPodUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
-    assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_DELETED);
+    assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_TERMINATED);
     assertThat(podEvent.getTimestamp()).isEqualTo(HTimestamps.parse("2019-09-09T19:34:33.000+05:30"));
   }
 
