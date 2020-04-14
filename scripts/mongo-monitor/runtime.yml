@@ -31,3 +31,6 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.resourceConstraintInstances.find({}).count()"
 
+  - resource_secret_usage_logs_count:
+      check_interval:   10      # seconds
+      query:            "db.secretUsageLogs.find({}).count()"

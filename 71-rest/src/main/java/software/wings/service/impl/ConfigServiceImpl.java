@@ -210,7 +210,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
-    final Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
+    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
 
     String columnName;
     if (EntityType.SERVICE == entityType) {
@@ -307,10 +307,10 @@ public class ConfigServiceImpl implements ConfigService {
       SecretUsageLog secretUsageLog = SecretUsageLog.builder()
                                           .encryptedDataId(encryptedData.getUuid())
                                           .workflowExecutionId(activity.getWorkflowExecutionId())
+                                          .appId(configFile.getAppId())
                                           .envId(activity.getEnvironmentId())
                                           .accountId(encryptedData.getAccountId())
                                           .build();
-      secretUsageLog.setAppId(configFile.getAppId());
       wingsPersistence.save(secretUsageLog);
     }
 

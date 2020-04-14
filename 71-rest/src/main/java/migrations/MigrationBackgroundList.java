@@ -20,6 +20,7 @@ import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
+import migrations.all.AddValidUntilToSecretUsageLogs;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
@@ -185,6 +186,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(108, AddAccountIdToInfraDefinition.class))
         .add(Pair.of(109, AddAccountIdToTimeSeriesAnalysisRecords.class))
         .add(Pair.of(110, DelegatesWithoutProfileMigration.class))
+        .add(Pair.of(111, AddValidUntilToSecretUsageLogs.class))
         .build();
   }
 }
