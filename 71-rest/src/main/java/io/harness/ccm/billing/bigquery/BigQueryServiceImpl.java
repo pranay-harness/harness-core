@@ -19,12 +19,13 @@ import java.io.IOException;
 @Slf4j
 @Singleton
 public class BigQueryServiceImpl implements BigQueryService {
-  private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
+  private static final String CE_BIGQUERY_GOOGLE_APPLICATION_CREDENTIALS_PATH =
+      "CE_BIGQUERY_GOOGLE_APPLICATION_CREDENTIALS";
 
   @Override
   public BigQuery get() {
     // read the credential path from env variables
-    String googleCredentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
+    String googleCredentialsPath = System.getenv(CE_BIGQUERY_GOOGLE_APPLICATION_CREDENTIALS_PATH);
     checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {
