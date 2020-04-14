@@ -50,6 +50,7 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.intfc.VerificationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -150,6 +151,8 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
 
     registerJerseyProviders(environment);
 
+    initializeServiceSecretKeys(injector);
+
     registerCharsetResponseFilter(environment, injector);
 
     // Authentication/Authorization filters
@@ -219,5 +222,9 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     final HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("Command Library Service", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
+  }
+
+  private void initializeServiceSecretKeys(Injector injector) {
+    injector.getInstance(VerificationService.class).initializeServiceSecretKeys();
   }
 }

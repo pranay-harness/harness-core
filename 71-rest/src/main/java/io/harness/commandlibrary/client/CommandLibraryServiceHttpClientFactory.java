@@ -3,6 +3,7 @@ package io.harness.commandlibrary.client;
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.commandlibrary.common.service.CommandLibraryService;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.security.ServiceTokenGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Slf4j
 public class CommandLibraryServiceHttpClientFactory implements Provider<CommandLibraryServiceHttpClient> {
@@ -65,8 +70,10 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
 
   @NotNull
   private Interceptor getAuthorizationInterceptor() {
+    final Supplier<String> secretKeyForManageSupplier =
+        Suppliers.memoizeWithExpiration(this ::getServiceSecretForManager, 1, TimeUnit.MINUTES);
     return chain -> {
-      String token = tokenGenerator.getServiceToken(getServiceSecretForManager());
+      String token = tokenGenerator.getServiceToken(secretKeyForManageSupplier.get());
       Request request = chain.request();
       return chain.proceed(
           request.newBuilder().header("Authorization", MANAGER_CLIENT_ID + StringUtils.SPACE + token).build());
@@ -75,6 +82,10 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
 
   @VisibleForTesting
   String getServiceSecretForManager() {
-    return commandLibraryService.getSecretForClient(MANAGER_CLIENT_ID);
+    final String secretForClient = commandLibraryService.getSecretForClient(MANAGER_CLIENT_ID);
+    if (StringUtils.isBlank(secretForClient)) {
+      throw new InvalidRequestException("no secret key for client : " + MANAGER_CLIENT_ID);
+    }
+    return secretForClient;
   }
 }
