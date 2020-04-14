@@ -613,7 +613,6 @@ userGroups { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 userInvites { "name" : "accountId_email_1" , "background" : true} { "accountId" : 1 , "email" : 1}
 userInvites { "name" : "appId_1" , "background" : true} { "appId" : 1}
 userInvites { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
-users { "name" : "accounts_1" , "background" : true} { "accounts" : 1}
 users { "name" : "appId_1" , "background" : true} { "appId" : 1}
 users { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 users { "name" : "email_1" , "unique" : true} { "email" : 1}
