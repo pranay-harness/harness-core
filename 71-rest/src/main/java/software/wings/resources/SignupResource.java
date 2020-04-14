@@ -1,15 +1,19 @@
 package software.wings.resources;
 
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.Level;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.exception.WeakPasswordException;
 import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -56,6 +60,9 @@ public class SignupResource {
       return new RestResponse<>(signupService.signup(userInvite, source));
     } catch (SignupException ex) {
       throw ex;
+    } catch (WeakPasswordException ex) {
+      logger.error("Password validation failed");
+      throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
       logger.error("Failed to complete signup", ex);
       throw new SignupException("Failed to signup. Please contact harness support");
@@ -82,6 +89,9 @@ public class SignupResource {
       return new RestResponse<>(signupService.completeSignup(passwordRequest, secretToken));
     } catch (SignupException ex) {
       throw ex;
+    } catch (WeakPasswordException ex) {
+      logger.error("Password validation failed");
+      throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
       logger.error("Failed to complete signup", ex);
       throw new SignupException("Failed to signup. Please contact harness support");
