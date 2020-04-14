@@ -24,7 +24,9 @@ import org.mongodb.morphia.utils.IndexType;
   ,
       @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "service_guard_idx"))
+      }, options = @IndexOptions(name = "service_guard_idx")), @Index(fields = {
+        @Field("workflowExecutionId"), @Field(value = "appId")
+      }, options = @IndexOptions(name = "workflow_exec_appId_index"))
 })
 @Data
 @Builder
