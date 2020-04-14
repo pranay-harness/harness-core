@@ -1144,9 +1144,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
       return "0";
     }
-    InfrastructureMapping infrastructureMapping = getInfraMapping(appId, serviceId, infraDefinitionId, null);
-    return infrastructureMappingService.getContainerRunningInstances(
-        appId, infrastructureMapping.getUuid(), serviceNameExpression);
+    InfrastructureMapping infrastructureMapping = infrastructureDefinition.getInfraMapping();
+    infrastructureMapping.setServiceId(serviceId);
+    return infrastructureMappingService.getContainerRunningInstances(serviceNameExpression, infrastructureMapping);
   }
 
   List<Host> listHosts(InfrastructureDefinition infrastructureDefinition) {
