@@ -36,6 +36,7 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.delegatetasks.k8s.exception.K8sClusterException;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +50,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
   private Map<String, K8sMetricCollector> metricCollectors = new ConcurrentHashMap<>();
+  private Map<String, Instant> clusterSyncLastPublished = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
   private final KubernetesClientFactory kubernetesClientFactory;
@@ -66,15 +68,18 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     try {
+      Instant now = Instant.now();
       String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
       logger.info("Created a watch with id {}.", watchId);
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
       K8sMetricsClient k8sMetricsClient =
           kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
-      if (taskWatchIdMap.get(taskId.getId()) == null) {
-        publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
-        taskWatchIdMap.put(taskId.getId(), watchId);
+      taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
+      clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
+      if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
+        publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, now);
+        clusterSyncLastPublished.put(taskId.getId(), now);
       }
       metricCollectors
           .computeIfAbsent(taskId.getId(),
@@ -88,7 +93,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                         .build();
                 return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
               })
-          .collectAndPublishMetrics(Instant.now());
+          .collectAndPublishMetrics(now);
 
       // to be removed after batch processing changes
       publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
@@ -128,6 +133,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                   .list()
                                   .getItems()
                                   .stream()
+                                  .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
                                   .map(Pod::getMetadata)
                                   .map(ObjectMeta::getUid)
                                   .collect(Collectors.toList());

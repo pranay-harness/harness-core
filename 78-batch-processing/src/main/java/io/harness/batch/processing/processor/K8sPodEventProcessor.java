@@ -15,7 +15,7 @@ public class K8sPodEventProcessor implements ItemProcessor<PublishedMessage, Ins
     PodEvent podEvent = (PodEvent) publishedMessage.getMessage(); // TODO: move this logic to reader
     EventType type = null;
     switch (podEvent.getType()) {
-      case EVENT_TYPE_DELETED:
+      case EVENT_TYPE_TERMINATED:
         type = EventType.STOP;
         break;
       case EVENT_TYPE_SCHEDULED:

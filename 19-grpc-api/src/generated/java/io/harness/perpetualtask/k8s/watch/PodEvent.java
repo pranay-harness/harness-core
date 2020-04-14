@@ -133,9 +133,9 @@ public final class PodEvent extends com.google.protobuf.GeneratedMessageV3 imple
          */
         EVENT_TYPE_SCHEDULED(1),
         /**
-         * <code>EVENT_TYPE_DELETED = 2;</code>
+         * <code>EVENT_TYPE_TERMINATED = 2;</code>
          */
-        EVENT_TYPE_DELETED(2), UNRECOGNIZED(-1),
+        EVENT_TYPE_TERMINATED(2), UNRECOGNIZED(-1),
         ;
 
     /**
@@ -147,9 +147,9 @@ public final class PodEvent extends com.google.protobuf.GeneratedMessageV3 imple
      */
     public static final int EVENT_TYPE_SCHEDULED_VALUE = 1;
     /**
-     * <code>EVENT_TYPE_DELETED = 2;</code>
+     * <code>EVENT_TYPE_TERMINATED = 2;</code>
      */
-    public static final int EVENT_TYPE_DELETED_VALUE = 2;
+    public static final int EVENT_TYPE_TERMINATED_VALUE = 2;
 
     public final int getNumber() {
       if (this == UNRECOGNIZED) {
@@ -173,7 +173,7 @@ public final class PodEvent extends com.google.protobuf.GeneratedMessageV3 imple
         case 1:
           return EVENT_TYPE_SCHEDULED;
         case 2:
-          return EVENT_TYPE_DELETED;
+          return EVENT_TYPE_TERMINATED;
         default:
           return null;
       }

@@ -1,8 +1,9 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -24,6 +25,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -79,15 +81,12 @@ public class PodWatcher implements Watcher<Pod> {
                             .setPodName(pod.getMetadata().getName())
                             .setNamespace(pod.getMetadata().getNamespace())
                             .setNodeName(pod.getSpec().getNodeName())
-                            // TODO: test getting the total resource usage
                             .setTotalResource(K8sResourceUtils.getTotalResourceRequest(pod.getSpec().getContainers()))
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
-                            .putAllLabels(pod.getMetadata().getLabels() != null ? pod.getMetadata().getLabels()
-                                                                                : Collections.emptyMap())
+                            .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
                             .setTopLevelOwner(K8sWorkloadUtils.getTopLevelOwner(client, pod))
                             .build();
-
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
@@ -107,7 +106,18 @@ public class PodWatcher implements Watcher<Pod> {
       Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
       PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
-                              .setType(EVENT_TYPE_DELETED)
+                              .setType(EVENT_TYPE_TERMINATED)
+                              .setTimestamp(timestamp)
+                              .build();
+      logMessage(podEvent);
+      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+      publishedPods.remove(uid);
+
+    } else if (isPodInTerminalPhase(pod)) {
+      Timestamp timestamp = HTimestamps.fromInstant(Instant.now());
+      PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
+                              .setPodUid(uid)
+                              .setType(EVENT_TYPE_TERMINATED)
                               .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
@@ -118,6 +128,11 @@ public class PodWatcher implements Watcher<Pod> {
 
   private boolean isPodDeleted(Pod pod) {
     return pod.getMetadata().getDeletionTimestamp() != null && pod.getMetadata().getDeletionGracePeriodSeconds() == 0L;
+  }
+
+  private boolean isPodInTerminalPhase(Pod pod) {
+    String phase = pod.getStatus().getPhase();
+    return "Succeeded".equals(phase) || "Failed".equals(phase);
   }
 
   @Override
