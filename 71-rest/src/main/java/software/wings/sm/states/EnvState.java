@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -33,8 +34,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.EnvStateExecutionData;
-import software.wings.api.ServiceArtifactElement;
-import software.wings.api.ServiceArtifactVariableElement;
+import software.wings.api.artifact.ServiceArtifactElement;
+import software.wings.api.artifact.ServiceArtifactElements;
+import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
@@ -52,7 +55,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ContextElement;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
@@ -109,6 +112,7 @@ public class EnvState extends State {
   @Transient @Inject private WorkflowExecutionService executionService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Transient @Inject private SweepingOutputService sweepingOutputService;
   @Transient @Inject private FeatureFlagService featureFlagService;
 
   @Getter @Setter @JsonIgnore private boolean disable;
@@ -209,16 +213,15 @@ public class EnvState extends State {
   private List<ArtifactVariable> getArtifactVariables(
       DeploymentExecutionContext context, WorkflowStandardParams workflowStandardParams) {
     List<ArtifactVariable> artifactVariables;
-    List<ContextElement> contextElementList = context.getContextElementList(ContextElementType.ARTIFACT_VARIABLE);
-    if (isEmpty(contextElementList)) {
+    List<ServiceArtifactVariableElement> artifactVariableElements = context.getArtifactVariableElements();
+    if (isEmpty(artifactVariableElements)) {
       artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-      return isEmpty(artifactVariables) ? new ArrayList<>() : artifactVariables;
+      return artifactVariables == null ? new ArrayList<>() : artifactVariables;
     }
 
     artifactVariables = new ArrayList<>();
     Map<String, ArtifactVariable> workflowVariablesMap = new HashMap<>();
-    for (ContextElement contextElement : contextElementList) {
-      ServiceArtifactVariableElement savElement = (ServiceArtifactVariableElement) contextElement;
+    for (ServiceArtifactVariableElement savElement : artifactVariableElements) {
       Artifact artifact = artifactService.get(savElement.getUuid());
       if (artifact == null) {
         continue;
@@ -363,46 +366,66 @@ public class EnvState extends State {
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, context.getAccountId())) {
-        List<Artifact> artifacts =
-            executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-        if (isNotEmpty(artifacts)) {
-          List<ContextElement> artifactElements = new ArrayList<>();
-          artifacts.forEach(artifact
-              -> artifactElements.add(
-                  ServiceArtifactElement.builder()
-                      .uuid(artifact.getUuid())
-                      .name(artifact.getDisplayName())
-                      .serviceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()))
-                      .build()));
-          executionResponseBuilder.contextElements(artifactElements);
-        }
+        saveArtifactElements(context, stateExecutionData);
       } else {
-        List<StateExecutionInstance> allStateExecutionInstances = executionService.getStateExecutionInstances(
-            context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-        if (isNotEmpty(allStateExecutionInstances)) {
-          List<ContextElement> artifactElements = new ArrayList<>();
-
-          allStateExecutionInstances.forEach(stateExecutionInstance -> {
-            ArtifactCollectionExecutionData artifactCollectionExecutionData =
-                (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
-
-            Artifact artifact = artifactService.get(artifactCollectionExecutionData.getArtifactId());
-            artifactElements.add(ServiceArtifactVariableElement.builder()
-                                     .uuid(artifact.getUuid())
-                                     .name(artifact.getDisplayName())
-                                     .entityType(artifactCollectionExecutionData.getEntityType())
-                                     .entityId(artifactCollectionExecutionData.getEntityId())
-                                     .serviceId(artifactCollectionExecutionData.getServiceId())
-                                     .artifactVariableName(artifactCollectionExecutionData.getArtifactVariableName())
-                                     .build());
-          });
-
-          executionResponseBuilder.contextElements(artifactElements);
-        }
+        saveArtifactVariableElements(context, stateExecutionData);
       }
     }
 
     return executionResponseBuilder.build();
+  }
+
+  private void saveArtifactElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
+    List<Artifact> artifacts =
+        executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+    if (isEmpty(artifacts)) {
+      return;
+    }
+
+    List<ServiceArtifactElement> artifactElements = new ArrayList<>();
+    artifacts.forEach(artifact
+        -> artifactElements.add(
+            ServiceArtifactElement.builder()
+                .uuid(artifact.getUuid())
+                .name(artifact.getDisplayName())
+                .serviceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()))
+                .build()));
+
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.PIPELINE)
+            .name(ServiceArtifactElements.SWEEPING_OUTPUT_NAME + context.getStateExecutionInstanceId())
+            .value(ServiceArtifactElements.builder().artifactElements(artifactElements).build())
+            .build());
+  }
+
+  private void saveArtifactVariableElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
+    List<StateExecutionInstance> allStateExecutionInstances =
+        executionService.getStateExecutionInstances(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+    if (isEmpty(allStateExecutionInstances)) {
+      return;
+    }
+
+    List<ServiceArtifactVariableElement> artifactVariableElements = new ArrayList<>();
+    allStateExecutionInstances.forEach(stateExecutionInstance -> {
+      ArtifactCollectionExecutionData artifactCollectionExecutionData =
+          (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
+
+      Artifact artifact = artifactService.get(artifactCollectionExecutionData.getArtifactId());
+      artifactVariableElements.add(ServiceArtifactVariableElement.builder()
+                                       .uuid(artifact.getUuid())
+                                       .name(artifact.getDisplayName())
+                                       .entityType(artifactCollectionExecutionData.getEntityType())
+                                       .entityId(artifactCollectionExecutionData.getEntityId())
+                                       .serviceId(artifactCollectionExecutionData.getServiceId())
+                                       .artifactVariableName(artifactCollectionExecutionData.getArtifactVariableName())
+                                       .build());
+    });
+
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.PIPELINE)
+            .name(ServiceArtifactVariableElements.SWEEPING_OUTPUT_NAME + context.getStateExecutionInstanceId())
+            .value(ServiceArtifactVariableElements.builder().artifactVariableElements(artifactVariableElements).build())
+            .build());
   }
 
   @Deprecated
