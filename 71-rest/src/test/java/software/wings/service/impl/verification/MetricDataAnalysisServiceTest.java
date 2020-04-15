@@ -74,7 +74,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     int numOfMetricsPerTxns = 10;
     for (int i = 0; i < numOfTransactions; i++) {
       for (int j = 0; j < numOfMetricsPerTxns; j++) {
-        metricDataAnalysisService.saveCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId,
+        metricDataAnalysisService.saveCustomThreshold(accountId, appId, StateType.NEW_RELIC, serviceId, cvConfigId,
             "transaction-" + (i * numOfMetricsPerTxns + j), DEFAULT_GROUP_NAME,
             TimeSeriesMetricDefinition.builder()
                 .metricName("metric-" + (i * numOfMetricsPerTxns + j))
@@ -115,7 +115,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
 
     // change a few thresholds
     for (int i = 0; i < 10; i++) {
-      metricDataAnalysisService.saveCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId,
+      metricDataAnalysisService.saveCustomThreshold(accountId, appId, StateType.NEW_RELIC, serviceId, cvConfigId,
           "transaction-" + 21, DEFAULT_GROUP_NAME,
           TimeSeriesMetricDefinition.builder()
               .metricName("metric-" + 21)
@@ -130,7 +130,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     }
 
     for (int i = 0; i < 7; i++) {
-      metricDataAnalysisService.saveCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId,
+      metricDataAnalysisService.saveCustomThreshold(accountId, appId, StateType.NEW_RELIC, serviceId, cvConfigId,
           "transaction-" + 37, DEFAULT_GROUP_NAME,
           TimeSeriesMetricDefinition.builder()
               .metricName("metric-" + 37)

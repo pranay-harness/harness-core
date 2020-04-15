@@ -10,6 +10,7 @@ import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
+import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
@@ -187,6 +188,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(109, AddAccountIdToTimeSeriesAnalysisRecords.class))
         .add(Pair.of(110, DelegatesWithoutProfileMigration.class))
         .add(Pair.of(111, AddValidUntilToSecretUsageLogs.class))
+        .add(Pair.of(112, AddAccountIdToTimeSeriesTransactionThresholdsMigration.class))
+        .add(Pair.of(113, AddAccountIdToLogDataRecordsMigration.class))
         .build();
   }
 }

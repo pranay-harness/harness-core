@@ -591,6 +591,7 @@ timeSeriesRawData { "name" : "validUntil_1" , "background" : true , "expireAfter
 timeSeriesRiskSummary { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeSeriesRiskSummary { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeSeriesRiskSummary { "name" : "minute_idx" , "background" : true} { "cvConfigId" : 1 , "analysisMinute" : 1 , "tag" : 1}
+timeseriesTransactionThresholds { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 timeseriesTransactionThresholds { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeseriesTransactionThresholds { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeseriesTransactionThresholds { "name" : "timeseriesThresholdsQueryIndex" , "background" : true} { "appId" : 1 , "serviceId" : 1 , "stateType" : 1 , "groupName" : 1 , "transactionName" : 1 , "metricName" : 1 , "cvConfigId" : 1 , "thresholdType" : 1}

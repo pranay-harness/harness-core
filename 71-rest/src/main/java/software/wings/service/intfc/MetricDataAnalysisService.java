@@ -64,7 +64,7 @@ public interface MetricDataAnalysisService {
   List<TimeSeriesMLTransactionThresholds> getCustomThreshold(String fieldName, String fieldValue);
   List<TimeSeriesMLTransactionThresholds> getCustomThreshold(String customThresholdRefId);
 
-  boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
+  boolean saveCustomThreshold(String accountId, String appId, StateType stateType, String serviceId, String cvConfigId,
       String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition,
       String customThresholdRefId);
   boolean saveCustomThreshold(String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds);
