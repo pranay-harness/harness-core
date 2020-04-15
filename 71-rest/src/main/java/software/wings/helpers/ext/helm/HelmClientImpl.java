@@ -295,7 +295,7 @@ public class HelmClientImpl implements HelmClient {
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
-    return HelmCliResponse.builder().commandExecutionStatus(status).output(processResult.outputString()).build();
+    return HelmCliResponse.builder().commandExecutionStatus(status).output(processResult.outputUTF8()).build();
   }
 
   private String getNamespaceFlag(String namespace) {

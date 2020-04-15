@@ -166,7 +166,7 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         if (validateKubectlExists(kubectlDirectory)) {
           logger.info("kubectl path: {}", kubectlPath);
           return true;
@@ -176,7 +176,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("kubectl install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -200,10 +200,10 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -259,7 +259,7 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
           logger.info("go-template path: {}", goTemplateToolPath);
           return true;
@@ -269,7 +269,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("go-template install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -293,10 +293,10 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -349,10 +349,10 @@ public class InstallUtils {
 
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
 
@@ -398,7 +398,7 @@ public class InstallUtils {
         return true;
       } else {
         logger.error("Helm client init failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } else {
@@ -464,7 +464,7 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         String helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
         helmPaths.put(helmVersion, helmPath);
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
 
         if (validateHelmExists(helmDirectory)) {
           logger.info("helm path: {}", helmPath);
@@ -475,7 +475,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("helm install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -507,10 +507,10 @@ public class InstallUtils {
 
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
 
@@ -563,7 +563,7 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
 
         if (validateChartMuseumExists(chartMuseumDirectory)) {
           logger.info("chartmuseum path: {}", chartMuseumPath);
@@ -574,7 +574,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("chart museum install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
 
@@ -691,7 +691,7 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         ocPath = Paths.get(ocDirectory, "oc").toAbsolutePath().normalize().toString();
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         if (validateOcExists(ocDirectory)) {
           logger.info("oc path: {}", ocPath);
           return true;
@@ -701,7 +701,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("oc install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -726,10 +726,10 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -788,7 +788,7 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         kustomizePath = Paths.get(kustomizeDir + "/kustomize").toAbsolutePath().normalize().toString();
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         if (validateKustomizeExists(kustomizeDir)) {
           logger.info("kustomize path: {}", kustomizePath);
           return true;
@@ -798,7 +798,7 @@ public class InstallUtils {
         }
       } else {
         logger.error("kustomize install failed");
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
@@ -822,10 +822,10 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputString());
+        logger.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputString());
+        logger.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {

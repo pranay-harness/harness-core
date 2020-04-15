@@ -517,7 +517,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                           .directory(Paths.get(scriptDir).toFile());
 
     ProcessResult processResult = processExecutor.execute();
-    String output = processResult.outputString();
+    String output = processResult.outputUTF8();
     if (processResult.getExitValue() != 0) {
       throw new InvalidRequestException("Failed to list workspaces. " + output);
     }
