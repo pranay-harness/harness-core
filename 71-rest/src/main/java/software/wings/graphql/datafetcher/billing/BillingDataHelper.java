@@ -88,7 +88,7 @@ public class BillingDataHelper {
     }
   }
 
-  protected String getTotalCostFormattedDate(Instant instant) {
+  public String getTotalCostFormattedDate(Instant instant) {
     return getFormattedDate(instant, TOTAL_COST_DATE_PATTERN);
   }
 

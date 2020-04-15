@@ -18,6 +18,7 @@ public class BillingAggregate {
   public static final String BILLING_GCP_CREDITS = "discount";
   public static final String AWS_UN_BLENDED_COST = "unblendedCost";
   public static final String AWS_BLENDED_COST = "blendedCost";
+  public static final String PRE_AGG_START_TIME = "startTime";
 
   QLCCMAggregateOperation operationType;
   String columnName;
@@ -61,6 +62,9 @@ public class BillingAggregate {
         break;
       case AWS_BLENDED_COST:
         functionCall.addColumnParams(PreAggregatedTableSchema.blendedCost);
+        break;
+      case PRE_AGG_START_TIME:
+        functionCall.addColumnParams(PreAggregatedTableSchema.startTime);
         break;
       default:
         break;

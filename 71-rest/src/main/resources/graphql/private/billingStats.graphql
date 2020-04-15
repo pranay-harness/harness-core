@@ -81,6 +81,7 @@ input CCMAggregationFunction {
 enum CCMAggregateOperation {
   SUM
   MAX
+  MIN
   AVG
 }
 

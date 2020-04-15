@@ -11,6 +11,7 @@ enum DataFetcherEnum {
   gcpBillingTimeSeriesStats
   gcpBillingTrendStats
   cloudEntityStats
+  cloudTrendStats
   cloudTimeSeriesStats
   budget
   budgetList

@@ -28,6 +28,7 @@ public class CloudBillingFilter {
   BillingTimeFilter startTime;
   BillingTimeFilter endTime;
   BillingTimeFilter preAggregatedTableStartTime;
+  BillingTimeFilter preAggregatedTableEndTime;
   BillingIdFilter project;
   BillingIdFilter product;
   BillingIdFilter sku;
@@ -59,7 +60,7 @@ public class CloudBillingFilter {
     return endTime;
   }
 
-  public BillingTimeFilter getAwsStartTime() {
+  public BillingTimeFilter getPreAggregatedStartTime() {
     if (preAggregatedTableStartTime == null) {
       return null;
     }
@@ -67,6 +68,16 @@ public class CloudBillingFilter {
     Preconditions.checkNotNull(preAggregatedTableStartTime.getOperator(), AWS_TIME_FILTER_ERROR);
     preAggregatedTableStartTime.setVariable(BILLING_AWS_STARTTIME);
     return preAggregatedTableStartTime;
+  }
+
+  public BillingTimeFilter getPreAggregatedEndTime() {
+    if (preAggregatedTableEndTime == null) {
+      return null;
+    }
+    Preconditions.checkNotNull(preAggregatedTableEndTime.getValue(), AWS_TIME_FILTER_ERROR);
+    Preconditions.checkNotNull(preAggregatedTableEndTime.getOperator(), AWS_TIME_FILTER_ERROR);
+    preAggregatedTableEndTime.setVariable(BILLING_AWS_STARTTIME);
+    return preAggregatedTableEndTime;
   }
 
   public BillingIdFilter getProject() {
@@ -149,7 +160,10 @@ public class CloudBillingFilter {
       return getLinkedAccount().toCondition();
     }
     if (preAggregatedTableStartTime != null) {
-      return getAwsStartTime().toCondition();
+      return getPreAggregatedStartTime().toCondition();
+    }
+    if (getPreAggregatedTableEndTime() != null) {
+      return getPreAggregatedEndTime().toCondition();
     }
     return null;
   }
