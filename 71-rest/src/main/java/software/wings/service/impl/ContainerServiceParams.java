@@ -18,6 +18,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
@@ -74,8 +75,8 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
             "https://container.googleapis.com/"));
       } else {
         if (masterUrl == null) {
-          logger.warn(
-              "[DelegateCapability] This should Not happen. Master URL is null for Setting Value: {}", value.getType());
+          executionCapabilities.add(
+              ClusterMasterUrlValidationCapability.builder().containerServiceParams(this).build());
         } else {
           executionCapabilities.add(
               HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
