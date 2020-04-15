@@ -326,6 +326,11 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification) {
+    return updateMembers(userGroup, sendNotification, false);
+  }
+
+  @Override
+  public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited) {
     Set<String> newMemberIds = Sets.newHashSet();
     if (isNotEmpty(userGroup.getMembers())) {
       newMemberIds = userGroup.getMembers()
@@ -348,6 +353,23 @@ public class UserGroupServiceImpl implements UserGroupService {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "memberIds", newMemberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
+
+    // auditing addition/removal of users in/from user group
+    if (toBeAudited) {
+      Set<String> memberIdsToBeAdded = Sets.difference(newMemberIds, existingMemberIds);
+      Set<String> memberIdsTOBeRemoved = Sets.difference(existingMemberIds, newMemberIds);
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          userGroup.getAccountId(), userGroup, updatedUserGroup, Type.UPDATE);
+      memberIdsToBeAdded.forEach(userId -> {
+        User user = userService.get(userId);
+        auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.ADD);
+      });
+      memberIdsTOBeRemoved.forEach(userId -> {
+        User user = userService.get(userId);
+        auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.REMOVE);
+      });
+    }
+
     if (isNotEmpty(existingUserGroup.getMemberIds())) {
       newMemberIds.addAll(existingUserGroup.getMemberIds());
     }
@@ -367,6 +389,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         }
       });
     }
+
     return updatedUserGroup;
   }
 

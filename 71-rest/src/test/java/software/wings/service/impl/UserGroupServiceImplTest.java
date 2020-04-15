@@ -15,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -402,6 +403,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       // Update operation 1
       User userAfterUpdate = userService.updateUserGroupsOfUser(
           savedUser.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
+      verify(auditServiceHelper, atLeast(3))
+          .reportForAuditingUsingAccountId(ArgumentCaptor.forClass(String.class).capture(),
+              ArgumentCaptor.forClass(Object.class).capture(), ArgumentCaptor.forClass(Object.class).capture(),
+              ArgumentCaptor.forClass(Type.class).capture());
       userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
       userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
       assertThat(userAfterUpdate.getUserGroups()).size().isEqualTo(2);
@@ -553,6 +558,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
               .filter(emailData -> emailData.getTemplateName().equals(ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME))
               .collect(toList())
               .size());
+      userGroup1.setMembers(Arrays.asList(user1));
+      userGroupService.updateMembers(userGroup1, true, true);
+      verify(auditServiceHelper, atLeast(2))
+          .reportForAuditingUsingAccountId(ArgumentCaptor.forClass(String.class).capture(),
+              ArgumentCaptor.forClass(Object.class).capture(), ArgumentCaptor.forClass(Object.class).capture(),
+              ArgumentCaptor.forClass(Type.class).capture());
     }
   }
 

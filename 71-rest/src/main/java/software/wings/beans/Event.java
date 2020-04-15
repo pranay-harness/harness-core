@@ -233,7 +233,17 @@ public class Event {
     /**
      * Update Delegate Scope type.
      */
-    UPDATE_SCOPE
+    UPDATE_SCOPE,
+
+    /**
+     * for addition of users in user groups and assigning user groups to users
+     */
+    ADD,
+
+    /**
+     * for removal of users from user groups and un assigning user groups to users
+     */
+    REMOVE
   }
 
   /**

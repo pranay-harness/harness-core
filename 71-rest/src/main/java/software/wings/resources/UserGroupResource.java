@@ -216,7 +216,7 @@ public class UserGroupResource {
     if (null != existingGroup.getNotificationSettings()) {
       sendMailToNewMembers = existingGroup.getNotificationSettings().isSendMailToNewMembers();
     }
-    return getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers));
+    return getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers, true));
   }
 
   /**

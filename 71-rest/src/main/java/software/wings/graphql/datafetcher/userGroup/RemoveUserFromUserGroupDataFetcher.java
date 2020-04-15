@@ -46,7 +46,7 @@ public class RemoveUserFromUserGroupDataFetcher
       memberIds.remove(userId);
       existingUserGroup.setMembers(memberIds.stream().map(this ::createEmptyUser).collect(toList()));
     }
-    return userGroupService.updateMembers(existingUserGroup, false);
+    return userGroupService.updateMembers(existingUserGroup, false, true);
   }
 
   @Override

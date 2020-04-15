@@ -906,20 +906,24 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void addUserToUserGroups(
+  private List<UserGroup> addUserToUserGroups(
       String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
     if (isNotEmpty(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
       addUserToUserGroups(accountId, user, userGroups, sendNotification);
+      return userGroups;
     }
+    return new ArrayList<>();
   }
 
-  private void removeUserFromUserGroups(
+  private List<UserGroup> removeUserFromUserGroups(
       String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
     if (isNotEmpty(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
       removeUserFromUserGroups(user, userGroups, sendNotification);
+      return userGroups;
     }
+    return new ArrayList<>();
   }
 
   private void removeUserFromUserGroups(User user, List<UserGroup> userGroups, boolean sendNotification) {
@@ -1911,6 +1915,15 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.getWithAppId(User.class, user.getAppId(), user.getUuid());
   }
 
+  private void auditUserAdditionAndRemovalFromUserGroups(
+      String accountId, User user, List<UserGroup> userGroupMemberAdditions, List<UserGroup> userGroupMemberDeletions) {
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UPDATE);
+    userGroupMemberAdditions.forEach(userGroupAdded
+        -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userGroupAdded, Type.ADD));
+    userGroupMemberDeletions.forEach(userGroupDeleted
+        -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userGroupDeleted, Type.REMOVE));
+  }
+
   @Override
   public User updateUserGroupsOfUser(
       String userId, List<UserGroup> userGroups, String accountId, boolean sendNotification) {
@@ -1923,13 +1936,17 @@ public class UserServiceImpl implements UserService {
     SetView<String> userGroupMemberDeletions = Sets.difference(oldUserGroupIds, newUserGroupIds);
     SetView<String> userGroupMemberAdditions = Sets.difference(newUserGroupIds, oldUserGroupIds);
 
+    List<UserGroup> userGroupsAdded = new ArrayList<>();
+    List<UserGroup> userGroupsDeleted = new ArrayList<>();
     if (isNotEmpty(userGroupMemberAdditions)) {
-      addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions, sendNotification);
+      userGroupsAdded = addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions, sendNotification);
     }
 
     if (isNotEmpty(userGroupMemberDeletions)) {
-      removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
+      userGroupsDeleted = removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
     }
+
+    auditUserAdditionAndRemovalFromUserGroups(accountId, userFromDB, userGroupsAdded, userGroupsDeleted);
 
     authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, Arrays.asList(userId));
     return get(accountId, userId);

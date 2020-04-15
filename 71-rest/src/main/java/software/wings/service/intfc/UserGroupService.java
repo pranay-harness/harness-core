@@ -94,6 +94,11 @@ public interface UserGroupService extends OwnedByAccount {
   UserGroup updateMembers(UserGroup userGroup, boolean sendNotification);
 
   /**
+   * Same as above, but with a boolean flag to perform or skip auditing
+   */
+  UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited);
+
+  /**
    * Remove members from the userGroup
    *
    * @return the userGroup
