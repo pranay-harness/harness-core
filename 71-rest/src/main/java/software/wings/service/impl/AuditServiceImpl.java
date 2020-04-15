@@ -449,6 +449,8 @@ public class AuditServiceImpl implements AuditService {
         case ACCEPTED_INVITE:
         case TEST:
         case UPDATE:
+        case ADD:
+        case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
           break;
         case DELETE:
@@ -476,6 +478,8 @@ public class AuditServiceImpl implements AuditService {
         case TEST:
         case UPDATE_NOTIFICATION_SETTING:
         case UPDATE_SCOPE:
+        case ADD:
+        case REMOVE:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
           resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);

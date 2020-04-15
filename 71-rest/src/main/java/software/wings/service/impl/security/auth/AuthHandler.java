@@ -1589,7 +1589,7 @@ public class AuthHandler {
         members.add(user);
         userGroup.setMembers(members);
 
-        userGroupService.updateMembers(userGroup, sendNotification);
+        userGroupService.updateMembers(userGroup, sendNotification, true);
 
         logger.info("User {} is added to the user group in account {}", user.getName(), accountId);
       }

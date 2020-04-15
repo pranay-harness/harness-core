@@ -104,7 +104,7 @@ public class UpdateUserGroupDataFetcher
       if (existingUserGroup.getNotificationSettings() != null) {
         sendNotification = existingUserGroup.getNotificationSettings().isSendMailToNewMembers();
       }
-      userGroupService.updateMembers(existingUserGroup, sendNotification);
+      userGroupService.updateMembers(existingUserGroup, sendNotification, true);
     }
 
     // Update SSOSettings

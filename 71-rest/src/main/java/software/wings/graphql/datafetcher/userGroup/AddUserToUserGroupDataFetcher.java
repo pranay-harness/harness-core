@@ -51,7 +51,7 @@ public class AddUserToUserGroupDataFetcher
       memberIds.add(userId);
       existingUserGroup.setMembers(memberIds.stream().map(this ::createEmptyUser).collect(toList()));
     }
-    return userGroupService.updateMembers(existingUserGroup, sendNotification);
+    return userGroupService.updateMembers(existingUserGroup, sendNotification, true);
   }
 
   @Override
