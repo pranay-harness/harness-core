@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.command.CommandExecutionData;
-import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -217,15 +216,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                                  .bastionConnectionCredentials(bastionConnectionCredentials)
                                  .sshExecutionCredential((SSHExecutionCredential) executionCredential)
                                  .build());
-      case ECS:
-        if (containerSetupParams != null) {
-          region = ((EcsSetupParams) containerSetupParams).getRegion();
-        } else if (containerResizeParams != null) {
-          region = ((EcsResizeParams) containerResizeParams).getRegion();
-        }
-        return singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
       case AWS_CODEDEPLOY:
         return singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
+      case ECS:
       case AMI:
       case AWS_LAMBDA:
         return emptyList();

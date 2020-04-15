@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
@@ -105,8 +104,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(AwsRegionCapability.class);
+    assertThat(executionCapabilities).isEmpty();
   }
 
   @Test
@@ -119,8 +117,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(AwsRegionCapability.class);
+    assertThat(executionCapabilities).isEmpty();
   }
 
   @Test

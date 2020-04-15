@@ -20,12 +20,10 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
-import java.io.File;
 import java.util.List;
 
 @Singleton
@@ -53,8 +51,7 @@ public class ContainerValidationHelper {
 
     boolean validated;
     if (value instanceof AwsConfig) {
-      String region = containerServiceParams.getRegion();
-      validated = region == null || AwsHelperService.isInAwsRegion(region) || isLocalDev();
+      validated = true;
     } else if (value instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
       validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
@@ -68,16 +65,10 @@ public class ContainerValidationHelper {
     return validated;
   }
 
-  private static boolean isLocalDev() {
-    return !new File("start.sh").exists();
-  }
-
   public String getCriteria(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
-      String region = containerServiceParams.getRegion();
-      String cluster = containerServiceParams.getClusterName();
-      return "ECS Cluster: " + cluster + ", " + getAwsRegionCriteria(region);
+      return ALWAYS_TRUE_CRITERIA;
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
       if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
@@ -138,9 +129,5 @@ public class ContainerValidationHelper {
       }
     }
     return kubernetesConfig.getMasterUrl();
-  }
-
-  private String getAwsRegionCriteria(String region) {
-    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS Region: " + region;
   }
 }
