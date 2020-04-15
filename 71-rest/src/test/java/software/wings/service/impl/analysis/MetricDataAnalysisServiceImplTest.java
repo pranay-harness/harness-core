@@ -41,11 +41,18 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject MetricDataAnalysisService metricDataAnalysisService;
 
-  String appId, workflowId, serviceId, infraMappingId, envId, cvConfigId;
+  private String appId;
+  private String workflowId;
+  private String serviceId;
+  private String infraMappingId;
+  private String envId;
+  private String cvConfigId;
   private String stateExecutionId;
+  private String accountId;
 
   @Before
   public void setup() throws IllegalAccessException {
+    accountId = generateUuid();
     appId = generateUuid();
     serviceId = generateUuid();
     workflowId = generateUuid();
@@ -139,7 +146,7 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
     int numOfMetricsPerTxns = 10;
     for (int i = 0; i < numOfTransactions; i++) {
       for (int j = 0; j < numOfMetricsPerTxns; j++) {
-        metricDataAnalysisService.saveCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId,
+        metricDataAnalysisService.saveCustomThreshold(accountId, appId, StateType.NEW_RELIC, serviceId, cvConfigId,
             "transaction-" + (i * numOfMetricsPerTxns + j), DEFAULT_GROUP_NAME,
             TimeSeriesMetricDefinition.builder()
                 .metricName("metric-" + (i * numOfMetricsPerTxns + j))

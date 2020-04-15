@@ -115,8 +115,8 @@ public class TimeSeriesResource {
       @QueryParam("transactionName") String transactionName, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("customThresholdRefId") String customThresholdRefId,
       TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
-    return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(appId, stateType, serviceId, cvConfigId,
-        transactionName, groupName, timeSeriesMetricDefinition, customThresholdRefId));
+    return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(accountId, appId, stateType, serviceId,
+        cvConfigId, transactionName, groupName, timeSeriesMetricDefinition, customThresholdRefId));
   }
 
   @POST

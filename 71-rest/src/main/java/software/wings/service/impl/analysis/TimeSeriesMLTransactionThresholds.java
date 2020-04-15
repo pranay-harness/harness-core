@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import com.google.common.collect.Sets;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +13,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesCustomThresholdType;
@@ -34,7 +36,7 @@ import java.util.HashMap;
 @FieldNameConstants(innerTypeName = "TimeSeriesMLTransactionThresholdKeys")
 @Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesMLTransactionThresholds extends Base {
+public class TimeSeriesMLTransactionThresholds extends Base implements AccountAccess {
   @NotEmpty private String serviceId;
 
   @NotEmpty private String workflowId;
@@ -48,6 +50,8 @@ public class TimeSeriesMLTransactionThresholds extends Base {
   @NotEmpty private String metricName;
 
   @NotEmpty private String cvConfigId;
+
+  @Indexed private String accountId;
 
   TimeSeriesMetricDefinition thresholds;
 
@@ -66,6 +70,7 @@ public class TimeSeriesMLTransactionThresholds extends Base {
         .transactionName(transactionName)
         .metricName(metricName)
         .cvConfigId(cvConfigId)
+        .accountId(accountId)
         .thresholds(TimeSeriesMetricDefinition.builder()
                         .metricName(thresholds.getMetricName())
                         .metricType(thresholds.getMetricType())
