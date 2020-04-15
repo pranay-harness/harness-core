@@ -45,6 +45,10 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    if (settingValue == null) {
+      return emptyList();
+    }
+
     switch (settingValue.getSettingType()) {
       case JENKINS:
       case BAMBOO:
