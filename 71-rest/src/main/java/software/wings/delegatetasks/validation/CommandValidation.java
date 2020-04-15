@@ -24,8 +24,6 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.EcsResizeParams;
-import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -34,11 +32,9 @@ import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -47,7 +43,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class CommandValidation extends AbstractDelegateValidateTask {
-  private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
+  static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
 
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient GkeClusterService gkeClusterService;
@@ -135,20 +131,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateEcs(CommandExecutionContext context) {
-    String region = null;
-    if (context.getContainerSetupParams() != null) {
-      region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
-    } else if (context.getContainerResizeParams() != null) {
-      region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
-    }
-    return DelegateConnectionResult.builder()
-        .criteria(getCriteria(context))
-        .validated(region == null || AwsHelperService.isInAwsRegion(region) || isLocalDev())
-        .build();
-  }
-
-  private static boolean isLocalDev() {
-    return !new File("start.sh").exists();
+    return DelegateConnectionResult.builder().criteria(getCriteria(context)).validated(true).build();
   }
 
   private DelegateConnectionResult validateAwsCodeDelpoy(CommandExecutionContext context) {
@@ -261,15 +244,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
               .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
         }
       case ECS:
-        String cluster = "";
-        if (context.getContainerSetupParams() != null) {
-          region = ((EcsSetupParams) context.getContainerSetupParams()).getRegion();
-          cluster = context.getContainerSetupParams().getClusterName();
-        } else if (context.getContainerResizeParams() != null) {
-          region = ((EcsResizeParams) context.getContainerResizeParams()).getRegion();
-          cluster = context.getContainerResizeParams().getClusterName();
-        }
-        return "ECS Cluster: " + cluster + ", " + getAwsRegionCriteria(region);
+        return ALWAYS_TRUE_CRITERIA;
       case AWS_CODEDEPLOY:
         return AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
       case WINRM:
@@ -286,9 +261,5 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "deploymentType is not handled: " + deploymentType.name());
     }
-  }
-
-  private String getAwsRegionCriteria(String region) {
-    return region == null ? ALWAYS_TRUE_CRITERIA : "AWS Region: " + region;
   }
 }
