@@ -95,6 +95,7 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData.AlertRiskDetail;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
@@ -119,6 +120,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
+import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.log.CustomLogSetupTestNodeData;
@@ -142,6 +144,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
@@ -245,11 +248,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private StateExecutionService stateExecutionService;
   @Inject private PrometheusAnalysisService prometheusAnalysisService;
   @Inject private MLServiceUtils mlServiceUtils;
+  @Inject private DatadogService datadogService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
   private static final String DUMMY_METRIC_NAME = "DummyMetricName";
   private static final int MAX_NUMBER_OF_TXNS_DETAILS_IN_ALERTS = 5;
+  private static final String COMMA_STR = ",";
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -1557,12 +1562,21 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
     apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromTime()));
     apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
+    String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
+        config.getMetrics(), config.getDockerMetrics(), null, config.getEcsMetrics());
+    Map<String, String> invalidMetrics =
+        DatadogServiceImpl.validateNameClashInCustomMetrics(config.getCustomMetrics(), metricsString);
+    if (isNotEmpty(invalidMetrics)) {
+      StringBuilder exception = new StringBuilder("Invalid metric definitions found:");
+      invalidMetrics.forEach((metric, reason) -> { exception.append(metric + COMMA_STR); });
+      throw new DataCollectionException(exception.substring(0, exception.lastIndexOf(COMMA_STR)));
+    }
 
     Map<String, List<APMMetricInfo>> metricInfoByQuery;
     if (!config.isServiceLevel()) {
       Optional<List<String>> metrics = Optional.empty();
       if (isNotEmpty(config.getMetrics())) {
-        metrics = Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(","))));
+        metrics = Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(COMMA_STR))));
       }
       metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()), metrics,
           Optional.empty(), Optional.ofNullable(config.getCustomMetrics()),

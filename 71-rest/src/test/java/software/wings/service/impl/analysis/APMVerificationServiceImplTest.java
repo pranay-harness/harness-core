@@ -21,6 +21,7 @@ import static software.wings.service.impl.verification.CVConfigurationServiceImp
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
@@ -69,6 +70,7 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
@@ -80,6 +82,7 @@ import software.wings.sm.states.APMVerificationState.ResponseMapping;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
+import software.wings.sm.states.DatadogState;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -91,6 +94,7 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Praveen 9/6/18
@@ -105,6 +109,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private CloudWatchService cloudWatchService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private CVActivityLogService cvActivityLogService;
+  @Mock private DatadogService datadogService;
   @Mock MLServiceUtils mlServiceUtils;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
@@ -192,6 +197,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
     when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
         .thenReturn(textLoad);
+    when(datadogService.getConcatenatedListOfMetricsForValidation(anyString(), any(), any(), any()))
+        .thenReturn("docker.mem.rss");
     // execute
     VerificationNodeDataSetupResponse response =
         service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.DATA_DOG);
@@ -229,6 +236,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
     when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
         .thenReturn(textLoad);
+    when(datadogService.getConcatenatedListOfMetricsForValidation(anyString(), any(), any(), any()))
+        .thenReturn("docker.mem.rss");
     // execute
     VerificationNodeDataSetupResponse response =
         service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.DATA_DOG);
@@ -237,6 +246,38 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertThat(response.isProviderReachable()).isTrue();
     assertThat(response.getLoadResponse()).isNotNull();
     assertThat(response.getLoadResponse().isLoadPresent()).isFalse();
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetNodeDataDatadog_invalidMetricsSetup() throws Exception {
+    DataDogSetupTestNodeData nodeData =
+        DataDogSetupTestNodeData.builder()
+            .deploymentType("KUBERNETES")
+            .metrics("docker.mem.rss")
+            .fromTime(Timestamp.currentMinuteBoundary())
+            .toTime(Timestamp.currentMinuteBoundary())
+            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .stateType(StateType.DATA_DOG)
+            .guid(generateUuid())
+            .build();
+    Map<String, Set<DatadogState.Metric>> customMetric = new HashMap<>();
+    customMetric.put("pod_name",
+        Sets.newHashSet(DatadogState.Metric.builder().displayName("docker mem").metricName("docker.mem.rss").build()));
+
+    nodeData.setCustomMetrics(customMetric);
+    when(mlServiceUtils.getHostName(eq(nodeData))).thenReturn("sampleHostname");
+    DatadogConfig ddConfig = DatadogConfig.builder().url("sampleUrl.com").build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(ddConfig);
+    // setup
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(datadogService.getConcatenatedListOfMetricsForValidation(anyString(), any(), any(), any()))
+        .thenReturn("docker.mem.rss");
+    // execute
+    VerificationNodeDataSetupResponse response =
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.DATA_DOG);
   }
 
   @Test

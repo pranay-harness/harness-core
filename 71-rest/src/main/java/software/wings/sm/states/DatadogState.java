@@ -15,6 +15,7 @@ import static software.wings.utils.Misc.replaceDotWithUnicode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
@@ -45,6 +46,8 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
 import software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
+import software.wings.service.impl.datadog.DatadogServiceImpl;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -72,6 +75,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
 public class DatadogState extends AbstractMetricAnalysisState {
+  @Inject @SchemaIgnore private transient DatadogService datadogService;
   private static final int DATA_COLLECTION_RATE_MINS = 5;
   private static final URL DATADOG_URL = DatadogState.class.getResource("/apm/datadog.yml");
   private static final URL DATADOG_METRICS_URL = DatadogState.class.getResource("/apm/datadog_metrics.yml");
@@ -141,6 +145,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
         }
       });
     }
+    validateFields.putAll(DatadogServiceImpl.validateNameClashInCustomMetrics(customMetrics, metrics));
     return validateFields;
   }
 
