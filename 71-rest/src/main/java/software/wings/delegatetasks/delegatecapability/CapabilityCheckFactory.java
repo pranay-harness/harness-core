@@ -12,6 +12,7 @@ import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapab
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmInstallationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapabilityCheck;
@@ -38,6 +39,7 @@ public class CapabilityCheckFactory {
   @Inject HelmCommandCapabilityCheck helmCommandCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
+  @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -71,6 +73,8 @@ public class CapabilityCheckFactory {
         return helmInstallationCapabilityCheck;
       case CHART_MUSEUM:
         return chartMuseumCapabilityCheck;
+      case CLUSTER_MASTER_URL:
+        return clusterMasterUrlCapabilityCheck;
       default:
         return null;
     }
