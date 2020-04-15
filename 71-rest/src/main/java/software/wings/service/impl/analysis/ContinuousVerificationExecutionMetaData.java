@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -45,7 +46,7 @@ import java.util.Date;
 })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ContinuousVerificationExecutionMetaData extends Base {
+public class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;
 

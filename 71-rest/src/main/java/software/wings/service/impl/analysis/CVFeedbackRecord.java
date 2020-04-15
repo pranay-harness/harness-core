@@ -16,6 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -42,7 +43,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 @IgnoreUnusedIndex
 @Entity(value = "cvFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CVFeedbackRecord implements GoogleDataStoreAware {
+public class CVFeedbackRecord implements GoogleDataStoreAware, AccountAccess {
   @Id private String uuid;
   @NotEmpty @Indexed private String accountId;
 

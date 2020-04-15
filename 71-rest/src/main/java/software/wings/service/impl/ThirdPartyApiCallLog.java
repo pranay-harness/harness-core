@@ -24,6 +24,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.UuidAware;
@@ -71,7 +72,7 @@ import java.util.List;
 })
 @Entity(value = "thirdPartyApiCallLog")
 @HarnessEntity(exportable = false)
-public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware {
+public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
   public static final String PAYLOAD = "Payload";
