@@ -7,7 +7,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -33,14 +32,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.StringJoiner;
 
 @Slf4j
 public class SunburstChartStatsDataFetcher
@@ -64,28 +61,8 @@ public class SunburstChartStatsDataFetcher
       Integer offset) {
     try {
       if (timeScaleDBService.isValid()) {
-        if (groupBy.size() > 4) {
-          List<QLCCMGroupBy> k8sGroupBy = new ArrayList<>(groupBy);
-          List<QLCCMGroupBy> ecsGroupBy = new ArrayList<>(groupBy);
-          processAndRetainK8sGroupBy(k8sGroupBy);
-          processAndRetainEcsGroupBy(ecsGroupBy);
-          List<QLSunburstGridDataPoint> k8sGridData =
-              getGridDataPointsForAllViews(accountId, aggregateFunction, filters, k8sGroupBy, sort, true);
-          List<QLSunburstGridDataPoint> ecsGridData =
-              getGridDataPointsForAllViews(accountId, aggregateFunction, filters, ecsGroupBy, sort, false);
-          List<QLSunburstGridDataPoint> gridData = new ArrayList<>(k8sGridData);
-          gridData.addAll(ecsGridData);
-          List<QLSunburstChartDataPoint> k8sChartData = getSunburstChartData(
-              accountId, aggregateFunction, filters, k8sGroupBy, sort, true, convertGridPointsToMap(gridData));
-          List<QLSunburstChartDataPoint> ecsChartData = getSunburstChartData(
-              accountId, aggregateFunction, filters, ecsGroupBy, sort, false, convertGridPointsToMap(gridData));
-          List<QLSunburstChartDataPoint> chartData = k8sChartData;
-          chartData.addAll(ecsChartData);
-          return QLSunburstChartData.builder().data(chartData).gridData(gridData).build();
-        }
-
         List<QLSunburstGridDataPoint> sunburstGridDataPointList =
-            getGridDataPointsForAllViews(accountId, aggregateFunction, filters, groupBy, sort, true);
+            getGridDataPointsForAllViews(accountId, aggregateFunction, filters, groupBy, sort);
         List<QLSunburstChartDataPoint> sunburstChartDataPointList = getSunburstChartData(accountId, aggregateFunction,
             filters, groupBy, sort, true, convertGridPointsToMap(sunburstGridDataPointList));
 
@@ -103,24 +80,15 @@ public class SunburstChartStatsDataFetcher
 
   private List<QLSunburstGridDataPoint> getGridDataPointsForAllViews(String accountId,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy,
-      List<QLBillingSortCriteria> sort, boolean computeClusterData) {
+      List<QLBillingSortCriteria> sort) {
     List<QLSunburstGridDataPoint> sunburstGridDataPointList = new ArrayList<>();
-    List<QLCCMGroupBy> modifiedGroupBy = new ArrayList<>();
     for (QLCCMGroupBy groupByPoint : groupBy) {
       boolean isClusterGroupBy = false;
       if (groupByPoint.getEntityGroupBy() == QLCCMEntityGroupBy.Cluster) {
         isClusterGroupBy = true;
-        if (!computeClusterData) {
-          modifiedGroupBy.add(groupByPoint);
-          continue;
-        }
       }
-      if (groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.ClusterType
-          && groupByPoint.getEntityGroupBy() != QLCCMEntityGroupBy.InstanceType) {
-        modifiedGroupBy.add(groupByPoint);
-        sunburstGridDataPointList.addAll(getSunburstGridData(
-            accountId, aggregateFunction, new ArrayList<>(filters), modifiedGroupBy, sort, isClusterGroupBy));
-      }
+      sunburstGridDataPointList.addAll(getSunburstGridData(
+          accountId, aggregateFunction, new ArrayList<>(filters), Arrays.asList(groupByPoint), sort, isClusterGroupBy));
     }
     return sunburstGridDataPointList;
   }
@@ -180,7 +148,6 @@ public class SunburstChartStatsDataFetcher
     while (null != resultSet && resultSet.next()) {
       QLSunburstGridDataPointBuilder gridDataPointBuilder = QLSunburstGridDataPoint.builder();
       QLStatsBreakdownInfoBuilder qlStatsBreakdownInfoBuilder = QLStatsBreakdownInfo.builder();
-      StringJoiner entityIdAppender = new StringJoiner(":");
       for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case DOUBLE:
@@ -201,42 +168,11 @@ public class SunburstChartStatsDataFetcher
               case APPID:
                 String fieldName = field.getFieldName();
                 String entityId = resultSet.getString(fieldName);
-                if (groupBySize == 1) {
-                  qlStatsBreakdownInfoBuilder.unallocated(
-                      unallocatedCostMap.get(entityId) != null ? unallocatedCostMap.get(entityId) : 0);
-                  entityIdAppender.add(entityId);
-                  gridDataPointBuilder.id(entityIdAppender.toString());
-                  gridDataPointBuilder.type(fieldName);
-                  gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
-                }
-                entityIdAppender.add(entityId);
-                break;
-              case NAMESPACE:
-              case CLOUDSERVICENAME:
-              case ENVID:
-                fieldName = field.getFieldName();
-                entityId = resultSet.getString(fieldName);
-                if (groupBySize == 2) {
-                  qlStatsBreakdownInfoBuilder.unallocated(0);
-                  entityIdAppender.add(entityId);
-                  gridDataPointBuilder.id(entityIdAppender.toString());
-                  gridDataPointBuilder.type(fieldName);
-                  gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
-                }
-                entityIdAppender.add(entityId);
-                break;
-              case WORKLOADNAME:
-              case TASKID:
-              case SERVICEID:
-                fieldName = field.getFieldName();
-                entityId = resultSet.getString(fieldName);
-                if (groupBySize == 3) {
-                  qlStatsBreakdownInfoBuilder.unallocated(0);
-                  entityIdAppender.add(entityId);
-                  gridDataPointBuilder.id(entityIdAppender.toString());
-                  gridDataPointBuilder.type(fieldName);
-                  gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
-                }
+                qlStatsBreakdownInfoBuilder.unallocated(
+                    unallocatedCostMap.get(entityId) != null ? unallocatedCostMap.get(entityId) : 0);
+                gridDataPointBuilder.id(entityId);
+                gridDataPointBuilder.type(fieldName);
+                gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
                 break;
               default:
                 throw new InvalidRequestException(unsupportedType + field.getDataType());
@@ -331,95 +267,26 @@ public class SunburstChartStatsDataFetcher
       Map<String, QLSunburstGridDataPoint> sunburstGridDataPointMap) throws SQLException {
     List<BillingDataQueryMetadata.BillingDataMetaDataFields> groupByFields = queryData.getGroupByFields();
     BillingDataQueryMetadata.BillingDataMetaDataFields parentField = groupByFields.get(0);
-    BillingDataQueryMetadata.BillingDataMetaDataFields childField = groupByFields.get(1);
-    BillingDataQueryMetadata.BillingDataMetaDataFields leafField = groupByFields.get(2);
 
     List<QLSunburstChartDataPoint> sunburstChartDataPoints = new ArrayList<>();
     addRootParentIdIfSpecified(addRootParent, sunburstChartDataPoints, contextName);
-    // First in the pair is the first level Id's and so on ..
-    Set<Pair<String, String>> pairOfNonLeafEntities = new HashSet<>();
-    Set<Pair<String, String>> parentIdAndClusterTypeSet = new HashSet<>();
-    Map<String, Double> childIdCostMap = new HashMap<>();
-    Map<String, String> instanceTypeMap = new HashMap<>();
-    Map<String, String> clusterTypeMap = new HashMap<>();
 
     while (resultSet != null && resultSet.next()) {
       QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
       String parentFieldName = resultSet.getString(parentField.getFieldName());
-      String chileFieldName = resultSet.getString(childField.getFieldName());
-      // Add Inner two fields data into a Set for adding Data Points
-      String instanceType = getInstanceType(resultSet);
-      pairOfNonLeafEntities.add(Pair.of(parentFieldName, chileFieldName));
-      String clusterType = checkAndSetClusterType(resultSet, parentField);
-      parentIdAndClusterTypeSet.add(Pair.of(parentFieldName, clusterType));
-
-      String id = resultSet.getString(leafField.getFieldName());
-      dataPointBuilder.name(billingStatsHelper.getEntityName(leafField, id));
-      dataPointBuilder.type(leafField.getFieldName());
-
-      String parentId = parentFieldName + ":" + chileFieldName;
-      dataPointBuilder.parent(parentFieldName + ":" + chileFieldName);
-      String uniqueId = parentId + ":" + id;
-      dataPointBuilder.id(uniqueId);
-      dataPointBuilder.clusterType(clusterType);
-      dataPointBuilder.instanceType(instanceType);
-      dataPointBuilder.metadata(sunburstGridDataPointMap.get(uniqueId));
+      QLSunburstGridDataPoint metadata = sunburstGridDataPointMap.get(parentFieldName);
+      dataPointBuilder.id(parentFieldName);
+      dataPointBuilder.metadata(metadata);
       double value =
           resultSet.getBigDecimal(BillingDataQueryMetadata.BillingDataMetaDataFields.SUM.getFieldName()).doubleValue();
       dataPointBuilder.value(billingDataHelper.getRoundedDoubleValue(value));
-      childIdCostMap.put(parentId, childIdCostMap.getOrDefault(parentId, 0.0) + value);
-      instanceTypeMap.putIfAbsent(parentId, instanceType);
-      clusterTypeMap.putIfAbsent(parentId, clusterType);
-      sunburstChartDataPoints.add(dataPointBuilder.build());
-    }
-
-    // Add Children Data Points
-    for (Pair<String, String> pairOfIds : pairOfNonLeafEntities) {
-      String parentId = pairOfIds.getKey();
-      String childId = pairOfIds.getValue();
-      QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
-      String id = parentId + ":" + childId;
-      dataPointBuilder.id(id);
-      dataPointBuilder.name(billingStatsHelper.getEntityName(childField, childId));
-      dataPointBuilder.type(childField.getFieldName());
-      dataPointBuilder.metadata(sunburstGridDataPointMap.get(id));
-      dataPointBuilder.value(
-          childIdCostMap.get(id) != null ? billingDataHelper.getRoundedDoubleValue(childIdCostMap.get(id)) : null);
-      dataPointBuilder.instanceType(instanceTypeMap.get(id));
-      dataPointBuilder.clusterType(clusterTypeMap.get(id));
-      dataPointBuilder.parent(parentId);
-      sunburstChartDataPoints.add(dataPointBuilder.build());
-    }
-
-    // Add First Level Data Points (Parent)
-    for (Pair<String, String> parentIds : parentIdAndClusterTypeSet) {
-      String id = parentIds.getKey();
-      String clusterType = parentIds.getValue();
-      QLSunburstChartDataPointBuilder dataPointBuilder = QLSunburstChartDataPoint.builder();
-      QLSunburstGridDataPoint metadata = sunburstGridDataPointMap.get(id);
-      dataPointBuilder.id(id);
-      dataPointBuilder.metadata(metadata);
-      dataPointBuilder.value(metadata.getValue());
-      dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, id));
+      dataPointBuilder.name(billingStatsHelper.getEntityName(parentField, parentFieldName));
       dataPointBuilder.type(parentField.getFieldName());
       dataPointBuilder.parent(ROOT_PARENT_ID);
-      dataPointBuilder.clusterType(clusterType);
       sunburstChartDataPoints.add(dataPointBuilder.build());
     }
 
     return sunburstChartDataPoints;
-  }
-
-  private String getInstanceType(ResultSet resultSet) throws SQLException {
-    return resultSet.getString(BillingDataQueryMetadata.BillingDataMetaDataFields.INSTANCETYPE.getFieldName());
-  }
-
-  private String checkAndSetClusterType(
-      ResultSet resultSet, BillingDataQueryMetadata.BillingDataMetaDataFields parentField) throws SQLException {
-    if (parentField == BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID) {
-      return resultSet.getString(BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERTYPE.getFieldName());
-    }
-    return null;
   }
 
   private void addRootParentIdIfSpecified(
@@ -429,18 +296,6 @@ public class SunburstChartStatsDataFetcher
       sunburstChartDataPoints.add(
           QLSunburstChartDataPoint.builder().id(ROOT_PARENT_ID).name(contextName).parent(ROOT_PARENT_CONSTANT).build());
     }
-  }
-
-  private void processAndRetainK8sGroupBy(List<QLCCMGroupBy> groupBy) {
-    groupBy.removeIf(groupByItem
-        -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.CloudServiceName
-            || groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.TaskId);
-  }
-
-  private void processAndRetainEcsGroupBy(List<QLCCMGroupBy> groupBy) {
-    groupBy.removeIf(groupByItem
-        -> groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.Namespace
-            || groupByItem.getEntityGroupBy() == QLCCMEntityGroupBy.WorkloadName);
   }
 
   @VisibleForTesting
@@ -520,36 +375,15 @@ public class SunburstChartStatsDataFetcher
     ValueComparator valueComparator = new ValueComparator();
     List<QLSunburstChartDataPoint> limitProcessedDataPoints = new ArrayList<>();
     PriorityQueue<QLSunburstChartDataPoint> pqParentLevelData = new PriorityQueue<>(valueComparator);
-    Map<String, PriorityQueue<QLSunburstChartDataPoint>> mapOfParentChildrenEntities = new HashMap<>();
     for (QLSunburstChartDataPoint dataPoint : data.getData()) {
-      // Add Root Parent
       if (dataPoint.getId().equals(ROOT_PARENT_ID)) {
         limitProcessedDataPoints.add(dataPoint);
-      } else if (dataPoint.getParent().equals(ROOT_PARENT_ID)) {
-        // Find Top Parent Level Entries
-        pqParentLevelData.add(dataPoint);
       } else {
-        // Collect ParentId to Top Contributors
-        String parentId = dataPoint.getParent();
-        PriorityQueue<QLSunburstChartDataPoint> listOfChildren = new PriorityQueue<>(valueComparator);
-        PriorityQueue<QLSunburstChartDataPoint> mapValue = mapOfParentChildrenEntities.get(parentId);
-        if (mapValue != null) {
-          listOfChildren.addAll(mapValue);
-        }
-        listOfChildren.add(dataPoint);
-        mapOfParentChildrenEntities.put(parentId, listOfChildren);
+        pqParentLevelData.add(dataPoint);
       }
     }
-    List<String> retainedParents = processDataPoints(pqParentLevelData, limitProcessedDataPoints, limit);
-    List<String> retainedChildren = new ArrayList<>();
-    for (String parentId : retainedParents) {
-      List<String> retainedList =
-          processDataPoints(mapOfParentChildrenEntities.get(parentId), limitProcessedDataPoints, limit);
-      retainedChildren.addAll(retainedList);
-    }
-    for (String parentId : retainedChildren) {
-      processDataPoints(mapOfParentChildrenEntities.get(parentId), limitProcessedDataPoints, limit);
-    }
+
+    processDataPoints(pqParentLevelData, limitProcessedDataPoints, limit);
     return QLSunburstChartData.builder().data(limitProcessedDataPoints).gridData(data.getGridData()).build();
   }
 

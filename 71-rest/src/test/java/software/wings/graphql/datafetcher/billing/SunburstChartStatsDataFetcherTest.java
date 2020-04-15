@@ -111,11 +111,8 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartData.get(1).getId())
-        .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
+    assertThat(sunburstChartData.get(1).getId()).isEqualTo(CLUSTER1_ID);
     assertThat(sunburstChartData.get(1).getValue()).isEqualTo(TOTAL_COST.doubleValue());
-    assertThat(sunburstChartData.get(2).getId()).isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1);
-    assertThat(sunburstChartData.get(3).getId()).isEqualTo(CLUSTER1_ID);
   }
 
   @Test
@@ -127,9 +124,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeStartTimeFilter(START_TIME));
     filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy =
-        Arrays.asList(makeClusterEntityGroupBy(), makeNamespaceEntityGroupBy(), makeWorkloadNameEntityGroupBy(),
-            makeCloudServiceNameEntityGroupBy(), makeTaskIdEntityGroupBy(), makeClusterTypeEntityGroupBy());
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
     QLSunburstChartData sunburstChartData = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, LIMIT, OFFSET);
     List<QLSunburstChartDataPoint> sunburstChartDataPoints = sunburstChartData.getData();
@@ -171,26 +166,13 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
     assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
-    assertThat(sunburstChartData.get(1).getId())
-        .isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1 + ":" + SERVICE1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(1).getName()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(1).getParent()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(2).getId()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(2).getName()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
-    assertThat(sunburstChartData.get(2).getParent()).isEqualTo(APP1_ID_ACCOUNT1);
-    assertThat(sunburstChartData.get(3).getId()).isEqualTo(APP1_ID_ACCOUNT1);
-    assertThat(sunburstChartData.get(3).getName()).isEqualTo(APP1_ID_ACCOUNT1);
-    assertThat(sunburstChartData.get(3).getParent()).isEqualTo(ROOT_PARENT_ID);
+    assertThat(sunburstChartData.get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
 
     QLSunburstChartData postFetchData = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID,
         Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
         QLSunburstChartData.builder().data(sunburstChartData).build(), 1, true);
     assertThat(postFetchData.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
     assertThat(postFetchData.getData().get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
-    assertThat(postFetchData.getData().get(2).getId()).isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1);
-    assertThat(postFetchData.getData().get(3).getId())
-        .isEqualTo(APP1_ID_ACCOUNT1 + ":" + ENV1_ID_APP1_ACCOUNT1 + ":" + SERVICE1_ID_APP1_ACCOUNT1);
-
     QLSunburstChartData postFetchDataWithOtherPoints = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(
         ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
         QLSunburstChartData.builder().data(sunburstChartData).build(), 0, true);
@@ -206,12 +188,10 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeStartTimeFilter(START_TIME));
     filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy =
-        Arrays.asList(makeClusterEntityGroupBy(), makeNamespaceEntityGroupBy(), makeWorkloadNameEntityGroupBy());
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
     List<QLSunburstGridDataPoint> sunburstGridData = sunburstChartStatsDataFetcher.getSunburstGridData(
         ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, false);
-    assertThat(sunburstGridData.get(0).getId())
-        .isEqualTo(CLUSTER1_ID + ":" + NAMESPACE1 + ":" + WORKLOAD_NAME_ACCOUNT1);
+    assertThat(sunburstGridData.get(0).getId()).isEqualTo(CLUSTER1_ID);
   }
 
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
