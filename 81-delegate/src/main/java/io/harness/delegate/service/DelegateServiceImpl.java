@@ -1498,7 +1498,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
-      if (isEmpty(delegateTask.getDelegateId())) {
+      if (isEmpty(delegateTaskPackage.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
 
@@ -1545,7 +1545,7 @@ public class DelegateServiceImpl implements DelegateService {
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
         logger.info("Task submitted for validation");
 
-      } else if (delegateId.equals(delegateTask.getDelegateId())) {
+      } else if (delegateId.equals(delegateTaskPackage.getDelegateId())) {
         applyDelegateSecretFunctor(delegateTaskPackage);
         // Whitelisted. Proceed immediately.
         logger.info("Delegate {} whitelisted for task and accountId: {}", delegateId, accountId);
@@ -1628,7 +1628,7 @@ public class DelegateServiceImpl implements DelegateService {
             delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
 
         if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
-            && delegateId.equals(delegateTaskPackage.getDelegateTask().getDelegateId())) {
+            && delegateId.equals(delegateTaskPackage.getDelegateId())) {
           logger.info("Got the go-ahead to proceed for task.");
           applyDelegateSecretFunctor(delegateTaskPackage);
           executeTask(delegateTaskPackage);

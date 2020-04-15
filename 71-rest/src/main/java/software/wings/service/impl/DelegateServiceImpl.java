@@ -2059,8 +2059,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
-      DelegateTaskPackageBuilder delegateTaskPackageBuilder =
-          DelegateTaskPackage.builder().delegateTaskId(delegateTask.getUuid()).delegateTask(delegateTask);
+      DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder()
+                                                                  .delegateId(delegateTask.getDelegateId())
+                                                                  .delegateTaskId(delegateTask.getUuid())
+                                                                  .delegateTask(delegateTask);
 
       if (delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
@@ -2116,6 +2118,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             CapabilityHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
 
         return DelegateTaskPackage.builder()
+            .delegateId(delegateTask.getDelegateId())
             .delegateTaskId(delegateTask.getUuid())
             .delegateTask(delegateTask)
             .encryptionConfigs(encryptionConfigMap)
