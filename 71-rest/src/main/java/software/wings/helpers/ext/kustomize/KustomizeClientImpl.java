@@ -72,6 +72,6 @@ public class KustomizeClientImpl implements KustomizeClient {
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
-    return CliResponse.builder().commandExecutionStatus(status).output(processResult.outputString()).build();
+    return CliResponse.builder().commandExecutionStatus(status).output(processResult.outputUTF8()).build();
   }
 }

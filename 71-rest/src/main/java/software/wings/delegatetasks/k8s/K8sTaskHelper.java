@@ -312,7 +312,7 @@ public class K8sTaskHelper {
       success = result.getExitValue() == 0;
 
       if (!success) {
-        logger.warn(result.outputString());
+        logger.warn(result.outputUTF8());
       }
       return success;
     } catch (Exception e) {
@@ -407,21 +407,21 @@ public class K8sTaskHelper {
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputString());
+        logger.warn(result.outputUTF8());
         return false;
       }
 
       // cli command outputs with single quotes
-      String jobStatus = result.outputString().replace("'", "");
+      String jobStatus = result.outputUTF8().replace("'", "");
       if ("True".equals(jobStatus)) {
         result = jobCompletionTimeCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
         success = 0 == result.getExitValue();
         if (!success) {
-          logger.warn(result.outputString());
+          logger.warn(result.outputUTF8());
           return false;
         }
 
-        String completionTime = result.outputString().replace("'", "");
+        String completionTime = result.outputUTF8().replace("'", "");
         if (isNotBlank(completionTime)) {
           return true;
         }
@@ -431,11 +431,11 @@ public class K8sTaskHelper {
 
       success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputString());
+        logger.warn(result.outputUTF8());
         return false;
       }
 
-      jobStatus = result.outputString().replace("'", "");
+      jobStatus = result.outputUTF8().replace("'", "");
       if ("True".equals(jobStatus)) {
         return false;
       }
@@ -489,7 +489,7 @@ public class K8sTaskHelper {
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputString());
+        logger.warn(result.outputUTF8());
       }
 
       return success;
@@ -718,7 +718,7 @@ public class K8sTaskHelper {
             emptyLogOutputStream, emptyLogOutputStream);
 
         if (result.getExitValue() == 0) {
-          String[] lines = result.outputString().split("\\r?\\n");
+          String[] lines = result.outputUTF8().split("\\r?\\n");
           return lines[lines.length - 1].split("\t")[0];
         }
       }
@@ -728,7 +728,7 @@ public class K8sTaskHelper {
           client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
       ProcessResult result = executeCommandSilent(rolloutHistoryCommand, k8sDelegateTaskParams.getWorkingDirectory());
       if (result.getExitValue() == 0) {
-        return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+        return parseLatestRevisionNumberFromRolloutHistory(result.outputUTF8());
       }
     }
 
@@ -743,7 +743,7 @@ public class K8sTaskHelper {
                                 .output("jsonpath={$.spec.replicas}");
     ProcessResult result = executeCommandSilent(getCommand, k8sDelegateTaskParams.getWorkingDirectory());
     if (result.getExitValue() == 0) {
-      return Integer.valueOf(result.outputString());
+      return Integer.valueOf(result.outputUTF8());
     } else {
       return null;
     }
@@ -810,7 +810,7 @@ public class K8sTaskHelper {
         throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
       }
 
-      result.add(ManifestFile.builder().fileName("manifest.yaml").fileContent(processResult.outputString()).build());
+      result.add(ManifestFile.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
     }
 
     return result;
@@ -888,7 +888,7 @@ public class K8sTaskHelper {
 
         result.add(ManifestFile.builder()
                        .fileName(manifestFile.getFileName())
-                       .fileContent(processResult.outputString())
+                       .fileContent(processResult.outputUTF8())
                        .build());
       }
     }
@@ -1622,7 +1622,7 @@ public class K8sTaskHelper {
             throw new WingsException(format("Failed to render chart file [%s]", chartFile));
           }
 
-          result.add(ManifestFile.builder().fileName(chartFile).fileContent(processResult.outputString()).build());
+          result.add(ManifestFile.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
         }
       } else {
         executionLogCallback.saveExecutionLog(
