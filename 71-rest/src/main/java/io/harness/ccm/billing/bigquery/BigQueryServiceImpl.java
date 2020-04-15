@@ -29,16 +29,16 @@ public class BigQueryServiceImpl implements BigQueryService {
     checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {
-      ServiceAccountCredentials.fromStream(serviceAccountStream);
+      ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
+      BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(serviceAccountCredentials).build().getService();
+      checkTrue(verifyAuth(bigQuery), "Failed to authenticate with the BigQuery credentials.");
+      return bigQuery;
     } catch (FileNotFoundException e) {
       logger.error("Failed to fine Google credential file for BigQuery in the specified path.", e);
     } catch (IOException e) {
       logger.error("Failed to get Google credential file for BigQuery.", e);
     }
-
-    BigQuery bigQuery = BigQueryOptions.newBuilder().build().getService();
-    checkTrue(verifyAuth(bigQuery), "Failed to authenticate with the BigQuery credentials.");
-    return bigQuery;
+    return null;
   }
 
   boolean verifyAuth(BigQuery bigQuery) {
