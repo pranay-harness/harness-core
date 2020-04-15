@@ -2,12 +2,14 @@ package io.harness.ccm.billing.preaggregated;
 
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -18,6 +20,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   private BigQueryService bigQueryService;
   private PreAggregatedBillingDataHelper dataHelper;
 
+  private static final String BLENDED_COST_LABEL = "Blended Cost";
+  private static final String UN_BLENDED_COST_LABEL = "Unblended Cost";
+
   @Inject
   PreAggregateBillingServiceImpl(BigQueryService bigQueryService, PreAggregatedBillingDataHelper dataHelper) {
     this.bigQueryService = bigQueryService;
@@ -27,6 +32,8 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName) {
+    Preconditions.checkNotNull(
+        groupByObjects, "Queries to getPreAggregateBillingTimeSeriesStats need at least one groupBy");
     String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
     // Replacing the Default Table with the Table in the context
     timeSeriesDataQuery = timeSeriesDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, tableName);
@@ -46,6 +53,8 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
+    Preconditions.checkNotNull(
+        groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
     String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
     // Replacing the Default Table with the Table in the context
     entityDataQuery = entityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
@@ -60,5 +69,40 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       return null;
     }
     return dataHelper.convertToPreAggregatesEntityData(result);
+  }
+
+  @Override
+  public PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
+      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters) {
+    PreAggregatedCostDataStats preAggregatedCostDataStats =
+        getAggregatedCostData(aggregateFunction, conditions, queryTableName);
+    if (preAggregatedCostDataStats != null) {
+      return PreAggregateBillingTrendStatsDTO.builder()
+          .blendedCost(
+              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(), filters, BLENDED_COST_LABEL))
+          .unBlendedCost(dataHelper.getCostBillingStats(
+              preAggregatedCostDataStats.getUnBlendedCost(), filters, UN_BLENDED_COST_LABEL))
+          .build();
+    } else {
+      return PreAggregateBillingTrendStatsDTO.builder().build();
+    }
+  }
+
+  public PreAggregatedCostDataStats getAggregatedCostData(
+      List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName) {
+    String trendStatsQuery = dataHelper.getQuery(aggregateFunction, null, conditions, null);
+    // Replacing the Default Table with the Table in the context
+    trendStatsQuery = trendStatsQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    logger.info("getAggregatedCostData Query {}", trendStatsQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(trendStatsQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get AggregatedCostData. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertToAggregatedCostData(result);
   }
 }

@@ -16,6 +16,13 @@ extend type Query {
     groupBy: [CloudGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudEntityStats @dataFetcher(name: cloudEntityStats)
+
+  cloudTrendStats(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
 }
 
 type CloudTimeSeriesStats {
@@ -36,10 +43,16 @@ type CloudEntityData {
   awsUnblendedCost: Number
 }
 
+type CloudTrendStats {
+  unBlendedCost: BillingStatsInfo
+  blendedCost: BillingStatsInfo
+}
+
 input CloudBillingFilter {
   startTime: TimeFilter
   endTime: TimeFilter
   preAggregatedTableStartTime: TimeFilter
+  preAggregatedTableEndTime: TimeFilter
   billingAccountId: IdFilter
   project: IdFilter
   product: IdFilter

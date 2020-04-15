@@ -45,6 +45,7 @@ import software.wings.graphql.datafetcher.billing.BillingStatsTimeSeriesDataFetc
 import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.CloudEntityStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.CloudTimeSeriesStatsDataFetcher;
+import software.wings.graphql.datafetcher.billing.CloudTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.EfficiencyStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.GcpBillingEntityStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.GcpBillingTimeSeriesStatsDataFetcher;
@@ -228,6 +229,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(LinkedAccountStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudTimeSeriesStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudEntityStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(CloudTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sEventYamlDiffDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(NodeAndPodDetailsDataFetcher.class);

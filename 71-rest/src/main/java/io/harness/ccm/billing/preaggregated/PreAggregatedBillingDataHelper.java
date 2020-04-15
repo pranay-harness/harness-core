@@ -7,6 +7,8 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
@@ -16,6 +18,7 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.healthmarketscience.sqlbuilder.Condition;
@@ -26,12 +29,19 @@ import io.harness.ccm.billing.bigquery.AliasExpression;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
 import io.harness.ccm.billing.bigquery.ConstExpression;
 import io.harness.ccm.billing.bigquery.TruncExpression;
+import io.harness.ccm.billing.graphql.BillingTimeFilter;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingEntityDataPoint.PreAggregateBillingEntityDataPointBuilder;
+import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint.QLBillingDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLReference;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +52,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Singleton
 public class PreAggregatedBillingDataHelper {
+  @Inject BillingDataHelper billingDataHelper;
+
+  private static final String COST_DESCRIPTION = "of %s - %s";
+  private static final String COST_VALUE = "$%s";
+
   public PreAggregateBillingTimeSeriesStatsDTO convertToPreAggregatesTimeSeriesData(TableResult result) {
     Preconditions.checkNotNull(result);
     if (result.getTotalRows() == 0) {
@@ -105,15 +120,19 @@ public class PreAggregatedBillingDataHelper {
 
   public String getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions,
       List<SqlObject> sort) {
-    Preconditions.checkNotNull(groupByObjects, "Queries to Pre-Aggregated Tables need at least one groupBy");
     List<Object> selectObjects = new ArrayList<>();
     List<Object> sqlGroupByObjects = new ArrayList<>();
-    List<Object> sortObjects = new ArrayList<>(sort);
+    List<Object> sortObjects = new ArrayList<>();
 
-    groupByObjects.stream().filter(g -> g instanceof DbColumn).forEach(sqlGroupByObjects::add);
+    if (sort != null) {
+      sortObjects.addAll(sort);
+    }
 
-    processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects);
-    processAndAddGroupBy(sqlGroupByObjects, selectObjects);
+    if (groupByObjects != null) {
+      groupByObjects.stream().filter(g -> g instanceof DbColumn).forEach(sqlGroupByObjects::add);
+      processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects);
+      processAndAddGroupBy(sqlGroupByObjects, selectObjects);
+    }
 
     if (aggregateFunction != null) {
       selectObjects.addAll(aggregateFunction);
@@ -157,7 +176,7 @@ public class PreAggregatedBillingDataHelper {
   }
 
   public PreAggregateBillingEntityStatsDTO convertToPreAggregatesEntityData(TableResult result) {
-    if (PreconditionsValidation(result)) {
+    if (preconditionsValidation(result, "convertToPreAggregatesEntityData")) {
       return null;
     }
     Schema schema = result.getSchema();
@@ -170,10 +189,10 @@ public class PreAggregatedBillingDataHelper {
   }
 
   @VisibleForTesting
-  boolean PreconditionsValidation(TableResult result) {
+  boolean preconditionsValidation(TableResult result, String entryPoint) {
     Preconditions.checkNotNull(result);
     if (result.getTotalRows() == 0) {
-      logger.warn("No result from convertToPreAggregatesEntityData query");
+      logger.warn("No result from " + entryPoint + " query");
       return true;
     }
     return false;
@@ -211,5 +230,74 @@ public class PreAggregatedBillingDataHelper {
       }
     }
     dataPointList.add(dataPointBuilder.build());
+  }
+
+  public PreAggregatedCostDataStats convertToAggregatedCostData(TableResult result) {
+    if (preconditionsValidation(result, "convertToAggregatedCostData")) {
+      return null;
+    }
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+    PreAggregatedCostDataBuilder unBlendedCostDataBuilder = PreAggregatedCostData.builder();
+    PreAggregatedCostDataBuilder blendedCostDataBuilder = PreAggregatedCostData.builder();
+    for (FieldValueList row : result.iterateAll()) {
+      processTrendDataAndAppendToList(fields, row, blendedCostDataBuilder, unBlendedCostDataBuilder);
+    }
+    return PreAggregatedCostDataStats.builder()
+        .unBlendedCost(unBlendedCostDataBuilder.build())
+        .blendedCost(blendedCostDataBuilder.build())
+        .build();
+  }
+
+  @VisibleForTesting
+  void processTrendDataAndAppendToList(FieldList fields, FieldValueList row,
+      PreAggregatedCostDataBuilder blendedCostData, PreAggregatedCostDataBuilder unBlendedCostData) {
+    for (Field field : fields) {
+      switch (field.getName()) {
+        case entityConstantAwsBlendedCost:
+          blendedCostData.cost(row.get(field.getName()).getDoubleValue());
+          break;
+        case entityConstantAwsUnBlendedCost:
+          unBlendedCostData.cost(row.get(field.getName()).getDoubleValue());
+          break;
+        case minPreAggStartTimeConstant:
+          blendedCostData.minStartTime(row.get(field.getName()).getTimestampValue());
+          unBlendedCostData.minStartTime(row.get(field.getName()).getTimestampValue());
+          break;
+        case maxPreAggStartTimeConstant:
+          blendedCostData.maxStartTime(row.get(field.getName()).getTimestampValue());
+          unBlendedCostData.maxStartTime(row.get(field.getName()).getTimestampValue());
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  protected QLBillingStatsInfo getCostBillingStats(
+      PreAggregatedCostData costData, List<CloudBillingFilter> filters, String label) {
+    Instant startInstant = Instant.ofEpochMilli(getStartTimeFilter(filters).getValue().longValue());
+    Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
+    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
+    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
+    String totalCostDescription = String.format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
+    String totalCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(costData.getCost()));
+    return QLBillingStatsInfo.builder()
+        .statsLabel(label)
+        .statsDescription(totalCostDescription)
+        .statsValue(totalCostValue)
+        .build();
+  }
+
+  protected BillingTimeFilter getStartTimeFilter(List<CloudBillingFilter> filters) {
+    Optional<CloudBillingFilter> startTimeDataFilter =
+        filters.stream()
+            .filter(qlStartTimeDataFilter -> qlStartTimeDataFilter.getPreAggregatedStartTime() != null)
+            .findFirst();
+    if (startTimeDataFilter.isPresent()) {
+      return startTimeDataFilter.get().getPreAggregatedTableStartTime();
+    } else {
+      throw new InvalidRequestException("Start time cannot be null");
+    }
   }
 }
