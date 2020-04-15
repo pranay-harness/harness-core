@@ -36,12 +36,17 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
             parentInstanceId = parentInstanceData.getInstanceName();
           }
         }
+        BigDecimal unallocatedCostForNode = BigDecimal.valueOf(nodeData.getCost() - nodeData.getSystemCost());
+        BigDecimal cpuUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getCpuCost() - nodeData.getCpuSystemCost());
+        BigDecimal memoryUnallocatedCostForNode =
+            BigDecimal.valueOf(nodeData.getMemoryCost() - nodeData.getMemorySystemCost());
+
         if (parentInstanceIdToPodData.containsKey(parentInstanceId)) {
-          BigDecimal unallocatedCostForNode = BigDecimal.valueOf(nodeData.getCost()
+          unallocatedCostForNode = BigDecimal.valueOf(nodeData.getCost()
               - parentInstanceIdToPodData.get(parentInstanceId).getCost() - nodeData.getSystemCost());
-          BigDecimal cpuUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getCpuCost()
+          cpuUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getCpuCost()
               - parentInstanceIdToPodData.get(parentInstanceId).getCpuCost() - nodeData.getCpuSystemCost());
-          BigDecimal memoryUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getMemoryCost()
+          memoryUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getMemoryCost()
               - parentInstanceIdToPodData.get(parentInstanceId).getMemoryCost() - nodeData.getMemorySystemCost());
           if (unallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
               || cpuUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
@@ -54,37 +59,37 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
             cpuUnallocatedCostForNode = BigDecimal.ZERO;
             memoryUnallocatedCostForNode = BigDecimal.ZERO;
           }
-          BigDecimal actualIdleCost = BigDecimal.valueOf(nodeData.getIdleCost() - unallocatedCostForNode.doubleValue());
-          BigDecimal cpuActualIdleCost =
-              BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
-          BigDecimal memoryActualIdleCost =
-              BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
-
-          if (actualIdleCost.compareTo(BigDecimal.ZERO) == -1 || cpuActualIdleCost.compareTo(BigDecimal.ZERO) == -1
-              || memoryActualIdleCost.compareTo(BigDecimal.ZERO) == -1) {
-            logger.warn(
-                "Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
-                nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
-                actualIdleCost, cpuActualIdleCost, memoryActualIdleCost);
-            actualIdleCost = BigDecimal.ZERO;
-            cpuActualIdleCost = BigDecimal.ZERO;
-            memoryActualIdleCost = BigDecimal.ZERO;
-          }
-
-          billingDataService.update(ActualIdleCostWriterData.builder()
-                                        .accountId(nodeData.getAccountId())
-                                        .instanceId(nodeData.getInstanceId())
-                                        .parentInstanceId(nodeData.getParentInstanceId())
-                                        .unallocatedCost(unallocatedCostForNode)
-                                        .cpuUnallocatedCost(cpuUnallocatedCostForNode)
-                                        .memoryUnallocatedCost(memoryUnallocatedCostForNode)
-                                        .actualIdleCost(actualIdleCost)
-                                        .cpuActualIdleCost(cpuActualIdleCost)
-                                        .memoryActualIdleCost(memoryActualIdleCost)
-                                        .startTime(nodeData.getStartTime())
-                                        .clusterId(nodeData.getClusterId())
-                                        .build());
         }
+
+        BigDecimal actualIdleCost = BigDecimal.valueOf(nodeData.getIdleCost() - unallocatedCostForNode.doubleValue());
+        BigDecimal cpuActualIdleCost =
+            BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
+        BigDecimal memoryActualIdleCost =
+            BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
+
+        if (actualIdleCost.compareTo(BigDecimal.ZERO) == -1 || cpuActualIdleCost.compareTo(BigDecimal.ZERO) == -1
+            || memoryActualIdleCost.compareTo(BigDecimal.ZERO) == -1) {
+          logger.warn(
+              "Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
+              nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
+              actualIdleCost, cpuActualIdleCost, memoryActualIdleCost);
+          actualIdleCost = BigDecimal.ZERO;
+          cpuActualIdleCost = BigDecimal.ZERO;
+          memoryActualIdleCost = BigDecimal.ZERO;
+        }
+        billingDataService.update(ActualIdleCostWriterData.builder()
+                                      .accountId(nodeData.getAccountId())
+                                      .instanceId(nodeData.getInstanceId())
+                                      .parentInstanceId(nodeData.getParentInstanceId())
+                                      .unallocatedCost(unallocatedCostForNode)
+                                      .cpuUnallocatedCost(cpuUnallocatedCostForNode)
+                                      .memoryUnallocatedCost(memoryUnallocatedCostForNode)
+                                      .actualIdleCost(actualIdleCost)
+                                      .cpuActualIdleCost(cpuActualIdleCost)
+                                      .memoryActualIdleCost(memoryActualIdleCost)
+                                      .startTime(nodeData.getStartTime())
+                                      .clusterId(nodeData.getClusterId())
+                                      .build());
       });
     });
   }
