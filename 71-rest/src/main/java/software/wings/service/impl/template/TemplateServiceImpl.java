@@ -43,6 +43,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -50,6 +51,7 @@ import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -95,6 +97,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -127,20 +130,37 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public PageResponse<Template> list(PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId) {
-    if (galleryKeys != null) {
-      List<String> galleryIds =
-          galleryKeys.stream()
-              .map(galleryKey -> templateGalleryHelper.getGalleryByGalleryKey(galleryKey, accountId).getUuid())
-              .collect(Collectors.toList());
-      SearchFilter searchFilter =
-          SearchFilter.builder().fieldName(TemplateKeys.galleryId).op(IN).fieldValues(galleryIds.toArray()).build();
-      pageRequest.addFilter(searchFilter);
+    if (isNotEmpty(galleryKeys)) {
+      addSearchFilterForGalleryIds(pageRequest, galleryKeys, accountId);
     }
-    PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
+    final PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
+
     for (Template template : pageResponse.getResponse()) {
       setDetailsOfTemplate(template, null);
     }
+
     return pageResponse;
+  }
+
+  private void addSearchFilterForGalleryIds(
+      PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId) {
+    final List<String> galleryIds = getGalleryIds(galleryKeys, accountId);
+    if (isNotEmpty(galleryIds)) {
+      final SearchFilter searchFilter =
+          SearchFilter.builder().fieldName(TemplateKeys.galleryId).op(IN).fieldValues(galleryIds.toArray()).build();
+      pageRequest.addFilter(searchFilter);
+    }
+  }
+
+  @NotNull
+  private List<String> getGalleryIds(List<String> galleryKeys, String accountId) {
+    return galleryKeys.stream()
+        .filter(EmptyPredicate::isNotEmpty)
+        .map(galleryKey -> templateGalleryHelper.getGalleryByGalleryKey(galleryKey, accountId))
+        .filter(Objects::nonNull)
+        .map(TemplateGallery::getUuid)
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   @Override

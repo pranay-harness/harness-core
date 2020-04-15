@@ -8,9 +8,11 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
+import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -1096,6 +1098,24 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template importedTemplate = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1");
     Template accountTemplate = saveTemplate();
 
+    // Case 0: empty input
+    PageRequest<Template> pageRequest_0 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+    List<Template> templates_0 = templateService.list(pageRequest_0, EMPTY_LIST, GLOBAL_ACCOUNT_ID);
+
+    assertThat(templates_0).isNotEmpty();
+    assertThat(templates_0.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(importedTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+    assertThat(templates_0.stream()
+                   .map(Template::getUuid)
+                   .filter(uuid -> uuid.equals(accountTemplate.getUuid()))
+                   .findFirst()
+                   .get())
+        .isNotNull();
+
     // Case 1: null as input
     PageRequest<Template> pageRequest_1 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Template> templates_1 = templateService.list(pageRequest_1, null, GLOBAL_ACCOUNT_ID);
@@ -1146,6 +1166,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                    .findFirst()
                    .get())
         .isNotNull();
+
+    // Case 4: inexistent galleryKey
+    PageRequest<Template> pageRequest_4 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+    assertThatThrownBy(() -> templateService.list(pageRequest_4, Arrays.asList("random"), GLOBAL_ACCOUNT_ID));
   }
 
   private Template saveImportedTemplate(Template template, String commandId, String commandStoreId, String version) {
