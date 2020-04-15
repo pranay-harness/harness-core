@@ -417,7 +417,8 @@ public abstract class TerraformProvisionState extends State {
   private ExecutionResponse executeInternalInherited(ExecutionContext context, String activityId) {
     List<TerraformProvisionInheritPlanElement> allPlanElements = context.getContextElementList(TERRAFORM_INHERIT_PLAN);
     if (isEmpty(allPlanElements)) {
-      throw new InvalidRequestException("No Terraform provision command with dry run found");
+      throw new InvalidRequestException(
+          "No previous Terraform plan execution found. Unable to inherit configuration from Terraform Plan");
     }
     Optional<TerraformProvisionInheritPlanElement> elementOptional =
         allPlanElements.stream().filter(element -> element.getProvisionerId().equals(provisionerId)).findFirst();
