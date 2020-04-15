@@ -49,12 +49,14 @@ import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesKeyTransactions.TimeSeriesKeyTransactionsKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
+import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
@@ -113,6 +115,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AlertService alertService;
+  @Inject private DatadogService datadogService;
 
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
 
@@ -162,6 +165,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
           final Map<String, String> ddInvalidFields =
               DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
+          String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
+              null, ddCVConfig.getDockerMetrics(), null, ddCVConfig.getEcsMetrics());
+          ddInvalidFields.putAll(
+              DatadogServiceImpl.validateNameClashInCustomMetrics(ddCVConfig.getCustomMetrics(), metricsString));
+
           if (isNotEmpty(ddInvalidFields)) {
             throw new VerificationOperationException(
                 ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
@@ -425,6 +433,19 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case DATA_DOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
+        DatadogCVServiceConfiguration ddCVConfig = (DatadogCVServiceConfiguration) updatedConfig;
+        if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
+          final Map<String, String> ddInvalidFields =
+              DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
+          String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
+              null, ddCVConfig.getDockerMetrics(), null, ddCVConfig.getEcsMetrics());
+          ddInvalidFields.putAll(
+              DatadogServiceImpl.validateNameClashInCustomMetrics(ddCVConfig.getCustomMetrics(), metricsString));
+          if (isNotEmpty(ddInvalidFields)) {
+            throw new VerificationOperationException(
+                ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
+          }
+        }
         break;
       case CLOUD_WATCH:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);

@@ -317,6 +317,7 @@ import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
+import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
 import software.wings.service.impl.deployment.checks.SIUsageChecker;
@@ -516,6 +517,7 @@ import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 import software.wings.service.intfc.deployment.RateLimitCheck;
@@ -729,6 +731,7 @@ public class WingsModule extends DependencyModule {
     bind(StackDriverService.class).to(StackDriverServiceImpl.class);
     bind(NewRelicService.class).to(NewRelicServiceImpl.class);
     bind(DynaTraceService.class).to(DynaTraceServiceImpl.class);
+    bind(DatadogService.class).to(DatadogServiceImpl.class);
     bind(MetricDataAnalysisService.class).to(MetricDataAnalysisServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(ExperimentalAnalysisService.class).to(ExperimentalAnalysisServiceImpl.class);

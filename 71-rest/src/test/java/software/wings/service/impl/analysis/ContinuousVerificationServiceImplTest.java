@@ -81,6 +81,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
@@ -136,6 +137,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private APMDelegateService apmDelegateService;
+  @Mock private DatadogService datadogService;
   @Mock private MLServiceUtils mlServiceUtils;
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
@@ -686,7 +688,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(new ArrayList<>());
     when(delegateProxyFactory.get(any(), any())).thenReturn(apmDelegateService);
     when(apmDelegateService.fetch(any(), any())).thenReturn("{}");
-
+    when(datadogService.getConcatenatedListOfMetricsForValidation(anyString(), any(), any(), any()))
+        .thenReturn("kubernetes.cpu.usage.total");
     continuousVerificationService.getDataForNode(accountId, serverConfigId, testNodeData, StateType.DATA_DOG);
     ArgumentCaptor<APMValidateCollectorConfig> validateCollectorConfigArgumentCaptor =
         ArgumentCaptor.forClass(APMValidateCollectorConfig.class);
