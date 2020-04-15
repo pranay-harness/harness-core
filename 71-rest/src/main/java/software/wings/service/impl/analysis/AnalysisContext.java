@@ -11,6 +11,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -57,7 +58,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class AnalysisContext extends Base implements PersistentRegularIterable {
+public class AnalysisContext extends Base implements PersistentRegularIterable, AccountAccess {
   private String accountId;
   private String workflowId;
   private String workflowExecutionId;

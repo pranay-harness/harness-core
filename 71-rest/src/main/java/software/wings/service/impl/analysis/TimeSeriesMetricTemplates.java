@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -37,7 +38,7 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricTemplatesKeys")
 @Entity(value = "timeSeriesMetricTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TimeSeriesMetricTemplates extends Base {
+public class TimeSeriesMetricTemplates extends Base implements AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String stateExecutionId;

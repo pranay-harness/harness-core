@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -30,7 +31,7 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
   @NonNull @Indexed private String accountId;
