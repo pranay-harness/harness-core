@@ -26,12 +26,15 @@ import software.wings.beans.PipelineStage.WorkflowVariable;
 import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.WorkflowYAMLHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
@@ -53,6 +56,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
   @Inject WorkflowYAMLHelper workflowYAMLHelper;
+  @Inject UserGroupService userGroupService;
+  @Inject AppService appService;
 
   private PipelineStage toBean(ChangeContext<Yaml> context) {
     Yaml yaml = context.getYaml();
@@ -106,7 +111,14 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Map<String, Object> yamlProperties = yaml.getProperties();
 
       if (yamlProperties != null) {
-        yamlProperties.forEach(properties::put);
+        yamlProperties.forEach((name, value) -> {
+          if (!shouldBeIgnored(name)) {
+            properties.put(name,
+                "userGroups".equals(name)
+                    ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId))
+                    : value);
+          }
+        });
       }
     }
 
@@ -121,6 +133,16 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
     return stage;
+  }
+
+  private Object getUserGroupUuids(List<String> userGroupNameList, String accountId) {
+    List<String> userGroupUuids = new ArrayList<>();
+    for (String userGroupName : userGroupNameList) {
+      UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
+      notNullCheck("User group " + userGroupName + "doesn't exist", userGroup);
+      userGroupUuids.add(userGroup.getUuid());
+    }
+    return userGroupUuids;
   }
 
   private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties,
@@ -217,7 +239,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       if (properties != null) {
         properties.forEach((name, value) -> {
           if (!shouldBeIgnored(name)) {
-            outputProperties.put(name, value);
+            outputProperties.put(name,
+                "userGroups".equals(name)
+                    ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
+                    : value);
           }
         });
       }
@@ -233,6 +258,15 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .workflowVariables(pipelineStageVariables)
         .properties(outputProperties.isEmpty() ? null : outputProperties)
         .build();
+  }
+
+  private Object getUserGroupNames(List<String> userGroupList, String accountId) {
+    List<String> userGroupNames = new ArrayList<>();
+    for (String userGroupId : userGroupList) {
+      UserGroup userGroup = userGroupService.get(accountId, userGroupId);
+      userGroupNames.add(userGroup != null ? userGroup.getName() : userGroupId);
+    }
+    return userGroupNames;
   }
 
   private boolean shouldBeIgnored(String name) {
