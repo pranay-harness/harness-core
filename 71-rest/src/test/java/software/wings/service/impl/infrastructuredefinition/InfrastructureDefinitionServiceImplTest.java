@@ -792,10 +792,12 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     ((PhysicalInfra) def.getInfrastructure()).setCloudProviderId(cloudProvider.getUuid());
 
     when(wingsPersistence.getWithAppId(InfrastructureDefinition.class, def.getAppId(), def.getUuid())).thenReturn(def);
-    when(mockSettingsService.get(def.getInfrastructure().getCloudProviderId())).thenReturn(cloudProvider, null);
+    when(mockSettingsService.get(def.getInfrastructure().getCloudProviderId())).thenReturn(cloudProvider);
 
     assertThat(infrastructureDefinitionService.cloudProviderNameForDefinition(def.getAppId(), def.getUuid()))
         .isEqualTo(cloudProvider.getName());
+
+    when(mockSettingsService.get(def.getInfrastructure().getCloudProviderId())).thenReturn(null);
     assertThat(infrastructureDefinitionService.cloudProviderNameForDefinition(def.getAppId(), def.getUuid()))
         .isEqualTo(null);
   }
