@@ -15,6 +15,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -136,6 +137,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionInsertChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
     boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineInsertChangeEvent);
@@ -150,6 +152,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionUpdateChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
     boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineUpdateChangeEvent);
@@ -163,6 +166,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionDeleteChange() {
     when(searchDao.deleteDocument(eq(DeploymentSearchEntity.TYPE), anyString())).thenReturn(true);
     boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineDeleteChangeEvent);
@@ -176,6 +180,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
@@ -190,6 +195,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
     when(searchDao.updateListInMultipleDocuments(
@@ -202,6 +208,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
         EnvironmentEntityTestUtils.createEnvironmentChangeEvent(environment, ChangeType.UPDATE);
@@ -215,6 +222,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);

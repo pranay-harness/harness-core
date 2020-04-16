@@ -13,6 +13,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.elasticsearch.action.search.SearchResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -73,6 +74,7 @@ public class ServiceElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void translateHitsToSearchResultsTest() {
     Account account = getAccount(AccountType.PAID);
     String accountId = wingsPersistence.save(account);
@@ -190,6 +192,7 @@ public class ServiceElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = MOHIT)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void filterSearchResultsTest() {
     setup();
     UserRequestContext userRequestContext = UserRequestContext.builder().accountId(accountId).build();

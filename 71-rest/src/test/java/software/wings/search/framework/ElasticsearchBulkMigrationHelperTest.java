@@ -17,6 +17,7 @@ import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.rest.RestStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
+
 public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Mock private ElasticsearchIndexManager elasticsearchIndexManager;
   @Mock private ElasticsearchClient elasticsearchClient;
@@ -40,6 +42,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testSearchEntityBulkMigration() throws IOException {
     Account account = new Account();
     String accountId = wingsPersistence.save(account);

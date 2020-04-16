@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -43,6 +44,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testGetSearchResults() throws IOException {
     String searchString = "value";
     Account account = getAccount(AccountType.PAID);

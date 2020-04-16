@@ -47,7 +47,7 @@ public class MorphiaModule extends DependencyProviderModule {
     return morphiaClasses;
   }
 
-  private Set<Class> morphiaClasses = collectMorphiaClasses();
+  private static Set<Class> morphiaClasses = collectMorphiaClasses();
 
   @Provides
   @Named("morphiaClasses")

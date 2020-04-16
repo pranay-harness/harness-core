@@ -35,7 +35,6 @@ import io.harness.factory.ClosingFactory;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.module.TestMongoModule;
@@ -92,8 +91,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
@@ -201,17 +198,14 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     List<Module> modules = getRequiredModules(configuration, mongoClient, dbName);
     addQueueModules(modules);
 
-    if (annotations.stream().filter(Cache.class ::isInstance).findFirst().isPresent()) {
+    if (annotations.stream().anyMatch(Cache.class ::isInstance)) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
       CacheModule cacheModule = new CacheModule((MainConfiguration) configuration);
       modules.add(0, cacheModule);
       hazelcastInstance = cacheModule.getHazelcastInstance();
     }
 
-    if (annotations.stream()
-            .filter(annotation -> Hazelcast.class.isInstance(annotation) || Cache.class.isInstance(annotation))
-            .findFirst()
-            .isPresent()) {
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Hazelcast || annotation instanceof Cache)) {
       if (new MockUtil().isMock(hazelcastInstance)) {
         hazelcastInstance = com.hazelcast.core.Hazelcast.newHazelcastInstance();
       }
@@ -365,23 +359,6 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
    * @param annotations the annotations
    */
   protected void after(List<Annotation> annotations) {
-    // Clear caches.
-    if (annotations.stream()
-            .filter(annotation -> Hazelcast.class.isInstance(annotation) || Cache.class.isInstance(annotation))
-            .findFirst()
-            .isPresent()) {
-      CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-      cacheManager.getCacheNames().forEach(cacheManager::destroyCache);
-    }
-
-    try {
-      log().info("Stopping mongo locker");
-      injector.getInstance(MongoPersistentLocker.class).stop();
-      log().info("Stopped mongo locker");
-    } catch (Exception ex) {
-      logger.error("", ex);
-    }
-
     try {
       log().info("Stopping executorService...");
       executorService.shutdownNow();

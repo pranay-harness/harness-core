@@ -4,6 +4,7 @@ import static io.harness.lock.DistributedLockImplementation.REDIS;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -12,6 +13,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CCMSettingServiceImpl;
@@ -45,6 +47,7 @@ import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.govern.DependencyModule;
+import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
 import io.harness.governance.pipeline.service.PipelineGovernanceServiceImpl;
@@ -82,6 +85,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -598,9 +602,12 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -614,7 +621,7 @@ import java.util.concurrent.TimeUnit;
  * @author Rishi
  */
 @Slf4j
-public class WingsModule extends DependencyModule {
+public class WingsModule extends DependencyModule implements ServersModule {
   private MainConfiguration configuration;
 
   /**
@@ -1225,5 +1232,24 @@ public class WingsModule extends DependencyModule {
             StandardCharsets.UTF_8);
 
     return new YamlUtils().read(featureRestrictions, FeatureRestrictions.class);
+  }
+
+  @Override
+  public List<Closeable> servers(Injector injector) {
+    return Collections.singletonList(getPersistentLockerCloseable(injector));
+  }
+
+  @NotNull
+  private Closeable getPersistentLockerCloseable(Injector injector) {
+    return () -> {
+      PersistentLocker persistentLocker = injector.getInstance(PersistentLocker.class);
+      if (persistentLocker instanceof Managed) {
+        try {
+          ((Managed) persistentLocker).stop();
+        } catch (Exception e) {
+          throw new IOException(e);
+        }
+      }
+    };
   }
 }

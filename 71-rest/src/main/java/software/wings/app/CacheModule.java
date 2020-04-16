@@ -1,6 +1,9 @@
 package software.wings.app;
 
+import static javax.cache.Caching.getCachingProvider;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 
@@ -9,6 +12,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import io.harness.govern.ServersModule;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jsr107.ri.annotations.CacheContextSource;
 import org.jsr107.ri.annotations.DefaultCacheKeyGenerator;
@@ -19,11 +23,13 @@ import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
 import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
 
+import java.io.Closeable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.cache.CacheManager;
-import javax.cache.Caching;
 import javax.cache.annotation.CacheKeyGenerator;
 import javax.cache.annotation.CachePut;
 import javax.cache.annotation.CacheRemove;
@@ -90,7 +96,7 @@ import javax.cache.spi.CachingProvider;
  * @author Michael Stachel
  * @version $Revision$
  */
-public class CacheModule extends AbstractModule {
+public class CacheModule extends AbstractModule implements ServersModule {
   private HazelcastInstance hazelcastInstance;
   private CacheManager cacheManager;
 
@@ -112,7 +118,7 @@ public class CacheModule extends AbstractModule {
     System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
     Properties properties = new Properties();
     properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, "wings-hazelcast");
-    CachingProvider provider = Caching.getCachingProvider();
+    CachingProvider provider = getCachingProvider();
     this.cacheManager =
         provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader(), properties);
   }
@@ -150,5 +156,10 @@ public class CacheModule extends AbstractModule {
 
   public HazelcastInstance getHazelcastInstance() {
     return hazelcastInstance;
+  }
+
+  @Override
+  public List<Closeable> servers(Injector injector) {
+    return Collections.singletonList(() -> hazelcastInstance.shutdown());
   }
 }
