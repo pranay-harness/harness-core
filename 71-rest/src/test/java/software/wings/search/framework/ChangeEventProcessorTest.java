@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,6 +35,7 @@ public class ChangeEventProcessorTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testProcessChange() {
     SearchEntity searchEntity = mock(SearchEntity.class);
     ChangeHandler changeHandler = mock(ChangeHandler.class);

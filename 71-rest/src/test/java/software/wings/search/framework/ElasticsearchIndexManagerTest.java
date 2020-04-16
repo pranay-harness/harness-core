@@ -19,6 +19,7 @@ import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +39,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void createIndexTest() throws IOException {
     String indexName = "indexName";
     String entityConfiguration = "{\"a\": \"b\"}";
@@ -61,6 +63,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void deleteIndexTest() throws IOException {
     String indexName = "indexName";
 
@@ -97,6 +100,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void removeIndexFromAlias() throws IOException {
     String indexName = "indexName";
 
@@ -126,6 +130,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void attachIndexToAlias() throws IOException {
     String indexName = "indexName";
     String aliasName = "aliasName";
@@ -151,6 +156,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void getIndexName() {
     String indexName = "indexName";
 
@@ -167,6 +173,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void getAliasName() {
     String type = "type";
     String suffix = "suffix";

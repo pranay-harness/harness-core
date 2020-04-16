@@ -193,7 +193,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
 
   @Override
   public void stop() throws Exception {
-    if (distributedLockSvc != null) {
+    if (distributedLockSvc != null && distributedLockSvc.isRunning()) {
       distributedLockSvc.shutdown();
     }
   }

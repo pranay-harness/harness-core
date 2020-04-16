@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -17,12 +18,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
+
 public class ChangeTrackerTest extends WingsBaseTest {
   @Inject private ChangeTracker changeTracker;
 
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void changeStreamTrackerTest() {
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
     ChangeTrackingInfo<?> changeTrackingInfo =

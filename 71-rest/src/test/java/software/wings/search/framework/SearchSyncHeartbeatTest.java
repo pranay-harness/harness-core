@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -25,6 +26,7 @@ public class SearchSyncHeartbeatTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testSearchSyncHeartbeatRun() {
     WingsPersistence spyWingsPersistence = spy(wingsPersistence);
 

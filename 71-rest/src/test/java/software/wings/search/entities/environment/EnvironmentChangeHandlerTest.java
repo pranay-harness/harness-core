@@ -18,6 +18,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -142,6 +143,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAuditRelatedChange() {
     boolean isSuccessful = environmentChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
     assertThat(isSuccessful).isTrue();
@@ -162,6 +164,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testEnvironmentInsertChange() {
     Environment environment =
         EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
@@ -176,6 +179,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testEnvironmentDeleteChange() {
     Environment environment =
         EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
@@ -190,6 +194,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testEnvironmentUpdateChange() {
     Environment environment =
         EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
@@ -204,6 +209,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
@@ -228,6 +234,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testPipelineDeleteChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.DELETE);
@@ -247,6 +254,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
@@ -262,6 +270,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
@@ -288,6 +297,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowInsertChange() {
     ChangeEvent workflowInsertChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
@@ -303,6 +313,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowDeleteChange() {
     ChangeEvent workflowDeleteChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
@@ -323,6 +334,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.INSERT);
@@ -341,6 +353,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.UPDATE);
@@ -356,6 +369,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.DELETE);

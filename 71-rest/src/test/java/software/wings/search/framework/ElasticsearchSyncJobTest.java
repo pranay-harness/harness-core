@@ -13,6 +13,7 @@ import com.google.inject.Provider;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.eclipse.jetty.util.ArrayQueue;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -27,6 +28,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testElasticsearchSyncTask() throws InterruptedException {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
     ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask = mock(ElasticsearchRealtimeSyncTask.class);
@@ -55,6 +57,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testErroredElasticsearchSyncTask() throws InterruptedException {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
     ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask = mock(ElasticsearchRealtimeSyncTask.class);

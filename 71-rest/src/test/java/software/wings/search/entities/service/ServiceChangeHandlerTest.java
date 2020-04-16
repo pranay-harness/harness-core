@@ -18,6 +18,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -142,6 +143,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAuditRelatedChange() {
     boolean isSuccessful = serviceChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
     assertThat(isSuccessful).isNotNull();
@@ -163,6 +165,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testServiceInsertChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
@@ -175,6 +178,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testServiceDeleteChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
@@ -187,6 +191,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testServiceUpdateChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
@@ -199,6 +204,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
@@ -224,6 +230,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testPipelineDeleteChange() {
     ChangeEvent serviceDeleteChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.DELETE);
@@ -244,6 +251,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
@@ -259,6 +267,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
@@ -285,6 +294,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowInsertChange() {
     ChangeEvent workflowInsertChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
@@ -300,6 +310,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowDeleteChange() {
     ChangeEvent workflowDeleteChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
@@ -320,6 +331,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.INSERT);
@@ -338,6 +350,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.UPDATE);
@@ -353,6 +366,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.DELETE);

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -46,6 +47,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testUpsertDocument() {
     String entityJson = "entity_json";
     when(elasticsearchDao.upsertDocument(entityType, entityId, entityJson)).thenReturn(true);
@@ -56,6 +58,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testNestedQuery() {
     String value = "value";
     List<String> arrayList = new ArrayList<>();
@@ -76,6 +79,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAddTimestamp() {
     when(elasticsearchDao.addTimestamp(entityType, listToUpdate, documentId, timestamp, daysToRetain)).thenReturn(true);
     boolean isSuccessful =
@@ -86,6 +90,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAddTimestamps() {
     when(elasticsearchDao.addTimestamp(entityType, listToUpdate, documentIds, timestamp, daysToRetain))
         .thenReturn(true);
@@ -97,6 +102,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testDeleteDocument() {
     String entityJson = "entity_json";
     when(elasticsearchDao.deleteDocument(entityType, entityJson)).thenReturn(true);
@@ -107,6 +113,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testUpdateKeyInMultipleDocuments() {
     String filterKey = "filter_key";
     String newValue = "new_value";
@@ -121,6 +128,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testUpdateListInMultipleDocuments() {
     String elementKey = "element_key";
     String newValue = "new_value";
@@ -134,6 +142,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAppendToListInSingleDocument() {
     when(elasticsearchDao.appendToListInSingleDocument(entityType, listToUpdate, documentId, newElement))
         .thenReturn(true);
@@ -145,6 +154,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAppendToListInSingleDocumentWithLimit() {
     when(elasticsearchDao.appendToListInSingleDocument(entityType, listToUpdate, documentId, newElement, limit))
         .thenReturn(true);
@@ -156,6 +166,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAppendToListInMultipleDocuments() {
     when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement))
         .thenReturn(true);
@@ -167,6 +178,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testAppendToListInMultipleDocumentsWithLimit() {
     when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement, limit))
         .thenReturn(true);
@@ -178,6 +190,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testRemoveFromListInMultipleDocuments() {
     String idToBeDeleted = generateUuid();
     when(elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, documentIds, idToBeDeleted))
@@ -190,6 +203,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testRemoveFromListInMultipleDocument() {
     String idToBeDeleted = generateUuid();
     when(elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, idToBeDeleted)).thenReturn(true);

@@ -18,6 +18,7 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.rest.RestStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +36,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void upsertDocumentTest() throws IOException {
     String entityType = "entityType";
     String entityId = "entityId";
@@ -67,6 +69,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void deleteDocumentTest() throws IOException {
     String entityType = "entityType";
     String entityId = "entityId";
