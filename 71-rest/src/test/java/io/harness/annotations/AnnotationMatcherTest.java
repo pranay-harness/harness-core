@@ -1,16 +1,15 @@
-package io.harness.annotation;
+package io.harness.annotations;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.OrchestrationBeansTest;
-import io.harness.annotations.Redesign;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
+import software.wings.WingsBaseTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class AnnotationMatcherTest extends OrchestrationBeansTest {
+public class AnnotationMatcherTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
