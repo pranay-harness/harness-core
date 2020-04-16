@@ -48,7 +48,7 @@ public class DelegateTaskBroadcastHelper {
                        .version(delegateTask.getVersion())
                        .accountId(delegateTask.getAccountId())
                        .taskId(delegateTask.getUuid())
-                       .async(delegateTask.isAsync())
+                       .async(delegateTask.getData().isAsync())
                        .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
                        .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
                        .build());
@@ -58,7 +58,7 @@ public class DelegateTaskBroadcastHelper {
     int delta;
     int nextBroadcastCount = delegateTask.getBroadcastCount() + 1;
 
-    if (delegateTask.isAsync()) {
+    if (delegateTask.getData().isAsync()) {
       // 6 attempt onwards, its every 10 mins
       if (nextBroadcastCount < asyncIntervals.length) {
         delta = asyncIntervals[nextBroadcastCount];

@@ -44,7 +44,7 @@ public class BambooTaskTest extends CategoryTest {
 
   @InjectMocks
   private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";

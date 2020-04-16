@@ -125,9 +125,9 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
         new AwsEcsRequest(awsConfig, getEncryptionDetails(awsConfig), AwsEcsRequestType.LIST_CLUSTERS, region);
 
     return DelegateTask.builder()
-        .async(false)
         .accountId(accountId)
         .data(TaskData.builder()
+                  .async(false)
                   .taskType(TaskType.AWS_ECS_TASK.name())
                   .parameters(new Object[] {awsEcsRequest})
                   .timeout(TimeUnit.MINUTES.toMillis(1))

@@ -42,8 +42,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   private EcsSteadyStateCheckTask task =
       (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(DELEGATE_ID,
           DelegateTask.builder()
-              .async(true)
-              .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
   @Before

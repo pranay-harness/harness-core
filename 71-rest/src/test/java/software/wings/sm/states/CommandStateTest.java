@@ -344,12 +344,12 @@ public class CommandStateTest extends WingsBaseTest {
     verify(delegateService)
         .queueTask(
             DelegateTask.builder()
-                .async(true)
                 .appId(APP_ID)
                 .accountId(ACCOUNT_ID)
                 .waitId(ACTIVITY_ID)
                 .data(
                     TaskData.builder()
+                        .async(true)
                         .taskType(TaskType.COMMAND.name())
                         .parameters(new Object[] {COMMAND,
                             aCommandExecutionContext()

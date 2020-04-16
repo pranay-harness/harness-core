@@ -124,11 +124,11 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                                       .appId(GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
                                                 .parameters(new Object[] {request})
                                                 .timeout(TimeUnit.MINUTES.toMillis(10))
                                                 .build())
-                                      .async(true)
                                       .build();
       waitNotifyEngine.waitForAllOn(GENERAL, new EmailNotificationCallBack(), waitId);
       delegateService.queueTask(delegateTask);

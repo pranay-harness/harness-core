@@ -108,11 +108,11 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .async(true)
             .accountId(appService.getAccountIdByAppId(context.getAppId()))
             .appId(context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))

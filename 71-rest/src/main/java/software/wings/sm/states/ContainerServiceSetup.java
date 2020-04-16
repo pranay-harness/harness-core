@@ -206,11 +206,11 @@ public abstract class ContainerServiceSetup extends State {
 
       String delegateTaskId =
           delegateService.queueTask(DelegateTask.builder()
-                                        .async(true)
                                         .accountId(app.getAccountId())
                                         .appId(app.getUuid())
                                         .waitId(activity.getUuid())
                                         .data(TaskData.builder()
+                                                  .async(true)
                                                   .taskType(TaskType.COMMAND.name())
                                                   .parameters(new Object[] {command, commandExecutionContext})
                                                   .timeout(TimeUnit.HOURS.toMillis(1))

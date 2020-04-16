@@ -179,11 +179,11 @@ public class BambooState extends State {
     String infrastructureMappingId = context.fetchInfraMappingId();
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(getTaskType().name())
                                               .parameters(new Object[] {bambooConfig,
                                                   secretManager.getEncryptionDetails(bambooConfig, context.getAppId(),

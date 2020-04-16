@@ -190,8 +190,8 @@ public class K8sCommandValidationTest extends WingsBaseTest {
             .namespace("default")
             .build());
     return DelegateTask.builder()
-        .async(true)
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(TaskType.K8S_COMMAND_TASK.name())
                   .parameters(new Object[] {taskParameters})
                   .build())

@@ -141,7 +141,7 @@ delegateSequenceConfig { "name" : "appId_1" , "background" : true} { "appId" : 1
 delegateSequenceConfig { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 delegateSequenceConfig { "name" : "uniqueDelegateSequenceIdx" , "unique" : true} { "accountId" : 1 , "hostName" : 1 , "sequenceNum" : 1}
 delegateTasks { "name" : "appId_1" , "background" : true} { "appId" : 1}
-delegateTasks { "name" : "async_1" , "background" : true} { "async" : 1}
+delegateTasks { "name" : "data_async" , "background" : true} { "data.async" : 1}
 delegateTasks { "name" : "index" , "background" : true} { "status" : 1 , "expiry" : 1}
 delegateTasks { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 delegates { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}

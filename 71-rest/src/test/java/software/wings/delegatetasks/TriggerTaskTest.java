@@ -44,7 +44,7 @@ public class TriggerTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask("delegateId",
-      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

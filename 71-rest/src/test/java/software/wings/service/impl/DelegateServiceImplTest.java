@@ -108,7 +108,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
-    delegateTask.setAsync(false);
+    delegateTask.getData().setAsync(false);
     delegateService.saveDelegateTask(delegateTask);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
@@ -119,7 +119,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();
-    delegateTask.setAsync(true);
+    delegateTask.getData().setAsync(true);
     delegateService.saveDelegateTask(delegateTask);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
@@ -223,13 +223,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
   private DelegateTask getDelegateTask() {
     return DelegateTask.builder()
-        .async(false)
         .uuid(generateUuid())
         .accountId(ACCOUNT_ID)
         .waitId(generateUuid())
         .appId(APP_ID)
         .version(VERSION)
         .data(TaskData.builder()
+                  .async(false)
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {HttpTaskParameters.builder().url("https://www.google.com").build()})
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

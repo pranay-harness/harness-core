@@ -328,12 +328,12 @@ public class EcsStateHelper {
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, Object[] parameters, long timeout) {
     return DelegateTask.builder()
-        .async(true)
         .appId(appId)
         .accountId(accountId)
         .envId(envId)
         .waitId(waitId)
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(taskType.name())
                   .parameters(parameters)
                   .timeout(TimeUnit.MINUTES.toMillis(timeout))
@@ -524,12 +524,12 @@ public class EcsStateHelper {
       EcsCommandRequest request, EcsSetUpDataBag dataBag, Activity activity, DelegateService delegateService) {
     DelegateTask task =
         DelegateTask.builder()
-            .async(true)
             .appId(dataBag.getApplication().getUuid())
             .accountId(dataBag.getApplication().getAccountId())
             .envId(dataBag.getEnvironment().getUuid())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(ECS_COMMAND_TASK.name())
                       .parameters(new Object[] {request, dataBag.getEncryptedDataDetails()})
                       .timeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
@@ -608,7 +608,6 @@ public class EcsStateHelper {
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
       EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(deployDataBag.getApp().getAccountId())
                             .appId(deployDataBag.getApp().getUuid())
                             .waitId(activity.getUuid())
@@ -616,6 +615,7 @@ public class EcsStateHelper {
                                     ? singletonList(deployDataBag.getAwsConfig().getTag())
                                     : null)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.ECS_COMMAND_TASK.name())
                                       .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
                                       .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))

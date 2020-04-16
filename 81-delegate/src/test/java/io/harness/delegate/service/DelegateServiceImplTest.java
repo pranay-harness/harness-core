@@ -58,14 +58,14 @@ public class DelegateServiceImplTest extends CategoryTest {
   public void shouldNotApplyFunctorIfNoSecrets() {
     String delegateTaskId = UUIDGenerator.generateUuid();
 
-    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
-                                                  .delegateTaskId(delegateTaskId)
-                                                  .delegateTask(DelegateTask.builder()
-                                                                    .async(true)
-                                                                    .uuid(delegateTaskId)
-                                                                    .data(TaskData.builder().taskType("HTTP").build())
-                                                                    .build())
-                                                  .build();
+    DelegateTaskPackage delegateTaskPackage =
+        DelegateTaskPackage.builder()
+            .delegateTaskId(delegateTaskId)
+            .delegateTask(DelegateTask.builder()
+                              .uuid(delegateTaskId)
+                              .data(TaskData.builder().async(true).taskType("HTTP").build())
+                              .build())
+            .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(0)).decrypt(anyMap());
@@ -90,16 +90,16 @@ public class DelegateServiceImplTest extends CategoryTest {
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
-    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
-                                                  .delegateTaskId(delegateTaskId)
-                                                  .delegateTask(DelegateTask.builder()
-                                                                    .async(true)
-                                                                    .uuid(delegateTaskId)
-                                                                    .data(TaskData.builder().taskType("HTTP").build())
-                                                                    .build())
-                                                  .encryptionConfigs(encryptionConfigMap)
-                                                  .secretDetails(secretDetails)
-                                                  .build();
+    DelegateTaskPackage delegateTaskPackage =
+        DelegateTaskPackage.builder()
+            .delegateTaskId(delegateTaskId)
+            .delegateTask(DelegateTask.builder()
+                              .uuid(delegateTaskId)
+                              .data(TaskData.builder().async(true).taskType("HTTP").build())
+                              .build())
+            .encryptionConfigs(encryptionConfigMap)
+            .secretDetails(secretDetails)
+            .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());

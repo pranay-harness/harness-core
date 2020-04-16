@@ -104,11 +104,11 @@ public class ScalyrState extends AbstractLogAnalysisState {
     String infrastructureMappingId = context.fetchInfraMappingId();
     return delegateService.queueTask(
         DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))

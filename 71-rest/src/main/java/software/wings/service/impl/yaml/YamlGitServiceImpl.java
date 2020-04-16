@@ -586,11 +586,11 @@ public class YamlGitServiceImpl implements YamlGitService {
       List<String> yamlChangeSetIds = new ArrayList<>();
       yamlChangeSetIds.add(yamlChangeSetId);
       DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
                                       .accountId(accountId)
                                       .appId(GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.GIT_COMMAND.name())
                                                 .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
                                                     secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
@@ -798,11 +798,11 @@ public class YamlGitServiceImpl implements YamlGitService {
       String waitId = generateUuid();
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
                                       .accountId(accountId)
                                       .appId(GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.GIT_COMMAND.name())
                                                 .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
                                                     secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),

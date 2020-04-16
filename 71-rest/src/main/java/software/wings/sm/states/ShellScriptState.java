@@ -410,12 +410,12 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .tags(renderedTags)
                                     .appId(context.getApp().getAppId())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.SCRIPT.name())
                                               .parameters(new Object[] {shellScriptParameters.build()})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))

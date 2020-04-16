@@ -127,11 +127,11 @@ public class KubernetesSteadyStateCheck extends State {
               .timeoutMillis(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
       DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
                                       .accountId(app.getAccountId())
                                       .appId(app.getUuid())
                                       .waitId(activity.getUuid())
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
                                                 .parameters(new Object[] {kubernetesSteadyStateCheckParams})
                                                 .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))

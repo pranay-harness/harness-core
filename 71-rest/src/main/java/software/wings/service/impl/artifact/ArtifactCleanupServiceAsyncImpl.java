@@ -53,8 +53,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
 
     String waitId = generateUuid();
     final TaskDataBuilder dataBuilder =
-        TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
+        TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().appId(GLOBAL_APP_ID).waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       ArtifactStreamAttributes artifactStreamAttributes =

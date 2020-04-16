@@ -35,11 +35,11 @@ public class AcrValidationTest extends WingsBaseTest {
   static DelegateTask delegateTask =
       DelegateTask.builder()
           .uuid("id")
-          .async(true)
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("")
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.ACR_GET_BUILDS.name())
                     .parameters(new Object[] {ArtifactStreamAttributes.builder()
                                                   .registryName(registryName)

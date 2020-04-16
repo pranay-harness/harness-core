@@ -309,12 +309,12 @@ public class AwsAmiServiceSetup extends State {
               .waitId(activity.getUuid())
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
                         .parameters(new Object[] {request})
                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                         .build())
               .envId(env.getUuid())
-              .async(true)
               .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {

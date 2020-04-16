@@ -88,8 +88,8 @@ public class HostValidationTaskTest extends WingsBaseTest {
 
   private DelegateTask prepareDelegateTask() {
     return DelegateTask.builder()
-        .async(true)
         .data(TaskData.builder()
+                  .async(true)
                   .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                   .parameters(new Object[] {getTaskParameters()})
                   .build())

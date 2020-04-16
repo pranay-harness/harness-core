@@ -1507,7 +1507,7 @@ public class DelegateServiceImpl implements DelegateService {
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
-        ExecutorService executorService = selectExecutorService(delegateTask);
+        ExecutorService executorService = selectExecutorService(delegateTask.getData());
 
         Future<List<DelegateConnectionResult>> future =
             executorService.submit(() -> delegateValidateTask.validationResults());
@@ -1556,11 +1556,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private ExecutorService selectExecutorService(DelegateTask delegateTask) {
-    if (delegateTask.isAsync()) {
+  private ExecutorService selectExecutorService(TaskData taskData) {
+    if (taskData.isAsync()) {
       return asyncExecutor;
     }
-    if (delegateTask.getData().getTaskType().contains("BUILD")) {
+    if (taskData.getTaskType().contains("BUILD")) {
       return artifactExecutor;
     }
 
@@ -1673,7 +1673,7 @@ public class DelegateServiceImpl implements DelegateService {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
     injector.injectMembers(delegateRunnableTask);
-    ExecutorService executorService = selectExecutorService(delegateTask);
+    ExecutorService executorService = selectExecutorService(delegateTask.getData());
     Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);

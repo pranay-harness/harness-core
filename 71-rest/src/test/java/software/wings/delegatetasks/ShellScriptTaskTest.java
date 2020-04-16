@@ -92,7 +92,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellScriptTask shellScriptTask = (ShellScriptTask) TaskType.SCRIPT.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

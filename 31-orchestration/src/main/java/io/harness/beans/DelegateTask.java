@@ -45,9 +45,11 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "index"), fields = {
-    @Field(DelegateTaskKeys.status), @Field(DelegateTaskKeys.expiry)
-  })
+  @Index(options = @IndexOptions(name = "index"),
+      fields = { @Field(DelegateTaskKeys.status)
+                 , @Field(DelegateTaskKeys.expiry) })
+  ,
+      @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
@@ -67,7 +69,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   private String version;
   private List<String> tags;
-  @Indexed private boolean async;
 
   private String waitId;
   private String correlationId;
@@ -115,5 +116,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
     public static final String data_parameters = data + "." + TaskDataKeys.parameters;
     public static final String data_taskType = data + "." + TaskDataKeys.taskType;
     public static final String data_timeout = data + "." + TaskDataKeys.timeout;
+    public static final String data_async = data + "." + TaskDataKeys.async;
   }
 }

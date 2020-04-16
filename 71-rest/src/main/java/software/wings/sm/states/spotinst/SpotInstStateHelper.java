@@ -290,12 +290,12 @@ public class SpotInstStateHelper {
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, SpotInstCommandRequest spotInstCommandRequest) {
     return DelegateTask.builder()
-        .async(true)
         .accountId(accountId)
         .appId(appId)
         .waitId(waitId)
         .tags(commandHelper.nonEmptyTag(spotInstCommandRequest.getAwsConfig()))
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(taskType.name())
                   .parameters(new Object[] {spotInstCommandRequest})
                   .timeout(TimeUnit.MINUTES.toMillis(generateTimeOutForDelegateTask(

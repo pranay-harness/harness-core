@@ -359,7 +359,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
     assertThat(delegateTask.getWaitId()).isEqualTo(waitId);
-    assertThat(delegateTask.isAsync()).isTrue();
+    assertThat(delegateTask.getData().isAsync()).isTrue();
 
     TaskData taskData = delegateTask.getData();
     assertThat(taskData).isNotNull();

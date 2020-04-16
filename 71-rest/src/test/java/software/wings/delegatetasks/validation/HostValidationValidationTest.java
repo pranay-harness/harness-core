@@ -126,8 +126,8 @@ public class HostValidationValidationTest extends CategoryTest {
       List<String> hostNames, SettingAttribute connectionSetting) throws IllegalAccessException {
     HostValidationValidation hostValidationValidation = new HostValidationValidation(generateUuid(),
         DelegateTask.builder()
-            .async(true)
             .data(TaskData.builder()
+                      .async(true)
                       .parameters(new Object[] {
                           HostValidationTaskParameters.builder()
                               .hostNames(hostNames)

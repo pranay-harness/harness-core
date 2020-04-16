@@ -29,7 +29,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsLambdaTask task = (AwsLambdaTask) TaskType.AWS_LAMBDA_TASK.getDelegateRunnableTask("delegateid",
-      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

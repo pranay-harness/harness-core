@@ -33,7 +33,7 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
   @InjectMocks
   private AwsCodeDeployTask task = (AwsCodeDeployTask) TaskType.AWS_CODE_DEPLOY_TASK.getDelegateRunnableTask(
       "delegateid",
-      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

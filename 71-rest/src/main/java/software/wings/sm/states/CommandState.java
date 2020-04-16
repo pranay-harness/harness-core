@@ -535,12 +535,12 @@ public class CommandState extends State {
       Command command, String accountId, CommandExecutionContext commandExecutionContext) {
     String delegateTaskId;
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(accountId)
                                     .appId(appId)
                                     .waitId(activityId)
                                     .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.COMMAND.name())
                                               .parameters(new Object[] {command, commandExecutionContext})
                                               .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))

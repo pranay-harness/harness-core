@@ -55,11 +55,11 @@ public class APMDataCollectionTaskTest extends CategoryTest {
                              .build();
 
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

@@ -33,11 +33,11 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
 
   private static DelegateTask collectionDelegateTask =
       DelegateTask.builder()
-          .async(true)
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("waitId")
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
                     .parameters(new Object[] {
                         AzureArtifactsCollectionTaskParameters.builder()
@@ -61,11 +61,11 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
   private static DelegateTask getBuildsDelegateTask =
       DelegateTask.builder()
           .uuid("uuid")
-          .async(true)
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("waitId")
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.AZURE_ARTIFACTS_GET_BUILDS.name())
                     .parameters(new Object[] {ArtifactStreamAttributes.builder()
                                                   .protocolType(ProtocolType.maven.name())

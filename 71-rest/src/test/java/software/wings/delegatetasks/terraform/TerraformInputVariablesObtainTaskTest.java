@@ -63,8 +63,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
           WingsTestConstants.DELEGATE_ID,
           DelegateTask.builder()
-              .async(true)
-              .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

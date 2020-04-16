@@ -140,11 +140,11 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     }
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(accountId)
                                     .waitId(activityId)
                                     .appId(executionContext.fetchRequiredApp().getAppId())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(SERVICENOW_ASYNC.name())
                                               .parameters(new Object[] {serviceNowTaskParameters})
                                               .timeout(ASYNC_TASK_TIMEOUT_MILLIS)

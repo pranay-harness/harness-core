@@ -70,11 +70,11 @@ public class ShellScriptApprovalService {
                                     .appId(appId)
                                     .waitId(activityId)
                                     .data(TaskData.builder()
+                                              .async(false)
                                               .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
                                               .parameters(new Object[] {shellScriptApprovalTaskParameters})
                                               .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                               .build())
-                                    .async(false)
                                     .build();
 
     ResponseData responseData = null;

@@ -145,11 +145,11 @@ public class PcfStateHelper {
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
-        .async(true)
         .accountId(taskCreationData.getAccountId())
         .appId(taskCreationData.getAppId())
         .waitId(taskCreationData.getWaitId())
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(taskCreationData.getTaskType().name())
                   .parameters(taskCreationData.getParameters())
                   .timeout(TimeUnit.MINUTES.toMillis(taskCreationData.getTimeout()))
@@ -626,8 +626,8 @@ public class PcfStateHelper {
         .envId(env.getUuid())
         .infrastructureMappingId(infraMapping.getUuid())
         .waitId(waitId)
-        .async(true)
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(GIT_FETCH_FILES_TASK.name())
                   .parameters(new Object[] {fetchFilesTaskParams})
                   .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))

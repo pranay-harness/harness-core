@@ -214,12 +214,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       setTimeOutOnRequest(request);
       DelegateTask delegateTask =
           DelegateTask.builder()
-              .async(true)
               .accountId(executionContext.getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getAppId())
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
@@ -274,12 +274,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       setTimeOutOnRequest(request);
       delegateTask =
           DelegateTask.builder()
-              .async(true)
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
@@ -304,12 +304,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       setTimeOutOnRequest(request);
       delegateTask =
           DelegateTask.builder()
-              .async(true)
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
