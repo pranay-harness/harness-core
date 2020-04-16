@@ -6,7 +6,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
+import lombok.NonNull;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.Base;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -138,6 +141,13 @@ public interface SecretManager extends OwnedByAccount {
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
   boolean transitionAllSecretsToHarnessSecretManager(String accountId);
+
+  boolean canUseSecretsInAppAndEnv(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest);
+
+  boolean canUseSecretsInAppAndEnv(@NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest,
+      String envIdFromRequest, boolean isAccountAdmin, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMapForAccount);
 
   void clearDefaultFlagOfSecretManagers(String accountId);
 

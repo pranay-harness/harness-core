@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,9 +16,11 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
@@ -29,7 +31,9 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -40,6 +44,8 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -48,10 +54,16 @@ import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SecretManagerImplTest extends WingsBaseTest {
@@ -61,10 +73,12 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private HarnessUserGroupService harnessUserGroupService;
   @Mock private FileService fileService;
-  @Mock private UsageRestrictionsService usageRestrictionsService;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject @InjectMocks private SecretManager secretManager;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
   private String secretName = "secretName";
   private String secretValue = "secretValue";
 
@@ -263,7 +277,6 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .type(SettingVariableTypes.GCP_KMS)
                                       .build();
 
-    doNothing().when(usageRestrictionsService).validateUsageRestrictionsOnEntitySave(any(), any());
     when(gcpKmsService.encrypt(
              eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
         .thenReturn(encryptedData);
@@ -276,12 +289,199 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_saveSecretLocal() {
-    doNothing().when(usageRestrictionsService).validateUsageRestrictionsOnEntitySave(any(), any());
     Account newAccount = getAccount(AccountType.PAID);
     newAccount.setLocalEncryptionEnabled(true);
     String accountId = wingsPersistence.save(newAccount);
     String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue, null, null);
     assertThat(secretId).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_canUseSecretsInAppAndEnv() {
+    String appId1 = "appId1";
+    String envId1 = "envId1";
+    String appId2 = "appId2";
+    String envId2 = "envId2";
+    String appId3 = "appId3";
+    String envId3 = "envId3";
+
+    AppEnvRestriction appEnvRestriction1 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId1, envId1)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+    AppEnvRestriction appEnvRestriction2 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId2, envId2)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+    AppEnvRestriction appEnvRestriction3 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId3, envId3)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+
+    UsageRestrictions usageRestrictions1 =
+        UsageRestrictions.builder().appEnvRestrictions(Sets.newHashSet(appEnvRestriction1, appEnvRestriction2)).build();
+    UsageRestrictions usageRestrictions2 =
+        UsageRestrictions.builder().appEnvRestrictions(Sets.newHashSet(appEnvRestriction2, appEnvRestriction3)).build();
+
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(account.getUuid())
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.AWS)
+                                      .usageRestrictions(usageRestrictions1)
+                                      .build();
+
+    String encryptedDataId1 = wingsPersistence.save(encryptedData);
+    encryptedData.setUuid(null);
+    encryptedData.setName(UUIDGenerator.generateUuid());
+    encryptedData.setUsageRestrictions(usageRestrictions2);
+    String encryptedDataId2 = wingsPersistence.save(encryptedData);
+
+    Environment environment1 = mock(Environment.class);
+    when(environment1.getUuid()).thenReturn(envId1);
+    Environment environment2 = mock(Environment.class);
+    when(environment2.getUuid()).thenReturn(envId2);
+    Environment environment3 = mock(Environment.class);
+    when(environment3.getUuid()).thenReturn(envId3);
+
+    UsageRestrictions userUsageRestrictions = mock(UsageRestrictions.class);
+    Map<String, Set<String>> userAppEnvMap = new HashMap<>();
+    Map<String, List<Base>> appIdEnvMapForAccount = new HashMap<>();
+    appIdEnvMapForAccount.put(appId1, Collections.singletonList(environment1));
+    appIdEnvMapForAccount.put(appId2, Collections.singletonList(environment1));
+    appIdEnvMapForAccount.put(appId3, Collections.singletonList(environment1));
+
+    boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1, encryptedDataId2),
+        account.getUuid(), appId2, envId2, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
+    assertThat(canUseSecrets).isTrue();
+
+    canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1, encryptedDataId2),
+        account.getUuid(), appId1, envId1, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
+    assertThat(canUseSecrets).isFalse();
+
+    canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1, encryptedDataId2),
+        account.getUuid(), appId3, envId3, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
+    assertThat(canUseSecrets).isFalse();
+
+    canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1), account.getUuid(), appId1,
+        envId1, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
+    assertThat(canUseSecrets).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_canUseSecretsInAppAndEnv_OnlyAppIdandEnvId() {
+    String appId1 = "appId1";
+    String envId1 = "envId1";
+    String appId2 = "appId2";
+    String envId2 = "envId2";
+    String appId3 = "appId3";
+    String envId3 = "envId3";
+
+    AppEnvRestriction appEnvRestriction1 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId1, envId1)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+    AppEnvRestriction appEnvRestriction2 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId2, envId2)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+    AppEnvRestriction appEnvRestriction3 =
+        usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), appId3, envId3)
+            .getAppEnvRestrictions()
+            .iterator()
+            .next();
+
+    UsageRestrictions usageRestrictions1 =
+        UsageRestrictions.builder().appEnvRestrictions(Sets.newHashSet(appEnvRestriction1, appEnvRestriction2)).build();
+    UsageRestrictions usageRestrictions2 =
+        UsageRestrictions.builder().appEnvRestrictions(Sets.newHashSet(appEnvRestriction2, appEnvRestriction3)).build();
+
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(account.getUuid())
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.AWS)
+                                      .usageRestrictions(usageRestrictions1)
+                                      .build();
+
+    String encryptedDataId1 = wingsPersistence.save(encryptedData);
+    encryptedData.setUuid(null);
+    encryptedData.setName(UUIDGenerator.generateUuid());
+    encryptedData.setUsageRestrictions(usageRestrictions2);
+    String encryptedDataId2 = wingsPersistence.save(encryptedData);
+
+    Environment environment1 = mock(Environment.class);
+    when(environment1.getUuid()).thenReturn(envId1);
+    Environment environment2 = mock(Environment.class);
+    when(environment2.getUuid()).thenReturn(envId2);
+    Environment environment3 = mock(Environment.class);
+    when(environment3.getUuid()).thenReturn(envId3);
+
+    Map<String, List<Base>> appIdEnvMapForAccount = new HashMap<>();
+    appIdEnvMapForAccount.put(appId1, Collections.singletonList(environment1));
+    appIdEnvMapForAccount.put(appId2, Collections.singletonList(environment1));
+    appIdEnvMapForAccount.put(appId3, Collections.singletonList(environment1));
+
+    when(appService.getAppIdsByAccountId(account.getUuid())).thenReturn(Arrays.asList(appId1, appId2, appId3));
+    when(environmentService.getAppIdEnvMap(any())).thenReturn(appIdEnvMapForAccount);
+
+    boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), appId2, envId2);
+    assertThat(canUseSecrets).isTrue();
+
+    canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), appId1, envId1);
+    assertThat(canUseSecrets).isFalse();
+
+    canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), appId3, envId3);
+    assertThat(canUseSecrets).isFalse();
+
+    canUseSecrets =
+        secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1), account.getUuid(), appId1, envId1);
+    assertThat(canUseSecrets).isTrue();
+  }
+
+  @Test(expected = SecretManagementException.class)
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_canUseSecretsInAppAndEnv_OnlyAppIdandEnvId_shouldFail() {
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(account.getUuid())
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.AWS)
+                                      .build();
+
+    String encryptedDataId1 = wingsPersistence.save(encryptedData);
+    String encryptedDataId2 = UUIDGenerator.generateUuid();
+
+    secretManager.canUseSecretsInAppAndEnv(
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), "appId2", "envId2");
   }
 
   @Test

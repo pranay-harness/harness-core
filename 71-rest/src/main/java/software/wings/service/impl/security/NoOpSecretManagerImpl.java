@@ -5,7 +5,9 @@ import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
+import lombok.NonNull;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.Base;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -248,13 +251,31 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public boolean canUseSecretsInAppAndEnv(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean canUseSecretsInAppAndEnv(@NonNull Set<String> secretIds, @NonNull String accountId,
+      String appIdFromRequest, String envIdFromRequest, boolean isAccountAdmin,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions,
+      Map<String, List<Base>> appIdEnvMapForAccount) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean transitionAllSecretsToHarnessSecretManager(String accountId) {
     return false;
   }
 
   @Override
-  public void clearDefaultFlagOfSecretManagers(String accountId) {}
+  public void clearDefaultFlagOfSecretManagers(String accountId) {
+    // NoOp Function
+  }
 
   @Override
-  public void deleteByAccountId(String accountId) {}
+  public void deleteByAccountId(String accountId) {
+    // NoOp Function
+  }
 }
