@@ -74,8 +74,14 @@ public class IndexManager {
     private BasicDBObject options;
 
     public void create() {
+      logger.warn("Creating index {} {}", options.toString(), keys.toString());
       collection.createIndex(keys, options);
     }
+  }
+
+  public static void dropIndex(DBCollection collection, String indexName) {
+    logger.warn("Dropping index {}", indexName);
+    collection.dropIndex(indexName);
   }
 
   @Value
@@ -199,7 +205,7 @@ public class IndexManager {
     }
 
     // now we are safe to drop the original
-    indexCreator.collection.dropIndex(currentName);
+    dropIndex(indexCreator.collection, currentName);
 
     // Lets create the target index
     indexCreator.create();
@@ -315,7 +321,7 @@ public class IndexManager {
     return result;
   }
 
-  public static void ensureIndex(AdvancedDatastore datastore, Morphia morphia) {
+  public static void ensureIndexes(AdvancedDatastore datastore, Morphia morphia) {
     // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
     // There is no way to override this behavior.
     // https://github.com/mongodb/morphia/issues/706
@@ -345,8 +351,7 @@ public class IndexManager {
             if (okToDropIndexes) {
               obsoleteIndexes.forEach(name -> {
                 try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
-                  logger.info("Remove obsolete index");
-                  collection.dropIndex(name);
+                  dropIndex(collection, name);
                 } catch (RuntimeException ex) {
                   logger.error("Failed to drop index", ex);
                 }

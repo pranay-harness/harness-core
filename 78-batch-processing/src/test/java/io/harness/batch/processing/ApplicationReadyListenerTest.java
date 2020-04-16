@@ -21,6 +21,7 @@ import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -68,11 +69,12 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
+  @Ignore("Ensure index is temporary disabled")
   public void shouldEnsureIndexForEventsStoreClassesOnly() throws Exception {
     AdvancedDatastore datastore = mock(AdvancedDatastore.class);
     doReturn(datastore).when(hPersistence).getDatastore(EVENTS_STORE);
     PowerMockito.spy(IndexManager.class);
-    PowerMockito.doNothing().when(IndexManager.class, "ensureIndex", refEq(datastore), captor.capture());
+    PowerMockito.doNothing().when(IndexManager.class, "ensureIndexes", refEq(datastore), captor.capture());
     listener.ensureIndexForEventsStore();
     Morphia morphia = captor.getValue();
     assertThat(

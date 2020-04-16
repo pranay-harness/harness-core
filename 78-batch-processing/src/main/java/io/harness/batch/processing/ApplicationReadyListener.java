@@ -12,7 +12,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -62,7 +61,9 @@ public class ApplicationReadyListener {
     locMorphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     AdvancedDatastore datastore = hPersistence.getDatastore(EVENTS_STORE);
     locMorphia.map(classes);
-    IndexManager.ensureIndex(datastore, locMorphia);
+
+    // TODO: temporary disabled
+    // IndexManager.ensureIndexes(datastore, locMorphia);
   }
 
   @EventListener(ApplicationReadyEvent.class)

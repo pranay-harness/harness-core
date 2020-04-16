@@ -1,7 +1,6 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.mongo.IndexManager.ensureIndex;
 import static io.harness.mongo.IndexManager.updateMovedClasses;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
@@ -87,7 +86,8 @@ public class MongoModule extends DependencyProviderModule {
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    ensureIndex(primaryDatastore, morphia);
+    // TODO: temporary disabled
+    // ensureIndexes(primaryDatastore, morphia);
 
     updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
 
