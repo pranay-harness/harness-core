@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.ExecutionPlan;
+import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 
@@ -18,6 +19,9 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(Map<String, Class> map) {
-    // No classes to register
+    final HelperPut h = (name, clazz) -> {
+      map.put(PKG_HARNESS + name, clazz);
+    };
+    h.put("state.core.fork.ForkStateParameters", ForkStateParameters.class);
   }
 }
