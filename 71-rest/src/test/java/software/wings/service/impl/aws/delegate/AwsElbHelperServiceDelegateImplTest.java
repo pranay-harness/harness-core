@@ -512,4 +512,34 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(finalDetails.getProdTargetGroupArn()).isEqualTo("arnProd");
     assertThat(finalDetails.getStageTargetGroupArn()).isEqualTo("arnStage");
   }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testUpdateRulesForAlbTrafficShift() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    EncryptionService mockEncryptionService = mock(EncryptionService.class);
+    on(service).set("encryptionService", mockEncryptionService);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    AmazonElasticLoadBalancingClient mockClient = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockClient).when(service).getAmazonElasticLoadBalancingClientV2(any(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    List<LbDetailsForAlbTrafficShift> details = asList(LbDetailsForAlbTrafficShift.builder()
+                                                           .useSpecificRule(true)
+                                                           .ruleArn("ruleArn")
+                                                           .prodTargetGroupArn("prodTg1")
+                                                           .stageTargetGroupArn("stageTg1")
+                                                           .build(),
+        LbDetailsForAlbTrafficShift.builder()
+            .useSpecificRule(false)
+            .prodTargetGroupArn("progTg2")
+            .stageTargetGroupArn("stageTg2")
+            .build());
+    service.updateRulesForAlbTrafficShift(
+        AwsConfig.builder().build(), "us-east-1", emptyList(), details, mockCallback, 10);
+    verify(mockClient).modifyRule(any());
+    verify(mockClient).modifyListener(any());
+  }
 }

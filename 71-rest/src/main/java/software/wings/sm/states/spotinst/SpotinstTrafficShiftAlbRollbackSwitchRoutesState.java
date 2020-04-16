@@ -1,35 +1,73 @@
 package software.wings.sm.states.spotinst;
 
-import io.harness.delegate.beans.ResponseData;
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_OLD_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
+
+import com.google.common.collect.ImmutableList;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
 
-import java.util.Map;
+import java.util.List;
 
 @ToString
 @Slf4j
-public class SpotinstTrafficShiftAlbRollbackSwitchRoutesState extends State {
+public class SpotinstTrafficShiftAlbRollbackSwitchRoutesState extends SpotinstTrafficShiftAlbSwitchRoutesState {
   public SpotinstTrafficShiftAlbRollbackSwitchRoutesState(String name) {
     super(name, StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name());
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    throw new InvalidRequestException("Not implemented yet.");
-  }
-
-  @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    throw new InvalidRequestException("Not implemented yet.");
+    try {
+      return executeInternal(context, true);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {
-    // Do nothing on abort
+  protected List<CommandUnit> getCommandUnits() {
+    return ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(RENAME_OLD_COMMAND_UNIT), new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(RENAME_NEW_COMMAND_UNIT), new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
+  }
+
+  @Override
+  protected int getNewElastigroupWeight(ExecutionContext context) {
+    return MIN_TRAFFIC_SHIFT_WEIGHT;
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isDownsizeOldElastigroup() {
+    return super.isDownsizeOldElastigroup();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getNewElastigroupWeightExpr() {
+    return super.getNewElastigroupWeightExpr();
   }
 }

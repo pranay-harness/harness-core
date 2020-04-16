@@ -735,6 +735,7 @@ import software.wings.sm.states.spotinst.SpotinstDeployExecutionSummary;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbDeployExecutionData;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupExecutionData;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecutionData;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
@@ -1551,5 +1552,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HostValidationTaskParameters.class, 7341);
     kryo.register(ServiceArtifactElements.class, 7342);
     kryo.register(ServiceArtifactVariableElements.class, 7343);
+    kryo.register(SpotinstTrafficShiftAlbSwapRoutesExecutionData.class, 7344);
   }
 }
