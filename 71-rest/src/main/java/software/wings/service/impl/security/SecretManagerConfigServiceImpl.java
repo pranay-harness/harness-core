@@ -5,6 +5,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
+import static software.wings.service.intfc.security.SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.service.intfc.security.SecretManager.ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.IS_DEFAULT_KEY;
 
@@ -40,6 +41,7 @@ import software.wings.service.intfc.security.VaultService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -80,6 +82,32 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     secretManagerConfig.setEncryptionType(secretManagerConfig.getEncryptionType());
 
     return wingsPersistence.save(secretManagerConfig);
+  }
+
+  private Map<String, SecretManagerConfig> getSecretManagerMap(String accountId) {
+    Map<String, SecretManagerConfig> result = new HashMap<>();
+    List<SecretManagerConfig> secretManagerConfigs = listSecretManagers(accountId, true, false);
+    for (SecretManagerConfig secretManagerConfig : secretManagerConfigs) {
+      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
+    }
+    List<SecretManagerConfig> globalSecretManagers = getAllGlobalSecretManagers();
+    for (SecretManagerConfig secretManagerConfig : globalSecretManagers) {
+      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
+    }
+    return result;
+  }
+
+  @Override
+  public String getSecretManagerName(String kmsId, EncryptionType encryptionType, String accountId) {
+    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
+    if (encryptionType == LOCAL) {
+      return HARNESS_DEFAULT_SECRET_MANAGER;
+    } else if (secretManagerConfigMap.containsKey(kmsId)) {
+      return secretManagerConfigMap.get(kmsId).getName();
+    } else {
+      logger.warn("Secret manager with id {} and type {} can't be resolved.", kmsId, encryptionType);
+      return null;
+    }
   }
 
   @Override

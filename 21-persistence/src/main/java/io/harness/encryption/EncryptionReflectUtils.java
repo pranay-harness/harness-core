@@ -7,11 +7,13 @@ import static io.harness.exception.WingsException.USER_SRE;
 import io.harness.beans.Encryptable;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @UtilityClass
@@ -21,6 +23,11 @@ public class EncryptionReflectUtils {
       Encrypted a = f.getAnnotation(Encrypted.class);
       return a != null && a.value();
     });
+  }
+
+  public static Optional<Field> getFieldHavingFieldName(
+      @NonNull List<Field> encryptedFields, @NonNull String fieldName) {
+    return encryptedFields.stream().filter(field -> getEncryptedFieldTag(field).equals(fieldName)).findFirst();
   }
 
   public static String getEncryptedFieldTag(@NotNull Field field) {

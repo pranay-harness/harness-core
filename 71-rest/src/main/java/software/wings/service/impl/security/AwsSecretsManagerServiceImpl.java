@@ -74,8 +74,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   private void validateSecretName(String name) {
     if (!AWS_SECRET_NAME_PATTERN.matcher(name).find()) {
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Secret name can only contain alphanumeric characters, or any of: -/_+=.@!");
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR,
+          "Secret name can only contain alphanumeric characters, or any of: -/_+=.@!", USER_SRE);
     }
   }
 
@@ -183,8 +183,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     try {
       secretsManagerConfigId = secretManagerConfigService.save(secretsManagerConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Another AWS Secrets Manager configuration with the same name or URL exists");
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR,
+          "Another AWS Secrets Manager configuration with the same name or URL exists", e, USER_SRE);
     }
 
     // Create a LOCAL encrypted record for AWS secret key
@@ -216,7 +216,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     } catch (AWSSecretsManagerException e) {
       String message =
           "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
     }
     logger.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
   }
@@ -280,7 +280,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       String message =
           "Can not delete the AWS Secrets Manager configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER);
     }
 
     AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, configId);

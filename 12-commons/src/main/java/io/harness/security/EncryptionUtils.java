@@ -2,11 +2,10 @@ package io.harness.security;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 
 import com.google.common.io.Files;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.EncryptDecryptException;
 import lombok.experimental.UtilityClass;
 
 import java.io.File;
@@ -28,6 +27,7 @@ public class EncryptionUtils {
 
   /**
    * Generate a salt to use for encryption.
+   *
    * @param bytes the length of the salt in bytes
    * @return a byte array containing the salt to use
    */
@@ -57,7 +57,7 @@ public class EncryptionUtils {
           isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
       return encryption.encrypt(content);
     } catch (Exception ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new EncryptDecryptException("Failed to encrypt content", ioe);
     }
   }
 
@@ -67,7 +67,7 @@ public class EncryptionUtils {
           isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
       return encryption.decrypt(encryptedText);
     } catch (Exception ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new EncryptDecryptException("Failed to decrypt encrypted text", ioe);
     }
   }
 
@@ -79,7 +79,7 @@ public class EncryptionUtils {
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new EncryptDecryptException("Failed to decrypt file", ioe);
     }
   }
 
@@ -91,7 +91,7 @@ public class EncryptionUtils {
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new EncryptDecryptException("Failed to decrypt file to stream", ioe);
     }
   }
 }

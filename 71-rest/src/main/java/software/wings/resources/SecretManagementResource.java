@@ -33,6 +33,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -42,6 +43,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
@@ -267,6 +270,16 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<UuidAware>> getSecretUsage(
+      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String secretId) {
+    Set<SecretSetupUsage> setupUsages = secretManager.getSecretUsage(accountId, secretId);
+    return new RestResponse<>(setupUsages.stream().map(SecretSetupUsage::getEntity).collect(Collectors.toList()));
+  }
+
+  @GET
+  @Path("/list-setup-usage")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<SecretSetupUsage>> getSecretSetupUsage(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String secretId) {
     return new RestResponse<>(secretManager.getSecretUsage(accountId, secretId));
   }

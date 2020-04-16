@@ -2,7 +2,6 @@ package software.wings.service.impl.security;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -12,6 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
@@ -237,7 +237,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
+  public Set<SecretSetupUsage> getSecretUsage(String accountId, String secretTextId) {
     throw new UnsupportedOperationException();
   }
 

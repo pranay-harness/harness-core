@@ -201,6 +201,14 @@ import software.wings.security.encryption.migration.secretparents.migrators.Dire
 import software.wings.security.encryption.migration.secretparents.migrators.SecretManagerConfigMigrator;
 import software.wings.security.encryption.migration.secretparents.migrators.ServiceVariableMigrator;
 import software.wings.security.encryption.migration.secretparents.migrators.SettingAttributeMigrator;
+import software.wings.security.encryption.setupusage.SecretSetupUsageBuilder;
+import software.wings.security.encryption.setupusage.SecretSetupUsageBuilders;
+import software.wings.security.encryption.setupusage.SecretSetupUsageService;
+import software.wings.security.encryption.setupusage.SecretSetupUsageServiceImpl;
+import software.wings.security.encryption.setupusage.builders.ConfigFileSetupUsageBuilder;
+import software.wings.security.encryption.setupusage.builders.SecretManagerSetupUsageBuilder;
+import software.wings.security.encryption.setupusage.builders.ServiceVariableSetupUsageBuilder;
+import software.wings.security.encryption.setupusage.builders.SettingAttributeSetupUsageBuilder;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
@@ -1182,6 +1190,25 @@ public class WingsModule extends DependencyModule {
         .bind(SecretsMigrator.class)
         .annotatedWith(Names.named(Migrators.CONFIG_FILE_MIGRATOR.getName()))
         .to(ConfigFileMigrator.class);
+
+    bind(SecretSetupUsageService.class).to(SecretSetupUsageServiceImpl.class);
+
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER.getName()))
+        .to(ServiceVariableSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER.getName()))
+        .to(ConfigFileSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER.getName()))
+        .to(SettingAttributeSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
+        .to(SecretManagerSetupUsageBuilder.class);
   }
 
   @Override

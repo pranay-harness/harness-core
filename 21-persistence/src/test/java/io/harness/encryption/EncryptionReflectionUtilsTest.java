@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Optional;
 
 @FieldNameConstants(innerTypeName = "EncryptionReflectionUtilsTestKeys")
@@ -28,5 +29,19 @@ public class EncryptionReflectionUtilsTest {
         () -> { throw new RuntimeException("Field should not be null"); });
     String encryptedFieldTag = EncryptionReflectUtils.getEncryptedFieldTag(annotatedField);
     assertThat(encryptedFieldTag).isEqualTo(ANNOTATION_FIELD_NAME);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testGetFieldHavingFieldName() {
+    Optional<Field> annotatedFieldOptional = Optional.ofNullable(
+        ReflectionUtils.getFieldByName(EncryptionReflectionUtilsTest.class, EncryptionReflectionUtilsTestKeys.value));
+    Field annotatedField = annotatedFieldOptional.<RuntimeException>orElseThrow(
+        () -> { throw new RuntimeException("Field should not be null"); });
+    Field field =
+        EncryptionReflectUtils.getFieldHavingFieldName(Collections.singletonList(annotatedField), ANNOTATION_FIELD_NAME)
+            .<RuntimeException>orElseThrow(() -> { throw new RuntimeException("Field should not be null"); });
+    assertThat(field.getName()).isEqualTo(EncryptionReflectionUtilsTestKeys.value);
   }
 }

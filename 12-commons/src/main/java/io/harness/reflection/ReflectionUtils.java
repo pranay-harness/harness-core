@@ -1,8 +1,9 @@
 package io.harness.reflection;
 
+import static io.harness.exception.WingsException.USER_SRE;
 import static java.lang.String.format;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,7 +94,7 @@ public class ReflectionUtils {
       return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
     }
 
-    throw new WingsException("Invalid accessor method name");
+    throw new InvalidArgumentsException("Invalid accessor method name", USER_SRE);
   }
 
   public static List<Method> getAccessorMethods(Class<?> clazz) {

@@ -4,6 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -27,10 +28,9 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -475,7 +475,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } catch (ClassCastException e) {
       logger.info("Invalid assertion " + ExceptionUtils.getMessage(e), e);
       executionData.setErrorMsg(ASSERTION_ERROR_MSG);
-      throw new InvalidRequestException(ASSERTION_ERROR_MSG, WingsException.USER);
+      throw new InvalidRequestException(ASSERTION_ERROR_MSG, USER);
     } catch (JexlException e) {
       logger.info("Error in httpStateAssertion", e);
 
@@ -490,11 +490,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         errorMsg = getMessage(e);
       }
       executionData.setErrorMsg(errorMsg);
-      throw new InvalidRequestException(errorMsg, WingsException.USER);
+      throw new InvalidRequestException(errorMsg, USER);
     } catch (Exception e) {
       logger.info("Error in httpStateAssertion", e);
       executionData.setErrorMsg(getMessage(e));
-      throw new InvalidRequestException(getMessage(e), WingsException.USER);
+      throw new InvalidRequestException(getMessage(e), USER);
     }
   }
 
@@ -525,7 +525,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     try {
       return URLEncoder.encode(queryString, "UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Couldn't url-encode " + queryString);
+      throw new InvalidArgumentsException("Couldn't url-encode " + queryString, USER, ex);
     }
   }
 
