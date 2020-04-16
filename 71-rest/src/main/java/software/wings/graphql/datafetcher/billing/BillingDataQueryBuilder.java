@@ -268,6 +268,7 @@ public class BillingDataQueryBuilder {
     }
 
     if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 

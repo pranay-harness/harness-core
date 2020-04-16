@@ -32,6 +32,7 @@ type BudgetTableData {
   notifications: [String]
   budgetedAmount: Number
   actualAmount: Number
+  lastUpdatedAt: Number
 }
 
 type BudgetTrendStats {

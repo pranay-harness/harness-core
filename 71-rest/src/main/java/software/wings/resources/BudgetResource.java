@@ -43,8 +43,8 @@ public class BudgetResource {
   @Path("{id}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> clone(
-      @QueryParam("accountId") String accountId, @PathParam("id") String budgetId, String budgetName) {
+  public RestResponse<String> clone(@QueryParam("accountId") String accountId, @PathParam("id") String budgetId,
+      @QueryParam("cloneName") String budgetName) {
     return new RestResponse<>(budgetService.clone(budgetId, budgetName));
   }
 
