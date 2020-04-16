@@ -119,9 +119,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     public static final String EXPIRED = "Deployment Expired";
     public static final String ABORTED = "Deployment Aborted";
     public static final String FAILED = "Deployment Failed";
-    public static final String MODULE = "module";
+    static final String MODULE = "module";
     public static final String DEPLOYMENT = "Deployment";
-    public static final String PRODUCTION = "production";
+    static final String PRODUCTION = "production";
+    static final String DEPLOYMENT_ID = "deployment_id";
+    static final String DEPLOYMENT_TYPE = "deployment_type";
+    static final String WORKFLOW = "workflow";
   }
 
   /**
@@ -362,6 +365,14 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     return EnvironmentType.PROD == workflowExecution.getEnvType();
   }
 
+  private String getDeploymentType(WorkflowExecution workflowExecution) {
+    if (WorkflowType.ORCHESTRATION == workflowExecution.getWorkflowType()) {
+      return Keys.WORKFLOW;
+    } else {
+      return WorkflowType.PIPELINE.name().toLowerCase();
+    }
+  }
+
   @VisibleForTesting
   public void reportDeploymentEventToSegment(WorkflowExecution workflowExecution) {
     try {
@@ -371,15 +382,20 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
       properties.put(Keys.MODULE, Keys.DEPLOYMENT);
       properties.put(Keys.PRODUCTION, Boolean.toString(isProdEnv(workflowExecution)));
+      properties.put(Keys.DEPLOYMENT_ID, workflowExecution.getUuid());
+      if (workflowExecution.getWorkflowType() != null) {
+        properties.put(Keys.DEPLOYMENT_TYPE, getDeploymentType(workflowExecution));
+      }
 
       Map<String, Boolean> integrations = new HashMap<>();
       integrations.put(SegmentHandler.Keys.NATERO, true);
       integrations.put(SegmentHandler.Keys.SALESFORCE, false);
+
       Account account = accountService.getFromCacheWithFallback(accountId);
       EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
       String userId = null;
       if (triggeredBy != null) {
-        userId = triggeredBy.getUuid() != null ? triggeredBy.getUuid() : null;
+        userId = triggeredBy.getUuid();
       }
 
       String deploymentEvent = getSegmentDeploymentEvent(workflowExecution);
@@ -415,7 +431,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
   }
 
-  protected void handlePostExecution(ExecutionContext context) {
+  private void handlePostExecution(ExecutionContext context) {
     // TODO: this is temporary. this should be part of its own callback and with more precise filter
     try {
       barrierService.updateAllActiveBarriers(context.getAppId());
@@ -453,11 +469,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
   }
 
-  public boolean isNeedToNotifyPipeline() {
-    return needToNotifyPipeline;
-  }
-
-  public void setNeedToNotifyPipeline(boolean needToNotifyPipeline) {
+  void setNeedToNotifyPipeline(boolean needToNotifyPipeline) {
     this.needToNotifyPipeline = needToNotifyPipeline;
   }
 }
