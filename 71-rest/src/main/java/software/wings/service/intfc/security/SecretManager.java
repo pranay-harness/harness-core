@@ -2,7 +2,6 @@ package software.wings.service.intfc.security;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -13,6 +12,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -54,6 +54,8 @@ public interface SecretManager extends OwnedByAccount {
 
   PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId, String entityId,
       SettingVariableTypes variableType) throws IllegalAccessException;
+
+  Set<SecretSetupUsage> getSecretUsage(String accountId, String secretId);
 
   List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException;
@@ -131,8 +133,6 @@ public interface SecretManager extends OwnedByAccount {
 
   PageResponse<EncryptedData> listSecretsMappedToAccount(
       String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException;
-
-  List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 
   String saveSecretUsingLocalMode(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);

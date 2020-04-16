@@ -19,7 +19,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.persistence.UuidAware;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
@@ -39,6 +38,7 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -52,6 +52,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class SecretManagerImplTest extends WingsBaseTest {
   private Account account;
@@ -363,7 +364,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
     assertThat(encryptedData.getParents()).hasSize(3);
 
-    List<UuidAware> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
+    Set<SecretSetupUsage> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(usages).isNotNull();
     assertThat(usages.size()).isEqualTo(1);
   }

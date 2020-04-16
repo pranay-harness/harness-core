@@ -48,7 +48,6 @@ import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.collect.TreeBasedTable;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -73,8 +72,6 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
@@ -95,7 +92,6 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -115,15 +111,13 @@ import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParen
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
+import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.AuditServiceHelper;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
@@ -184,13 +178,9 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private AzureVaultService azureVaultService;
   @Inject private CyberArkService cyberArkService;
-  @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
-  @Inject private SettingsService settingsService;
   @Inject private QueuePublisher<KmsTransitionEvent> transitionKmsQueue;
-  @Inject private ServiceVariableService serviceVariableService;
-  @Inject private ConfigService configService;
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
@@ -199,6 +189,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SecretSetupUsageService secretSetupUsageService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -537,6 +528,11 @@ public class SecretManagerImpl implements SecretManager {
     return response;
   }
 
+  @Override
+  public Set<SecretSetupUsage> getSecretUsage(String accountId, String secretId) {
+    return secretSetupUsageService.getSecretUsage(accountId, secretId);
+  }
+
   private Map<String, Long> getUsageLogSizes(
       String accountId, Collection<String> entityIds, SettingVariableTypes variableType) throws IllegalAccessException {
     List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
@@ -676,16 +672,13 @@ public class SecretManagerImpl implements SecretManager {
 
     // 3. Set 'encryptionType' and 'encryptedBy' field of setting attributes based on children encrypted record
     // association
-    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
-    // Create a new list, and only those setting attributes with encrypted record or in SETTING category will be
-    // retained.
     List<SettingAttribute> finalList = new ArrayList<>();
     for (SettingAttribute settingAttribute : settingAttributeList) {
       EncryptedData encryptedData = encryptedDataMap.get(settingAttribute.getUuid());
       if (encryptedData != null) {
         settingAttribute.setEncryptionType(encryptedData.getEncryptionType());
-        settingAttribute.setEncryptedBy(
-            getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
+        settingAttribute.setEncryptedBy(secretManagerConfigService.getSecretManagerName(
+            encryptedData.getKmsId(), encryptedData.getEncryptionType(), accountId));
         finalList.add(settingAttribute);
       } else if (settingAttribute.getCategory() == SettingCategory.SETTING) {
         finalList.add(settingAttribute);
@@ -2023,16 +2016,8 @@ public class SecretManagerImpl implements SecretManager {
 
     if (update && newEncryptedFile != null) {
       // update parent's file size
-      Set<Parent> parents = new HashSet<>();
-      for (EncryptedDataParent encryptedDataParent : encryptedData.getParents()) {
-        parents.add(
-            Parent.builder()
-                .id(encryptedDataParent.getId())
-                .variableType(encryptedDataParent.getType())
-                .encryptionDetail(EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
-                .build());
-      }
-      List<UuidAware> configFiles = fetchParents(accountId, recordId, parents);
+      List<UuidAware> configFiles =
+          getSecretUsage(accountId, recordId).stream().map(SecretSetupUsage::getEntity).collect(Collectors.toList());
       configFiles.forEach(configFile -> {
         ((ConfigFile) configFile).setSize(uploadFileSize);
         wingsPersistence.save((ConfigFile) configFile);
@@ -2183,12 +2168,11 @@ public class SecretManagerImpl implements SecretManager {
     Map<String, Long> usageLogSizes = getUsageLogSizes(accountId, encryptedDataIds, SettingVariableTypes.SECRET_TEXT);
     Map<String, Long> changeLogSizes = getChangeLogSizes(accountId, encryptedDataIds, SettingVariableTypes.SECRET_TEXT);
 
-    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
     for (EncryptedData encryptedData : encryptedDataList) {
       String entityId = encryptedData.getUuid();
 
-      encryptedData.setEncryptedBy(
-          getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
+      encryptedData.setEncryptedBy(secretManagerConfigService.getSecretManagerName(
+          encryptedData.getKmsId(), encryptedData.getEncryptionType(), accountId));
       int secretUsageSize = encryptedData.getParents().size();
       encryptedData.setSetupUsage(secretUsageSize);
 
@@ -2275,31 +2259,6 @@ public class SecretManagerImpl implements SecretManager {
     return pageResponse;
   }
 
-  @Override
-  public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
-    EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
-    checkNotNull(secretText, "could not find secret with id " + secretTextId);
-    if (isEmpty(secretText.getParents())) {
-      return Collections.emptyList();
-    }
-
-    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
-    Set<Parent> parents = new HashSet<>();
-    for (EncryptedDataParent encryptedDataParent : secretText.getParents()) {
-      parents.add(Parent.builder()
-                      .id(encryptedDataParent.getId())
-                      .variableType(encryptedDataParent.getType())
-                      .encryptionDetail(EncryptionDetail.builder()
-                                            .encryptionType(secretText.getEncryptionType())
-                                            .secretManagerName(getSecretManagerName(secretText.getKmsId(),
-                                                secretText.getEncryptionType(), secretManagerConfigMap))
-                                            .build())
-                      .build());
-    }
-
-    return fetchParents(accountId, secretTextId, parents);
-  }
-
   private List<String> getSecretIds(String accountId, Collection<String> entityIds, SettingVariableTypes variableType)
       throws IllegalAccessException {
     List<String> secretIds = new ArrayList<>();
@@ -2347,165 +2306,6 @@ public class SecretManagerImpl implements SecretManager {
     return secretIds;
   }
 
-  private List<UuidAware> fetchParents(String accountId, String entityId, Set<Parent> parents) {
-    TreeBasedTable<SettingVariableTypes, EncryptionDetail, List<Parent>> parentByTypes = TreeBasedTable.create();
-    parents.forEach(parent -> {
-      List<Parent> parentList = parentByTypes.get(parent.getVariableType(), parent.getEncryptionDetail());
-      if (parentList == null) {
-        parentList = new ArrayList<>();
-        parentByTypes.put(parent.getVariableType(), parent.getEncryptionDetail(), parentList);
-      }
-      parentList.add(parent);
-    });
-
-    List<UuidAware> rv = new ArrayList<>();
-    parentByTypes.cellSet().forEach(cell -> {
-      List<String> parentIds = cell.getValue().stream().map(Parent::getId).collect(Collectors.toList());
-      switch (cell.getRowKey()) {
-        case KMS:
-          EncryptionConfig encryptionConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
-          if (encryptionConfig instanceof KmsConfig) {
-            rv.add((KmsConfig) encryptionConfig);
-          }
-          break;
-        case SERVICE_VARIABLE:
-          List<ServiceVariable> serviceVariables = serviceVariableService
-                                                       .list(aPageRequest()
-                                                                 .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
-                                                                 .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                                                 .build())
-                                                       .getResponse();
-          serviceVariables = serviceVariables.stream()
-                                 .filter(serviceVariable
-                                     -> serviceVariable.getEncryptedValue() != null
-                                         && serviceVariable.getEncryptedValue().equals(entityId))
-                                 .collect(Collectors.toList());
-          serviceVariables.forEach(serviceVariable -> {
-            serviceVariable.setValue(SECRET_MASK.toCharArray());
-            if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-              ServiceTemplate serviceTemplate =
-                  wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
-              checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
-              serviceVariable.setServiceId(serviceTemplate.getServiceId());
-            }
-            serviceVariable.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            serviceVariable.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(serviceVariables);
-          break;
-
-        case CONFIG_FILE:
-          List<ConfigFile> configFiles = configService
-                                             .list(aPageRequest()
-                                                       .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
-                                                       .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                                       .build())
-                                             .getResponse();
-          configFiles =
-              configFiles.stream()
-                  .filter(configFile
-                      -> configFile.getEncryptedFileId() != null && configFile.getEncryptedFileId().equals(entityId))
-                  .collect(Collectors.toList());
-          configFiles.forEach(configFile -> {
-            if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-              ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
-              checkNotNull(serviceTemplate, "can't find service template " + configFile);
-              configFile.setServiceId(serviceTemplate.getServiceId());
-            }
-            configFile.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            configFile.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(configFiles);
-          break;
-
-        case VAULT:
-          List<VaultConfig> vaultConfigs = wingsPersistence.createQuery(VaultConfig.class)
-                                               .field(ID_KEY)
-                                               .in(parentIds)
-                                               .field(ACCOUNT_ID_KEY)
-                                               .equal(accountId)
-                                               .asList();
-          vaultConfigs.forEach(vaultConfig -> {
-            vaultConfig.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            vaultConfig.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(vaultConfigs);
-          break;
-
-        case AWS_SECRETS_MANAGER:
-          List<AwsSecretsManagerConfig> secretsManagerConfigs =
-              wingsPersistence.createQuery(AwsSecretsManagerConfig.class)
-                  .field(ID_KEY)
-                  .in(parentIds)
-                  .field(ACCOUNT_ID_KEY)
-                  .equal(accountId)
-                  .asList();
-          secretsManagerConfigs.forEach(secretsManagerConfig -> {
-            secretsManagerConfig.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            secretsManagerConfig.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(secretsManagerConfigs);
-          break;
-
-        case CYBERARK:
-          List<CyberArkConfig> cyberArkConfigs = wingsPersistence.createQuery(CyberArkConfig.class)
-                                                     .field(ID_KEY)
-                                                     .in(parentIds)
-                                                     .field(ACCOUNT_ID_KEY)
-                                                     .equal(accountId)
-                                                     .asList();
-          cyberArkConfigs.forEach(cyberArkConfig -> {
-            cyberArkConfig.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            cyberArkConfig.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(cyberArkConfigs);
-          break;
-
-        default:
-          List<SettingAttribute> settingAttributes = settingsService
-                                                         .list(aPageRequest()
-                                                                   .addFilter(ID_KEY, Operator.IN, parentIds.toArray())
-                                                                   .addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                                                   .build(),
-                                                             null, null)
-                                                         .getResponse();
-          settingAttributes.forEach(settingAttribute -> {
-            settingAttribute.setEncryptionType(cell.getColumnKey().getEncryptionType());
-            settingAttribute.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
-          });
-          rv.addAll(settingAttributes);
-          break;
-      }
-    });
-    return rv;
-  }
-
-  private Map<String, SecretManagerConfig> getSecretManagerMap(String accountId) {
-    Map<String, SecretManagerConfig> result = new HashMap<>();
-    List<SecretManagerConfig> secretManagerConfigs =
-        secretManagerConfigService.listSecretManagers(accountId, true, false);
-    for (SecretManagerConfig secretManagerConfig : secretManagerConfigs) {
-      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
-    }
-    List<SecretManagerConfig> globalSecretManagers = secretManagerConfigService.getAllGlobalSecretManagers();
-    for (SecretManagerConfig secretManagerConfig : globalSecretManagers) {
-      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
-    }
-    return result;
-  }
-
-  private String getSecretManagerName(
-      String kmsId, EncryptionType encryptionType, Map<String, SecretManagerConfig> secretManagerConfigMap) {
-    if (encryptionType == LOCAL) {
-      return HARNESS_DEFAULT_SECRET_MANAGER;
-    } else if (secretManagerConfigMap.containsKey(kmsId)) {
-      return secretManagerConfigMap.get(kmsId).getName();
-    } else {
-      logger.warn("Secret manager with id {} and type {} can't be resolved.", kmsId, encryptionType);
-      return null;
-    }
-  }
-
   private static boolean containsIllegalCharacters(String name) {
     String[] parts = name.split(ILLEGAL_CHARACTERS, 2);
     return parts.length > 1;
@@ -2520,31 +2320,13 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  @Data
-  @Builder
-  @EqualsAndHashCode(exclude = {"encryptionDetail", "variableType"})
-  private static class Parent {
-    private String id;
-    private EncryptionDetail encryptionDetail;
-    private SettingVariableTypes variableType;
-  }
-
-  @Data
-  @Builder
-  private static class EncryptionDetail implements Comparable<EncryptionDetail> {
-    private EncryptionType encryptionType;
-    private String secretManagerName;
-
-    @Override
-    public int compareTo(EncryptionDetail o) {
-      return encryptionType.compareTo(o.encryptionType);
-    }
-  }
-
   // Creating a map of appId/envIds which are referring the specific secret through service variable etc.
   private Map<String, Set<String>> getSetupAppEnvMap(EncryptedData encryptedData) {
     Map<String, Set<String>> referredAppEnvMap = new HashMap<>();
-    List<UuidAware> secretUsages = getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid());
+    List<UuidAware> secretUsages = getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid())
+                                       .stream()
+                                       .map(SecretSetupUsage::getEntity)
+                                       .collect(Collectors.toList());
     for (UuidAware uuidAware : secretUsages) {
       String appId = null;
       String envId = null;

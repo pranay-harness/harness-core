@@ -40,7 +40,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
-import io.harness.persistence.UuidAware;
 import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptedRecord;
@@ -86,6 +85,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AccountService;
@@ -120,6 +120,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -1048,8 +1049,9 @@ public class SecretTextTest extends WingsBaseTest {
       serviceVariable.setEncryptionType(encryptionType);
       serviceVariables.add(serviceVariable);
 
-      List<UuidAware> usages = secretManagementResource.getSecretUsage(accountId, secretId).getResource();
-      assertThat(new HashSet<>(usages)).isEqualTo(serviceVariables);
+      Set<SecretSetupUsage> usages = secretManagementResource.getSecretSetupUsage(accountId, secretId).getResource();
+      assertThat(usages.stream().map(SecretSetupUsage::getEntity).collect(Collectors.toSet()))
+          .isEqualTo(serviceVariables);
     }
 
     Set<ServiceVariable> remainingVariables = new HashSet<>(serviceVariables);
@@ -1057,8 +1059,9 @@ public class SecretTextTest extends WingsBaseTest {
       remainingVariables.remove(serviceVariable);
       wingsPersistence.delete(ServiceVariable.class, serviceVariable.getUuid());
 
-      List<UuidAware> usages = secretManagementResource.getSecretUsage(accountId, secretId).getResource();
-      assertThat(new HashSet<>(usages)).isEqualTo(remainingVariables);
+      Set<SecretSetupUsage> usages = secretManagementResource.getSecretSetupUsage(accountId, secretId).getResource();
+      assertThat(usages.stream().map(SecretSetupUsage::getEntity).collect(Collectors.toSet()))
+          .isEqualTo(remainingVariables);
     }
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)

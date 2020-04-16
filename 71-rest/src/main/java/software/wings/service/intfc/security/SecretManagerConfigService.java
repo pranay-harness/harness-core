@@ -11,6 +11,8 @@ import java.util.List;
 public interface SecretManagerConfigService {
   String save(SecretManagerConfig secretManagerConfig);
 
+  String getSecretManagerName(String kmsId, EncryptionType encryptionType, String accountId);
+
   EncryptionType getEncryptionType(String accountId);
 
   EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId);
