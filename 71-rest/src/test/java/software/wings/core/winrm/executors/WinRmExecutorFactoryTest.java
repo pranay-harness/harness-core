@@ -1,6 +1,6 @@
 package software.wings.core.winrm.executors;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.DINESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -15,7 +15,7 @@ public class WinRmExecutorFactoryTest extends CategoryTest {
   @Mock WinRmSessionConfig winRmSessionConfig;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldGetWinRmExecutor() {
     assertThat(winRmExecutorFactory.getExecutor(winRmSessionConfig)).isNotNull().isInstanceOf(WinRmExecutor.class);

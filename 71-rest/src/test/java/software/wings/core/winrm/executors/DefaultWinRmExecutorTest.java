@@ -1,6 +1,6 @@
 package software.wings.core.winrm.executors;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.DINESH;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
@@ -33,7 +33,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldCopyConfigFile() {
     doReturn(CommandExecutionStatus.SUCCESS).when(defaultWinRmExecutor).copyConfigFiles(configFileMetaData);

@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -370,7 +369,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   public void testShouldDownloadArtifactThroughPowerShell(ArtifactStreamType artifactStreamType) {
@@ -407,7 +406,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
@@ -432,7 +431,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   @Parameters(method = "getScriptType")
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {

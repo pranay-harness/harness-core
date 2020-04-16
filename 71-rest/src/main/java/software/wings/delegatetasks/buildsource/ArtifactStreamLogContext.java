@@ -13,4 +13,8 @@ public class ArtifactStreamLogContext extends AutoLogContext {
   public ArtifactStreamLogContext(String artifactStreamId, String artifactStreamType, OverrideBehavior behavior) {
     super(ImmutableMap.of(ID, artifactStreamId, ARTIFACT_STREAM_TYPE, artifactStreamType), behavior);
   }
+
+  public ArtifactStreamLogContext(String artifactStreamId, OverrideBehavior behavior) {
+    super(ImmutableMap.of(ID, artifactStreamId), behavior);
+  }
 }
