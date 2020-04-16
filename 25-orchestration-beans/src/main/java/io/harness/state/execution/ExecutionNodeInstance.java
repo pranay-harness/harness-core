@@ -1,6 +1,7 @@
 package io.harness.state.execution;
 
 import io.harness.annotations.Redesign;
+import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -28,7 +29,7 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   @Indexed long createdAt;
   @NotNull Ambiance ambiance;
   @NotNull ExecutionNode node;
-  @Indexed @NotNull String executionInstanceId;
+  @NotNull ExecutionMode mode;
 
   // Mutable
   long lastUpdatedAt;
