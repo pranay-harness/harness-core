@@ -31,6 +31,7 @@ import io.harness.testframework.framework.utils.TestUtils;
 import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -513,6 +514,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ABHINAV)
   @Category(FunctionalTests.class)
+  @Ignore("Temporary disabled, seems dependent on index creation")
   public void testDuplicateFolderSave() {
     TemplateFolder templateFolder =
         templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);

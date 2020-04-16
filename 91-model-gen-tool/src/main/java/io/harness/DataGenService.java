@@ -156,11 +156,11 @@ public class DataGenService {
     templateGalleryService.copyHarnessTemplates();
 
     {
-      final Seed seed = new Seed(0);
+      Seed seed = new Seed(0);
       accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.RBAC_TEST);
     }
 
-    final Seed seed = new Seed(0);
+    Seed seed = new Seed(0);
 
     accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.HARNESS_TEST);
 
@@ -198,11 +198,11 @@ public class DataGenService {
 
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE).getDB().dropDatabase();
-    IndexManager.ensureIndex(primaryDatastore, morphia);
+    IndexManager.ensureIndexes(primaryDatastore, morphia);
   }
 
   private void createGlobalSettings(Account account) {
-    final Seed seed = new Seed(0);
+    Seed seed = new Seed(0);
     String accountId = account.getUuid();
     Owners owners = new Owners();
     owners.add(account);
@@ -273,7 +273,7 @@ public class DataGenService {
             .build();
     wingsPersistence.save(awsNonProdAttribute);
 
-    final SettingAttribute hostConnection =
+    SettingAttribute hostConnection =
         aSettingAttribute()
             .withAccountId(accountId)
             .withAppId(GLOBAL_APP_ID)
@@ -294,9 +294,9 @@ public class DataGenService {
   }
 
   private void createTestApplication(Account account) {
-    final Seed seed = new Seed(0);
+    Seed seed = new Seed(0);
 
-    final Owners owners = ownerManager.create();
+    Owners owners = ownerManager.create();
 
     owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
 
@@ -350,7 +350,7 @@ public class DataGenService {
                         .build()))
             .build());
 
-    final Owners terraformOwners = ownerManager.create();
+    Owners terraformOwners = ownerManager.create();
     workflowGenerator.ensurePredefined(seed, terraformOwners, Workflows.TERRAFORM);
   }
 

@@ -85,7 +85,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public void isHealthy() {
-    final List<AdvancedDatastore> datastores = datastoreMap.values().stream().distinct().collect(toList());
+    List<AdvancedDatastore> datastores = datastoreMap.values().stream().distinct().collect(toList());
     for (AdvancedDatastore datastore : datastores) {
       datastore.getDB().getStats();
     }
@@ -104,7 +104,7 @@ public class MongoPersistence implements HPersistence {
   @Override
   public AdvancedDatastore getDatastore(Store store) {
     return datastoreMap.computeIfAbsent(store.getName(), key -> {
-      final Info info = storeInfo.get(store.getName());
+      Info info = storeInfo.get(store.getName());
       if (info == null || isEmpty(info.getUri())) {
         return getDatastore(DEFAULT_STORE);
       }
@@ -124,7 +124,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public DBCollection getCollection(Class cls) {
-    final AdvancedDatastore datastore = getDatastore(cls);
+    AdvancedDatastore datastore = getDatastore(cls);
     return datastore.getDB().getCollection(datastore.getCollection(cls).getName());
   }
 
@@ -138,7 +138,7 @@ public class MongoPersistence implements HPersistence {
     classSet.add(cls);
     locMorphia.map(classSet);
 
-    IndexManager.ensureIndex(datastore, locMorphia);
+    IndexManager.ensureIndexes(datastore, locMorphia);
   }
 
   @Override
@@ -187,7 +187,7 @@ public class MongoPersistence implements HPersistence {
       }
     }
 
-    final long currentTime = currentTimeMillis();
+    long currentTime = currentTimeMillis();
     if (entity instanceof CreatedByAware) {
       CreatedByAware createdByAware = (CreatedByAware) entity;
       if (createdByAware.getCreatedBy() == null) {
@@ -207,7 +207,7 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> String save(T entity) {
     onSave(entity);
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> datastore.save(entity).getId().toString());
   }
 
@@ -236,7 +236,7 @@ public class MongoPersistence implements HPersistence {
       return;
     }
 
-    final AdvancedDatastore datastore = getDatastore(ts.get(0));
+    AdvancedDatastore datastore = getDatastore(ts.get(0));
 
     InsertOptions insertOptions = new InsertOptions();
     insertOptions.continueOnError(true);
@@ -250,14 +250,14 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> String insert(T entity) {
     onSave(entity);
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> datastore.insert(entity).getId().toString());
   }
 
   @Override
   public <T extends PersistentEntity> String insertIgnoringDuplicateKeys(T entity) {
     onSave(entity);
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     try {
       return HPersistence.retry(() -> datastore.insert(entity).getId().toString());
     } catch (DuplicateKeyException ignore) {
@@ -277,7 +277,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
-    final AdvancedDatastore datastore = getDatastore(cls);
+    AdvancedDatastore datastore = getDatastore(cls);
     return HPersistence.retry(() -> {
       WriteResult result = datastore.delete(cls, uuid);
       return !(result == null || result.getN() == 0);
@@ -286,7 +286,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> boolean delete(Query<T> query) {
-    final AdvancedDatastore datastore = getDatastore(query.getEntityClass());
+    AdvancedDatastore datastore = getDatastore(query.getEntityClass());
     return HPersistence.retry(() -> {
       WriteResult result = datastore.delete(query);
       return !(result == null || result.getN() == 0);
@@ -295,7 +295,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> boolean delete(T entity) {
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> {
       WriteResult result = datastore.delete(entity);
       return !(result == null || result.getN() == 0);
@@ -308,7 +308,7 @@ public class MongoPersistence implements HPersistence {
     // TODO: add encryption handling; right now no encrypted classes use upsert
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
 
-    final long currentTime = currentTimeMillis();
+    long currentTime = currentTimeMillis();
 
     if (CreatedByAware.class.isAssignableFrom(query.getEntityClass())) {
       setUnsetOnInsert(updateOperations, SampleEntityKeys.createdBy, userProvider.activeUser());
@@ -320,7 +320,7 @@ public class MongoPersistence implements HPersistence {
 
     onUpdate(query, updateOperations, currentTime);
     // TODO: this ignores the read preferences in the query
-    final AdvancedDatastore datastore = getDatastore(query.getEntityClass());
+    AdvancedDatastore datastore = getDatastore(query.getEntityClass());
     return HPersistence.retry(() -> datastore.findAndModify(query, updateOperations, options));
   }
 
@@ -345,7 +345,7 @@ public class MongoPersistence implements HPersistence {
     // TODO: add encryption handling; right now no encrypted classes use update
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     onEntityUpdate(entity, currentTimeMillis());
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> datastore.update(entity, ops));
   }
 
@@ -354,7 +354,7 @@ public class MongoPersistence implements HPersistence {
     // TODO: add encryption handling; right now no encrypted classes use update
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     onUpdate(updateQuery, updateOperations, currentTimeMillis());
-    final AdvancedDatastore datastore = getDatastore(updateQuery.getEntityClass());
+    AdvancedDatastore datastore = getDatastore(updateQuery.getEntityClass());
     return HPersistence.retry(() -> datastore.update(updateQuery, updateOperations));
   }
 
@@ -362,21 +362,21 @@ public class MongoPersistence implements HPersistence {
   public <T extends PersistentEntity> T findAndModify(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
     onUpdate(query, updateOperations, currentTimeMillis());
-    final AdvancedDatastore datastore = getDatastore(query.getEntityClass());
+    AdvancedDatastore datastore = getDatastore(query.getEntityClass());
     return HPersistence.retry(() -> datastore.findAndModify(query, updateOperations, findAndModifyOptions));
   }
 
   @Override
   public <T extends PersistentEntity> T findAndModifySystemData(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
-    final AdvancedDatastore datastore = getDatastore(query.getEntityClass());
+    AdvancedDatastore datastore = getDatastore(query.getEntityClass());
     return HPersistence.retry(() -> datastore.findAndModify(query, updateOperations, findAndModifyOptions));
   }
 
   @Override
   public <T extends PersistentEntity> String merge(T entity) {
     onEntityUpdate(entity, currentTimeMillis());
-    final AdvancedDatastore datastore = getDatastore(entity);
+    AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> datastore.merge(entity).getId().toString());
   }
 }
