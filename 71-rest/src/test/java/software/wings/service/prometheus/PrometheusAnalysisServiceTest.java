@@ -115,10 +115,9 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
 
     when(apmDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
         .thenThrow(new DataCollectionException("unsuccessful call"));
-    VerificationNodeDataSetupResponse setupResponse = prometheusAnalysisService.getMetricsWithDataForNode(nodeData);
-
-    assertThat(setupResponse).isNotNull();
-    assertThat(setupResponse.isProviderReachable()).isFalse();
+    assertThatThrownBy(() -> prometheusAnalysisService.getMetricsWithDataForNode(nodeData))
+        .isInstanceOf(DataCollectionException.class)
+        .hasMessage("unsuccessful call");
   }
 
   private PrometheusMetricDataResponse createResponse() {

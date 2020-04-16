@@ -80,10 +80,6 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeries =
         getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, hostName);
 
-    if (metricDataResponseByTimeSeries == null) {
-      // exception occurred during the call, provider not reachable.
-      return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
-    }
     PrometheusMetricDataResponse responseDataFromDelegateForServiceLevel =
         metricDataResponseByTimeSeries.values().iterator().next();
     boolean isLoadPresentForServiceLevel = responseDataFromDelegateForServiceLevel != null
@@ -173,18 +169,13 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
                                         .appId(GLOBAL_APP_ID)
                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                         .build();
-      try {
-        final PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
-        APMValidateCollectorConfig apmValidateCollectorConfig = prometheusConfig.createAPMValidateCollectorConfig(url);
-        final String validateResponseJson = delegateProxyFactory.get(APMDelegateService.class, taskContext)
-                                                .fetch(apmValidateCollectorConfig, apiCallLog);
-        PrometheusMetricDataResponse response =
-            JsonUtils.asObject(validateResponseJson, PrometheusMetricDataResponse.class);
-        metricDataResponseByTimeSeries.put(timeSeries, response);
-      } catch (Exception e) {
-        logger.info("Exception while trying to collect data for prometheus test: ", e);
-        return null;
-      }
+      final PrometheusConfig prometheusConfig = (PrometheusConfig) settingAttribute.getValue();
+      APMValidateCollectorConfig apmValidateCollectorConfig = prometheusConfig.createAPMValidateCollectorConfig(url);
+      final String validateResponseJson =
+          delegateProxyFactory.get(APMDelegateService.class, taskContext).fetch(apmValidateCollectorConfig, apiCallLog);
+      PrometheusMetricDataResponse response =
+          JsonUtils.asObject(validateResponseJson, PrometheusMetricDataResponse.class);
+      metricDataResponseByTimeSeries.put(timeSeries, response);
     }
     return metricDataResponseByTimeSeries;
   }
