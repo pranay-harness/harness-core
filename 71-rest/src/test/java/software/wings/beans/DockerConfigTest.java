@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -12,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class DockerConfigTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   // test with a URL that doesn't end on a / and make sure a / gets added
   public void testConstructorWithUrlWithoutSlash() {

@@ -4,9 +4,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -430,7 +430,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and get summary/details.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -582,7 +582,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on connect timeout.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
     context.pushContextElement(HostElement.builder().hostName("www.google.com").build());

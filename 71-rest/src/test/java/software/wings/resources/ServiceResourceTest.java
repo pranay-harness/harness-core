@@ -2,8 +2,8 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
@@ -174,7 +174,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should delete command.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(RESOURCE_SERVICE.deleteCommand(APP_ID, SERVICE_ID, "START")).thenReturn(aSERVICE);

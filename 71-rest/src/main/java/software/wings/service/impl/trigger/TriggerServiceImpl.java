@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
@@ -93,12 +94,15 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.TriggerLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
@@ -474,62 +478,116 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void triggerExecutionPostArtifactCollection(
       String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
-    triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
-      logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
-          artifactStreamId);
-      if (trigger.isDisabled()) {
-        logger.info("Trigger rejected due to slowness in the product");
-        return;
-      }
-      ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
-      List<Artifact> artifacts = new ArrayList<>();
-      if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
-        logger.info("No artifact filter set. Triggering with the collected artifact {}",
-            collectedArtifacts.get(collectedArtifacts.size() - 1).getUuid());
-        artifacts.add(collectedArtifacts.get(collectedArtifacts.size() - 1));
-      } else {
-        logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
-            artifactTriggerCondition.getArtifactFilter());
-        List<Artifact> matchedArtifacts =
-            collectedArtifacts.stream()
-                .filter(artifact
-                    -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
-                        artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
-                .collect(Collectors.toList());
-        if (isNotEmpty(matchedArtifacts)) {
-          logger.info(
-              "Matched artifacts {}. Selecting the latest artifact", matchedArtifacts.get(matchedArtifacts.size() - 1));
-          artifacts.add(matchedArtifacts.get(matchedArtifacts.size() - 1));
-        } else {
-          logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+    try (AutoLogContext ignore1 = new AppLogContext(appId, OVERRIDE_ERROR);
+         AutoLogContext ignore3 = new ArtifactStreamLogContext(artifactStreamId, OVERRIDE_ERROR)) {
+      triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
+        try (AutoLogContext ignore2 = new TriggerLogContext(trigger.getUuid(), OVERRIDE_ERROR)) {
+          logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(),
+              trigger.getUuid(), artifactStreamId);
+          if (trigger.isDisabled()) {
+            logger.info("Trigger rejected due to slowness in the product");
+            return;
+          }
+          ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+          List<Artifact> artifacts = new ArrayList<>();
+          if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
+            logger.info("No artifact filter set. Triggering with the collected artifact {}",
+                collectedArtifacts.get(collectedArtifacts.size() - 1).getUuid());
+            artifacts.add(collectedArtifacts.get(collectedArtifacts.size() - 1));
+          } else {
+            logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+                artifactTriggerCondition.getArtifactFilter());
+            List<Artifact> matchedArtifacts =
+                collectedArtifacts.stream()
+                    .filter(artifact
+                        -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
+                            artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
+                    .collect(Collectors.toList());
+            if (isNotEmpty(matchedArtifacts)) {
+              logger.info("Matched artifacts {}. Selecting the latest artifact",
+                  matchedArtifacts.get(matchedArtifacts.size() - 1));
+              artifacts.add(matchedArtifacts.get(matchedArtifacts.size() - 1));
+            } else {
+              logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+            }
+          }
+          if (isEmpty(artifacts)) {
+            logger.warn(
+                "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
+                artifactTriggerCondition);
+            return;
+          }
+          String accountId = appService.getAccountIdByAppId(appId);
+          boolean preferArtifactSelectionOverTriggeringArtifact =
+              featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, accountId);
+          if (preferArtifactSelectionOverTriggeringArtifact) {
+            List<Artifact> artifactsFromSelection = new ArrayList<>();
+            if (isNotEmpty(trigger.getArtifactSelections())) {
+              logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+              addArtifactsFromSelectionsTriggeringArtifactSource(
+                  trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
+            }
+            if (isNotEmpty(artifactsFromSelection)) {
+              logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+                  artifactsFromSelection.stream().map(Artifact::getUuid).collect(toList()));
+              try {
+                triggerDeployment(artifactsFromSelection, trigger, null);
+              } catch (WingsException exception) {
+                ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+              }
+            } else {
+              logger.info("No Artifacts matched. Hence Skipping the deployment");
+              return;
+            }
+          } else {
+            if (isNotEmpty(trigger.getArtifactSelections())) {
+              logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+              addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
+            }
+            if (isNotEmpty(artifacts)) {
+              logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+                  artifacts.stream().map(Artifact::getUuid).collect(toList()));
+              try {
+                triggerDeployment(artifacts, trigger, null);
+              } catch (WingsException exception) {
+                exception.addContext(Application.class, trigger.getAppId());
+                exception.addContext(ArtifactStream.class, artifactStreamId);
+                exception.addContext(Trigger.class, trigger.getUuid());
+                ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+              }
+            } else {
+              logger.info("No Artifacts matched. Hence Skipping the deployment");
+              return;
+            }
+          }
         }
-      }
-      if (isEmpty(artifacts)) {
-        logger.warn(
-            "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
-            artifactTriggerCondition);
-        return;
-      }
-      if (isNotEmpty(trigger.getArtifactSelections())) {
-        logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
-        addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
-      }
-      if (isNotEmpty(artifacts)) {
-        logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
-            artifacts.stream().map(Artifact::getUuid).collect(toList()));
-        try {
-          triggerDeployment(artifacts, trigger, null);
-        } catch (WingsException exception) {
-          exception.addContext(Application.class, trigger.getAppId());
-          exception.addContext(ArtifactStream.class, artifactStreamId);
-          exception.addContext(Trigger.class, trigger.getUuid());
-          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-        }
+      });
+    }
+  }
+
+  private void addArtifactsFromSelectionsTriggeringArtifactSource(
+      String appId, Trigger trigger, List<Artifact> artifactSelections, List<Artifact> triggeringArtifacts) {
+    if (isEmpty(trigger.getArtifactSelections())) {
+      artifactSelections.addAll(triggeringArtifacts);
+      return;
+    }
+    trigger.getArtifactSelections().forEach(artifactSelection -> {
+      if (artifactSelection.getType() == LAST_COLLECTED) {
+        addLastCollectedArtifact(appId, artifactSelection, artifactSelections);
+      } else if (artifactSelection.getType() == LAST_DEPLOYED) {
+        addLastDeployedArtifacts(
+            appId, artifactSelection.getWorkflowId(), artifactSelection.getServiceId(), artifactSelections);
       } else {
-        logger.info("No Artifacts matched. Hence Skipping the deployment");
-        return;
+        addTriggeringArtifacts(artifactSelections, artifactSelection.getServiceId(), triggeringArtifacts);
       }
     });
+  }
+
+  private void addTriggeringArtifacts(
+      List<Artifact> artifactSelections, String serviceId, List<Artifact> triggeringArtifacts) {
+    artifactSelections.addAll(triggeringArtifacts.stream()
+                                  .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
+                                  .collect(toList()));
   }
 
   private void triggerExecutionPostPipelineCompletion(String appId, String sourcePipelineId) {
