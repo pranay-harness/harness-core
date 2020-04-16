@@ -72,6 +72,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
@@ -2115,7 +2116,7 @@ public class SecretManagerImpl implements SecretManager {
 
     // Increase the batch fetch page size to 2 times the requested, just in case some of the data
     // are filtered out based on usage restrictions. Or decrease the batch fetch size to 1000 if
-    // the requested page size is too big (>1000);
+    // the requested page size is too big such as greater than 1000
     int inputPageSize = pageRequest.getPageSize();
     if (2 * inputPageSize > PageRequest.DEFAULT_UNLIMITED) {
       batchPageSize = PageRequest.DEFAULT_UNLIMITED;
@@ -2390,6 +2391,65 @@ public class SecretManagerImpl implements SecretManager {
 
     usageRestrictionsService.validateSetupUsagesOnUsageRestrictionsUpdate(
         encryptedData.getAccountId(), setupAppEnvMap, usageRestrictions);
+  }
+
+  private Set<EncryptedData> fetchSecretsFromSecretIds(@NonNull Set<String> secretIds, @NonNull String accountId) {
+    Set<EncryptedData> encryptedDataSet = new HashSet<>();
+    try (HIterator<EncryptedData> iterator = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                                                                 .field(ID_KEY)
+                                                                 .in(secretIds)
+                                                                 .field(ACCOUNT_ID_KEY)
+                                                                 .equal(accountId)
+                                                                 .fetch())) {
+      while (iterator.hasNext()) {
+        encryptedDataSet.add(iterator.next());
+      }
+    }
+    Set<String> returnedParentIds = encryptedDataSet.stream().map(Base::getUuid).collect(Collectors.toSet());
+    Set<String> notFoundIds = Sets.difference(secretIds, returnedParentIds);
+    if (isNotEmpty(notFoundIds)) {
+      throw new SecretManagementException("Could not find secrets with ids ".concat(String.join(", ", notFoundIds)));
+    }
+
+    return encryptedDataSet;
+  }
+
+  public boolean canUseSecretsInAppAndEnv(
+      @NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest, String envIdFromRequest) {
+    Set<EncryptedData> encryptedDataSet = fetchSecretsFromSecretIds(secretIds, accountId);
+    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
+        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
+    Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
+    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
+
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMapForAccount = envService.getAppIdEnvMap(appsByAccountId);
+
+    for (EncryptedData encryptedData : encryptedDataSet) {
+      if (!usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
+              encryptedData.getUsageRestrictions(), restrictionsFromUserPermissions, appEnvMapFromPermissions,
+              appIdEnvMapForAccount)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean canUseSecretsInAppAndEnv(@NonNull Set<String> secretIds, @NonNull String accountId,
+      String appIdFromRequest, String envIdFromRequest, boolean isAccountAdmin,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions,
+      Map<String, List<Base>> appIdEnvMapForAccount) {
+    Set<EncryptedData> encryptedDataSet = fetchSecretsFromSecretIds(secretIds, accountId);
+
+    for (EncryptedData encryptedData : encryptedDataSet) {
+      if (!usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
+              encryptedData.getUsageRestrictions(), restrictionsFromUserPermissions, appEnvMapFromPermissions,
+              appIdEnvMapForAccount)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private boolean deleteAndReportForAuditRecord(String accountId, EncryptedData encryptedData) {
