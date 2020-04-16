@@ -69,11 +69,11 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
     dataCollectionInfo = buildDataCollectionInfo();
 
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

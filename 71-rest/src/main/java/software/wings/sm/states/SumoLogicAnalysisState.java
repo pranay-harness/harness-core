@@ -137,11 +137,11 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       String waitId = generateUuid();
       String infrastructureMappingId = context.fetchInfraMappingId();
       delegateTasks.add(DelegateTask.builder()
-                            .async(true)
                             .accountId(appService.get(context.getAppId()).getAccountId())
                             .appId(context.getAppId())
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.SUMO_COLLECT_LOG_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 60))

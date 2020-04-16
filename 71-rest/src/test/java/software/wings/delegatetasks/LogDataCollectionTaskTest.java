@@ -61,11 +61,11 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     dataCollectionInfo = getDataCollectionInfo(logDefinition, hosts);
 
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

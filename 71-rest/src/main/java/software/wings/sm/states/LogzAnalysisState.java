@@ -91,11 +91,11 @@ public class LogzAnalysisState extends ElkAnalysisState {
 
       String waitId = generateUuid();
       delegateTasks.add(DelegateTask.builder()
-                            .async(true)
                             .accountId(appService.get(context.getAppId()).getAccountId())
                             .appId(context.getAppId())
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.LOGZ_COLLECT_LOG_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))

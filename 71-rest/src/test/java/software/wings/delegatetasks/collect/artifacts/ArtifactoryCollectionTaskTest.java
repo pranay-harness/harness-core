@@ -44,11 +44,11 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
   private DelegateTask collectionTask =
       DelegateTask.builder()
-          .async(true)
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("123456789")
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
                     .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
                         artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",

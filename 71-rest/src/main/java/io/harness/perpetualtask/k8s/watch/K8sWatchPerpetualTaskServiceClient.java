@@ -97,9 +97,9 @@ public class K8sWatchPerpetualTaskServiceClient
         new K8sTaskParameters("", "", "", "", k8sClusterConfig, "", "", 0, APPLY, null);
 
     return DelegateTask.builder()
-        .async(false)
         .accountId(accountId)
         .data(TaskData.builder()
+                  .async(false)
                   .taskType(TaskType.K8S_WATCH_TASK.name())
                   .parameters(new Object[] {k8sTaskParameters})
                   .timeout(TimeUnit.MINUTES.toMillis(1))

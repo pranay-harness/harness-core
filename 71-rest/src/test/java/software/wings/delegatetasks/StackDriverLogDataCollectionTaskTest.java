@@ -81,11 +81,11 @@ public class StackDriverLogDataCollectionTaskTest extends WingsBaseTest {
     dataCollectionInfo = buildDataCollectionInfo();
 
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

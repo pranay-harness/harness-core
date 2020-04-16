@@ -209,12 +209,12 @@ public class AwsCodeDeployState extends State {
 
     String delegateTaskId =
         delegateService.queueTask(DelegateTask.builder()
-                                      .async(true)
                                       .accountId(app.getAccountId())
                                       .appId(app.getAppId())
                                       .waitId(activity.getUuid())
                                       .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.COMMAND.name())
                                                 .parameters(new Object[] {command, commandExecutionContext})
                                                 .timeout(getTaskTimeout())

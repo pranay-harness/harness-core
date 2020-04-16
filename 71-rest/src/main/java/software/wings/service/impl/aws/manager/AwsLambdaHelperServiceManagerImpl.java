@@ -61,9 +61,9 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
+                      .async(false)
                       .taskType(TaskType.AWS_LAMBDA_TASK.name())
                       .parameters(new Object[] {request})
                       .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))

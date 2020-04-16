@@ -335,7 +335,6 @@ public class AwsLambdaState extends State {
           app.getAccountId(), activity.getUuid());
       DelegateTask delegateTask =
           DelegateTask.builder()
-              .async(true)
               .accountId(app.getAccountId())
               .waitId(activity.getUuid())
               .appId(context.getAppId())
@@ -344,6 +343,7 @@ public class AwsLambdaState extends State {
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(AWS_LAMBDA_TASK.name())
                         .parameters(new Object[] {wfRequest})
                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

@@ -158,11 +158,11 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .async(true)
             .accountId(appService.get(context.getAppId()).getAccountId())
             .appId(context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.NEWRELIC_COLLECT_METRIC_DATA.name())
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))

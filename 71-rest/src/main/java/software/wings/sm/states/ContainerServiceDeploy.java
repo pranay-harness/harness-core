@@ -187,12 +187,12 @@ public abstract class ContainerServiceDeploy extends State {
       String waitId = UUID.randomUUID().toString();
       String delegateTaskId = delegateService.queueTask(
           DelegateTask.builder()
-              .async(true)
               .accountId(contextData.app.getAccountId())
               .appId(contextData.appId)
               .waitId(waitId)
               .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
               .data(TaskData.builder()
+                        .async(true)
                         .taskType(TaskType.COMMAND.name())
                         .parameters(new Object[] {contextData.command, commandExecutionContext})
                         .timeout(TimeUnit.HOURS.toMillis(1))

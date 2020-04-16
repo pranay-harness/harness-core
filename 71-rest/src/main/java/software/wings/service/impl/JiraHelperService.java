@@ -72,11 +72,11 @@ public class JiraHelperService {
                                     .accountId(accountId)
                                     .appId(APP_ID_KEY)
                                     .data(TaskData.builder()
+                                              .async(false)
                                               .taskType(TaskType.JIRA.name())
                                               .parameters(new Object[] {jiraTaskParameters})
                                               .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                               .build())
-                                    .async(false)
                                     .build();
 
     JiraExecutionData jiraExecutionData;
@@ -186,11 +186,11 @@ public class JiraHelperService {
                                     .accountId(accountId)
                                     .appId(appId)
                                     .data(TaskData.builder()
+                                              .async(false)
                                               .taskType(TaskType.JIRA.name())
                                               .parameters(new Object[] {jiraTaskParameters})
                                               .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                               .build())
-                                    .async(false)
                                     .build();
 
     ResponseData responseData = delegateService.executeTask(delegateTask);

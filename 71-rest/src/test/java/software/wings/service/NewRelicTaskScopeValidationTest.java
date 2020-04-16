@@ -100,8 +100,8 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.builder()
-            .async(true)
             .data(TaskData.builder()
+                      .async(true)
                       .parameters(new Object[] {NewRelicConfig.builder()
                                                     .newRelicUrl(newRelicUrl)
                                                     .accountId(generateUuid())

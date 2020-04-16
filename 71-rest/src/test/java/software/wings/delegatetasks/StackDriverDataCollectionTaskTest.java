@@ -98,11 +98,11 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
     dataCollectionInfo = buildDataCollectionInfo();
 
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
@@ -223,11 +223,11 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
 
     // create a task with 24/7 task type
     DelegateTask task = DelegateTask.builder()
-                            .async(true)
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
                             .data(TaskData.builder()
+                                      .async(true)
                                       .taskType(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name())
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt("30") + 120))

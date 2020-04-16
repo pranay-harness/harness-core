@@ -2486,11 +2486,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
              new VerificationLogContext(accountId, cvConfigId, stateExecutionId, stateType, OVERRIDE_ERROR)) {
       logger.info("Triggered delegate task");
       return DelegateTask.builder()
-          .async(true)
           .accountId(accountId)
           .appId(appId)
           .waitId(waitId)
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(taskType.name())
                     .parameters(dataCollectionInfo)
                     .timeout(TimeUnit.MINUTES.toMillis(5))

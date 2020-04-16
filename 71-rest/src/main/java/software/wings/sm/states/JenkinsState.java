@@ -294,11 +294,11 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   private DelegateTask buildDelegateTask(ExecutionContext context, String activityId,
       JenkinsTaskParams jenkinsTaskParams, String envId, String infrastructureMappingId) {
     return DelegateTask.builder()
-        .async(true)
         .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
         .waitId(activityId)
         .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(getTaskType().name())
                   .parameters(new Object[] {jenkinsTaskParams})
                   .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))

@@ -277,8 +277,8 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
-    final TaskDataBuilder dataBuilder = TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().appId(GLOBAL_APP_ID).waitId(waitId);
+    final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
 
@@ -718,9 +718,9 @@ public class ArtifactCollectionUtils {
     }
 
     return DelegateTask.builder()
-        .async(false)
         .accountId(accountId)
         .data(TaskData.builder()
+                  .async(false)
                   .taskType(TaskType.BUILD_SOURCE_TASK.name())
                   .parameters(new Object[] {parametersBuilder.build()})
                   .timeout(TimeUnit.MINUTES.toMillis(1))

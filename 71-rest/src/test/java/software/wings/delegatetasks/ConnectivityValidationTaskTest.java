@@ -43,8 +43,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
   private ConnectivityValidationTask task =
       (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask("delegateid",
           DelegateTask.builder()
-              .async(true)
-              .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

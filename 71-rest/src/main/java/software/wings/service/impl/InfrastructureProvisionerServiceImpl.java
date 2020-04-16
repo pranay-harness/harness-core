@@ -779,6 +779,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .accountId(accountId)
             .appId(appId)
             .data(TaskData.builder()
+                      .async(false)
                       .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
@@ -790,7 +791,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .build()})
                       .timeout(TimeUnit.SECONDS.toMillis(30))
                       .build())
-            .async(false)
             .build();
 
     ResponseData notifyResponseData;
@@ -847,6 +847,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .accountId(accountId)
             .appId(appId)
             .data(TaskData.builder()
+                      .async(false)
                       .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
@@ -858,7 +859,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .build()})
                       .timeout(TimeUnit.SECONDS.toMillis(30))
                       .build())
-            .async(false)
             .build();
     ResponseData responseData;
     try {

@@ -327,7 +327,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     try {
       if (isNotEmpty(syncTaskWaitMap)) {
         List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                              .filter(DelegateTaskKeys.async, false)
+                                              .filter(DelegateTaskKeys.data_async, false)
                                               .field(DelegateTaskKeys.status)
                                               .in(TASK_COMPLETED_STATUSES)
                                               .field(DelegateTaskKeys.uuid)
@@ -1595,7 +1595,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    task.setAsync(true);
+    task.getData().setAsync(true);
     saveDelegateTask(task);
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
@@ -1614,7 +1614,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateTask completedTask;
     ResponseData responseData;
 
-    task.setAsync(false);
+    task.getData().setAsync(false);
     saveDelegateTask(task);
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
@@ -1696,7 +1696,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
     // Ensure that broadcast happens at least 5 seconds from current time for async tasks
-    if (task.isAsync()) {
+    if (task.getData().isAsync()) {
       task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
     }
 
@@ -1826,7 +1826,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? ASYNC : SYNC);
+      logger.info("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
 
       UpdateOperations<DelegateTask> updateOperations =
           wingsPersistence.createUpdateOperations(DelegateTask.class)
@@ -1908,7 +1908,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       String errorMessage = generateValidationError(delegateTask);
       logger.info(errorMessage);
       ResponseData response;
-      if (delegateTask.isAsync()) {
+      if (delegateTask.getData().isAsync()) {
         response = ErrorNotifyResponseData.builder()
                        .failureTypes(EnumSet.of(FailureType.DELEGATE_PROVISIONING))
                        .errorMessage(errorMessage)
@@ -1977,7 +1977,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @VisibleForTesting
   void setValidationStarted(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate to validate {} task", delegateTask.isAsync() ? ASYNC : SYNC);
+    logger.info("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -2142,7 +2142,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response,
       DelegateTask.Status error) {
-    if (delegateTask.isAsync()) {
+    if (delegateTask.getData().isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
         waitNotifyEngine.doneWith(waitId, response.getResponse());
@@ -2163,7 +2163,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info("Assigning {} task to delegate", delegateTask.isAsync() ? ASYNC : SYNC);
+    logger.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.status, QUEUED)
@@ -2341,7 +2341,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .filter(ID_KEY, delegateTaskId)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
-                                                .filter(DelegateTaskKeys.async, true);
+                                                .filter(DelegateTaskKeys.data_async, true);
     delegateTaskQuery.or(delegateTaskQuery.criteria(DelegateTaskKeys.status).equal(QUEUED),
         delegateTaskQuery.criteria(DelegateTaskKeys.status).equal(STARTED));
     return delegateTaskQuery;
@@ -2367,7 +2367,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .filter(DelegateTaskKeys.accountId, accountId)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .filter(DelegateTaskKeys.status, QUEUED)
-            .filter(DelegateTaskKeys.async, !sync)
+            .filter(DelegateTaskKeys.data_async, !sync)
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
 
@@ -2385,7 +2385,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
     Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
                                            .filter(DelegateTaskKeys.status, ABORTED)
-                                           .filter(DelegateTaskKeys.async, true)
+                                           .filter(DelegateTaskKeys.data_async, true)
                                            .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.delegateId, delegateId);
 

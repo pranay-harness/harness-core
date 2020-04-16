@@ -136,8 +136,8 @@ public class WebhookTriggerProcessor {
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.TRIGGER_TASK.name())
                                               .parameters(new Object[] {triggerDeploymentNeededRequest})
                                               .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))

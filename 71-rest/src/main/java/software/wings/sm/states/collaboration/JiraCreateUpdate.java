@@ -181,11 +181,11 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     }
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(JIRA.name())
                                               .parameters(new Object[] {parameters})
                                               .timeout(JIRA_TASK_TIMEOUT_MILLIS)

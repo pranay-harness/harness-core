@@ -511,13 +511,13 @@ public abstract class TerraformProvisionState extends State {
       TerraformProvisionParameters parameters, String delegateTag) {
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .async(true)
             .accountId(requireNonNull(executionContext.getApp()).getAccountId())
             .waitId(activityId)
             .appId(requireNonNull(executionContext.getApp()).getAppId())
             .envId(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TERRAFORM_PROVISION_TASK.name())
                       .parameters(new Object[] {parameters})
                       .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))

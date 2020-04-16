@@ -95,11 +95,11 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
 
     String delegateTaskId =
         delegateService.queueTask(DelegateTask.builder()
-                                      .async(true)
                                       .accountId(context.getApp().getAccountId())
                                       .waitId(correlationId)
                                       .appId(context.getApp().getAppId())
                                       .data(TaskData.builder()
+                                                .async(true)
                                                 .taskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
                                                 .parameters(new Object[] {dataCollectionInfo})
                                                 .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

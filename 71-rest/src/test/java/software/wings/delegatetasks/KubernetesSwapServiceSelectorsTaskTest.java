@@ -45,8 +45,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
           "delid1",
           DelegateTask.builder()
-              .async(true)
-              .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

@@ -39,6 +39,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
     DelegateTaskBuilder builder = DelegateTask.builder()
                                       .data(TaskData.builder()
+                                                .async(false)
                                                 .taskType(taskType.name())
                                                 .parameters(delegateArguments)
                                                 .timeout(syncTaskContext.getTimeout())
@@ -47,7 +48,6 @@ public class DelegateInvocationHandler implements InvocationHandler {
                                       .appId(syncTaskContext.getAppId())
                                       .envId(syncTaskContext.getEnvId())
                                       .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
-                                      .async(false)
                                       .tags(syncTaskContext.getTags())
                                       .correlationId(syncTaskContext.getCorrelationId());
 

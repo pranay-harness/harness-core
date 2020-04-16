@@ -368,12 +368,12 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()));
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
                                     .waitId(activityId)
                                     .tags(renderedTags)
                                     .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(getTaskType().name())
                                               .parameters(new Object[] {httpTaskParameters})
                                               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

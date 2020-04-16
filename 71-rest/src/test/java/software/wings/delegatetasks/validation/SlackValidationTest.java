@@ -31,11 +31,11 @@ public class SlackValidationTest extends WingsBaseTest {
   static DelegateTask delegateTask =
       DelegateTask.builder()
           .uuid("id")
-          .async(true)
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("")
           .data(TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.SLACK.name())
                     .parameters(new Object[] {
                         null, null, new SlackMessage(OUTGOING_WEBHOOK_URL, SLACK_CHANNEL, SENDER_NAME, MESSAGE)})
@@ -58,11 +58,11 @@ public class SlackValidationTest extends WingsBaseTest {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .uuid("id")
-            .async(true)
             .accountId(ACCOUNT_ID)
             .appId(APP_ID)
             .waitId("")
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.SLACK.name())
                       .parameters(new Object[] {null, null,
                           new SlackMessage(INCORRECT_OUTGOING_WEBHOOK_URL, SLACK_CHANNEL, SENDER_NAME, MESSAGE)})

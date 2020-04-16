@@ -202,11 +202,11 @@ public class DatadogState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(accountId)
                                     .appId(context.getAppId())
                                     .waitId(waitId)
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                                               .parameters(new Object[] {dataCollectionInfo})
                                               .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))

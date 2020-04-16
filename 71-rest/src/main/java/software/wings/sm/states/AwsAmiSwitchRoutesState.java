@@ -152,6 +152,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(AWS_AMI_ASYNC_TASK.name())
                       .parameters(new Object[] {routesRequest})
                       .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
@@ -159,7 +160,6 @@ public class AwsAmiSwitchRoutesState extends State {
             .tags(isNotEmpty(routesRequest.getAwsConfig().getTag())
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)
-            .async(true)
             .envId(infrastructureMapping.getEnvId())
             .build();
     delegateService.queueTask(delegateTask);

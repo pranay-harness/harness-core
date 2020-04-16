@@ -177,11 +177,11 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(appService.get(context.getAppId()).getAccountId())
                                     .appId(context.getAppId())
                                     .waitId(waitId)
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                               .parameters(new Object[] {dataCollectionInfo})
                                               .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

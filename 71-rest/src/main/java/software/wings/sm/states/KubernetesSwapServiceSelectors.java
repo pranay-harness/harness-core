@@ -281,11 +281,11 @@ public class KubernetesSwapServiceSelectors extends State {
             .service2(renderedService2)
             .build();
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .waitId(activity.getUuid())
                                     .data(TaskData.builder()
+                                              .async(true)
                                               .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
                                               .parameters(new Object[] {kubernetesSwapServiceSelectorsParams})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))

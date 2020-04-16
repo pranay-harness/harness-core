@@ -126,11 +126,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.JENKINS_COLLECTION.name())
                       .parameters(
                           new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
@@ -146,11 +146,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.BAMBOO_COLLECTION.name())
                       .parameters(
                           new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
@@ -165,12 +165,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.NEXUS_COLLECTION.name())
                     .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                         nexusArtifactStream.fetchArtifactStreamAttributes(), artifact.getMetadata()})
@@ -184,11 +184,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
                       .parameters(new Object[] {artifactoryConfig,
                           secretManager.getEncryptionDetails(artifactoryConfig, null, null),
@@ -203,12 +203,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
+                      .async(true)
                       .taskType(TaskType.AMAZON_S3_COLLECTION.name())
                       .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
                           amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
@@ -222,12 +222,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         AzureArtifactsConfig azureArtifactsConfig = (AzureArtifactsConfig) settingAttribute.getValue();
 
         return DelegateTask.builder()
-            .async(true)
             .accountId(accountId)
             .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()
+                    .async(true)
                     .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
                     .parameters(new Object[] {
                         AzureArtifactsCollectionTaskParameters.builder()

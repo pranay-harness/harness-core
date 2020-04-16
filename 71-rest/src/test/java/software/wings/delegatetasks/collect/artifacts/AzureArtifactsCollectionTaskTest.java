@@ -98,11 +98,11 @@ public class AzureArtifactsCollectionTaskTest extends CategoryTest {
 
   private DelegateTask prepareDelegateTask(ProtocolType protocolType) {
     return DelegateTask.builder()
-        .async(true)
         .accountId(ACCOUNT_ID)
         .appId(APP_ID)
         .waitId("123456789")
         .data(TaskData.builder()
+                  .async(true)
                   .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
                   .parameters(new Object[] {
                       AzureArtifactsCollectionTaskParameters.builder()
