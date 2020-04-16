@@ -68,4 +68,6 @@ public interface AwsElbHelperServiceDelegate {
   LbDetailsForAlbTrafficShift loadTrafficShiftTargetGroupData(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, LbDetailsForAlbTrafficShift originalLbDetails,
       ExecutionLogCallback logCallback);
+  void updateRulesForAlbTrafficShift(AwsConfig awsConfig, String region, List<EncryptedDataDetail> encryptionDetails,
+      List<LbDetailsForAlbTrafficShift> details, ExecutionLogCallback logCallback, int newServiceTrafficWeight);
 }

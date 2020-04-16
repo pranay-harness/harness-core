@@ -32,7 +32,8 @@ public class SpotInstTaskParameters implements TaskParameters {
     SPOT_INST_GET_ELASTI_GROUP_JSON,
     SPOT_INST_LIST_ELASTI_GROUP_INSTANCES,
     SPOT_INST_ALB_SHIFT_SETUP,
-    SPOT_INST_ALB_SHIFT_DEPLOY
+    SPOT_INST_ALB_SHIFT_DEPLOY,
+    SPOT_INST_ALB_SHIFT_SWAP_ROUTES
   }
 
   public boolean isSyncTask() {
