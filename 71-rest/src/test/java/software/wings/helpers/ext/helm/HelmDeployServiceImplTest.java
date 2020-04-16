@@ -2,6 +2,7 @@ package software.wings.helpers.ext.helm;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -225,7 +226,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
-        .thenThrow(new WingsException("WingsException"));
+        .thenThrow(new InvalidRequestException("WingsException", USER));
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
     helmDeployService.deploy(helmInstallCommandRequest);

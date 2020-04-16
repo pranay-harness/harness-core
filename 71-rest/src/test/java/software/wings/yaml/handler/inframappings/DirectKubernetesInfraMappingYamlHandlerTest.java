@@ -15,11 +15,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -64,7 +62,6 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   @Mock protected EnvironmentService environmentService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
-  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private SecretManager secretManager;
 

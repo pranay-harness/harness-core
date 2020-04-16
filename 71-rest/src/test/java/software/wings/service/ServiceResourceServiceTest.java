@@ -15,7 +15,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -2613,9 +2612,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-
   public void testSetPcfV2ServiceFromAppManifestIfRequiredInvalidSource() {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();

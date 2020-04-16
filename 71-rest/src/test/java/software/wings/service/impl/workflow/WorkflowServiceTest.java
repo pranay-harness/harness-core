@@ -242,7 +242,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
@@ -259,7 +258,6 @@ import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -412,7 +410,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
   @Mock private EnvironmentService environmentService;
-  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private TemplateService templateService;
   @Mock private UserGroupService userGroupService;
   @Mock FeatureFlagService featureFlagService;
