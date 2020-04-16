@@ -16,14 +16,15 @@ import io.harness.adviser.impl.success.OnSuccessAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.engine.executables.ExecutableInvokerFactory;
+import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.handlers.ExecutableInvoker;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorResponse;
-import io.harness.facilitate.modes.async.AsyncExecutable;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
-import io.harness.facilitate.modes.sync.SyncExecutable;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
@@ -52,22 +53,18 @@ import javax.validation.Valid;
 public class ExecutionEngine implements Engine {
   // For database needs
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
-
   // For leveraging the wait notify engine
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
   // Guice Injector
   @Inject private Injector injector;
-
   // ExecutorService for the engine
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-
   // Registries
   @Inject private StateRegistry stateRegistry;
 
-  @Inject EngineObtainmentHelper engineObtainmentHelper;
-
-  @Inject EngineStatusHelper engineStatusHelper;
+  @Inject private EngineObtainmentHelper engineObtainmentHelper;
+  @Inject private EngineStatusHelper engineStatusHelper;
+  @Inject private ExecutableInvokerFactory executableInvokerFactory;
 
   public ExecutionInstance startExecution(@Valid ExecutionPlan executionPlan, EmbeddedUser createdBy) {
     ExecutionInstance instance = ExecutionInstance.builder()
@@ -139,7 +136,7 @@ public class ExecutionEngine implements Engine {
           "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
     }
     ExecutionNodeInstance updatedNodeInstance =
-        engineStatusHelper.updateNodeInstanceStatus(nodeInstanceId, NodeExecutionStatus.RUNNING);
+        engineStatusHelper.updateNodeInstance(nodeInstanceId, NodeExecutionStatus.RUNNING, ops -> {});
     if (updatedNodeInstance == null) {
       throw new InvalidRequestException(
           "Cannot set the Node Execution instance in running state id: " + nodeInstanceId);
@@ -156,29 +153,21 @@ public class ExecutionEngine implements Engine {
     }
     injector.injectMembers(currentState);
     List<StateTransput> inputs = engineObtainmentHelper.obtainInputs(node.getRefObjects());
-    switch (facilitatorResponse.getExecutionMode()) {
-      case SYNC:
-        SyncExecutable syncExecutable = (SyncExecutable) currentState;
-        StateResponse stateResponse = syncExecutable.executeSync(
-            ambiance, node.getStateParameters(), inputs, facilitatorResponse.getPassThroughData());
-        handleStateResponse(nodeInstance.getUuid(), stateResponse);
-        break;
-      case ASYNC:
-        AsyncExecutable asyncExecutable = (AsyncExecutable) currentState;
-        AsyncExecutableResponse asyncExecutableResponse =
-            asyncExecutable.executeAsync(ambiance, node.getStateParameters(), inputs);
-        handleAsyncExecutableResponse(nodeInstance, asyncExecutableResponse);
-        break;
-      default:
-        logger.info("Add More Handlers, Throw Exception for now");
-        throw new InvalidRequestException(
-            "No Handling present for execution mode type :" + facilitatorResponse.getExecutionMode());
-    }
+    ExecutableInvoker executableInvoker =
+        executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
+    executableInvoker.invokeExecutable(InvokerPackage.builder()
+                                           .state(currentState)
+                                           .ambiance(ambiance)
+                                           .parameters(node.getStateParameters())
+                                           .inputs(inputs)
+                                           .passThroughData(facilitatorResponse.getPassThroughData())
+                                           .build());
   }
 
   public void handleStateResponse(String nodeInstanceId, StateResponse stateResponse) {
     ExecutionNodeInstance nodeInstance =
-        engineStatusHelper.updateNodeInstanceStatus(nodeInstanceId, stateResponse.getExecutionStatus());
+        engineStatusHelper.updateNodeInstance(nodeInstanceId, stateResponse.getExecutionStatus(),
+            ops -> ops.set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
     // TODO handle Failure
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
@@ -224,12 +213,12 @@ public class ExecutionEngine implements Engine {
         ORCHESTRATION, callback, asyncExecutableResponse.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstanceStatus(nodeInstance.getUuid(), TASK_WAITING);
+    engineStatusHelper.updateNodeInstance(nodeInstance.getUuid(), TASK_WAITING, operations -> {});
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
     ExecutionNodeInstance nodeInstance =
-        engineStatusHelper.updateNodeInstanceStatus(nodeInstanceId, NodeExecutionStatus.RUNNING);
+        engineStatusHelper.updateNodeInstance(nodeInstanceId, NodeExecutionStatus.RUNNING, operations -> {});
     ExecutionNode node = nodeInstance.getNode();
     State currentState = engineObtainmentHelper.obtainState(node.getStateType());
     injector.injectMembers(currentState);
