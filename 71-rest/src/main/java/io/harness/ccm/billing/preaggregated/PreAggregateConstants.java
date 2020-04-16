@@ -14,4 +14,5 @@ public class PreAggregateConstants {
   public static final String entityConstantAwsUnBlendedCost = "sum_unblendedCost";
   public static final String minPreAggStartTimeConstant = "min_startTime";
   public static final String maxPreAggStartTimeConstant = "max_startTime";
+  public static final String startTimeTruncatedConstant = "start_time_trunc";
 }

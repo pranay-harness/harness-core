@@ -4,7 +4,6 @@ import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.OrderObject;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
-import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -24,7 +23,7 @@ public class CloudSortCriteria {
     String orderIdentifier = null;
     switch (sortType) {
       case Time:
-        orderIdentifier = PreAggregatedTableSchema.startTime.getColumnNameSQL();
+        orderIdentifier = PreAggregateConstants.startTimeTruncatedConstant;
         break;
       case awsBlendedCost:
         orderIdentifier = PreAggregateConstants.entityConstantAwsBlendedCost;

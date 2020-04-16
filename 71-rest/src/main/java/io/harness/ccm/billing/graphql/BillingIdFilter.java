@@ -12,16 +12,20 @@ import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_SKU;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+
+import java.util.Arrays;
 
 @Data
 @Builder
@@ -77,12 +81,20 @@ public class BillingIdFilter implements Filter {
         return null;
     }
 
+    boolean containsNullStringConst = Arrays.asList(values).contains(PreAggregateConstants.nullStringValueConstant);
+
     Condition condition;
     switch (operator) {
       case EQUALS:
+        if (containsNullStringConst) {
+          return UnaryCondition.isNull(dbColumn);
+        }
         condition = BinaryCondition.equalTo(dbColumn, values[0]);
         break;
       case IN:
+        if (containsNullStringConst) {
+          return ComboCondition.and(new InCondition(dbColumn, getValues()), UnaryCondition.isNull(dbColumn));
+        }
         return new InCondition(dbColumn, getValues());
       case NOT_IN:
         condition = BinaryCondition.notEqualTo(dbColumn, values);

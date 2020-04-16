@@ -11,10 +11,10 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 
 public class TruncExpression extends Expression {
-  public enum DatePart { MONTH, DAY, HOUR }
+  public enum DatePart { MONTH, DAY, HOUR, WEEK }
 
   private final SqlObject _timestampExpression;
-  private final Object _datePart;
+  @Getter public final Object _datePart;
   @Getter public final String alias;
 
   public TruncExpression(Object timestampExpression, DatePart datePart) {

@@ -15,4 +15,7 @@ public interface PreAggregateBillingService {
 
   PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
       List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters);
+
+  PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
+      List<Object> groupByObjects, List<Condition> conditions, String queryTableName);
 }
