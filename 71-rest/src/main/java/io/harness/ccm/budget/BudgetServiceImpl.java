@@ -3,6 +3,8 @@ package io.harness.ccm.budget;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.AlertThresholdBase;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
@@ -47,6 +49,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class BudgetServiceImpl implements BudgetService {
@@ -63,7 +66,14 @@ public class BudgetServiceImpl implements BudgetService {
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
-      "Error in creating budget. The budget amount should be positive and less than " + BUDGET_AMOUNT_UPPER_LIMIT;
+      "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
+
+  private static final long CACHE_SIZE = 10000;
+
+  private LoadingCache<Budget, Double> budgetToCostCache = Caffeine.newBuilder()
+                                                               .maximumSize(CACHE_SIZE)
+                                                               .refreshAfterWrite(24, TimeUnit.HOURS)
+                                                               .build(this ::computeActualCost);
 
   @Override
   public String create(Budget budget) {
@@ -136,20 +146,18 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getActualCost(Budget budget) {
-    QLBudgetDataList data = getBudgetData(budget);
-    if (data == null || data.getData().isEmpty()) {
+    if (budget != null) {
+      return budgetToCostCache.get(budget);
+    } else {
       return 0;
     }
-    return data.getData().get(data.getData().size() - 1).getActualCost();
   }
 
   @Override
   public double getForecastCost(Budget budget) {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
-    if (isApplicationScopePresent(budget)) {
-      addEnvironmentIdFilter(budget, filters);
-    }
+    addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getEndTimeFilterForCurrentBillingCycle());
     List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
     aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
@@ -169,9 +177,7 @@ public class BudgetServiceImpl implements BudgetService {
     Preconditions.checkNotNull(budget.getAccountId());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
-    if (isApplicationScopePresent(budget)) {
-      addEnvironmentIdFilter(budget, filters);
-    }
+    addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
     QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
@@ -230,6 +236,7 @@ public class BudgetServiceImpl implements BudgetService {
         .notifications(notificationMessages.toArray(new String[0]))
         .budgetedAmount(budget.getBudgetAmount())
         .actualAmount(getActualCost(budget))
+        .lastUpdatedAt(budget.getLastUpdatedAt())
         .build();
   }
 
@@ -379,5 +386,28 @@ public class BudgetServiceImpl implements BudgetService {
       return true;
     }
     return false;
+  }
+
+  private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
+    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE"};
+    filters.add(QLBillingDataFilter.builder()
+                    .instanceType(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(instanceTypeValues).build())
+                    .build());
+  }
+
+  private void addAdditionalFiltersBasedOnScope(Budget budget, List<QLBillingDataFilter> filters) {
+    if (isApplicationScopePresent(budget)) {
+      addEnvironmentIdFilter(budget, filters);
+    } else {
+      addInstanceTypeFilter(filters);
+    }
+  }
+
+  private double computeActualCost(Budget budget) {
+    QLBudgetDataList data = getBudgetData(budget);
+    if (data == null || data.getData().isEmpty()) {
+      return 0;
+    }
+    return data.getData().get(data.getData().size() - 1).getActualCost();
   }
 }

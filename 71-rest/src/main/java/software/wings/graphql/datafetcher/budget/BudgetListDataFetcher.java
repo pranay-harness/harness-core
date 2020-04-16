@@ -12,6 +12,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -24,6 +25,7 @@ public class BudgetListDataFetcher extends AbstractArrayDataFetcher<QLBudgetTabl
     List<Budget> budgets = budgetService.list(accountId);
     List<QLBudgetTableData> budgetTableDataList = new ArrayList<>();
     budgets.forEach(budget -> budgetTableDataList.add(budgetService.getBudgetDetails(budget)));
+    budgetTableDataList.sort(Comparator.comparing(QLBudgetTableData::getLastUpdatedAt).reversed());
     return budgetTableDataList;
   }
 

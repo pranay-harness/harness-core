@@ -58,9 +58,9 @@ public class BudgetResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testClone() {
     RESOURCES.client()
-        .target(format("/budgets/%s/?accountId=%s", budgetId, accountId))
+        .target(format("/budgets/%s/?accountId=%s&cloneName=%s", budgetId, accountId, cloneBudgetName))
         .request()
-        .post(entity(cloneBudgetName, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
+        .post(entity(budget, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
     verify(budgetService).clone(eq(budgetId), eq(cloneBudgetName));
   }
 
