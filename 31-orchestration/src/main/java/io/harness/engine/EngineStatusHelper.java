@@ -13,15 +13,21 @@ import io.harness.state.execution.status.NodeExecutionStatus;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.function.Consumer;
+
 @Redesign
 public class EngineStatusHelper {
   @Inject HPersistence hPersistence;
 
-  public ExecutionNodeInstance updateNodeInstanceStatus(String nodeInstanceId, NodeExecutionStatus status) {
+  public ExecutionNodeInstance updateNodeInstance(
+      String nodeInstanceId, NodeExecutionStatus status, Consumer<UpdateOperations<ExecutionNodeInstance>> ops) {
     Query<ExecutionNodeInstance> findQuery =
         hPersistence.createQuery(ExecutionNodeInstance.class).filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId);
     UpdateOperations<ExecutionNodeInstance> operations =
         hPersistence.createUpdateOperations(ExecutionNodeInstance.class).set(ExecutionNodeInstanceKeys.status, status);
+    if (ops != null) {
+      ops.accept(operations);
+    }
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
   }
 
