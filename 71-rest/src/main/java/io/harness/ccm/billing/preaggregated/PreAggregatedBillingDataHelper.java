@@ -36,6 +36,7 @@ import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedC
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
+import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint.QLBillingDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLReference;
@@ -43,10 +44,13 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -58,12 +62,7 @@ public class PreAggregatedBillingDataHelper {
   private static final String COST_VALUE = "$%s";
 
   public PreAggregateBillingTimeSeriesStatsDTO convertToPreAggregatesTimeSeriesData(TableResult result) {
-    Preconditions.checkNotNull(result);
-    if (result.getTotalRows() == 0) {
-      logger.warn("No result from PreAggregate billing time series stats query");
-      return null;
-    }
-
+    preconditionsValidation(result, "PreAggregate billing time series stats");
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
 
@@ -77,8 +76,8 @@ public class PreAggregatedBillingDataHelper {
             startTimeTruncatedTimestamp = Timestamp.ofTimeMicroseconds(row.get(field.getName()).getTimestampValue());
             break;
           case STRING:
-            billingDataPointBuilder.key(
-                QLReference.builder().name(fetchStringValue(row, field)).type(field.getName()).build());
+            String value = fetchStringValue(row, field);
+            billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
             break;
           case FLOAT64:
             billingDataPointBuilder.value(row.get(field.getName()).getNumericValue());
@@ -119,7 +118,7 @@ public class PreAggregatedBillingDataHelper {
   }
 
   public String getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions,
-      List<SqlObject> sort) {
+      List<SqlObject> sort, boolean addTimeTrucGroupBy) {
     List<Object> selectObjects = new ArrayList<>();
     List<Object> sqlGroupByObjects = new ArrayList<>();
     List<Object> sortObjects = new ArrayList<>();
@@ -130,7 +129,9 @@ public class PreAggregatedBillingDataHelper {
 
     if (groupByObjects != null) {
       groupByObjects.stream().filter(g -> g instanceof DbColumn).forEach(sqlGroupByObjects::add);
-      processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects);
+      if (addTimeTrucGroupBy) {
+        processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects);
+      }
       processAndAddGroupBy(sqlGroupByObjects, selectObjects);
     }
 
@@ -150,11 +151,18 @@ public class PreAggregatedBillingDataHelper {
   private void processAndAddTimeTruncatedGroupBy(List<Object> groupByObjects, List<Object> sqlGroupByObjects) {
     Optional<Object> timeTruncatedGroupBy =
         groupByObjects.stream().filter(g -> g instanceof TruncExpression).findFirst();
-    if (!timeTruncatedGroupBy.isPresent()) {
-      timeTruncatedGroupBy = Optional.of(
-          new TruncExpression(PreAggregatedTableSchema.startTime, TruncExpression.DatePart.DAY, "start_time_trunc"));
-    }
+
+    timeTruncatedGroupBy = Optional.of(new TruncExpression(PreAggregatedTableSchema.startTime,
+        getTimeTruncationInterval(timeTruncatedGroupBy), PreAggregateConstants.startTimeTruncatedConstant));
+
     sqlGroupByObjects.add(timeTruncatedGroupBy.get());
+  }
+
+  private TruncExpression.DatePart getTimeTruncationInterval(Optional<Object> timeTruncatedGroupBy) {
+    if (timeTruncatedGroupBy.isPresent()) {
+      return (TruncExpression.DatePart) ((TruncExpression) timeTruncatedGroupBy.get()).get_datePart();
+    }
+    return TruncExpression.DatePart.DAY;
   }
 
   private void processAndAddGroupBy(List<Object> sqlGroupByObjects, List<Object> selectObjects) {
@@ -203,21 +211,32 @@ public class PreAggregatedBillingDataHelper {
       FieldList fields, FieldValueList row, List<PreAggregateBillingEntityDataPoint> dataPointList) {
     PreAggregateBillingEntityDataPointBuilder dataPointBuilder = PreAggregateBillingEntityDataPoint.builder();
     for (Field field : fields) {
+      String value = null;
       switch (field.getName()) {
         case entityConstantAwsRegion:
-          dataPointBuilder.awsRegion(fetchStringValue(row, field));
+          value = fetchStringValue(row, field);
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsRegion(value);
           break;
         case entityConstantAwsLinkedAccount:
-          dataPointBuilder.awsLinkedAccount(fetchStringValue(row, field));
+          value = fetchStringValue(row, field);
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsLinkedAccount(value);
           break;
         case entityConstantAwsService:
-          dataPointBuilder.awsService(fetchStringValue(row, field));
+          value = fetchStringValue(row, field);
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsService(value);
           break;
         case entityConstantAwsUsageType:
-          dataPointBuilder.awsUsageType(fetchStringValue(row, field));
+          value = fetchStringValue(row, field);
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsUsageType(value);
           break;
         case entityConstantAwsInstanceType:
-          dataPointBuilder.awsInstanceType(fetchStringValue(row, field));
+          value = fetchStringValue(row, field);
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsInstanceType(value);
           break;
         case entityConstantAwsBlendedCost:
           dataPointBuilder.awsBlendedCost(row.get(field.getName()).getDoubleValue());
@@ -299,5 +318,64 @@ public class PreAggregatedBillingDataHelper {
     } else {
       throw new InvalidRequestException("Start time cannot be null");
     }
+  }
+
+  public PreAggregateFilterValuesDTO convertToPreAggregatesFilterValue(TableResult result) {
+    if (preconditionsValidation(result, "convertToPreAggregatesFilterValue")) {
+      return null;
+    }
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+    Set<QLEntityData> awsRegion = new HashSet<>();
+    Set<QLEntityData> awsService = new HashSet<>();
+    Set<QLEntityData> awsUsageType = new HashSet<>();
+    Set<QLEntityData> awsInstanceType = new HashSet<>();
+    Set<QLEntityData> awsLinkedAccount = new HashSet<>();
+    for (FieldValueList row : result.iterateAll()) {
+      processAndGetFilterValuesDataPoint(
+          fields, row, awsRegion, awsService, awsUsageType, awsInstanceType, awsLinkedAccount);
+    }
+    return PreAggregateFilterValuesDTO.builder()
+        .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder()
+                                .awsRegion(awsRegion)
+                                .awsService(awsService)
+                                .awsUsageType(awsUsageType)
+                                .awsInstanceType(awsInstanceType)
+                                .awsLinkedAccount(awsLinkedAccount)
+                                .build()))
+        .build();
+  }
+
+  @VisibleForTesting
+  void processAndGetFilterValuesDataPoint(FieldList fields, FieldValueList row, Set<QLEntityData> awsRegion,
+      Set<QLEntityData> awsService, Set<QLEntityData> awsUsageType, Set<QLEntityData> awsInstanceType,
+      Set<QLEntityData> awsLinkedAccount) {
+    for (Field field : fields) {
+      switch (field.getName()) {
+        case entityConstantAwsRegion:
+          getEntityDataPoint(row, field);
+          awsRegion.add(getEntityDataPoint(row, field));
+          break;
+        case entityConstantAwsLinkedAccount:
+          awsLinkedAccount.add(getEntityDataPoint(row, field));
+          break;
+        case entityConstantAwsService:
+          awsService.add(getEntityDataPoint(row, field));
+          break;
+        case entityConstantAwsUsageType:
+          awsUsageType.add(getEntityDataPoint(row, field));
+          break;
+        case entityConstantAwsInstanceType:
+          awsInstanceType.add(getEntityDataPoint(row, field));
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  private QLEntityData getEntityDataPoint(FieldValueList row, Field field) {
+    String value = fetchStringValue(row, field);
+    return QLEntityData.builder().id(value).name(value).type(field.getName()).build();
   }
 }

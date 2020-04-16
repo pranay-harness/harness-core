@@ -3,6 +3,7 @@ package io.harness.ccm.billing.preaggregated;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
@@ -38,7 +40,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Mock BigQuery bigQuery;
@@ -56,6 +60,9 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private static final String STATS_LABEL = "statsLabel";
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
+  private static final String ID = "id";
+  private static final String NAME = "name";
+  private static final String TYPE = "type";
   private static final long MIN_START_TIME = 0L;
   private static final long MAX_START_TIME = currentMillis;
   private static final Double COST = 1.0;
@@ -77,7 +84,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
 
     when(bigQueryService.get()).thenReturn(bigQuery);
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
-    when(dataHelper.getQuery(anyList(), anyList(), anyList(), anyList()))
+    when(dataHelper.getQuery(anyList(), anyList(), anyList(), anyList(), anyBoolean()))
         .thenReturn(PreAggregatedTableSchema.defaultTableName);
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
@@ -103,6 +110,16 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
                         .statsDescription(STATS_DESCRIPTION)
                         .statsLabel(STATS_LABEL)
                         .build());
+
+    Set<QLEntityData> awsRegionSet = new HashSet<>();
+    QLEntityData entityData = QLEntityData.builder().id(ID).name(NAME).type(TYPE).build();
+    awsRegionSet.add(entityData);
+
+    when(dataHelper.convertToPreAggregatesFilterValue(tableResult))
+        .thenReturn(
+            PreAggregateFilterValuesDTO.builder()
+                .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder().awsRegion(awsRegionSet).build()))
+                .build());
     groupByObjects.add(PreAggregatedTableSchema.usageAccountId);
   }
 
@@ -166,6 +183,26 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     PreAggregateBillingTrendStatsDTO stats =
         preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters);
     assertThat(stats).isEqualTo(PreAggregateBillingTrendStatsDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateFilterValueStatsTest() {
+    PreAggregateFilterValuesDTO stats =
+        preAggregateBillingService.getPreAggregateFilterValueStats(groupByObjects, null, TABLE_NAME);
+    assertThat(stats.getData().get(0)).isNotNull();
+    assertThat(stats.getData().get(0).getAwsRegion().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateFilterValueStatsTestNegativeCase() throws InterruptedException {
+    when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
+    PreAggregateFilterValuesDTO stats =
+        preAggregateBillingService.getPreAggregateFilterValueStats(groupByObjects, null, TABLE_NAME);
+    assertThat(stats).isNull();
   }
 
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {

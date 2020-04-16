@@ -34,7 +34,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingTimeSeriesStats need at least one groupBy");
-    String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
+    String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, true);
     // Replacing the Default Table with the Table in the context
     timeSeriesDataQuery = timeSeriesDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, tableName);
     logger.info("getPreAggregateBillingTimeSeriesStats Query {}", timeSeriesDataQuery);
@@ -55,7 +55,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
-    String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort);
+    String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
     // Replacing the Default Table with the Table in the context
     entityDataQuery = entityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getPreAggregateBillingEntityStats Query {}", entityDataQuery);
@@ -88,9 +88,28 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     }
   }
 
+  @Override
+  public PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
+      List<Object> groupByObjects, List<Condition> conditions, String queryTableName) {
+    String filterValueQuery = dataHelper.getQuery(null, groupByObjects, conditions, null, false);
+    // Replacing the Default Table with the Table in the context
+    filterValueQuery = filterValueQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    logger.info("getPreAggregateFilterValueStats Query {}", filterValueQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(filterValueQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertToPreAggregatesFilterValue(result);
+  }
+
   public PreAggregatedCostDataStats getAggregatedCostData(
       List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName) {
-    String trendStatsQuery = dataHelper.getQuery(aggregateFunction, null, conditions, null);
+    String trendStatsQuery = dataHelper.getQuery(aggregateFunction, null, conditions, null, false);
     // Replacing the Default Table with the Table in the context
     trendStatsQuery = trendStatsQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getAggregatedCostData Query {}", trendStatsQuery);

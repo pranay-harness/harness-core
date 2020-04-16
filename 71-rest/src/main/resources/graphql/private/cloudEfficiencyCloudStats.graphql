@@ -23,6 +23,13 @@ extend type Query {
     groupBy: [CloudGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
+
+  cloudFilterValues(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudFilterData @dataFetcher(name: cloudFilterValues)
 }
 
 type CloudTimeSeriesStats {
@@ -34,6 +41,7 @@ type CloudEntityStats {
 }
 
 type CloudEntityData {
+  id: String
   awsRegion: String
   awsLinkedAccount: String
   awsUsageType: String
@@ -46,6 +54,19 @@ type CloudEntityData {
 type CloudTrendStats {
   unBlendedCost: BillingStatsInfo
   blendedCost: BillingStatsInfo
+}
+
+type CloudFilterData {
+  data: [CloudFilterDataPoint]
+}
+
+type CloudFilterDataPoint {
+  awsRegion: [EntityData]
+  awsLinkedAccount: [EntityData]
+  awsUsageType: [EntityData]
+  awsService: [EntityData]
+  awsInstanceType: [EntityData]
+  cloudProvider: [EntityData]
 }
 
 input CloudBillingFilter {

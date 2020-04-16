@@ -43,6 +43,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
+import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
@@ -53,7 +54,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Mock FieldValueList row;
@@ -102,7 +105,7 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   public void getQuery() {
     List<Object> groupBy = Arrays.asList(PreAggregatedTableSchema.usageAccountId, PreAggregatedTableSchema.serviceCode,
         PreAggregatedTableSchema.usageType, PreAggregatedTableSchema.instanceType, PreAggregatedTableSchema.region);
-    String query = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList());
+    String query = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList(), true);
     assertThat(query.contains(entityConstantAwsRegion)).isTrue();
     assertThat(query.contains(entityConstantAwsLinkedAccount)).isTrue();
   }
@@ -152,6 +155,39 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     assertThat(unBlendedCost.getCost()).isEqualTo(2.0);
     assertThat(blendedCost.getMinStartTime()).isEqualTo(0L);
     assertThat(unBlendedCost.getMaxStartTime()).isEqualTo(1586895998000000L);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void processAndGetFilterValuesDataPointTest() {
+    FieldList trendFieldList =
+        FieldList.of(Field.newBuilder(entityConstantAwsRegion, StandardSQLTypeName.STRING).build(),
+            Field.newBuilder(entityConstantAwsLinkedAccount, StandardSQLTypeName.STRING).build(),
+            Field.newBuilder(entityConstantAwsService, StandardSQLTypeName.FLOAT64).build(),
+            Field.newBuilder(entityConstantAwsUsageType, StandardSQLTypeName.FLOAT64).build(),
+            Field.newBuilder(entityConstantAwsInstanceType, StandardSQLTypeName.FLOAT64).build());
+
+    Set<QLEntityData> awsRegion = new HashSet<>();
+    Set<QLEntityData> awsService = new HashSet<>();
+    Set<QLEntityData> awsUsageType = new HashSet<>();
+    Set<QLEntityData> awsInstanceType = new HashSet<>();
+    Set<QLEntityData> awsLinkedAccount = new HashSet<>();
+
+    dataHelper.processAndGetFilterValuesDataPoint(
+        trendFieldList, row, awsRegion, awsService, awsUsageType, awsInstanceType, awsLinkedAccount);
+
+    assertThat(awsRegion).containsOnly(QLEntityData.builder()
+                                           .id(entityConstantAwsRegion)
+                                           .name(entityConstantAwsRegion)
+                                           .type(entityConstantAwsRegion)
+                                           .build());
+    assertThat(awsInstanceType)
+        .containsOnly(QLEntityData.builder()
+                          .id(nullStringValueConstant)
+                          .name(nullStringValueConstant)
+                          .type(entityConstantAwsInstanceType)
+                          .build());
   }
 
   @Test

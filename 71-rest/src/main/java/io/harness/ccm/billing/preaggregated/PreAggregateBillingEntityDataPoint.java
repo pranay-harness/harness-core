@@ -6,6 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class PreAggregateBillingEntityDataPoint {
+  String id;
   String awsRegion;
   String awsLinkedAccount;
   String awsUsageType;
