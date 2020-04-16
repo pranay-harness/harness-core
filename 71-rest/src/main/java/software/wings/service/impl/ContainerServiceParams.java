@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
@@ -62,7 +61,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
 
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (value instanceof AwsConfig) {
-      executionCapabilities.add(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+      return executionCapabilities;
     } else if (value instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
       executionCapabilities.add(SystemEnvCheckerCapability.builder()
