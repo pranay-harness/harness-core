@@ -110,6 +110,10 @@ import javax.validation.constraints.NotNull;
         @Field(WorkflowExecutionKeys.accountId)
         , @Field(WorkflowExecutionKeys.appId), @Field("tags.name"),
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+      }), @Index(options = @IndexOptions(name = "appid_workflowid_status_createdat"), fields = {
+        @Field(WorkflowExecutionKeys.appId)
+        , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
+            @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)

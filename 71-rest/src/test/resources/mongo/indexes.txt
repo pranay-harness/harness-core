@@ -667,6 +667,7 @@ workflowExecutions { "name" : "accountId_tags_createdAt" , "background" : true} 
 workflowExecutions { "name" : "appId_1" , "background" : true} { "appId" : 1}
 workflowExecutions { "name" : "appId_endTs" , "background" : true} { "appId" : 1 , "endTs" : 1}
 workflowExecutions { "name" : "app_pipExecutionId_createdAt" , "background" : true} { "appId" : 1 , "pipelineExecutionId" : 1 , "createdAt" : -1}
+workflowExecutions { "name" : "appid_workflowid_status_createdat" , "background" : true} { "appId" : 1 , "workflowId" : 1 , "status" : 1 , "createdAt" : -1}
 workflowExecutions { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 workflowExecutions { "name" : "infraDefinitionIds_1" , "background" : true} { "infraDefinitionIds" : 1}
 workflowExecutions { "name" : "infraMappingIds_1" , "background" : true} { "infraMappingIds" : 1}
