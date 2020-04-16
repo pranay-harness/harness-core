@@ -190,6 +190,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(111, AddValidUntilToSecretUsageLogs.class))
         .add(Pair.of(112, AddAccountIdToTimeSeriesTransactionThresholdsMigration.class))
         .add(Pair.of(113, AddAccountIdToLogDataRecordsMigration.class))
+        .add(Pair.of(114, BaseMigration.class))
         .build();
   }
 }
