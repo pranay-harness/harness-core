@@ -107,14 +107,12 @@ public class ExecutionEngine implements Engine {
 
   private void startNodeExecution(Ambiance ambiance, ExecutionNode executionNode) {
     // Create ExecutionNodeInstance save to the database
-    ExecutionNodeInstance nodeInstance =
-        ExecutionNodeInstance.builder()
-            .uuid(generateUuid())
-            .node(executionNode)
-            .ambiance(ambiance)
-            .executionInstanceId(ambiance.getSetupAbstractions().get("executionInstanceId"))
-            .status(NodeExecutionStatus.QUEUED)
-            .build();
+    ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
+                                             .uuid(generateUuid())
+                                             .node(executionNode)
+                                             .ambiance(ambiance)
+                                             .status(NodeExecutionStatus.QUEUED)
+                                             .build();
     hPersistence.save(nodeInstance);
     handleNewNodeInstance(ambiance, nodeInstance.getUuid());
   }
