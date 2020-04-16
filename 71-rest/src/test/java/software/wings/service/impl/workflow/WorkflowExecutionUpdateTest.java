@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -36,8 +37,11 @@ import io.harness.event.listener.EventListener;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
@@ -74,6 +78,7 @@ import java.util.List;
  */
 @Slf4j
 @Listeners(GeneralNotifyEventListener.class)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private PersistentLocker persistentLocker;
@@ -84,6 +89,32 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @InjectMocks @Inject private WorkflowExecutionUpdate workflowExecutionUpdate;
+
+  private SegmentHandler segmentHandler;
+  private MainConfiguration mainConfiguration;
+  private SegmentHelper segmentHelper;
+  private UserService userService = mock(UserService.class);
+  private Utils utils = spy(new Utils());
+
+  @Before
+  public void setup() throws IllegalAccessException {
+    SegmentConfig segmentConfig =
+        SegmentConfig.builder().enabled(true).url("https://api.segment.io").apiKey("dummy_api_key").build();
+    EventListener eventListener = mock(EventListener.class);
+    segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
+    mainConfiguration = mock(MainConfiguration.class);
+
+    segmentHelper = new SegmentHelper(mainConfiguration);
+
+    FieldUtils.writeField(utils, "userService", userService, true);
+    FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
+    FieldUtils.writeField(segmentHandler, "utils", utils, true);
+    FieldUtils.writeField(segmentHandler, "userService", userService, true);
+    FieldUtils.writeField(segmentHandler, "persistentLocker", persistentLocker, true);
+    FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
+    FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
+    FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
+  }
 
   private WorkflowExecution createNewWorkflowExecution(User triggeredBy) {
     WorkflowExecutionBuilder workflowExecutionBuilder = WorkflowExecution.builder()
@@ -101,23 +132,25 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
                                                .name(triggeredBy.getName())
                                                .build());
     }
-
     return workflowExecutionBuilder.build();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldReportDeploymentEventToSegmentWithNullWorkflowType() throws URISyntaxException {
+    Account account = testUtils.createAccount();
+    when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution(null);
+    workflowExecution.setWorkflowType(null);
+    workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
+    verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
   }
 
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void shouldReportDeploymentEventToSegmentByTrigger() throws IllegalAccessException, URISyntaxException {
-    SegmentConfig segmentConfig =
-        SegmentConfig.builder().enabled(true).url("https://api.segment.io").apiKey("dummy_api_key").build();
-    EventListener eventListener = mock(EventListener.class);
-    SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
-    MainConfiguration mainConfiguration = mock(MainConfiguration.class);
-    FieldUtils.writeField(mainConfiguration, "segmentConfig", segmentConfig, true);
-    SegmentHelper segmentHelper = new SegmentHelper(mainConfiguration);
-    FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
-    FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
+  public void shouldReportDeploymentEventToSegmentByTrigger() throws URISyntaxException {
     Account account = testUtils.createAccount();
     when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
     WorkflowExecution workflowExecution = createNewWorkflowExecution(null);
@@ -132,24 +165,11 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     Account account = testUtils.createAccount();
     User user = testUtils.createUser(account);
     user.setSegmentIdentity(UUIDGenerator.generateUuid());
-    SegmentConfig segmentConfig =
-        SegmentConfig.builder().enabled(true).url("https://api.segment.io").apiKey("dummy_api_key").build();
-    EventListener eventListener = mock(EventListener.class);
-    UserService userService = mock(UserService.class);
+
     when(userService.get(anyString())).thenReturn(user);
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(user);
     when(userService.update(any(User.class))).thenReturn(user);
-    SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
-    MainConfiguration mainConfiguration = mock(MainConfiguration.class);
-    FieldUtils.writeField(mainConfiguration, "segmentConfig", segmentConfig, true);
-    SegmentHelper segmentHelper = new SegmentHelper(mainConfiguration);
-    Utils utils = spy(new Utils());
-    FieldUtils.writeField(utils, "userService", userService, true);
-    FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
-    FieldUtils.writeField(segmentHandler, "utils", utils, true);
-    FieldUtils.writeField(segmentHandler, "userService", userService, true);
-    FieldUtils.writeField(segmentHandler, "persistentLocker", persistentLocker, true);
-    FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
+
     when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
     AcquiredLock acquiredLock = mock(AcquiredLock.class);
     when(persistentLocker.waitToAcquireLock(anyString(), any(Duration.class), any(Duration.class)))
