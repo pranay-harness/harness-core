@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.harness.CategoryTest;
@@ -16,13 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class K8sResourceUtilsTest extends CategoryTest {
   private ResourceRequirements resourceRequirements = new ResourceRequirements();
   private Container k8sContainer;
-  private List<Container> k8sContainers = new ArrayList<>();
 
   @Before
   public void init() {
@@ -34,9 +33,6 @@ public class K8sResourceUtilsTest extends CategoryTest {
                        .addToCommand("-c")
                        .addToCommand("until nslookup mydb; do echo waiting for mydb; sleep 2; done;")
                        .build();
-
-    k8sContainers.add(k8sContainer);
-    k8sContainers.add(k8sContainer);
   }
 
   @Test
@@ -48,11 +44,20 @@ public class K8sResourceUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testGetTotalResourceRequest() {
-    Resource actualResource = K8sResourceUtils.getTotalResourceRequest(k8sContainers);
-    assertThat(actualResource).isNotNull();
+  public void shouldComputeEffectiveRequest() throws Exception {
+    Pod pod = new PodBuilder()
+                  .withNewSpec()
+                  .withContainers(makeContainer("250m", "1Ki"), makeContainer("500m", "1Mi"))
+                  .withInitContainers(makeContainer("0.8", "1Ki"), makeContainer("500m", "2Ki"))
+                  .endSpec()
+                  .build();
+    assertThat(K8sResourceUtils.getTotalResourceRequest(pod.getSpec()))
+        .isEqualTo(Resource.newBuilder()
+                       .putRequests("cpu", Resource.Quantity.newBuilder().setAmount(800_000_000).setUnit("n").build())
+                       .putRequests("memory", Resource.Quantity.newBuilder().setAmount(1049600).setUnit("").build())
+                       .build());
   }
 
   @Test
@@ -71,5 +76,14 @@ public class K8sResourceUtilsTest extends CategoryTest {
     assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu", new Quantity("100m"))))
         .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(100_000_000L).build(),
             "memory", Resource.Quantity.newBuilder().setAmount(0).build()));
+  }
+
+  private Container makeContainer(String cpu, String memory) {
+    return new ContainerBuilder()
+        .withNewResources()
+        .addToRequests("cpu", new Quantity(cpu))
+        .addToRequests("memory", new Quantity(memory))
+        .endResources()
+        .build();
   }
 }

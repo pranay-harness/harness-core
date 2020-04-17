@@ -81,7 +81,7 @@ public class PodWatcher implements Watcher<Pod> {
                             .setPodName(pod.getMetadata().getName())
                             .setNamespace(pod.getMetadata().getNamespace())
                             .setNodeName(pod.getSpec().getNodeName())
-                            .setTotalResource(K8sResourceUtils.getTotalResourceRequest(pod.getSpec().getContainers()))
+                            .setTotalResource(K8sResourceUtils.getTotalResourceRequest(pod.getSpec()))
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
                             .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))

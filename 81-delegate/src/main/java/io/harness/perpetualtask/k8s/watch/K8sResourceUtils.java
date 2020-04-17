@@ -6,13 +6,13 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableMap;
 
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity.Builder;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
 import java.util.Map;
 
 @UtilityClass
@@ -103,14 +103,19 @@ public class K8sResourceUtils {
     return memLimitBuilder.build();
   }
 
-  // for now, only resource request is taken into consideration
-  public static Resource getTotalResourceRequest(List<Container> k8sContainerList) {
+  static Resource getTotalResourceRequest(PodSpec podSpec) {
     long cpuNanos = 0;
     long memBytes = 0;
-    for (Container k8sContainer : k8sContainerList) {
-      Map<String, Quantity> resourceRequests = k8sContainer.getResources().getRequests();
+    for (Container container : podSpec.getContainers()) {
+      Map<String, Quantity> resourceRequests = container.getResources().getRequests();
       cpuNanos += getCpuNanos(resourceRequests);
       memBytes += getMemBytes(resourceRequests);
+    }
+
+    for (Container initContainer : podSpec.getInitContainers()) {
+      Map<String, Quantity> resourceRequests = initContainer.getResources().getRequests();
+      cpuNanos = Math.max(cpuNanos, getCpuNanos(resourceRequests));
+      memBytes = Math.max(memBytes, getMemBytes(resourceRequests));
     }
     return Resource.newBuilder()
         .putRequests(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(cpuNanos).setUnit("n").build())
