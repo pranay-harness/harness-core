@@ -31,6 +31,8 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   @NotNull ExecutionNode node;
   @NotNull ExecutionMode mode;
 
+  String notifyId;
+
   // Mutable
   long lastUpdatedAt;
   NodeExecutionStatus status;

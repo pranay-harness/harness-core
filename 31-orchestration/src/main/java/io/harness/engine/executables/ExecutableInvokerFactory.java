@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.engine.executables.handlers.AsyncExecutableInvoker;
-import io.harness.engine.executables.handlers.ExecutableInvoker;
+import io.harness.engine.executables.handlers.ChildrenExecutableInvoker;
 import io.harness.engine.executables.handlers.SyncExecutableInvoker;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.modes.ExecutionMode;
@@ -13,6 +13,7 @@ import io.harness.facilitate.modes.ExecutionMode;
 public class ExecutableInvokerFactory {
   @Inject private AsyncExecutableInvoker asyncExecutableInvoker;
   @Inject private SyncExecutableInvoker syncExecutableInvoker;
+  @Inject private ChildrenExecutableInvoker childrenExecutableInvoker;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
     switch (mode) {
@@ -20,6 +21,8 @@ public class ExecutableInvokerFactory {
         return asyncExecutableInvoker;
       case SYNC:
         return syncExecutableInvoker;
+      case CHILDREN:
+        return childrenExecutableInvoker;
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }

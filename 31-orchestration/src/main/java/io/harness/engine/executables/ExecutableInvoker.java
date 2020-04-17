@@ -1,7 +1,6 @@
-package io.harness.engine.executables.handlers;
+package io.harness.engine.executables;
 
 import io.harness.annotations.Redesign;
-import io.harness.engine.executables.InvokerPackage;
 
 @Redesign
 public interface ExecutableInvoker {

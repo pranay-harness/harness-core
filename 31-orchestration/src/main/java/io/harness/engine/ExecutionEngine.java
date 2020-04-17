@@ -1,9 +1,8 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.state.execution.status.NodeExecutionStatus.TASK_WAITING;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -16,30 +15,30 @@ import io.harness.adviser.impl.success.OnSuccessAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
-import io.harness.engine.executables.handlers.ExecutableInvoker;
-import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorResponse;
-import io.harness.facilitate.modes.async.AsyncExecutableResponse;
+import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
 import io.harness.state.execution.ExecutionInstance;
-import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
+import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.ambiance.Ambiance;
-import io.harness.waiter.NotifyCallback;
+import io.harness.state.io.ambiance.Ambiance.AmbianceBuilder;
+import io.harness.state.io.ambiance.Level;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +69,7 @@ public class ExecutionEngine implements Engine {
     ExecutionInstance instance = ExecutionInstance.builder()
                                      .uuid(generateUuid())
                                      .executionPlan(executionPlan)
-                                     .status(ExecutionInstanceStatus.QUEUED)
+                                     .status(ExecutionInstanceStatus.RUNNING)
                                      .createdBy(createdBy)
                                      .startTs(System.currentTimeMillis())
                                      .build();
@@ -80,41 +79,33 @@ public class ExecutionEngine implements Engine {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
-    Ambiance ambiance = Ambiance.builder()
-                            .setupAbstractions(executionPlan.getSetupAbstractions())
-                            .setupAbstraction("executionInstanceId", instance.getUuid())
-                            .build();
-    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(this).build());
+    AmbianceBuilder ambianceBuilder = Ambiance.builder()
+                                          .setupAbstractions(executionPlan.getSetupAbstractions())
+                                          .setupAbstraction("executionInstanceId", instance.getUuid());
+    triggerExecution(ambianceBuilder, executionPlan.fetchStartingNode());
     return instance;
   }
 
-  public void startExecution(Ambiance ambiance) {
-    String executionInstanceId = ambiance.getSetupAbstractions().get("executionInstanceId");
-    ExecutionInstance executionInstance =
-        hPersistence.createQuery(ExecutionInstance.class).filter(ExecutionInstanceKeys.uuid, executionInstanceId).get();
-    if (executionInstance == null) {
-      logger.error("Execution Instance not found for id : {}", executionInstanceId);
-      throw new InvalidRequestException("Execution Instance not found for id : " + executionInstanceId);
-    }
-    ExecutionPlan plan = executionInstance.getExecutionPlan();
-    ExecutionNode executionNode = plan.fetchStartingNode();
-    engineStatusHelper.updateExecutionInstanceStatus(executionInstanceId, ExecutionInstanceStatus.RUNNING);
-    startNodeExecution(ambiance, executionNode);
+  public void startNodeExecution(Ambiance ambiance) {
+    startNodeInstance(ambiance, ambiance.getLevels().get("currentNode").getRuntimeId());
   }
 
-  private void startNodeExecution(Ambiance ambiance, ExecutionNode executionNode) {
-    // Create ExecutionNodeInstance save to the database
+  public void triggerExecution(AmbianceBuilder ambianceBuilder, ExecutionNode node) {
+    String uuid = generateUuid();
+    Ambiance ambiance =
+        ambianceBuilder.level("currentNode", Level.builder().setupId(node.getUuid()).runtimeId(uuid).build()).build();
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
-                                             .uuid(generateUuid())
-                                             .node(executionNode)
+                                             .uuid(uuid)
+                                             .node(node)
                                              .ambiance(ambiance)
+                                             .startTs(System.currentTimeMillis())
                                              .status(NodeExecutionStatus.QUEUED)
                                              .build();
     hPersistence.save(nodeInstance);
-    handleNewNodeInstance(ambiance, nodeInstance.getUuid());
+    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(this).build());
   }
 
-  public void handleNewNodeInstance(Ambiance ambiance, String nodeInstanceId) {
+  public void startNodeInstance(Ambiance ambiance, String nodeInstanceId) {
     // Update to Running Status
     ExecutionNodeInstance nodeInstance = hPersistence.createQuery(ExecutionNodeInstance.class)
                                              .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
@@ -135,8 +126,9 @@ public class ExecutionEngine implements Engine {
       throw new InvalidRequestException(
           "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
     }
-    ExecutionNodeInstance updatedNodeInstance =
-        engineStatusHelper.updateNodeInstance(nodeInstanceId, NodeExecutionStatus.RUNNING, ops -> {});
+    ExecutionMode mode = facilitatorResponse.getExecutionMode();
+    ExecutionNodeInstance updatedNodeInstance = engineStatusHelper.updateNodeInstance(
+        nodeInstanceId, NodeExecutionStatus.RUNNING, ops -> ops.set(ExecutionNodeInstanceKeys.mode, mode));
     if (updatedNodeInstance == null) {
       throw new InvalidRequestException(
           "Cannot set the Node Execution instance in running state id: " + nodeInstanceId);
@@ -153,15 +145,14 @@ public class ExecutionEngine implements Engine {
     }
     injector.injectMembers(currentState);
     List<StateTransput> inputs = engineObtainmentHelper.obtainInputs(node.getRefObjects());
-    ExecutableInvoker executableInvoker =
-        executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
-    executableInvoker.invokeExecutable(InvokerPackage.builder()
-                                           .state(currentState)
-                                           .ambiance(ambiance)
-                                           .parameters(node.getStateParameters())
-                                           .inputs(inputs)
-                                           .passThroughData(facilitatorResponse.getPassThroughData())
-                                           .build());
+    ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
+    invoker.invokeExecutable(InvokerPackage.builder()
+                                 .state(currentState)
+                                 .ambiance(ambiance)
+                                 .inputs(inputs)
+                                 .parameters(node.getStateParameters())
+                                 .passThroughData(facilitatorResponse.getPassThroughData())
+                                 .build());
   }
 
   public void handleStateResponse(String nodeInstanceId, StateResponse stateResponse) {
@@ -172,48 +163,44 @@ public class ExecutionEngine implements Engine {
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
     if (isEmpty(advisers)) {
+      endTransition(nodeInstance);
+    } else {
+      Advise advise = null;
+      for (Adviser adviser : advisers) {
+        advise = adviser.onAdviseEvent(AdvisingEvent.builder().stateResponse(stateResponse).build());
+        if (advise != null) {
+          break;
+        }
+      }
+      handleAdvise(nodeInstance, advise);
+    }
+  }
+
+  private void endTransition(ExecutionNodeInstance nodeInstance) {
+    if (isNotEmpty(nodeInstance.getNotifyId())) {
+      StatusNotifyResponseData responseData =
+          StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+      waitNotifyEngine.doneWith(nodeInstance.getNotifyId(), responseData);
+    } else {
+      logger.info("End Execution");
       engineStatusHelper.updateExecutionInstanceStatus(
           nodeInstance.getAmbiance().getSetupAbstractions().get("executionInstanceId"),
           ExecutionInstanceStatus.SUCCEEDED);
-      return;
     }
-    Advise advise = null;
-    for (Adviser adviser : advisers) {
-      advise = adviser.onAdviseEvent(AdvisingEvent.builder().stateResponse(stateResponse).build());
-      if (advise != null) {
-        break;
-      }
-    }
-    handleAdvise(nodeInstance.getAmbiance(), advise);
   }
 
-  private void handleAdvise(Ambiance ambiance, Advise advise) {
+  private void handleAdvise(ExecutionNodeInstance nodeInstance, Advise advise) {
+    Ambiance ambiance = nodeInstance.getAmbiance();
     if (advise != null) {
       if ("ON_SUCCESS".equals(advise.getType())) {
         OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
-        startNodeExecution(ambiance,
+        triggerExecution(ambiance.cloneBuilder(),
             engineObtainmentHelper.fetchExecutionNode(
                 onSuccessAdvise.getNextNodeId(), ambiance.getSetupAbstractions().get("executionInstanceId")));
       }
+    } else {
+      endTransition(nodeInstance);
     }
-    // End Execution
-    logger.info("Advise is null ending execution");
-  }
-
-  private void handleAsyncExecutableResponse(
-      ExecutionNodeInstance nodeInstance, AsyncExecutableResponse asyncExecutableResponse) {
-    ExecutionNode nodeDefinition = nodeInstance.getNode();
-    if (isEmpty(asyncExecutableResponse.getCallbackIds())) {
-      logger.error("executionResponse is null, but no correlationId - currentState : " + nodeDefinition.getName()
-          + ", stateExecutionInstanceId: " + nodeInstance.getUuid());
-      throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
-    }
-    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeInstance.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(
-        ORCHESTRATION, callback, asyncExecutableResponse.getCallbackIds().toArray(new String[0]));
-
-    // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstance(nodeInstance.getUuid(), TASK_WAITING, operations -> {});
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
