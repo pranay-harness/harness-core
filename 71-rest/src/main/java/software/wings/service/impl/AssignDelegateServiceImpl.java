@@ -37,6 +37,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -65,6 +66,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
   private static final long WHITELIST_REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(10);
 
+  @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
   @Inject private WingsPersistence wingsPersistence;
@@ -112,7 +114,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(delegate, task) && canAssignTags(delegate, task.getTags());
+    return canAssignScopes(delegate, task) && canAssignSelectors(delegate, task.getTags());
   }
 
   @Override
@@ -122,7 +124,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(delegate, appId, envId, infraMappingId, taskGroup) && canAssignTags(delegate, tags);
+    return canAssignScopes(delegate, appId, envId, infraMappingId, taskGroup) && canAssignSelectors(delegate, tags);
   }
 
   private boolean canAssignScopes(Delegate delegate, DelegateTask task) {
@@ -144,21 +146,41 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       excludeScopes = delegate.getExcludeScopes().stream().filter(Objects::nonNull).collect(toList());
     }
 
-    return (isEmpty(includeScopes)
-               || (includeScopes.stream().anyMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))))
-        && (isEmpty(excludeScopes)
-               || (excludeScopes.stream().noneMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))));
+    boolean excludeMatched = false;
+    boolean includeMatched = true;
+
+    for (DelegateScope scope : includeScopes) {
+      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+        delegateSelectionLogsService.logIncludeScopeMatched(scope, delegate.getUuid());
+        includeMatched = true;
+        break;
+      } else {
+        includeMatched = false;
+      }
+    }
+
+    if (!includeMatched) {
+      delegateSelectionLogsService.logNoIncludeScopeMatched(delegate.getUuid());
+      return false;
+    }
+
+    for (DelegateScope scope : excludeScopes) {
+      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+        delegateSelectionLogsService.logExcludeScopeMatched(scope, delegate.getUuid());
+        excludeMatched = true;
+        break;
+      }
+    }
+
+    return !excludeMatched && includeMatched;
   }
 
-  private boolean canAssignTags(Delegate delegate, List<String> tags) {
+  private boolean canAssignSelectors(Delegate delegate, List<String> tags) {
     if (isEmpty(tags)) {
       return true;
     }
 
     Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : trimmedLowercaseSet(delegate.getTags());
-
     if (featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, delegate.getAccountId())) {
       if (delegate.getHostName() != null) {
         selectors.add(delegate.getHostName().trim().toLowerCase());
@@ -169,7 +191,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       }
     }
 
-    return isNotEmpty(selectors) && selectors.containsAll(trimmedLowercaseSet(tags));
+    if (isEmpty(selectors)) {
+      delegateSelectionLogsService.logMissingAllSelectors(delegate.getUuid());
+      return false;
+    }
+
+    boolean canAssignSelector = true;
+    for (String selector : trimmedLowercaseSet(tags)) {
+      if (!selectors.contains(selector)) {
+        delegateSelectionLogsService.logMissingSelector(selector, delegate.getUuid());
+        canAssignSelector = false;
+      }
+    }
+
+    return canAssignSelector;
   }
 
   private boolean scopeMatch(
@@ -401,7 +436,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
             boolean canAssignScope = canAssignScopes(delegate, delegateTask);
-            boolean canAssignTags = canAssignTags(delegate, delegateTask.getTags());
+            boolean canAssignTags = canAssignSelectors(delegate, delegateTask.getTags());
             if (!canAssignScope) {
               msg.append("Not in scope");
             }

@@ -6,11 +6,15 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Status.ENABLED;
@@ -46,6 +50,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
@@ -58,6 +63,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -75,6 +81,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
 
   @Inject @InjectMocks private AssignDelegateService assignDelegateService;
 
@@ -107,6 +114,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+
+    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
   }
 
   @Test
@@ -119,15 +130,81 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate =
-        Delegate.builder()
-            .accountId(ACCOUNT_ID)
-            .uuid(DELEGATE_ID)
-            .includeScopes(ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
-            .excludeScopes(emptyList())
-            .build();
+
+    List<DelegateScope> includeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(includeScopes)
+                            .excludeScopes(emptyList())
+                            .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+
+    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldAssignDelegateWithMatchingIncludeScopesAndWithoutMatchingExcludeScope() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+
+    List<DelegateScope> includeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
+    List<DelegateScope> excludeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(includeScopes)
+                            .excludeScopes(excludeScopes)
+                            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+
+    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotAssignDelegateWithMatchingIncludeScopesAndWithMatchingExcludeScope() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+
+    List<DelegateScope> includeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
+    List<DelegateScope> excludeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(includeScopes)
+                            .excludeScopes(excludeScopes)
+                            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+
+    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
   }
 
   @Test
@@ -140,15 +217,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
+
+    List<DelegateScope> includeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
-                            .includeScopes(ImmutableList.of(
-                                DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
+                            .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+
+    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService).logNoIncludeScopeMatched(anyString());
   }
 
   @Test
@@ -161,15 +244,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
+
+    List<DelegateScope> excludeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
                             .includeScopes(emptyList())
-                            .excludeScopes(ImmutableList.of(
-                                DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
+                            .excludeScopes(excludeScopes)
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+
+    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
   }
 
   @Test
@@ -182,6 +271,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
+
+    List<DelegateScope> excludeScopes =
+        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
     Delegate delegate =
         Delegate.builder()
             .accountId(ACCOUNT_ID)
@@ -191,6 +283,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+
+    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
+    verify(delegateSelectionLogsService).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
   }
 
   @Value
@@ -199,71 +295,128 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<String> taskTags;
     List<String> delegateTags;
     boolean assignable;
+    int numOfMissingAllSelectorsInvocations;
+    int numOfMissingSelectorInvocations;
   }
 
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void assignByTags() {
-    List<TagTestData> tests =
-        ImmutableList.<TagTestData>builder()
-            .add(TagTestData.builder().taskTags(null).delegateTags(null).assignable(true).build())
-            .add(TagTestData.builder().taskTags(null).delegateTags(emptyList()).assignable(true).build())
-            .add(TagTestData.builder().taskTags(emptyList()).delegateTags(null).assignable(true).build())
-            .add(TagTestData.builder().taskTags(emptyList()).delegateTags(emptyList()).assignable(true).build())
-            .add(TagTestData.builder().taskTags(ImmutableList.of("a")).delegateTags(null).assignable(false).build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a"))
-                     .delegateTags(emptyList())
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder().taskTags(null).delegateTags(ImmutableList.of("a")).assignable(true).build())
-            .add(TagTestData.builder()
-                     .taskTags(emptyList())
-                     .delegateTags(ImmutableList.of("a"))
-                     .assignable(true)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a", "b"))
-                     .delegateTags(ImmutableList.of("a", "c", "b"))
-                     .assignable(true)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a", "b", "c"))
-                     .delegateTags(ImmutableList.of("a", "b"))
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a", "b"))
-                     .delegateTags(ImmutableList.of("c", "a"))
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a", "b"))
-                     .delegateTags(ImmutableList.of("c", "d"))
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a ", " B "))
-                     .delegateTags(ImmutableList.of("A", " b"))
-                     .assignable(true)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a-b"))
-                     .delegateTags(ImmutableList.of("a", " b"))
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("a"))
-                     .delegateTags(ImmutableList.of("a-b"))
-                     .assignable(false)
-                     .build())
-            .add(TagTestData.builder()
-                     .taskTags(ImmutableList.of("", " "))
-                     .delegateTags(ImmutableList.of("a"))
-                     .assignable(true)
-                     .build())
-            .build();
+    List<TagTestData> tests = ImmutableList.<TagTestData>builder()
+                                  .add(TagTestData.builder()
+                                           .taskTags(null)
+                                           .delegateTags(null)
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(0)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(null)
+                                           .delegateTags(emptyList())
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(0)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(emptyList())
+                                           .delegateTags(null)
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(0)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(emptyList())
+                                           .delegateTags(emptyList())
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(0)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a"))
+                                           .delegateTags(null)
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(1)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a"))
+                                           .delegateTags(emptyList())
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(null)
+                                           .delegateTags(ImmutableList.of("a"))
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(emptyList())
+                                           .delegateTags(ImmutableList.of("a"))
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a", "b"))
+                                           .delegateTags(ImmutableList.of("a", "c", "b"))
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(0)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a", "b", "c"))
+                                           .delegateTags(ImmutableList.of("a", "b"))
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(1)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a", "b"))
+                                           .delegateTags(ImmutableList.of("c", "a"))
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(2)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a", "b"))
+                                           .delegateTags(ImmutableList.of("c", "d"))
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(4)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a ", " B "))
+                                           .delegateTags(ImmutableList.of("A", " b"))
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(4)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a-b"))
+                                           .delegateTags(ImmutableList.of("a", " b"))
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(5)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("a"))
+                                           .delegateTags(ImmutableList.of("a-b"))
+                                           .assignable(false)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(6)
+                                           .build())
+                                  .add(TagTestData.builder()
+                                           .taskTags(ImmutableList.of("", " "))
+                                           .delegateTags(ImmutableList.of("a"))
+                                           .assignable(true)
+                                           .numOfMissingAllSelectorsInvocations(2)
+                                           .numOfMissingSelectorInvocations(6)
+                                           .build())
+                                  .build();
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -286,6 +439,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
       assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+
+      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
+          .logMissingAllSelectors(DELEGATE_ID);
+      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
+          .logMissingSelector(anyString(), eq(DELEGATE_ID));
     }
 
     delegateTaskBuilder.envId(ENV_ID);
