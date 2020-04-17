@@ -361,8 +361,9 @@ public class SecretManagerImplTest extends WingsBaseTest {
     appIdEnvMapForAccount.put(appId2, Collections.singletonList(environment1));
     appIdEnvMapForAccount.put(appId3, Collections.singletonList(environment1));
 
-    boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1, encryptedDataId2),
-        account.getUuid(), appId2, envId2, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
+    boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2, UUIDGenerator.generateUuid()), account.getUuid(), appId2,
+        envId2, false, userUsageRestrictions, userAppEnvMap, appIdEnvMapForAccount);
     assertThat(canUseSecrets).isTrue();
 
     canUseSecrets = secretManager.canUseSecretsInAppAndEnv(Sets.newHashSet(encryptedDataId1, encryptedDataId2),
@@ -445,7 +446,8 @@ public class SecretManagerImplTest extends WingsBaseTest {
     when(environmentService.getAppIdEnvMap(any())).thenReturn(appIdEnvMapForAccount);
 
     boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
-        Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), appId2, envId2);
+        Sets.newHashSet(encryptedDataId1, encryptedDataId2, UUIDGenerator.generateUuid()), account.getUuid(), appId2,
+        envId2);
     assertThat(canUseSecrets).isTrue();
 
     canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
@@ -461,27 +463,16 @@ public class SecretManagerImplTest extends WingsBaseTest {
     assertThat(canUseSecrets).isTrue();
   }
 
-  @Test(expected = SecretManagementException.class)
+  @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void test_canUseSecretsInAppAndEnv_OnlyAppIdandEnvId_shouldFail() {
-    EncryptedData encryptedData = EncryptedData.builder()
-                                      .accountId(account.getUuid())
-                                      .enabled(true)
-                                      .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
-                                      .encryptionKey("Dummy Key")
-                                      .encryptedValue("Dummy Value".toCharArray())
-                                      .base64Encoded(false)
-                                      .name("Dummy record")
-                                      .type(SettingVariableTypes.AWS)
-                                      .build();
-
-    String encryptedDataId1 = wingsPersistence.save(encryptedData);
+  public void test_canUseSecretsInAppAndEnv_OnlyAppIdandEnvId_shouldReturnTrue() {
+    String encryptedDataId1 = UUIDGenerator.generateUuid();
     String encryptedDataId2 = UUIDGenerator.generateUuid();
 
-    secretManager.canUseSecretsInAppAndEnv(
+    boolean canUseSecrets = secretManager.canUseSecretsInAppAndEnv(
         Sets.newHashSet(encryptedDataId1, encryptedDataId2), account.getUuid(), "appId2", "envId2");
+    assertThat(canUseSecrets).isTrue();
   }
 
   @Test
