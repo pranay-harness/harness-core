@@ -77,7 +77,7 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
     });
 
     modules.add(new VersionModule());
-    modules.add(new TimeModule());
+    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.addAll(new TestMongoModule(datastore).cumulativeDependencies());
     return modules;
   }

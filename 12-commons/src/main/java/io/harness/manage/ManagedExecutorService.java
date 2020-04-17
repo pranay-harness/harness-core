@@ -1,5 +1,7 @@
 package io.harness.manage;
 
+import static java.util.stream.Collectors.toList;
+
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.Collection;
@@ -55,7 +57,7 @@ public class ManagedExecutorService implements ExecutorService, Managed {
 
   @Override
   public <T> Future<T> submit(Runnable task, T result) {
-    return executorService.submit(task, result);
+    return executorService.submit(GlobalContextManager.generateExecutorTask(task), result);
   }
 
   @Override
@@ -65,29 +67,31 @@ public class ManagedExecutorService implements ExecutorService, Managed {
 
   @Override
   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-    return executorService.invokeAll(tasks);
+    return executorService.invokeAll(tasks.stream().map(GlobalContextManager::generateExecutorTask).collect(toList()));
   }
 
   @Override
   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
       throws InterruptedException {
-    return executorService.invokeAll(tasks, timeout, unit);
+    return executorService.invokeAll(
+        tasks.stream().map(GlobalContextManager::generateExecutorTask).collect(toList()), timeout, unit);
   }
 
   @Override
   public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-    return executorService.invokeAny(tasks);
+    return executorService.invokeAny(tasks.stream().map(GlobalContextManager::generateExecutorTask).collect(toList()));
   }
 
   @Override
   public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
       throws InterruptedException, ExecutionException, TimeoutException {
-    return executorService.invokeAny(tasks, timeout, unit);
+    return executorService.invokeAny(
+        tasks.stream().map(GlobalContextManager::generateExecutorTask).collect(toList()), timeout, unit);
   }
 
   @Override
   public void execute(Runnable command) {
-    executorService.execute(command);
+    executorService.execute(GlobalContextManager.generateExecutorTask(command));
   }
 
   protected ExecutorService getExecutorService() {
