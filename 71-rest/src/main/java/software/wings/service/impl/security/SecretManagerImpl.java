@@ -1637,22 +1637,29 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean deleteSecret(String accountId, String uuId) {
-    List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
-                                                 .filter(ACCOUNT_ID_KEY, accountId)
-                                                 .filter(ENCRYPTED_VALUE_KEY, uuId)
-                                                 .asList();
-    if (!serviceVariables.isEmpty()) {
-      String reason = "Can't delete this secret because it is still being used in service variable(s): "
-          + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "))
-          + ". Please remove the usages of this secret and try again.";
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
-    }
-
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+  public boolean deleteSecret(String accountId, String secretId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    checkNotNull(encryptedData, "No encrypted record found with id " + secretId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
+      Set<SecretSetupUsage> secretSetupUsages = getSecretUsage(accountId, secretId);
+      if (!secretSetupUsages.isEmpty()) {
+        String reason = "Can not delete secret because it is still being used. See setup usage(s) of the secret.";
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
+      }
+    } else {
+      List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
+                                                   .filter(ACCOUNT_ID_KEY, accountId)
+                                                   .filter(ENCRYPTED_VALUE_KEY, secretId)
+                                                   .asList();
+      if (!serviceVariables.isEmpty()) {
+        String reason = "Can not delete secret because it is still being used in service variable(s): "
+            + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "));
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
+      }
     }
 
     EncryptionType encryptionType = encryptedData.getEncryptionType();
