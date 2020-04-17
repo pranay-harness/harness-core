@@ -2,8 +2,8 @@ package io.harness.ccm.setup.service;
 
 import com.google.inject.Inject;
 
-import io.harness.ccm.setup.dao.CECloudAccountDao;
-import io.harness.ccm.setup.dao.CEClusterDao;
+import io.harness.ccm.setup.CECloudAccountDao;
+import io.harness.ccm.setup.CEClusterDao;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;

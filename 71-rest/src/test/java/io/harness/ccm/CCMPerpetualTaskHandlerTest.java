@@ -13,6 +13,7 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

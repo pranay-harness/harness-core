@@ -11,13 +11,13 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.CCMConfig;
-import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;

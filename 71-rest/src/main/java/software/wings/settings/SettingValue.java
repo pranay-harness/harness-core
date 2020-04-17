@@ -312,6 +312,8 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     CE_AWS("Continuous Efficiency AWS"),
 
+    CE_GCP("Continuous Efficiency GCP"),
+
     AZURE_VAULT("Azure Vault Secrets Manager");
 
     @Getter private String displayName;

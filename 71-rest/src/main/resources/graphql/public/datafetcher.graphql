@@ -3,21 +3,22 @@ enum DataFetcherEnum {
   applicationConnection
   applicationStats
   artifact
+  billingAccount
   billingStatsEntity
   billingStatsFilterValues
   billingStatsTimeSeries
   billingTrendStats
+  budget
+  budgetList
+  budgetTrendStats
   gcpBillingEntityStats
   gcpBillingTimeSeriesStats
   gcpBillingTrendStats
+  ceHealthStatusta
   cloudEntityStats
   cloudFilterValues
   cloudTrendStats
   cloudTimeSeriesStats
-  budget
-  budgetList
-  budgetTrendStats
-  ceHealthStatusta
   cloudProvider
   cloudProviderConnection
   cloudProviderStats

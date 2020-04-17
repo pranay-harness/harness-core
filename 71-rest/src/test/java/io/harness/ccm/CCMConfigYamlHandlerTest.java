@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

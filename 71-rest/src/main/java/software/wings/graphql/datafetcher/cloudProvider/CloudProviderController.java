@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import io.harness.ccm.CloudCostAware;
+import io.harness.ccm.config.CloudCostAware;
 import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.SettingAttribute;

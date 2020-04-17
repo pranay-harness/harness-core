@@ -12,10 +12,10 @@ import static java.lang.String.format;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;

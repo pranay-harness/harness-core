@@ -37,7 +37,6 @@ public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAwa
   String infraAccountId;
   String infraMasterAccountId; // master account id
   String masterAccountSettingId; // setting id of ce connectors
-  long lastReceivedAt;
   long createdAt;
   long lastUpdatedAt;
 }

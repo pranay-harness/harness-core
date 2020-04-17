@@ -9,9 +9,9 @@ import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
-import io.harness.ccm.setup.dao.EksClusterStatsDataFetcher;
-import io.harness.ccm.setup.dao.InfraAccountConnectionDataFetcher;
-import io.harness.ccm.setup.dao.LinkedAccountStatsDataFetcher;
+import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
+import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
+import io.harness.ccm.setup.graphql.LinkedAccountStatsDataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +39,7 @@ import software.wings.graphql.datafetcher.application.batch.ApplicationBatchData
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeContentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeSetConnectionDataFetcher;
+import software.wings.graphql.datafetcher.billing.BillingAccountDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsEntityDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsFilterValuesDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsTimeSeriesDataFetcher;
@@ -197,6 +198,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(BillingAccountDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsTimeSeriesDataFetcher.class);
