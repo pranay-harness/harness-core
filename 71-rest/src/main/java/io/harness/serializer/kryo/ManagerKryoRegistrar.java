@@ -369,6 +369,7 @@ import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
+import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
@@ -1551,5 +1552,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceArtifactElements.class, 7342);
     kryo.register(ServiceArtifactVariableElements.class, 7343);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesExecutionData.class, 7344);
+    kryo.register(ClusterMasterUrlValidationCapability.class, 7345);
   }
 }
