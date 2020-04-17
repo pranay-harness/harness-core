@@ -43,6 +43,8 @@ public class QLStatsHelper {
         return entityId;
       case WORKFLOWID:
         return getWorkflowName(entityId);
+      case TAGS:
+        return entityId;
       default:
         throw new RuntimeException("Invalid EntityType " + field);
     }

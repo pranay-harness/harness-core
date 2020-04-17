@@ -18,7 +18,8 @@ public enum QLDeploymentFilterType {
   Trigger(DeploymentMetaDataFields.TRIGGER_ID),
   Workflow(DeploymentMetaDataFields.WORKFLOWID),
   Pipeline(DeploymentMetaDataFields.PIPELINEID),
-  Tag(null);
+  Tag(null),
+  Tags(DeploymentMetaDataFields.TAGS);
 
   private QLDataType dataType;
   private DeploymentMetaDataFields metaDataFields;

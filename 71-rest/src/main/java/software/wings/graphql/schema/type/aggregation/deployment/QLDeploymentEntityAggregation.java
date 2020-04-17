@@ -12,7 +12,8 @@ public enum QLDeploymentEntityAggregation {
   TriggeredBy(QLAggregationKind.SIMPLE),
   Trigger(QLAggregationKind.SIMPLE),
   Workflow(QLAggregationKind.ARRAY),
-  Pipeline(QLAggregationKind.SIMPLE);
+  Pipeline(QLAggregationKind.SIMPLE),
+  Deployment(QLAggregationKind.HSTORE);
 
   QLAggregationKind aggregationKind;
 

@@ -32,6 +32,7 @@ public class DeploymentTableSchema {
    * 	STAGENAME TEXT
    * 	ROLLBACK_DURATION BIGINT
    * 	INSTANCES_DEPLOYED INT
+   *    TAGS HSTORE
    */
   DbSpec dbSpec;
   DbSchema dbSchema;
@@ -56,6 +57,7 @@ public class DeploymentTableSchema {
   DbColumn stageName;
   DbColumn rollbackDuration;
   DbColumn instancesDeployed;
+  DbColumn tags;
 
   public DeploymentTableSchema() {
     dbSpec = new DbSpec();
@@ -81,5 +83,6 @@ public class DeploymentTableSchema {
     stageName = deploymentTable.addColumn("STAGENAME", "text", null);
     rollbackDuration = deploymentTable.addColumn("ROLLBACK_DURATION", "bigint", null);
     instancesDeployed = deploymentTable.addColumn("INSTANCES_DEPLOYED", "int", null);
+    tags = deploymentTable.addColumn("TAGS", "hstore", null);
   }
 }

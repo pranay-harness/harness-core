@@ -134,8 +134,12 @@ public class ExecutionQueryHelper {
       if (filter.getTag() != null) {
         QLDeploymentTagFilter tagFilter = filter.getTag();
         List<QLTagInput> tags = tagFilter.getTags();
-        Set<String> entityIds =
-            tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
+        Set<String> entityIds;
+        if (QLDeploymentTagType.DEPLOYMENT == tagFilter.getEntityType()) {
+          entityIds = tagHelper.getWorkExecutionsWithTags(accountId, tags);
+        } else {
+          entityIds = tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
+        }
         switch (tagFilter.getEntityType()) {
           case APPLICATION:
             query.field(WorkflowExecutionKeys.appId).in(entityIds);
@@ -145,6 +149,9 @@ public class ExecutionQueryHelper {
             break;
           case ENVIRONMENT:
             query.field(WorkflowExecutionKeys.envIds).in(entityIds);
+            break;
+          case DEPLOYMENT:
+            query.field(WorkflowExecutionKeys.uuid).in(entityIds);
             break;
           default:
             logger.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
@@ -169,6 +176,8 @@ public class ExecutionQueryHelper {
         return EntityType.SERVICE;
       case ENVIRONMENT:
         return EntityType.ENVIRONMENT;
+      case DEPLOYMENT:
+        return EntityType.DEPLOYMENT;
       default:
         logger.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);

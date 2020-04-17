@@ -33,6 +33,7 @@ enum DeploymentTagType {
   APPLICATION
   SERVICE
   ENVIRONMENT
+  DEPLOYMENT
 }
 
 enum ExecutionStatus {
@@ -78,6 +79,12 @@ interface Execution {
   status: ExecutionStatus
   cause: Cause
   notes: String
+  tags: [DeploymentTag]
+}
+
+type DeploymentTag {
+  name: String
+  value: String
 }
 
 type ExecutionConnection {
@@ -112,6 +119,8 @@ type WorkflowExecution implements Execution {
   cause: Cause
 
   notes: String
+
+  tags: [DeploymentTag]
 }
 
 # Type for pipeline execution
@@ -139,6 +148,8 @@ type PipelineExecution implements Execution {
   cause: Cause
 
   notes: String
+
+  tags: [DeploymentTag]
 
   memberExecutions: ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")

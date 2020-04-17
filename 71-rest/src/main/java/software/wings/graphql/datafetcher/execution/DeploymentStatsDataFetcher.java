@@ -2,22 +2,27 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.healthmarketscience.common.util.AppendableExt;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition.Op;
 import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.CustomCondition;
 import com.healthmarketscience.sqlbuilder.CustomExpression;
+import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.OrderObject;
 import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
+import com.healthmarketscience.sqlbuilder.ValidationContext;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
@@ -82,15 +87,16 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -142,8 +148,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList, groupByTime);
 
     preValidateInput(groupByEntityList, groupByTime);
-
-    queryData = formQuery(accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
+    if (isGroupByHStore(groupByTagList)) {
+      queryData = formQueryWithHStoreGroupBy(
+          accountId, aggregateFunction, filters, groupByEntityList, groupByTagList, groupByTime, sortCriteria);
+    } else {
+      queryData = formQueryWithNonHStoreGroupBy(
+          accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
+    }
 
     while (!successful && retryCount < MAX_RETRY) {
       ResultSet resultSet = null;
@@ -183,6 +194,19 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       }
     }
     return null;
+  }
+
+  private boolean isGroupByHStore(List<QLDeploymentTagAggregation> groupByTagList) {
+    boolean isGroupByHStore = false;
+    if (isNotEmpty(groupByTagList)) {
+      for (QLDeploymentTagAggregation tagAggregation : groupByTagList) {
+        if (tagAggregation.getEntityType() == QLDeploymentTagType.DEPLOYMENT) {
+          isGroupByHStore = true;
+          break;
+        }
+      }
+    }
+    return isGroupByHStore;
   }
 
   private List<QLDeploymentEntityAggregation> getGroupByEntity(List<QLDeploymentAggregation> groupBy) {
@@ -225,6 +249,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
               dataPointBuilder.key(buildQLReference(field, entityId));
             } else {
               dataPointBuilder.groupBy1(entityId);
+            }
+            break;
+          case HSTORE:
+            final String entity = resultSet.getString("tag");
+            if (queryData.getGroupByFields().get(1) == field) {
+              dataPointBuilder.key(QLReference.builder().type(field.getFieldName()).id(entity).name(entity).build());
+            } else {
+              dataPointBuilder.groupBy1(entity);
             }
             break;
           default:
@@ -350,6 +382,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             dataPointBuilder.time(time);
             break;
+          case HSTORE:
+            final String entity = resultSet.getString("tag");
+            dataPointBuilder.key(QLReference.builder().type(field.getFieldName()).id(entity).name(entity).build());
+            break;
           default:
             throw new RuntimeException("UnsupportedType " + field.getDataType());
         }
@@ -423,6 +459,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             final String entityId = resultSet.getString(field.getFieldName());
             dataPoint.key(buildQLReference(field, entityId));
             break;
+          case HSTORE:
+            final String entity = resultSet.getString("tag");
+            dataPoint.key(QLReference.builder().type(field.getFieldName()).id(entity).name(entity).build());
+            break;
           default:
             throw new RuntimeException("UnsupportedType " + field.getDataType());
         }
@@ -474,24 +514,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return builder.build();
   }
 
-  protected DeploymentStatsQueryMetaData formQuery(String accountId, QLDeploymentAggregationFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentEntityAggregation> groupBy,
-      QLTimeSeriesAggregation groupByTime, List<QLDeploymentSortCriteria> sortCriteria) {
+  protected DeploymentStatsQueryMetaData formQueryWithNonHStoreGroupBy(String accountId,
+      QLDeploymentAggregationFunction aggregateFunction, List<QLDeploymentFilter> filters,
+      List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
     SelectQuery selectQuery = new SelectQuery();
 
-    ResultType resultType;
-    if (isValidGroupBy(groupBy) && groupBy.size() == 1 && isValidGroupByTime(groupByTime)) {
-      resultType = ResultType.STACKED_TIME_SERIES;
-    } else if (isValidGroupByTime(groupByTime) && !isValidGroupBy(groupBy)) {
-      resultType = ResultType.TIME_SERIES;
-    } else if (isValidGroupBy(groupBy) && groupBy.size() == 1) {
-      resultType = ResultType.AGGREGATE_DATA;
-    } else if (isValidGroupBy(groupBy) && groupBy.size() == 2) {
-      resultType = ResultType.STACKED_BAR_CHART;
-    } else {
-      resultType = ResultType.SINGLE_POINT;
-    }
+    ResultType resultType = getResultType(groupBy, groupByTime);
 
     queryMetaDataBuilder.resultType(resultType);
     List<DeploymentMetaDataFields> fieldNames = new ArrayList<>();
@@ -571,6 +601,258 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
+  }
+
+  protected DeploymentStatsQueryMetaData formQueryWithHStoreGroupBy(String accountId,
+      QLDeploymentAggregationFunction aggregateFunction, List<QLDeploymentFilter> filters,
+      List<QLDeploymentEntityAggregation> groupBy, List<QLDeploymentTagAggregation> groupByTagList,
+      QLTimeSeriesAggregation groupByTime, List<QLDeploymentSortCriteria> sortCriteria) {
+    ResultType resultType = getResultType(groupBy, groupByTime);
+
+    DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
+    queryMetaDataBuilder.resultType(resultType);
+
+    List<DeploymentMetaDataFields> fieldNames = new ArrayList<>();
+    List<DeploymentMetaDataFields> groupByFields = new ArrayList<>();
+    SelectQuery selectQuery = new SelectQuery();
+
+    if (aggregateFunction == null || aggregateFunction.getCount() != null) {
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(FunctionCall.countAll(), DeploymentMetaDataFields.COUNT.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.COUNT);
+    }
+    if (aggregateFunction != null && aggregateFunction.getDuration() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getDuration());
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          addCustomColumn(functionCall, DURATION_COLUMN), DeploymentMetaDataFields.DURATION.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.DURATION);
+    }
+
+    if (aggregateFunction != null && aggregateFunction.getRollbackDuration() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getRollbackDuration());
+      selectQuery.addCustomColumns(Converter.toColumnSqlObject(addCustomColumn(functionCall, ROLLBACK_DURATION_COLUMN),
+          DeploymentMetaDataFields.ROLLBACK_DURATION.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.ROLLBACK_DURATION);
+
+      if (filters == null) {
+        filters = new ArrayList<>();
+      }
+
+      // If the metric is 'rollback duration', add a filter to only include the entries that had rollback duration set.
+      filters.add(
+          QLDeploymentFilter.builder()
+              .rollbackDuration(
+                  QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
+              .build());
+    }
+
+    if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getInstancesDeployed());
+      selectQuery.addCustomColumns(Converter.toColumnSqlObject(addCustomColumn(functionCall, INSTANCES_DEPLOYED_COLUMN),
+          DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
+    }
+
+    String tagName = "";
+    String columnName = "";
+    if (isNotEmpty(groupByTagList)) {
+      for (QLDeploymentTagAggregation tagAggregation : groupByTagList) {
+        if (tagAggregation.getEntityType() == QLDeploymentTagType.DEPLOYMENT) {
+          tagName = tagAggregation.getTagName();
+          columnName = DeploymentMetaDataFields.TAGS.getFieldName();
+          break;
+        }
+      }
+    }
+
+    // custom logic
+    SelectQuery selectTags = new SelectQuery();
+    selectTags.addCustomColumns(new CustomSql("*"));
+    selectTags.addCustomFromTable("skeys(t0." + columnName + ") as x(tagname)");
+    selectTags.addCondition(new CustomCondition("x.tagname='" + tagName + "'"));
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTags(accountId, filters);
+      decorateQueryWithFilters(selectTags, filters);
+    }
+
+    validateTimeFilters(filters, selectTags);
+
+    addAccountFilter(selectTags, accountId);
+    addParentIdFilter(selectTags);
+
+    List<QLDeploymentSortCriteria> finalSortCriteria = null;
+    if (!isValidGroupByTime(groupByTime)) {
+      finalSortCriteria = validateAndAddSortCriteria(selectTags, sortCriteria, fieldNames);
+    } else {
+      finalSortCriteria = null;
+      logger.info("Not adding sortCriteria since it is a timeSeries");
+    }
+
+    boolean isValidGroupByTime = isValidGroupByTime(groupByTime);
+
+    SelectQuery existsQuery = new SelectQuery();
+    String customSql = "(each(" + columnName + ")).key AS key ,(each(" + columnName + ")).value::text AS values";
+    if (aggregateFunction == null || aggregateFunction.getCount() != null) {
+      existsQuery.addCustomColumns(new CustomSql(customSql));
+      addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
+    }
+    if (aggregateFunction != null && aggregateFunction.getDuration() != null) {
+      existsQuery.addCustomColumns(new CustomSql(customSql));
+      existsQuery.addCustomColumns(new CustomSql(DeploymentMetaDataFields.DURATION.getFieldName()));
+      addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
+    }
+
+    if (aggregateFunction != null && aggregateFunction.getRollbackDuration() != null) {
+      existsQuery.addCustomColumns(new CustomSql(customSql));
+      existsQuery.addCustomColumns(new CustomSql(DeploymentMetaDataFields.ROLLBACK_DURATION.getFieldName()));
+      addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
+    }
+
+    if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
+      existsQuery.addCustomColumns(new CustomSql(customSql));
+      existsQuery.addCustomColumns(new CustomSql(DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName()));
+      addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
+    }
+    existsQuery.addCustomFromTable("deployment t0");
+    existsQuery.addCondition(new UnaryCondition(UnaryCondition.Op.EXISTS, selectTags));
+    if (isValidGroupByTime(groupByTime)) {
+      selectQuery.addCustomColumns(new CustomSql("TIME_BUCKET"));
+    }
+    if (isValidGroupBy(groupBy)) {
+      decorateQueryWithHStoreGroupBy(fieldNames, selectQuery, groupBy, groupByFields, tagName, existsQuery, selectTags);
+    }
+
+    selectQuery.addCustomFromTable("(" + existsQuery + ") as tab1");
+    selectQuery.getWhereClause().setDisableParens(true);
+    if (isValidGroupByTime(groupByTime)) {
+      selectQuery.addCustomGroupings(DeploymentMetaDataFields.TIME_SERIES.getFieldName());
+      selectQuery.addCustomOrdering(DeploymentMetaDataFields.TIME_SERIES.getFieldName(), Dir.ASCENDING);
+      fieldNames.add(DeploymentMetaDataFields.TIME_SERIES);
+    }
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.groupByFields(groupByFields);
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
+  private ResultType getResultType(List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+    ResultType resultType;
+    if (isValidGroupBy(groupBy) && groupBy.size() == 1 && isValidGroupByTime(groupByTime)) {
+      resultType = ResultType.STACKED_TIME_SERIES;
+    } else if (isValidGroupByTime(groupByTime) && !isValidGroupBy(groupBy)) {
+      resultType = ResultType.TIME_SERIES;
+    } else if (isValidGroupBy(groupBy) && groupBy.size() == 1) {
+      resultType = ResultType.AGGREGATE_DATA;
+    } else if (isValidGroupBy(groupBy) && groupBy.size() == 2) {
+      resultType = ResultType.STACKED_BAR_CHART;
+    } else {
+      resultType = ResultType.SINGLE_POINT;
+    }
+    return resultType;
+  }
+
+  private void addGroupByTimeToExistsQuery(
+      QLTimeSeriesAggregation groupByTime, boolean isValidGroupByTime, SelectQuery existsQuery) {
+    if (isValidGroupByTime) {
+      String timeBucket = getGroupByTimeQuery(groupByTime, "endtime");
+      existsQuery.addCustomColumns(
+          Converter.toCustomColumnSqlObject(new CustomExpression(timeBucket).setDisableParens(true),
+              DeploymentMetaDataFields.TIME_SERIES.getFieldName()));
+    }
+  }
+
+  private void decorateQueryWithHStoreGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<QLDeploymentEntityAggregation> groupBy, List<DeploymentMetaDataFields> groupByFields, String tagName,
+      SelectQuery existsQuery, SelectQuery selectTags) {
+    for (QLDeploymentEntityAggregation aggregation : groupBy) {
+      if (aggregation.getAggregationKind() == QLAggregationKind.SIMPLE) {
+        decorateSimpleGroupBy(fieldNames, selectQuery, groupByFields, existsQuery, selectTags, aggregation);
+      } else if (aggregation.getAggregationKind() == QLAggregationKind.ARRAY) {
+        decorateAggregateGroupBy(fieldNames, selectQuery, groupByFields, existsQuery, aggregation);
+      } else if (aggregation.getAggregationKind() == QLAggregationKind.HSTORE) {
+        decorateHStoreGroupBy(fieldNames, selectQuery, groupByFields, tagName);
+      }
+    }
+  }
+
+  private void decorateHStoreGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<DeploymentMetaDataFields> groupByFields, String tagName) {
+    selectQuery.addCustomColumns(new CustomSql("concat('" + tagName + ":',values) as tag"));
+    selectQuery.addCondition(new CustomCondition("tab1.key='" + tagName + "'"));
+    selectQuery.addCustomGroupings("tab1.values");
+    fieldNames.add(DeploymentMetaDataFields.TAGS);
+    groupByFields.add(DeploymentMetaDataFields.TAGS);
+  }
+
+  private void decorateAggregateGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<DeploymentMetaDataFields> groupByFields, SelectQuery existsQuery,
+      QLDeploymentEntityAggregation aggregation) {
+    DeploymentMetaDataFields groupByColumn = null;
+    String unnestField = null;
+    switch (aggregation) {
+      case Service:
+        groupByColumn = DeploymentMetaDataFields.SERVICEID;
+        unnestField = schema.getServices().getName();
+        break;
+      case Environment:
+        groupByColumn = DeploymentMetaDataFields.ENVID;
+        unnestField = schema.getEnvironments().getName();
+        break;
+      case EnvironmentType:
+        groupByColumn = DeploymentMetaDataFields.ENVTYPE;
+        unnestField = schema.getEnvTypes().getName();
+        break;
+      case CloudProvider:
+        groupByColumn = DeploymentMetaDataFields.CLOUDPROVIDERID;
+        unnestField = schema.getCloudProviders().getName();
+        break;
+      case Workflow:
+        groupByColumn = DeploymentMetaDataFields.WORKFLOWID;
+        unnestField = schema.getWorkflows().getName();
+        break;
+      default:
+        throw new InvalidRequestException("No valid groupBy found");
+    }
+    String unnestClause = "unnest(" + unnestField + ") " + groupByColumn;
+    existsQuery.addCustomColumns(new CustomSql(unnestClause));
+    selectQuery.addCustomColumns(new CustomSql(groupByColumn));
+    selectQuery.addCustomGroupings(groupByColumn);
+    fieldNames.add(groupByColumn);
+    groupByFields.add(groupByColumn);
+  }
+
+  private void decorateSimpleGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<DeploymentMetaDataFields> groupByFields, SelectQuery existsQuery, SelectQuery selectTags,
+      QLDeploymentEntityAggregation aggregation) {
+    DbColumn groupByColumn;
+    switch (aggregation) {
+      case Application:
+        groupByColumn = schema.getAppId();
+        break;
+      case Status:
+        groupByColumn = schema.getStatus();
+        break;
+      case Trigger:
+        groupByColumn = schema.getTriggerId();
+        break;
+      case TriggeredBy:
+        groupByColumn = schema.getTriggeredBy();
+        break;
+      case Pipeline:
+        groupByColumn = schema.getPipeline();
+        break;
+      default:
+        throw new InvalidRequestException("Invalid groupBy clause");
+    }
+    selectQuery.addCustomColumns(new CustomSql(groupByColumn.getColumnNameSQL()));
+    existsQuery.addCustomColumns(new CustomSql(groupByColumn.getColumnNameSQL()));
+    selectQuery.addCustomGroupings(groupByColumn.getColumnNameSQL());
+    fieldNames.add(DeploymentMetaDataFields.valueOf(groupByColumn.getName()));
+    selectTags.addCondition(UnaryCondition.isNotNull(groupByColumn));
+    groupByFields.add(DeploymentMetaDataFields.valueOf(groupByColumn.getName()));
   }
 
   private void validateTimeFilters(List<QLDeploymentFilter> filters, SelectQuery selectQuery) {
@@ -697,6 +979,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
           decorateSimpleFilter(selectQuery, filter, type);
         } else if (type.getMetaDataFields().getFilterKind() == QLFilterKind.ARRAY) {
           decorateArrayFilter(selectQuery, filter, type);
+        } else if (type.getMetaDataFields().getFilterKind() == QLFilterKind.HSTORE) {
+          decorateHstoreFilter(selectQuery, filter, type);
         } else {
           logger.error("Failed to apply filter :[{}]", filter);
         }
@@ -715,36 +999,43 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
           if (tagFilter != null) {
             Set<String> entityIds = tagHelper.getEntityIdsFromTags(
                 accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
-            if (isNotEmpty(entityIds)) {
-              switch (tagFilter.getEntityType()) {
-                case APPLICATION:
+            switch (tagFilter.getEntityType()) {
+              case APPLICATION:
+                if (isNotEmpty(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .application(QLIdFilter.builder()
                                                    .operator(QLIdOperator.IN)
                                                    .values(entityIds.toArray(new String[0]))
                                                    .build())
                                   .build());
-                  break;
-                case SERVICE:
+                }
+                break;
+              case SERVICE:
+                if (isNotEmpty(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .service(QLIdFilter.builder()
                                                .operator(QLIdOperator.IN)
                                                .values(entityIds.toArray(new String[0]))
                                                .build())
                                   .build());
-                  break;
-                case ENVIRONMENT:
+                }
+                break;
+              case ENVIRONMENT:
+                if (isNotEmpty(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .environment(QLIdFilter.builder()
                                                    .operator(QLIdOperator.IN)
                                                    .values(entityIds.toArray(new String[0]))
                                                    .build())
                                   .build());
-                  break;
-                default:
-                  logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
-                  throw new InvalidRequestException("Error while compiling query", WingsException.USER);
-              }
+                }
+                break;
+              case DEPLOYMENT:
+                newList.add(QLDeploymentFilter.builder().tags(tagFilter).build());
+                break;
+              default:
+                logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                throw new InvalidRequestException("Error while compiling query", WingsException.USER);
             }
           }
         } else {
@@ -768,6 +1059,32 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         break;
       default:
         throw new RuntimeException("Invalid TimeFilter operator: " + filter.getOperator());
+    }
+  }
+
+  private void decorateHstoreFilter(SelectQuery selectQuery, QLDeploymentFilter filter, QLDeploymentFilterType type) {
+    Filter f = QLDeploymentFilter.getFilter(type, filter);
+    if (isDeploymentTagFilter(f)) {
+      List<QLTagInput> tags = ((QLDeploymentTagFilter) f).getTags();
+      if (isEmpty(tags)) {
+        throw new InvalidRequestException("No values are provided for Tag filter" + filter);
+      }
+      CustomCondition[] customConditions = new CustomCondition[tags.size()];
+      for (int i = 0; i < tags.size(); i++) {
+        String name = tags.get(i).getName();
+        String value = tags.get(i).getValue();
+        if (isEmpty(value)) {
+          customConditions[i] = new CustomCondition(schema.getDeploymentTable().getAlias() + ".tags"
+              + " ->"
+              + "'" + name + "'"
+              + " IS NOT NULL");
+        } else {
+          customConditions[i] = new CustomCondition(schema.getDeploymentTable().getAlias() + ".tags"
+              + " ->"
+              + "'" + name + "' = '" + value + "'");
+        }
+      }
+      selectQuery.addCondition(new ComboCondition(Op.OR, customConditions).setDisableParens(false));
     }
   }
 
@@ -893,6 +1210,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return f instanceof QLTimeFilter;
   }
 
+  private boolean isDeploymentTagFilter(Filter f) {
+    return f instanceof QLDeploymentTagFilter
+        && ((QLDeploymentTagFilter) f).getEntityType() == QLDeploymentTagType.DEPLOYMENT;
+  }
+
   private boolean checkFilter(Filter f) {
     return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
   }
@@ -1010,7 +1332,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       }
       if (filter.getEnvironmentType() != null) {
         filterMap.put(DeploymentMetaDataFields.ENVTYPE,
-            Arrays.asList(filter.getEnvironmentType().getValues())
+            asList(filter.getEnvironmentType().getValues())
                 .stream()
                 .map(Enum::name)
                 .collect(Collectors.toList())
@@ -1077,6 +1399,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         return schema.getDuration();
       case RollbackDuration:
         return schema.getRollbackDuration();
+      case Tags:
+        return schema.getTags();
       default:
         throw new RuntimeException("Filter type not supported " + type);
     }
@@ -1230,6 +1554,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         return QLDeploymentEntityAggregation.Service;
       case ENVIRONMENT:
         return QLDeploymentEntityAggregation.Environment;
+      case DEPLOYMENT:
+        return QLDeploymentEntityAggregation.Deployment;
       default:
         logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
@@ -1240,4 +1566,41 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   protected QLDeploymentEntityAggregation getEntityAggregation(QLDeploymentAggregation groupBy) {
     return groupBy.getEntityAggregation();
   }
+
+  public static FunctionCall addCustomColumn(FunctionCall functionCall, SqlObject sqlObject) {
+    return functionCall.addCustomParams(sqlObject);
+  }
+
+  public static final SqlObject DURATION_COLUMN = new SqlObject() {
+    @Override
+    public void appendTo(AppendableExt app) throws IOException {
+      app.append(DeploymentMetaDataFields.DURATION.getFieldName());
+    }
+
+    protected void collectSchemaObjects(ValidationContext vContext) {
+      // do nothing
+    }
+  };
+
+  public static final SqlObject ROLLBACK_DURATION_COLUMN = new SqlObject() {
+    @Override
+    public void appendTo(AppendableExt app) throws IOException {
+      app.append(DeploymentMetaDataFields.ROLLBACK_DURATION.getFieldName());
+    }
+
+    protected void collectSchemaObjects(ValidationContext vContext) {
+      // do nothing
+    }
+  };
+
+  public static final SqlObject INSTANCES_DEPLOYED_COLUMN = new SqlObject() {
+    @Override
+    public void appendTo(AppendableExt app) throws IOException {
+      app.append(DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName());
+    }
+
+    protected void collectSchemaObjects(ValidationContext vContext) {
+      // do nothing
+    }
+  };
 }

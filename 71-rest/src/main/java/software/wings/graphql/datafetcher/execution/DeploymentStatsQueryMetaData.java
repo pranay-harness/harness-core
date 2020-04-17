@@ -17,7 +17,7 @@ import java.util.List;
 public class DeploymentStatsQueryMetaData {
   private static final DeploymentTableSchema schema = new DeploymentTableSchema();
 
-  enum DataType { STRING, INTEGER, TIMESTAMP, LONG }
+  enum DataType { STRING, INTEGER, TIMESTAMP, LONG, HSTORE }
 
   public enum DeploymentMetaDataFields {
     TIME_SERIES("TIME_BUCKET", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
@@ -36,7 +36,8 @@ public class DeploymentStatsQueryMetaData {
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     ROLLBACK_DURATION("ROLLBACK_DURATION", DataType.LONG, QLFilterKind.SIMPLE),
-    INSTANCES_DEPLOYED("INSTANCES_DEPLOYED", DataType.INTEGER, QLFilterKind.SIMPLE);
+    INSTANCES_DEPLOYED("INSTANCES_DEPLOYED", DataType.INTEGER, QLFilterKind.SIMPLE),
+    TAGS("TAGS", DataType.HSTORE, QLFilterKind.HSTORE);
 
     private DataType dataType;
     private String fieldName;

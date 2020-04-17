@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.aggregation.deployment;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
@@ -51,6 +51,7 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter workflow;
   private QLIdFilter pipeline;
   private QLDeploymentTagFilter tag;
+  private QLDeploymentTagFilter tags;
 
   public static Set<QLDeploymentFilterType> getFilterTypes(QLDeploymentFilter filter) {
     Set<QLDeploymentFilterType> filterTypes = new HashSet<>();
@@ -105,6 +106,10 @@ public class QLDeploymentFilter implements EntityFilter {
       filterTypes.add(QLDeploymentFilterType.Tag);
     }
 
+    if (filter.getTags() != null) {
+      filterTypes.add(QLDeploymentFilterType.Tags);
+    }
+
     return filterTypes;
   }
 
@@ -140,8 +145,10 @@ public class QLDeploymentFilter implements EntityFilter {
         return filter.getStartTime();
       case Tag:
         return filter.getTag();
+      case Tags:
+        return filter.getTags();
       default:
-        throw new WingsException("Unsupported type " + type);
+        throw new InvalidRequestException("Unsupported type " + type);
     }
   }
 }
