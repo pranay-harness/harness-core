@@ -28,4 +28,8 @@ public class Ambiance {
     levels.forEach((key, level) -> logContext.put(key + "ExecutionId", level.getRuntimeId()));
     return new AutoLogContext(logContext.build(), OVERRIDE_ERROR);
   }
+
+  public AmbianceBuilder cloneBuilder() {
+    return builder().setupAbstractions(getSetupAbstractions()).levels(getLevels());
+  }
 }

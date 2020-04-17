@@ -6,7 +6,9 @@ import io.harness.annotations.Redesign;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
+import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.modes.async.AsyncExecutable;
+import io.harness.facilitate.modes.children.ChildrenExecutable;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.execution.ExecutionNodeInstance;
@@ -44,12 +46,34 @@ public class EngineResumeExecutor implements Runnable {
       }
 
       ExecutionNode node = executionNodeInstance.getNode();
-      AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
-      StateResponse stateResponse =
-          asyncExecutable.handleAsyncResponse(executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
-      executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
+      switch (executionNodeInstance.getMode()) {
+        case CHILDREN:
+          resumeChildrenExecutable(node);
+          break;
+        case ASYNC:
+          resumeAsyncExecutable(node);
+          break;
+        default:
+          throw new InvalidRequestException(
+              "Resume not handled for execution Mode : " + executionNodeInstance.getMode());
+      }
+
     } catch (Exception ex) {
       logger.error(ex.getMessage());
     }
+  }
+
+  private void resumeAsyncExecutable(ExecutionNode node) {
+    AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
+    StateResponse stateResponse =
+        asyncExecutable.handleAsyncResponse(executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
+    executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
+  }
+
+  private void resumeChildrenExecutable(ExecutionNode node) {
+    ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
+    StateResponse stateResponse = childrenExecutable.handleAsyncResponse(
+        executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
+    executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
   }
 }

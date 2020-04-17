@@ -22,7 +22,7 @@ public class ExecutionEngineDispatcher implements Runnable {
   @Override
   public void run() {
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      executionEngine.startExecution(ambiance);
+      executionEngine.startNodeExecution(ambiance);
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {

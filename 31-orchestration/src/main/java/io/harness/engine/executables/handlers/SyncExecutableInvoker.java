@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.engine.ExecutionEngine;
+import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.facilitate.modes.sync.SyncExecutable;
 import io.harness.state.io.StateResponse;
