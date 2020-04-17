@@ -1,7 +1,9 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -70,7 +72,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 
 @FieldNameConstants(innerTypeName = "DeploymentStatsDataFetcherTestKeys")
@@ -103,7 +104,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
   private void mockTagHelper() {
     when(tagHelper.getEntityIdsFromTags(anyString(), anyListOf(QLTagInput.class), Matchers.any(EntityType.class)))
-        .thenReturn(Collections.setOf(Arrays.asList("DATA1", "DATA2")));
+        .thenReturn(Collections.setOf(asList("DATA1", "DATA2")));
   }
 
   private String ACCOUNTID;
@@ -145,9 +146,10 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
                                  .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
                                  .build())
             .build();
-    DeploymentStatsQueryMetaData queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
-        null, Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentEntityAggregation.Application), null, null);
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+            asList(QLDeploymentEntityAggregation.Application), null, null);
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
@@ -155,28 +157,27 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
 
-    queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
-        Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter), null,
-        null, null);
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter), null, null,
+        null);
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
             "SELECT COUNT(*) AS COUNT FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL)");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.SINGLE_POINT);
 
-    queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
-        Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentEntityAggregation.Application, QLDeploymentEntityAggregation.Environment), null,
-        null);
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+        asList(QLDeploymentEntityAggregation.Application, QLDeploymentEntityAggregation.Environment), null, null);
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
             "SELECT COUNT(*) AS COUNT,t0.APPID,ENVID FROM DEPLOYMENT t0, unnest(ENVIRONMENTS) ENVID WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY t0.APPID,ENVID");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_BAR_CHART);
 
-    queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
-        Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentEntityAggregation.Application),
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+        asList(QLDeploymentEntityAggregation.Application),
         QLTimeSeriesAggregation.builder()
             .timeAggregationType(QLTimeAggregationType.HOUR)
             .timeAggregationValue(1)
@@ -188,8 +189,8 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
             "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
 
-    queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
-        Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter), null,
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter), null,
         QLTimeSeriesAggregation.builder()
             .timeAggregationType(QLTimeAggregationType.HOUR)
             .timeAggregationValue(1)
@@ -205,7 +206,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
         QLDeploymentFilter.builder()
             .tag(QLDeploymentTagFilter.builder()
                      .entityType(QLDeploymentTagType.APPLICATION)
-                     .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
+                     .tags(asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
                      .build())
             .build();
 
@@ -213,7 +214,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
         QLDeploymentFilter.builder()
             .tag(QLDeploymentTagFilter.builder()
                      .entityType(QLDeploymentTagType.SERVICE)
-                     .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
+                     .tags(asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
                      .build())
             .build();
 
@@ -221,13 +222,13 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
         QLDeploymentFilter.builder()
             .tag(QLDeploymentTagFilter.builder()
                      .entityType(QLDeploymentTagType.ENVIRONMENT)
-                     .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
+                     .tags(asList(QLTagInput.builder().name("TAG1").value("DATA1").build()))
                      .build())
             .build();
 
-    queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
-        Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter,
-            appTagFilter, serviceTagFilter, envTagFilter),
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter, appTagFilter,
+            serviceTagFilter, envTagFilter),
         null,
         QLTimeSeriesAggregation.builder()
             .timeAggregationType(QLTimeAggregationType.HOUR)
@@ -246,7 +247,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   public void testSingleDataPoint() {
     try {
       DeploymentStatsQueryMetaData metaData =
-          DeploymentStatsQueryMetaData.builder().fieldNames(Arrays.asList(DeploymentMetaDataFields.COUNT)).build();
+          DeploymentStatsQueryMetaData.builder().fieldNames(asList(DeploymentMetaDataFields.COUNT)).build();
 
       when(resultSet.next()).then((Answer<Boolean>) invocation -> {
         switch (count[0]) {
@@ -273,26 +274,25 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
       resetValues();
 
-      metaData =
-          DeploymentStatsQueryMetaData.builder().fieldNames(Arrays.asList(DeploymentMetaDataFields.DURATION)).build();
+      metaData = DeploymentStatsQueryMetaData.builder().fieldNames(asList(DeploymentMetaDataFields.DURATION)).build();
       qlData = dataFetcher.getData(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
           QLDeploymentAggregationFunction.builder().duration(QLDurationAggregateOperation.MAX).build(),
-          Arrays.asList(QLDeploymentFilter.builder()
-                            .tag(QLDeploymentTagFilter.builder()
-                                     .entityType(QLDeploymentTagType.APPLICATION)
-                                     .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
-                                     .build())
-                            .build(),
+          asList(QLDeploymentFilter.builder()
+                     .tag(QLDeploymentTagFilter.builder()
+                              .entityType(QLDeploymentTagType.APPLICATION)
+                              .tags(asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
+                              .build())
+                     .build(),
               QLDeploymentFilter.builder()
                   .tag(QLDeploymentTagFilter.builder()
                            .entityType(QLDeploymentTagType.SERVICE)
-                           .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
+                           .tags(asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
                            .build())
                   .build(),
               QLDeploymentFilter.builder()
                   .tag(QLDeploymentTagFilter.builder()
                            .entityType(QLDeploymentTagType.ENVIRONMENT)
-                           .tags(Arrays.asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
+                           .tags(asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
                            .build())
                   .build()),
           new ArrayList<>(), new ArrayList<>());
@@ -303,8 +303,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
       resetValues();
       try {
-        metaData =
-            DeploymentStatsQueryMetaData.builder().fieldNames(Arrays.asList(DeploymentMetaDataFields.APPID)).build();
+        metaData = DeploymentStatsQueryMetaData.builder().fieldNames(asList(DeploymentMetaDataFields.APPID)).build();
         qlData = dataFetcher.generateSinglePointData(metaData, resultSet);
         fail("Expected an exception");
       } catch (RuntimeException e) {
@@ -324,7 +323,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     try {
       QLData qlData = dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
           QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
-          Arrays.asList(
+          asList(
               QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Environment).build()),
           new ArrayList<>());
 
@@ -359,8 +358,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     try {
       QLStackedData qlData = (QLStackedData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
           QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
-          Arrays.asList(
-              QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Service).build(),
+          asList(QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Service).build(),
               QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Application).build()),
           new ArrayList<>());
 
@@ -390,13 +388,12 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
       qlData = (QLStackedData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
           QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
-          Arrays.asList(
-              QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Status).build(),
+          asList(QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Status).build(),
               QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Application).build()),
-          Arrays.asList(QLDeploymentSortCriteria.builder()
-                            .sortOrder(QLSortOrder.DESCENDING)
-                            .sortType(QLDeploymentSortType.Count)
-                            .build()));
+          asList(QLDeploymentSortCriteria.builder()
+                     .sortOrder(QLSortOrder.DESCENDING)
+                     .sortType(QLDeploymentSortType.Count)
+                     .build()));
 
       validateStackedDataPointKey(qlData.getDataPoints().get(4), "DATA0", "DATA0NAME");
       assertThat(qlData.getDataPoints().get(4).getValues().size()).isEqualTo(1);
@@ -438,12 +435,12 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
       QLTimeSeriesData timeSeriesData =
           (QLTimeSeriesData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
               QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
-              Arrays.asList(QLDeploymentAggregation.builder()
-                                .timeAggregation(QLTimeSeriesAggregation.builder()
-                                                     .timeAggregationType(QLTimeAggregationType.DAY)
-                                                     .timeAggregationValue(1)
-                                                     .build())
-                                .build()),
+              asList(QLDeploymentAggregation.builder()
+                         .timeAggregation(QLTimeSeriesAggregation.builder()
+                                              .timeAggregationType(QLTimeAggregationType.DAY)
+                                              .timeAggregationValue(1)
+                                              .build())
+                         .build()),
               new ArrayList<>());
 
       validateTimeSeriesDataPoint(timeSeriesData.getDataPoints().get(0), 10, currentTime + 3600000 * 1);
@@ -497,13 +494,13 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     try {
       QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) dataFetcher.fetch(
           DeploymentStatsDataFetcherTestKeys.ACCOUNTID, deploymentAggregationFunction, new ArrayList<>(),
-          Arrays.asList(QLDeploymentAggregation.builder()
-                            .timeAggregation(QLTimeSeriesAggregation.builder()
-                                                 .timeAggregationType(QLTimeAggregationType.DAY)
-                                                 .timeAggregationValue(1)
-                                                 .build())
-                            .entityAggregation(QLDeploymentEntityAggregation.EnvironmentType)
-                            .build()),
+          asList(QLDeploymentAggregation.builder()
+                     .timeAggregation(QLTimeSeriesAggregation.builder()
+                                          .timeAggregationType(QLTimeAggregationType.DAY)
+                                          .timeAggregationValue(1)
+                                          .build())
+                     .entityAggregation(QLDeploymentEntityAggregation.EnvironmentType)
+                     .build()),
           new ArrayList<>());
 
       validateStackedTimeSeriesDataPoint(data.getData().get(0), currentTime + 3600000 * 1);
@@ -571,5 +568,314 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     assertThat(dataFetcher.getGroupByEntityFromTag(
                    QLDeploymentTagAggregation.builder().entityType(QLDeploymentTagType.ENVIRONMENT).build()))
         .isEqualTo(QLDeploymentEntityAggregation.Environment);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testQueriesWithDeploymentTags() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLDeploymentFilter deploymentTagFilter =
+        QLDeploymentFilter.builder()
+            .tag(QLDeploymentTagFilter.builder()
+                     .entityType(QLDeploymentTagType.DEPLOYMENT)
+                     .tags(asList(QLTagInput.builder().name("commitId").value("").build()))
+                     .build())
+            .build();
+
+    QLDeploymentFilter appTagFilter = QLDeploymentFilter.builder()
+                                          .tag(QLDeploymentTagFilter.builder()
+                                                   .entityType(QLDeploymentTagType.APPLICATION)
+                                                   .tags(asList(QLTagInput.builder().name("foo").value("").build()))
+                                                   .build())
+                                          .build();
+
+    QLDeploymentFilter arrayStringFilter = QLDeploymentFilter.builder()
+                                               .status(QLStringFilter.builder()
+                                                           .operator(QLStringOperator.IN)
+                                                           .values(new String[] {"SUCCESS", "FAILURE"})
+                                                           .build())
+                                               .build();
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(beforeTimeFilter, afterTimeFilter), asList(QLDeploymentEntityAggregation.Deployment),
+            asList(QLDeploymentTagAggregation.builder()
+                       .entityType(QLDeploymentTagType.DEPLOYMENT)
+                       .tagName("commitId")
+                       .build()),
+            null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values");
+
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
+
+    queryMetaData = dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(beforeTimeFilter, afterTimeFilter, deploymentTagFilter, arrayStringFilter),
+        asList(QLDeploymentEntityAggregation.Deployment),
+        asList(QLDeploymentTagAggregation.builder()
+                   .entityType(QLDeploymentTagType.DEPLOYMENT)
+                   .tagName("commitId")
+                   .build()),
+        null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values");
+
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
+
+    queryMetaData = dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(beforeTimeFilter, afterTimeFilter, arrayStringFilter, deploymentTagFilter),
+        asList(QLDeploymentEntityAggregation.Deployment, QLDeploymentEntityAggregation.Environment),
+        asList(QLDeploymentTagAggregation.builder()
+                   .entityType(QLDeploymentTagType.DEPLOYMENT)
+                   .tagName("commitId")
+                   .build()),
+        null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag,ENVID FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,unnest(ENVIRONMENTS) ENVID FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values,ENVID");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_BAR_CHART);
+
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(arrayStringFilter, beforeTimeFilter, afterTimeFilter, deploymentTagFilter),
+        asList(QLDeploymentEntityAggregation.Application),
+        QLTimeSeriesAggregation.builder()
+            .timeAggregationType(QLTimeAggregationType.DAY)
+            .timeAggregationValue(1)
+            .build(),
+        null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 days',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
+
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+        asList(beforeTimeFilter, afterTimeFilter, appTagFilter, deploymentTagFilter), null,
+        QLTimeSeriesAggregation.builder()
+            .timeAggregationType(QLTimeAggregationType.HOUR)
+            .timeAggregationValue(1)
+            .build(),
+        null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.APPID IN ('DATA1','DATA2') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.TIME_SERIES);
+
+    queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+        QLDeploymentAggregationFunction.builder().duration(QLDurationAggregateOperation.AVERAGE).build(),
+        asList(beforeTimeFilter, afterTimeFilter, deploymentTagFilter), null, null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT AVG(t0.DURATION) AS DURATION FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL)");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.SINGLE_POINT);
+
+    queryMetaData = dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+        QLDeploymentAggregationFunction.builder().duration(QLDurationAggregateOperation.MAX).build(),
+        asList(beforeTimeFilter, afterTimeFilter, arrayStringFilter), asList(QLDeploymentEntityAggregation.Deployment),
+        asList(QLDeploymentTagAggregation.builder()
+                   .entityType(QLDeploymentTagType.DEPLOYMENT)
+                   .tagName("commitId")
+                   .build()),
+        QLTimeSeriesAggregation.builder()
+            .timeAggregationType(QLTimeAggregationType.DAY)
+            .timeAggregationValue(1)
+            .build(),
+        null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT MAX(DURATION) AS DURATION,TIME_BUCKET,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,DURATION,time_bucket('1 days',endtime) AS TIME_BUCKET FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values,TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testSingleDataPointWithDeploymentTagFilter() {
+    try {
+      DeploymentStatsQueryMetaData metaData =
+          DeploymentStatsQueryMetaData.builder().fieldNames(asList(DeploymentMetaDataFields.COUNT)).build();
+
+      when(resultSet.next()).then((Answer<Boolean>) invocation -> {
+        switch (count[0]) {
+          case 0:
+            count[0]++;
+            return true;
+          default:
+            return false;
+        }
+      });
+
+      when(resultSet.getInt(anyString())).thenReturn(10);
+      when(resultSet.getLong(anyString())).thenReturn(20L);
+
+      resetValues();
+
+      QLData qlData = dataFetcher.getData(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+          QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(),
+          asList(QLDeploymentFilter.builder()
+                     .tag(QLDeploymentTagFilter.builder()
+                              .entityType(QLDeploymentTagType.DEPLOYMENT)
+                              .tags(asList(QLTagInput.builder().name("TAG1").value("VALUE").build()))
+                              .build())
+                     .build()),
+          new ArrayList<>(), new ArrayList<>());
+
+      assertThat(qlData.getClass()).isEqualTo(QLSinglePointData.class);
+      QLSinglePointData singlePointData = (QLSinglePointData) qlData;
+      validateSingleDataPoint(singlePointData, 10);
+
+      resetValues();
+      try {
+        metaData = DeploymentStatsQueryMetaData.builder().fieldNames(asList(DeploymentMetaDataFields.APPID)).build();
+        qlData = dataFetcher.generateSinglePointData(metaData, resultSet);
+        fail("Expected an exception");
+      } catch (RuntimeException e) {
+        assertThat(e).hasMessage(
+            "Single Data Type data type not supported " + DeploymentMetaDataFields.APPID.getDataType());
+      }
+
+    } catch (Exception e) {
+      Assertions.fail(e.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testAggregateDataWithDeploymentTagFilter() {
+    try {
+      QLData qlData = dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+          QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(),
+          asList(QLDeploymentFilter.builder()
+                     .tag(QLDeploymentTagFilter.builder()
+                              .entityType(QLDeploymentTagType.DEPLOYMENT)
+                              .tags(asList(QLTagInput.builder().name("commitId").value("12345").build()))
+                              .build())
+                     .build()),
+          asList(QLDeploymentAggregation.builder()
+                     .tagAggregation(QLDeploymentTagAggregation.builder()
+                                         .entityType(QLDeploymentTagType.DEPLOYMENT)
+                                         .tagName("commitId")
+                                         .build())
+                     .build()),
+          new ArrayList<>());
+
+      assertThat(qlData).isInstanceOf(QLAggregatedData.class);
+      QLAggregatedData aggregatedData = (QLAggregatedData) qlData;
+      assertThat(aggregatedData.getDataPoints().size()).isEqualTo(5);
+      validateAggregateDataPointForTags(aggregatedData, 0, 10, "DATA0", "DATA0");
+      validateAggregateDataPointForTags(aggregatedData, 1, 11, "DATA1", "DATA1");
+      validateAggregateDataPointForTags(aggregatedData, 2, 12, "DATA2", "DATA2");
+      validateAggregateDataPointForTags(aggregatedData, 3, 13, "DATA3", "DATA3");
+      validateAggregateDataPointForTags(aggregatedData, 4, 14, "DATA4", "DATA4");
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  private void validateAggregateDataPointForTags(QLAggregatedData aggregatedData, int i, int i2, String s, String s2) {
+    assertThat(aggregatedData.getDataPoints().get(i).getValue()).isEqualTo(i2);
+    assertThat(aggregatedData.getDataPoints().get(i).getKey().getType())
+        .isEqualTo(DeploymentMetaDataFields.TAGS.name());
+    assertThat(aggregatedData.getDataPoints().get(i).getKey().getId()).isEqualTo(s);
+    assertThat(aggregatedData.getDataPoints().get(i).getKey().getName()).isEqualTo(s2);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testStackedDataWithDeploymentTagFilter() {
+    try {
+      QLStackedData qlData = (QLStackedData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+          QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
+          asList(QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Application).build(),
+              QLDeploymentAggregation.builder()
+                  .tagAggregation(QLDeploymentTagAggregation.builder()
+                                      .entityType(QLDeploymentTagType.DEPLOYMENT)
+                                      .tagName("commitId")
+                                      .build())
+                  .build()),
+          new ArrayList<>());
+
+      assertThat(qlData.getDataPoints().size()).isEqualTo(5);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(0), "DATA0", "DATA0NAME");
+      assertThat(qlData.getDataPoints().get(0).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(0).getValues().get(0), "DATA1", "DATA1", 10);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(1), "DATA2", "DATA2NAME");
+      assertThat(qlData.getDataPoints().get(1).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(1).getValues().get(0), "DATA3", "DATA3", 11);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(2), "DATA4", "DATA4NAME");
+      assertThat(qlData.getDataPoints().get(2).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(2).getValues().get(0), "DATA5", "DATA5", 12);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(3), "DATA6", "DATA6NAME");
+      assertThat(qlData.getDataPoints().get(3).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(3).getValues().get(0), "DATA7", "DATA7", 13);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(4), "DATA8", "DATA8NAME");
+      assertThat(qlData.getDataPoints().get(4).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(4).getValues().get(0), "DATA9", "DATA9", 14);
+
+      resetValues();
+
+      qlData = (QLStackedData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+          QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
+          asList(QLDeploymentAggregation.builder()
+                     .tagAggregation(QLDeploymentTagAggregation.builder()
+                                         .entityType(QLDeploymentTagType.DEPLOYMENT)
+                                         .tagName("commitId")
+                                         .build())
+                     .build(),
+              QLDeploymentAggregation.builder().entityAggregation(QLDeploymentEntityAggregation.Application).build()),
+          asList(QLDeploymentSortCriteria.builder()
+                     .sortOrder(QLSortOrder.DESCENDING)
+                     .sortType(QLDeploymentSortType.Count)
+                     .build()));
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(4), "DATA0", "DATA0NAME");
+      assertThat(qlData.getDataPoints().get(4).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(4).getValues().get(0), "DATA1", "DATA1NAME", 10);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(3), "DATA2", "DATA2NAME");
+      assertThat(qlData.getDataPoints().get(3).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(3).getValues().get(0), "DATA3", "DATA3NAME", 11);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(2), "DATA4", "DATA4NAME");
+      assertThat(qlData.getDataPoints().get(2).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(2).getValues().get(0), "DATA5", "DATA5NAME", 12);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(1), "DATA6", "DATA6NAME");
+      assertThat(qlData.getDataPoints().get(1).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(1).getValues().get(0), "DATA7", "DATA7NAME", 13);
+
+      validateStackedDataPointKey(qlData.getDataPoints().get(0), "DATA8", "DATA8NAME");
+      assertThat(qlData.getDataPoints().get(0).getValues().size()).isEqualTo(1);
+      validateQLDataPoint(qlData.getDataPoints().get(0).getValues().get(0), "DATA9", "DATA9NAME", 14);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
   }
 }

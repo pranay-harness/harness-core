@@ -253,4 +253,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   void addTagFilterToPageRequest(PageRequest<WorkflowExecution> pageRequest, String tagFilter);
 
   Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags);
+
+  Set<String> getWorkflowExecutionsWithTag(String accountId, String key, String value);
 }

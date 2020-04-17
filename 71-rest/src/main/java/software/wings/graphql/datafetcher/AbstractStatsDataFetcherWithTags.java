@@ -24,6 +24,8 @@ import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoi
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.TagAggregation;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagAggregation;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,17 +59,22 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
   @Override
   public QLData postFetch(String accountId, List<G> groupByList, QLData qlData) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
-
     int size = groupByTagList.size();
     if (size == 0) {
       return qlData;
     }
 
+    groupByTagList.removeIf(ta
+        -> ta != null
+            && (ta instanceof QLDeploymentTagAggregation && (QLDeploymentTagType.DEPLOYMENT == ta.getEntityType())));
+    if (isEmpty(groupByTagList)) {
+      return qlData;
+    }
     TA groupByTagLevel1 = groupByTagList.get(0);
     TA groupByTagLevel2 = null;
-    int groupByTagLevel1Position = findFirstGroupByTagPosition(groupByList);
+    int groupByTagLevel1Position = findFirstGroupByTagPositionExcludingDeploymentTag(groupByList);
 
-    if (size > 1) {
+    if (groupByTagList.size() > 1) {
       groupByTagLevel2 = groupByTagList.get(1);
     }
 
@@ -121,6 +128,22 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
       });
     }
     return qlData;
+  }
+
+  protected int findFirstGroupByTagPositionExcludingDeploymentTag(List<G> groupByList) {
+    int index = -1;
+    for (G groupBy : groupByList) {
+      index++;
+      TA tagAggregation = getTagAggregation(groupBy);
+      if (tagAggregation != null) {
+        if (tagAggregation instanceof QLDeploymentTagAggregation
+            && QLDeploymentTagType.DEPLOYMENT == tagAggregation.getEntityType()) {
+          continue;
+        }
+        return index;
+      }
+    }
+    return -1;
   }
 
   protected int findFirstGroupByTagPosition(List<G> groupByList) {

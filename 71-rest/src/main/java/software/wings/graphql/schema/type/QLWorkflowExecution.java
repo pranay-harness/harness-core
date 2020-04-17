@@ -3,8 +3,11 @@ package software.wings.graphql.schema.type;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+
+import java.util.List;
 
 @Value
 @Builder
@@ -19,4 +22,5 @@ public class QLWorkflowExecution implements QLExecution {
   private QLCause cause;
   private String notes;
   private String appId;
+  private List<QLDeploymentTag> tags;
 }

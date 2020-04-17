@@ -4072,4 +4072,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     return deploymentTags;
   }
+
+  @Override
+  public Set<String> getWorkflowExecutionsWithTag(String accountId, String key, String value) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.accountId, accountId)
+                                         .filter(WorkflowExecutionKeys.tags + ".name", key);
+    if (isNotEmpty(value)) {
+      query.field(WorkflowExecutionKeys.tags + ".value").equal(value);
+    }
+
+    List<WorkflowExecution> workflowExecutions = query.project("_id", true).asList();
+    return workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(Collectors.toSet());
+  }
 }
