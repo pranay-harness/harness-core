@@ -136,26 +136,17 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   private boolean canAssignScopes(
       Delegate delegate, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     List<DelegateScope> includeScopes = new ArrayList<>();
-    List<DelegateScope> excludeScopes = new ArrayList<>();
 
     if (isNotEmpty(delegate.getIncludeScopes())) {
       includeScopes = delegate.getIncludeScopes().stream().filter(Objects::nonNull).collect(toList());
     }
 
-    if (isNotEmpty(delegate.getExcludeScopes())) {
-      excludeScopes = delegate.getExcludeScopes().stream().filter(Objects::nonNull).collect(toList());
-    }
-
-    boolean excludeMatched = false;
-    boolean includeMatched = true;
-
+    boolean includeMatched = includeScopes.isEmpty();
     for (DelegateScope scope : includeScopes) {
       if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
         delegateSelectionLogsService.logIncludeScopeMatched(scope, delegate.getUuid());
         includeMatched = true;
         break;
-      } else {
-        includeMatched = false;
       }
     }
 
@@ -164,15 +155,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return false;
     }
 
+    List<DelegateScope> excludeScopes = new ArrayList<>();
+    if (isNotEmpty(delegate.getExcludeScopes())) {
+      excludeScopes = delegate.getExcludeScopes().stream().filter(Objects::nonNull).collect(toList());
+    }
+
     for (DelegateScope scope : excludeScopes) {
       if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
         delegateSelectionLogsService.logExcludeScopeMatched(scope, delegate.getUuid());
-        excludeMatched = true;
-        break;
+        return false;
       }
     }
 
-    return !excludeMatched && includeMatched;
+    return true;
   }
 
   private boolean canAssignSelectors(Delegate delegate, List<String> tags) {
