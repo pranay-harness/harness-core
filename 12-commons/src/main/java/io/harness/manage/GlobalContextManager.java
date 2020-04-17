@@ -92,10 +92,16 @@ public class GlobalContextManager {
   }
 
   public static <T> GlobalContextCallableWrapper<T> generateExecutorTask(Callable<T> task) {
+    if (task instanceof GlobalContextCallableWrapper) {
+      return (GlobalContextCallableWrapper<T>) task;
+    }
     return GlobalContextCallableWrapper.<T>builder().task(task).context(obtainGlobalContext()).build();
   }
 
   public static GlobalContextTaskWrapper generateExecutorTask(Runnable task) {
+    if (task instanceof GlobalContextTaskWrapper) {
+      return (GlobalContextTaskWrapper) task;
+    }
     return GlobalContextTaskWrapper.builder().task(task).context(obtainGlobalContext()).build();
   }
 

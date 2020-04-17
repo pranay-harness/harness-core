@@ -1,5 +1,7 @@
 package io.harness.manage;
 
+import static io.harness.manage.GlobalContextManager.generateExecutorTask;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Callable;
@@ -28,7 +30,7 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
    */
   @Override
   public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-    return ((ScheduledExecutorService) getExecutorService()).schedule(command, delay, unit);
+    return ((ScheduledExecutorService) getExecutorService()).schedule(generateExecutorTask(command), delay, unit);
   }
 
   /* (non-Javadoc)
@@ -37,7 +39,7 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
    */
   @Override
   public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-    return ((ScheduledExecutorService) getExecutorService()).schedule(callable, delay, unit);
+    return ((ScheduledExecutorService) getExecutorService()).schedule(generateExecutorTask(callable), delay, unit);
   }
 
   /* (non-Javadoc)
@@ -46,7 +48,8 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
    */
   @Override
   public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-    return ((ScheduledExecutorService) getExecutorService()).scheduleAtFixedRate(command, initialDelay, period, unit);
+    return ((ScheduledExecutorService) getExecutorService())
+        .scheduleAtFixedRate(generateExecutorTask(command), initialDelay, period, unit);
   }
 
   /* (non-Javadoc)
@@ -56,7 +59,7 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
   @Override
   public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
     return ((ScheduledExecutorService) getExecutorService())
-        .scheduleWithFixedDelay(GlobalContextManager.generateExecutorTask(command), initialDelay, delay, unit);
+        .scheduleWithFixedDelay(generateExecutorTask(command), initialDelay, delay, unit);
   }
 
   /* (non-Javadoc)
