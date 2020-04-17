@@ -58,6 +58,8 @@ public class HarnessServiceInfoFetcherTest extends CategoryTest {
     ImmutableMap<String, String> labels = ImmutableMap.of(RELEASE_NAME, "value1");
     HarnessServiceInfo harnessServiceInfo = new HarnessServiceInfo(
         "svc-id", "app-id", "cloud-provider-id", "env-id", "infra-mapping-id", "deployment-summary-id");
+    when(cloudToHarnessMappingService.getHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME))
+        .thenReturn(Optional.empty());
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, labels))
         .thenReturn(Optional.of(harnessServiceInfo));
     assertThat(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, SETTING_ID, NAMESPACE, POD_NAME, labels))

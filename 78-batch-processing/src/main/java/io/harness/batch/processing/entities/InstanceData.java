@@ -8,6 +8,7 @@ import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -58,7 +59,7 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn(EVENTS_DB)
-public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String settingId;
