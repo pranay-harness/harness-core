@@ -152,11 +152,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAssignDelegateWithMatchingIncludeScopesAndWithoutMatchingExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
     List<DelegateScope> includeScopes =
@@ -182,11 +181,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotAssignDelegateWithMatchingIncludeScopesAndWithMatchingExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
-                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
     List<DelegateScope> includeScopes =
