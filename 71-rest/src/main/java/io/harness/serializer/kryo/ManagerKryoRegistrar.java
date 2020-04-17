@@ -55,6 +55,7 @@ import software.wings.api.EnvStateExecutionData;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.ForkElement;
 import software.wings.api.GcpClusterExecutionData;
+import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.HostElement;
@@ -1553,5 +1554,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceArtifactVariableElements.class, 7343);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesExecutionData.class, 7344);
     kryo.register(ClusterMasterUrlValidationCapability.class, 7345);
+    kryo.register(HelmDeployContextElement.class, 7346);
   }
 }
