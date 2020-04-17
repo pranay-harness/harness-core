@@ -4,7 +4,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
-import io.harness.refrences.RefType;
+import io.harness.references.RefType;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.resolvers.Resolver;

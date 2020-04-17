@@ -1,5 +1,7 @@
 package io.harness.state.execution;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
@@ -17,6 +19,9 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -26,16 +31,19 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "executionInstances", noClassnameStored = true)
 public class ExecutionInstance implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
                                           CreatedByAccess, UpdatedAtAware, UuidAccess {
+  public static final Duration TTL = ofDays(21);
+
   @Id @NotNull private String uuid;
   private EmbeddedUser createdBy;
   private long createdAt;
   private ExecutionPlan executionPlan;
   private Long nextIteration;
+  @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   ExecutionInstanceStatus status;
   private Long startTs;
   private Long endTs;
-  private Long expiryTs;
+
   long lastUpdatedAt;
 
   @Override

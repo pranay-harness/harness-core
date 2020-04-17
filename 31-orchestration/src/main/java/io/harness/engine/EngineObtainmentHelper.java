@@ -13,7 +13,7 @@ import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
-import io.harness.refrences.RefObject;
+import io.harness.references.RefObject;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
