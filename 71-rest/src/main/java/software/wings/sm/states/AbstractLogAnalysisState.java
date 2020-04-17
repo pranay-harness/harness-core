@@ -408,7 +408,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
     String hostNameField = getHostnameField(context);
-
+    campareAndLogNodesUsingNewInstanceAPI(context, testNodes.keySet(), controlNodes.keySet());
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(accountId)
