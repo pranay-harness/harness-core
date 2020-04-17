@@ -9,6 +9,7 @@ import com.google.protobuf.Message;
 import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.DataFormatException;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -39,7 +40,7 @@ import java.util.Map;
 })
 @FieldNameConstants(innerTypeName = "PublishedMessageKeys")
 @Slf4j
-public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware {
+public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware, AccountAccess {
   @Id private String uuid;
   private long createdAt;
 

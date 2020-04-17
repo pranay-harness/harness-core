@@ -48,10 +48,7 @@ public class K8sLabelServiceInfoFetcher {
           ContainerDeploymentKey.builder().labels(Arrays.asList(label)).build();
       deploymentSummaryBuilder.containerDeploymentKey(containerDeploymentKey);
       DeploymentSummary deploymentSummary = deploymentSummaryBuilder.build();
-      Optional<HarnessServiceInfo> harnessServiceInfo =
-          cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
-      logger.info("helm request deployment summary {} {}", deploymentSummary, harnessServiceInfo.isPresent());
-      return harnessServiceInfo;
+      return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
     } else {
       return Optional.ofNullable(null);
     }

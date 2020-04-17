@@ -2,6 +2,7 @@ package io.harness.ccm.health;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.health.CeExceptionRecord.CeExceptionRecordKeys;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -32,7 +33,7 @@ import org.mongodb.morphia.utils.IndexType;
       , @Field(value = CeExceptionRecordKeys.clusterId),
           @Field(value = CeExceptionRecordKeys.createdAt, type = IndexType.ASC)
     }))
-public class CeExceptionRecord implements PersistentEntity, UuidAware, CreatedAtAware {
+public class CeExceptionRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id String uuid;
   @NotEmpty String accountId;
   @NotEmpty String clusterId;

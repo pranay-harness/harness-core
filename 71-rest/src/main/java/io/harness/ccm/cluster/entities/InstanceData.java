@@ -2,6 +2,7 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.InstanceData.InstanceDataKeys;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -33,7 +34,7 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String settingId;
