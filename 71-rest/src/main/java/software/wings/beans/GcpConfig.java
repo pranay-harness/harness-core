@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -39,7 +38,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class GcpConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String GCS_URL = "https://storage.cloud.google.com/";
-  @JsonIgnore @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
+  @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
 
   @SchemaIgnore @NotEmpty private String accountId;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;

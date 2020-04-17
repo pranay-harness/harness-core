@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
@@ -83,6 +84,20 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Override
   public String fetchResourceCategory() {
     return SOURCE_REPO_PROVIDER.name();
+  }
+
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    if (keyAuth) {
+      if (isBlank(sshSettingId)) {
+        logger.error("Key auth with empty ssh setting id");
+      }
+
+      // TODO(gpahal): Once ssh and winrm are moved to secrets, we can change this also.
+      return Collections.emptyList();
+    } else {
+      return Collections.singletonList(encryptedPassword);
+    }
   }
 
   public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM }

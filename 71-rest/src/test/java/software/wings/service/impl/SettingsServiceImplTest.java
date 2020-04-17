@@ -2,11 +2,18 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -22,12 +29,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.WingsTestConstants;
+import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,10 +44,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SettingsServiceImplTest extends WingsBaseTest {
+  private static final String PASSWORD = "PASSWORD";
+
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private EnvironmentService environmentService;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private SecretManager secretManager;
+  @Mock private UsageRestrictionsService usageRestrictionsService;
+  @Mock private SettingServiceHelper settingServiceHelper;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
 
@@ -46,16 +60,14 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void testEnsureHelmConnectorSafeToDelete() {
-    SettingAttribute helmConnector = SettingAttribute.Builder.aSettingAttribute()
-                                         .withAccountId(WingsTestConstants.ACCOUNT_ID)
-                                         .withName("http-helm")
-                                         .withUuid("id-1")
-                                         .withCategory(SettingCategory.HELM_REPO)
-                                         .withValue(HttpHelmRepoConfig.builder()
-                                                        .chartRepoUrl("http://stable-charts")
-                                                        .accountId(WingsTestConstants.ACCOUNT_ID)
-                                                        .build())
-                                         .build();
+    SettingAttribute helmConnector =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withName("http-helm")
+            .withUuid("id-1")
+            .withCategory(SettingCategory.HELM_REPO)
+            .withValue(HttpHelmRepoConfig.builder().chartRepoUrl("http://stable-charts").accountId(ACCOUNT_ID).build())
+            .build();
     settingsService.ensureSettingAttributeSafeToDelete(helmConnector);
 
     shouldNotDeleteIfReferencedInService(helmConnector);
@@ -145,5 +157,43 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   private ApplicationManifest helmChartManifestWithIds(String serviceId, String envId) {
     return ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).serviceId(serviceId).envId(envId).build();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void testIsFilteredSettingAttribute() {
+    SettingAttribute helmConnector = SettingAttribute.Builder.aSettingAttribute()
+                                         .withAccountId(ACCOUNT_ID)
+                                         .withName("http-helm")
+                                         .withUuid("id-1")
+                                         .withCategory(SettingCategory.HELM_REPO)
+                                         .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                         .build();
+
+    when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
+    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
+    verify(secretManager, never())
+        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(usageRestrictionsService, times(1))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
+
+    when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(true);
+    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
+    verify(secretManager, never())
+        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(usageRestrictionsService, times(2))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
+
+    helmConnector.setValue(HttpHelmRepoConfig.builder()
+                               .chartRepoUrl("http://stable-charts")
+                               .encryptedPassword(PASSWORD)
+                               .accountId(ACCOUNT_ID)
+                               .build());
+    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
+    verify(secretManager, times(1))
+        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(usageRestrictionsService, times(2))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
   }
 }

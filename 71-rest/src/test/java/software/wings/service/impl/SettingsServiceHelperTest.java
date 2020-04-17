@@ -31,6 +31,8 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InstanaConfig;
+import software.wings.beans.KubernetesClusterAuthType;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -38,11 +40,14 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+
+import java.util.List;
 
 public class SettingsServiceHelperTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -209,5 +214,33 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     settingServiceHelper.copyFromEncryptedRefFields(azureArtifactsPATConfig);
     assertThat(azureArtifactsPATConfig.getPat()).isEqualTo(PAT.toCharArray());
     assertThat(azureArtifactsPATConfig.getEncryptedPat()).isNull();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetAllEncryptedSecrets() {
+    // Not an EncryptableSetting.
+    List<String> encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(null);
+    assertThat(encryptedSecrets).isNotNull();
+    assertThat(encryptedSecrets).isEmpty();
+
+    // Does not contain any @Encrypted annotation.
+    encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(GCSHelmRepoConfig.builder().build());
+    assertThat(encryptedSecrets).isNotNull();
+    assertThat(encryptedSecrets).isEmpty();
+
+    String secret = "secret";
+    String password = "password";
+    String clientId = "clientId";
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
+                                                          .authType(KubernetesClusterAuthType.OIDC)
+                                                          .encryptedOidcSecret(secret)
+                                                          .encryptedOidcPassword(password)
+                                                          .encryptedOidcClientId(clientId)
+                                                          .build();
+    encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(kubernetesClusterConfig);
+    assertThat(encryptedSecrets).isNotNull();
+    assertThat(encryptedSecrets).contains(secret, password, clientId);
   }
 }

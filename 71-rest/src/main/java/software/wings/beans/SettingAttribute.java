@@ -82,7 +82,9 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.yaml.BaseYaml;
 
+import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 
 /**
@@ -339,5 +341,10 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
     public static final String uuid = "uuid";
     public static final String accountId = "accountId";
     public static final String valueType = SettingAttributeKeys.value + ".type";
+  }
+
+  @Nonnull
+  public List<String> fetchRelevantSecretIds() {
+    return value == null ? Collections.emptyList() : value.fetchRelevantEncryptedSecrets();
   }
 }

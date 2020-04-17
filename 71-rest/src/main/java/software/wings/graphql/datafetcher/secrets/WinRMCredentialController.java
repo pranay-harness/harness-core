@@ -28,6 +28,7 @@ import javax.validation.constraints.NotNull;
 public class WinRMCredentialController {
   @Inject SettingsService settingService;
   @Inject UsageScopeController usageScopeController;
+
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
     QLAuthScheme authScheme = QLAuthScheme.NTLM;
     WinRmConnectionAttributes winRmConnectionAttributes = (WinRmConnectionAttributes) settingAttribute.getValue();

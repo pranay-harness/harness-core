@@ -25,6 +25,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("AWS")
@@ -72,6 +73,15 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @Override
   public String fetchResourceCategory() {
     return ResourceType.CLOUD_PROVIDER.name();
+  }
+
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    if (useEc2IamCredentials) {
+      return Collections.emptyList();
+    }
+
+    return Collections.singletonList(encryptedSecretKey);
   }
 
   @Data

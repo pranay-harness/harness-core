@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.lang.reflect.Field;
@@ -48,6 +49,11 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   }
 
   public abstract String fetchResourceCategory();
+
+  // Default Implementation
+  public List<String> fetchRelevantEncryptedSecrets() {
+    return SettingServiceHelper.getAllEncryptedSecrets(this);
+  }
 
   /**
    * The Enum SettingVariableTypes.
