@@ -21,6 +21,9 @@ import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
+import io.harness.redesign.states.http.BasicHttpStateParameters;
+import io.harness.redesign.states.wait.WaitStateParameters;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1523,5 +1526,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
     w.put(
         smss + "SpotinstTrafficShiftAlbSwapRoutesExecutionData", SpotinstTrafficShiftAlbSwapRoutesExecutionData.class);
+    // Redesign Classes
+    w.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
+    w.put("redesign.states.http.BasicHttpStateParameters", BasicHttpStateParameters.class);
+    w.put("redesign.states.wait.WaitStateParameters", WaitStateParameters.class);
   }
 }

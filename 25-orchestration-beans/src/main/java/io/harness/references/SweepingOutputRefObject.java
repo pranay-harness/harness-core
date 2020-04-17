@@ -1,4 +1,4 @@
-package io.harness.refrences;
+package io.harness.references;
 
 import io.harness.annotations.Redesign;
 import lombok.Builder;

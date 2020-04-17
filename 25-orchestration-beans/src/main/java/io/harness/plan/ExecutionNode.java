@@ -3,7 +3,7 @@ package io.harness.plan;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.FacilitatorObtainment;
-import io.harness.refrences.RefObject;
+import io.harness.references.RefObject;
 import io.harness.state.io.StateParameters;
 import lombok.Builder;
 import lombok.Singular;

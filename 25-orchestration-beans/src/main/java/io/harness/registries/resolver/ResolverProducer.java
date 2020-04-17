@@ -1,7 +1,7 @@
 package io.harness.registries.resolver;
 
 import io.harness.annotations.Redesign;
-import io.harness.refrences.RefType;
+import io.harness.references.RefType;
 import io.harness.resolvers.Resolver;
 
 @Redesign
