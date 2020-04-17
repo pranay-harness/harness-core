@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -12,6 +11,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -47,9 +47,11 @@ import java.util.function.Function;
 @Singleton
 @Slf4j
 public class DockerRegistryServiceImpl implements DockerRegistryService {
+  public static final String BEARER = "Bearer ";
   @Inject private EncryptionService encryptionService;
   @Inject private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
   @Inject private DockerRegistryUtils dockerRegistryUtils;
+  private static final String AUTHENTICATE_HEADER = "Www-Authenticate";
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
@@ -91,9 +93,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
     if (response.code() == 401) { // unauthorized
       token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
-      response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+      response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       if (response.code() == 401) {
-        throw new WingsException(INVALID_CREDENTIAL, WingsException.USER);
+        throw new InvalidCredentialsException("Invalid Credentials while fetching build details", USER);
       }
     }
 
@@ -120,10 +122,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       int queryParamIndex = nextLink.indexOf('?');
       String nextPageUrl =
           queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
-      response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
+      response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       if (response.code() == 401) { // unauthorized
         token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
-        response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
+        response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       }
       dockerImageTagResponse = response.body();
       if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
@@ -202,7 +204,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
           registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
       if (response.code() == 401) { // unauthorized
         String token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
-        response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+        response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       }
       if (!isSuccessful(response)) {
         // Image not found or user doesn't have permission to list image tags.
@@ -221,20 +223,43 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
         throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
       }
+      DockerRegistryRestClient registryRestClient = null;
+      String basicAuthHeader;
+      String authHeaderValue;
+      Response response;
+      DockerRegistryToken dockerRegistryToken;
       try {
-        DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
-        String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-        Response response = registryRestClient.getApiVersion(basicAuthHeader).execute();
+        registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+        basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+        response = registryRestClient.getApiVersion(basicAuthHeader).execute();
         if (response.code() == 401) { // unauthorized
-          String authHeaderValue = response.headers().get("Www-Authenticate");
-          DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+          authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
+          dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
           if (dockerRegistryToken != null) {
-            response = registryRestClient.getApiVersion("Bearer " + dockerRegistryToken.getToken()).execute();
+            response = registryRestClient.getApiVersion(BEARER + dockerRegistryToken.getToken()).execute();
           }
         }
         return isSuccessful(response);
       } catch (IOException e) {
-        throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
+        logger.warn("Failed to fetch apiversion with credentials" + e);
+        try {
+          // This is special case for repositories that require "/v2/" path for getting API version . Eg. Harbor docker
+          // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
+          basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+          response = registryRestClient.getApiVersionEndingWithForwardSlash(basicAuthHeader).execute();
+          if (response.code() == 401) { // unauthorized
+            authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
+            dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+            if (dockerRegistryToken != null) {
+              response = registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken())
+                             .execute();
+            }
+          }
+          return isSuccessful(response);
+        } catch (IOException ioException) {
+          Exception exception = new Exception(ioException);
+          throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
+        }
       }
     }
     return true;
@@ -244,7 +269,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       DockerRegistryRestClient registryRestClient) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-    String authHeaderValue = headers.get("Www-Authenticate");
+    String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
       if (dockerRegistryToken != null) {

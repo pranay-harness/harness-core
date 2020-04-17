@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -37,6 +38,8 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
   @Override
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
+    notNullCheck("Application cannot be null", executionContext.getApp());
+
     CloudFormationDeleteStackRequest request =
         CloudFormationDeleteStackRequest.builder()
             .region(region)

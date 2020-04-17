@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -302,6 +303,9 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .awsConfig(awsConfig);
       CloudFormationCreateStackRequest request = builder.build();
       setTimeOutOnRequest(request);
+
+      notNullCheck("Application cannot be null", context.getApp());
+
       delegateTask =
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())

@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -212,6 +213,8 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   private Activity createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    notNullCheck("Application cannot be null", app);
+
     ActivityBuilder activityBuilder = Activity.builder()
                                           .appId(app.getUuid())
                                           .applicationName(app.getName())

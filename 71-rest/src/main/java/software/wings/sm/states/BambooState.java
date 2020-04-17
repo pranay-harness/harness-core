@@ -142,6 +142,7 @@ public class BambooState extends State {
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
         ? null
         : workflowStandardParams.getEnv().getUuid();
+    notNullCheck("Application cannot be null", context.getApp());
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
 
     BambooConfig bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId);
@@ -257,7 +258,7 @@ public class BambooState extends State {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
-
+    notNullCheck("Application cannot be null", app);
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
                                           .commandName(getName())
