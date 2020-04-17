@@ -18,8 +18,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
-import io.harness.ccm.BillingReportConfig;
-import io.harness.ccm.CCMConfig;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
@@ -1505,7 +1504,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaMetricItem.class, 7299);
     kryo.register(InstanaMetricValues.class, 7300);
     kryo.register(InstanaDataCollectionInfo.class, 7301);
-    kryo.register(BillingReportConfig.class, 7302);
     kryo.register(HelmVersion.class, 7303);
     kryo.register(InstanaTagFilter.class, 7304);
 

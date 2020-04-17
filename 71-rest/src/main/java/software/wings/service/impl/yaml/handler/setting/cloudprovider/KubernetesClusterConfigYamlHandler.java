@@ -4,9 +4,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.CCMConfig;
-import io.harness.ccm.CCMConfigYamlHandler;
-import io.harness.ccm.CCMSettingService;
+import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYamlHandler;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;

@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.CCMPerpetualTaskManager;
-import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.config.CCMSettingService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;

@@ -15,8 +15,6 @@ import com.google.inject.name.Names;
 
 import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
-import io.harness.ccm.CCMSettingService;
-import io.harness.ccm.CCMSettingServiceImpl;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -27,6 +25,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.config.CCMSettingService;
+import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;

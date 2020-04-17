@@ -19,7 +19,7 @@ import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.BillingReportConfig;
-import io.harness.ccm.CCMConfig;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;

@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.config.CCMSettingService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

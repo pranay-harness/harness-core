@@ -71,7 +71,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.CCMSettingService;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;

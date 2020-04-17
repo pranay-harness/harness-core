@@ -15,6 +15,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CE_AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CE_GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CUSTOM;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
@@ -154,7 +155,7 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
 
     AZURE_ARTIFACTS(Lists.newArrayList(AZURE_ARTIFACTS_PAT)),
 
-    CE_CONNECTOR(Lists.newArrayList(CE_AWS));
+    CE_CONNECTOR(Lists.newArrayList(CE_AWS, CE_GCP));
 
     @Getter private List<SettingVariableTypes> settingVariableTypes;
 

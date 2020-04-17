@@ -67,8 +67,8 @@ public class BudgetDaoTest extends WingsBaseTest {
   public void shouldListAllBudgets() {
     budgetDao.save(budget1);
     budgetDao.save(budget2);
-    List<Budget> budgets2 = budgetDao.list(accountId, 0, 0);
-    assertThat(budgets2).hasSize(2);
+    List<Budget> budgets = budgetDao.list(accountId, 0, 0);
+    assertThat(budgets).hasSize(2);
   }
 
   @Test

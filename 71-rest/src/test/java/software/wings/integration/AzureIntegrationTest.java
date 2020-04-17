@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.ccm.CCMConfig;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;

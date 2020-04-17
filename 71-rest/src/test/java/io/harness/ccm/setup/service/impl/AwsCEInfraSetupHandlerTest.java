@@ -9,8 +9,8 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.setup.dao.CECloudAccountDao;
-import io.harness.ccm.setup.dao.CEClusterDao;
+import io.harness.ccm.setup.CECloudAccountDao;
+import io.harness.ccm.setup.CEClusterDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
 import io.harness.rule.Owner;

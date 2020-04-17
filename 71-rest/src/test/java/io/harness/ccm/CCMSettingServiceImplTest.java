@@ -12,6 +12,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMSettingServiceImpl;
+import io.harness.ccm.config.CloudCostAware;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -100,8 +103,8 @@ public class CCMSettingServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldNotMaskCCMConfig() {
-    SettingAttribute maskedSettingAttribute = ccmSettingService.maskCCMConfig(settingAttribute);
-    assertThat(maskedSettingAttribute).isEqualTo(settingAttribute);
+    ccmSettingService.maskCCMConfig(settingAttribute);
+    assertThat(((CloudCostAware) settingAttribute.getValue()).cloudCostEnabled()).isNotNull();
   }
 
   @Test
@@ -132,8 +135,8 @@ public class CCMSettingServiceImplTest extends CategoryTest {
                                             .withAccountId(accountIdNoCCM)
                                             .withValue(kubernetesClusterConfig)
                                             .build();
-    SettingAttribute maskedSettingAttribute = ccmSettingService.maskCCMConfig(settingAttribute);
-    assertThat(maskedSettingAttribute.getValue() instanceof KubernetesClusterConfig).isTrue();
-    assertThat(((KubernetesClusterConfig) maskedSettingAttribute.getValue()).getCcmConfig()).isNull();
+    ccmSettingService.maskCCMConfig(settingAttribute);
+    assertThat(settingAttribute.getValue() instanceof KubernetesClusterConfig).isTrue();
+    assertThat(((KubernetesClusterConfig) settingAttribute.getValue()).getCcmConfig()).isNull();
   }
 }

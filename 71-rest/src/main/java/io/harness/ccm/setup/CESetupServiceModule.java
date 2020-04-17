@@ -2,6 +2,8 @@ package io.harness.ccm.setup;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.ccm.config.GcpBillingAccountService;
+import io.harness.ccm.config.GcpBillingAccountServiceImpl;
 import io.harness.ccm.setup.service.impl.AWSAccountServiceImpl;
 import io.harness.ccm.setup.service.impl.AwsEKSClusterServiceImpl;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
@@ -27,5 +29,6 @@ public class CESetupServiceModule extends AbstractModule {
     bind(AwsEKSHelperService.class).to(AwsEKSHelperServiceImpl.class);
     bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
     bind(AWSAccountService.class).to(AWSAccountServiceImpl.class);
+    bind(GcpBillingAccountService.class).to(GcpBillingAccountServiceImpl.class);
   }
 }
