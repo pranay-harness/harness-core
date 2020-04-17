@@ -33,18 +33,10 @@ public class CachingTest extends WingsBaseTest {
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
     assertThat(cacheableService.getCacheableObject(1, 2)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
-  }
 
-  /**
-   * Should not cache when key is different.
-   */
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void shouldNotCacheWhenKeyIsDifferent() {
-    assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
-    assertThat(cacheableService.getCallCount()).isEqualTo(1);
     assertThat(cacheableService.getCacheableObject(2, 1)).extracting(CacheableObject::getX).isEqualTo(2);
+    assertThat(cacheableService.getCallCount()).isEqualTo(2);
+    assertThat(cacheableService.getCacheableObject(1, 2)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(2);
   }
 

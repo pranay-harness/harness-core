@@ -43,6 +43,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.QueuePublisher;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -352,7 +353,9 @@ public class AppServiceImpl implements AppService {
 
     setUnset(operations, "description", app.getDescription());
 
-    wingsPersistence.update(query, operations);
+    PersistenceValidator.duplicateCheck(
+        () -> wingsPersistence.update(query, operations), ApplicationKeys.name, app.getName());
+
     dbCache.invalidate(Application.class, app.getUuid());
 
     updateAppYamlGitConfig(savedApp, app, !app.isSyncFromGit());
