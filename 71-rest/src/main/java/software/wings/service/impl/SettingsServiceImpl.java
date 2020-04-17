@@ -367,11 +367,8 @@ public class SettingsServiceImpl implements SettingsService {
       if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
-        UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
-
         if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
-                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                usageRestrictionsFromEntity)) {
+                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute, settingAttribute)) {
           filteredSettingAttributes.add(settingAttribute);
         }
       }
@@ -430,11 +427,9 @@ public class SettingsServiceImpl implements SettingsService {
       helmRepoSettingAttributes.forEach(settingAttribute -> {
         String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
         if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)) {
-          UsageRestrictions usageRestrictionsFromEntity = cloudProvidersMap.get(cloudProviderId).getUsageRestrictions();
-
           if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
                   restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                  usageRestrictionsFromEntity)) {
+                  cloudProvidersMap.get(cloudProviderId))) {
             filteredSettingAttributes.add(settingAttribute);
           }
         }
@@ -442,10 +437,24 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  private boolean isFilteredSettingAttribute(String appIdFromRequest, String envIdFromRequest, String accountId,
+  @VisibleForTesting
+  public boolean isFilteredSettingAttribute(String appIdFromRequest, String envIdFromRequest, String accountId,
       Map<String, Set<String>> appEnvMapFromUserPermissions, UsageRestrictions restrictionsFromUserPermissions,
       boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap, SettingAttribute settingAttribute,
-      UsageRestrictions usageRestrictionsFromEntity) {
+      SettingAttribute settingAttributeWithUsageRestrictions) {
+    if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
+      // Try to get any secret references if possible.
+      List<String> secretIds = settingAttributeWithUsageRestrictions.fetchRelevantSecretIds();
+      Set<String> usedSecretIds = secretIds.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
+
+      if (isNotEmpty(usedSecretIds)) {
+        // Runtime check using intersection of usage scopes of secretIds.
+        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest,
+            isAccountAdmin, restrictionsFromUserPermissions, appEnvMapFromUserPermissions, appIdEnvMap);
+      }
+    }
+
+    UsageRestrictions usageRestrictionsFromEntity = settingAttributeWithUsageRestrictions.getUsageRestrictions();
     if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
             usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions, appIdEnvMap)) {
       // HAR-7726: Mask the encrypted field values when listing all settings.
@@ -465,7 +474,7 @@ public class SettingsServiceImpl implements SettingsService {
                || GCS_HELM_REPO.name().equals(settingAttribute.getValue().getType()));
   }
 
-  private UsageRestrictions getUsageRestriction(SettingAttribute settingAttribute) {
+  private UsageRestrictions getUsageRestrictions(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
     if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
       String cloudProviderId = ((HelmRepoConfig) settingValue).getConnectorId();
@@ -531,7 +540,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
-        settingAttribute.getAccountId(), getUsageRestriction(settingAttribute));
+        settingAttribute.getAccountId(), getUsageRestrictions(settingAttribute));
 
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof EncryptableSetting) {
@@ -778,8 +787,8 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
     validateSettingAttribute(settingAttribute, existingSetting);
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        settingAttribute.getAccountId(), existingSetting.getUsageRestrictions(), getUsageRestriction(settingAttribute));
+    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(settingAttribute.getAccountId(),
+        existingSetting.getUsageRestrictions(), getUsageRestrictions(settingAttribute));
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
@@ -1400,7 +1409,10 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute == null) {
       throw new InvalidRequestException(format("Setting attribute %s not found", settingId), USER);
     }
-    return getUsageRestriction(settingAttribute);
+
+    // TODO: ASR: This is only used for multi-artifact right now. When enabling that, we might need to change this to
+    // use runtime usage restrictions.
+    return getUsageRestrictions(settingAttribute);
   }
 
   @Override

@@ -28,6 +28,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("JENKINS")
@@ -92,6 +93,15 @@ public class JenkinsConfig extends SettingValue
   @Override
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
+  }
+
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    if (JenkinsUtils.TOKEN_FIELD.equals(authMechanism)) {
+      return Collections.singletonList(encryptedToken);
+    } else {
+      return Collections.singletonList(encryptedPassword);
+    }
   }
 
   @Data

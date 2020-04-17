@@ -14,10 +14,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.exception.UnexpectedException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,10 +30,12 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.jersey.JsonViews;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -143,6 +147,32 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     return ResourceType.CLOUD_PROVIDER.name();
   }
 
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    if (useKubernetesDelegate) {
+      return Collections.emptyList();
+    }
+
+    if (authType == null) {
+      return SettingServiceHelper.getAllEncryptedSecrets(this);
+    }
+
+    switch (authType) {
+      case NONE:
+        return SettingServiceHelper.getAllEncryptedSecrets(this);
+      case OIDC:
+        return Arrays.asList(encryptedOidcSecret, encryptedOidcClientId, encryptedOidcPassword);
+      case SERVICE_ACCOUNT:
+        return Collections.singletonList(encryptedServiceAccountToken);
+      case CLIENT_KEY_CERT:
+        return Arrays.asList(encryptedCaCert, encryptedClientCert, encryptedClientKey, encryptedClientKeyPassphrase);
+      case USER_PASSWORD:
+        return Collections.singletonList(encryptedPassword);
+      default:
+        throw new UnexpectedException("Undefined auth type: " + authType);
+    }
+  }
+
   public KubernetesConfig createKubernetesConfig(String namespace) {
     String namespaceNotBlank = isNotBlank(namespace) ? namespace : "default";
 
@@ -166,40 +196,40 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       return initWithOidcAuthDetails(kubernetesConfig);
     }
 
-    if (isNotBlank(encryptedPassword)) {
-      kubernetesConfig.encryptedPassword(encryptedPassword);
-    } else {
+    if (EmptyPredicate.isNotEmpty(password)) {
       kubernetesConfig.password(password);
+    } else {
+      kubernetesConfig.encryptedPassword(encryptedPassword);
     }
 
-    if (isNotBlank(encryptedCaCert)) {
-      kubernetesConfig.encryptedCaCert(encryptedCaCert);
-    } else {
+    if (EmptyPredicate.isNotEmpty(caCert)) {
       kubernetesConfig.caCert(caCert);
+    } else {
+      kubernetesConfig.encryptedCaCert(encryptedCaCert);
     }
 
-    if (isNotBlank(encryptedClientCert)) {
-      kubernetesConfig.encryptedClientCert(encryptedClientCert);
-    } else {
+    if (EmptyPredicate.isNotEmpty(clientCert)) {
       kubernetesConfig.clientCert(clientCert);
+    } else {
+      kubernetesConfig.encryptedClientCert(encryptedClientCert);
     }
 
-    if (isNotBlank(encryptedClientKey)) {
-      kubernetesConfig.encryptedClientKey(encryptedClientKey);
-    } else {
+    if (EmptyPredicate.isNotEmpty(clientKey)) {
       kubernetesConfig.clientKey(clientKey);
+    } else {
+      kubernetesConfig.encryptedClientKey(encryptedClientKey);
     }
 
-    if (isNotBlank(encryptedClientKeyPassphrase)) {
-      kubernetesConfig.encryptedClientKeyPassphrase(encryptedClientKeyPassphrase);
-    } else {
+    if (EmptyPredicate.isNotEmpty(clientKeyPassphrase)) {
       kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
+    } else {
+      kubernetesConfig.encryptedClientKeyPassphrase(encryptedClientKeyPassphrase);
     }
 
-    if (isNotBlank(encryptedServiceAccountToken)) {
-      kubernetesConfig.encryptedServiceAccountToken(encryptedServiceAccountToken);
-    } else {
+    if (EmptyPredicate.isNotEmpty(serviceAccountToken)) {
       kubernetesConfig.serviceAccountToken(serviceAccountToken);
+    } else {
+      kubernetesConfig.encryptedServiceAccountToken(encryptedServiceAccountToken);
     }
 
     return kubernetesConfig.build();

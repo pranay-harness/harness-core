@@ -9,6 +9,9 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.Encryptable;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
@@ -20,6 +23,8 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Singleton
@@ -239,5 +244,29 @@ public class SettingServiceHelper {
       default:
         return false;
     }
+  }
+
+  public static List<String> getAllEncryptedSecrets(SettingValue obj) {
+    if (!(obj instanceof EncryptableSetting)) {
+      return Collections.emptyList();
+    }
+
+    List<Field> encryptedFields = EncryptionReflectUtils.getEncryptedFields(obj.getClass());
+    if (EmptyPredicate.isEmpty(encryptedFields)) {
+      return Collections.emptyList();
+    }
+
+    List<String> encryptedSecrets = new ArrayList<>();
+    for (Field encryptedField : encryptedFields) {
+      Field encryptedRefField = EncryptionReflectUtils.getEncryptedRefField(encryptedField, (Encryptable) obj);
+      encryptedRefField.setAccessible(true);
+      try {
+        String encryptedValue = (String) encryptedRefField.get(obj);
+        encryptedSecrets.add(encryptedValue);
+      } catch (IllegalAccessException e) {
+        throw new InvalidRequestException("Unable to access encrypted field", e);
+      }
+    }
+    return encryptedSecrets;
   }
 }
