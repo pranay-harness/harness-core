@@ -2412,18 +2412,17 @@ public class SecretManagerImpl implements SecretManager {
         encryptedDataSet.add(iterator.next());
       }
     }
-    Set<String> returnedParentIds = encryptedDataSet.stream().map(Base::getUuid).collect(Collectors.toSet());
-    Set<String> notFoundIds = Sets.difference(secretIds, returnedParentIds);
-    if (isNotEmpty(notFoundIds)) {
-      throw new SecretManagementException("Could not find secrets with ids ".concat(String.join(", ", notFoundIds)));
-    }
-
     return encryptedDataSet;
   }
 
   public boolean canUseSecretsInAppAndEnv(
       @NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest, String envIdFromRequest) {
     Set<EncryptedData> encryptedDataSet = fetchSecretsFromSecretIds(secretIds, accountId);
+
+    if (encryptedDataSet.isEmpty()) {
+      return true;
+    }
+
     boolean isAccountAdmin = userService.isAccountAdmin(accountId);
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
