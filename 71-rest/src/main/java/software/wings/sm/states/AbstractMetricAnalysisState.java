@@ -433,6 +433,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
     boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
+    campareAndLogNodesUsingNewInstanceAPI(context, testNodes.keySet(), controlNodes.keySet());
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(appService.get(context.getAppId()).getAccountId())

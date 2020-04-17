@@ -24,6 +24,7 @@ import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -138,6 +139,8 @@ import java.util.concurrent.TimeUnit;
 @FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
+  // only use it in the new instance API.
+  private static final String DEFAULT_HOSTNAME_TEMPLATE = "${instanceDetails.hostName}";
 
   public static final String START_TIME_PLACE_HOLDER = "$startTime";
   public static final String END_TIME_PLACE_HOLDER = "$endTime";
@@ -1196,5 +1199,39 @@ public abstract class AbstractAnalysisState extends State {
     SettingAttribute settingAttribute = settingsService.get(configId);
     Preconditions.checkNotNull(settingAttribute, "No connector found with id " + configId);
     return settingAttribute;
+  }
+
+  protected void campareAndLogNodesUsingNewInstanceAPI(
+      ExecutionContext context, Set<String> testNodes, Set<String> controlNodes) {
+    try {
+      Set<String> newControlNodes, newTestNodes;
+      String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
+
+      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
+        newTestNodes = new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+        newControlNodes = new HashSet<>();
+      } else {
+        Set<String> allNodes =
+            new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false));
+        Set<String> newNodes = includePreviousPhaseNodes
+            ? new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true))
+            : new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+        newTestNodes = newNodes;
+        newControlNodes = Sets.difference(allNodes, newNodes);
+      }
+      if (testNodes.equals(newTestNodes) && controlNodes.equals(newControlNodes)) {
+        getLogger().info(
+            "[NewInstanceAPI] New nodes and old nodes are equal. ComparisionStrategy: {} testNodes: {}, controlNodes {}",
+            getComparisonStrategy(), testNodes, controlNodes);
+      } else {
+        getLogger().info(
+            "[NewInstanceAPI] New nodes and old nodes are not equal. ComparisionStrategy: {}, includePreviousPhaseNodes: {} testNodes: {}, controlNodes {}, newTestNodes {}, newControlNodes {}",
+            getComparisonStrategy(), includePreviousPhaseNodes, testNodes, controlNodes, newTestNodes, newControlNodes);
+      }
+    } catch (Exception e) {
+      // this is the new api supposed to replace the old code. Ignoring any exception so that the existing code is not
+      // impacted. this code is printing the comparision
+      getLogger().error("[NewInstanceAPI] Exception while calling new instance API", e);
+    }
   }
 }
