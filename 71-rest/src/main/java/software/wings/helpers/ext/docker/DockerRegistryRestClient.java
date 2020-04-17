@@ -27,6 +27,9 @@ public interface DockerRegistryRestClient {
 
   @GET("/v2") Call<Object> getApiVersion(@Header("Authorization") String bearerAuthHeader);
 
+  // Added to handle special case for some custom docker repos
+  @GET("/v2/") Call<Object> getApiVersionEndingWithForwardSlash(@Header("Authorization") String bearerAuthHeader);
+
   @GET
   Call<DockerImageTagResponse> listImageTagsByUrl(@Header("Authorization") String bearerAuthHeader, @Url String url);
 
