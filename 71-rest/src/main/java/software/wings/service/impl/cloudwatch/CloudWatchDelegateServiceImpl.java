@@ -43,7 +43,6 @@ import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,10 +68,12 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(final AwsConfig config,
       List<EncryptedDataDetail> encryptionDetails, CloudWatchSetupTestNodeData setupTestNodeData,
-      ThirdPartyApiCallLog thirdPartyApiCallLog, String hostName) throws IOException {
+      ThirdPartyApiCallLog thirdPartyApiCallLog, String hostName) {
     logger.info("Initiating getDataForNode for hostname : " + hostName + " setupTestNodeData : " + setupTestNodeData);
     List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
+    setupTestNodeData.setFromTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime()));
+    setupTestNodeData.setToTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime()));
     encryptionService.decrypt(config, encryptionDetails);
     AmazonCloudWatchClient cloudWatchClient =
         awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config);

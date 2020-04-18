@@ -668,6 +668,7 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
@@ -686,6 +687,7 @@ import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
@@ -1555,5 +1557,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesExecutionData.class, 7344);
     kryo.register(ClusterMasterUrlValidationCapability.class, 7345);
     kryo.register(HelmDeployContextElement.class, 7346);
+    kryo.register(NewRelicMetricDataRecord.class, 7347);
+    kryo.register(ClusterLevel.class, 7348);
   }
 }

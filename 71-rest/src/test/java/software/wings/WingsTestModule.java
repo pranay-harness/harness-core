@@ -74,6 +74,7 @@ import software.wings.service.impl.aws.delegate.AwsEc2HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
+import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.instana.InstanaDelegateServiceImpl;
@@ -104,6 +105,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
+import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.instana.InstanaDelegateService;
@@ -175,6 +177,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
     bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);
     bind(AzureArtifactsBuildService.class).to(AzureArtifactsBuildServiceImpl.class);
+    bind(CloudWatchDelegateService.class).to(CloudWatchDelegateServiceImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
