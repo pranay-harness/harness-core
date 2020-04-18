@@ -2,8 +2,11 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromNamespaceKindName;
+import static io.harness.validation.Validator.nullCheckForInvalidRequest;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
@@ -162,6 +165,10 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
           } else {
             maxInstances = currentReplicas;
           }
+          nullCheckForInvalidRequest(maxInstances,
+              format("Could not get current replica count for workload %s/%s in namespace %s",
+                  resourceIdToScale.getKind(), resourceIdToScale.getName(), resourceIdToScale.getNamespace()),
+              USER);
           targetReplicaCount = (int) Math.round(k8sScaleTaskParameters.getInstances() * maxInstances / 100.0);
           break;
 
