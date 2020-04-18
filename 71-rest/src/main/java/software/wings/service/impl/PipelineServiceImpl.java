@@ -93,6 +93,7 @@ import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -151,6 +152,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private CounterSyncer counterSyncer;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private PipelineResumeUtils pipelineResumeUtils;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
@@ -180,16 +182,15 @@ public class PipelineServiceImpl implements PipelineService {
     }
     if (previousExecutionsCount != null && previousExecutionsCount > 0) {
       for (Pipeline pipeline : pipelines) {
+        PageRequest<WorkflowExecution> innerPageRequest = aPageRequest()
+                                                              .withLimit(previousExecutionsCount.toString())
+                                                              .addFilter("workflowId", EQ, pipeline.getUuid())
+                                                              .addFilter("appId", EQ, pipeline.getAppId())
+                                                              .build();
+        pipelineResumeUtils.addLatestPipelineResumeFilter(pipeline.getAccountId(), innerPageRequest);
         try {
           List<WorkflowExecution> workflowExecutions =
-              workflowExecutionService
-                  .listExecutions(aPageRequest()
-                                      .withLimit(previousExecutionsCount.toString())
-                                      .addFilter("workflowId", EQ, pipeline.getUuid())
-                                      .addFilter("appId", EQ, pipeline.getAppId())
-                                      .build(),
-                      false, false, false, false)
-                  .getResponse();
+              workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false).getResponse();
           pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
           logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);

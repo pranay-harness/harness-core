@@ -1,9 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.GE;
-import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
-import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -23,7 +20,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
@@ -38,7 +34,6 @@ import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PipelineStageGroupedInfo;
@@ -63,10 +58,10 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.RollbackConfirmation;
@@ -98,8 +93,8 @@ public class ExecutionResource {
   @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
+  @Inject private PipelineResumeUtils pipelineResumeUtils;
 
   /**
    * List.
@@ -157,16 +152,7 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
-    if (featureFlagService.isEnabled(FeatureName.PIPELINE_RESUME, accountId)) {
-      pageRequest.addFilter("", OR,
-          SearchFilter.builder().fieldName(WorkflowExecutionKeys.pipelineResumeId).op(NOT_EXISTS).build(),
-          SearchFilter.builder()
-              .fieldName(WorkflowExecutionKeys.latestPipelineResume)
-              .op(EQ)
-              .fieldValues(new Object[] {Boolean.TRUE})
-              .build());
-    }
-
+    pipelineResumeUtils.addLatestPipelineResumeFilter(accountId, pageRequest);
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 
