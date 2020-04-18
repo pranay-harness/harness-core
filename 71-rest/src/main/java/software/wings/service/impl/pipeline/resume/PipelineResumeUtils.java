@@ -2,6 +2,9 @@ package software.wings.service.impl.pipeline.resume;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -18,12 +21,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -383,5 +389,17 @@ public class PipelineResumeUtils {
     throw new InvalidRequestException(format(
         "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
         stageName, workflowId));
+  }
+
+  public void addLatestPipelineResumeFilter(String accountId, PageRequest<WorkflowExecution> pageRequest) {
+    if (featureFlagService.isEnabled(FeatureName.PIPELINE_RESUME, accountId)) {
+      pageRequest.addFilter("", OR,
+          SearchFilter.builder().fieldName(WorkflowExecutionKeys.pipelineResumeId).op(NOT_EXISTS).build(),
+          SearchFilter.builder()
+              .fieldName(WorkflowExecutionKeys.latestPipelineResume)
+              .op(EQ)
+              .fieldValues(new Object[] {Boolean.TRUE})
+              .build());
+    }
   }
 }

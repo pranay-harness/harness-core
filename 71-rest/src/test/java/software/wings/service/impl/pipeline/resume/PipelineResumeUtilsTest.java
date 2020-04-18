@@ -1,5 +1,6 @@
 package software.wings.service.impl.pipeline.resume;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -26,6 +27,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -48,6 +52,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -631,6 +636,34 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
             .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(1)))
             .build();
     pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testAddLatestPipelineResumeFilter() {
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, ACCOUNT_ID).build();
+
+    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
+    pipelineResumeUtils.addLatestPipelineResumeFilter(ACCOUNT_ID, pageRequest);
+    assertThat(pageRequest.getFilters().size()).isEqualTo(1);
+
+    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(true);
+    pipelineResumeUtils.addLatestPipelineResumeFilter(ACCOUNT_ID, pageRequest);
+    assertThat(pageRequest.getFilters().size()).isEqualTo(2);
+
+    SearchFilter searchFilter = pageRequest.getFilters().get(1);
+    assertThat(searchFilter.getFieldName()).isEqualTo("");
+    assertThat(searchFilter.getOp()).isEqualTo(Operator.OR);
+
+    SearchFilter searchFilter1 = (SearchFilter) searchFilter.getFieldValues()[0];
+    assertThat(searchFilter1.getFieldName()).isEqualTo(WorkflowExecutionKeys.pipelineResumeId);
+    assertThat(searchFilter1.getOp()).isEqualTo(Operator.NOT_EXISTS);
+
+    SearchFilter searchFilter2 = (SearchFilter) searchFilter.getFieldValues()[1];
+    assertThat(searchFilter2.getFieldName()).isEqualTo(WorkflowExecutionKeys.latestPipelineResume);
+    assertThat(searchFilter2.getOp()).isEqualTo(Operator.EQ);
+    assertThat(searchFilter2.getFieldValues()).containsExactly(Boolean.TRUE);
   }
 
   private void authorizeReadDeployments() {
