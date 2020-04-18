@@ -8,7 +8,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -18,5 +17,5 @@ public interface CloudWatchDelegateService {
   @DelegateTaskType(TaskType.CLOUD_WATCH_METRIC_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(AwsConfig config,
       List<EncryptedDataDetail> encryptionDetails, CloudWatchSetupTestNodeData setupTestNodeData,
-      ThirdPartyApiCallLog thirdPartyApiCallLog, String hostName) throws IOException;
+      ThirdPartyApiCallLog thirdPartyApiCallLog, String hostName);
 }

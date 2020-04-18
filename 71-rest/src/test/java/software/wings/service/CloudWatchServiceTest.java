@@ -9,6 +9,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -26,6 +28,7 @@ import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import com.amazonaws.services.costandusagereport.model.AWSRegion;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -35,19 +38,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.CloudWatchServiceImpl;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -55,6 +63,8 @@ import java.util.Map;
 public class CloudWatchServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private AwsHelperService awsHelperService;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Inject private CloudWatchDelegateService cloudWatchDelegateService;
 
   @Inject @InjectMocks private CloudWatchService cloudWatchService;
 
@@ -195,5 +205,20 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertThat(hasRespTime).isTrue();
     assertThat(hasErrors).isTrue();
     assertThat(errorsCount).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMetricsWithDataForNode_timeInMs() {
+    final CloudWatchSetupTestNodeData cloudWatchSetupTestNodeData = new CloudWatchSetupTestNodeData();
+    cloudWatchSetupTestNodeData.setSettingId(SETTING_ID);
+    cloudWatchSetupTestNodeData.setRegion(AWSRegion.UsEast1.name());
+    final CloudWatchSetupTestNodeData spy = spy(cloudWatchSetupTestNodeData);
+    cloudWatchDelegateService.getMetricsWithDataForNode(
+        AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build(), Lists.newArrayList(), spy,
+        ThirdPartyApiCallLog.createApiCallLog(generateUuid(), generateUuid()), generateUuid());
+    verify(spy).setFromTime(TimeUnit.SECONDS.toMillis(cloudWatchSetupTestNodeData.getFromTime()));
+    verify(spy).setToTime(TimeUnit.SECONDS.toMillis(cloudWatchSetupTestNodeData.getToTime()));
   }
 }
