@@ -98,7 +98,8 @@ public enum FeatureName {
   PIPELINE_RESUME,
   AWS_TRAFFIC_SHIFT,
   HELM_CHART_ENV_SVC_OVERRIDE,
-  HARNESS_TAGS;
+  HARNESS_TAGS,
+  AZURE_US_GOV_CLOUD;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
