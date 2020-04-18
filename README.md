@@ -123,12 +123,12 @@ NOTE: the data from it is used for every git operation github does on you behave
 3. If Global Search is not required:
 
     Install and start MongoDB Docker Image (v3.6):
-
     ```
     $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
     ```
+    Verify the container is running using `docker ps`
     
-    Install & use RoboMongo client to test MongoDB connection.
+    Install & use [RoboMongo](https://robomongo.org/download) client to test MongoDB connection.
 
 4. If Global search has to be enabled (OPTIONAL):
 
@@ -137,7 +137,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
     
-    In config.yml set `searchEnabled` to `true`.
+    In portal/71-rest/config.yml set `searchEnabled` to `true`. 
     
     Run mongo in replica set:
 
@@ -152,7 +152,8 @@ NOTE: the data from it is used for every git operation github does on you behave
     127.0.0.1       mongo3
     ```
 
-    Run `brew install mongodb`
+    Run `brew tap mongodb/brew`
+    Run `brew install mongodb-community@4.2`
 
     Run `mongo --port 30001`
 
@@ -179,36 +180,39 @@ NOTE: the data from it is used for every git operation github does on you behave
   ``` 
    
 ### Run Harness without IDE (especially for the UI development)
+cd to `portal` directory
+1. Start server by running following commands : 
 
-1. Start server : Replace the \<Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands. Do
-   
-`export HOSTNAME` 
+   * `mvn clean install -DskipTests`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log &`
 
-then
+2. Generate sample data required to run the services locally by running the following step only once.
+   DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
-`mvn clean install -DskipTests && java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log &`
+   * `java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml`
 
-2. Run DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
+3. Start Delegate 
 
-`java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml`
+   * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
 
-3. Start Delegate : Open a new terminal and navigate to the same directory. And run following command:
+4. Start Verification service (Optional) 
 
-`java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
-
-4. Start Verification service (Optional) : Open a new terminal and navigate to the same directory. And run following command:
-
-`java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
 
 ### Editing setup
 
-1. Install clang-format - https://clang.llvm.org/docs/ClangFormat.html ( Please Install version 7.0.0, refer to this link https://gist.github.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25 instead)
+1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) ( Install version 7.0.0 by running following 2 [commands](https://gist.github.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25))
+```
+curl https://gist.githubusercontent.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25/raw/4ac5c1aef6d24849b96a0d36b6417798289722fe/clang-format@7.rb -o $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula/clang-format@7.rb
+
+brew install clang-format@7
+```
 
 helper shell scripts:
 
-`git clang-format` - makes sure all staged in git files are reformatted
+* `git clang-format` - makes sure all staged in git files are reformatted
 
-`find . -iname *.java | xargs clang-format -i` - formats all java files from the current directory down
+* `find . -iname *.java | xargs clang-format -i` - formats all java files from the current directory down
 
 ### IntelliJ Setup
 
@@ -237,17 +241,20 @@ helper shell scripts:
    - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
     ![config image](img/sonar-highlight-config.png).
    - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
-6. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to "java sources including tests".
-    ![config image](img/checkstyle-config.png).
+6. Install the [IntelliJ Checkstyle Plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea). Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`.
+   *  ![config image](img/checkstyle-config-pre.png).
+   *  ![config image](img/checkstyle-config.png).
 7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
    Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
+   *  ![config image](img/annotation_config.png).
+
 8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
 
 
 ### Run from IntelliJ
 
 Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
-![Run configuration menu](img/run_configs.png)
+![Run configuration menu](img/run_configs.png) 
 
 
 ### Show current git branch in command prompt

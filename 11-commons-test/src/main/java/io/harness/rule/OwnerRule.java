@@ -60,6 +60,7 @@ public class OwnerRule implements TestRule {
   public static final String CONTINUOUS_DEPLOYMENT_CORE = "CDC";
   public static final String CONTINUOUS_VERIFICATION = "CV";
   public static final String CONTINUOUS_EFFICIENCY = "CE";
+  public static final String CONTINUOUS_INTEGRATION = "CI";
   public static final String DEVELOPER_EXPERIENCE = "DX";
   public static final String SWAT = "SWAT";
 
@@ -102,6 +103,7 @@ public class OwnerRule implements TestRule {
   public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh.shah";
   public static final String SHASWAT = "shaswat.deep";
+  public static final String SHIVAKUMAR = "shivakumar.ningappa";
   public static final String SHUBHANSHU = "shubhanshu.verma";
   public static final String SOWMYA = "sowmya.k";
   public static final String SRINIVAS = "srinivas";
@@ -167,6 +169,12 @@ public class OwnerRule implements TestRule {
           .put(ADWAIT, defaultDevInfo(ADWAIT).slack("U8PL7JRMG").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(SATYAM, defaultDevInfo(SATYAM).slack("U9Z3R0GL8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
+          .put(SHIVAKUMAR,
+              defaultDevInfo(SHIVAKUMAR)
+                  .slack("U01124VC43C")
+                  .team(CONTINUOUS_INTEGRATION)
+                  .jira("5e875b7bcb85aa0c1471748c")
+                  .build())
           .put(SHUBHANSHU, defaultDevInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CONTINUOUS_EFFICIENCY).build())
           .put(SOWMYA, defaultDevInfo(SOWMYA).slack("UHM19HBKM").team(CONTINUOUS_VERIFICATION).build())
           .put(SRINIVAS, defaultDevInfo(SRINIVAS).slack("U4QC23961").team(CONTINUOUS_DEPLOYMENT_CORE).build())
