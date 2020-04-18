@@ -270,9 +270,14 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       saveExecutionLog(
           format("Command completed with ExitCode (%d)", processResult.getExitValue()), INFO, commandExecutionStatus);
-    } catch (RuntimeException | InterruptedException | TimeoutException e) {
-      executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-      saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      handleException(executionDataBuilder, envVariablesMap, commandExecutionStatus, e, "Script execution interrupted");
+    } catch (TimeoutException e) {
+      handleException(executionDataBuilder, envVariablesMap, commandExecutionStatus, e, "Script execution timed out");
+    } catch (RuntimeException e) {
+      handleException(executionDataBuilder, envVariablesMap, commandExecutionStatus, e,
+          format("Exception occurred in Script execution. Reason: %s", e));
     } finally {
       if (isEmpty(config.getWorkingDirectory())) {
         deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
@@ -287,6 +292,13 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     commandExecutionResult.status(commandExecutionStatus);
     commandExecutionResult.commandExecutionData(executionDataBuilder.build());
     return commandExecutionResult.build();
+  }
+
+  private void handleException(ShellExecutionDataBuilder executionDataBuilder, Map<String, String> envVariablesMap,
+      CommandExecutionStatus commandExecutionStatus, Exception e, String message) {
+    executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
+    saveExecutionLog(message, ERROR, commandExecutionStatus);
+    logger.error("Exception in script execution ", e);
   }
 
   @Override
