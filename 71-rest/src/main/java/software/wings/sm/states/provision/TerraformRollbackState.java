@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -194,8 +195,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) entry.getValue();
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
-    fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
-        terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
+    if (isNotBlank(terraformExecutionData.getStateFileId())) {
+      fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
+          terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
+    }
     if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
       if (terraformExecutionData.getCommandExecuted() == TerraformCommand.APPLY) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
