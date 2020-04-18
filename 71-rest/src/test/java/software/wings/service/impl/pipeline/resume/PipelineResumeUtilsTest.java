@@ -327,11 +327,12 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetResumeStages() {
-    PipelineStage stage1 = PipelineStage.builder()
-                               .name("ps1")
-                               .pipelineStageElements(Collections.singletonList(
-                                   PipelineStageElement.builder().name("pse1").parallelIndex(1).build()))
-                               .build();
+    PipelineStage stage1 =
+        PipelineStage.builder()
+            .name("ps1")
+            .pipelineStageElements(Collections.singletonList(
+                PipelineStageElement.builder().name("pse1").type(APPROVAL.name()).parallelIndex(1).build()))
+            .build();
     PipelineStage stage21 =
         PipelineStage.builder()
             .name("ps2")
@@ -372,7 +373,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     assertThat(groupedInfoList.size()).isEqualTo(2);
     PipelineStageGroupedInfo groupedInfo1 = groupedInfoList.get(0);
     assertThat(groupedInfo1.getName()).isEqualTo("ps1");
-    assertThat(groupedInfo1.getPipelineStageElementNames()).containsExactly("pse1");
+    assertThat(groupedInfo1.getPipelineStageElementNames()).containsExactly("Approval");
     assertThat(groupedInfo1.getParallelIndex()).isEqualTo(1);
     PipelineStageGroupedInfo groupedInfo2 = groupedInfoList.get(1);
     assertThat(groupedInfo2.getName()).isEqualTo("ps2");

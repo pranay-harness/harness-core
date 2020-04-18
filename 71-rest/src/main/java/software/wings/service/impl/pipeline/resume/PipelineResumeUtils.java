@@ -250,7 +250,12 @@ public class PipelineResumeUtils {
           ? Collections.emptyList()
           : pipelineStage.getPipelineStageElements()
                 .stream()
-                .map(PipelineStageElement::getName)
+                .map(pse -> {
+                  if (APPROVAL.name().equals(pse.getType())) {
+                    return "Approval";
+                  }
+                  return pse.getName();
+                })
                 .collect(Collectors.toList());
       if (pipelineStage.isParallel() && isNotEmpty(groupedInfoBuilders)) {
         // The stage is parallel to the previous one. Just append the new element names to the last group info.
