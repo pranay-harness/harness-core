@@ -845,8 +845,6 @@ public class PipelineServiceImpl implements PipelineService {
       boolean withFinalValuesOnly, boolean infraRefator) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
 
-    boolean templatedPipeline = featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, workflow.getAccountId());
-
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
 
     if (isEmpty(workflowVariables)) {
@@ -871,18 +869,18 @@ public class PipelineServiceImpl implements PipelineService {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
-        handleNonEntityVariables(pipelineVariables, variable, value, templatedPipeline);
+        handleNonEntityVariables(pipelineVariables, variable, value);
       } else {
         // Entity variables.
-        handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
-            templatedPipeline, pseWorkflowVariables, variable);
+        handleEntityVariables(
+            pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables, pseWorkflowVariables, variable);
       }
     }
   }
 
   private void handleEntityVariables(List<Variable> pipelineVariables, boolean withFinalValuesOnly,
-      boolean infraRefactor, List<Variable> workflowVariables, boolean templatedPipeline,
-      Map<String, String> pseWorkflowVariables, Variable variable) {
+      boolean infraRefactor, List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
+      Variable variable) {
     String value = pseWorkflowVariables.get(variable.getName());
     if (isNotEmpty(value)) {
       String variableName = matchesVariablePattern(value) ? getName(value) : null;
@@ -892,8 +890,8 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineVariable.setName(variableName);
         EntityType entityType = pipelineVariable.obtainEntityType();
 
-        setParentAndRelatedFields(infraRefactor, workflowVariables, templatedPipeline, pseWorkflowVariables, variable,
-            pipelineVariable, entityType);
+        setParentAndRelatedFields(
+            infraRefactor, workflowVariables, pseWorkflowVariables, variable, pipelineVariable, entityType);
         if (!contains(pipelineVariables, variableName)) {
           // Variable is an expression so prompt for the value at runtime.
           if (withFinalValuesOnly) {
@@ -905,34 +903,31 @@ public class PipelineServiceImpl implements PipelineService {
           }
           pipelineVariables.add(pipelineVariable);
         } else {
-          updateStoredVariable(pipelineVariables, infraRefactor, templatedPipeline, workflowVariables,
-              pseWorkflowVariables, pipelineVariable, variableName);
+          updateStoredVariable(pipelineVariables, infraRefactor, workflowVariables, pseWorkflowVariables,
+              pipelineVariable, variableName);
         }
       }
     }
   }
 
   private void setParentAndRelatedFields(boolean infraRefator, List<Variable> workflowVariables,
-      boolean templatedPipeline, Map<String, String> pseWorkflowVariables, Variable variable, Variable pipelineVariable,
-      EntityType entityType) {
+      Map<String, String> pseWorkflowVariables, Variable variable, Variable pipelineVariable, EntityType entityType) {
     if (ENVIRONMENT == entityType) {
       setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
     } else {
       cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
     }
-    populateParentFields(
-        pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables, templatedPipeline);
+    populateParentFields(pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables);
   }
 
-  private void handleNonEntityVariables(
-      List<Variable> pipelineVariables, Variable variable, String value, boolean templatedPipelines) {
+  private void handleNonEntityVariables(List<Variable> pipelineVariables, Variable variable, String value) {
     // Non-entity variables. Here we can handle values like ${myTeam} for non entity variables
     if (!variable.isFixed()) {
       if (isEmpty(value)) {
         if (!contains(pipelineVariables, variable.getName())) {
           pipelineVariables.add(variable.cloneInternal());
         }
-      } else if (templatedPipelines && matchesVariablePattern(value) && !value.contains(".")) {
+      } else if (matchesVariablePattern(value) && !value.contains(".")) {
         String variableName = getName(value);
         if (!contains(pipelineVariables, variableName)) {
           Variable newVar = variable.cloneInternal();
@@ -944,16 +939,15 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @VisibleForTesting
-  void updateStoredVariable(List<Variable> pipelineVariables, boolean infraRefator, boolean templatedPipelines,
-      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable variable,
-      String variableName) {
+  void updateStoredVariable(List<Variable> pipelineVariables, boolean infraRefator, List<Variable> workflowVariables,
+      Map<String, String> pseWorkflowVariables, Variable variable, String variableName) {
     Variable storedVar = getContainedVariable(pipelineVariables, variableName);
     if (storedVar != null) {
       if (ENVIRONMENT == storedVar.obtainEntityType()) {
         updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
-      } else if (SERVICE == storedVar.obtainEntityType() && templatedPipelines) {
+      } else if (SERVICE == storedVar.obtainEntityType()) {
         mergeMetadataServiceVariable(variable, storedVar);
-      } else if (INFRASTRUCTURE_DEFINITION == storedVar.obtainEntityType() && templatedPipelines) {
+      } else if (INFRASTRUCTURE_DEFINITION == storedVar.obtainEntityType()) {
         mergeMetadataInfraVariable(variable, storedVar);
       }
     }
@@ -1071,7 +1065,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   void populateParentFields(Variable pipelineVariable, EntityType entityType, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables, boolean templatedPiplines) {
+      String originalVarName, Map<String, String> pseWorkflowVariables) {
     if (workflowVariables == null) {
       return;
     }
@@ -1083,8 +1077,7 @@ public class PipelineServiceImpl implements PipelineService {
     Map<String, String> parentFields = new HashMap<>();
     switch (entityType) {
       case SERVICE:
-        handleServiceVariable(
-            pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables, templatedPiplines);
+        handleServiceVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       case INFRASTRUCTURE_MAPPING:
       case INFRASTRUCTURE_DEFINITION:
@@ -1260,10 +1253,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void handleServiceVariable(Variable pipelineVariable, List<Variable> workflowVariables,
-      String originalVarName, Map<String, String> pseWorkflowVariables, boolean templatedPipelines) {
-    if (!templatedPipelines) {
-      return;
-    }
+      String originalVarName, Map<String, String> pseWorkflowVariables) {
     for (Variable var : workflowVariables) {
       if (INFRASTRUCTURE_DEFINITION == var.obtainEntityType()) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {

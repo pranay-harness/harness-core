@@ -354,7 +354,6 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
     pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
     when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
     InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
                                                .uuid("infra1")
                                                .name("ssh")
@@ -392,7 +391,6 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
     pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
     when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
     InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
                                                .uuid("infra1")
                                                .name("ssh")
@@ -428,7 +426,6 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     queryParams.put("infraDefinitionId", asList("infra1", "infra2", "infra3"));
     pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
     when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
     InfrastructureDefinition sshInfraDef = InfrastructureDefinition.builder()
                                                .uuid("infra1")
                                                .name("ssh")

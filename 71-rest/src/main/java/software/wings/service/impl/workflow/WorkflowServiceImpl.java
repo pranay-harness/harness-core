@@ -46,7 +46,6 @@ import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
-import static software.wings.beans.FeatureName.TEMPLATED_PIPELINES;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
@@ -726,12 +725,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
       }
-      boolean templatedPipeline = featureFlagService.isEnabled(TEMPLATED_PIPELINES, workflow.getAccountId());
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       checkCommandStep(workflow);
       if (orchestrationWorkflow != null) {
-        orchestrationWorkflow.onLoad(infraRefactor, templatedPipeline, workflow);
+        orchestrationWorkflow.onLoad(infraRefactor, workflow);
         orchestrationWorkflow.setTransientFields(infraRefactor, workflow);
         workflow.setDeploymentTypes(workflowServiceHelper.obtainDeploymentTypes(orchestrationWorkflow));
         workflow.setTemplatized(orchestrationWorkflow.checkTemplatized());
