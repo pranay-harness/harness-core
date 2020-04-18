@@ -359,10 +359,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("More than 1 appId not supported for listing services");
     }
     String appId = (String) appIdValues.get(0);
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, accountId)) {
-      return;
-    }
     List<String> infraIds = request.getUriInfo().getQueryParameters().get(INFRA_ID_FILTER);
     if (isEmpty(infraIds)) {
       return;

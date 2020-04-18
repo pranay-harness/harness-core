@@ -332,16 +332,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
    * Invoked after loading document from mongo by morphia.
    */
   @Override
-  public void onLoad(boolean infraRefactor, boolean templatedPipeline, Workflow workflow) {
+  public void onLoad(boolean infraRefactor, Workflow workflow) {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
     }
 
     // cleanup relatedField, infraId,serviceId,envId from metadata as they should be runtime.
-    if (templatedPipeline) {
-      cleanupMetadata(userVariables);
-    }
+    cleanupMetadata(userVariables);
     // update related field for envId var.
     if (workflow.checkEnvironmentTemplatized()) {
       updateRelatedFieldEnv(infraRefactor, workflow);
@@ -356,12 +354,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       // update infra Id field service
       try {
         if (workflowPhase.checkServiceTemplatized()) {
-          updateMetadataService(workflow, workflowPhase, templatedPipeline);
+          updateMetadataService(workflow, workflowPhase);
         }
 
         if (infraRefactor) {
           if (workflowPhase.checkInfraDefinitionTemplatized()) {
-            updateMetadataInfraDefinition(workflow, workflowPhase, templatedPipeline);
+            updateMetadataInfraDefinition(workflow, workflowPhase);
           }
         } else {
           if (workflowPhase.checkInfraTemplatized()) {
@@ -427,26 +425,22 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
-  private void updateMetadataService(Workflow workflow, WorkflowPhase workflowPhase, boolean templatedPipeline) {
+  private void updateMetadataService(Workflow workflow, WorkflowPhase workflowPhase) {
     String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
     Variable variable = contains(userVariables, serviceVarName);
     if (variable != null && variable.getMetadata() != null) {
       // add deployment type
-      if (templatedPipeline) {
-        addDeploymentTypeService(workflowPhase, variable);
-      }
+      addDeploymentTypeService(workflowPhase, variable);
 
       // add infra ID if infra is not templatised
       if (!workflowPhase.checkInfraDefinitionTemplatized()) {
-        if (templatedPipeline) {
-          String storedInfraValue = (String) variable.getMetadata().get(Variable.INFRA_ID);
-          String currentInfraId = workflowPhase.getInfraDefinitionId();
-          if (isEmpty(storedInfraValue)) {
-            variable.getMetadata().put(Variable.INFRA_ID, currentInfraId);
-          } else if (!Arrays.asList(storedInfraValue.split(",")).contains(currentInfraId)) {
-            String joinedInfraVal = join(",", storedInfraValue, currentInfraId);
-            variable.getMetadata().put(Variable.INFRA_ID, joinedInfraVal);
-          }
+        String storedInfraValue = (String) variable.getMetadata().get(Variable.INFRA_ID);
+        String currentInfraId = workflowPhase.getInfraDefinitionId();
+        if (isEmpty(storedInfraValue)) {
+          variable.getMetadata().put(Variable.INFRA_ID, currentInfraId);
+        } else if (!Arrays.asList(storedInfraValue.split(",")).contains(currentInfraId)) {
+          String joinedInfraVal = join(",", storedInfraValue, currentInfraId);
+          variable.getMetadata().put(Variable.INFRA_ID, joinedInfraVal);
         }
       } else {
         // add infra variable names in related field
@@ -484,8 +478,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
-  private void updateMetadataInfraDefinition(
-      Workflow workflow, WorkflowPhase workflowPhase, boolean templatedPipeline) {
+  private void updateMetadataInfraDefinition(Workflow workflow, WorkflowPhase workflowPhase) {
     String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
     Variable variable = contains(userVariables, infraVarName);
     if (variable != null && variable.getMetadata() != null) {
@@ -507,17 +500,13 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       } else {
         // add service variable names in related field
-        if (templatedPipeline) {
-          String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
-          String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
-          if (isEmpty(storedRelatedField)) {
-            variable.getMetadata().put(Variable.RELATED_FIELD, serviceVarName);
-          } else if (!Arrays.asList(storedRelatedField.split(",")).contains(serviceVarName)) {
-            String joinedRelatedField = join(",", storedRelatedField, serviceVarName);
-            variable.getMetadata().put(Variable.RELATED_FIELD, joinedRelatedField);
-          }
-        } else {
-          variable.getMetadata().remove(Variable.SERVICE_ID);
+        String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
+        String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
+        if (isEmpty(storedRelatedField)) {
+          variable.getMetadata().put(Variable.RELATED_FIELD, serviceVarName);
+        } else if (!Arrays.asList(storedRelatedField.split(",")).contains(serviceVarName)) {
+          String joinedRelatedField = join(",", storedRelatedField, serviceVarName);
+          variable.getMetadata().put(Variable.RELATED_FIELD, joinedRelatedField);
         }
       }
 
@@ -526,9 +515,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
 
       // add deployment type
-      if (templatedPipeline) {
-        addDeploymentTypeInfra(workflowPhase, variable);
-      }
+      addDeploymentTypeInfra(workflowPhase, variable);
     }
   }
 

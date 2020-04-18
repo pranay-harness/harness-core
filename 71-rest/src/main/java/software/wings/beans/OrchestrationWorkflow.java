@@ -82,7 +82,7 @@ public abstract class OrchestrationWorkflow {
 
   public abstract void onSave();
 
-  public abstract void onLoad(boolean infraRefactor, boolean templatedPipeline, Workflow workflow);
+  public abstract void onLoad(boolean infraRefactor, Workflow workflow);
 
   public abstract void setTransientFields(boolean infraRefactor, Workflow workflow);
 

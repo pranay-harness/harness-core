@@ -70,7 +70,46 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     assertThat(canaryOrchestrationWorkflow.checkLastPhaseForOnDemandRollback("Staging Execution Phase 1")).isFalse();
   }
 
-  // check variables metadata is correct when all env, srv, infra is templatised, templated pipelines is on
+  // check variables metadata is correct when all env, infra is templatised, templated pipelines is on
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void checkOnLoadVariablesBasicEnvInfratemplatised() {
+    Map<String, Object> infraMetadata = getVarMetadata(INFRASTRUCTURE_DEFINITION.toString());
+    TemplateExpression infraTemplateExpression = TemplateExpression.builder()
+                                                     .expression("${InfraDefinition_Kubernetes}")
+                                                     .fieldName("infraDefinitionId")
+                                                     .metadata(infraMetadata)
+                                                     .build();
+
+    Map<String, Object> envMetadata = getVarMetadata(ENVIRONMENT.toString());
+    TemplateExpression envTemplateExpression =
+        TemplateExpression.builder().expression("${Environment}").fieldName("envId").metadata(envMetadata).build();
+
+    Variable envVar = getVariable("Environment", envMetadata);
+    Variable infraVar = getVariable("InfraDefinition_Kubernetes", infraMetadata);
+
+    List<Variable> workflowVariables = asList(envVar, infraVar);
+    Workflow workflow = getBasicWorkflow(asList(infraTemplateExpression), envTemplateExpression, workflowVariables);
+
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
+        .isEqualTo("InfraDefinition_Kubernetes");
+
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getName())
+        .isEqualTo("InfraDefinition_Kubernetes");
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.RELATED_FIELD))
+        .isNull();
+    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.SERVICE_ID))
+        .isEqualTo(SERVICE_ID);
+    assertThat(
+        workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.DEPLOYMENT_TYPE))
+        .isEqualTo("SSH");
+  }
+
+  // check variables metadata is correct when all env, srv, infra is templatised
   @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
@@ -98,7 +137,8 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     Workflow workflow = getBasicWorkflow(
         asList(srvTemplateExpression, infraTemplateExpression), envTemplateExpression, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
+
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
@@ -119,105 +159,11 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
         .isEqualTo("Service");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.SERVICE_ID))
         .isNull();
-    assertThat(
-        workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.DEPLOYMENT_TYPE))
-        .isEqualTo("SSH");
-  }
-
-  // check variables metadata is correct when all env, infra is templatised, templated pipelines is on
-  @Test
-  @Owner(developers = POOJA)
-  @Category(UnitTests.class)
-  public void checkOnLoadVariablesBasicEnvInfratemplatised() {
-    Map<String, Object> infraMetadata = getVarMetadata(INFRASTRUCTURE_DEFINITION.toString());
-    TemplateExpression infraTemplateExpression = TemplateExpression.builder()
-                                                     .expression("${InfraDefinition_Kubernetes}")
-                                                     .fieldName("infraDefinitionId")
-                                                     .metadata(infraMetadata)
-                                                     .build();
-
-    Map<String, Object> envMetadata = getVarMetadata(ENVIRONMENT.toString());
-    TemplateExpression envTemplateExpression =
-        TemplateExpression.builder().expression("${Environment}").fieldName("envId").metadata(envMetadata).build();
-
-    Variable envVar = getVariable("Environment", envMetadata);
-    Variable infraVar = getVariable("InfraDefinition_Kubernetes", infraMetadata);
-
-    List<Variable> workflowVariables = asList(envVar, infraVar);
-    Workflow workflow = getBasicWorkflow(asList(infraTemplateExpression), envTemplateExpression, workflowVariables);
-
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
-        .isEqualTo("InfraDefinition_Kubernetes");
-
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getName())
-        .isEqualTo("InfraDefinition_Kubernetes");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.RELATED_FIELD))
-        .isNull();
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.SERVICE_ID))
-        .isEqualTo(SERVICE_ID);
-    assertThat(
-        workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.DEPLOYMENT_TYPE))
-        .isEqualTo("SSH");
-  }
-
-  // check variables metadata is correct when all env, srv, infra is templatised, templated pipelines is off
-  @Test
-  @Owner(developers = POOJA)
-  @Category(UnitTests.class)
-  public void checkOnLoadVariablesBasicAllTemplatisedFFOff() {
-    Map<String, Object> srvMetadata = getVarMetadata(SERVICE.toString());
-
-    TemplateExpression srvTemplateExpression =
-        TemplateExpression.builder().expression("${Service}").fieldName("serviceId").metadata(srvMetadata).build();
-    Map<String, Object> infraMetadata = getVarMetadata(INFRASTRUCTURE_DEFINITION.toString());
-    TemplateExpression infraTemplateExpression = TemplateExpression.builder()
-                                                     .expression("${InfraDefinition_Kubernetes}")
-                                                     .fieldName("infraDefinitionId")
-                                                     .metadata(infraMetadata)
-                                                     .build();
-
-    Map<String, Object> envMetadata = getVarMetadata(ENVIRONMENT.toString());
-    TemplateExpression envTemplateExpression =
-        TemplateExpression.builder().expression("${Environment}").fieldName("envId").metadata(envMetadata).build();
-
-    Variable serviceVar = getVariable("Service", srvMetadata);
-    Variable envVar = getVariable("Environment", envMetadata);
-    Variable infraVar = getVariable("InfraDefinition_Kubernetes", infraMetadata);
-
-    List<Variable> workflowVariables = asList(serviceVar, envVar, infraVar);
-    Workflow workflow = getBasicWorkflow(
-        asList(srvTemplateExpression, infraTemplateExpression), envTemplateExpression, workflowVariables);
-
-    workflow.getOrchestrationWorkflow().onLoad(true, false, workflow);
-
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
-        .isEqualTo("InfraDefinition_Kubernetes");
-
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getName()).isEqualTo("Service");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.RELATED_FIELD))
-        .isEqualTo("InfraDefinition_Kubernetes");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.INFRA_ID))
-        .isNull();
-    assertThat(
-        workflow.getOrchestrationWorkflow().getUserVariables().get(1).getMetadata().get(Variable.DEPLOYMENT_TYPE))
-        .isNull();
-
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(2).getName())
-        .isEqualTo("InfraDefinition_Kubernetes");
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.RELATED_FIELD))
-        .isNull();
-    assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.SERVICE_ID))
-        .isNull();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.ENV_ID))
         .isNull();
     assertThat(
         workflow.getOrchestrationWorkflow().getUserVariables().get(2).getMetadata().get(Variable.DEPLOYMENT_TYPE))
-        .isNull();
+        .isEqualTo("SSH");
   }
 
   // check variables metadata is correct when infra is templatised, templated pipelines is on
@@ -237,7 +183,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     List<Variable> workflowVariables = asList(infraVar);
     Workflow workflow = getBasicWorkflow(asList(infraTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
@@ -267,7 +213,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     List<Variable> workflowVariables = asList(serviceVar);
     Workflow workflow = getBasicWorkflow(asList(srvTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
@@ -302,7 +248,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
     Workflow workflow =
         getBasicWorkflow(asList(srvTemplateExpression, infraTemplateExpression), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -361,7 +307,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), envTemplateExpression, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Environment");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getMetadata().get(Variable.RELATED_FIELD))
@@ -433,7 +379,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -485,7 +431,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -518,7 +464,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -557,7 +503,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName()).isEqualTo("Service");
@@ -608,7 +554,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables()).isNotEmpty();
 
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables().get(0).getName())
@@ -641,7 +587,7 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
 
     Workflow workflow = getWorkflow(asList(phase1, phase2), null, workflowVariables);
 
-    workflow.getOrchestrationWorkflow().onLoad(true, true, workflow);
+    workflow.getOrchestrationWorkflow().onLoad(true, workflow);
     assertThat(workflow.getOrchestrationWorkflow().isValid()).isFalse();
     assertThat(workflow.getOrchestrationWorkflow().getValidationMessage())
         .isEqualTo(

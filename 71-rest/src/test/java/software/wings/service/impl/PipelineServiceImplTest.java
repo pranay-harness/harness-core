@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -50,7 +49,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -170,8 +168,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .fixed(false)
                                            .metadata(metadataMapInfra)
                                            .build();
-    pipelineServiceImpl.populateParentFields(infraMappingPipelineVar, INFRASTRUCTURE_MAPPING, workflowVariables,
-        "ServiceInfra_ECS", pseWorkflowVariables, false);
+    pipelineServiceImpl.populateParentFields(
+        infraMappingPipelineVar, INFRASTRUCTURE_MAPPING, workflowVariables, "ServiceInfra_ECS", pseWorkflowVariables);
     assertThat(infraMappingPipelineVar.getMetadata().get(Variable.ENV_ID)).isNotNull();
     assertThat(infraMappingPipelineVar.getMetadata().get(Variable.ENV_ID)).isEqualTo("Environment 2");
 
@@ -190,8 +188,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .metadata(metadataMapInfraDef)
                                        .build();
 
-    pipelineServiceImpl.populateParentFields(infraDefPipelineVar, INFRASTRUCTURE_DEFINITION, workflowVariables,
-        "ServiceInfra_ECS", pseWorkflowVariables, false);
+    pipelineServiceImpl.populateParentFields(
+        infraDefPipelineVar, INFRASTRUCTURE_DEFINITION, workflowVariables, "ServiceInfra_ECS", pseWorkflowVariables);
     assertThat(infraDefPipelineVar.getMetadata().get(Variable.ENV_ID)).isNotNull();
     assertThat(infraDefPipelineVar.getMetadata().get(Variable.ENV_ID)).isEqualTo("Environment 2");
 
@@ -212,7 +210,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .build();
 
     pipelineServiceImpl.populateParentFields(
-        appdTierPipelineVar, APPDYNAMICS_TIERID, workflowVariables, "AppdTierId", pseWorkflowVariables, false);
+        appdTierPipelineVar, APPDYNAMICS_TIERID, workflowVariables, "AppdTierId", pseWorkflowVariables);
     assertThat(appdTierPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     Map<String, String> parents = (Map<String, String>) appdTierPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("applicationId")).isEqualTo("AppD app 1");
@@ -231,7 +229,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                       .build();
 
     pipelineServiceImpl.populateParentFields(
-        appdAppPipelineVar, APPDYNAMICS_APPID, workflowVariables, "AppdTierId", pseWorkflowVariables, false);
+        appdAppPipelineVar, APPDYNAMICS_APPID, workflowVariables, "AppdTierId", pseWorkflowVariables);
     assertThat(appdAppPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) appdAppPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("AppD config 2");
@@ -249,7 +247,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.populateParentFields(
-        elkIndicesPipelineVar, ELK_INDICES, workflowVariables, "ElkIndices", pseWorkflowVariables, false);
+        elkIndicesPipelineVar, ELK_INDICES, workflowVariables, "ElkIndices", pseWorkflowVariables);
     assertThat(elkIndicesPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) elkIndicesPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("elkconfig");
@@ -267,7 +265,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                        .build();
 
     pipelineServiceImpl.populateParentFields(
-        newRelicPipelineVar, NEWRELIC_APPID, workflowVariables, "NewRelicAppId", pseWorkflowVariables, false);
+        newRelicPipelineVar, NEWRELIC_APPID, workflowVariables, "NewRelicAppId", pseWorkflowVariables);
     assertThat(newRelicPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) newRelicPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("newRelicConfigId");
@@ -285,13 +283,13 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                              .build();
 
     pipelineServiceImpl.populateParentFields(newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, workflowVariables,
-        "NewRelicMarkerAppId", pseWorkflowVariables, false);
+        "NewRelicMarkerAppId", pseWorkflowVariables);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
     parents = (Map<String, String>) newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS);
     assertThat(parents.get("analysisServerConfigId")).isEqualTo("newRelicMarkerconfigId");
 
     pipelineServiceImpl.populateParentFields(
-        newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables, false);
+        newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
   }
 
@@ -463,7 +461,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Environment", "${env}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, false, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env");
+        pipelineVariables, true, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env");
     assertThat(envVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -500,7 +498,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Service", "${srv}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv");
+        pipelineVariables, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv");
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -526,7 +524,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra2");
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1");
   }
@@ -552,7 +550,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                                Variable.INFRA_ID, "infra_id_2", Variable.ENTITY_TYPE, SERVICE))
                                            .build();
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1,infra_id_2");
   }
 
@@ -577,7 +575,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .build();
 
     assertThatThrownBy(()
-                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, true, new ArrayList<>(),
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
                                new HashMap<>(), serviceVariableNewPhase, "srv"))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
@@ -605,7 +603,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     assertThatThrownBy(()
-                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, true, new ArrayList<>(),
+                           -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
                                new HashMap<>(), infraVariableNewPhase, "infra"))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
@@ -633,7 +631,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1,srv2");
   }
 
@@ -658,7 +656,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1");
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("service_id_2");
   }
@@ -684,7 +682,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("serviceID_1,serviceID_2");
   }
 
@@ -761,7 +759,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
     assertThat(pipelineVariables).isEmpty();
 
-    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
     pseWorkflowVariables.put("customVar", "${service.name}");
     pipelineVariables = new ArrayList<>();
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
@@ -830,8 +827,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pse2WorkflowVariables.put("InfraDefinition_ECS", "I2");
     pse2WorkflowVariables.put("Service", "${srv}");
     PipelineStageElement pse2 = PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).build();
-
-    when(featureFlagService.isEnabled(FeatureName.TEMPLATED_PIPELINES, ACCOUNT_ID)).thenReturn(true);
 
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
     pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
