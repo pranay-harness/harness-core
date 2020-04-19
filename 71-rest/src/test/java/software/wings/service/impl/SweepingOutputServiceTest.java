@@ -29,7 +29,7 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void shouldGetInstanceId() {
-    persistence.ensureIndex(SweepingOutputInstance.class);
+    persistence.ensureIndexForTesting(SweepingOutputInstance.class);
 
     final SweepingOutputInstanceBuilder builder = SweepingOutputInstance.builder()
                                                       .name("jenkins")

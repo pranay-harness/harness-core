@@ -14,12 +14,8 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
@@ -28,7 +24,6 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
 @FieldNameConstants(innerTypeName = "DelegateKeys")
 @Entity(value = "delegates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
@@ -36,7 +31,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore @Indexed private long createdAt;
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
-  @NotEmpty private String accountId;
+  @NotEmpty @Indexed private String accountId;
   @Default private Status status = Status.ENABLED;
   private String description;
   private String ip;

@@ -2375,7 +2375,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = PRAVEEN, intermittent = true)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -2480,7 +2480,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = PRAVEEN, intermittent = true)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisWithExperiment() throws Exception {
     wingsPersistence.save(

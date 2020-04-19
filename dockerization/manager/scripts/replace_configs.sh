@@ -74,6 +74,14 @@ if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
   yq write -i $CONFIG_FILE mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
 fi
 
+if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
+fi
+
+if [[ "" != "$EVEMTS_MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE events-mongo.indexManagerMode $EVEMTS_MONGO_INDEX_MANAGER_MODE
+fi
+
 if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 else

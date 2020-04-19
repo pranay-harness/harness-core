@@ -37,9 +37,9 @@ public class StressTest extends OrchestrationTest {
   @Category(StressTests.class)
   @RealMongo
   public void stress() throws IOException {
-    persistence.ensureIndex(NotifyEvent.class);
-    persistence.ensureIndex(WaitInstance.class);
-    persistence.ensureIndex(NotifyResponse.class);
+    persistence.ensureIndexForTesting(NotifyEvent.class);
+    persistence.ensureIndexForTesting(WaitInstance.class);
+    persistence.ensureIndexForTesting(NotifyResponse.class);
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       Concurrent.test(1, n -> {

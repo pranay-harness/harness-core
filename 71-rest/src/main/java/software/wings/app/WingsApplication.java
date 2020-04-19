@@ -242,6 +242,8 @@ public class WingsApplication extends Application<MainConfiguration> {
   public void initialize(Bootstrap<MainConfiguration> bootstrap) {
     initializeLogging();
     logger.info("bootstrapping ...");
+    bootstrap.addCommand(new InspectCommand<>(this));
+
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));

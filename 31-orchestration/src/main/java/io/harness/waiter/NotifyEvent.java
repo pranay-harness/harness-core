@@ -4,15 +4,12 @@ import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
-import io.harness.waiter.NotifyEvent.NotifyEventKeys;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Date;
 
@@ -20,12 +17,9 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "notifyQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(options = @IndexOptions(name = "unique", unique = true), fields = { @Field(NotifyEventKeys.waitInstanceId) })
-})
 @FieldNameConstants(innerTypeName = "NotifyEventKeys")
 public class NotifyEvent extends Queuable {
-  private String waitInstanceId;
+  @Indexed(options = @IndexOptions(unique = true)) private String waitInstanceId;
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add(NotifyEventKeys.waitInstanceId, waitInstanceId).toString();

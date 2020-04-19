@@ -6,6 +6,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.AccountGenerator.Accounts;
+import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -198,7 +199,7 @@ public class DataGenService {
 
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE).getDB().dropDatabase();
-    IndexManager.ensureIndexes(primaryDatastore, morphia);
+    IndexManager.ensureIndexes(AUTO, primaryDatastore, morphia);
   }
 
   private void createGlobalSettings(Account account) {

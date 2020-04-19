@@ -36,7 +36,7 @@ public class StressTest extends PersistenceTest {
   @RealMongo
   public void topicPerformance() throws IOException {
     assertThatCode(() -> {
-      persistence.ensureIndex(TestTopicQueuableObject.class);
+      persistence.ensureIndexForTesting(TestTopicQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 1; i <= COUNT; ++i) {
@@ -80,7 +80,7 @@ public class StressTest extends PersistenceTest {
   @RealMongo
   public void noTopicPerformance() throws IOException {
     assertThatCode(() -> {
-      persistence.ensureIndex(TestNoTopicQueuableObject.class);
+      persistence.ensureIndexForTesting(TestNoTopicQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 1; i <= COUNT; ++i) {

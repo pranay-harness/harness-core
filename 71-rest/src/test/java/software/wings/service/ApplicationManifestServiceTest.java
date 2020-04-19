@@ -176,7 +176,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void testDuplicateManifestFileNames() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
 
-    wingsPersistence.ensureIndex(ManifestFile.class);
+    wingsPersistence.ensureIndexForTesting(ManifestFile.class);
     applicationManifestService.create(applicationManifest);
 
     ManifestFile manifestFileWithSameName =
@@ -656,7 +656,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileName() {
-    wingsPersistence.ensureIndex(ManifestFile.class);
+    wingsPersistence.ensureIndexForTesting(ManifestFile.class);
     upsertManifestFile("abc/def", "abc/def");
   }
 

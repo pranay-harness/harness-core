@@ -8,6 +8,10 @@ if [[ -z "$MEMORY" ]]; then
    export MEMORY=4096
 fi
 
+if [[ -z "$COMMAND" ]]; then
+   export COMMAND=server
+fi
+
 echo "Using memory " $MEMORY
 
 if [[ -z "$CAPSULE_JAR" ]]; then
@@ -45,7 +49,7 @@ fi
 
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/config.yml
+    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
+    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
 fi

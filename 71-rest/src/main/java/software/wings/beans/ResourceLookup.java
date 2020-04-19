@@ -33,14 +33,6 @@ import javax.validation.constraints.NotNull;
             @Field(ResourceLookupKeys.resourceName)
       })
   ,
-      @Index(options = @IndexOptions(name = "resourceIndex_2"),
-          fields =
-          {
-            @Field(ResourceLookupKeys.accountId)
-            , @Field(ResourceLookupKeys.appId), @Field(ResourceLookupKeys.resourceType),
-                @Field(ResourceLookupKeys.resourceName)
-          }),
-
       @Index(options = @IndexOptions(name = "resourceIndex_3"),
           fields =
           {

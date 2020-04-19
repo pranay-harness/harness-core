@@ -1,7 +1,5 @@
 package software.wings.beans.infrastructure.instance.stats;
 
-import static org.mongodb.morphia.utils.IndexType.DESC;
-
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
@@ -17,6 +15,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -32,18 +31,15 @@ import java.util.List;
 @Entity(value = "instanceStats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("timestamp") },
-      options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true))
-  ,
-      @Index(fields = { @Field(value = "timestamp", type = DESC) },
-          options = @IndexOptions(name = "timestamp_idx", background = true))
+  @Index(fields = {
+    @Field("accountId"), @Field("timestamp")
+  }, options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx"))
 })
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
 
-  @NonFinal private Instant timestamp;
+  @NonFinal @Indexed private Instant timestamp;
   @NonFinal private String accountId;
   @NonFinal private List<AggregateCount> aggregateCounts = new ArrayList<>();
   @NonFinal private int total;

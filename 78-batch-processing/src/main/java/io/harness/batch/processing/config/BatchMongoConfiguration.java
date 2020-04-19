@@ -34,6 +34,7 @@ public class BatchMongoConfiguration {
     return new ProviderModule() {
       @Provides
       @Named("morphiaClasses")
+      @Singleton
       Set<Class> classes() {
         return morphiaClasses;
       }

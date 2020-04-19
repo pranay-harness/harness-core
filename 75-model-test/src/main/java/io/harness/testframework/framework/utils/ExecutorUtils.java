@@ -26,9 +26,12 @@ public class ExecutorUtils {
     command.add("-XX:MaxGCPauseMillis=500");
   }
 
-  public static void addJarConfig(Path jar, Path config, List<String> command) {
+  public static void addJar(Path jar, List<String> command) {
     command.add("-jar");
     command.add(jar.toString());
+  }
+
+  public static void addConfig(Path config, List<String> command) {
     command.add(config.toString());
   }
 }

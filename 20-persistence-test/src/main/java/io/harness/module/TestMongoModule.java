@@ -2,6 +2,7 @@ package io.harness.module;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.MongoClient;
@@ -31,18 +32,21 @@ public class TestMongoModule extends DependencyProviderModule {
 
   @Provides
   @Named("primaryDatastore")
+  @Singleton
   public AdvancedDatastore primaryDatastore() {
     return primaryDatastore;
   }
 
   @Provides
   @Named("locksMongoClient")
+  @Singleton
   public MongoClient getLocksMongoClient() {
     return locksMongoClient;
   }
 
   @Provides
   @Named("locksDatabase")
+  @Singleton
   public String getLocksDB() {
     return locksDB;
   }

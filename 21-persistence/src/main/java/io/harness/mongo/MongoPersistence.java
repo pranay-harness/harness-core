@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.MongoUtils.setUnsetOnInsert;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
@@ -129,7 +130,7 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
-  public void ensureIndex(Class cls) {
+  public void ensureIndexForTesting(Class cls) {
     AdvancedDatastore datastore = getDatastore(cls);
     Morphia locMorphia = new Morphia();
     locMorphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
@@ -138,7 +139,7 @@ public class MongoPersistence implements HPersistence {
     classSet.add(cls);
     locMorphia.map(classSet);
 
-    IndexManager.ensureIndexes(datastore, locMorphia);
+    IndexManager.ensureIndexes(AUTO, datastore, locMorphia);
   }
 
   @Override

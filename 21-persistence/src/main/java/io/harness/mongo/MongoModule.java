@@ -1,7 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.mongo.IndexManager.updateMovedClasses;
+import static io.harness.mongo.ClassRefactoringManager.updateMovedClasses;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.common.collect.ImmutableSet;
@@ -70,6 +70,7 @@ public class MongoModule extends DependencyProviderModule {
 
   @Provides
   @Named("primaryDatastore")
+  @Singleton
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, HObjectFactory objectFactory) {
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(defaultMongoClientOptions.getRetryWrites())
@@ -86,8 +87,7 @@ public class MongoModule extends DependencyProviderModule {
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    // TODO: temporary disabled
-    // ensureIndexes(primaryDatastore, morphia);
+    IndexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
 
     updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
 
@@ -98,6 +98,7 @@ public class MongoModule extends DependencyProviderModule {
 
   @Provides
   @Named("locksMongoClient")
+  @Singleton
   public MongoClient getLocksMongoClient(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
@@ -110,6 +111,7 @@ public class MongoModule extends DependencyProviderModule {
 
   @Provides
   @Named("locksDatabase")
+  @Singleton
   public String getLocksDatabase(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {

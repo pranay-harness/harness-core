@@ -1,6 +1,7 @@
 package io.harness.morphia;
 
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.exception.GeneralException;
@@ -51,6 +52,7 @@ public class MorphiaModule extends DependencyProviderModule {
 
   @Provides
   @Named("morphiaClasses")
+  @Singleton
   Set<Class> classes() {
     return morphiaClasses;
   }

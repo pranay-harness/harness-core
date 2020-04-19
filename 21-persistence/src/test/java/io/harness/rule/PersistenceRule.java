@@ -18,6 +18,7 @@ import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
+import io.harness.mongo.TestIndexEntity;
 import io.harness.mongo.queue.MongoQueueConsumer;
 import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
@@ -97,6 +98,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     morphia.map(TestTopicQueuableObject.class);
     morphia.map(TestRegularIterableEntity.class);
     morphia.map(TestIrregularIterableEntity.class);
+    morphia.map(TestIndexEntity.class);
 
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());

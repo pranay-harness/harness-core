@@ -1,8 +1,9 @@
 package io.harness.testframework.framework;
 
+import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
-import static io.harness.testframework.framework.utils.ExecutorUtils.addJarConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -59,7 +60,8 @@ public class WatcherExecutor {
         addGCVMOptions(command);
         addJacocoAgentVM(jar, command);
 
-        addJarConfig(jar, config, command);
+        addJar(jar, command);
+        addConfig(config, command);
 
         logger.info(Strings.join(command, " "));
 
