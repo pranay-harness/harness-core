@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -48,6 +49,94 @@ public class SettingAttributeTest extends CategoryTest {
                                  .fetchRelevantSecretIds();
     assertThat(secretIds).isNotNull();
     assertThat(secretIds).containsExactly(PASSWORD);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyWhenAwsCPWithDelegateOption() {
+    AwsConfig awsConfig = AwsConfig.builder().useEc2IamCredentials(true).build();
+    List<String> secretIds = awsConfig.fetchRelevantEncryptedSecrets();
+
+    assertThat(secretIds).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnSecretKeyWhenAwsCPWithNonDelegateOption() {
+    AwsConfig awsConfig = AwsConfig.builder().useEc2IamCredentials(false).encryptedSecretKey(PASSWORD).build();
+    List<String> secretIds = awsConfig.fetchRelevantEncryptedSecrets();
+
+    assertThat(secretIds).containsExactly(PASSWORD);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnAllEncryptedSecretsForNullAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(9);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnAllEncryptedSecretsForNoneAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.NONE).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(9);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnRelevantEncryptedSecretsForOIDCAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.OIDC).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnRelevantEncryptedSecretsForServiceAccountAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.SERVICE_ACCOUNT).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(1);
+  }
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnRelevantEncryptedSecretsForClientKeyAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.CLIENT_KEY_CERT).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(4);
+  }
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnRelevantEncryptedSecretsForUserPassAuthType() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.USER_PASSWORD).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+    assertThat(secretIds).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyWhenInClusterDelegateForK8sCP() {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).build();
+    List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
+
+    assertThat(secretIds).isEmpty();
   }
 
   @Test
