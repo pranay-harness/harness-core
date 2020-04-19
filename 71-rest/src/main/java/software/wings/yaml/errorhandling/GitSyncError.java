@@ -47,18 +47,18 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   private String yamlFilePath;
   private String changeType;
   private String failureReason;
-  private String yamlContent;
-  private String gitCommitId;
+  @Deprecated private String yamlContent;
+  @Deprecated private String gitCommitId;
   @Setter @Indexed private Long nextIteration;
   // TODO @deepak All other fields of this collection will be marked depreceated and will no longer be in db, but
   // fullSyncPath variable will be there in db as it is boolean, so will need one more migration to remove it
   private boolean fullSyncPath;
-  private String lastAttemptedYaml;
+  @Deprecated private String lastAttemptedYaml;
   private GitSyncErrorStatus status;
   private String gitConnectorId;
   private String branchName;
   private String yamlGitConfigId;
-  private Long commitTime;
+  @Deprecated private Long commitTime;
   private GitSyncErrorDetails additionalErrorDetails;
   private String gitSyncDirection;
 
@@ -97,8 +97,6 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
 
   @UtilityClass
   public static final class GitSyncErrorKeys {
-    public static final String previousErrors =
-        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.previousErrors;
     public static final String gitCommitId =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.gitCommitId;
     public static final String commitTime =
