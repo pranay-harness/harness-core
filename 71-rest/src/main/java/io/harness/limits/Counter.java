@@ -7,22 +7,18 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "limitCounters", noClassnameStored = true)
-@Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
 @FieldNameConstants(innerTypeName = "CounterKeys")
 @HarnessEntity(exportable = true)
 public class Counter extends Base implements AccountAccess {
-  private final String key;
+  @Indexed(options = @IndexOptions(unique = true)) private final String key;
   private final Long value;
   @Indexed private String accountId;
 

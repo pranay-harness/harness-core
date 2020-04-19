@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Indexes;
         @Field(TestIndexEntity.TestEntityKeys.uuid), @Field(TestIndexEntity.TestEntityKeys.sparseTest)
       })
 })
-class TestIndexEntity implements PersistentEntity, UuidAccess {
+public class TestIndexEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   @Indexed private String test;
   @Indexed(options = @IndexOptions(sparse = true)) private String sparseTest;

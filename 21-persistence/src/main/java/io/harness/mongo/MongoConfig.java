@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.mongo.IndexManager.Mode.MANUAL;
 import static lombok.AccessLevel.NONE;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +11,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
  */
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class MongoConfig {
   @Value
@@ -35,7 +37,7 @@ public class MongoConfig {
   }
 
   @JsonProperty(defaultValue = "mongodb://localhost:27017/wings")
-  @Builder.Default
+  @Default
   @NotEmpty
   private String uri = "mongodb://localhost:27017/wings";
 
@@ -46,13 +48,15 @@ public class MongoConfig {
   private byte[] encryptedUri;
   private byte[] encryptedLocksUri;
 
-  @JsonProperty(defaultValue = "30000") @Builder.Default @NotEmpty private int connectTimeout = 30000;
+  @JsonProperty(defaultValue = "30000") @Default @NotEmpty private int connectTimeout = 30000;
 
-  @JsonProperty(defaultValue = "90000") @Builder.Default @NotEmpty private int serverSelectionTimeout = 90000;
+  @JsonProperty(defaultValue = "90000") @Default @NotEmpty private int serverSelectionTimeout = 90000;
 
-  @JsonProperty(defaultValue = "600000") @Builder.Default @NotEmpty private int maxConnectionIdleTime = 600000;
+  @JsonProperty(defaultValue = "600000") @Default @NotEmpty private int maxConnectionIdleTime = 600000;
 
-  @JsonProperty(defaultValue = "300") @Builder.Default @NotEmpty private int connectionsPerHost = 300;
+  @JsonProperty(defaultValue = "300") @Default @NotEmpty private int connectionsPerHost = 300;
+
+  @JsonProperty(defaultValue = "MANUAL") @Default @NotEmpty private IndexManager.Mode indexManagerMode = MANUAL;
 
   @JsonIgnore
   public ReadPreference getReadPreference() {

@@ -6,16 +6,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Indexed;
 
-/**
- * Created by rsingh on 1/10/18.
- */
-@Indexes(
-    { @Index(fields = { @Field("serviceType") }, options = @IndexOptions(unique = true, name = "serviceSecretIndex")) })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -24,7 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @HarnessEntity(exportable = true)
 public class ServiceSecretKey extends Base {
   private String serviceSecret;
-  private ServiceType serviceType;
+  @Indexed(options = @IndexOptions(unique = true)) private ServiceType serviceType;
 
   public enum ServiceType { LEARNING_ENGINE, MANAGER_TO_COMMAND_LIBRARY_SERVICE }
 

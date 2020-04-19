@@ -81,8 +81,6 @@ import javax.validation.constraints.NotNull;
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "appId_endTs", background = true), fields = {
         @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)
-      }), @Index(options = @IndexOptions(name = "pipelineExecutionId", background = true), fields = {
-        @Field(WorkflowExecutionKeys.pipelineExecutionId)
       }), @Index(options = @IndexOptions(name = "lastInfraMappingSearch"), fields = {
         @Field(WorkflowExecutionKeys.appId)
         , @Field(WorkflowExecutionKeys.workflowType), @Field(WorkflowExecutionKeys.status),
@@ -149,7 +147,7 @@ public class WorkflowExecution
   @Transient private GraphNode executionNode; // used for workflow details.
   private PipelineExecution pipelineExecution; // used for pipeline details.
 
-  private String pipelineExecutionId;
+  @Indexed private String pipelineExecutionId;
   private String stageName;
   private ErrorStrategy errorStrategy;
 

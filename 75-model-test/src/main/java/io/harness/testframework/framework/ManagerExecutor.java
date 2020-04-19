@@ -1,8 +1,9 @@
 package io.harness.testframework.framework;
 
+import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
-import static io.harness.testframework.framework.utils.ExecutorUtils.addJarConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -83,7 +84,9 @@ public class ManagerExecutor {
 
         addJacocoAgentVM(jar, command);
 
-        addJarConfig(jar, config, command);
+        addJar(jar, command);
+        command.add("server");
+        addConfig(config, command);
 
         logger.info(Strings.join(command, " "));
 

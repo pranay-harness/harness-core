@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -40,7 +41,7 @@ import java.util.Map;
     @Field("artifactStreamId"), @Field("metadata.artifactPath")
   }), @Index(options = @IndexOptions(name = "artifactStream_revision"), fields = {
     @Field("artifactStreamId"), @Field("revision")
-  }), @Index(options = @IndexOptions(name = "account_idx"), fields = { @Field("accountId") })
+  })
 })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
@@ -94,7 +95,7 @@ public class Artifact extends Base {
   private ContentStatus contentStatus;
   private Map<String, String> source;
   private String settingId;
-  private String accountId;
+  @Indexed private String accountId;
   private String artifactStreamType;
   private String uiDisplayName;
   private String buildIdentity;

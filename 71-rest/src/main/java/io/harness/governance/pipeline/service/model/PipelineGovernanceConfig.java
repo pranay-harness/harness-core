@@ -13,11 +13,8 @@ import io.harness.persistence.UuidAccess;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.List;
 import java.util.Objects;
@@ -31,12 +28,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Value
 @Entity(value = "pipelineGovernanceConfigs")
 @HarnessEntity(exportable = true)
-@Indexes(@Index(fields = @Field("accountId"), options = @IndexOptions(name = "account_id_idx")))
 @FieldNameConstants(innerTypeName = "PipelineGovernanceConfigKeys")
 @ParametersAreNonnullByDefault
 public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess, AccountAccess {
   @Id private String uuid;
-  @Nonnull private String accountId;
+  @Nonnull @Indexed private String accountId;
   @Nonnull private String name;
   @Nonnull private String description;
   @Nonnull private List<PipelineGovernanceRule> rules;

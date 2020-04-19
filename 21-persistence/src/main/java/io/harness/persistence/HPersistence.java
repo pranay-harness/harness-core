@@ -102,7 +102,7 @@ public interface HPersistence extends HealthMonitor {
    *
    * @param cls            the class of the collection that indexes should be ensured
    */
-  void ensureIndex(Class cls);
+  void ensureIndexForTesting(Class cls);
 
   /**
    * Close.

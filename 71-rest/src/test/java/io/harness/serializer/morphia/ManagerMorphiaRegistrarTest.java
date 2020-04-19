@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.mongo.ClassRefactoringManager.movements;
 import static io.harness.mongo.HObjectFactory.checkRegisteredClasses;
-import static io.harness.mongo.IndexManager.movements;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 

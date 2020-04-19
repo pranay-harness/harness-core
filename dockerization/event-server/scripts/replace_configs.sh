@@ -21,6 +21,14 @@ if [[ "" != "$MONGO_READ_PREF_TAGS" ]]; then
   done
 fi
 
+if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE harness-mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
+fi
+
+if [[ "" != "$EVEMTS_MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE events-mongo.indexManagerMode $EVEMTS_MONGO_INDEX_MANAGER_MODE
+fi
+
 if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 fi

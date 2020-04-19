@@ -43,12 +43,9 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "next_iteration_license_info2"),
-      fields = { @Field("licenseExpiryCheckIteration")
-                 , @Field("encryptedLicenseInfo") })
-  ,
-      @Index(options = @IndexOptions(name = "next_iteration_git_sync_error"),
-          fields = { @Field("gitSyncExpiryCheckIteration") })
+  @Index(options = @IndexOptions(name = "next_iteration_license_info2"), fields = {
+    @Field("licenseExpiryCheckIteration"), @Field("encryptedLicenseInfo")
+  })
 })
 
 public class Account extends Base implements PersistentRegularIterable {
