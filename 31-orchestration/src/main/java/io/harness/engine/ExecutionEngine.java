@@ -11,10 +11,11 @@ import com.google.inject.name.Named;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.impl.success.OnSuccessAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.engine.advise.AdviseHandler;
+import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
@@ -64,6 +65,7 @@ public class ExecutionEngine implements Engine {
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private EngineStatusHelper engineStatusHelper;
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
+  @Inject private AdviseHandlerFactory adviseHandlerFactory;
 
   public ExecutionInstance startExecution(@Valid ExecutionPlan executionPlan, EmbeddedUser createdBy) {
     ExecutionInstance instance = ExecutionInstance.builder()
@@ -192,12 +194,8 @@ public class ExecutionEngine implements Engine {
   private void handleAdvise(ExecutionNodeInstance nodeInstance, Advise advise) {
     Ambiance ambiance = nodeInstance.getAmbiance();
     if (advise != null) {
-      if ("ON_SUCCESS".equals(advise.getType())) {
-        OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
-        triggerExecution(ambiance.cloneBuilder(),
-            engineObtainmentHelper.fetchExecutionNode(
-                onSuccessAdvise.getNextNodeId(), ambiance.getSetupAbstractions().get("executionInstanceId")));
-      }
+      AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
+      adviseHandler.handleAdvise(ambiance, advise);
     } else {
       endTransition(nodeInstance);
     }
