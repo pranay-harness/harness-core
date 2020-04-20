@@ -9,4 +9,7 @@ public class GitToHarnessErrorCommitStats {
   String gitCommitId;
   Integer failedCount;
   Long commitTime;
+  String gitConnectorId;
+  String branchName;
+  String gitConnectorName;
 }
