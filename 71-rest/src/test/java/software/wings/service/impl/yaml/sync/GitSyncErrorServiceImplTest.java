@@ -81,18 +81,27 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   public void test_fetchGitToHarnessErrors() {
     final String commitId = "gitCommitId";
     // Saving GitSyncError
+    SettingAttribute gitConnector = aSettingAttribute()
+                                        .withAccountId(accountId)
+                                        .withName("settingName")
+                                        .withCategory(CONNECTOR)
+                                        .withValue(GitConfig.builder().build())
+                                        .build();
+    String gitConnectorId = wingsPersistence.save(gitConnector);
     final GitToHarnessErrorDetails gitSyncErrorDetails =
         GitToHarnessErrorDetails.builder().gitCommitId(commitId).commitTime(Long.valueOf(123)).build();
     final GitSyncError gitSyncError = GitSyncError.builder()
                                           .accountId(accountId)
                                           .gitSyncDirection(GIT_TO_HARNESS.toString())
+                                          .gitConnectorId(gitConnectorId)
+                                          .branchName(branchName)
                                           .additionalErrorDetails(gitSyncErrorDetails)
                                           .build();
     String id = wingsPersistence.save(gitSyncError);
 
     PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitToHarnessErrorCommitStats> errorsList =
-        gitSyncErrorService.fetchGitToHarnessErrors(req, accountId, null, null).getResponse();
+        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, null, null).getResponse();
     assertThat(errorsList.size()).isEqualTo(1);
     GitToHarnessErrorCommitStats error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(1);

@@ -88,13 +88,50 @@ public class GitSyncResource {
    */
   @GET
   @Path("errors/gitToHarness")
-  public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrors(
+  public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrorsCommitsOldApi(
       @BeanParam PageRequest<GitToHarnessErrorCommitStats> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("gitConnectorId") String gitConnectorId,
       @QueryParam("branchName") String branchName) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
     PageResponse<GitToHarnessErrorCommitStats> pageResponse =
-        gitSyncErrorService.fetchGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
+        gitSyncErrorService.listGitToHarnessErrorsCommits(pageRequest, accountId, gitConnectorId, branchName);
+    return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * List all commits for git to harness errors
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/gitToHarness/commits")
+  public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrorsCommits(
+      @BeanParam PageRequest<GitToHarnessErrorCommitStats> pageRequest,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("gitConnectorId") String gitConnectorId,
+      @QueryParam("branchName") String branchName) {
+    pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
+    PageResponse<GitToHarnessErrorCommitStats> pageResponse =
+        gitSyncErrorService.listGitToHarnessErrorsCommits(pageRequest, accountId, gitConnectorId, branchName);
+    return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * List all  git to harness errors for fileView
+   *
+   * @param pageRequest the page request
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/gitToHarness/listAllErrors")
+  public RestResponse<PageResponse<GitSyncError>> listGitToHarnessErrors(
+      @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("gitConnectorId") String gitConnectorId, @QueryParam("branchName") String branchName) {
+    pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
+    PageResponse<GitSyncError> pageResponse =
+        gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
     return new RestResponse<>(pageResponse);
   }
 

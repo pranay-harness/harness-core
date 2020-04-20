@@ -150,7 +150,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
+  public PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
       PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName) {
     // Creating a page request to get the commits
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
@@ -169,31 +169,61 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
     addGitToHarnessErrorFilter(query);
 
-    List<GitToHarnessErrorCommitStats> commitWiseErrorMessages = new ArrayList<>();
+    List<GitToHarnessErrorCommitStats> commitWiseErrorDetails = new ArrayList<>();
     wingsPersistence.getDatastore(GitSyncError.class)
         .createAggregation(GitSyncError.class)
         .match(query)
         .unwind(GitSyncErrorKeys.additionalErrorDetails)
         .group(GitSyncErrorKeys.gitCommitId, grouping("failedCount", accumulator("$sum", 1)),
-            grouping(GitToHarnessErrorCommitStatsKeys.commitTime, first(GitSyncErrorKeys.commitTime)))
+            grouping(GitToHarnessErrorCommitStatsKeys.commitTime, first(GitSyncErrorKeys.commitTime)),
+            grouping(GitSyncErrorKeys.gitConnectorId, first(GitSyncErrorKeys.gitConnectorId)),
+            grouping(GitSyncErrorKeys.branchName, first(GitSyncErrorKeys.branchName)))
         .project(projection("gitCommitId", "_id"), projection("failedCount"),
-            projection(GitToHarnessErrorCommitStatsKeys.commitTime))
+            projection(GitToHarnessErrorCommitStatsKeys.commitTime), projection(GitSyncErrorKeys.gitConnectorId),
+            projection(GitSyncErrorKeys.branchName))
         .sort(Sort.descending(GitToHarnessErrorCommitStatsKeys.commitTime))
         .limit(limit)
         .skip(offset)
         .aggregate(GitToHarnessErrorCommitStats.class)
-        .forEachRemaining(commitWiseErrorMessages::add);
+        .forEachRemaining(commitWiseErrorDetails::add);
+
+    List<GitToHarnessErrorCommitStats> filteredCommitDetails =
+        filterCommitsWithValidConnectorAndPopulateConnectorName(commitWiseErrorDetails, accountId);
 
     return aPageResponse()
-        .withTotal(commitWiseErrorMessages.size())
+        .withTotal(filteredCommitDetails.size())
         .withLimit(String.valueOf(limit))
         .withOffset(String.valueOf(offset))
-        .withResponse(commitWiseErrorMessages)
+        .withResponse(filteredCommitDetails)
         .build();
+  }
+
+  private List<GitToHarnessErrorCommitStats> filterCommitsWithValidConnectorAndPopulateConnectorName(
+      List<GitToHarnessErrorCommitStats> commitWiseErrorDetails, String accountId) {
+    if (isEmpty(commitWiseErrorDetails)) {
+      return Collections.emptyList();
+    }
+    List<String> connectorIdList =
+        commitWiseErrorDetails.stream().map(GitToHarnessErrorCommitStats::getGitConnectorId).collect(toList());
+    Map<String, String> connetorIdNameMap = getConnectorIdNameMap(connectorIdList, accountId);
+    List<GitToHarnessErrorCommitStats> filteredCommitDetails = new ArrayList<>();
+    for (GitToHarnessErrorCommitStats commitStats : commitWiseErrorDetails) {
+      String gitConnectorId = commitStats.getGitConnectorId();
+      if (connetorIdNameMap.containsKey(gitConnectorId)) {
+        commitStats.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
+        filteredCommitDetails.add(commitStats);
+      }
+    }
+    return filteredCommitDetails;
   }
 
   private PageRequest<GitSyncError> addHarnessToGitErrorFilter(PageRequest<GitSyncError> gitSyncErrorPageRequest) {
     gitSyncErrorPageRequest.addFilter(GitSyncErrorKeys.gitSyncDirection, EQ, HARNESS_TO_GIT.name());
+    return gitSyncErrorPageRequest;
+  }
+
+  private PageRequest<GitSyncError> addGitToHarnessErrorFilter(PageRequest<GitSyncError> gitSyncErrorPageRequest) {
+    gitSyncErrorPageRequest.addFilter(GitSyncErrorKeys.gitSyncDirection, EQ, GIT_TO_HARNESS.name());
     return gitSyncErrorPageRequest;
   }
 
@@ -210,6 +240,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     if (isNotEmpty(includeDataList)) {
       returnPreviousErrors = includeDataList.contains("obsoleteErrorFiles");
     }
+
     if (returnPreviousErrors) {
       query.disableValidation().or(query.criteria(GitSyncErrorKeys.gitCommitId).equal(gitCommitId),
           query.criteria(GitSyncErrorKeys.previousCommitIds).hasAnyOf(Collections.singletonList(gitCommitId)));
@@ -233,10 +264,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
           .withResponse(Collections.emptyList())
           .build();
     }
-
     List<GitSyncError> filteredGitSyncError =
         allGitSyncErrors.stream().map(error -> getActualErrorForThatCommit(error, gitCommitId)).collect(toList());
-
     sortErrorsByFileProcessingOrder(filteredGitSyncError);
 
     return aPageResponse()
@@ -245,6 +274,41 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .withOffset(String.valueOf(offset))
         .withResponse(filteredGitSyncError)
         .build();
+  }
+
+  @Override
+  public PageResponse<GitSyncError> listAllGitToHarnessErrors(
+      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName) {
+    req.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
+    if (isNotEmpty(gitConnectorId)) {
+      req.addFilter(GitSyncErrorKeys.gitConnectorId, EQ, gitConnectorId);
+    }
+
+    if (isNotEmpty(branchName)) {
+      req.addFilter(GitSyncErrorKeys.branchName, EQ, branchName);
+    }
+    addGitToHarnessErrorFilter(req);
+    PageResponse<GitSyncError> allErrorsResponse = fetchErrors(req);
+    List<GitSyncError> errorsReturnedInRequest = allErrorsResponse.getResponse();
+    if (isEmpty(errorsReturnedInRequest)) {
+      return allErrorsResponse;
+    }
+    List<GitSyncError> errorsWithoutPreviousErrorsFields =
+        errorsReturnedInRequest.stream().map(error -> removePreviousErrorField(error)).collect(toList());
+
+    allErrorsResponse.setResponse(errorsWithoutPreviousErrorsFields);
+    return allErrorsResponse;
+  }
+
+  private GitSyncError removePreviousErrorField(GitSyncError error) {
+    GitToHarnessErrorDetails gitToHarnessErrorDetails;
+    try {
+      gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
+    } catch (Exception e) {
+      throw new UnexpectedException("The previous errors fields should only be queried for git to harness errros ", e);
+    }
+    gitToHarnessErrorDetails.setPreviousErrors(Collections.emptyList());
+    return error;
   }
 
   private void sortErrorsByFileProcessingOrder(List<GitSyncError> gitSyncErrors) {
@@ -489,7 +553,35 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       req.addFilter(GitSyncErrorKeys.branchName, EQ, branchName);
     }
     addHarnessToGitErrorFilter(req);
-    return fetchErrors(req);
+
+    PageResponse<GitSyncError> response = fetchErrors(req);
+    List<GitSyncError> filteredErrors =
+        filterErrorsWithValidConnectorAndPopulateConnectorName(response.getResponse(), accountId);
+    return aPageResponse()
+        .withTotal(response.getTotal())
+        .withResponse(filteredErrors)
+        .withLimit(response.getLimit())
+        .withOffset(response.getOffset())
+        .build();
+  }
+
+  private List<GitSyncError> filterErrorsWithValidConnectorAndPopulateConnectorName(
+      List<GitSyncError> gitSyncErrors, String accountId) {
+    if (isEmpty(gitSyncErrors)) {
+      return Collections.emptyList();
+    }
+    List<String> connectorIdList = gitSyncErrors.stream().map(error -> error.getGitConnectorId()).collect(toList());
+    Map<String, String> connetorIdNameMap = getConnectorIdNameMap(connectorIdList, accountId);
+    List<GitSyncError> filteredErrors = new ArrayList<>();
+
+    for (GitSyncError error : gitSyncErrors) {
+      String gitConnectorId = error.getGitConnectorId();
+      if (connetorIdNameMap.containsKey(gitConnectorId)) {
+        error.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
+        filteredErrors.add(error);
+      }
+    }
+    return filteredErrors;
   }
 
   @Override

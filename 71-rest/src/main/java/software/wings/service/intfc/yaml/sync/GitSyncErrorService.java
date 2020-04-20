@@ -11,8 +11,11 @@ import software.wings.yaml.gitSync.GitFileActivity;
 import java.util.List;
 
 public interface GitSyncErrorService {
-  PageResponse<GitToHarnessErrorCommitStats> fetchGitToHarnessErrors(
+  PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
       PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName);
+
+  PageResponse<GitSyncError> listAllGitToHarnessErrors(
+      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName);
 
   PageResponse<GitSyncError> fetchErrorsInEachCommits(PageRequest<GitSyncError> req, String gitCommitId,
       String accountId, List<String> includeDataList, String yamlFilePath);

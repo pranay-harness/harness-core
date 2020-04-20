@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
@@ -56,6 +57,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   @Deprecated private String lastAttemptedYaml;
   private GitSyncErrorStatus status;
   private String gitConnectorId;
+  @Transient private String gitConnectorName;
   private String branchName;
   private String yamlGitConfigId;
   @Deprecated private Long commitTime;
