@@ -19,6 +19,7 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   @Expression private String header;
   @Expression private String body;
   private int socketTimeoutMillis;
+  private boolean useProxy;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

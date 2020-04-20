@@ -36,6 +36,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
   private String assertionStatement;
   private String assertionStatus;
   private String header;
+  private boolean useProxy;
 
   @Transient private transient Document document;
 
@@ -43,7 +44,8 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
   public HttpStateExecutionData(String stateName, String stateType, Long startTs, Long endTs, ExecutionStatus status,
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
       Map<String, Object> templateVariables, String httpUrl, String httpMethod, int httpResponseCode,
-      String httpResponseBody, String assertionStatement, String assertionStatus, Document document, String header) {
+      String httpResponseBody, String assertionStatement, String assertionStatus, Document document, String header,
+      boolean useProxy) {
     super(
         stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariables);
     this.httpUrl = httpUrl;
@@ -54,6 +56,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     this.assertionStatus = assertionStatus;
     this.document = document;
     this.header = header;
+    this.useProxy = useProxy;
   }
 
   /**
