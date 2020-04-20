@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Rule;
@@ -81,6 +82,57 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     assertThat(apmVerificationConfig.getOptionsList().get(0).getValue()).isEqualTo(optionSecretRef);
     assertThat(apmVerificationConfig.getOptionsList().get(0).getEncryptedValue()).isEqualTo(optionSecretRef);
     assertThat(apmVerificationConfig.getOptionsList().get(1).getValue()).isEqualTo("321");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testFetchRelevantEncryptedSecrets() {
+    String headerSecretRef = generateUuid();
+    String optionSecretRef = generateUuid();
+    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
+    List<KeyValues> headers = new ArrayList<>();
+    headers.add(KeyValues.builder().key("api_key").encryptedValue(headerSecretRef).encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
+
+    List<KeyValues> options = new ArrayList<>();
+    options.add(KeyValues.builder().key("option_key").encryptedValue(optionSecretRef).encrypted(true).build());
+    options.add(KeyValues.builder().key("option_key_plain").value("321").encrypted(false).build());
+
+    apmVerificationConfig.setHeadersList(headers);
+    apmVerificationConfig.setOptionsList(options);
+    apmVerificationConfig.setAccountId("111");
+
+    int numOfUrlSecrets = 5;
+    int numOfBodySecrets = 7;
+
+    List<String> urlSecrets = new ArrayList<>();
+    String validationUrl = "validatiobUrl?";
+    for (int i = 0; i < numOfUrlSecrets; i++) {
+      String secretId = generateUuid();
+      validationUrl += "&token" + i + "=${secretRef:" + generateUuid() + "," + secretId + "}";
+      urlSecrets.add(secretId);
+    }
+    apmVerificationConfig.setValidationUrl(validationUrl);
+
+    List<String> bodySecrets = new ArrayList<>();
+    String validationBody = "{body}";
+    for (int i = 0; i < numOfBodySecrets; i++) {
+      String secretId = generateUuid();
+      validationBody += "&token" + i + "=${secretRef:" + generateUuid() + "," + secretId + "}";
+      bodySecrets.add(secretId);
+    }
+    apmVerificationConfig.setValidationBody(validationBody);
+
+    List<String> expectedRelevantSecretIds = new ArrayList<>();
+    expectedRelevantSecretIds.add(headerSecretRef);
+    expectedRelevantSecretIds.add(optionSecretRef);
+    expectedRelevantSecretIds.addAll(urlSecrets);
+    expectedRelevantSecretIds.addAll(bodySecrets);
+
+    assertThat(CollectionUtils.isEqualCollection(
+                   expectedRelevantSecretIds, apmVerificationConfig.fetchRelevantEncryptedSecrets()))
+        .isTrue();
   }
 
   @Test

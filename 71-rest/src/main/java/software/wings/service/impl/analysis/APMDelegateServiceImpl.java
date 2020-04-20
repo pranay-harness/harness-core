@@ -53,9 +53,9 @@ public class APMDelegateServiceImpl implements APMDelegateService {
              .contains("accept")) {
       config.getHeaders().put("Accept", "application/json");
     }
+    decryptFields(config.getEncryptedDataDetails());
     Call<Object> request = getAPMRestClient(config).validate(
         resolveDollarReferences(config.getUrl()), config.getHeaders(), config.getOptions());
-    decryptFields(config.getEncryptedDataDetails());
     if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
