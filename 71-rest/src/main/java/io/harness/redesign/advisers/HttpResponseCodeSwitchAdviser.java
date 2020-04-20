@@ -9,7 +9,6 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.impl.success.OnSuccessAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
-import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import lombok.Builder;
@@ -52,10 +51,5 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
     Optional<StateTransput> outputOptional =
         filterAndGetFirst(stateOutputs, stateOutput -> stateOutput instanceof HttpStateExecutionData);
     return (HttpStateExecutionData) outputOptional.orElse(null);
-  }
-
-  @Override
-  public boolean canAdvise(NodeExecutionStatus status) {
-    return status == NodeExecutionStatus.SUCCEEDED;
   }
 }

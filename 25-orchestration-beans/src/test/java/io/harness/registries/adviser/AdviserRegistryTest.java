@@ -14,7 +14,6 @@ import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.state.execution.status.NodeExecutionStatus;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -70,11 +69,6 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     @Override
     public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
-    }
-
-    @Override
-    public boolean canAdvise(NodeExecutionStatus status) {
-      return false;
     }
   }
 }
