@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,10 +41,11 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "TimeSeriesAnomaliesRecordKeys")
 @Entity(value = "timeSeriesAnomaliesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesAnomaliesRecord extends Base {
+public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
   @NotEmpty @Indexed private String cvConfigId;
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
   @JsonIgnore private byte[] compressedAnomalies;
+  @Indexed private String accountId;
   private String tag;
 
   public void compressAnomalies() {
