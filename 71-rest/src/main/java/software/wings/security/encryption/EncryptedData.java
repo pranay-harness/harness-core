@@ -118,6 +118,8 @@ public class EncryptedData
 
   @Indexed private Long nextMigrationIteration;
 
+  @Indexed private Long nextAwsToGcpKmsMigrationIteration;
+
   @SchemaIgnore private boolean base64Encoded;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
@@ -179,6 +181,9 @@ public class EncryptedData
     if (EncryptedDataKeys.nextMigrationIteration.equals(fieldName)) {
       this.nextMigrationIteration = nextIteration;
       return;
+    } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
+      this.nextAwsToGcpKmsMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -187,6 +192,8 @@ public class EncryptedData
   public Long obtainNextIteration(String fieldName) {
     if (EncryptedDataKeys.nextMigrationIteration.equals(fieldName)) {
       return nextMigrationIteration;
+    } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
+      return nextAwsToGcpKmsMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

@@ -2,6 +2,7 @@ package software.wings.security.encryption;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.powermock.reflect.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -147,5 +149,30 @@ public class EncryptedDataTest extends WingsBaseTest {
     } catch (IllegalArgumentException e) {
       // expected
     }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdateNextIterationForAwsToGcpKmsMigrationField() {
+    long oldNextMigrationIterationValue = random.nextLong();
+    Whitebox.setInternalState(
+        encryptedData, EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration, oldNextMigrationIterationValue);
+    long newNextMigrationIterationValue = random.nextLong();
+    encryptedData.updateNextIteration(
+        EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration, newNextMigrationIterationValue);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration))
+        .isEqualTo(newNextMigrationIterationValue);
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testObtainNextIterationForAwsToGcpKmsMigrationField() {
+    long nextMigrationIterationValue = random.nextLong();
+    Whitebox.setInternalState(
+        encryptedData, EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration, nextMigrationIterationValue);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration))
+        .isEqualTo(nextMigrationIterationValue);
   }
 }
