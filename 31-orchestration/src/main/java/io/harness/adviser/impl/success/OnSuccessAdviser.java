@@ -28,9 +28,4 @@ public class OnSuccessAdviser implements Adviser {
   public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
     return OnSuccessAdvise.builder().nextNodeId(onSuccessAdviserParameters.getNextNodeId()).build();
   }
-
-  @Override
-  public boolean canAdvise(NodeExecutionStatus status) {
-    return ADVISING_STATUSES.contains(status);
-  }
 }
