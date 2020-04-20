@@ -247,6 +247,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
+              .accountId(context.getAccountId())
               .workflow_id(context.getWorkflowId())
               .workflow_execution_id(context.getWorkflowExecutionId())
               .state_execution_id(context.getStateExecutionId())

@@ -214,6 +214,7 @@ public class LogMLAnalysisGenerator implements Runnable {
           + VerificationConstants.NOTIFY_LEARNING_FAILURE + "taskId=" + uuid;
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder;
       analysisTaskBuilder = LearningEngineAnalysisTask.builder()
+                                .accountId(accountId)
                                 .query(Lists.newArrayList(query.split(" ")))
                                 .workflow_id(context.getWorkflowId())
                                 .workflow_execution_id(context.getWorkflowExecutionId())
@@ -281,6 +282,7 @@ public class LogMLAnalysisGenerator implements Runnable {
 
     LearningEngineAnalysisTask feedbackTask =
         LearningEngineAnalysisTask.builder()
+            .accountId(accountId)
             .feedback_url(feedbackUrl)
             .logMLResultUrl(logMLResultUrl)
             .state_execution_id(context.getStateExecutionId())

@@ -318,6 +318,7 @@ lambdaSpecifications { "name" : "appId_1" , "background" : true} { "appId" : 1}
 lambdaSpecifications { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 lambdaSpecifications { "name" : "serviceId_1" , "unique" : true} { "serviceId" : 1}
 lastReceivedPublishedMessage { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "identifier" : 1}
+learningEngineAnalysisTask { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 learningEngineAnalysisTask { "name" : "appId_1" , "background" : true} { "appId" : 1}
 learningEngineAnalysisTask { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 learningEngineAnalysisTask { "name" : "cvConfigStatusIdx" , "background" : true} { "cvConfigId" : 1 , "analysis_minute" : -1 , "executionStatus" : 1}

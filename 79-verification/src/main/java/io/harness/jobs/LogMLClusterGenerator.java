@@ -54,6 +54,7 @@ public class LogMLClusterGenerator implements Runnable {
     logger.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
+                                                  .accountId(context.getAccountId())
                                                   .control_input_url(inputLogsUrl)
                                                   .analysis_save_url(clusteredLogSaveUrl)
                                                   .analysis_failure_url(failureUrl)

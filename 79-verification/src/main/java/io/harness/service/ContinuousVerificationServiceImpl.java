@@ -369,6 +369,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     LearningEngineAnalysisTask learningEngineAnalysisTask =
         LearningEngineAnalysisTask.builder()
+            .accountId(accountId)
             .service_id(cvConfiguration.getServiceId())
             .state_execution_id(stateExecutionIdForLETask)
             .cvConfigId(cvConfiguration.getUuid())
@@ -895,6 +896,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     stateExecutionIdForLETask, cvConfiguration.getUuid(), logRecordMinute, MLAnalysisType.LOG_CLUSTER);
                 LearningEngineAnalysisTask analysisTask =
                     LearningEngineAnalysisTask.builder()
+                        .accountId(accountId)
                         .control_input_url(inputLogsUrl)
                         .analysis_save_url(clusteredLogSaveUrl)
                         .analysis_failure_url(failureUrl)
@@ -1099,6 +1101,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     cvConfiguration.getUuid(), l2ClusteringMinute, MLAnalysisType.LOG_CLUSTER);
                 LearningEngineAnalysisTask analysisTask =
                     LearningEngineAnalysisTask.builder()
+                        .accountId(accountId)
                         .control_input_url(inputLogsUrl)
                         .analysis_save_url(clusteredLogSaveUrl)
                         .analysis_failure_url(failureUrl)
@@ -1326,6 +1329,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
     LearningEngineAnalysisTask feedbackTask =
         LearningEngineAnalysisTask.builder()
+            .accountId(logsCVConfiguration.getAccountId())
             .feedback_url(feedbackUrl)
             .logMLResultUrl(logMLResultUrl)
             .state_execution_id(stateExecutionIdForLETask)
@@ -1564,6 +1568,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     LearningEngineAnalysisTask analysisTask =
         LearningEngineAnalysisTask.builder()
+            .accountId(logsCVConfiguration.getAccountId())
             .state_execution_id(stateExecutionIdForLETask)
             .service_id(logsCVConfiguration.getServiceId())
             .query(Lists.newArrayList(logsCVConfiguration.getQuery()))

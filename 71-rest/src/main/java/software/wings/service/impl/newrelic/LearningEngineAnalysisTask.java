@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -67,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LearningEngineAnalysisTask extends Base {
+public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;
 
@@ -117,6 +118,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String tag = "default";
   private int service_guard_backoff_count;
   private Double alertThreshold;
+  @Indexed private String accountId;
 
   @Builder.Default private int priority = 1;
 
