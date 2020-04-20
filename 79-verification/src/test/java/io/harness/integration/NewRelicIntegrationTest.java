@@ -995,7 +995,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     String prevWorkflowExecutionId = wingsPersistence.save(workflowExecution);
 
     List<String> metricNames = new ArrayList<>();
-    timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.NEW_RELIC, stateExecutionId,
+    timeSeriesAnalysisService.saveMetricTemplates(accountId, appId, StateType.NEW_RELIC, stateExecutionId,
         metricUtilHelper.metricDefinitions(
             metricUtilHelper.getMetricsCorrespondingToMetricNames(metricNames).values()));
 
@@ -1167,7 +1167,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     List<String> metricNames = new ArrayList<>();
-    timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.NEW_RELIC, stateExecutionId,
+    timeSeriesAnalysisService.saveMetricTemplates(accountId, appId, StateType.NEW_RELIC, stateExecutionId,
         metricUtilHelper.metricDefinitions(
             metricUtilHelper.getMetricsCorrespondingToMetricNames(metricNames).values()));
 

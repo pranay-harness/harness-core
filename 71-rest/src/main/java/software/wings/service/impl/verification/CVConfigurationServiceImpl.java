@@ -901,6 +901,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                          .stateType(stateType)
                          .metricTemplates(metricTemplates)
                          .cvConfigId(cvConfiguration.getUuid())
+                         .accountId(accountId)
                          .build();
 
     metricTemplate.setAppId(appId);

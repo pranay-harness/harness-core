@@ -80,7 +80,7 @@ public interface TimeSeriesAnalysisService {
 
   Map<String, TimeSeriesMlAnalysisGroupInfo> getMetricGroups(String appId, String stateExecutionId);
 
-  void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
+  void saveMetricTemplates(String accountId, String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
   long getMaxCVCollectionMinute(String appId, String cvConfigId, String accountId);

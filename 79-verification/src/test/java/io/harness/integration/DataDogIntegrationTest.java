@@ -241,7 +241,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     timeSeriesAnalysisService.saveMetricData(
         accountId, appId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
 
-    timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.DATA_DOG, stateExecutionId,
+    timeSeriesAnalysisService.saveMetricTemplates(accountId, appId, StateType.DATA_DOG, stateExecutionId,
         DatadogState.metricDefinitions(DatadogState
                                            .metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration",
                                                         "trace.servlet.request.hits")),
