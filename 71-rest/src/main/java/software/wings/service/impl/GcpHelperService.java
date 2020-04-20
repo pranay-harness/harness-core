@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
@@ -17,6 +18,7 @@ import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -153,6 +155,9 @@ public class GcpHelperService {
       throws IOException {
     if (isNotEmpty(encryptedDataDetails)) {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+    }
+    if (isEmpty(gcpConfig.getServiceAccountKeyFileContent())) {
+      throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
     }
     GoogleCredential credential = GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset()));
