@@ -1449,7 +1449,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
     Map<String, TimeSeriesMetricDefinition> timeSeriesMetricDefinitionMap = new HashMap<>();
     timeSeriesMetricDefinitionMap.put(timeSeriesMetricDefinition.getMetricName(), timeSeriesMetricDefinition);
     timeSeriesAnalysisService.saveMetricTemplates(
-        appId, StateType.NEW_RELIC, stateExecutionId, timeSeriesMetricDefinitionMap);
+        accountId, appId, StateType.NEW_RELIC, stateExecutionId, timeSeriesMetricDefinitionMap);
     TimeSeriesMetricTemplates timeSeriesMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
                                                               .filter("stateExecutionId", stateExecutionId)
                                                               .get();

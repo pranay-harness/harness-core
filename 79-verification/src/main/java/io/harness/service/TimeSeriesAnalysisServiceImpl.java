@@ -904,9 +904,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   @VisibleForTesting
-  public void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
+  public void saveMetricTemplates(String accountId, String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates) {
     TimeSeriesMetricTemplates metricTemplate = TimeSeriesMetricTemplates.builder()
+                                                   .accountId(accountId)
                                                    .stateType(stateType)
                                                    .stateExecutionId(stateExecutionId)
                                                    .metricTemplates(metricTemplates)

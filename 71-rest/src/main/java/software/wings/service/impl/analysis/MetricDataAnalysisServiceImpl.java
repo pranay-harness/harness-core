@@ -943,11 +943,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId, String cvConfigId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates) {
+    String accountId = appService.getAccountIdByAppId(appId);
     TimeSeriesMetricTemplates metricTemplate = TimeSeriesMetricTemplates.builder()
                                                    .stateType(stateType)
                                                    .stateExecutionId(stateExecutionId)
                                                    .metricTemplates(metricTemplates)
                                                    .cvConfigId(cvConfigId)
+                                                   .accountId(accountId)
                                                    .build();
     metricTemplate.setAppId(appId);
     wingsPersistence.save(metricTemplate);
