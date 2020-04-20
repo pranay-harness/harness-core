@@ -42,7 +42,8 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
   public void handle(AuditRecord entity) {
     // if not last with match auditHeaderId, EXIT
     AuditRecord mostRecentAuditRecord = auditService.fetchMostRecentAuditRecord(entity.getAuditHeaderId());
-    if (!mostRecentAuditRecord.getUuid().equals(entity.getUuid())) {
+    if (mostRecentAuditRecord != null && mostRecentAuditRecord.getUuid() != null
+        && !mostRecentAuditRecord.getUuid().equals(entity.getUuid())) {
       // Seems there are more recent records added in "AuditRecord" collection for this AuditHeaderId.
       // existing now, when newest record will be processed, these entityAuditRecords will be copied to actual
       // "AuditHeader" record.
