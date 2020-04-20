@@ -8,14 +8,18 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.ExecutionNode;
 import io.harness.state.execution.status.NodeExecutionStatus;
+import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -39,4 +43,7 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   private Long startTs;
   private Long endTs;
   private Long expiryTs;
+
+  // Applicable only for child/children states
+  @Singular List<StateTransput> additionalInputs = new ArrayList<>();
 }

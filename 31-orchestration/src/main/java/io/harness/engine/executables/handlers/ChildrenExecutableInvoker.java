@@ -70,6 +70,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
                                                 .ambiance(ambiance)
                                                 .status(NodeExecutionStatus.QUEUED)
                                                 .notifyId(uuid)
+                                                .additionalInputs(child.getAdditionalInputs())
                                                 .build();
       hPersistence.save(childInstance);
       executorService.submit(

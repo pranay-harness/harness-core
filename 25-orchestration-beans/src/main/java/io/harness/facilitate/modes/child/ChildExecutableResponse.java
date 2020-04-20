@@ -3,6 +3,7 @@ package io.harness.facilitate.modes.child;
 import io.harness.annotations.Redesign;
 import io.harness.state.io.StateTransput;
 import lombok.Builder;
+import lombok.Singular;
 import lombok.Value;
 
 import java.util.List;
@@ -12,5 +13,5 @@ import java.util.List;
 @Redesign
 public class ChildExecutableResponse {
   String childNodeId;
-  List<StateTransput> additionalInputs;
+  @Singular List<StateTransput> additionalInputs;
 }
