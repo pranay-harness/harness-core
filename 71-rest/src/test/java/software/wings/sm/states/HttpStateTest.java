@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -325,6 +326,50 @@ public class HttpStateTest extends WingsBaseTest {
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+
+    response = asyncExecutionResponse;
+
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(HttpStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
+                                               .assertionStatus("SUCCESS")
+                                               .httpResponseCode(200)
+                                               .httpResponseBody("<health><status>Enabled</status></health>")
+                                               .build(),
+            "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
+
+    verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteAndEvaluateResponseWithProxy() {
+    wireMockRule.stubFor(get(urlEqualTo("/health/status"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
+                             .withHeader("Accept", equalTo("*/*"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("<health><status>Enabled</status></health>")
+                                             .withHeader("Content-Type", "text/xml")));
+
+    HttpState.Builder proxyHttpBuilder =
+        aHttpState()
+            .withName("healthCheck1")
+            .withMethod("GET")
+            .withUrl("http://${host.hostName}:8088/health/status")
+            .withHeader("Content-Type: application/xml, Accept: */*")
+            .usesProxy(true)
+            .withAssertion(
+                "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
+
+    ExecutionResponse response = getHttpState(proxyHttpBuilder.but(), context).execute(context);
+
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+
+    assertThat(((HttpStateExecutionData) response.getStateExecutionData()).isUseProxy()).isTrue();
 
     response = asyncExecutionResponse;
 

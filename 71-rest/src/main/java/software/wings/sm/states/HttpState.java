@@ -95,6 +95,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Attributes(title = "Header") private String header;
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
+  @Getter @Setter @Attributes(title = "Use Delegate Proxy") private boolean useProxy;
   @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
 
   @Getter @Setter private List<NameValuePair> responseProcessingExpressions;
@@ -354,9 +355,12 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                 .body(finalBody)
                                                 .url(finalUrl)
                                                 .socketTimeoutMillis(taskSocketTimeout)
+                                                .useProxy(useProxy)
                                                 .build();
-    HttpStateExecutionDataBuilder executionDataBuilder = HttpStateExecutionData.builder().templateVariables(
-        templateUtils.processTemplateVariables(context, getTemplateVariables()));
+
+    HttpStateExecutionDataBuilder executionDataBuilder =
+        HttpStateExecutionData.builder().useProxy(useProxy).templateVariables(
+            templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters, expressionFunctorToken);
@@ -555,6 +559,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     private String header;
     private String body;
     private String assertion;
+    private boolean useProxy;
     private int socketTimeoutMillis = 10000;
     private List<Variable> templateVariables;
 
@@ -638,6 +643,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       return this;
     }
 
+    public Builder usesProxy(boolean useProxy) {
+      this.useProxy = useProxy;
+      return this;
+    }
+
     /**
      * With socket timeout millis builder.
      *
@@ -667,6 +677,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
           .withHeader(header)
           .withBody(body)
           .withAssertion(assertion)
+          .usesProxy(useProxy)
           .withSocketTimeoutMillis(socketTimeoutMillis)
           .withTemplateVariables(templateVariables);
     }
@@ -686,6 +697,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       httpState.setSocketTimeoutMillis(socketTimeoutMillis);
       httpState.setTemplateVariables(templateVariables);
       httpState.setHeader(header);
+      httpState.setUseProxy(useProxy);
       return httpState;
     }
   }

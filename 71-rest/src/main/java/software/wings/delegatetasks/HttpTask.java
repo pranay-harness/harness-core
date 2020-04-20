@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static com.google.common.base.Ascii.toUpperCase;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.Splitter;
@@ -10,10 +11,16 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -25,8 +32,11 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
@@ -54,7 +64,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   public HttpStateExecutionResponse run(TaskParameters parameters) {
     HttpTaskParameters httpTaskParameters = (HttpTaskParameters) parameters;
     return run(httpTaskParameters.getMethod(), httpTaskParameters.getUrl(), httpTaskParameters.getBody(),
-        httpTaskParameters.getHeader(), httpTaskParameters.getSocketTimeoutMillis());
+        httpTaskParameters.getHeader(), httpTaskParameters.getSocketTimeoutMillis(), httpTaskParameters.isUseProxy());
   }
 
   @Override
@@ -63,7 +73,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   }
 
   public HttpStateExecutionResponse run(
-      String method, String url, String body, String headers, int socketTimeoutMillis) {
+      String method, String url, String body, String headers, int socketTimeoutMillis, boolean useProxy) {
     HttpStateExecutionResponse httpStateExecutionResponse = new HttpStateExecutionResponse();
 
     SSLContextBuilder builder = new SSLContextBuilder();
@@ -82,9 +92,31 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     RequestConfig.Builder requestBuilder = RequestConfig.custom();
     requestBuilder = requestBuilder.setConnectTimeout(2000);
     requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
+    HttpClientBuilder httpClientBuilder =
+        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build());
 
-    CloseableHttpClient httpclient =
-        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
+    if (useProxy) {
+      if (Http.shouldUseNonProxy(url)) {
+        throw new InvalidRequestException(
+            "Delegate is configured not to use proxy for the given url: " + url, WingsException.USER);
+      }
+
+      HttpHost proxyHost = Http.getHttpProxyHost();
+      if (proxyHost != null) {
+        if (isNotEmpty(Http.getProxyUserName())) {
+          httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+          BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+          credsProvider.setCredentials(new AuthScope(proxyHost),
+              new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
+          httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+        }
+        httpClientBuilder.setProxy(proxyHost);
+      } else {
+        logger.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+      }
+    }
+
+    CloseableHttpClient httpclient = httpClientBuilder.build();
 
     HttpUriRequest httpUriRequest;
 
