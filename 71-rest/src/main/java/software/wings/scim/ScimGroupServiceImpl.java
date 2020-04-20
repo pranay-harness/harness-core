@@ -303,9 +303,33 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     return scimGroup;
   }
 
+  private UserGroup checkIfUserGroupAlreadyPresentByName(String accountId, String userGroupName) {
+    if (userGroupName == null) {
+      return null;
+    }
+
+    Query<UserGroup> userGroupQuery =
+        wingsPersistence.createQuery(UserGroup.class).field(UserGroupKeys.accountId).equal(accountId);
+
+    if (StringUtils.isNotEmpty(userGroupName)) {
+      userGroupQuery.field(UserGroupKeys.name).equal(userGroupName);
+    }
+
+    List<UserGroup> userGroupList = userGroupQuery.asList();
+    if (isNotEmpty(userGroupList)) {
+      return userGroupList.get(0);
+    }
+    return null;
+  }
+
   @Override
   public ScimGroup createGroup(ScimGroup groupQuery, String accountId) {
     logger.info("SCIM: Creating group call: {}", groupQuery);
+
+    UserGroup userGroupAlreadyPresent = checkIfUserGroupAlreadyPresentByName(accountId, groupQuery.getDisplayName());
+    if (userGroupAlreadyPresent != null) {
+      return getGroup(userGroupAlreadyPresent.getUuid(), accountId);
+    }
 
     UserGroup userGroup = UserGroup.builder()
                               .accountId(accountId)
@@ -313,6 +337,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
                               .memberIds(getMembersOfUserGroup(groupQuery))
                               .importedByScim(true)
                               .build();
+
     userGroupService.save(userGroup);
 
     groupQuery.setId(userGroup.getUuid());

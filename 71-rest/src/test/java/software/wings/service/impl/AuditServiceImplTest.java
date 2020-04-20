@@ -96,14 +96,12 @@ public class AuditServiceImplTest extends WingsBaseTest {
     assertThat(auditServiceImpl.isNonYamlEntity(EntityAuditRecord.builder()
                                                     .entityType(EntityType.TEMPLATE_FOLDER.name())
                                                     .affectedResourceType(EntityType.TEMPLATE_FOLDER.name())
-                                                    .build(),
-                   ACCOUNT_ID))
+                                                    .build()))
         .isEqualTo(true);
     assertThat(auditServiceImpl.isNonYamlEntity(EntityAuditRecord.builder()
                                                     .entityType(EntityType.TEMPLATE.name())
                                                     .affectedResourceType(EntityType.TEMPLATE.name())
-                                                    .build(),
-                   ACCOUNT_ID))
+                                                    .build()))
         .isEqualTo(false);
   }
 }
