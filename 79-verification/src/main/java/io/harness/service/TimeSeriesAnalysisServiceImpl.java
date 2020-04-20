@@ -344,6 +344,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                               .cvConfigId(cvConfigId)
                               .tag(mlAnalysisResponse.getTag())
                               .anomalies(mlAnalysisResponse.getAnomalies())
+                              .accountId(accountId)
                               .build();
         anomaliesRecord.setAppId(appId);
       }
