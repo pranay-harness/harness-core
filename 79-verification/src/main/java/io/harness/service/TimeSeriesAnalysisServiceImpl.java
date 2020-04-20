@@ -377,6 +377,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
               .cvConfigId(mlAnalysisResponse.getCvConfigId())
               .transactionMetricSums(mlAnalysisResponse.getTransactionMetricSums())
+              .accountId(accountId)
               .build();
       cumulativeSums.setAppId(appId);
       if (isNotEmpty(tag)) {
