@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,12 +36,14 @@ import java.util.Map;
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricGroupKeys")
-public class TimeSeriesMetricGroup extends Base {
+public class TimeSeriesMetricGroup extends Base implements AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty private Map<String, TimeSeriesMlAnalysisGroupInfo> groups;
+
+  @Indexed private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
@@ -50,11 +53,12 @@ public class TimeSeriesMetricGroup extends Base {
   @Builder
   public TimeSeriesMetricGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType,
-      String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups) {
+      String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.stateExecutionId = stateExecutionId;
     this.groups = groups;
+    this.accountId = accountId;
   }
 
   @Data

@@ -958,6 +958,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void saveMetricGroups(
       String appId, StateType stateType, String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups) {
+    String accountId = appService.getAccountIdByAppId(appId);
     Map<String, TimeSeriesMlAnalysisGroupInfo> toSave = new HashMap<>();
     groups.forEach((groupName, timeSeriesMlAnalysisGroupInfo) -> {
       groupName = replaceDotWithUnicode(groupName);
@@ -970,6 +971,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                               .stateType(stateType)
                               .stateExecutionId(stateExecutionId)
                               .groups(toSave)
+                              .accountId(accountId)
                               .build());
   }
 

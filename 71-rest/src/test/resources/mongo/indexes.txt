@@ -570,6 +570,7 @@ timeSeriesKeyTransactions { "name" : "serviceId_1" , "background" : true} { "ser
 timeSeriesMLScores { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeSeriesMLScores { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeSeriesMLScores { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
+timeSeriesMetricGroup { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 timeSeriesMetricGroup { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeSeriesMetricGroup { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeSeriesMetricGroup { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
