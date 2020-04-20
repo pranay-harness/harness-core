@@ -139,7 +139,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
-        "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.";
+        "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
     verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =
@@ -172,7 +172,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
-        "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.";
+        "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
     verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =

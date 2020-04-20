@@ -171,7 +171,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
             getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
             return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
-                "Could not find existing instances of the service and environment. Analysis will be skipped. Either this is the first deployment or the previous version instances are deleted/unreachable. Please check your setup.");
+                "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.");
           }
 
           getLogger().warn(
