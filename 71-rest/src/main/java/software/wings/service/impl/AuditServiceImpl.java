@@ -116,18 +116,10 @@ public class AuditServiceImpl implements AuditService {
       ResourceType.USER_INVITE.name(), ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(),
       ResourceType.DELEGATE_PROFILE.name());
 
-  boolean checkIfYamlEntityIsBehindFeatureFlag(
-      FeatureName featureName, String entityName, EntityAuditRecord record, String accountId) {
-    if (featureFlagService.isEnabled(featureName, accountId)) {
-      return record.getEntityType().equals(entityName) || record.getAffectedResourceType().equals(entityName);
-    }
-    return false;
-  }
-
   /**
    * check for nonYamlEntites.
    */
-  public boolean isNonYamlEntity(EntityAuditRecord record, String accountId) {
+  boolean isNonYamlEntity(EntityAuditRecord record) {
     // If any entity is to be hidden behind feature flag it can be hidden here.
     return nonYamlEntities.contains(record.getEntityType())
         || nonYamlEntities.contains(record.getAffectedResourceType());
@@ -174,7 +166,6 @@ public class AuditServiceImpl implements AuditService {
         auditRecords.add(iterator.next());
       }
     }
-
     return auditRecords;
   }
 
@@ -383,14 +374,14 @@ public class AuditServiceImpl implements AuditService {
                 .remove(new BasicDBObject(
                     ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
 
-            if (requestPayloadIds != null) {
+            if (isNotEmpty(requestPayloadIds)) {
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", requestPayloadIds.toArray())));
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
             }
 
-            if (responsePayloadIds != null) {
+            if (isNotEmpty(requestPayloadIds)) {
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", responsePayloadIds.toArray())));
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")
@@ -569,7 +560,7 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void loadLatestYamlDetailsForEntity(EntityAuditRecord record, String accountId) {
-    if (isNonYamlEntity(record, accountId)) {
+    if (isNonYamlEntity(record)) {
       return;
     }
     String entityId;
@@ -611,7 +602,7 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
-    if (isNonYamlEntity(record, accountId) || entity == null) {
+    if (isNonYamlEntity(record) || entity == null) {
       return;
     }
     String yamlContent;
