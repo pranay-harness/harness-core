@@ -64,6 +64,11 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
 
+  @Override
+  public Integer getTimeoutMillis() {
+    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
   public K8sBlueGreenDeploy(String name) {
     super(name, K8S_BLUE_GREEN_DEPLOY.name());
   }

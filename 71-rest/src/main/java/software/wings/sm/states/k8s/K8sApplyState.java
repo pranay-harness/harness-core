@@ -1,5 +1,6 @@
 package software.wings.sm.states.k8s;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.StateType.K8S_APPLY;
@@ -13,6 +14,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class K8sApplyState extends State implements K8sStateExecutor {
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private AppService appService;
@@ -59,6 +62,17 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+
+  @Override
+  public Integer getTimeoutMillis() {
+    try {
+      Integer timeoutMinutes = Integer.valueOf(stateTimeoutInMinutes);
+      return getTimeoutMillisFromMinutes(timeoutMinutes);
+    } catch (IllegalArgumentException ex) {
+      logger.error(format("Could not convert stateTimeout %s to Integer", stateTimeoutInMinutes), ex);
+      return null;
+    }
+  }
 
   @Override
   public String commandName() {

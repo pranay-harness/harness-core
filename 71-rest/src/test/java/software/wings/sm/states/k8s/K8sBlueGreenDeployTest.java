@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -87,5 +88,16 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
     assertThat(taskParams.getCommandName()).isEqualTo(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME);
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTimeoutValue() {
+    K8sBlueGreenDeploy state = new K8sBlueGreenDeploy("k8s-bg");
+    assertThat(state.getTimeoutMillis()).isNull();
+
+    state.setStateTimeoutInMinutes(5);
+    assertThat(state.getTimeoutMillis()).isEqualTo(300000);
   }
 }

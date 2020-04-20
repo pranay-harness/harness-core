@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -97,5 +98,19 @@ public class K8sApplyStateTest extends WingsBaseTest {
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTimeoutValue() {
+    K8sApplyState state = new K8sApplyState("k8s-apply");
+    assertThat(state.getTimeoutMillis()).isNull();
+
+    state.setStateTimeoutInMinutes("5");
+    assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+
+    state.setStateTimeoutInMinutes("foo");
+    assertThat(state.getTimeoutMillis()).isNull();
   }
 }

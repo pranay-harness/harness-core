@@ -76,6 +76,11 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
 
   @Override
+  public Integer getTimeoutMillis() {
+    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
+  @Override
   public String commandName() {
     return K8S_CANARY_DEPLOY_COMMAND_NAME;
   }

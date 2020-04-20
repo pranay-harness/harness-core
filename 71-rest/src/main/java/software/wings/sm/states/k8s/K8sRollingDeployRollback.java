@@ -5,6 +5,7 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -43,6 +44,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 
+import java.time.Duration;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -66,6 +68,14 @@ public class K8sRollingDeployRollback extends State {
 
   public K8sRollingDeployRollback(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING_ROLLBACK.name());
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    if (stateTimeoutInMinutes != null) {
+      return Ints.checkedCast(Duration.ofMinutes(stateTimeoutInMinutes).toMillis());
+    }
+    return null;
   }
 
   @Override
