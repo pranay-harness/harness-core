@@ -18,6 +18,6 @@ public class ChildrenExecutableResponse {
   @Builder
   public static class Child {
     String childNodeId;
-    List<StateTransput> additionalInputs;
+    @Singular List<StateTransput> additionalInputs;
   }
 }

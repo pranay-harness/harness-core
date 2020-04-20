@@ -49,13 +49,16 @@ public class EngineObtainmentHelper {
     return obtainments.stream().map(obtainment -> facilitatorRegistry.obtain(obtainment)).collect(Collectors.toList());
   }
 
-  public List<StateTransput> obtainInputs(List<RefObject> refObjects) {
+  public List<StateTransput> obtainInputs(List<RefObject> refObjects, List<StateTransput> additionalInputs) {
     if (isEmpty(refObjects)) {
       return Collections.emptyList();
     }
-    return refObjects.stream()
-        .map(refObject -> resolverRegistry.obtain(refObject.getRefType()).resolve(refObject))
-        .collect(Collectors.toList());
+    List<StateTransput> inputs =
+        refObjects.stream()
+            .map(refObject -> resolverRegistry.obtain(refObject.getRefType()).resolve(refObject))
+            .collect(Collectors.toList());
+    inputs.addAll(additionalInputs);
+    return inputs;
   }
 
   public State obtainState(String stateType) {
