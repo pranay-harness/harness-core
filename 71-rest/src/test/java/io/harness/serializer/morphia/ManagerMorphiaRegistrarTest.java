@@ -117,12 +117,6 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
             .put("io.harness.waiter.ErrorNotifyResponseData", "io.harness.delegate.beans.ErrorNotifyResponseData")
             .put("software.wings.api.JiraExecutionData", "software.wings.api.jira.JiraExecutionData")
             .put("software.wings.security.encryption.SimpleEncryption", "io.harness.security.SimpleEncryption")
-            .put("software.wings.redesign.advisers.HttpResponseCodeSwitchAdviserParameters",
-                "io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters")
-            .put("software.wings.redesign.states.http.BasicHttpStateParameters",
-                "io.harness.redesign.states.http.BasicHttpStateParameters")
-            .put("software.wings.redesign.states.wait.WaitStateParameters",
-                "io.harness.redesign.states.wait.WaitStateParameters")
             .build();
 
     assertThat(movements(objectFactory.getMorphiaInterfaceImplementers())).isEqualTo(known);

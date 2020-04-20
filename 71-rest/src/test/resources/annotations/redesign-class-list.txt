@@ -54,6 +54,9 @@ io.harness.plan.ExecutionPlan
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserProducer
+io.harness.redesign.services.CustomExecutionService
+io.harness.redesign.services.CustomExecutionServiceImpl
+io.harness.redesign.services.CustomExecutionUtils
 io.harness.redesign.states.dummy.DummyState
 io.harness.redesign.states.dummy.DummyStateProducer
 io.harness.redesign.states.http.BasicHttpState
@@ -92,3 +95,4 @@ io.harness.state.io.StatusNotifyResponseData
 io.harness.state.io.ambiance.Ambiance
 io.harness.state.io.ambiance.Level
 io.harness.state.metadata.StateMetadata
+software.wings.resources.CustomExecutionResource
