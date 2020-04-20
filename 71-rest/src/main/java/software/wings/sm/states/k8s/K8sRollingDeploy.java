@@ -68,6 +68,11 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
 
+  @Override
+  public Integer getTimeoutMillis() {
+    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
   public K8sRollingDeploy(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING.name());
   }
