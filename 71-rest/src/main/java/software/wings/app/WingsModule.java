@@ -73,6 +73,8 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.redesign.services.CustomExecutionService;
+import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
@@ -1062,6 +1064,9 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
+
+    // Custom Workflow Dependencies
+    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
   }
 
   private void bindFeatures() {

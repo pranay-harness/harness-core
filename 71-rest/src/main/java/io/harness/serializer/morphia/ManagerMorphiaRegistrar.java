@@ -1029,6 +1029,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
     h.put("ccm.cluster.entities.GcpKubernetesCluster", GcpKubernetesCluster.class);
 
+    // Redesign Classes
+    h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
+    h.put("redesign.states.http.BasicHttpStateParameters", BasicHttpStateParameters.class);
+    h.put("redesign.states.wait.WaitStateParameters", WaitStateParameters.class);
+
     final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
@@ -1526,9 +1531,5 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
     w.put(
         smss + "SpotinstTrafficShiftAlbSwapRoutesExecutionData", SpotinstTrafficShiftAlbSwapRoutesExecutionData.class);
-    // Redesign Classes
-    w.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
-    w.put("redesign.states.http.BasicHttpStateParameters", BasicHttpStateParameters.class);
-    w.put("redesign.states.wait.WaitStateParameters", WaitStateParameters.class);
   }
 }
