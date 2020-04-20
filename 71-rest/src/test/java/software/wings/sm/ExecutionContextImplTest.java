@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
@@ -240,6 +241,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
+    std.setWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(PIPELINE_EXECUTION_ID).build());
     injector.injectMembers(std);
     context.pushContextElement(std);
 
@@ -279,9 +281,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
+    std.setWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(PIPELINE_EXECUTION_ID).build());
     injector.injectMembers(std);
     context.pushContextElement(std);
-
     context.getArtifacts();
     verify(artifactService).get(eq("u1"));
     verify(artifactService).get(eq("u2"));
@@ -361,6 +363,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
+    std.setWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(PIPELINE_EXECUTION_ID).build());
     injector.injectMembers(std);
     context.pushContextElement(std);
 

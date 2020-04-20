@@ -393,9 +393,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private List<ServiceArtifactElement> getArtifactElementsFromSweepingOutput() {
-    List<ServiceArtifactElements> artifactElementsList = sweepingOutputService.findSweepingOutputsWithNamePrefix(
-        prepareSweepingOutputInquiryBuilder().name(ServiceArtifactElements.SWEEPING_OUTPUT_NAME).build(),
-        Scope.PIPELINE);
+    SweepingOutputInquiry sweepingOutputInquiry =
+        prepareSweepingOutputInquiryBuilder().name(ServiceArtifactElements.SWEEPING_OUTPUT_NAME).build();
+    if (sweepingOutputInquiry.getPipelineExecutionId() == null) {
+      return new ArrayList<>();
+    }
+
+    List<ServiceArtifactElements> artifactElementsList =
+        sweepingOutputService.findSweepingOutputsWithNamePrefix(sweepingOutputInquiry, Scope.PIPELINE);
     if (artifactElementsList == null) {
       return new ArrayList<>();
     }
@@ -425,10 +430,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private List<ServiceArtifactVariableElement> getArtifactVariableElementsFromSweepingOutput() {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        prepareSweepingOutputInquiryBuilder().name(ServiceArtifactVariableElements.SWEEPING_OUTPUT_NAME).build();
+    if (sweepingOutputInquiry.getPipelineExecutionId() == null) {
+      return new ArrayList<>();
+    }
+
     List<ServiceArtifactVariableElements> artifactVariableElementsList =
-        sweepingOutputService.findSweepingOutputsWithNamePrefix(
-            prepareSweepingOutputInquiryBuilder().name(ServiceArtifactVariableElements.SWEEPING_OUTPUT_NAME).build(),
-            Scope.PIPELINE);
+        sweepingOutputService.findSweepingOutputsWithNamePrefix(sweepingOutputInquiry, Scope.PIPELINE);
     if (artifactVariableElementsList == null) {
       return new ArrayList<>();
     }
