@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
@@ -82,9 +83,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
-  public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
+  public Optional<FeatureFlag> getFeatureFlag(@NotNull FeatureName featureName) {
     FeatureFlag featureFlag;
-
     synchronized (cache) {
       // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
       // objects to be replaced, and the potential change will be in a relatively same time on all managers.
@@ -100,27 +100,32 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                  .filter(FeatureFlagKeys.name, key.name())
                  .get());
     }
+    return Optional.ofNullable(featureFlag);
+  }
 
-    if (featureFlag == null) {
-      // this is common in test scenarios, lets not do anything here and just return false
-      return false;
-    }
+  @Override
+  public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
+    Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
 
-    if (featureFlag.isEnabled()) {
-      return true;
-    }
+    if (featureFlagOptional.isPresent()) {
+      FeatureFlag featureFlag = featureFlagOptional.get();
 
-    if (isEmpty(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
-      logger.error("FeatureFlag isEnabled check without accountId", new Exception(""));
-      return false;
-    }
+      if (featureFlag.isEnabled()) {
+        return true;
+      }
 
-    if (isNotEmpty(featureFlag.getAccountIds())) {
-      if (featureName.getScope() == Scope.GLOBAL) {
-        logger.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
+      if (isEmpty(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
+        logger.error("FeatureFlag isEnabled check without accountId", new Exception(""));
         return false;
       }
-      return featureFlag.getAccountIds().contains(accountId);
+
+      if (isNotEmpty(featureFlag.getAccountIds())) {
+        if (featureName.getScope() == Scope.GLOBAL) {
+          logger.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
+          return false;
+        }
+        return featureFlag.getAccountIds().contains(accountId);
+      }
     }
 
     return false;

@@ -150,6 +150,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.encryption.migration.EncryptedDataAwsToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.EncryptedDataMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
@@ -717,6 +718,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(BudgetHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(EncryptedDataMigrationHandler.class).registerIterators();
+    injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
