@@ -190,6 +190,28 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
         Utils.appendPathToBaseUrl(getUrl(), getValidationUrl()), QUERY));
   }
 
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    List<String> rv = new ArrayList<>();
+    if (isNotEmpty(headersList)) {
+      headersList.stream()
+          .filter(keyValues -> keyValues.encrypted)
+          .forEach(keyValues -> rv.add(keyValues.encryptedValue));
+    }
+
+    if (isNotEmpty(optionsList)) {
+      optionsList.stream()
+          .filter(keyValues -> keyValues.encrypted)
+          .forEach(keyValues -> rv.add(keyValues.encryptedValue));
+    }
+
+    List<KeyValues> bodySecrets = getSecretNameIdKeyValueList(validationBody);
+    bodySecrets.forEach(keyValues -> rv.add(keyValues.encryptedValue));
+    List<KeyValues> urlSecrets = getSecretNameIdKeyValueList(validationUrl);
+    urlSecrets.forEach(keyValues -> rv.add(keyValues.encryptedValue));
+    return rv;
+  }
+
   @Data
   @Builder
   public static class KeyValues {
