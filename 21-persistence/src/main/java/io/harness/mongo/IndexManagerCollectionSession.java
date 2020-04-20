@@ -26,7 +26,11 @@ import java.util.Set;
 class IndexManagerCollectionSession {
   private List<DBObject> indexInfo;
 
-  IndexManagerCollectionSession(DBCollection collection) {
+  public static IndexManagerCollectionSession createCollectionSession(DBCollection collection) {
+    return new IndexManagerCollectionSession(collection);
+  }
+
+  private IndexManagerCollectionSession(DBCollection collection) {
     reset(collection);
   }
 
@@ -86,7 +90,7 @@ class IndexManagerCollectionSession {
   // A good article on the topic:
   // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
   // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
-  void checkForUnusedIndexes(DBCollection collection, Map<String, IndexManagerSession.Accesses> accesses) {
+  void checkForUnusedIndexes(Map<String, IndexManagerSession.Accesses> accesses) {
     long now = currentTimeMillis();
     Date tooNew = new Date(now - ofDays(7).toMillis());
 

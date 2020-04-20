@@ -3,6 +3,7 @@ package io.harness.mongo;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
@@ -380,10 +381,9 @@ public class IndexManagerSession {
 
     Set<String> processedCollections = processIndexes(datastore, morphia, (mc, collection) -> {
       try {
-        IndexManagerCollectionSession collectionSession = new IndexManagerCollectionSession(collection);
         Map<String, IndexCreator> creators = indexCreators(mc, collection);
         // We should be attempting to drop indexes only if we successfully created all new ones
-        int created = createNewIndexes(collectionSession, creators);
+        int created = createNewIndexes(createCollectionSession(collection), creators);
         if (created > 0) {
           actionPerformed.set(true);
         }
@@ -393,6 +393,7 @@ public class IndexManagerSession {
         Map<String, Accesses> accesses = fetchIndexAccesses(collection);
 
         if (okToDropIndexes) {
+          IndexManagerCollectionSession collectionSession = createCollectionSession(collection);
           List<String> obsoleteIndexes = collectionSession.obsoleteIndexes(creators.keySet());
           if (isNotEmpty(obsoleteIndexes)) {
             // Make sure that all indexes that we have are operational, we check that they have being seen since
@@ -414,7 +415,7 @@ public class IndexManagerSession {
         }
 
         if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
-          collectionSession.checkForUnusedIndexes(collection, accesses);
+          createCollectionSession(collection).checkForUnusedIndexes(accesses);
         }
       } catch (RuntimeException exception) {
         logger.error("", exception);
