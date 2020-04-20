@@ -1,6 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.mongo.IndexManager.Mode.AUTO;
+import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,13 +47,12 @@ public class IndexManagerSessionTest extends PersistenceTest {
     IndexCreator indexCreator = buildIndexCreator(collection, "foo2", 1).build();
     session.create(indexCreator);
 
-    DBObject dbObject = new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator);
+    DBObject dbObject = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject.get("name")).isEqualTo("foo");
 
-    assertThat(session.rebuildIndex(new IndexManagerCollectionSession(collection), indexCreator, ofSeconds(0)))
-        .isTrue();
+    assertThat(session.rebuildIndex(createCollectionSession(collection), indexCreator, ofSeconds(0))).isTrue();
 
-    DBObject dbObject2 = new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator);
+    DBObject dbObject2 = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject2.get("name")).isEqualTo("foo2");
   }
 
@@ -71,11 +71,10 @@ public class IndexManagerSessionTest extends PersistenceTest {
     assertThatThrownBy(() -> session.create(indexCreator))
         .hasMessageContaining("has the same name as the requested index");
 
-    DBObject dbObject = new IndexManagerCollectionSession(collection).findIndexByFields(original);
+    DBObject dbObject = createCollectionSession(collection).findIndexByFields(original);
     assertThat(dbObject.get("name")).isEqualTo("foo");
 
-    assertThat(session.rebuildIndex(new IndexManagerCollectionSession(collection), indexCreator, ofSeconds(0)))
-        .isTrue();
+    assertThat(session.rebuildIndex(createCollectionSession(collection), indexCreator, ofSeconds(0))).isTrue();
     session.create(indexCreator);
   }
 
@@ -94,22 +93,20 @@ public class IndexManagerSessionTest extends PersistenceTest {
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo2", 1).build();
 
-    assertThat(session.rebuildIndex(new IndexManagerCollectionSession(collection), indexCreator, ofSeconds(120)))
-        .isFalse();
+    assertThat(session.rebuildIndex(createCollectionSession(collection), indexCreator, ofSeconds(120))).isFalse();
 
     // The rebuild did not drop the original but created the temporary one
     assertThat(collection.getIndexInfo()).hasSize(3);
 
-    DBObject dbObject2 = new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator);
+    DBObject dbObject2 = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject2.get("name")).isEqualTo("foo");
 
-    assertThat(session.rebuildIndex(new IndexManagerCollectionSession(collection), indexCreator, ofSeconds(0)))
-        .isTrue();
+    assertThat(session.rebuildIndex(createCollectionSession(collection), indexCreator, ofSeconds(0))).isTrue();
 
     // The original is dropped and regenerated
     assertThat(collection.getIndexInfo()).hasSize(3);
 
-    DBObject dbObject3 = new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator);
+    DBObject dbObject3 = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject3.get("name")).isEqualTo("foo2");
   }
 
@@ -141,15 +138,12 @@ public class IndexManagerSessionTest extends PersistenceTest {
     assertThat(creators.get("sparseTest_1").getOptions().get(IndexManagerSession.SPARSE)).isEqualTo(Boolean.TRUE);
 
     IndexManagerSession session = new IndexManagerSession(AUTO);
-    assertThat(session.createNewIndexes(new IndexManagerCollectionSession(collection), creators))
-        .isEqualTo(creators.size());
+    assertThat(session.createNewIndexes(createCollectionSession(collection), creators)).isEqualTo(creators.size());
     Date afterCreatingIndexes = new Date();
 
     Map<String, Accesses> accesses = IndexManagerSession.fetchIndexAccesses(collection);
     Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(1).toMillis());
-    assertThat(new IndexManagerCollectionSession(collection).isOkToDropIndexes(IndexManagerSession.tooNew(), accesses))
-        .isFalse();
-    assertThat(new IndexManagerCollectionSession(collection).isOkToDropIndexes(afterCreatingIndexes, accesses))
-        .isTrue();
+    assertThat(createCollectionSession(collection).isOkToDropIndexes(IndexManagerSession.tooNew(), accesses)).isFalse();
+    assertThat(createCollectionSession(collection).isOkToDropIndexes(afterCreatingIndexes, accesses)).isTrue();
   }
 }

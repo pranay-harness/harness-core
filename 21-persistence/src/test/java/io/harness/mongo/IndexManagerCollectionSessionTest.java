@@ -1,6 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.mongo.IndexManager.Mode.AUTO;
+import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,11 +43,11 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
-    assertThat(new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator)).isNull();
+    assertThat(createCollectionSession(collection).findIndexByFields(indexCreator)).isNull();
 
     session.create(indexCreator);
 
-    DBObject dbObject = new IndexManagerCollectionSession(collection).findIndexByFields(indexCreator);
+    DBObject dbObject = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject.get("name")).isEqualTo("foo");
   }
 
@@ -59,14 +60,14 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
-    assertThat(new IndexManagerCollectionSession(collection).isRebuildNeeded(indexCreator)).isFalse();
+    assertThat(createCollectionSession(collection).isRebuildNeeded(indexCreator)).isFalse();
 
     session.create(indexCreator);
 
-    assertThat(new IndexManagerCollectionSession(collection).isRebuildNeeded(indexCreator)).isFalse();
+    assertThat(createCollectionSession(collection).isRebuildNeeded(indexCreator)).isFalse();
 
     IndexCreator differentCreator = buildIndexCreator(collection, "foo2", 1).build();
-    assertThat(new IndexManagerCollectionSession(collection).isRebuildNeeded(differentCreator)).isTrue();
+    assertThat(createCollectionSession(collection).isRebuildNeeded(differentCreator)).isTrue();
   }
 
   @Test
@@ -78,11 +79,11 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
-    assertThat(new IndexManagerCollectionSession(collection).isCreateNeeded(indexCreator)).isTrue();
+    assertThat(createCollectionSession(collection).isCreateNeeded(indexCreator)).isTrue();
 
     session.create(indexCreator);
 
-    assertThat(new IndexManagerCollectionSession(collection).isCreateNeeded(indexCreator)).isFalse();
+    assertThat(createCollectionSession(collection).isCreateNeeded(indexCreator)).isFalse();
   }
 
   @Test
@@ -98,8 +99,7 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
     session.create(buildIndexCreator(collection, "foo1", 1).build());
     session.create(buildIndexCreator(collection, "foo2", 1).build());
 
-    IndexManagerCollectionSession collectionSession = new IndexManagerCollectionSession(collection);
-    List<String> obsoleteIndexes = collectionSession.obsoleteIndexes(names);
+    List<String> obsoleteIndexes = createCollectionSession(collection).obsoleteIndexes(names);
 
     assertThat(obsoleteIndexes).containsExactly("foo1");
   }
