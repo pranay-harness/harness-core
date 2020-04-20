@@ -30,7 +30,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -159,7 +158,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
       httpStateExecutionResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
       HttpEntity entity = httpResponse.getEntity();
       httpStateExecutionResponse.setHttpResponseBody(
-          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
+          entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "");
     } catch (IOException e) {
       logger.error("Exception occurred during HTTP task execution", e);
       httpStateExecutionResponse.setHttpResponseCode(500);
