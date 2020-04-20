@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,11 +55,12 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesCumulativeSums extends Base {
+public class TimeSeriesCumulativeSums extends Base implements AccountAccess {
   @NotEmpty @Indexed private String cvConfigId;
   @NotEmpty @Indexed private int analysisMinute;
   @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
   @JsonIgnore private byte[] compressedMetricSums;
+  @Indexed private String accountId;
 
   private String tag;
 
