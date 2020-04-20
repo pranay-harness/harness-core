@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Redesign
@@ -83,7 +84,7 @@ public class ExecutionEngine implements Engine {
     }
     AmbianceBuilder ambianceBuilder = Ambiance.builder()
                                           .setupAbstractions(executionPlan.getSetupAbstractions())
-                                          .setupAbstraction("executionInstanceId", instance.getUuid());
+                                          .executionInstanceId(instance.getUuid());
     triggerExecution(ambianceBuilder, executionPlan.fetchStartingNode());
     return instance;
   }
@@ -166,16 +167,20 @@ public class ExecutionEngine implements Engine {
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
     if (isEmpty(advisers)) {
       endTransition(nodeInstance);
-    } else {
-      Advise advise = null;
-      for (Adviser adviser : advisers) {
-        advise = adviser.onAdviseEvent(AdvisingEvent.builder().stateResponse(stateResponse).build());
-        if (advise != null) {
-          break;
-        }
-      }
-      handleAdvise(nodeInstance, advise);
+      return;
     }
+    Advise advise = null;
+    for (Adviser adviser : advisers) {
+      advise = adviser.onAdviseEvent(AdvisingEvent.builder().stateResponse(stateResponse).build());
+      if (advise != null) {
+        break;
+      }
+    }
+    if (advise == null) {
+      endTransition(nodeInstance);
+      return;
+    }
+    handleAdvise(nodeInstance, advise);
   }
 
   private void endTransition(ExecutionNodeInstance nodeInstance) {
@@ -186,19 +191,14 @@ public class ExecutionEngine implements Engine {
     } else {
       logger.info("End Execution");
       engineStatusHelper.updateExecutionInstanceStatus(
-          nodeInstance.getAmbiance().getSetupAbstractions().get("executionInstanceId"),
-          ExecutionInstanceStatus.SUCCEEDED);
+          nodeInstance.getAmbiance().getExecutionInstanceId(), ExecutionInstanceStatus.SUCCEEDED);
     }
   }
 
-  private void handleAdvise(ExecutionNodeInstance nodeInstance, Advise advise) {
+  private void handleAdvise(@NotNull ExecutionNodeInstance nodeInstance, @NotNull Advise advise) {
     Ambiance ambiance = nodeInstance.getAmbiance();
-    if (advise != null) {
-      AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
-      adviseHandler.handleAdvise(ambiance, advise);
-    } else {
-      endTransition(nodeInstance);
-    }
+    AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
+    adviseHandler.handleAdvise(ambiance, advise);
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {

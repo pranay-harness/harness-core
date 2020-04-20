@@ -11,6 +11,7 @@ import lombok.Singular;
 import lombok.Value;
 
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 @Redesign
 @Value
@@ -22,6 +23,8 @@ public class Ambiance {
   // These is a combination of setup/execution Id for a particular level
   @Singular Map<String, Level> levels;
 
+  @NotNull String executionInstanceId;
+
   public AutoLogContext autoLogContext() {
     ImmutableMap.Builder<String, String> logContext = ImmutableMap.builder();
     logContext.putAll(setupAbstractions);
@@ -30,6 +33,9 @@ public class Ambiance {
   }
 
   public AmbianceBuilder cloneBuilder() {
-    return builder().setupAbstractions(getSetupAbstractions()).levels(getLevels());
+    return Ambiance.builder()
+        .setupAbstractions(setupAbstractions)
+        .levels(levels)
+        .executionInstanceId(executionInstanceId);
   }
 }

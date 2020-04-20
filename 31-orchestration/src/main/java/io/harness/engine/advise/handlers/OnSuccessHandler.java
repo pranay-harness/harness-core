@@ -17,8 +17,8 @@ public class OnSuccessHandler implements AdviseHandler {
   @Override
   public void handleAdvise(Ambiance ambiance, Advise advise) {
     OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
-    ExecutionNode nextNode = engineObtainmentHelper.fetchExecutionNode(
-        onSuccessAdvise.getNextNodeId(), ambiance.getSetupAbstractions().get("executionInstanceId"));
+    ExecutionNode nextNode =
+        engineObtainmentHelper.fetchExecutionNode(onSuccessAdvise.getNextNodeId(), ambiance.getExecutionInstanceId());
     engine.triggerExecution(ambiance.cloneBuilder(), nextNode);
   }
 }
