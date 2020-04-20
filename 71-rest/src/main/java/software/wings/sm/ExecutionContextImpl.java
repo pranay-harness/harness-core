@@ -1362,6 +1362,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @VisibleForTesting
   InstanceInfoVariables getAccumulatedInstanceInfoVariables(List<SweepingOutput> sweepingOutputs) {
+    if (isEmpty(sweepingOutputs)) {
+      return InstanceInfoVariables.builder().build();
+    }
     if (sweepingOutputs.size() == 1) {
       return (InstanceInfoVariables) sweepingOutputs.get(0);
     }
