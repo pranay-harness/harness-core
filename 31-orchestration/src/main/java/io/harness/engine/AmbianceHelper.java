@@ -22,7 +22,7 @@ public class AmbianceHelper {
   }
 
   public ExecutionInstance obtainExecutionInstance(Ambiance ambiance) {
-    String executionId = ambiance.getSetupAbstractions().get("executionInstanceId");
+    String executionId = ambiance.getExecutionInstanceId();
     return hPersistence.createQuery(ExecutionInstance.class).filter(ExecutionInstanceKeys.uuid, executionId).get();
   }
 }
