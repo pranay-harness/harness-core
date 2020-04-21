@@ -12,6 +12,7 @@ import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.URL_STRING;
@@ -1094,20 +1095,10 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected int getDelaySeconds(String initialDelay) {
-    if (isEmpty(initialDelay)) {
-      initialDelay = "2m";
-    }
-    char lastChar = initialDelay.charAt(initialDelay.length() - 1);
-    switch (lastChar) {
-      case 's':
-        return Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
-      case 'm':
-        return (int) TimeUnit.MINUTES.toSeconds(1)
-            * Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
-      default:
-        throw new VerificationOperationException(
-            ErrorCode.APM_CONFIGURATION_ERROR, "Specify delay in seconds (1s) or minutes (1m) ");
-    }
+    // https://harness.atlassian.net/browse/CV-3902
+    // this is a hack because delay second is getting removed from UI and we will decide if we want to get rid this
+    // logic completely
+    return (int) TimeUnit.MINUTES.toSeconds(DELAY_MINUTES);
   }
 
   protected void sampleHostsMap(AnalysisContext analysisContext) {
