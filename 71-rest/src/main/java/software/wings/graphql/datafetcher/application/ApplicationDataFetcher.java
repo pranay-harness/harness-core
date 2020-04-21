@@ -31,8 +31,10 @@ public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplicat
       application = persistence.get(Application.class, qlQuery.getApplicationId());
     }
     if (qlQuery.getName() != null) {
-      try (HIterator<Application> iterator = new HIterator<>(
-               persistence.createQuery(Application.class).filter(ApplicationKeys.name, qlQuery.getName()).fetch())) {
+      try (HIterator<Application> iterator = new HIterator<>(persistence.createQuery(Application.class)
+                                                                 .filter(ApplicationKeys.name, qlQuery.getName())
+                                                                 .filter(ApplicationKeys.accountId, accountId)
+                                                                 .fetch())) {
         if (iterator.hasNext()) {
           application = iterator.next();
         }
