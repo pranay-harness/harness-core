@@ -267,8 +267,12 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
             loadBalancerDetailsForBGDeployment.getStageTargetGroupName(),
             loadBalancerDetailsForBGDeployment.getStageTargetGroupArn()));
       }
-    } catch (Exception e) {
-      throw new WingsException("Failed while fetching TargetGroup Details", e);
+    } catch (NumberFormatException numberFormatEx) {
+      String errorMessage =
+          "Unable to fetch load balancer listener details. Please verify port numbers are entered correctly.";
+      throw new InvalidRequestException(errorMessage, numberFormatEx, WingsException.USER);
+    } catch (InvalidRequestException e) {
+      throw new InvalidRequestException("Failed while fetching TargetGroup Details", e, WingsException.USER);
     }
 
     return lbDetailsWithArnValues;
