@@ -236,6 +236,25 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
                 .endMetadata()
                 .build())
         .always();
+
+    server.expect()
+        .get()
+        .withPath("/api/v1/namespaces/ns1/pods/pod7")
+        .andReturn(200,
+            new PodBuilder()
+                .withNewMetadata()
+                .withUid("5fc261da-2aa3-40aa-aa09-2c785821580b")
+                .withName("pod7")
+                .withNamespace("ns1")
+                .withOwnerReferences(new OwnerReferenceBuilder()
+                                         .withKind("MyKind")
+                                         .withUid("445997f9-1606-4136-8990-4cee62c9cb11")
+                                         .withName("foobar")
+                                         .withController(true)
+                                         .build())
+                .endMetadata()
+                .build())
+        .always();
   }
 
   @Test
@@ -307,12 +326,25 @@ public class K8sWorkloadUtilsTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testWorkloadForJob() throws Exception {
-    Pod pod4 = server.getClient().pods().inNamespace("ns1").withName("pod6").get();
-    assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod4))
+    Pod pod6 = server.getClient().pods().inNamespace("ns1").withName("pod6").get();
+    assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod6))
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
                        .setKind("Job")
                        .setName("job2")
                        .setUid("4c26f640-d683-4024-992d-859b16c7f2d3")
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testWorkloadForCustomKind() throws Exception {
+    Pod pod7 = server.getClient().pods().inNamespace("ns1").withName("pod7").get();
+    assertThat(K8sWorkloadUtils.getTopLevelOwner(server.getClient(), pod7))
+        .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+                       .setKind("MyKind")
+                       .setName("foobar")
+                       .setUid("")
                        .build());
   }
 }
