@@ -56,7 +56,6 @@
         <excludedCategories />
         <extensions-version>2.4.3</extensions-version>
         <fastxml.version>2.7.9</fastxml.version>
-        <forkCount>4</forkCount>
         <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
@@ -1858,8 +1857,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.20.1</version>
                     <configuration>
-                        <argLine>-Xmx2048m</argLine>
-                        <forkCount>${forkCount}</forkCount>
+                        <forkCount>6</forkCount>
+                        <reuseForks>true</reuseForks>
                         <groups>${categories}</groups>
                         <excludedGroups>${excludedCategories}</excludedGroups>
                         <properties>
