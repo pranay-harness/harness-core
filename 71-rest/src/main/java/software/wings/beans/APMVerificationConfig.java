@@ -65,6 +65,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   private List<KeyValues> headersList;
   private List<KeyValues> optionsList;
   private List<KeyValues> additionalEncryptedFields;
+  @SchemaIgnore private Map<String, String> secretIdsToFieldNameMap = new HashMap<>();
 
   /**LogMLAnalysisRecord.java
    * Instantiates a new config.
@@ -162,13 +163,10 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       List<KeyValues> bodySecrets = getSecretNameIdKeyValueList(validationBody);
       List<KeyValues> urlSecrets = getSecretNameIdKeyValueList(validationUrl);
 
-      validationUrl = resolveSecretNameInUrlOrBody(validationUrl);
-      validationBody = resolveSecretNameInUrlOrBody(validationBody);
-
       return APMValidateCollectorConfig.builder()
           .baseUrl(url)
-          .url(validationUrl)
-          .body(validationBody)
+          .url(resolveSecretNameInUrlOrBody(validationUrl))
+          .body(resolveSecretNameInUrlOrBody(validationBody))
           .collectionMethod(validationMethod)
           .headers(headers)
           .options(options)
@@ -272,8 +270,8 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
     return encryptedDataDetails.size() > 0 ? encryptedDataDetails : null;
   }
 
-  // TODO won't work for vault
   public void encryptFields(SecretManager secretManager, boolean enabledConnectorsRefSecrets) {
+    secretIdsToFieldNameMap.clear();
     if (headersList != null) {
       headersList.stream()
           .filter(header -> header.encrypted)
@@ -282,6 +280,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             header.encryptedValue =
                 enabledConnectorsRefSecrets ? header.value : secretManager.encrypt(accountId, header.value, null);
             header.value = enabledConnectorsRefSecrets ? header.value : MASKED_STRING;
+            secretIdsToFieldNameMap.put(header.value, "header." + header.key);
           });
     }
 
@@ -293,8 +292,14 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             option.encryptedValue =
                 enabledConnectorsRefSecrets ? option.value : secretManager.encrypt(accountId, option.value, null);
             option.value = enabledConnectorsRefSecrets ? option.value : MASKED_STRING;
+            secretIdsToFieldNameMap.put(option.value, "option." + option.key);
           });
     }
+
+    List<KeyValues> bodySecrets = getSecretNameIdKeyValueList(validationBody);
+    bodySecrets.forEach(keyValues -> secretIdsToFieldNameMap.put(keyValues.encryptedValue, keyValues.key));
+    List<KeyValues> urlSecrets = getSecretNameIdKeyValueList(validationUrl);
+    urlSecrets.forEach(keyValues -> secretIdsToFieldNameMap.put(keyValues.encryptedValue, keyValues.key));
   }
 
   public String resolveSecretNameInUrlOrBody(String url) {

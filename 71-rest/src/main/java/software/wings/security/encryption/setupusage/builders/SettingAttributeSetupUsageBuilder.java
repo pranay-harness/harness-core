@@ -1,6 +1,7 @@
 package software.wings.security.encryption.setupusage.builders;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -47,17 +48,27 @@ public class SettingAttributeSetupUsageBuilder implements SecretSetupUsageBuilde
       settingAttribute.setEncryptedBy(encryptionDetail.getSecretManagerName());
       if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId())) {
         Set<EncryptedDataParent> parents = parentsByParentIds.get(settingAttribute.getUuid());
-        parents.forEach(parent -> {
-          List<Field> encryptedFields = settingAttribute.getValue().getEncryptedFields();
-          EncryptionReflectUtils.getFieldHavingFieldName(encryptedFields, parent.getFieldName()).ifPresent(field -> {
-            secretSetupUsages.add(SecretSetupUsage.builder()
-                                      .entityId(parent.getId())
-                                      .type(parent.getType())
-                                      .fieldName(SettingAttributeKeys.value.concat(".").concat(field.getName()))
-                                      .entity(settingAttribute)
-                                      .build());
+        if (settingAttribute.getValue().getSettingType() == APM_VERIFICATION) {
+          parents.forEach(parent
+              -> secretSetupUsages.add(SecretSetupUsage.builder()
+                                           .entityId(parent.getId())
+                                           .type(parent.getType())
+                                           .fieldName(parent.getFieldName())
+                                           .entity(settingAttribute)
+                                           .build()));
+        } else {
+          parents.forEach(parent -> {
+            List<Field> encryptedFields = settingAttribute.getValue().getEncryptedFields();
+            EncryptionReflectUtils.getFieldHavingFieldName(encryptedFields, parent.getFieldName()).ifPresent(field -> {
+              secretSetupUsages.add(SecretSetupUsage.builder()
+                                        .entityId(parent.getId())
+                                        .type(parent.getType())
+                                        .fieldName(SettingAttributeKeys.value.concat(".").concat(field.getName()))
+                                        .entity(settingAttribute)
+                                        .build());
+            });
           });
-        });
+        }
       } else {
         secretSetupUsages.add(SecretSetupUsage.builder()
                                   .entityId(settingAttribute.getUuid())

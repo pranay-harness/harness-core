@@ -133,7 +133,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
 
     settingAttribute.setValue(new APMVerificationConfig());
-    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
+    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
   }
 
   @Test

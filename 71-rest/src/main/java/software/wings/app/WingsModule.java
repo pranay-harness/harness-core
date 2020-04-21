@@ -313,6 +313,7 @@ import software.wings.service.impl.analysis.LogLabelingServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecordServiceImpl;
 import software.wings.service.impl.analysis.VerificationServiceImpl;
+import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
@@ -518,6 +519,7 @@ import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
 import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
+import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
@@ -1043,6 +1045,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(ServerlessInstanceStatService.class).to(ServerlessInstanceStatServiceImpl.class);
     bind(ServerlessDashboardService.class).to(ServerlessDashboardServiceImpl.class);
     bind(ScalyrService.class).to(ScalyrServiceImpl.class);
+    bind(ApmVerificationService.class).to(ApmVerificationServiceImpl.class);
 
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);

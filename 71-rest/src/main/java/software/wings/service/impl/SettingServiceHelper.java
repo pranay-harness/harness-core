@@ -5,6 +5,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFA
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -66,10 +67,11 @@ import java.util.Set;
 @Singleton
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
-  public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES = Sets.immutableEnumSet(AWS, AZURE, GCP,
-      KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA, PROMETHEUS, DATA_DOG, DYNA_TRACE,
-      CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ, JENKINS, BAMBOO, DOCKER, NEXUS, ARTIFACTORY, SMB,
-      SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO, HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW);
+  public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES =
+      Sets.immutableEnumSet(AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA,
+          PROMETHEUS, DATA_DOG, DYNA_TRACE, CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ,
+          APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS, ARTIFACTORY, SMB, SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO,
+          HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW);
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
