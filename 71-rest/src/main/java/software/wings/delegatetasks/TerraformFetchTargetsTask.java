@@ -6,6 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
@@ -17,6 +18,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
 import software.wings.helpers.ext.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.TerraformConfigInspectService;
@@ -53,9 +55,17 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
       if (isNotEmpty(parameters.getSourceRepoBranch())) {
         gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
-      GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
-          GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
-          parameters.getSourceRepoEncryptionDetails());
+      GitOperationContext gitOperationContext = null;
+      try {
+        gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
+            GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
+            parameters.getSourceRepoEncryptionDetails());
+      } catch (Exception e) {
+        return TerraformExecutionData.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage(TerraformTaskUtils.getGitExceptionMessageIfExists(e))
+            .build();
+      }
 
       String absoluteModulePath =
           gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, parameters.getScriptPath());

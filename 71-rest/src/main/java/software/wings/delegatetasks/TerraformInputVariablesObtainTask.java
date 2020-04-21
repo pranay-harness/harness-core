@@ -25,6 +25,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
 import software.wings.helpers.ext.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.TerraformConfigInspectService;
@@ -67,9 +68,19 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
         gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
 
-      GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
-          GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
-          parameters.getSourceRepoEncryptionDetails());
+      GitOperationContext gitOperationContext = null;
+      try {
+        gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
+            GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
+            parameters.getSourceRepoEncryptionDetails());
+      } catch (Exception ex) {
+        return TerraformInputVariablesTaskResponse.builder()
+            .terraformExecutionData(TerraformExecutionData.builder()
+                                        .executionStatus(ExecutionStatus.FAILED)
+                                        .errorMessage(TerraformTaskUtils.getGitExceptionMessageIfExists(ex))
+                                        .build())
+            .build();
+      }
 
       String absoluteModulePath =
           gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, parameters.getScriptPath());
