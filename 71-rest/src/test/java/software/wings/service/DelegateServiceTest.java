@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
@@ -116,6 +117,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.cdn.CdnConfig;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
@@ -196,6 +198,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private VersionInfoManager versionInfoManager;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ConfigurationController configurationController;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -947,9 +950,20 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotCheckForProfileIfManagerNotPrimary() {
+    when(configurationController.isNotPrimary()).thenReturn(Boolean.TRUE);
+    DelegateProfileParams delegateProfileParams = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
+
+    assertThat(delegateProfileParams).isNull();
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCheckForProfile() {
+    when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profile1").build();
     wingsPersistence.save(delegate);

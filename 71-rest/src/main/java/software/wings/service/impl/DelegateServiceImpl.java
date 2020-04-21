@@ -157,6 +157,7 @@ import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.cdn.CdnConfig;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -291,6 +292,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private DelegateDao delegateDao;
+  @Inject private ConfigurationController configurationController;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -1470,6 +1472,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateProfileParams checkForProfile(
       String accountId, String delegateId, String profileId, long lastUpdatedAt) {
+    if (configurationController.isNotPrimary()) {
+      return null;
+    }
+
     logger.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
