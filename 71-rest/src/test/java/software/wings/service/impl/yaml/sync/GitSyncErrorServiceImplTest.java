@@ -461,6 +461,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                    .alertData(GitConnectionErrorAlert.builder()
                                                   .message(errorMessage)
                                                   .branchName(branchName)
+                                                  .accountId(accountId)
                                                   .gitConnectorId(connectorId)
                                                   .build())
                                    .build();

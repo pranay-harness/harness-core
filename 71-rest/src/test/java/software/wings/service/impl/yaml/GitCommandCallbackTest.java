@@ -161,7 +161,11 @@ public class GitCommandCallbackTest extends CategoryTest {
     commandCallback.notify(map);
     verify(yamlGitService, times(1))
         .closeAlertForGitFailureIfOpen(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.GitConnectionError,
-            GitConnectionErrorAlert.builder().accountId(ACCOUNT_ID).build());
+            GitConnectionErrorAlert.builder()
+                .accountId(ACCOUNT_ID)
+                .gitConnectorId("gitConnectorId")
+                .branchName("branchName")
+                .build());
     verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, Status.FAILED);
   }
 

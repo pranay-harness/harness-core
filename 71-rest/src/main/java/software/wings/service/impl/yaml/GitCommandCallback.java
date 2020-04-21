@@ -124,8 +124,8 @@ public class GitCommandCallback implements NotifyCallback {
         }
 
         // close alert if GitConnectionErrorAlert is open as now connection was successful
-        yamlGitService.closeAlertForGitFailureIfOpen(accountId, GLOBAL_APP_ID, AlertType.GitConnectionError,
-            GitConnectionErrorAlert.builder().accountId(accountId).build());
+        yamlGitService.closeAlertForGitFailureIfOpen(
+            accountId, GLOBAL_APP_ID, AlertType.GitConnectionError, createGitConnectionErrorData(accountId));
 
         logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
             gitCommandExecutionResponse.getGitCommandStatus());
@@ -179,6 +179,14 @@ public class GitCommandCallback implements NotifyCallback {
         updateChangeSetFailureStatusSafely();
       }
     }
+  }
+
+  private GitConnectionErrorAlert createGitConnectionErrorData(String accountId) {
+    return GitConnectionErrorAlert.builder()
+        .accountId(accountId)
+        .gitConnectorId(gitConnectorId)
+        .branchName(branchName)
+        .build();
   }
 
   private GitSyncFailureAlertDetails getGitFailureDetailsFromGitResponse(
