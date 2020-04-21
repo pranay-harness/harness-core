@@ -163,7 +163,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class SecretManagerImpl implements SecretManager {
-  private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;]";
+  private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;.]";
   private static final String URL_ROOT_PREFIX = "//";
   // Prefix YAML ingestion generated secret names with this prefix
   private static final String YAML_PREFIX = "YAML_";
@@ -1405,8 +1405,8 @@ public class SecretManagerImpl implements SecretManager {
     String encryptedDataId;
 
     if (containsIllegalCharacters(name)) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Secret name '" + name + "' contains illegal characters", USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Secret name should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
     }
 
     char[] secretValue = isEmpty(value) ? null : value.toCharArray();
@@ -1844,8 +1844,8 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionType encryptionType;
 
     if (containsIllegalCharacters(name)) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Encrypted file name '" + name + "' contains illegal characters", USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Encrypted file name should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
     }
 
     if (isNotEmpty(uuid)) {
