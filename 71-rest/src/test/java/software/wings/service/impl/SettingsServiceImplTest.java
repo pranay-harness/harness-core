@@ -37,6 +37,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.yaml.YamlHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -187,13 +188,24 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     helmConnector.setValue(HttpHelmRepoConfig.builder()
                                .chartRepoUrl("http://stable-charts")
+                               .encryptedPassword(YamlHelper.ENCRYPTED_VALUE_STR)
+                               .accountId(ACCOUNT_ID)
+                               .build());
+    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
+    verify(secretManager, never())
+        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(usageRestrictionsService, times(3))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
+
+    helmConnector.setValue(HttpHelmRepoConfig.builder()
+                               .chartRepoUrl("http://stable-charts")
                                .encryptedPassword(PASSWORD)
                                .accountId(ACCOUNT_ID)
                                .build());
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
     verify(secretManager, times(1))
         .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
-    verify(usageRestrictionsService, times(2))
+    verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
   }
 }
