@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
@@ -144,6 +145,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
+import software.wings.yaml.YamlHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -444,8 +446,11 @@ public class SettingsServiceImpl implements SettingsService {
       SettingAttribute settingAttributeWithUsageRestrictions) {
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
-      List<String> secretIds = settingAttributeWithUsageRestrictions.fetchRelevantSecretIds();
-      Set<String> usedSecretIds = secretIds.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
+      List<String> secretIds = emptyIfNull(settingAttributeWithUsageRestrictions.fetchRelevantSecretIds());
+      Set<String> usedSecretIds =
+          secretIds.stream()
+              .filter(secretId -> isNotEmpty(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
+              .collect(Collectors.toSet());
 
       if (isNotEmpty(usedSecretIds)) {
         // Runtime check using intersection of usage scopes of secretIds.
