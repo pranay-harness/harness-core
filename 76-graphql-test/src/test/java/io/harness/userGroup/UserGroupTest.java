@@ -2,6 +2,7 @@ package io.harness.userGroup;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.beans.AccountType;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapConnectionSettings;
@@ -537,11 +537,9 @@ mutation{
 }
 */ UserGroupTest.class);
     String query = String.format(userGroupQueryPattern, "harnessUserGroup");
-    final Account account =
-        accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
-    UserGroup userGroup = userGroupHelper.createUserGroup(accountId, "harnessUserGroup", "sample user group");
+    UserGroup userGroup = userGroupHelper.createUserGroup(ACCOUNT_ID, "harnessUserGroup", "sample user group");
 
-    final QLTestObject qlUserGroupObject = qlExecute(query, account.getUuid());
+    final QLTestObject qlUserGroupObject = qlExecute(query, ACCOUNT_ID);
     assertThat(qlUserGroupObject.get(QLUserGroupKeys.name)).isEqualTo(userGroup.getName());
     assertThat(qlUserGroupObject.get(QLUserGroupKeys.description)).isEqualTo(userGroup.getDescription());
   }

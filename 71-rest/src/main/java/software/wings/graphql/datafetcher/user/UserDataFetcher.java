@@ -29,8 +29,10 @@ public class UserDataFetcher extends AbstractObjectDataFetcher<QLUser, QLUserQue
       user = persistence.get(User.class, qlQuery.getId());
     }
     if (qlQuery.getName() != null) {
-      try (HIterator<User> iterator =
-               new HIterator<>(persistence.createQuery(User.class).filter(UserKeys.name, qlQuery.getName()).fetch())) {
+      try (HIterator<User> iterator = new HIterator<>(persistence.createQuery(User.class)
+                                                          .filter(UserKeys.name, qlQuery.getName())
+                                                          .filter(UserKeys.accounts, accountId)
+                                                          .fetch())) {
         if (iterator.hasNext()) {
           user = iterator.next();
         }
