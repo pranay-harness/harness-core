@@ -283,20 +283,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testInValidInitialDelay_Minutes() throws Exception {
-    YamlUtils yamlUtils = new YamlUtils();
-    String yamlStr =
-        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
-    List<APMVerificationState.MetricCollectionInfo> mcInfo =
-        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
-    apmVerificationState.setMetricCollectionInfos(mcInfo);
-    apmVerificationState.setInitialAnalysisDelay("40m");
-    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isTrue();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
   public void testValidInitialDelay_Seconds() throws Exception {
     YamlUtils yamlUtils = new YamlUtils();
     String yamlStr =
@@ -319,7 +305,9 @@ public class APMVerificationStateTest extends WingsBaseTest {
         yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
     apmVerificationState.setMetricCollectionInfos(mcInfo);
     apmVerificationState.setInitialAnalysisDelay("500s");
-    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isTrue();
+    // Now value is hard coded to DELAY_MINUTES
+    // https://harness.atlassian.net/browse/CV-3902
+    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isFalse();
   }
 
   @Test
