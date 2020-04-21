@@ -4,6 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
@@ -37,6 +38,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
@@ -237,6 +239,32 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
                     .build()))
             .build();
     assertThat(spotInstSetupTaskHandler.generateFinalJson(parameters, "newName")).isEqualTo(newJsonConfig);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalForBlueGreenThrowsException() throws Exception {
+    String loadBalancerName = "LOAD_BALANCER_NAME";
+
+    SpotInstSetupTaskParameters parameters =
+        SpotInstSetupTaskParameters.builder()
+            .blueGreen(true)
+            .elastiGroupNamePrefix("foo")
+            .elastiGroupJson("JSON")
+            .image("ami-id")
+            .awsLoadBalancerConfigs(Collections.singletonList(LoadBalancerDetailsForBGDeployment.builder()
+                                                                  .loadBalancerName(loadBalancerName)
+                                                                  .prodListenerPort("H80")
+                                                                  .stageListenerPort("H80")
+                                                                  .build()))
+            .build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+
+    SpotInstTaskExecutionResponse response = spotInstSetupTaskHandler.executeTaskInternalForBlueGreen(
+        parameters, "SPOTINST_ACCOUNT_ID", "TOKEN", AwsConfig.builder().build(), mockCallback);
   }
 
   @Test
