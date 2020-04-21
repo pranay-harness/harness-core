@@ -49,20 +49,31 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
       UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
 
       Instant instant = instanceEvent.getTimestamp();
+      boolean updateRequired = false;
       switch (instanceEvent.getType()) {
         case STOP:
-          updateOperations.set(InstanceDataKeys.usageStopTime, instant);
-          updateOperations.set(InstanceDataKeys.instanceState, InstanceState.STOPPED);
+          if (null == instanceData.getUsageStopTime()) {
+            updateOperations.set(InstanceDataKeys.usageStopTime, instant);
+            updateOperations.set(InstanceDataKeys.instanceState, InstanceState.STOPPED);
+            updateRequired = true;
+          }
           break;
         case START:
-          updateOperations.set(InstanceDataKeys.usageStartTime, instant);
-          updateOperations.set(InstanceDataKeys.instanceState, InstanceState.RUNNING);
+          if (null == instanceData.getUsageStartTime()) {
+            updateOperations.set(InstanceDataKeys.usageStartTime, instant);
+            updateOperations.set(InstanceDataKeys.instanceState, InstanceState.RUNNING);
+            updateRequired = true;
+          }
           break;
         default:
           break;
       }
-      FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
-      return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+      if (updateRequired) {
+        FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
+        return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+      } else {
+        return instanceData;
+      }
     } else {
       logger.warn("Instance Event received before info event {}", instanceEvent.getInstanceId());
     }
