@@ -76,19 +76,20 @@ public class SettingServiceHelper {
   @Inject private FeatureFlagService featureFlagService;
 
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
+    if (settingAttribute == null) {
+      return false;
+    }
     // Only use referenced secrets feature if the feature flag is on and the setting attribute type supports it.
-    if (settingAttribute == null || settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
+    if (settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
         || settingAttribute.getValue().getSettingType() == null
-        || !featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())) {
+        || !featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())
+        || !ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType())) {
+      settingAttribute.setSecretsMigrated(false);
       return false;
     }
 
-    if (ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType())) {
-      settingAttribute.setSecretsMigrated(true);
-      return true;
-    }
-    settingAttribute.setSecretsMigrated(false);
-    return false;
+    settingAttribute.setSecretsMigrated(true);
+    return true;
   }
 
   public void updateEncryptedFieldsInResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
