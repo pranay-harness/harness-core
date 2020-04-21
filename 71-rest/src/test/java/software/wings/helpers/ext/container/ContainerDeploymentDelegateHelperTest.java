@@ -125,18 +125,13 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testRetrieveOpenIdAccessToken_ExceptionTest() throws Exception {
-    doThrow(new InvalidRequestException("")).when(oidcTokenRetriever).getAccessToken(any());
+    doThrow(new InvalidRequestException("abc")).when(oidcTokenRetriever).getAccessToken(any());
 
     try {
       containerDeploymentDelegateHelper.retrieveOpenIdAccessToken(OidcTokenRequestData.builder().build());
     } catch (Exception e) {
       assertThat(e instanceof InvalidRequestException).isTrue();
-    }
-
-    try {
-      containerDeploymentDelegateHelper.retrieveOpenIdAccessToken(OidcTokenRequestData.builder().build());
-    } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
+      assertThat(e.getMessage()).isEqualTo("Failed to fetch OpenId Access Token. Invalid request: abc");
     }
   }
 

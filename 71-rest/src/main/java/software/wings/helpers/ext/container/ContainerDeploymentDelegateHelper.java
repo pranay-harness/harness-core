@@ -232,7 +232,7 @@ public class ContainerDeploymentDelegateHelper {
 
     if (ex != null) {
       throw new InvalidRequestException(
-          "Failed to fetch OpenId Access Token" + ExceptionUtils.getMessage(ex), ex, WingsException.USER);
+          "Failed to fetch OpenId Access Token. " + ExceptionUtils.getMessage(ex), ex, WingsException.USER);
     }
     return accessToken;
   }
