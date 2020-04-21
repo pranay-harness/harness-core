@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface Encrypted {
   boolean value() default true;
   String fieldName();
+  boolean isReference() default false;
 }

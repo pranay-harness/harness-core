@@ -6,12 +6,15 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.encryption.EncryptionType.KMS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.security.UserThreadLocal.userGuard;
+import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -27,6 +30,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.rule.Owner;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,10 +43,13 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -50,9 +57,12 @@ import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -67,6 +77,7 @@ import javax.ws.rs.core.UriInfo;
  *
  * @author Rishi
  */
+@Slf4j
 public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
@@ -595,6 +606,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       String rand = String.valueOf(Math.random());
       String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
+      User user = User.Builder.anUser().uuid("uuid").email("admin@harness.io").name("admin").build();
+      UserThreadLocal.userGuard(user);
       JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                         .jenkinsUrl("https://jenkins.wings.software")
                                         .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
@@ -620,6 +633,10 @@ public class WingsPersistenceTest extends WingsBaseTest {
       encryptionService.decrypt((EncryptableSetting) result.getValue(),
           secretManager.getEncryptionDetails((EncryptableSetting) result.getValue(), null, null));
       assertThat(new String(((JenkinsConfig) result.getValue()).getPassword())).isEqualTo(password);
+
+      wingsPersistence.delete(settingAttribute);
+      result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+      assertThat(result).isNull();
     }
   }
 
@@ -679,6 +696,123 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(password).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void shouldStoreAndUpdateEncryptedConfigValue() {
+    String rand = String.valueOf(Math.random());
+    String secretId = wingsPersistence.save(EncryptedData.builder()
+                                                .encryptionType(KMS)
+                                                .encryptionKey("key")
+                                                .encryptedValue("value".toCharArray())
+                                                .kmsId("kmsId")
+                                                .name("name")
+                                                .type(JENKINS)
+                                                .build());
+    char[] password = "amazonkms:".concat(secretId).toCharArray();
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.ENCRYPTED_TEXT)
+                                          .build();
+    serviceVariable.setAppId("myapp");
+
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(secretId).isEqualTo(result.getEncryptedValue());
+    assertThat(result.getValue()).isNull();
+
+    char[] newPassword = "foo".toCharArray();
+    Map<String, Object> updateMap = new HashMap<>();
+    updateMap.put(ServiceVariableKeys.value, newPassword);
+    updateMap.put(ServiceVariableKeys.type, result.getType());
+
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariableId, updateMap);
+
+    result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(newPassword).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void shouldStoreAndUpdateEncryptedConfigValueUsingSave() {
+    String rand = String.valueOf(Math.random());
+    char[] password = "bar".toCharArray();
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.ENCRYPTED_TEXT)
+                                          .build();
+    serviceVariable.setAppId("myapp");
+
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(password).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+
+    char[] newPassword = "foo".toCharArray();
+    serviceVariable.setValue(newPassword);
+    wingsPersistence.save(serviceVariable);
+    result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(newPassword).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+
+    char[] updatedPassword = "joe".toCharArray();
+    serviceVariable.setValue(updatedPassword);
+    serviceVariable.setName("abc");
+    serviceVariable.setUuid("uuid");
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(serviceVariable));
+    result = wingsPersistence.get(ServiceVariable.class, "uuid");
+    logger.info(result.getName());
+    assertThat(updatedPassword).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void shouldStoreAndRemoveEncryptedConfigValue() {
+    String rand = String.valueOf(Math.random());
+    char[] password = "bar".toCharArray();
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.ENCRYPTED_TEXT)
+                                          .build();
+    serviceVariable.setAppId("myapp");
+
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(password).isEqualTo(result.getEncryptedValue().toCharArray());
+    assertThat(result.getValue()).isNull();
+
+    Set<String> fieldsToRemove = new HashSet<>();
+    fieldsToRemove.add(ServiceVariableKeys.value);
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariableId, new HashMap<>(), fieldsToRemove);
+
+    result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(result.getEncryptedValue()).isNull();
+    assertThat(result.getValue()).isNull();
   }
 
   @Test

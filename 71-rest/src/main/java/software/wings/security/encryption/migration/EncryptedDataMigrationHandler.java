@@ -6,6 +6,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
+@Singleton
 public class EncryptedDataMigrationHandler implements Handler<EncryptedData> {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptedDataMigrator encryptedDataMigrator;
@@ -39,7 +41,7 @@ public class EncryptedDataMigrationHandler implements Handler<EncryptedData> {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("EncryptedDataParentMigrationHandler")
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofSeconds(10))
             .build(),
         EncryptedData.class,

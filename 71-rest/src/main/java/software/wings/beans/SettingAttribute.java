@@ -127,6 +127,8 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
   private boolean sample;
 
   @Indexed private Long nextIteration;
+  @Indexed private Long nextSecretMigrationIteration;
+  @Indexed private boolean secretsMigrated;
   private String connectivityError;
 
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;
@@ -135,12 +137,26 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
+    if (SettingAttributeKeys.nextIteration.equals(fieldName)) {
+      return nextIteration;
+    }
+    if (SettingAttributeKeys.nextSecretMigrationIteration.equals(fieldName)) {
+      return nextSecretMigrationIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
-    this.nextIteration = nextIteration;
+    if (SettingAttributeKeys.nextIteration.equals(fieldName)) {
+      this.nextIteration = nextIteration;
+      return;
+    }
+    if (SettingAttributeKeys.nextSecretMigrationIteration.equals(fieldName)) {
+      this.nextSecretMigrationIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   public enum SettingCategory {

@@ -3,6 +3,7 @@ package io.harness.reflection;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -178,5 +179,16 @@ public class ReflectionUtilsTest extends CategoryTest {
     assertThat(fieldValues).hasSize(2);
     assertThat(fieldValues.get("field")).isEqualTo("val1");
     assertThat(fieldValues.get("annotatedField")).isEqualTo("val2");
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void shouldGetFieldValue() {
+    Field dummy = Field.builder().field("val1").annotatedField("val2").build();
+    java.lang.reflect.Field dummyField = ReflectionUtils.getFieldByName(dummy.getClass(), "field");
+    Object object = ReflectionUtils.getFieldValue(dummy, dummyField);
+    assertThat(object).isNotNull();
+    assertThat((String) object).isEqualTo("val1");
   }
   }

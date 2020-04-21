@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -10,17 +13,21 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
+import java.util.Random;
 
 public class SettingAttributeTest extends CategoryTest {
   private static final String PASSWORD = "password";
   private static final String TOKEN = "token";
+  private static final Random random = new Random();
 
   @Test
   @Owner(developers = GARVIT)
@@ -176,6 +183,39 @@ public class SettingAttributeTest extends CategoryTest {
                     .fetchRelevantSecretIds();
     assertThat(secretIds).isNotNull();
     assertThat(secretIds).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testEncryptedDataMigrationIteration() throws IllegalAccessException {
+    long nextSecretMigrationIteration = random.nextLong();
+    SettingAttribute settingAttribute =
+        prepareSettingAttribute(GitConfig.builder().keyAuth(false).encryptedPassword(PASSWORD).build());
+    FieldUtils.writeField(
+        settingAttribute, SettingAttributeKeys.nextSecretMigrationIteration, nextSecretMigrationIteration, true);
+    assertThat(settingAttribute.obtainNextIteration(SettingAttributeKeys.nextSecretMigrationIteration))
+        .isEqualTo(nextSecretMigrationIteration);
+
+    nextSecretMigrationIteration = random.nextLong();
+    settingAttribute.updateNextIteration(
+        SettingAttributeKeys.nextSecretMigrationIteration, nextSecretMigrationIteration);
+    assertThat(settingAttribute.obtainNextIteration(SettingAttributeKeys.nextSecretMigrationIteration))
+        .isEqualTo(nextSecretMigrationIteration);
+
+    try {
+      settingAttribute.updateNextIteration(generateUuid(), random.nextLong());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    try {
+      settingAttribute.obtainNextIteration(generateUuid());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
   }
 
   private SettingAttribute prepareSettingAttribute(SettingValue value) {
