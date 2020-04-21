@@ -24,6 +24,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 
@@ -42,7 +43,9 @@ import java.util.Map;
 @Slf4j
 public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware, AccountAccess {
   @Id private String uuid;
-  private long createdAt;
+
+  // Delete after 14 days
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 14 * 24 * 60 * 60)) private long createdAt;
 
   private final long occurredAt;
   private final String accountId;
