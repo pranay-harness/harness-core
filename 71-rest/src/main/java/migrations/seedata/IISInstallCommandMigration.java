@@ -10,6 +10,7 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_IN
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import migrations.SeedDataMigration;
 import org.slf4j.Logger;
 import software.wings.beans.template.TemplateType;
@@ -30,8 +31,13 @@ public class IISInstallCommandMigration implements SeedDataMigration {
   }
 
   public void loadNewIISTemplatesToAccounts() {
-    templateService.loadDefaultTemplates(asList(POWER_SHELL_IIS_WEBSITE_INSTALL_PATH, POWER_SHELL_IIS_APP_INSTALL_PATH),
-        GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    try {
+      templateService.loadDefaultTemplates(
+          asList(POWER_SHELL_IIS_WEBSITE_INSTALL_PATH, POWER_SHELL_IIS_APP_INSTALL_PATH), GLOBAL_ACCOUNT_ID,
+          HARNESS_GALLERY);
+    } catch (WingsException e) {
+      logger.info("Default Template already exists in global gallery", e);
+    }
 
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(POWER_SHELL_COMMANDS, TemplateType.SSH,
         INSTALL_IIS_APPLICATION_TEMPLATE_NAME, POWER_SHELL_IIS_APP_INSTALL_PATH);
