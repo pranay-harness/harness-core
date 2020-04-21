@@ -46,13 +46,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ImportedTemplateServiceImpl implements ImportedTemplateService {
-  @Inject WingsPersistence wingsPersistence;
-  @Inject TemplateService templateService;
-  @Inject TemplateVersionService templateVersionService;
-  @Inject TemplateGalleryService templateGalleryService;
-  @Inject YamlHandlerFactory yamlHandlerFactory;
-  @Inject TemplateGalleryHelper templateGalleryHelper;
-  private CommandLibraryServiceHttpClient serviceHttpClient;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private TemplateService templateService;
+  @Inject private TemplateVersionService templateVersionService;
+  @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private TemplateGalleryHelper templateGalleryHelper;
+  @Inject private CommandLibraryServiceHttpClient serviceHttpClient;
 
   @Override
   public boolean isImported(String templateId, String accountId) {

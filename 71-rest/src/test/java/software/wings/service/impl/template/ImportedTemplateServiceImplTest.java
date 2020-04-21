@@ -31,7 +31,6 @@ import software.wings.service.intfc.template.TemplateVersionService;
 
 public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
   @Inject private TemplateGalleryService templateGalleryService;
-  //    @Inject private WingsPersistence wingsPersistence;
   @Inject TemplateService templateService;
   @Inject TemplateFolderService templateFolderService;
   @Spy @Inject private ImportedTemplateServiceImpl importedTemplateService;
