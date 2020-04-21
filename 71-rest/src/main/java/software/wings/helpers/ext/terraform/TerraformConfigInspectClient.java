@@ -7,8 +7,6 @@ import java.util.Collection;
  */
 public interface TerraformConfigInspectClient {
   enum BLOCK_TYPE { VARIABLES, MANAGED_RESOURCES, DIAGNOSTICS, DETAIL, SEVERITY, POS, FILENAME, LINE, SUMMARY }
-  ;
   enum ERROR_TYPE { ERROR, WARNING }
-  ;
   Collection<String> parseFieldsUnderBlock(String Directory, String category);
 }

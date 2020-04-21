@@ -52,6 +52,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
+import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
@@ -171,7 +172,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(ExceptionUtils.getMessage(ex))
+          .errorMessage(TerraformTaskUtils.getGitExceptionMessageIfExists(ex))
           .build();
     }
     String workingDir = resolveWorkingDir(parameters.getAccountId(), parameters.getEntityId());
