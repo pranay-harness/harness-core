@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({EncryptedDataAwsToGcpKmsMigrationHandler.class, PersistenceIteratorFactory.class})
+@PrepareForTest({PersistenceIteratorFactory.class})
 @PowerMockIgnore({"javax.net.*"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @FieldDefaults(level = AccessLevel.PRIVATE)
