@@ -71,6 +71,28 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setOptionsList(options);
     apmVerificationConfig.setAccountId("111");
+
+    int numOfUrlSecrets = 5;
+    int numOfBodySecrets = 7;
+
+    List<String> bodySecrets = new ArrayList<>();
+    String validationBody = "{body}";
+    for (int i = 0; i < numOfBodySecrets; i++) {
+      String secretId = generateUuid();
+      validationBody += "&token" + i + "=${secretRef:secretBodyName-" + i + "," + secretId + "}";
+      bodySecrets.add(secretId);
+    }
+    apmVerificationConfig.setValidationBody(validationBody);
+
+    List<String> urlSecrets = new ArrayList<>();
+    String validationUrl = "validatiobUrl?";
+    for (int i = 0; i < numOfUrlSecrets; i++) {
+      String secretId = generateUuid();
+      validationUrl += "&token" + i + "=${secretRef:secretUrlName-" + i + "," + secretId + "}";
+      urlSecrets.add(secretId);
+    }
+    apmVerificationConfig.setValidationUrl(validationUrl);
+
     apmVerificationConfig.encryptFields(secretManager, true);
 
     assertThat(apmVerificationConfig.getHeadersList()).hasSize(2);
@@ -82,6 +104,21 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     assertThat(apmVerificationConfig.getOptionsList().get(0).getValue()).isEqualTo(optionSecretRef);
     assertThat(apmVerificationConfig.getOptionsList().get(0).getEncryptedValue()).isEqualTo(optionSecretRef);
     assertThat(apmVerificationConfig.getOptionsList().get(1).getValue()).isEqualTo("321");
+
+    assertThat(apmVerificationConfig.getSecretIdsToFieldNameMap().size())
+        .isEqualTo(numOfBodySecrets + numOfUrlSecrets + 2);
+
+    Map<String, String> expectedSecretIdsToFieldNameMap = new HashMap<>();
+    for (int i = 0; i < numOfBodySecrets; i++) {
+      expectedSecretIdsToFieldNameMap.put(bodySecrets.get(i), "secretBodyName-" + i);
+    }
+    for (int i = 0; i < numOfUrlSecrets; i++) {
+      expectedSecretIdsToFieldNameMap.put(urlSecrets.get(i), "secretUrlName-" + i);
+    }
+    expectedSecretIdsToFieldNameMap.put(headerSecretRef, "header.api_key");
+    expectedSecretIdsToFieldNameMap.put(optionSecretRef, "option.option_key");
+
+    assertThat(apmVerificationConfig.getSecretIdsToFieldNameMap()).isEqualTo(expectedSecretIdsToFieldNameMap);
   }
 
   @Test

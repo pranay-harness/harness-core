@@ -80,6 +80,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
@@ -134,6 +135,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -201,6 +203,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AlertService alertService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private ApmVerificationService apmVerificationService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
@@ -567,6 +570,11 @@ public class SettingsServiceImpl implements SettingsService {
             AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
       }
     }
+
+    if (settingServiceHelper.hasReferencedSecrets(settingAttribute)
+        && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
+      apmVerificationService.addParents(settingAttribute);
+    }
     return createdSettingAttribute;
   }
 
@@ -817,6 +825,11 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     SettingAttribute savedSettingAttributes = get(settingAttribute.getUuid());
+    Map<String, String> existingSecretRefsForApm = new HashMap<>();
+    if (referencesSecrets && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
+      existingSecretRefsForApm =
+          new HashMap<>(((APMVerificationConfig) savedSettingAttributes.getValue()).getSecretIdsToFieldNameMap());
+    }
 
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
@@ -855,6 +868,10 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build(), fieldsToRemove);
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    if (referencesSecrets && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
+      apmVerificationService.updateParents(updatedSettingAttribute, existingSecretRefsForApm);
+    }
+
     if (!shouldBeSynced(settingAttribute, true)) {
       auditServiceHelper.reportForAuditingUsingAccountId(
           settingAttribute.getAccountId(), existingSetting, updatedSettingAttribute, Type.UPDATE);

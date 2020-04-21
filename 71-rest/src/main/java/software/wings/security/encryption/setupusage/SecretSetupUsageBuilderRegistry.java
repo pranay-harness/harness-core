@@ -63,6 +63,8 @@ class SecretSetupUsageBuilderRegistry {
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.HTTP_HELM_REPO, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
     registeredSecretSetupUsageBuilders.put(
         SettingVariableTypes.AZURE_ARTIFACTS_PAT, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
+    registeredSecretSetupUsageBuilders.put(
+        SettingVariableTypes.APM_VERIFICATION, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
 
     registeredSecretSetupUsageBuilders.put(
         SettingVariableTypes.AWS_SECRETS_MANAGER, SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER);
