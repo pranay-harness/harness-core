@@ -4,8 +4,42 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_ARTIFACTS_PAT;
+import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CLOUD_WATCH;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG_LOG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DYNA_TRACE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.INSTANA;
+import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.JIRA;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.LOGZ;
+import static software.wings.settings.SettingValue.SettingVariableTypes.NEW_RELIC;
+import static software.wings.settings.SettingValue.SettingVariableTypes.NEXUS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PCF;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PROMETHEUS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICENOW;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SFTP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SMB;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SPOT_INST;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,15 +55,21 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
+  public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES = Sets.immutableEnumSet(AWS, AZURE, GCP,
+      KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA, PROMETHEUS, DATA_DOG, DYNA_TRACE,
+      CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ, JENKINS, BAMBOO, DOCKER, NEXUS, ARTIFACTORY, SMB,
+      SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO, HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW);
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
@@ -38,50 +78,17 @@ public class SettingServiceHelper {
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
     // Only use referenced secrets feature if the feature flag is on and the setting attribute type supports it.
     if (settingAttribute == null || settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
+        || settingAttribute.getValue().getSettingType() == null
         || !featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())) {
       return false;
     }
 
-    if (SettingAttribute.SettingCategory.CLOUD_PROVIDER == settingAttribute.getCategory()) {
+    if (ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType())) {
+      settingAttribute.setSecretsMigrated(true);
       return true;
     }
-
-    if (verificationProvider(settingAttribute.getValue())) {
-      return true;
-    }
-
-    if (isConnectorCategory(settingAttribute.getCategory())) {
-      SettingValue.SettingVariableTypes settingVariableTypes = settingAttribute.getValue().getSettingType();
-      return isArtifactServer(settingVariableTypes) || isSourceRepoProvider(settingVariableTypes)
-          || isCollaborationProvider(settingVariableTypes);
-    }
-
+    settingAttribute.setSecretsMigrated(false);
     return false;
-  }
-
-  private boolean verificationProvider(SettingValue settingValue) {
-    if (settingValue == null || settingValue.getSettingType() == null) {
-      return false;
-    }
-
-    switch (settingValue.getSettingType()) {
-      case APP_DYNAMICS:
-      case NEW_RELIC:
-      case INSTANA:
-      case DYNA_TRACE:
-      case PROMETHEUS:
-      case DATA_DOG:
-      case CLOUD_WATCH:
-      case DATA_DOG_LOG:
-      case BUG_SNAG:
-      case ELK:
-      case SPLUNK:
-      case SUMO:
-      case LOGZ:
-        return true;
-      default:
-        return false;
-    }
   }
 
   public void updateEncryptedFieldsInResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
@@ -208,11 +215,11 @@ public class SettingServiceHelper {
     }
   }
 
-  public boolean isConnectorCategory(SettingAttribute.SettingCategory settingCategory) {
+  boolean isConnectorCategory(SettingAttribute.SettingCategory settingCategory) {
     return settingCategory == CONNECTOR || settingCategory == HELM_REPO || settingCategory == AZURE_ARTIFACTS;
   }
 
-  public boolean isArtifactServer(SettingValue.SettingVariableTypes settingVariableTypes) {
+  boolean isArtifactServer(SettingValue.SettingVariableTypes settingVariableTypes) {
     switch (settingVariableTypes) {
       case JENKINS:
       case BAMBOO:
@@ -225,21 +232,6 @@ public class SettingServiceHelper {
       case GCS_HELM_REPO:
       case HTTP_HELM_REPO:
       case AZURE_ARTIFACTS_PAT:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  public boolean isSourceRepoProvider(SettingValue.SettingVariableTypes settingVariableTypes) {
-    return settingVariableTypes == GIT;
-  }
-
-  public boolean isCollaborationProvider(SettingValue.SettingVariableTypes settingVariableTypes) {
-    switch (settingVariableTypes) {
-      case SMTP:
-      case JIRA:
-      case SERVICENOW:
         return true;
       default:
         return false;

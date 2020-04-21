@@ -98,7 +98,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
   @EntityName(charSetString = ALLOWED_CHARS_SERVICE_VARIABLE_STRING, message = ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE)
   private String name;
 
-  @Encrypted(fieldName = "value") private char[] value;
+  @Encrypted(fieldName = "value", isReference = true) private char[] value;
 
   private Type type;
 

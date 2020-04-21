@@ -553,7 +553,10 @@ public class SecretManagerImplTest extends WingsBaseTest {
         encryptedData1.getUuid());
 
     encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
-    assertThat(encryptedData.getParents()).hasSize(3);
+    assertThat(encryptedData.getParents()).hasSize(2);
+
+    encryptedData1 = wingsPersistence.get(EncryptedData.class, secretId1);
+    assertThat(encryptedData1.getParents()).hasSize(1);
 
     Set<SecretSetupUsage> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(usages).isNotNull();

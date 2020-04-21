@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import io.harness.configuration.DeployMode;
 import io.harness.persistence.HPersistence;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -30,12 +31,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 @Slf4j
@@ -75,15 +76,33 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
+  public void enableGlobally(FeatureName featureName) {
+    logger.info("Enabling feature name :[{}] globally", featureName.name());
+    Query<FeatureFlag> query =
+        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
+    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
+                                                         .setOnInsert(FeatureFlagKeys.name, featureName.name())
+                                                         .setOnInsert(FeatureFlagKeys.uuid, generateUuid())
+                                                         .setOnInsert(FeatureFlagKeys.obsolete, Boolean.FALSE)
+                                                         .set(FeatureFlagKeys.enabled, Boolean.TRUE);
+    FeatureFlag featureFlag =
+        wingsPersistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    synchronized (cache) {
+      cache.put(featureName, featureFlag);
+    }
+    logger.info("Enabled feature name :[{}] globally", featureName.name());
+  }
+
+  @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {
-      logger.error("FeatureFlag {} is not global", featureName.name(), new Exception(""));
+      logger.warn("FeatureFlag {} is not global", featureName.name(), new Exception(""));
     }
     return isEnabled(featureName, null);
   }
 
   @Override
-  public Optional<FeatureFlag> getFeatureFlag(@NotNull FeatureName featureName) {
+  public Optional<FeatureFlag> getFeatureFlag(@NonNull FeatureName featureName) {
     FeatureFlag featureFlag;
     synchronized (cache) {
       // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
@@ -104,7 +123,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
-  public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
+  public boolean isEnabled(@NonNull FeatureName featureName, String accountId) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
 
     if (featureFlagOptional.isPresent()) {
@@ -129,6 +148,18 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     }
 
     return false;
+  }
+
+  @Override
+  public Set<String> getAccountIds(@NonNull FeatureName featureName) {
+    FeatureFlag featureFlag = getFeatureFlag(featureName).orElse(null);
+    if (featureFlag == null || isEmpty(featureFlag.getAccountIds())) {
+      return new HashSet<>();
+    }
+    if (featureName.getScope() == Scope.GLOBAL) {
+      logger.warn("FeatureFlag {} is global, should not have accountIds", featureName.name(), new Exception(""));
+    }
+    return featureFlag.getAccountIds();
   }
 
   @Override

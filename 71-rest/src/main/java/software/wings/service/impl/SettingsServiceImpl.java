@@ -821,6 +821,8 @@ public class SettingsServiceImpl implements SettingsService {
       fields.put("usageRestrictions", settingAttribute.getUsageRestrictions());
     }
 
+    fields.put(SettingAttributeKeys.secretsMigrated, settingAttribute.isSecretsMigrated());
+
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof EncryptableSetting) {
         ((EncryptableSetting) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());

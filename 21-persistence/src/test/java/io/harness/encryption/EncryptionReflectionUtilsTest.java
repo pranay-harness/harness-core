@@ -18,6 +18,7 @@ import java.util.Optional;
 public class EncryptionReflectionUtilsTest {
   private static final String ANNOTATION_FIELD_NAME = "test_annotation";
   @Encrypted(fieldName = ANNOTATION_FIELD_NAME) private String value;
+  @Encrypted(fieldName = "test", isReference = true) private String key;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -43,5 +44,29 @@ public class EncryptionReflectionUtilsTest {
         EncryptionReflectUtils.getFieldHavingFieldName(Collections.singletonList(annotatedField), ANNOTATION_FIELD_NAME)
             .<RuntimeException>orElseThrow(() -> { throw new RuntimeException("Field should not be null"); });
     assertThat(field.getName()).isEqualTo(EncryptionReflectionUtilsTestKeys.value);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testIsSecretReference_shouldReturnTrue() {
+    Optional<Field> annotatedFieldOptional = Optional.ofNullable(
+        ReflectionUtils.getFieldByName(EncryptionReflectionUtilsTest.class, EncryptionReflectionUtilsTestKeys.key));
+    Field annotatedField = annotatedFieldOptional.<RuntimeException>orElseThrow(
+        () -> { throw new RuntimeException("Field should not be null"); });
+    boolean isReference = EncryptionReflectUtils.isSecretReference(annotatedField);
+    assertThat(isReference).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testIsSecretReference_shouldReturnFalse() {
+    Optional<Field> annotatedFieldOptional = Optional.ofNullable(
+        ReflectionUtils.getFieldByName(EncryptionReflectionUtilsTest.class, EncryptionReflectionUtilsTestKeys.value));
+    Field annotatedField = annotatedFieldOptional.<RuntimeException>orElseThrow(
+        () -> { throw new RuntimeException("Field should not be null"); });
+    boolean isReference = EncryptionReflectUtils.isSecretReference(annotatedField);
+    assertThat(isReference).isFalse();
   }
 }

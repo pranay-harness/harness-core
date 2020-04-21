@@ -2,19 +2,18 @@ package software.wings.dl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.encryption.EncryptionReflectUtils.getDecryptedField;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
+import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.utils.WingsReflectionUtils.buildSecretIdsToParentsMap;
+import static software.wings.utils.WingsReflectionUtils.fetchSecretParentsUpdateDetailList;
+import static software.wings.utils.WingsReflectionUtils.getEncryptableSetting;
 import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -24,7 +23,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.EncryptDecryptException;
@@ -38,6 +36,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.reflection.ReflectionUtils;
+import lombok.NonNull;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -57,6 +56,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.SecretParentsUpdateDetail;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -67,6 +67,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -95,9 +96,13 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T extends PersistentEntity> String save(T object) {
-    encryptIfNecessary(object);
+    Optional<T> savedObjectOptional = getSavedEntity(object);
+    T savedEntity = savedObjectOptional.orElse(null);
+    boolean isEncryptable = encryptIfNecessary(object, savedEntity);
     String key = super.save(object);
-    updateParentIfNecessary(object, key);
+    if (key != null && isEncryptable) {
+      updateEncryptionReferencesIfNecessary(object, key, savedEntity);
+    }
     return key;
   }
 
@@ -106,7 +111,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
       T t = iterator.next();
       if (t != null) {
-        this.encryptIfNecessary(t);
+        encryptIfNecessary(t, null);
       }
     }
 
@@ -143,77 +148,71 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
     Query<T> query = datastore.createQuery(cls).filter(ID_KEY, entityId);
     UpdateOperations<T> operations = datastore.createUpdateOperations(cls);
+    T savedObject = datastore.get(cls, entityId);
+
     boolean encryptable = EncryptableSetting.class.isAssignableFrom(cls);
-    Object savedObject = datastore.get(cls, entityId);
-    List<Field> declaredAndInheritedFields = ReflectionUtils.getAllDeclaredAndInheritedFields(cls);
-    for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
-      Object value = entry.getValue();
-      if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
-          && EncryptableSetting.class.isInstance(value)) {
-        EncryptableSetting e = (EncryptableSetting) value;
-        encrypt(e, (EncryptableSetting) ((SettingAttribute) savedObject).getValue());
-        updateParentIfNecessary(savedObject, entityId);
-        value = e;
-      } else if (encryptable) {
-        Field f = declaredAndInheritedFields.stream()
-                      .filter(field -> field.getName().equals(entry.getKey()))
-                      .findFirst()
-                      .orElse(null);
-        if (f == null) {
-          throw new EncryptDecryptException(
-              "Field " + entry.getKey() + " not found for update on class " + cls.getName());
-        }
-        if (f.getAnnotation(Encrypted.class) != null) {
-          try {
-            EncryptableSetting object = (EncryptableSetting) savedObject;
+    List<Field> fieldsWithEncryptedAnnotation = EncryptionReflectUtils.getEncryptedFields(cls);
+    boolean shouldUpdateSecretParents = false;
 
-            if (shouldEncryptWhileUpdating(f, object, keyValuePairs, entityId)) {
-              Field encryptedField = getEncryptedRefField(f, object);
-              String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
-              updateParentIfNecessary(object, entityId);
-              operations.set(encryptedField.getName(), encryptedId);
-              operations.unset(f.getName());
-              continue;
+    try {
+      for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
+        Object value = entry.getValue();
+
+        if (value instanceof EncryptableSetting) {
+          EncryptableSetting encryptableSetting = (EncryptableSetting) value;
+          EncryptableSetting savedEncryptableSetting = savedObject != null
+              ? (EncryptableSetting) ReflectionUtils.getFieldValue(savedObject, entry.getKey())
+              : null;
+          setEncryptedFields(encryptableSetting);
+          encryptPlainTextSecrets(encryptableSetting, savedEncryptableSetting);
+          shouldUpdateSecretParents = true;
+        } else if (encryptable && savedObject != null) {
+          EncryptableSetting encryptableSetting = (EncryptableSetting) savedObject;
+          Optional<Field> f = fieldsWithEncryptedAnnotation.stream()
+                                  .filter(field -> field.getName().equals(entry.getKey()))
+                                  .findFirst();
+
+          if (f.isPresent() && isEncryptedFieldDuringUpdate(f.get(), encryptableSetting, keyValuePairs)) {
+            Field encryptedField = f.get();
+            Field encryptedRefField = getEncryptedRefField(encryptedField, encryptableSetting);
+            boolean isReference = isSecretReference(encryptedField);
+            if (isReference) {
+              operations.set(encryptedRefField.getName(), value);
+            } else {
+              String encryptedId =
+                  encryptPlainTextSecret(encryptedField, (char[]) value, encryptableSetting, encryptableSetting);
+              operations.set(encryptedRefField.getName(), encryptedId);
             }
-          } catch (IllegalAccessException ex) {
-            throw new EncryptDecryptException("Failed to encrypt secret", ex);
+            operations.unset(encryptedField.getName());
+            continue;
           }
+          shouldUpdateSecretParents = true;
         }
+        operations.set(entry.getKey(), value);
       }
-      operations.set(entry.getKey(), value);
-    }
 
-    fieldsToRemove.forEach(fieldToRemove -> {
-      if (encryptable) {
-        EncryptableSetting object = (EncryptableSetting) savedObject;
-        Field f = ReflectionUtils.getFieldByName(savedObject.getClass(), fieldToRemove);
-        Preconditions.checkNotNull(f, "Can't find " + fieldToRemove + " in class " + cls);
-        if (f.getAnnotation(Encrypted.class) != null) {
-          try {
-            Field encryptedField = getEncryptedRefField(f, object);
-            String encryptedId = encrypt(object, null, encryptedField, object);
-            updateParentIfNecessary(object, entityId);
-            operations.set(encryptedField.getName(), encryptedId);
-          } catch (IllegalAccessException e) {
-            throw new WingsException(
-                "Failed to update record for " + fieldToRemove + " in " + cls + " id: " + entityId, e);
+      for (String fieldToRemove : fieldsToRemove) {
+        if (encryptable && savedObject != null) {
+          EncryptableSetting encryptableSetting = (EncryptableSetting) savedObject;
+          Optional<Field> f =
+              fieldsWithEncryptedAnnotation.stream().filter(field -> field.getName().equals(fieldToRemove)).findFirst();
+          if (f.isPresent()) {
+            Field encryptedRefField = getEncryptedRefField(f.get(), encryptableSetting);
+            operations.unset(encryptedRefField.getName());
           }
+          shouldUpdateSecretParents = true;
         }
+        operations.unset(fieldToRemove);
       }
-      operations.unset(fieldToRemove);
-    });
+    } catch (IllegalAccessException ex) {
+      throw new EncryptDecryptException("Failed to encrypt secret due to illegal access exception", ex);
+    }
 
     update(query, operations);
-  }
-
-  private boolean shouldEncryptWhileUpdating(
-      Field f, EncryptableSetting object, Map<String, Object> keyValuePairs, String entityId) {
-    List<Field> encryptedFields = object.getEncryptedFields();
-    if (object.getClass().equals(ServiceVariable.class)) {
-      deleteEncryptionReference(object, Collections.singleton(f.getName()), entityId);
-      return keyValuePairs.get("type") == Type.ENCRYPTED_TEXT;
+    T updatedObject = datastore.get(cls, entityId);
+    if (updatedObject != null && shouldUpdateSecretParents) {
+      updateEncryptionReferencesIfNecessary(updatedObject, entityId, savedObject);
     }
-    return encryptedFields.contains(f);
   }
 
   @Override
@@ -240,23 +239,17 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T extends PersistentEntity> boolean delete(Query<T> query) {
-    if (query.getEntityClass().equals(SettingAttribute.class)
-        || EncryptableSetting.class.isAssignableFrom(query.getEntityClass())) {
-      try (HIterator<T> records = new HIterator<>(query.fetch())) {
-        while (records.hasNext()) {
-          deleteEncryptionReferenceIfNecessary(records.next());
-        }
+    try (HIterator<T> records = new HIterator<>(query.fetch())) {
+      while (records.hasNext()) {
+        deleteEncryptionReferenceIfNecessary(records.next());
       }
     }
-
     return super.delete(query);
   }
 
   @Override
   public <T extends PersistentEntity> boolean delete(T entity) {
-    if (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity)) {
-      deleteEncryptionReferenceIfNecessary(entity);
-    }
+    deleteEncryptionReferenceIfNecessary(entity);
     return super.delete(entity);
   }
 
@@ -413,143 +406,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     return buffer.toString();
   }
 
-  /**
-   * Encrypt an EncryptableSetting object. Currently assumes SimpleEncryption.
-   *
-   * @param object the object to be encrypted
-   */
-  private void encrypt(EncryptableSetting object, EncryptableSetting savedObject) {
-    try {
-      List<Field> fieldsToEncrypt = object.getEncryptedFields();
-      for (Field f : fieldsToEncrypt) {
-        f.setAccessible(true);
-        char[] secret = (char[]) f.get(object);
-        Field encryptedField = getEncryptedRefField(f, object);
-        encryptedField.setAccessible(true);
-        // PL-3210: Avoid encrypt/decrypt null fields.
-        if (secret == null) {
-          String secretId = (String) encryptedField.get(object);
-          if (isSetByYaml(object, encryptedField)) {
-            // In YAML update/import case, the encrypted field is having secret manager prefix.
-            // Those prefix need to be stripped and only the UUID part be preserved.
-            EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(secretId, object.getAccountId());
-            if (encryptedData == null) {
-              throw new EncryptDecryptException("Invalid YAML secret reference: " + secretId);
-            } else {
-              // Update the YAML secret reference to the real secret UUID.
-              secretId = encryptedData.getUuid();
-            }
-          }
-          encryptedField.set(object, secretId);
-        } else {
-          encrypt(object, secret, encryptedField, savedObject);
-          f.set(object, null);
-        }
-      }
-    } catch (SecurityException e) {
-      throw new EncryptDecryptException("Security exception in encrypt", e);
-    } catch (IllegalAccessException e) {
-      throw new EncryptDecryptException("Illegal access exception in encrypt", e);
-    }
-  }
-
-  private String encrypt(EncryptableSetting object, char[] secret, Field encryptedField, EncryptableSetting savedObject)
-      throws IllegalAccessException {
-    encryptedField.setAccessible(true);
-    Field decryptedField = getDecryptedField(encryptedField, object);
-    decryptedField.setAccessible(true);
-
-    if (isReferencedSecretText(object, encryptedField)) {
-      encryptedField.set(object, String.valueOf(secret));
-      return String.valueOf(secret);
-    }
-
-    final String accountId = object.getAccountId();
-    String encryptedId =
-        savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
-    EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
-    String path = encryptedData == null ? null : encryptedData.getPath();
-    EncryptedData encryptedPair = secretManager.encrypt(
-        accountId, object.getSettingType(), secret, path, encryptedData, UUID.randomUUID().toString(), null);
-
-    String changeLogDescription = "";
-
-    if (encryptedData == null) {
-      encryptedData = encryptedPair;
-      encryptedData.setAccountId(accountId);
-      encryptedData.setType(object.getSettingType());
-      changeLogDescription = "Created";
-    } else {
-      encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
-      encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
-      encryptedData.setEncryptionType(encryptedPair.getEncryptionType());
-      encryptedData.setKmsId(encryptedPair.getKmsId());
-      encryptedData.setBackupEncryptionKey(encryptedPair.getBackupEncryptionKey());
-      encryptedData.setBackupEncryptedValue(encryptedPair.getBackupEncryptedValue());
-      encryptedData.setBackupKmsId(encryptedPair.getBackupKmsId());
-      encryptedData.setBackupEncryptionType(encryptedPair.getBackupEncryptionType());
-      changeLogDescription = "Changed " + decryptedField.getName();
-    }
-
-    encryptedId = save(encryptedData);
-    if (UserThreadLocal.get() != null) {
-      save(SecretChangeLog.builder()
-               .accountId(accountId)
-               .encryptedDataId(encryptedId)
-               .description(changeLogDescription)
-               .user(EmbeddedUser.builder()
-                         .uuid(UserThreadLocal.get().getUuid())
-                         .email(UserThreadLocal.get().getEmail())
-                         .name(UserThreadLocal.get().getName())
-                         .build())
-               .build());
-    }
-    encryptedField.set(object, encryptedId);
-    return encryptedId;
-  }
-
-  private boolean isReferencedSecretText(EncryptableSetting object, Field encryptedField) {
-    if (!ServiceVariable.class.isInstance(object)) {
-      return false;
-    }
-    ServiceVariable serviceVariable = (ServiceVariable) object;
-    if (isNotBlank(serviceVariable.getUuid())) {
-      Field decryptedField = getDecryptedField(encryptedField, object);
-      deleteEncryptionReference(object, Sets.newHashSet(decryptedField.getName()), serviceVariable.getUuid());
-    }
-    return true;
-  }
-
-  private void updateParent(EncryptableSetting object, String parentId) {
-    SettingVariableTypes entityType = object.getSettingType();
-    List<Field> fieldsToEncrypt = object.getEncryptedFields();
-    for (Field f : fieldsToEncrypt) {
-      f.setAccessible(true);
-      Field encryptedField = getEncryptedRefField(f, object);
-      String fieldKey = EncryptionReflectUtils.getEncryptedFieldTag(f);
-      encryptedField.setAccessible(true);
-      String encryptedId;
-      try {
-        encryptedId = (String) encryptedField.get(object);
-      } catch (IllegalAccessException e) {
-        throw new WingsException("Error updating parent for encrypted record", e);
-      }
-
-      if (isBlank(encryptedId)) {
-        continue;
-      }
-
-      EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
-      if (encryptedData == null) {
-        continue;
-      }
-
-      EncryptedDataParent parent = new EncryptedDataParent(parentId, entityType, fieldKey);
-      encryptedData.addParent(parent);
-      save(encryptedData);
-    }
-  }
-
   @Override
   public <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
     List<T> result = Lists.newArrayList();
@@ -577,92 +433,229 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     return result;
   }
 
-  private void deleteEncryptionReference(EncryptableSetting object, Set<String> fieldNames, String parentId) {
-    SettingVariableTypes entityType = object.getSettingType();
-    List<Field> fieldsToEncrypt = object.getEncryptedFields();
-    for (Field f : fieldsToEncrypt) {
-      if (fieldNames != null && !fieldNames.contains(f.getName())) {
-        continue;
-      }
+  private <T extends PersistentEntity> Optional<T> getSavedEntity(@NonNull T entity) {
+    Optional<String> entityId =
+        entity instanceof UuidAware ? Optional.ofNullable(((UuidAware) entity).getUuid()) : Optional.empty();
+    return entityId.flatMap(uuid -> Optional.ofNullable(getDatastore(entity).get((Class<T>) entity.getClass(), uuid)));
+  }
 
-      Field encryptedField = getEncryptedRefField(f, object);
-      String fieldKey = EncryptionReflectUtils.getEncryptedFieldTag(f);
+  private boolean isEncryptedFieldDuringUpdate(
+      Field f, EncryptableSetting savedObject, Map<String, Object> keyValuePairs) {
+    List<Field> encryptedFields = savedObject.getEncryptedFields();
+    if (savedObject.getClass().equals(ServiceVariable.class)) {
+      return keyValuePairs.get("type") == Type.ENCRYPTED_TEXT;
+    }
+    return encryptedFields.contains(f);
+  }
+
+  private <T extends PersistentEntity> boolean encryptIfNecessary(@NonNull T entity, T savedEntity) {
+    try {
+      Optional<EncryptableSetting> encryptableSettingOptional = getEncryptableSetting(entity);
+
+      if (encryptableSettingOptional.isPresent()) {
+        EncryptableSetting encryptableSetting = encryptableSettingOptional.get();
+        setEncryptedFields(encryptableSetting);
+        Optional<EncryptableSetting> savedEncryptableSettingOptional =
+            savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
+        EncryptableSetting savedEncryptableSetting = savedEncryptableSettingOptional.orElse(null);
+        encryptPlainTextSecrets(encryptableSetting, savedEncryptableSetting);
+        return true;
+      }
+    } catch (IllegalAccessException e) {
+      throw new EncryptDecryptException(
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while encryption",
+              entity.getClass()),
+          e);
+    }
+    return false;
+  }
+
+  private void setEncryptedFields(@NonNull EncryptableSetting object) throws IllegalAccessException {
+    List<Field> encryptedFields = Optional.ofNullable(object.getEncryptedFields()).orElseGet(Collections::emptyList);
+    for (Field encryptedField : encryptedFields) {
       encryptedField.setAccessible(true);
-      String encryptedId;
-      try {
-        encryptedId = (String) encryptedField.get(object);
-      } catch (IllegalAccessException e) {
-        throw new EncryptDecryptException("Could not delete referenced record", e);
+      Field encryptedRefField = getEncryptedRefField(encryptedField, object);
+      encryptedRefField.setAccessible(true);
+      boolean isReference = EncryptionReflectUtils.isSecretReference(encryptedField);
+      Optional<char[]> secretOptional = Optional.ofNullable((char[]) encryptedField.get(object));
+
+      if (isReference && secretOptional.isPresent()) {
+        encryptedRefField.set(object, String.valueOf(secretOptional.get()));
+        encryptedField.set(object, null);
       }
 
-      if (isBlank(encryptedId)) {
-        continue;
-      }
+      Optional<String> secretIdOptional = Optional.ofNullable((String) encryptedRefField.get(object));
 
-      EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
-      if (encryptedData == null) {
-        continue;
-      }
-      EncryptedDataParent encryptedDataParent = new EncryptedDataParent(parentId, entityType, fieldKey);
-      encryptedData.removeParent(encryptedDataParent);
-      if (isEmpty(encryptedData.getParents()) && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
-        delete(encryptedData);
-      } else {
-        save(encryptedData);
+      if (secretIdOptional.isPresent() && isSetByYaml(secretIdOptional.get())) {
+        Optional<EncryptedData> encryptedDataOptional = Optional.ofNullable(
+            secretManager.getEncryptedDataFromYamlRef(secretIdOptional.get(), object.getAccountId()));
+        EncryptedData encryptedData = encryptedDataOptional.<EncryptDecryptException>orElseThrow(
+            () -> { throw new EncryptDecryptException("The yaml reference is not valid."); });
+        encryptedRefField.set(object, encryptedData.getUuid());
       }
     }
   }
 
-  private <T extends PersistentEntity> void encryptIfNecessary(T entity) {
-    // if its an update
-    Object savedObject = null;
-    if (entity instanceof UuidAware) {
-      String uuid = ((UuidAware) entity).getUuid();
-      if (isNotBlank(uuid)
-          && (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity))) {
-        savedObject = getDatastore(entity).get((Class<T>) entity.getClass(), uuid);
-      }
-    }
-    Object toEncrypt = entity;
-    if (SettingAttribute.class.isInstance(entity)) {
-      toEncrypt = ((SettingAttribute) entity).getValue();
-      savedObject = savedObject == null ? null : ((SettingAttribute) savedObject).getValue();
-    }
+  private Optional<EncryptedData> getEncryptedDataFromField(
+      @NonNull EncryptableSetting object, @NonNull Field encryptedRefField) throws IllegalAccessException {
+    Optional<String> secretIdOptional = Optional.ofNullable((String) encryptedRefField.get(object));
+    return secretIdOptional.flatMap(secretId -> Optional.ofNullable(get(EncryptedData.class, secretId)));
+  }
 
-    if (EncryptableSetting.class.isInstance(toEncrypt)) {
-      encrypt((EncryptableSetting) toEncrypt, (EncryptableSetting) savedObject);
+  private void encryptPlainTextSecrets(@NonNull EncryptableSetting object, EncryptableSetting savedObject)
+      throws IllegalAccessException {
+    List<Field> encryptedFields = Optional.ofNullable(object.getEncryptedFields()).orElseGet(Collections::emptyList);
+    for (Field encryptedField : encryptedFields) {
+      encryptedField.setAccessible(true);
+      Field encryptedRefField = getEncryptedRefField(encryptedField, object);
+      encryptedRefField.setAccessible(true);
+      Optional<char[]> secretOptional = Optional.ofNullable((char[]) encryptedField.get(object));
+
+      if (secretOptional.isPresent()) {
+        char[] secret = secretOptional.get();
+        String encryptedId = encryptPlainTextSecret(encryptedField, secret, object, savedObject);
+        encryptedRefField.set(object, encryptedId);
+        encryptedField.set(object, null);
+      }
     }
   }
 
-  private void updateParentIfNecessary(Object o, String parentId) {
-    if (SettingAttribute.class.isInstance(o)) {
-      o = ((SettingAttribute) o).getValue();
-    }
+  private String encryptPlainTextSecret(@NonNull Field encryptedField, @NonNull char[] secret,
+      @NonNull EncryptableSetting object, EncryptableSetting savedObject) throws IllegalAccessException {
+    Field encryptedRefField = getEncryptedRefField(encryptedField, object);
+    encryptedRefField.setAccessible(true);
+    Optional<EncryptedData> savedSecretOptional =
+        savedObject == null ? Optional.empty() : getEncryptedDataFromField(savedObject, encryptedRefField);
 
-    if (EncryptableSetting.class.isInstance(o)) {
-      updateParent((EncryptableSetting) o, parentId);
+    String encryptedId;
+    if (savedSecretOptional.isPresent()) {
+      encryptedId = updateSecret(object.getAccountId(), savedSecretOptional.get(), secret, encryptedField.getName());
+    } else {
+      encryptedId = createSecret(object.getAccountId(), secret, encryptedField.getName(), object.getSettingType());
+    }
+    return encryptedId;
+  }
+
+  private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret,
+      @NonNull String fieldName) {
+    EncryptedData updatedEncryptedData = secretManager.encrypt(accountId, encryptedData.getType(), secret,
+        encryptedData.getPath(), encryptedData, encryptedData.getName(), encryptedData.getUsageRestrictions());
+    encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
+    encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
+    encryptedData.setEncryptionType(updatedEncryptedData.getEncryptionType());
+    encryptedData.setKmsId(updatedEncryptedData.getKmsId());
+    encryptedData.setBackupEncryptionKey(updatedEncryptedData.getBackupEncryptionKey());
+    encryptedData.setBackupEncryptedValue(updatedEncryptedData.getBackupEncryptedValue());
+    encryptedData.setBackupKmsId(updatedEncryptedData.getBackupKmsId());
+    encryptedData.setBackupEncryptionType(updatedEncryptedData.getBackupEncryptionType());
+    String changeLogDescription = "Changed ".concat(fieldName);
+
+    String encryptedId = save(encryptedData);
+    saveSecretChangeLog(accountId, encryptedId, changeLogDescription);
+    return encryptedId;
+  }
+
+  private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull String fieldName,
+      @NonNull SettingVariableTypes type) {
+    EncryptedData encryptedData =
+        secretManager.encrypt(accountId, type, secret, null, null, UUID.randomUUID().toString(), null);
+    encryptedData.setAccountId(accountId);
+    String changeLogDescription = "Created";
+
+    String encryptedId = save(encryptedData);
+    saveSecretChangeLog(accountId, encryptedId, changeLogDescription);
+    return encryptedId;
+  }
+
+  private void saveSecretChangeLog(
+      @NonNull String accountId, @NonNull String encryptedId, @NonNull String changeLogDescription) {
+    Optional.ofNullable(UserThreadLocal.get()).ifPresent(user -> {
+      save(SecretChangeLog.builder()
+               .accountId(accountId)
+               .encryptedDataId(encryptedId)
+               .description(changeLogDescription)
+               .user(EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build())
+               .build());
+    });
+  }
+
+  private <T extends PersistentEntity> void updateEncryptionReferencesIfNecessary(
+      @NonNull T entity, @NonNull String parentId, T savedEntity) {
+    Optional<EncryptableSetting> encryptableSettingOptional = getEncryptableSetting(entity);
+    Optional<EncryptableSetting> savedEncryptableSettingOptional =
+        savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
+
+    try {
+      Map<String, Set<EncryptedDataParent>> currentState = encryptableSettingOptional.isPresent()
+          ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
+          : new HashMap<>();
+      Map<String, Set<EncryptedDataParent>> previousState = savedEncryptableSettingOptional.isPresent()
+          ? buildSecretIdsToParentsMap(savedEncryptableSettingOptional.get(), parentId)
+          : new HashMap<>();
+
+      if (!previousState.isEmpty() || !currentState.isEmpty()) {
+        List<SecretParentsUpdateDetail> secretParentsUpdateDetails =
+            fetchSecretParentsUpdateDetailList(previousState, currentState);
+
+        for (SecretParentsUpdateDetail secretParentsUpdateDetail : secretParentsUpdateDetails) {
+          updateParent(secretParentsUpdateDetail);
+        }
+      }
+
+    } catch (IllegalAccessException e) {
+      throw new EncryptDecryptException(
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while updating parents",
+              entity.getClass()),
+          e);
     }
   }
 
   private <T extends PersistentEntity> void deleteEncryptionReferenceIfNecessary(T entity) {
-    if (!(entity instanceof UuidAware)) {
-      return;
+    Optional<T> savedEntityOptional = getSavedEntity(entity);
+    try {
+      if (savedEntityOptional.isPresent()) {
+        String parentId = ((UuidAware) savedEntityOptional.get()).getUuid();
+        Optional<EncryptableSetting> encryptableSettingOptional = getEncryptableSetting(savedEntityOptional.get());
+        Map<String, Set<EncryptedDataParent>> secretIdsToParentsMap = encryptableSettingOptional.isPresent()
+            ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
+            : new HashMap<>();
+        if (secretIdsToParentsMap.size() > 0) {
+          List<SecretParentsUpdateDetail> secretParentsUpdateDetails =
+              fetchSecretParentsUpdateDetailList(secretIdsToParentsMap, new HashMap<>());
+          for (SecretParentsUpdateDetail secretParentsUpdateDetail : secretParentsUpdateDetails) {
+            updateParent(secretParentsUpdateDetail);
+          }
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new EncryptDecryptException(
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while removing parents",
+              entity.getClass()),
+          e);
     }
-    String uuid = ((UuidAware) entity).getUuid();
-    if (isBlank(uuid)) {
+  }
+
+  private void updateParent(@NonNull SecretParentsUpdateDetail secretParentsUpdateDetail) {
+    EncryptedData encryptedData =
+        Optional.ofNullable(get(EncryptedData.class, secretParentsUpdateDetail.getSecretId())).orElse(null);
+
+    if (encryptedData == null) {
       return;
     }
 
-    Object toDelete = getDatastore(entity).get(entity.getClass(), uuid);
-    if (toDelete == null) {
-      return;
+    for (EncryptedDataParent encryptedDataParent : secretParentsUpdateDetail.getParentsToAdd()) {
+      encryptedData.addParent(encryptedDataParent);
     }
-    if (SettingAttribute.class.isInstance(toDelete)) {
-      toDelete = ((SettingAttribute) toDelete).getValue();
+    for (EncryptedDataParent encryptedDataParent : secretParentsUpdateDetail.getParentsToRemove()) {
+      encryptedData.removeParent(encryptedDataParent);
     }
-
-    if (EncryptableSetting.class.isInstance(toDelete)) {
-      deleteEncryptionReference((EncryptableSetting) toDelete, null, uuid);
+    if (encryptedData.getParents().isEmpty() && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
+      delete(encryptedData);
+    } else {
+      save(encryptedData);
     }
   }
 }

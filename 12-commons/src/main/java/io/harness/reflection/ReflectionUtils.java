@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -153,5 +154,14 @@ public class ReflectionUtils {
 
   public static Object getFieldValue(@NonNull Object obj, @NonNull String fieldName) {
     return getFieldValues(obj, Collections.singleton(fieldName)).get(fieldName);
+  }
+
+  public static Object getFieldValue(@NonNull Object obj, @NonNull Field field) {
+    try {
+      return FieldUtils.readField(field, obj, true);
+    } catch (IllegalAccessException e) {
+      logger.error("Unable to access field {} in object {}", field.getName(), obj.getClass(), e);
+    }
+    return null;
   }
 }

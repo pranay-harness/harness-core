@@ -4,6 +4,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface FeatureFlagService {
   boolean isGlobalEnabled(FeatureName featureName);
@@ -16,4 +17,8 @@ public interface FeatureFlagService {
   void enableAccount(FeatureName featureName, String accountId);
 
   Optional<FeatureFlag> getFeatureFlag(FeatureName featureName);
+
+  void enableGlobally(FeatureName featureName);
+
+  Set<String> getAccountIds(FeatureName featureName);
 }

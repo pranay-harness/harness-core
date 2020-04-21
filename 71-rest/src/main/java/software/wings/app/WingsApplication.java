@@ -152,6 +152,8 @@ import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.encryption.migration.EncryptedDataAwsToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.EncryptedDataMigrationHandler;
+import software.wings.security.encryption.migration.SettingAttributesSecretReferenceFeatureFlagJob;
+import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
@@ -581,6 +583,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(TimerScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(SettingAttributesSecretReferenceFeatureFlagJob.class));
     if (configuration.isSearchEnabled()) {
       environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
     }
@@ -719,6 +722,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(EncryptedDataMigrationHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
+    injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
