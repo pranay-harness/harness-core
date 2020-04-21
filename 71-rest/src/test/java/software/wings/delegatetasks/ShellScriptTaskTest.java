@@ -185,12 +185,12 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .scriptType(POWERSHELL)
                                        .script("Write-Host hello")
                                        .connectionType(SSH)
-                                       .workingDirectory("%TEMP%")
                                        .executeOnDelegate(true)
                                        .build();
 
+    ArgumentCaptor<String> scriptStringCaptor = ArgumentCaptor.forClass(String.class);
     when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class))).thenReturn(scriptProcessExecutor);
-    when(scriptProcessExecutor.executeCommandString(anyString(), anyList()))
+    when(scriptProcessExecutor.executeCommandString(scriptStringCaptor.capture(), anyList()))
         .thenReturn(CommandExecutionResult.builder()
                         .status(CommandExecutionStatus.SUCCESS)
                         .commandExecutionData(ShellExecutionData.builder().build())
@@ -201,6 +201,8 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
+    assertThat(scriptStringCaptor.getValue())
+        .isEqualTo("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {Write-Host hello}\"");
   }
 
   @Test
