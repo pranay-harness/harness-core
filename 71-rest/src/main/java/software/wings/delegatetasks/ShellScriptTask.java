@@ -11,6 +11,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -70,6 +71,9 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
       if (parameters.isLocalOverrideFeatureFlag()) {
         parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
       }
+      if (parameters.getScriptType() == ScriptType.POWERSHELL) {
+        parameters.setScript(processPowerShellScript(parameters.getScript()));
+      }
       return executor.executeCommandString(parameters.getScript(), items);
     }
 
@@ -111,5 +115,12 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
             .errorMessage(format("Unsupported ConnectionType %s", parameters.getConnectionType()))
             .build();
     }
+  }
+
+  private String processPowerShellScript(String scriptString) {
+    StringBuilder scriptStringBuilder =
+        new StringBuilder("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {");
+    scriptStringBuilder.append(scriptString.replace("$", "\\$").replace("\"", "\\\"")).append("}\"");
+    return scriptStringBuilder.toString();
   }
 }
