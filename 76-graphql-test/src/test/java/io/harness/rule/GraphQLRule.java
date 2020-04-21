@@ -11,6 +11,7 @@ import com.google.inject.TypeLiteral;
 
 import com.hazelcast.core.HazelcastInstance;
 import graphql.GraphQL;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -131,6 +132,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       protected void configure() {
         bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
+        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
 

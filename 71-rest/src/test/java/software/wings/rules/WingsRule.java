@@ -26,6 +26,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -303,6 +304,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
         bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
+        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
 

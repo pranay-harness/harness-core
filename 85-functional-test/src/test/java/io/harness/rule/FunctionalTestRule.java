@@ -13,6 +13,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -165,6 +166,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
         bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
+        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
     modules.add(new LicenseModule());
