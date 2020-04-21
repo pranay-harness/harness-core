@@ -2,14 +2,15 @@ package software.wings.beans.alert;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 
 @Data
 @Builder
 public class GitConnectionErrorAlert implements AlertData {
-  private String accountId;
+  @NonNull private String accountId;
   private String message;
-  private String gitConnectorId;
-  private String branchName;
+  @NonNull private String gitConnectorId;
+  @NonNull private String branchName;
 
   @Override
   public boolean matches(AlertData alertData) {
