@@ -199,6 +199,10 @@ cd to `portal` directory
 
    * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
 
+5. Start Command Library Service (Optional)
+
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 84-command-library-server/target/command-library-app-capsule.jar 84-command-library-server/command-library-server-config.yml > command_library_service.log &`
+
 ### Editing setup
 
 1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) ( Install version 7.0.0 by running following 2 [commands](https://gist.github.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25))
