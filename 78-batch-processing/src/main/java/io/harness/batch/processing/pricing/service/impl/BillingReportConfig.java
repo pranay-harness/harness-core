@@ -1,4 +1,4 @@
-package io.harness.ccm;
+package io.harness.batch.processing.pricing.service.impl;
 
 import lombok.Builder;
 import lombok.Value;

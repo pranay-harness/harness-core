@@ -15,13 +15,10 @@ import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.ccm.BillingReportConfig;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.wings.beans.AwsConfig;
-import software.wings.settings.SettingValue;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -50,8 +47,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
     String operatingSystem = instanceMetaData.get(InstanceMetaDataConstants.OPERATING_SYSTEM);
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
     String settingId = instanceData.getSettingId();
-    SettingValue settingValue = settingValueService.getSettingValueService(settingId);
-    BillingReportConfig billingReportConfig = ((AwsConfig) settingValue).getCcmConfig().getBillingReportConfig();
+    BillingReportConfig billingReportConfig = new BillingReportConfig(null, null, null, null, null, false);
     if (billingReportConfig.isBillingReportEnabled()) {
       String billingAccountId = billingReportConfig.getBillingAccountId();
       VMComputePricingInfo vmComputePricingInfo =
@@ -71,8 +67,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
     Map<String, String> instanceMetaData = instanceData.getMetaData();
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
     String settingId = instanceData.getSettingId();
-    SettingValue settingValue = settingValueService.getSettingValueService(settingId);
-    BillingReportConfig billingReportConfig = ((AwsConfig) settingValue).getCcmConfig().getBillingReportConfig();
+    BillingReportConfig billingReportConfig = new BillingReportConfig(null, null, null, null, null, false);
     String billingAccountId = billingReportConfig.getBillingAccountId();
     if (billingReportConfig.isBillingReportEnabled()) {
       EcsFargatePricingInfo fargatePricingInfoFromCache = getFargatePricingInfoFromCache(billingAccountId, region);

@@ -18,7 +18,6 @@ import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.BillingReportConfig;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -66,22 +65,12 @@ public class AwsCustomPricingServiceImplTest extends CategoryTest {
   private final Instant NOW = Instant.now();
   private final Instant START_INSTANT = NOW.truncatedTo(ChronoUnit.DAYS);
   private final String TEST_ACCOUNT_ID = "S3_SYNC_ACCOUNT_ID_" + this.getClass().getSimpleName();
-  private final String BILLING_ACCOUNT_ID = "S3_SYNC_BILLING_ACCOUNT_ID_" + this.getClass().getSimpleName();
-  private final String BILLING_BUCKET_PATH = "S3_SYNC_BILLING_BUCKET_PATH_" + this.getClass().getSimpleName();
-  private final String BILLING_BUCKET_REGION = "S3_SYNC_BILLING_BUCKET_REGION_ID_" + this.getClass().getSimpleName();
   private SettingAttribute settingAttribute;
   private SettingAttribute settingValueBillingReportEnabled;
 
   @Before
   public void setup() {
-    BillingReportConfig billingReportConfig = BillingReportConfig.builder()
-                                                  .billingAccountId(BILLING_ACCOUNT_ID)
-                                                  .billingBucketPath(BILLING_BUCKET_PATH)
-                                                  .billingBucketRegion(BILLING_BUCKET_REGION)
-                                                  .isBillingReportEnabled(false)
-                                                  .build();
-
-    CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).billingReportConfig(billingReportConfig).build();
+    CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
 
     SettingValue settingValue = AwsConfig.builder().ccmConfig(ccmConfig).build();
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -90,37 +79,12 @@ public class AwsCustomPricingServiceImplTest extends CategoryTest {
                            .withValue(settingValue)
                            .build();
 
-    billingReportConfig = BillingReportConfig.builder()
-                              .billingAccountId(BILLING_ACCOUNT_ID)
-                              .billingBucketPath(BILLING_BUCKET_PATH)
-                              .billingBucketRegion(BILLING_BUCKET_REGION)
-                              .isBillingReportEnabled(true)
-                              .build();
-    ccmConfig = CCMConfig.builder().cloudCostEnabled(true).billingReportConfig(billingReportConfig).build();
-
     settingValue = AwsConfig.builder().ccmConfig(ccmConfig).build();
     settingValueBillingReportEnabled = SettingAttribute.Builder.aSettingAttribute()
                                            .withAccountId(TEST_ACCOUNT_ID)
                                            .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
                                            .withValue(settingValue)
                                            .build();
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetAwsCustomComputeVMPricingInfoForBillingReportEnabled() throws InterruptedException {
-    when(settingValueService.getSettingValueService(any())).thenReturn(settingValueBillingReportEnabled.getValue());
-    when(awsAthenaQueryHelperService.fetchComputePriceRate(any(), any(), any())).thenReturn(createAccountPricingData());
-    VMComputePricingInfo computeVMPricingInfo = awsCustomPricingService.getComputeVMPricingInfo(
-        instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING), START_INSTANT);
-    assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(DEFAULT_INSTANCE_CPU);
-    assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(DEFAULT_INSTANCE_MEMORY);
-    assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(DEFAULT_INSTANCE_PRICE);
-    assertThat(computeVMPricingInfo.getType()).isEqualTo(DEFAULT_INSTANCE_FAMILY);
-    VMComputePricingInfo computeVMPricingInfoCached = awsCustomPricingService.getComputeVMPricingInfo(
-        instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING), START_INSTANT);
-    assertThat(computeVMPricingInfoCached).isNotNull();
   }
 
   @Test
@@ -132,23 +96,6 @@ public class AwsCustomPricingServiceImplTest extends CategoryTest {
     VMComputePricingInfo computeVMPricingInfo = awsCustomPricingService.getComputeVMPricingInfo(
         instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING), START_INSTANT);
     assertThat(computeVMPricingInfo).isNull();
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetAwsFargateVMPricingInfoForBillingReportEnabled() throws InterruptedException {
-    when(settingValueService.getSettingValueService(any())).thenReturn(settingValueBillingReportEnabled.getValue());
-    when(awsAthenaQueryHelperService.fetchEcsFargatePriceRate(any(), any(), any()))
-        .thenReturn(createAccountFargatePricingData());
-    EcsFargatePricingInfo fargateVMPricingInfo = awsCustomPricingService.getFargateVMPricingInfo(
-        instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING), START_INSTANT);
-    assertThat(fargateVMPricingInfo.getRegion()).isEqualTo(REGION);
-    assertThat(fargateVMPricingInfo.getCpuPrice()).isEqualTo(DEFAULT_BLENDED_RATE);
-    assertThat(fargateVMPricingInfo.getMemoryPrice()).isEqualTo(DEFAULT_UNBLENDED_RATE);
-    EcsFargatePricingInfo fargateVMPricingInfoCached = awsCustomPricingService.getFargateVMPricingInfo(
-        instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING), START_INSTANT);
-    assertThat(fargateVMPricingInfoCached).isNotNull();
   }
 
   @Test
