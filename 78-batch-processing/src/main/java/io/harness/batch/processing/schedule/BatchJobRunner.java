@@ -19,6 +19,7 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -66,11 +67,14 @@ public class BatchJobRunner {
                 .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
                 .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
                 .toJobParameters();
+        Instant jobStartTime = Instant.now();
         BatchStatus status = jobLauncher.run(job, params).getStatus();
         logger.info("Job status {}", status);
+        Instant jobStopTime = Instant.now();
+
         if (status == BatchStatus.COMPLETED) {
-          BatchJobScheduledData batchJobScheduledData =
-              new BatchJobScheduledData(accountId, batchJobType, startInstant, endInstant);
+          BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType,
+              Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
           batchJobScheduledDataService.create(batchJobScheduledData);
           startInstant = endInstant;
         } else {

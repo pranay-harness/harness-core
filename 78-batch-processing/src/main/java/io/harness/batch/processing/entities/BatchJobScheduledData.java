@@ -41,14 +41,17 @@ public class BatchJobScheduledData
   @Id String uuid;
   String accountId;
   BatchJobType batchJobType;
+  long jobRunTimeMillis;
   Instant startAt;
   Instant endAt;
   long createdAt;
   long lastUpdatedAt;
 
-  public BatchJobScheduledData(String accountId, BatchJobType batchJobType, Instant startAt, Instant endAt) {
+  public BatchJobScheduledData(
+      String accountId, BatchJobType batchJobType, long jobRunTimeMillis, Instant startAt, Instant endAt) {
     this.accountId = accountId;
     this.batchJobType = batchJobType;
+    this.jobRunTimeMillis = jobRunTimeMillis;
     this.startAt = startAt;
     this.endAt = endAt;
   }

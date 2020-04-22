@@ -44,6 +44,6 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   }
 
   private BatchJobScheduledData batchJobScheduledData(Instant startInstant, Instant endInstant) {
-    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, startInstant, endInstant);
+    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, startInstant, endInstant);
   }
 }

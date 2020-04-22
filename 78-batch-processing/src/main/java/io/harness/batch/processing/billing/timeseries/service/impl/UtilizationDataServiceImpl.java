@@ -36,7 +36,7 @@ public class UtilizationDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   @Autowired private DataFetcherUtils utils;
 
-  private static final int MAX_RETRY_COUNT = 5;
+  private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
