@@ -42,14 +42,14 @@ public class BatchJobScheduled {
     Instant firstStartAt = Instant.now().minus(2, ChronoUnit.DAYS);
     Instant firstEndAt = Instant.now().minus(1, ChronoUnit.DAYS);
     BatchJobScheduledData batchJobScheduledData =
-        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, firstStartAt, firstEndAt);
+        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, firstStartAt, firstEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(firstEndAt);
 
     Instant secondEndAt = Instant.now();
-    batchJobScheduledData = new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, firstEndAt, secondEndAt);
+    batchJobScheduledData = new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, firstEndAt, secondEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);

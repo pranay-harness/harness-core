@@ -30,7 +30,7 @@ public class K8sUtilizationGranularDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   @Autowired private DataFetcherUtils utils;
 
-  private static final int MAX_RETRY_COUNT = 5;
+  private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
       "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
