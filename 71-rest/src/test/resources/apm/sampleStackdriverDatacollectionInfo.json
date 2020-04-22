@@ -1,0 +1,26 @@
+{
+  "className" : "software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo",
+  "gcpConfig" : {
+    "accountId" : "JcrYaVotSiiKRqCrMQO1Pw",
+    "encryptedServiceAccountKeyFileContent" : "ETl5DPNtSQKCoxfLVGLTtA",
+    "type" : "GCP"
+  },
+  "logMessageField" : "textPayload",
+  "query" : "resource.type=\"k8s_container\"\nresource.labels.project_id=\"sq-kp-k8s-prod\"\nresource.labels.location=\"us-west1\"\nresource.labels.cluster_name=\"kp-k8s-prod-us-west1-v1\"\nresource.labels.namespace_name=\"pubsub-to-gcs\"\nresource.labels.container_name=\"pubsub-to-gcs\"\nseverity=(ERROR OR CRITICAL OR ALERT OR EMERGENCY)\nNOT \"INFO\"",
+  "startTime" :0,
+  "endTime" : 0,
+  "startMinute" : 0,
+  "collectionTime" : 5,
+  "hostnameField" : "resource.labels.pod_name",
+  "hosts" : [
+    "dummy"
+  ],
+  "stateType" : "STACK_DRIVER_LOG",
+  "initialDelayMinutes" : 0,
+  "accountId" : "JcrYaVotSiiKRqCrMQO1Pw",
+  "applicationId" : "EkvhhQqDTxmocv0GHsO4yg",
+  "stateExecutionId" : "RvLsld-zRkyjokJcuulBSw",
+  "workflowId" : "3znV8KKwSqmpY8h4AhJEUQ",
+  "workflowExecutionId" : "3zLpacY1S7mNvxdRfPF3Wg",
+  "serviceId" : "ZbHN0JerSxWCgjqsp-9nIg"
+}

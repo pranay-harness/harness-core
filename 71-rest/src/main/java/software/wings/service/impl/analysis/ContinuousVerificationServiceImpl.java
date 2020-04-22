@@ -44,6 +44,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -2345,9 +2346,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           delegateTasks.add(
               createDelegateTaskAndNotify(dataCollectionInfo, SUMO_COLLECT_LOG_DATA, executionData, context, true));
         }
-        for (DelegateTask task : delegateTasks) {
-          delegateService.queueTask(task);
-        }
         break;
       case DATA_DOG_LOG:
         DatadogConfig datadogConfig =
@@ -2358,10 +2356,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           delegateTasks.add(createDelegateTaskAndNotify(
               dataCollectionInfo, CUSTOM_LOG_COLLECTION_TASK, executionData, context, true));
         }
-        for (DelegateTask task : delegateTasks) {
-          delegateService.queueTask(task);
-        }
-
         break;
       case STACK_DRIVER_LOG:
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
@@ -2371,12 +2365,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           delegateTasks.add(createDelegateTaskAndNotify(
               dataCollectionInfo, STACKDRIVER_COLLECT_LOG_DATA, executionData, context, true));
         }
-        for (DelegateTask task : delegateTasks) {
-          delegateService.queueTask(task);
-        }
         break;
       default:
         throw new IllegalStateException("Invalid state: " + context.getStateType());
+    }
+    for (DelegateTask task : delegateTasks) {
+      // This log statement is pretty custom now for LogDataCollectionInfos
+      LogDataCollectionInfo info = (LogDataCollectionInfo) task.getData().getParameters()[0];
+      logger.info(
+          "Creating a delegate task for stateExecutionId {} for hosts {}", info.getStateExecutionId(), info.getHosts());
+      delegateService.queueTask(task);
     }
     return true;
   }
@@ -2457,8 +2455,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private StackDriverLogDataCollectionInfo createStackDriverLogDataCollectionInfo(
       GcpConfig gcpConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
+    // Create a deepcopy of the dataCollectionInfo by parsing toJson and creating the object back from Json.
+    Gson gson = new Gson();
     StackDriverLogDataCollectionInfo savedDataCollectionInfo =
-        (StackDriverLogDataCollectionInfo) context.getDataCollectionInfo();
+        gson.fromJson(gson.toJson((StackDriverLogDataCollectionInfo) context.getDataCollectionInfo()),
+            StackDriverLogDataCollectionInfo.class);
+
     savedDataCollectionInfo.setHosts(hostBatch);
 
     savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);

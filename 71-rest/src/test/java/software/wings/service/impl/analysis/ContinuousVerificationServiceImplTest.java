@@ -29,6 +29,8 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,6 +56,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -76,6 +79,7 @@ import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
@@ -100,6 +104,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.text.ParseException;
 import java.time.Instant;
@@ -140,6 +145,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private DatadogService datadogService;
   @Mock private MLServiceUtils mlServiceUtils;
   @Inject private WingsPersistence wingsPersistence;
+  @Mock private DelegateService delegateService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
@@ -798,5 +804,59 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(logger, times(1)).info(stringArgumentCaptor.capture());
     assertThat(stringArgumentCaptor.getValue()).isEqualTo("The state was marked success");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDeepCopy() throws Exception {
+    String textLoad = Resources.toString(
+        ContinuousVerificationServiceImplTest.class.getResource("/apm/sampleStackdriverDatacollectionInfo.json"),
+        Charsets.UTF_8);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<StackDriverLogDataCollectionInfo>() {}.getType();
+    StackDriverLogDataCollectionInfo dataCollectionInfo = gson.fromJson(textLoad, type);
+    StackDriverLogDataCollectionInfo copied =
+        gson.fromJson(gson.toJson(dataCollectionInfo), StackDriverLogDataCollectionInfo.class);
+    copied.setHosts(Sets.newHashSet("host1", "host3", "host2"));
+    assertThat(dataCollectionInfo.getHosts()).isNotSameAs(copied.getHosts());
+    assertThat(dataCollectionInfo.getGcpConfig().toString()).isEqualTo(copied.getGcpConfig().toString());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCollectCVDataForWorkflow_moreThanFiveHosts() throws Exception {
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    encryptedDataDetails.add(mock(EncryptedDataDetail.class));
+    when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(encryptedDataDetails);
+    when(settingsService.get(anyString()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(GcpConfig.builder().build()).build());
+    String textLoad = Resources.toString(
+        ContinuousVerificationServiceImplTest.class.getResource("/apm/sampleAnalysisContext.json"), Charsets.UTF_8);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<AnalysisContext>() {}.getType();
+    AnalysisContext context = gson.fromJson(textLoad, type);
+    context.setUuid("sampleUuid");
+    textLoad = Resources.toString(
+        ContinuousVerificationServiceImplTest.class.getResource("/apm/sampleStackdriverDatacollectionInfo.json"),
+        Charsets.UTF_8);
+
+    type = new TypeToken<StackDriverLogDataCollectionInfo>() {}.getType();
+    StackDriverLogDataCollectionInfo dataCollectionInfo = gson.fromJson(textLoad, type);
+    context.setDataCollectionInfo(dataCollectionInfo);
+    wingsPersistence.save(context);
+    continuousVerificationService.collectCVDataForWorkflow("sampleUuid", 26452678);
+    ArgumentCaptor<DelegateTask> taskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(4)).queueTask(taskArgumentCaptor.capture());
+    assertThat(taskArgumentCaptor.getAllValues().size()).isEqualTo(4);
+    Set<String> hosts = context.getTestNodes().keySet();
+    List<DelegateTask> tasks = taskArgumentCaptor.getAllValues();
+    int i = 0;
+    for (List<String> hostBatch : Lists.partition(new ArrayList<>(hosts), 5)) {
+      assertThat(hostBatch).containsExactlyInAnyOrderElementsOf(
+          ((LogDataCollectionInfo) tasks.get(i++).getData().getParameters()[0]).getHosts());
+    }
   }
 }
