@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.mockito.Mockito.mock;
 import static software.wings.utils.CacheManager.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -14,6 +15,7 @@ import com.google.inject.Singleton;
 import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -111,6 +113,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
       @Override
       protected void configure() {
         bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
+        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
 
