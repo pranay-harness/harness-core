@@ -71,6 +71,7 @@ import software.wings.sm.ExecutionContextImpl;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -116,7 +117,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
   }
 
-  private WorkflowExecution createNewWorkflowExecution(User triggeredBy) {
+  private WorkflowExecution createWorkflowExecution(User triggeredBy) {
     WorkflowExecutionBuilder workflowExecutionBuilder = WorkflowExecution.builder()
                                                             .accountId(ACCOUNT_ID)
                                                             .appId(APP_ID)
@@ -138,10 +139,35 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
+  public void shouldReportDeploymentEventToSegmentWithNullWorkflowTypeAndNullServiceIds() throws URISyntaxException {
+    Account account = testUtils.createAccount();
+    when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
+    WorkflowExecution workflowExecution = createWorkflowExecution(null);
+    workflowExecution.setServiceIds(Arrays.asList(generateUuid()));
+    workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
+    verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldReportDeploymentEventToSegmentWithNullServiceIds() throws URISyntaxException {
+    Account account = testUtils.createAccount();
+    when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
+    WorkflowExecution workflowExecution = createWorkflowExecution(null);
+    workflowExecution.setWorkflowType(null);
+    workflowExecution.setServiceIds(null);
+    workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
+    verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
   public void shouldReportDeploymentEventToSegmentWithNullWorkflowType() throws URISyntaxException {
     Account account = testUtils.createAccount();
     when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
-    WorkflowExecution workflowExecution = createNewWorkflowExecution(null);
+    WorkflowExecution workflowExecution = createWorkflowExecution(null);
     workflowExecution.setWorkflowType(null);
     workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
     verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
@@ -153,7 +179,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   public void shouldReportDeploymentEventToSegmentByTrigger() throws URISyntaxException {
     Account account = testUtils.createAccount();
     when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
-    WorkflowExecution workflowExecution = createNewWorkflowExecution(null);
+    WorkflowExecution workflowExecution = createWorkflowExecution(null);
     workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
     verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
   }
@@ -174,7 +200,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     AcquiredLock acquiredLock = mock(AcquiredLock.class);
     when(persistentLocker.waitToAcquireLock(anyString(), any(Duration.class), any(Duration.class)))
         .thenReturn(acquiredLock);
-    WorkflowExecution workflowExecution = createNewWorkflowExecution(user);
+    WorkflowExecution workflowExecution = createWorkflowExecution(user);
     workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
     verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
   }
