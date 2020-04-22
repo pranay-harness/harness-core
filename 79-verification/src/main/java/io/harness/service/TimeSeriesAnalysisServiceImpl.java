@@ -254,6 +254,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                             .analysisMinute(analysisMinute)
                                             .cvConfigId(cvConfigId)
                                             .tag(mlAnalysisResponse.getTag())
+                                            .accountId(mlAnalysisResponse.getAccountId())
                                             .build();
 
     riskSummary.setAppId(appId);

@@ -84,6 +84,7 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
                                               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
                                               .cvConfigId(mlAnalysisResponse.getCvConfigId())
+                                              .accountId(mlAnalysisResponse.getAccountId())
                                               .build();
 
       riskSummary.setAppId(mlAnalysisResponse.getAppId());
