@@ -1729,6 +1729,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           NewRelicMetricAnalysisRecord.builder()
               .message(message)
               .appId(appId)
+              .accountId(analysisContext.getAccountId())
               .stateType(analysisContext.getStateType())
               .stateExecutionId(stateExecutionId)
               .workflowExecutionId(analysisContext.getWorkflowExecutionId())

@@ -149,6 +149,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       Map<String, Set<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
       NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                        .accountId(context.getAccountId())
                                                         .appId(context.getAppId())
                                                         .stateExecutionId(context.getStateExecutionId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())

@@ -8,6 +8,7 @@ import migrations.all.AddAccountIdToDeploymentEntities;
 import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
+import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
 import migrations.all.AddAccountIdToTimeSeriesAnomaliesRecordMigration;
@@ -201,6 +202,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(117, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
         .add(Pair.of(118, AddAccountIdToTimeSeriesCumulativeSums.class))
         .add(Pair.of(119, AddAccountIdToTimeSeriesRiskSummary.class))
+        .add(Pair.of(120, AddAccountIdToNewRelicMetricAnalysisRecords.class))
         .build();
   }
 }

@@ -767,6 +767,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       NewRelicMetricAnalysisRecord metricAnalysisRecord =
           NewRelicMetricAnalysisRecord.builder()
               .appId(timeSeriesMLAnalysisRecord.getAppId())
+              .accountId(timeSeriesMLAnalysisRecord.getAccountId())
               .stateType(timeSeriesMLAnalysisRecord.getStateType())
               .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
               .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
@@ -824,8 +825,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     });
     analysisRecords.addAll(groupVsMetricAnalysisRecord.values());
 
+    String accountId = appService.getAccountIdByAppId(appId);
     if (isEmpty(analysisRecords)) {
       analysisRecords.add(NewRelicMetricAnalysisRecord.builder()
+                              .accountId(accountId)
                               .showTimeSeries(false)
                               .stateType(StateType.APP_DYNAMICS)
                               .riskLevel(RiskLevel.NA)

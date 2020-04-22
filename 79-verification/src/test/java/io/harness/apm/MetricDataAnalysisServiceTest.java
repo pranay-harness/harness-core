@@ -63,6 +63,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.StateExecutionData;
@@ -102,6 +103,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   private String groupName;
   @Mock private VerificationManagerClientHelper managerClientHelper;
   @Mock private UsageMetricsHelper usageMetricsHelper;
+  @Mock private AppService appService;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private TimeSeriesAnalysisService metricDataAnalysisService;
@@ -129,6 +131,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeField(managerAnalysisService, "settingsService", settingsService, true);
     FieldUtils.writeField(
         metricDataAnalysisService, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(managerAnalysisService, "appService", appService, true);
 
     wingsPersistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
                               .uuid(stateExecutionId)
@@ -149,6 +152,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       for (int j = 1; j <= numOfMinutes; j++) {
         TimeSeriesMLAnalysisRecord mlAnalysisResponse = TimeSeriesMLAnalysisRecord.builder().build();
         mlAnalysisResponse.setCreatedAt(j);
+        mlAnalysisResponse.setAccountId(accountId);
         mlAnalysisResponse.setTransactions(Collections.EMPTY_MAP);
         mlAnalysisResponse.setOverallMetricScores(new HashMap<String, Double>() {
           {

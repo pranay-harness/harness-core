@@ -404,6 +404,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                            .accountId(context.getAccountId())
                                                             .message(message)
                                                             .appId(context.getAppId())
                                                             .stateType(StateType.valueOf(getStateType()))
