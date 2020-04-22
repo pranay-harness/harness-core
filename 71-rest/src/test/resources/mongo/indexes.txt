@@ -591,6 +591,7 @@ timeSeriesMetricTemplates { "name" : "cvConfigId_1" , "background" : true} { "cv
 timeSeriesMetricTemplates { "name" : "unique_Idx" , "unique" : true} { "stateExecutionId" : 1 , "cvConfigId" : 1}
 timeSeriesMetricTemplates { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
 timeSeriesRawData { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+timeSeriesRiskSummary { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 timeSeriesRiskSummary { "name" : "appId_1" , "background" : true} { "appId" : 1}
 timeSeriesRiskSummary { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 timeSeriesRiskSummary { "name" : "minute_idx" , "background" : true} { "cvConfigId" : 1 , "analysisMinute" : 1 , "tag" : 1}

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -45,7 +47,7 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRiskSummary extends Base {
+public class TimeSeriesRiskSummary extends Base implements AccountAccess {
   @NotEmpty private String cvConfigId;
   @NotEmpty private int analysisMinute;
   @Transient Map<String, Map<String, Integer>> txnMetricRisk;
@@ -54,6 +56,7 @@ public class TimeSeriesRiskSummary extends Base {
   @JsonIgnore private byte[] compressedMetricRisk;
   @JsonIgnore private byte[] compressedLongTermPattern;
   @JsonIgnore private byte[] compressedRiskData;
+  @Indexed private String accountId;
 
   private String tag;
 

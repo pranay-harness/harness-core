@@ -14,6 +14,7 @@ import migrations.all.AddAccountIdToTimeSeriesAnomaliesRecordMigration;
 import migrations.all.AddAccountIdToTimeSeriesCumulativeSums;
 import migrations.all.AddAccountIdToTimeSeriesMetricGroupMigration;
 import migrations.all.AddAccountIdToTimeSeriesMetricTemplatesMigration;
+import migrations.all.AddAccountIdToTimeSeriesRiskSummary;
 import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
@@ -199,6 +200,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(116, AddAccountIdToTimeSeriesMetricGroupMigration.class))
         .add(Pair.of(117, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
         .add(Pair.of(118, AddAccountIdToTimeSeriesCumulativeSums.class))
+        .add(Pair.of(119, AddAccountIdToTimeSeriesRiskSummary.class))
         .build();
   }
 }
