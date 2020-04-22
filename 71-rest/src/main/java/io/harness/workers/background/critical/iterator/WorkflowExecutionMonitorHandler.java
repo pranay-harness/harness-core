@@ -4,8 +4,8 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.flowingStatuses;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_EXPIRED;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
-import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

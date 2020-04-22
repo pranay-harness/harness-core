@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
