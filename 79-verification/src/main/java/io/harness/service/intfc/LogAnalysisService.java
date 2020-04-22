@@ -3,7 +3,6 @@ package io.harness.service.intfc;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
@@ -72,8 +71,6 @@ public interface LogAnalysisService {
       String appId, String serviceId, String workflowId, String workflowExecutionId);
 
   boolean deleteFeedback(String feedbackId);
-
-  Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
 
   boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId);

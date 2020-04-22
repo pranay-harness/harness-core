@@ -22,10 +22,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.SPLUNKV2;
 
@@ -39,7 +36,6 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
@@ -62,12 +58,10 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
@@ -151,7 +145,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   private Random r;
   private LogsCVConfiguration logsCVConfiguration;
 
-  @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private HarnessMetricRegistry metricRegistry;
   @Mock ContinuousVerificationService continuousVerificationService;
   @Inject private LogAnalysisService analysisService;
@@ -2185,53 +2178,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                               .logCollectionMinute(100)
                               .build());
     assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isTrue();
-  }
-
-  @Test(expected = WingsException.class)
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetLastExecutionNodesNoExecution() {
-    analysisService.getLastExecutionNodes(appId, workflowId);
-  }
-
-  @Test(expected = WingsException.class)
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetLastExecutionNodesNoSummary() {
-    WorkflowExecution workflowExecution =
-        WorkflowExecution.builder()
-            .appId(appId)
-            .workflowId(workflowId)
-            .status(ExecutionStatus.SUCCESS)
-            .serviceExecutionSummaries(Lists.newArrayList(anElementExecutionSummary().build()))
-            .build();
-    wingsPersistence.save(workflowExecution);
-    analysisService.getLastExecutionNodes(appId, workflowId);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetLastExecutionNodes() {
-    WorkflowExecution workflowExecution =
-        WorkflowExecution.builder()
-            .appId(appId)
-            .workflowId(workflowId)
-            .status(ExecutionStatus.SUCCESS)
-            .serviceExecutionSummaries(Lists.newArrayList(
-                anElementExecutionSummary()
-                    .withInstanceStatusSummaries(Lists.newArrayList(
-                        anInstanceStatusSummary()
-                            .withInstanceElement(
-                                anInstanceElement().hostName("host1").displayName("hostDisplayName").build())
-                            .build()))
-                    .build()))
-            .build();
-    wingsPersistence.save(workflowExecution);
-    Map<String, InstanceElement> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
-    assertThat(lastExecutionNodes)
-        .isEqualTo(Collections.singletonMap(
-            "host1", anInstanceElement().hostName("host1").displayName("hostDisplayName").build()));
   }
 
   @Test

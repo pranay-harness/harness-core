@@ -1,11 +1,9 @@
 package io.harness.service;
 
-import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
@@ -33,7 +31,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
@@ -47,10 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
-import software.wings.api.InstanceElement;
-import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -82,7 +75,6 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -1045,38 +1037,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return true;
     }
     return false;
-  }
-
-  @Override
-  public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
-    WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                              .filter("appId", appId)
-                                              .filter(WorkflowExecutionKeys.workflowId, workflowId)
-                                              .filter(WorkflowExecutionKeys.status, SUCCESS)
-                                              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                                              .get();
-
-    if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
-          .addParam("reason", "No successful execution exists for the workflow.");
-    }
-
-    Map<String, InstanceElement> hosts = new HashMap<>();
-    for (ElementExecutionSummary executionSummary : workflowExecution.getServiceExecutionSummaries()) {
-      if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
-        continue;
-      }
-      for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-        hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), instanceStatusSummary.getInstanceElement());
-      }
-    }
-    if (isEmpty(hosts)) {
-      logger.info("No nodes found for successful execution for workflow {} with executionId {}", workflowId,
-          workflowExecution.getUuid());
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
-          .addParam("reason", "No node information was captured in the last successful workflow execution");
-    }
-    return hosts;
   }
 
   private boolean deleteIfStale(String query, String appId, String stateExecutionId, StateType type, Set<String> hosts,

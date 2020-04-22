@@ -109,8 +109,9 @@ public class LogMLResource {
   @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, InstanceElement>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
+  public RestResponse<Map<String, Map<String, InstanceElement>>> getLastExecutionNodes(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }
 
