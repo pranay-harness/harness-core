@@ -20,12 +20,14 @@ import java.util.List;
 public class EnrichedCommandVersionDTO extends CommandVersionDTO {
   BaseTemplate templateObject;
   List<Variable> variables;
+  String yamlContent;
 
   @Builder
-  public EnrichedCommandVersionDTO(String commandId, String commandStoreId, String version, String description,
-      String yamlContent, BaseTemplate templateObject, List<Variable> variables) {
-    super(commandId, commandStoreId, version, description, yamlContent);
+  public EnrichedCommandVersionDTO(String commandName, String commandStoreName, String version, String description,
+      BaseTemplate templateObject, List<Variable> variables, String yamlContent) {
+    super(commandName, commandStoreName, version, description);
     this.templateObject = templateObject;
     this.variables = variables;
+    this.yamlContent = yamlContent;
   }
 }

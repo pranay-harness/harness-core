@@ -453,7 +453,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId) {
-    return importedTemplateService.getTemplateByCommandId(commandId, commandStoreId, accountId);
+    return importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId);
   }
 
   @Override
@@ -486,9 +486,9 @@ public class TemplateServiceImpl implements TemplateService {
       ImportedTemplate importedCommandDetails =
           importedTemplateService.getCommandByTemplateId(template.getUuid(), template.getAccountId());
       return HarnessImportedTemplateDetails.builder()
-          .importedCommandId(importedCommandDetails.getCommandId())
-          .importedCommandVersion(templateVersion.getImportedTemplateVersion())
-          .importedCommandStoreId(importedCommandDetails.getCommandStoreId())
+          .commandName(importedCommandDetails.getCommandName())
+          .commandVersion(templateVersion.getImportedTemplateVersion())
+          .commandStoreName(importedCommandDetails.getCommandStoreName())
           .build();
     }
     return null;
@@ -659,7 +659,7 @@ public class TemplateServiceImpl implements TemplateService {
   private String getImportedTemplateVersion(ImportedTemplateDetails importedTemplateDetails, String accountId) {
     if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
       HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
-      return templateDetails.getImportedCommandVersion();
+      return templateDetails.getCommandVersion();
     }
     return null;
   }
@@ -668,8 +668,7 @@ public class TemplateServiceImpl implements TemplateService {
     // TODO: Refactor implementation.
     if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
       HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
-      return getReferencedTemplate(
-          templateDetails.getImportedCommandId(), templateDetails.getImportedCommandStoreId(), accountId);
+      return getReferencedTemplate(templateDetails.getCommandName(), templateDetails.getCommandStoreName(), accountId);
     }
     return null;
   }

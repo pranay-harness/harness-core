@@ -11,22 +11,22 @@ import java.util.Map;
 public interface ImportedTemplateService {
   boolean isImported(String templateId, String accountId);
 
-  List<Template> getTemplatesByCommandIds(List<String> commandIds, String commandStoreId, String accountId);
+  List<Template> getTemplatesByCommandNames(List<String> commandNames, String commandStoreName, String accountId);
 
-  Template getTemplateByCommandId(String commandId, String commandStoreId, String accountId);
+  Template getTemplateByCommandName(String commandName, String commandStoreName, String accountId);
 
   ImportedTemplate getCommandByTemplateId(String templateId, String accountId);
 
-  Map<String, Template> getCommandIdTemplateMap(List<String> commandIds, String commandStoreId, String accountId);
+  Map<String, Template> getCommandNameTemplateMap(List<String> commandNames, String commandStoreName, String accountId);
 
   List<ImportedCommand> makeImportedCommandObjectWithLatestVersion(
-      Map<String, TemplateVersion> templateUuidLatestVersionMap, List<String> commandIds, String commandStoreId,
-      Map<String, Template> commandIdTemplateMap, String accountId);
+      Map<String, TemplateVersion> templateUuidLatestVersionMap, List<String> commandNames, String commandStoreName,
+      Map<String, Template> commandNameTemplateMap, String accountId);
 
   ImportedCommand makeImportedCommandObject(String commandId, String commandStoreId,
       List<TemplateVersion> templateVersions, String accountId, Template template);
 
   ImportedTemplate get(String commandId, String commandStoreId, String accountId);
 
-  Template getAndSaveImportedTemplate(String version, String commandId, String commandStoreId, String accountId);
+  Template getAndSaveImportedTemplate(String version, String commandName, String commandStoreName, String accountId);
 }

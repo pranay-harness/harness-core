@@ -21,27 +21,27 @@ import java.util.Map;
 public interface CommandLibraryServiceHttpClient {
   @GET("command-stores") Call<RestResponse<List<CommandStoreDTO>>> getCommandStores();
 
-  @GET("command-stores/{commandStoreId}/commands/categories")
-  Call<RestResponse<List<String>>> getCommandCategories(@Path("commandStoreId") String commandStoreId);
+  @GET("command-stores/{commandStoreName}/commands/categories")
+  Call<RestResponse<List<String>>> getCommandCategories(@Path("commandStoreName") String commandStoreName);
 
-  @GET("command-stores/{commandStoreId}/commands")
-  Call<RestResponse<PageResponse<CommandDTO>>> listCommands(@Path("commandStoreId") String commandStoreId,
+  @GET("command-stores/{commandStoreName}/commands")
+  Call<RestResponse<PageResponse<CommandDTO>>> listCommands(@Path("commandStoreName") String commandStoreName,
       @Query("cl_implementation_version") Integer clImplementationVersion, @Query("category") String category,
       @QueryMap Map<String, Object> pageRequestParams);
 
-  @GET("command-stores/{commandStoreId}/commands/{commandId}")
+  @GET("command-stores/{commandStoreName}/commands/{commandName}")
   Call<RestResponse<CommandDTO>> getCommandDetails(
-      @Path("commandStoreId") String commandStoreId, @Path("commandId") String commandId);
+      @Path("commandStoreName") String commandStoreName, @Path("commandName") String commandName);
 
-  @POST("command-stores/{commandStoreId}/commands")
+  @POST("command-stores/{commandStoreName}/commands")
   Call<RestResponse<CommandEntity>> saveCommand(
-      @Path("commandStoreId") String commandStoreId, @Body CommandEntity commandEntity);
+      @Path("commandStoreName") String commandStoreName, @Body CommandEntity commandEntity);
 
-  @GET("command-stores/{commandStoreId}/commands/{commandId}/versions/{version}")
-  Call<RestResponse<EnrichedCommandVersionDTO>> getVersionDetails(@Path("commandStoreId") String commandStoreId,
-      @Path("commandId") String commandId, @Path("version") String version);
+  @GET("command-stores/{commandStoreName}/commands/{commandName}/versions/{version}")
+  Call<RestResponse<EnrichedCommandVersionDTO>> getVersionDetails(@Path("commandStoreName") String commandStoreName,
+      @Path("commandName") String commandName, @Path("version") String version);
 
-  @POST("command-stores/{commandStoreId}/commands/{commandId}/versions")
-  Call<RestResponse<CommandVersionEntity>> saveCommandVersion(@Path("commandStoreId") String commandStoreId,
-      @Path("commandId") String commandId, @Body CommandVersionEntity commandVersionEntity);
+  @POST("command-stores/{commandStoreName}/commands/{commandName}/versions")
+  Call<RestResponse<CommandVersionEntity>> saveCommandVersion(@Path("commandStoreName") String commandStoreName,
+      @Path("commandName") String commandName, @Body CommandVersionEntity commandVersionEntity);
 }

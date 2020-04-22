@@ -12,8 +12,9 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImportedCommandVersion {
-  private String commandStoreId;
-  private String commandId;
+  private String commandStoreName;
+  private String commandName;
+  private String commandDisplayName;
   private String templateId;
   private String version;
   private String description;

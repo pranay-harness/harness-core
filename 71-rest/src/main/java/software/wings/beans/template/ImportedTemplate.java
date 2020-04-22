@@ -48,8 +48,8 @@ public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtA
 
   @NotEmpty private String name;
   @NotEmpty private String commandStoreName;
-  @NotEmpty private String commandStoreId;
-  @NotEmpty private String commandId;
+  @NotEmpty private String commandName;
+  @NotEmpty private String commandDisplayName;
   @NotEmpty private String templateId;
   private String description;
   private String imageUrl;
@@ -57,8 +57,8 @@ public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtA
 
   @Builder(toBuilder = true)
   public ImportedTemplate(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String name, String commandStoreName, String commandStoreId, String commandId,
-      String templateId, String description, String imageUrl, String accountId) {
+      long lastUpdatedAt, String name, String commandStoreName, String commandName, String templateId,
+      String description, String imageUrl, String accountId) {
     this.uuid = uuid;
     this.appId = appId;
     this.createdBy = createdBy;
@@ -67,8 +67,7 @@ public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtA
     this.lastUpdatedAt = lastUpdatedAt;
     this.name = name;
     this.commandStoreName = commandStoreName;
-    this.commandStoreId = commandStoreId;
-    this.commandId = commandId;
+    this.commandName = commandName;
     this.templateId = templateId;
     this.description = description;
     this.imageUrl = imageUrl;

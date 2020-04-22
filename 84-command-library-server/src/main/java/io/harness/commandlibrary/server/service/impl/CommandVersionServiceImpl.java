@@ -25,19 +25,19 @@ public class CommandVersionServiceImpl implements CommandVersionService {
   }
 
   @Override
-  public CommandVersionEntity getCommandVersionEntity(String commandStoreId, String commandId, String version) {
+  public CommandVersionEntity getCommandVersionEntity(String commandStoreName, String commandName, String version) {
     return wingsPersistence.createQuery(CommandVersionEntity.class)
-        .filter(CommandVersionEntity.CommandVersionsKeys.commandStoreId, commandStoreId)
-        .filter(CommandVersionEntity.CommandVersionsKeys.commandId, commandId)
+        .filter(CommandVersionEntity.CommandVersionsKeys.commandStoreName, commandStoreName)
+        .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandName)
         .filter(CommandVersionEntity.CommandVersionsKeys.version, version)
         .get();
   }
 
   @Override
-  public List<CommandVersionEntity> getAllVersionEntitiesForCommand(String commandStoreId, String commandId) {
+  public List<CommandVersionEntity> getAllVersionEntitiesForCommand(String commandStoreName, String commandName) {
     return emptyIfNull(wingsPersistence.createQuery(CommandVersionEntity.class, HQuery.excludeAuthority)
-                           .filter(CommandVersionEntity.CommandVersionsKeys.commandStoreId, commandStoreId)
-                           .filter(CommandVersionEntity.CommandVersionsKeys.commandId, commandId)
+                           .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandStoreName)
+                           .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandName)
                            .order(Sort.descending(CommandVersionEntity.CommandVersionsKeys.createdAt))
                            .asList());
   }

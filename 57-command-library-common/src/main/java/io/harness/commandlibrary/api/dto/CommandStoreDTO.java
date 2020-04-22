@@ -10,7 +10,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "CommandStoreKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CommandStoreDTO {
-  String id;
   String name;
+  String displayName;
   String description;
 }

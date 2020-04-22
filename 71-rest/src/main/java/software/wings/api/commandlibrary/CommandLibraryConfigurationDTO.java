@@ -9,12 +9,12 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 public class CommandLibraryConfigurationDTO {
-  List<String> supportedCommandStoreIdList;
+  List<String> supportedCommandStoreNameList;
   int clImplementationVersion;
 
   @Builder
-  public CommandLibraryConfigurationDTO(List<String> supportedCommandStoreIdList, int clImplementationVersion) {
-    this.supportedCommandStoreIdList = supportedCommandStoreIdList;
+  public CommandLibraryConfigurationDTO(List<String> supportedCommandStoreNameList, int clImplementationVersion) {
+    this.supportedCommandStoreNameList = supportedCommandStoreNameList;
     this.clImplementationVersion = clImplementationVersion;
   }
 }

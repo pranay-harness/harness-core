@@ -17,8 +17,9 @@ public class CommandUtils {
   public static CommandDTOBuilder populateCommandDTO(CommandDTOBuilder commandDTOBuilder, CommandEntity commandEntity,
       CommandVersionEntity latestCommandVersionEntity, List<CommandVersionEntity> allVersionList) {
     if (commandEntity != null) {
-      commandDTOBuilder.id(commandEntity.getUuid())
-          .commandStoreId(commandEntity.getCommandStoreId())
+      commandDTOBuilder.name(commandEntity.getName())
+          .commandStoreName(commandEntity.getCommandStoreName())
+          .displayName(commandEntity.getDisplayName())
           .type(commandEntity.getType())
           .name(commandEntity.getName())
           .description(commandEntity.getDescription())

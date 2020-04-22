@@ -24,25 +24,18 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
-import software.wings.service.intfc.template.TemplateFolderService;
-import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
-import software.wings.service.intfc.template.TemplateVersionService;
 
 public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
-  @Inject private TemplateGalleryService templateGalleryService;
   @Inject TemplateService templateService;
-  @Inject TemplateFolderService templateFolderService;
   @Spy @Inject private ImportedTemplateServiceImpl importedTemplateService;
-  @Inject TemplateVersionService templateVersionService;
 
   private String COMMAND_NAME = "commandName";
-  private String COMMAND_ID = "commandId";
-  private String COMMAND_STORE_ID = "commandStoreId";
+  private String COMMAND_STORE_NAME = "commandStoreName";
 
   public void mockItems() {
     MockitoAnnotations.initMocks(this);
-    doReturn(CommandDTO.builder().commandStoreId(COMMAND_STORE_ID).id(COMMAND_ID).name(COMMAND_NAME).build())
+    doReturn(CommandDTO.builder().commandStoreName(COMMAND_STORE_NAME).name(COMMAND_NAME).build())
         .when(importedTemplateService)
         .downloadAndGetCommandDTO(anyString(), anyString());
   }
@@ -61,7 +54,7 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
 
     assertThatThrownBy(()
                            -> importedTemplateService.getAndSaveImportedTemplate(
-                               version, COMMAND_ID, COMMAND_STORE_ID, GLOBAL_ACCOUNT_ID));
+                               version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID));
   }
 
   @Test
@@ -76,20 +69,18 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
         .when(importedTemplateService)
         .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
 
-    Template updatedTemplate =
-        importedTemplateService.getAndSaveImportedTemplate(version, COMMAND_ID, COMMAND_STORE_ID, GLOBAL_ACCOUNT_ID);
+    Template updatedTemplate = importedTemplateService.getAndSaveImportedTemplate(
+        version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID);
 
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getUuid()).isEqualTo(savedTemplate.getUuid());
     assertThat(updatedTemplate.getImportedTemplateDetails()).isInstanceOf(HarnessImportedTemplateDetails.class);
-    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getImportedCommandId())
-        .isEqualTo(COMMAND_ID);
-    assertThat(
-        ((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getImportedCommandVersion())
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandName())
+        .isEqualTo(COMMAND_NAME);
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandVersion())
         .isEqualTo("2.2");
-    assertThat(
-        ((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getImportedCommandStoreId())
-        .isEqualTo(COMMAND_STORE_ID);
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandStoreName())
+        .isEqualTo(COMMAND_STORE_NAME);
   }
 
   @Test
@@ -102,16 +93,16 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
         .when(importedTemplateService)
         .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
 
-    assertThat(
-        importedTemplateService.getAndSaveImportedTemplate(version, COMMAND_ID, COMMAND_STORE_ID, GLOBAL_ACCOUNT_ID))
+    assertThat(importedTemplateService.getAndSaveImportedTemplate(
+                   version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID))
         .isNotNull();
   }
 
   private Template saveImportedTemplate(String templateName, String version) {
     HarnessImportedTemplateDetails harnessImportedTemplateDetails = HarnessImportedTemplateDetails.builder()
-                                                                        .importedCommandId(COMMAND_ID)
-                                                                        .importedCommandStoreId(COMMAND_STORE_ID)
-                                                                        .importedCommandVersion(version)
+                                                                        .commandName(COMMAND_NAME)
+                                                                        .commandStoreName(COMMAND_STORE_NAME)
+                                                                        .commandVersion(version)
                                                                         .build();
     TemplateGallery templateGallery =
         templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY);
@@ -130,8 +121,8 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
                                             .name(COMMAND_NAME)
                                             .appId(GLOBAL_APP_ID)
                                             .accountId(GLOBAL_ACCOUNT_ID)
-                                            .commandId(COMMAND_ID)
-                                            .commandStoreId(COMMAND_STORE_ID)
+                                            .commandName(COMMAND_NAME)
+                                            .commandStoreName(COMMAND_STORE_NAME)
                                             .build();
     wingsPersistence.save(importedTemplate);
     return template;
@@ -139,8 +130,8 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
 
   private EnrichedCommandVersionDTO makeCommandVersionDTO(String version) {
     return EnrichedCommandVersionDTO.builder()
-        .commandId(COMMAND_ID)
-        .commandStoreId(COMMAND_STORE_ID)
+        .commandName(COMMAND_NAME)
+        .commandStoreName(COMMAND_STORE_NAME)
         .description("desc")
         .templateObject(HttpTemplate.builder().build())
         .version(version)

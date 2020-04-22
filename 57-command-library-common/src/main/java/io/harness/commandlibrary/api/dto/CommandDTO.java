@@ -12,10 +12,10 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "CommandDTOKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CommandDTO {
-  String id;
-  String commandStoreId;
+  String commandStoreName;
   String type;
   String name;
+  String displayName;
   String description;
   String category;
   String imageUrl;

@@ -8,8 +8,7 @@ import lombok.Value;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarnessImportedTemplateDetails implements ImportedTemplateDetails {
-  // TODO: refactor to remove imported from all variables.
-  private String importedCommandVersion;
-  private String importedCommandId;
-  private String importedCommandStoreId;
+  private String commandVersion;
+  private String commandName;
+  private String commandStoreName;
 }
