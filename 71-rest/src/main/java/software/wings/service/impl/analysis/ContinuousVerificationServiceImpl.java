@@ -70,6 +70,7 @@ import software.wings.APMFetchConfig;
 import software.wings.alerts.AlertStatus;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -2599,7 +2600,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
-  public VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId) {
+  public StateExecutionData getVerificationStateExecutionData(String stateExecutionId) {
     final StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, stateExecutionId);
     Preconditions.checkNotNull(stateExecutionInstance);
@@ -2634,6 +2635,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),
         "The details for the state are not in the stateExecutionMap for " + stateExecutionId);
+    final StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+    if (stateExecutionData instanceof SkipStateExecutionData) {
+      return stateExecutionData;
+    }
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {

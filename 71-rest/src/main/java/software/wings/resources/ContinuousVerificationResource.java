@@ -23,9 +23,9 @@ import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
-import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -47,7 +47,7 @@ public class ContinuousVerificationResource {
   @Timed
   @Scope(SERVICE)
   @ExceptionMetered
-  public RestResponse<VerificationStateAnalysisExecutionData> getVerificationStateExecutionData(
+  public RestResponse<StateExecutionData> getVerificationStateExecutionData(
       @QueryParam("accountId") final String accountId, @QueryParam("stateExecutionId") final String stateExecutionId) {
     return new RestResponse<>(cvManagerService.getVerificationStateExecutionData(stateExecutionId));
   }
