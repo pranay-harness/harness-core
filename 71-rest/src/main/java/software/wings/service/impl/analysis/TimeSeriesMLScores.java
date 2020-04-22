@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,7 @@ import java.util.Map;
 @Entity(value = "timeSeriesMLScores", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMLScoresKeys")
-public class TimeSeriesMLScores extends Base {
+public class TimeSeriesMLScores extends Base implements AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowId;
@@ -35,19 +36,22 @@ public class TimeSeriesMLScores extends Base {
 
   @NotEmpty private int analysisMinute;
 
+  @Indexed private String accountId;
+
   private Map<String, TimeSeriesMLTxnScores> scoresMap;
 
   @Builder
   public TimeSeriesMLScores(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType, String workflowId,
       String workflowExecutionId, String stateExecutionId, int analysisMinute,
-      Map<String, TimeSeriesMLTxnScores> scoresMap) {
+      Map<String, TimeSeriesMLTxnScores> scoresMap, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
     this.analysisMinute = analysisMinute;
+    this.accountId = accountId;
     this.scoresMap = scoresMap;
   }
 }

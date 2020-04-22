@@ -239,6 +239,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
                                                 .appId(appId)
+                                                .accountId(accountId)
                                                 .stateExecutionId(stateExecutionId)
                                                 .workflowExecutionId(workflowExecutionId)
                                                 .analysisMinute(analysisMinute)
