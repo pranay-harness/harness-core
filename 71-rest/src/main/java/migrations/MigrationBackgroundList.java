@@ -18,6 +18,7 @@ import migrations.all.AddAccountIdToTimeSeriesMetricTemplatesMigration;
 import migrations.all.AddAccountIdToTimeSeriesRiskSummary;
 import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
+import migrations.all.AddAccountidToTimeSeriesMLScores;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
 import migrations.all.AddCommitTimeToGitSyncError;
@@ -203,6 +204,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(118, AddAccountIdToTimeSeriesCumulativeSums.class))
         .add(Pair.of(119, AddAccountIdToTimeSeriesRiskSummary.class))
         .add(Pair.of(120, AddAccountIdToNewRelicMetricAnalysisRecords.class))
+        .add(Pair.of(121, AddAccountidToTimeSeriesMLScores.class))
         .build();
   }
 }
