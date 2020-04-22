@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
@@ -36,7 +37,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
-import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionCallbackMock;
 import software.wings.sm.StateMachineExecutor;

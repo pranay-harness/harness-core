@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import io.harness.interrupts.ExecutionInterruptType;
+
 import java.util.Map;
 
 /**

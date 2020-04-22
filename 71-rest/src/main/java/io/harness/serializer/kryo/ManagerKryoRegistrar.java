@@ -701,7 +701,6 @@ import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
-import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.InfraMappingSummary;
@@ -1278,7 +1277,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ElementNotifyResponseData.class, 5147);
     kryo.register(ExecutionInterrupt.class, 4009);
     kryo.register(ExecutionInterruptEffect.class, 5236);
-    kryo.register(ExecutionInterruptType.class, 4000);
     kryo.register(ExecutionResponse.class, 5135);
     kryo.register(ExecutionStatusData.class, 5137);
     kryo.register(InfraMappingSummary.class, 5138);

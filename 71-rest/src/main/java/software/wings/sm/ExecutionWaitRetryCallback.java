@@ -1,7 +1,7 @@
 package software.wings.sm;
 
+import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
-import static software.wings.sm.ExecutionInterruptType.RETRY;
 
 import com.google.inject.Inject;
 

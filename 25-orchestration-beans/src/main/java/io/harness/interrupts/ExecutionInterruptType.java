@@ -1,4 +1,4 @@
-package software.wings.sm;
+package io.harness.interrupts;
 
 /**
  * Describes different possible events for state.
