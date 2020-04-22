@@ -224,8 +224,8 @@ public class SignupServiceImpl implements SignupService {
 
       if (isPasswordPwned) {
         throw new WeakPasswordException(
-            "Please choose a stronger password. Don't use common patterns like password, abcdef, or 123456.", null,
-            PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
+            "The password you entered has been flagged as vulnerable. To ensure security of your account, please enter a different password.",
+            null, PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
       }
     }
   }
