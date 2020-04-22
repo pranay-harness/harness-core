@@ -11,8 +11,8 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImportedCommand {
   private String commandStoreName;
-  private String commandStoreId;
-  private String commandId;
+  private String commandName;
+  private String commandDisplayName;
   private String templateId;
   private String name;
   private String description;

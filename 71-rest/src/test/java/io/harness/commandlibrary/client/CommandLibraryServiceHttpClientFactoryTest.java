@@ -56,12 +56,13 @@ public class CommandLibraryServiceHttpClientFactoryTest extends CategoryTest {
                               .setResponseCode(HttpURLConnection.HTTP_OK)
                               .setBody(JsonUtils.asJson(aRestResponse()
                                                             .withResource(Collections.singletonList(
-                                                                CommandStoreDTO.builder().id("harness").build()))
+                                                                CommandStoreDTO.builder().name("harness").build()))
                                                             .build())));
 
     doReturn("secret").when(commandLibraryService).getSecretForClient(anyString());
     final CommandLibraryServiceHttpClient serviceHttpClient = factory.get();
 
-    assertThat(serviceHttpClient.getCommandStores().execute().body().getResource().get(0).getId()).isEqualTo("harness");
+    assertThat(serviceHttpClient.getCommandStores().execute().body().getResource().get(0).getName())
+        .isEqualTo("harness");
   }
 }

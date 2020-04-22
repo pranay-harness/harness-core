@@ -6,7 +6,7 @@ import io.harness.commandlibrary.api.dto.CommandDTO;
 import software.wings.beans.commandlibrary.CommandEntity;
 
 public interface CommandService {
-  CommandDTO getCommandDetails(String commandStoreId, String commandId);
+  CommandDTO getCommandDetails(String commandStoreName, String commandName);
 
   PageResponse<CommandEntity> listCommandEntity(PageRequest<CommandEntity> pageRequest);
 

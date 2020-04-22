@@ -7,5 +7,5 @@ import software.wings.beans.commandlibrary.CommandEntity;
 
 public interface CommandStoreService {
   PageResponse<CommandDTO> listCommandsForStore(
-      String commandStoreId, PageRequest<CommandEntity> pageRequest, String category);
+      String commandStoreName, PageRequest<CommandEntity> pageRequest, String category);
 }

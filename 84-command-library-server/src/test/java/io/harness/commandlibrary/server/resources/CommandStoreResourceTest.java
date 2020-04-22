@@ -68,20 +68,20 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     final PageResponse<CommandDTO> pageResponse = restResponse.getResource();
     assertThat(pageResponse.getTotal()).isEqualTo(2L);
-    assertThat(commandMap.keySet()).contains(pageResponse.get(0).getId(), pageResponse.get(1).getId());
+    assertThat(commandMap.keySet()).contains(pageResponse.get(0).getName(), pageResponse.get(1).getName());
   }
 
   @Test
   @Owner(developers = OwnerRule.ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getCommandDetails() {
-    final String commandId = commandMap.keySet().iterator().next();
+    final String commandName = commandMap.keySet().iterator().next();
     final CommandDTO commandDTO =
-        commandStoreResource.getCommandDetails("accountid", "harness", commandId).getResource();
-    assertThat(commandDTO.getId()).isEqualTo(commandId);
-    final Collection<String> versions = commandMap.get(commandId);
+        commandStoreResource.getCommandDetails("accountid", "harness", commandName).getResource();
+    assertThat(commandDTO.getName()).isEqualTo(commandName);
+    final Collection<String> versions = commandMap.get(commandName);
     assertThat(versions).contains(commandDTO.getLatestVersion().getVersion());
-    assertThat(commandDTO.getCommandStoreId()).isEqualTo("harness");
+    assertThat(commandDTO.getCommandStoreName()).isEqualTo("harness");
   }
 
   @Test
@@ -89,7 +89,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
   @Category(UnitTests.class)
   public void test_saveCommand() {
     final CommandEntity commandEntity1 = CommandEntity.builder()
-                                             .commandStoreId("harness")
+                                             .commandStoreName("harness")
                                              .type("HTTP")
                                              .name("Health Check 123")
                                              .description("This is http template for health check")
@@ -112,7 +112,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
     final EnrichedCommandVersionDTO commandVersionDTO =
         commandStoreResource.getVersionDetails("accountid", "harness", commandId, versionId).getResource();
     assertThat(commandVersionDTO.getVersion()).isEqualTo(versionId);
-    assertThat(commandVersionDTO.getCommandId()).isEqualTo(commandId);
+    assertThat(commandVersionDTO.getCommandName()).isEqualTo(commandId);
   }
 
   @Test
@@ -121,8 +121,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
   public void test_saveCommandVersion() {
     final CommandVersionEntity commandVersionEntity1 =
         CommandVersionEntity.builder()
-            .commandId("commandid")
-            .commandStoreId("harness")
+            .commandName("commandid")
+            .commandStoreName("harness")
             .description("version description 1")
             .version("1.0")
             .yamlContent("yaml content 1")
@@ -134,12 +134,12 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
     final CommandVersionEntity savedVersion =
         commandStoreResource.saveCommandVersion("Accountid", commandVersionEntity1).getResource();
     assertThat(savedVersion.getVersion()).isEqualTo(commandVersionEntity1.getVersion());
-    assertThat(savedVersion.getCommandId()).isEqualTo(commandVersionEntity1.getCommandId());
+    assertThat(savedVersion.getCommandName()).isEqualTo(commandVersionEntity1.getCommandName());
   }
 
   private void createCommands() {
     final CommandEntity commandEntity1 = CommandEntity.builder()
-                                             .commandStoreId("harness")
+                                             .commandStoreName("harness")
                                              .type("HTTP")
                                              .name("Health Check")
                                              .description("This is http template for health check")
@@ -150,7 +150,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     final CommandEntity commandEntity2 =
         CommandEntity.builder()
-            .commandStoreId("harness")
+            .commandStoreName("harness")
             .type("SSH")
             .name("Stop")
             .description("This is a command to stop service by invoking scripts over SSH to the individual instances")
@@ -173,8 +173,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
   private void createCommand1Versions(CommandEntity commandEntity) {
     final CommandVersionEntity commandVersionEntity1 =
         CommandVersionEntity.builder()
-            .commandId(commandEntity.getUuid())
-            .commandStoreId(commandEntity.getCommandStoreId())
+            .commandName(commandEntity.getName())
+            .commandStoreName(commandEntity.getCommandStoreName())
             .description("version description 1")
             .version("1.0")
             .yamlContent("yaml content 1")
@@ -185,8 +185,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     final CommandVersionEntity commandVersionEntity2 =
         CommandVersionEntity.builder()
-            .commandId(commandEntity.getUuid())
-            .commandStoreId(commandEntity.getCommandStoreId())
+            .commandName(commandEntity.getName())
+            .commandStoreName(commandEntity.getCommandStoreName())
             .description("version description 2")
             .version("1.5")
             .yamlContent("yaml content 2")
@@ -200,15 +200,15 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     commandVersionEntity1.setUuid(version1Id);
     commandVersionEntity2.setUuid(version2Id);
-    commandMap.put(commandEntity.getUuid(), commandVersionEntity1.getVersion());
-    commandMap.put(commandEntity.getUuid(), commandVersionEntity2.getVersion());
+    commandMap.put(commandEntity.getName(), commandVersionEntity1.getVersion());
+    commandMap.put(commandEntity.getName(), commandVersionEntity2.getVersion());
   }
 
   private void createCommand2Versions(CommandEntity commandEntity) {
     final CommandVersionEntity commandVersionEntity1 =
         CommandVersionEntity.builder()
-            .commandId(commandEntity.getUuid())
-            .commandStoreId(commandEntity.getCommandStoreId())
+            .commandName(commandEntity.getName())
+            .commandStoreName(commandEntity.getCommandStoreName())
             .description("version description 3")
             .version("1.0")
             .yamlContent("yaml content 3")
@@ -219,8 +219,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     final CommandVersionEntity commandVersionEntity2 =
         CommandVersionEntity.builder()
-            .commandId(commandEntity.getUuid())
-            .commandStoreId(commandEntity.getCommandStoreId())
+            .commandName(commandEntity.getName())
+            .commandStoreName(commandEntity.getCommandStoreName())
             .description("version description 4")
             .version("1.5")
             .yamlContent("yaml content 4")
@@ -231,8 +231,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
 
     final CommandVersionEntity commandVersionEntity3 =
         CommandVersionEntity.builder()
-            .commandId(commandEntity.getUuid())
-            .commandStoreId(commandEntity.getCommandStoreId())
+            .commandName(commandEntity.getName())
+            .commandStoreName(commandEntity.getCommandStoreName())
             .description("version description 5")
             .version("2.1")
             .yamlContent("yaml content 5")
@@ -249,8 +249,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
     commandVersionEntity2.setUuid(version2Id);
     commandVersionEntity3.setUuid(version3Id);
 
-    commandMap.put(commandEntity.getUuid(), commandVersionEntity1.getVersion());
-    commandMap.put(commandEntity.getUuid(), commandVersionEntity2.getVersion());
-    commandMap.put(commandEntity.getUuid(), commandVersionEntity3.getVersion());
+    commandMap.put(commandEntity.getName(), commandVersionEntity1.getVersion());
+    commandMap.put(commandEntity.getName(), commandVersionEntity2.getVersion());
+    commandMap.put(commandEntity.getName(), commandVersionEntity3.getVersion());
   }
 }

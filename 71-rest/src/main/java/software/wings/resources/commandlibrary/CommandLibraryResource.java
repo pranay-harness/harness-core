@@ -43,43 +43,42 @@ public class CommandLibraryResource {
     return aRestResponse()
         .withResource(CommandLibraryConfigurationDTO.builder()
                           .clImplementationVersion(1)
-                          .supportedCommandStoreIdList(Collections.singletonList("harness"))
+                          .supportedCommandStoreNameList(Collections.singletonList("harness"))
                           .build())
         .build();
   }
 
   @GET
-  @Path("command-stores/{commandStoreId}/commands")
+  @Path("command-stores/{commandStoreName}/commands")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<ImportedCommand>> listImportedCommandVersions(@QueryParam("accountId") String accountId,
-      @QueryParam("commandIds") List<String> commandIds, @PathParam("commandStoreId") String commandStoreId) {
+      @QueryParam("commandNames") List<String> commandNames, @PathParam("commandStoreName") String commandStoreName) {
     return new RestResponse<>(
-        templateVersionService.listLatestVersionOfImportedTemplates(commandIds, commandStoreId, accountId));
+        templateVersionService.listLatestVersionOfImportedTemplates(commandNames, commandStoreName, accountId));
   }
 
   @GET
-  @Path("command-stores/{commandStoreId}/commands/{commandId}")
+  @Path("command-stores/{commandStoreName}/commands/{commandName}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<ImportedCommand> listLatestVersionsOfTemplates(@QueryParam("accountId") String accountId,
-      @PathParam("commandId") String commandId, @PathParam("commandStoreId") String commandStoreId) {
+      @PathParam("commandName") String commandName, @PathParam("commandStoreName") String commandStoreName) {
     return new RestResponse<>(
-        templateVersionService.listImportedTemplateVersions(commandId, commandStoreId, accountId));
+        templateVersionService.listImportedTemplateVersions(commandName, commandStoreName, accountId));
   }
 
   @POST
-  @Path("command-stores/{commandStoreId}/commands/{commandId}/versions/{version}")
+  @Path("command-stores/{commandStoreName}/commands/{commandName}/versions/{version}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<Template> importTemplate(@QueryParam("accountId") String accountId,
-      @PathParam("commandId") String commandId, @PathParam("commandStoreId") String commandStoreId,
+      @PathParam("commandName") String commandName, @PathParam("commandStoreName") String commandStoreName,
       @PathParam("version") String version) {
     return new RestResponse<>(
-        importedTemplateService.getAndSaveImportedTemplate(version, commandId, commandStoreId, accountId));
+        importedTemplateService.getAndSaveImportedTemplate(version, commandName, commandStoreName, accountId));
   }
-  // Add api to get specific version of a command.
 }

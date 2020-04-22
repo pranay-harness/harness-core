@@ -28,9 +28,10 @@ import javax.validation.constraints.NotNull;
 public class CommandEntity
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {Update.class}) String uuid;
-  String commandStoreId;
+  String commandStoreName;
   String type;
   String name;
+  String displayName;
   String description;
   String category;
   String imageUrl;

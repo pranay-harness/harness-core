@@ -32,23 +32,23 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public CommandDTO getCommandDetails(String commandStoreId, String commandId) {
-    final CommandEntity commandEntity = getCommandEntity(commandStoreId, commandId);
+  public CommandDTO getCommandDetails(String commandStoreName, String commandName) {
+    final CommandEntity commandEntity = getCommandEntity(commandStoreName, commandName);
     if (commandEntity != null) {
-      final CommandVersionEntity commandVersionEntity =
-          commandVersionService.getCommandVersionEntity(commandStoreId, commandId, commandEntity.getLatestVersion());
+      final CommandVersionEntity commandVersionEntity = commandVersionService.getCommandVersionEntity(
+          commandStoreName, commandName, commandEntity.getLatestVersion());
       final List<CommandVersionEntity> allVersionEntityList =
-          commandVersionService.getAllVersionEntitiesForCommand(commandStoreId, commandId);
+          commandVersionService.getAllVersionEntitiesForCommand(commandStoreName, commandName);
       return populateCommandDTO(CommandDTO.builder(), commandEntity, commandVersionEntity, allVersionEntityList)
           .build();
     }
     return null;
   }
 
-  private CommandEntity getCommandEntity(String commandStoreId, String commandId) {
+  private CommandEntity getCommandEntity(String commandStoreName, String commandName) {
     return wingsPersistence.createQuery(CommandEntity.class)
-        .filter(CommandEntityKeys.commandStoreId, commandStoreId)
-        .filter(CommandEntityKeys.uuid, commandId)
+        .filter(CommandEntityKeys.commandStoreName, commandStoreName)
+        .filter(CommandEntityKeys.name, commandName)
         .get();
   }
 

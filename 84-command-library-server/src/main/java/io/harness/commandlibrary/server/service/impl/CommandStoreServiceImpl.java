@@ -36,11 +36,11 @@ public class CommandStoreServiceImpl implements CommandStoreService {
 
   @Override
   public PageResponse<CommandDTO> listCommandsForStore(
-      String commandStoreId, PageRequest<CommandEntity> pageRequest, String category) {
+      String commandStoreName, PageRequest<CommandEntity> pageRequest, String category) {
     pageRequest.addFilter(SearchFilter.builder()
-                              .fieldName(CommandEntityKeys.commandStoreId)
+                              .fieldName(CommandEntityKeys.commandStoreName)
                               .op(EQ)
-                              .fieldValues(new String[] {commandStoreId})
+                              .fieldValues(new String[] {commandStoreName})
                               .build());
     if (EmptyPredicate.isNotEmpty(category)) {
       pageRequest.addFilter(SearchFilter.builder()
@@ -69,6 +69,6 @@ public class CommandStoreServiceImpl implements CommandStoreService {
 
   private CommandVersionEntity getLatestVersionEntity(CommandEntity commandEntity) {
     return commandVersionService.getCommandVersionEntity(
-        commandEntity.getCommandStoreId(), commandEntity.getUuid(), commandEntity.getLatestVersion());
+        commandEntity.getCommandStoreName(), commandEntity.getName(), commandEntity.getLatestVersion());
   }
 }

@@ -11,19 +11,16 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "CommandVersionDTOKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CommandVersionDTO {
-  String commandId;
-  String commandStoreId;
+  String commandName;
+  String commandStoreName;
   String version;
   String description;
-  String yamlContent;
 
   @Builder(builderMethodName = "newBuilder")
-  public CommandVersionDTO(
-      String commandId, String commandStoreId, String version, String description, String yamlContent) {
-    this.commandId = commandId;
-    this.commandStoreId = commandStoreId;
+  public CommandVersionDTO(String commandName, String commandStoreName, String version, String description) {
+    this.commandName = commandName;
+    this.commandStoreName = commandStoreName;
     this.version = version;
     this.description = description;
-    this.yamlContent = yamlContent;
   }
 }

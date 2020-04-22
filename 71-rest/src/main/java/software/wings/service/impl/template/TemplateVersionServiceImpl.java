@@ -38,8 +38,8 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   }
 
   @Override
-  public ImportedCommand listImportedTemplateVersions(String commandId, String commandStoreId, String accountId) {
-    Template template = importedTemplateService.getTemplateByCommandId(commandId, commandStoreId, accountId);
+  public ImportedCommand listImportedTemplateVersions(String commandName, String commandStoreName, String accountId) {
+    Template template = importedTemplateService.getTemplateByCommandName(commandName, commandStoreName, accountId);
     List<TemplateVersion> templateVersions = null;
     if (template != null) {
       templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
@@ -50,14 +50,14 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                              .asList();
     }
     return importedTemplateService.makeImportedCommandObject(
-        commandId, commandStoreId, templateVersions, accountId, template);
+        commandName, commandStoreName, templateVersions, accountId, template);
   }
 
   @Override
   public List<ImportedCommand> listLatestVersionOfImportedTemplates(
-      List<String> commandIds, String commandStoreId, String accountId) {
+      List<String> commandNames, String commandStoreName, String accountId) {
     Map<String, Template> commandIdTemplateMap =
-        importedTemplateService.getCommandIdTemplateMap(commandIds, commandStoreId, accountId);
+        importedTemplateService.getCommandNameTemplateMap(commandNames, commandStoreName, accountId);
     List<String> templateUuids =
         commandIdTemplateMap.values().stream().map(Template::getUuid).collect(Collectors.toList());
     List<TemplateVersion> templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
@@ -75,7 +75,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       }
     }
     return importedTemplateService.makeImportedCommandObjectWithLatestVersion(
-        templateUuidLatestVersionMap, commandIds, commandStoreId, commandIdTemplateMap, accountId);
+        templateUuidLatestVersionMap, commandNames, commandStoreName, commandIdTemplateMap, accountId);
   }
 
   @Override

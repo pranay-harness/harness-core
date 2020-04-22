@@ -9,8 +9,8 @@ public class CommandVersionUtils {
   public static EnrichedCommandVersionDTOBuilder populateCommandVersionDTO(
       EnrichedCommandVersionDTOBuilder builder, CommandVersionEntity commandVersionEntity) {
     if (commandVersionEntity != null) {
-      builder.commandId(commandVersionEntity.getCommandId())
-          .commandStoreId(commandVersionEntity.getCommandStoreId())
+      builder.commandName(commandVersionEntity.getCommandName())
+          .commandStoreName(commandVersionEntity.getCommandStoreName())
           .description(commandVersionEntity.getDescription())
           .version(commandVersionEntity.getVersion())
           .yamlContent(commandVersionEntity.getYamlContent())

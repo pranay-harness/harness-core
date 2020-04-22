@@ -41,12 +41,12 @@ import javax.ws.rs.core.UriInfo;
 @Path("/command-library-service")
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
-public class CommandLibraryPassThroughResource {
+public class CommandLibraryServiceResource {
   private final CommandLibraryServiceHttpClient serviceHttpClient;
   private final HarnessUserGroupServiceImpl harnessUserGroupService;
 
   @Inject
-  public CommandLibraryPassThroughResource(
+  public CommandLibraryServiceResource(
       CommandLibraryServiceHttpClient serviceHttpClient, HarnessUserGroupServiceImpl harnessUserGroupService) {
     this.serviceHttpClient = serviceHttpClient;
     this.harnessUserGroupService = harnessUserGroupService;
@@ -62,26 +62,27 @@ public class CommandLibraryPassThroughResource {
   }
 
   @GET
-  @Path("/command-stores/{commandStoreId}/commands/categories")
+  @Path("/command-stores/{commandStoreName}/commands/categories")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<String>> getCommandCategories(
-      @QueryParam("accountId") String accountId, @PathParam("commandStoreId") String commandStoreId) {
-    return executeRequest(serviceHttpClient.getCommandCategories(commandStoreId));
+      @QueryParam("accountId") String accountId, @PathParam("commandStoreName") String commandStoreName) {
+    return executeRequest(serviceHttpClient.getCommandCategories(commandStoreName));
   }
 
   @GET
-  @Path("/command-stores/{commandStoreId}/commands")
+  @Path("/command-stores/{commandStoreName}/commands")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<CommandDTO>> listCommands(@QueryParam("accountId") String accountId,
-      @PathParam("commandStoreId") String commandStoreId, @BeanParam PageRequest<CommandEntity> pageRequest,
+      @PathParam("commandStoreName") String commandStoreName, @BeanParam PageRequest<CommandEntity> pageRequest,
       @QueryParam("cl_implementation_version") Integer clImplementationVersion, @QueryParam("category") String category,
       @Context UriInfo uriInfo) {
     Map<String, Object> queryMap = prepareQueryMap(uriInfo.getQueryParameters());
-    return executeRequest(serviceHttpClient.listCommands(commandStoreId, clImplementationVersion, category, queryMap));
+    return executeRequest(
+        serviceHttpClient.listCommands(commandStoreName, clImplementationVersion, category, queryMap));
   }
 
   private Map<String, Object> prepareQueryMap(Map<String, List<String>> queryParameters) {
@@ -90,24 +91,24 @@ public class CommandLibraryPassThroughResource {
   }
 
   @GET
-  @Path("/command-stores/{commandStoreId}/commands/{commandId}")
+  @Path("/command-stores/{commandStoreName}/commands/{commandName}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<CommandDTO> getCommandDetails(@QueryParam("accountId") String accountId,
-      @PathParam("commandStoreId") String commandStoreId, @PathParam("commandId") String commandId) {
-    return executeRequest(serviceHttpClient.getCommandDetails(commandStoreId, commandId));
+      @PathParam("commandStoreName") String commandStoreName, @PathParam("commandName") String commandName) {
+    return executeRequest(serviceHttpClient.getCommandDetails(commandStoreName, commandName));
   }
 
   @POST
-  @Path("/command-stores/{commandStoreId}/commands")
+  @Path("/command-stores/{commandStoreName}/commands")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<CommandEntity> saveCommand(@QueryParam("accountId") String accountId, CommandEntity commandEntity,
-      @PathParam("commandStoreId") String commandStoreId) {
+      @PathParam("commandStoreName") String commandStoreName) {
     ensureHarnessUser();
-    return executeRequest(serviceHttpClient.saveCommand(commandStoreId, commandEntity));
+    return executeRequest(serviceHttpClient.saveCommand(commandStoreName, commandEntity));
   }
 
   private void ensureHarnessUser() {
@@ -117,26 +118,26 @@ public class CommandLibraryPassThroughResource {
   }
 
   @GET
-  @Path("/command-stores/{commandStoreId}/commands/{commandId}/versions/{version}")
+  @Path("/command-stores/{commandStoreName}/commands/{commandName}/versions/{version}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<EnrichedCommandVersionDTO> getVersionDetails(@QueryParam("accountId") String accountId,
-      @PathParam("commandStoreId") String commandStoreId, @PathParam("commandId") String commandId,
+      @PathParam("commandStoreName") String commandStoreName, @PathParam("commandName") String commandName,
       @PathParam("version") String version) {
-    return executeRequest(serviceHttpClient.getVersionDetails(commandStoreId, commandId, version));
+    return executeRequest(serviceHttpClient.getVersionDetails(commandStoreName, commandName, version));
   }
 
   @POST
-  @Path("/command-stores/{commandStoreId}/commands/{commandId}/versions")
+  @Path("/command-stores/{commandStoreName}/commands/{commandName}/versions")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<CommandVersionEntity> saveCommandVersion(@QueryParam("accountId") String accountId,
-      @PathParam("commandStoreId") String commandStoreId, @PathParam("commandId") String commandId,
+      @PathParam("commandStoreName") String commandStoreName, @PathParam("commandName") String commandName,
       CommandVersionEntity commandVersionEntity) {
     ensureHarnessUser();
-    return executeRequest(serviceHttpClient.saveCommandVersion(commandStoreId, commandId, commandVersionEntity));
+    return executeRequest(serviceHttpClient.saveCommandVersion(commandStoreName, commandName, commandVersionEntity));
   }
 
   private <T> T executeRequest(Call<T> call) {

@@ -13,10 +13,10 @@ import java.util.List;
 public interface TemplateVersionService {
   PageResponse<TemplateVersion> listTemplateVersions(PageRequest<TemplateVersion> pageRequest);
 
-  ImportedCommand listImportedTemplateVersions(String commandId, String commandStoreId, String accountId);
+  ImportedCommand listImportedTemplateVersions(String commandName, String commandStoreName, String accountId);
 
   List<ImportedCommand> listLatestVersionOfImportedTemplates(
-      List<String> commandIds, String commandStoreId, String accountId);
+      List<String> commandNames, String commandStoreName, String accountId);
 
   TemplateVersion lastTemplateVersion(@NotEmpty String accountId, @NotEmpty String templateUuid);
 
