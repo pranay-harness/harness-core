@@ -279,7 +279,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public PageResponse<GitSyncError> listAllGitToHarnessErrors(
       PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName) {
-    req.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
     if (isNotEmpty(gitConnectorId)) {
       req.addFilter(GitSyncErrorKeys.gitConnectorId, EQ, gitConnectorId);
     }
@@ -295,8 +294,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
     List<GitSyncError> errorsWithoutPreviousErrorsFields =
         errorsReturnedInRequest.stream().map(error -> removePreviousErrorField(error)).collect(toList());
+    List<GitSyncError> filteredErrorsWithConnectorName =
+        filterErrorsWithValidConnectorAndPopulateConnectorName(errorsWithoutPreviousErrorsFields, accountId);
 
-    allErrorsResponse.setResponse(errorsWithoutPreviousErrorsFields);
+    allErrorsResponse.setResponse(filteredErrorsWithConnectorName);
     return allErrorsResponse;
   }
 
