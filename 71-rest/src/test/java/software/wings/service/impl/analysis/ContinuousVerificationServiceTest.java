@@ -33,6 +33,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
@@ -136,7 +137,8 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     wingsPersistence.updateField(
         StateExecutionInstance.class, stateExecutionId, StateExecutionInstanceKeys.displayName, displayName);
     VerificationStateAnalysisExecutionData verificationStateExecutionData =
-        continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData).isNotNull();
     assertThat(verificationStateExecutionData.getStateExecutionInstanceId())
         .isEqualTo(verificationStateAnalysisExecutionData.getStateExecutionInstanceId());
@@ -151,6 +153,36 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
         .isEqualTo(verificationStateAnalysisExecutionData.getAnalysisMinute());
     assertThat(verificationStateExecutionData.getProgressPercentage()).isEqualTo(100);
     assertThat(verificationStateExecutionData.getRemainingMinutes()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetVerificationStateExecutionData_whenSkippedBasedOnCondition() {
+    String stateExecutionId =
+        wingsPersistence.save(Builder.aStateExecutionInstance().status(ExecutionStatus.SUCCESS).build());
+    final String displayName = "new relic";
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    final SkipStateExecutionData skipStateExecutionData = SkipStateExecutionData.builder()
+                                                              .startTs(System.currentTimeMillis())
+                                                              .endTs(System.currentTimeMillis())
+                                                              .skipAssertionExpression(generateUuid())
+                                                              .status(ExecutionStatus.SKIPPED)
+                                                              .build();
+    stateExecutionMap.put(displayName, skipStateExecutionData);
+
+    wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionId,
+        StateExecutionInstanceKeys.stateExecutionMap, stateExecutionMap);
+    wingsPersistence.updateField(
+        StateExecutionInstance.class, stateExecutionId, StateExecutionInstanceKeys.displayName, displayName);
+    SkipStateExecutionData verificationStateExecutionData =
+        (SkipStateExecutionData) continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    assertThat(verificationStateExecutionData).isNotNull();
+    assertThat(verificationStateExecutionData.getSkipAssertionExpression())
+        .isEqualTo(skipStateExecutionData.getSkipAssertionExpression());
+    assertThat(verificationStateExecutionData.getStartTs()).isEqualTo(skipStateExecutionData.getStartTs());
+    assertThat(verificationStateExecutionData.getEndTs()).isEqualTo(skipStateExecutionData.getEndTs());
+    assertThat(verificationStateExecutionData.getStatus()).isEqualTo(skipStateExecutionData.getStatus());
   }
 
   @Test
@@ -182,7 +214,8 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     wingsPersistence.save(analysisContext);
 
     VerificationStateAnalysisExecutionData verificationStateExecutionData =
-        continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData).isNotNull();
     assertThat(verificationStateExecutionData.getStateExecutionInstanceId())
         .isEqualTo(verificationStateAnalysisExecutionData.getStateExecutionInstanceId());
@@ -208,7 +241,9 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     newRelicMetricAnalysisRecord1.setCreatedAt(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8));
     wingsPersistence.save(newRelicMetricAnalysisRecord1);
 
-    verificationStateExecutionData = continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    verificationStateExecutionData =
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData.getProgressPercentage())
         .isEqualTo(100 / analysisContext.getTimeDuration());
     assertThat(verificationStateExecutionData.getRemainingMinutes())
@@ -221,7 +256,9 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     newRelicMetricAnalysisRecord2.setCreatedAt(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2));
     wingsPersistence.save(newRelicMetricAnalysisRecord2);
 
-    verificationStateExecutionData = continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    verificationStateExecutionData =
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData.getProgressPercentage())
         .isEqualTo(100 * 2 / analysisContext.getTimeDuration());
     assertThat(verificationStateExecutionData.getRemainingMinutes())
@@ -237,7 +274,9 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     timeSeriesMLAnalysisRecord1.setCreatedAt(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(12));
     wingsPersistence.save(timeSeriesMLAnalysisRecord1);
 
-    verificationStateExecutionData = continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    verificationStateExecutionData =
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData.getProgressPercentage())
         .isEqualTo(100 / analysisContext.getTimeDuration());
     assertThat(verificationStateExecutionData.getRemainingMinutes())
@@ -250,7 +289,9 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     timeSeriesMLAnalysisRecord2.setAnalysisMinute(2);
     wingsPersistence.save(timeSeriesMLAnalysisRecord2);
 
-    verificationStateExecutionData = continuousVerificationService.getVerificationStateExecutionData(stateExecutionId);
+    verificationStateExecutionData =
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
     assertThat(verificationStateExecutionData.getProgressPercentage())
         .isEqualTo(100 * 2 / analysisContext.getTimeDuration());
     assertThat(verificationStateExecutionData.getRemainingMinutes())

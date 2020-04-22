@@ -6,6 +6,7 @@ import io.harness.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
@@ -13,7 +14,6 @@ import software.wings.verification.ServiceGuardTimeSeries;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
-import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
@@ -76,7 +76,7 @@ public interface ContinuousVerificationService {
 
   boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo);
 
-  VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId);
+  StateExecutionData getVerificationStateExecutionData(String stateExecutionId);
 
   List<CVCertifiedDetailsForWorkflowState> getCVCertifiedDetailsForWorkflow(
       String accountId, String appId, String workflowExecutionId);
