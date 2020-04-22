@@ -71,7 +71,7 @@ public interface AnalysisService {
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
       String hostName, StateType stateType);
 
-  Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
+  Map<String, Map<String, InstanceElement>> getLastExecutionNodes(String appId, String workflowId);
 
   List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
       Map<String, LogMLClusterScores.LogMLScore> clusterScores, AnalysisServiceImpl.CLUSTER_TYPE cluster_type);

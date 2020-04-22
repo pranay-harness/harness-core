@@ -11,7 +11,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
-import software.wings.api.InstanceElement;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
@@ -255,17 +254,6 @@ public class LogVerificationResource {
   public RestResponse<Map<FeedbackAction, List<CVFeedbackRecord>>> getFeedback(@QueryParam("appId") String appId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
     return new RestResponse<>(analysisService.getUserFeedback(cvConfigId, stateExecutionId, appId));
-  }
-
-  @GET
-  @Produces({"application/json", "application/v1+json"})
-  @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  public RestResponse<Map<String, InstanceElement>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
-    return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }
 
   @Produces({"application/json", "application/v1+json"})

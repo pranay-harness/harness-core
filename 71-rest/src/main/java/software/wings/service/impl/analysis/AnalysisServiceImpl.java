@@ -1290,14 +1290,13 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
+  public Map<String, Map<String, InstanceElement>> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter(WorkflowExecutionKeys.appId, appId)
                                               .filter(WorkflowExecutionKeys.workflowId, workflowId)
                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
-
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No successful execution exists for the workflow.");
@@ -1327,7 +1326,18 @@ public class AnalysisServiceImpl implements AnalysisService {
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No node information was captured in the last successful workflow execution");
     }
-    return hosts;
+    return wrapInstanceElementWithInstanceKey(hosts);
+  }
+
+  private Map<String, Map<String, InstanceElement>> wrapInstanceElementWithInstanceKey(
+      Map<String, InstanceElement> hosts) {
+    // renderExpression works with instance.
+    // example: ${instance.ecsContainerDetails.completeDockerId}
+    Map<String, Map<String, InstanceElement>> result = new HashMap<>();
+    for (Entry<String, InstanceElement> entry : hosts.entrySet()) {
+      result.put(entry.getKey(), Collections.singletonMap("instance", entry.getValue()));
+    }
+    return result;
   }
 
   private Map<String, InstanceElement> getPcfHostsIfneccessary(WorkflowExecution workflowExecution) {
