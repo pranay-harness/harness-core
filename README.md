@@ -8,9 +8,9 @@ Portal Project Dev environment setup instructions
    `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
 2. Install Java 8 download : 
-NOTE: Brew will download and install latest version of JDK/JRE, its recommended to install JDK/JRE_1.8.0_191 to be in sync with version everyone is using in the team.
+NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
 
-Download JDK 1.8-191 from [Java archive downloads](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase8-2177648.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
+Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME`, and `PATH` accordingly.
 
 3. Install maven :
 
