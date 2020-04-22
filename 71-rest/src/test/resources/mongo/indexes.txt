@@ -384,6 +384,7 @@ marketPlaces { "name" : "customerIdentificationCode_1" , "unique" : true} { "cus
 mlExperiments { "name" : "appId_1" , "background" : true} { "appId" : 1}
 mlExperiments { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 mlExperiments { "name" : "expUniqueIdx" , "unique" : true} { "ml_analysis_type" : 1 , "experimentName" : 1}
+newRelicMetricAnalysisRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 newRelicMetricAnalysisRecords { "name" : "analysisUniqueIdx" , "unique" : true} { "workflowExecutionId" : 1 , "stateExecutionId" : 1 , "groupName" : 1 , "analysisMinute" : 1}
 newRelicMetricAnalysisRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}
 newRelicMetricAnalysisRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}

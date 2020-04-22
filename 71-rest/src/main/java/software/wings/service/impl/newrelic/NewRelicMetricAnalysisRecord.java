@@ -11,6 +11,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -49,7 +50,8 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "NewRelicMetricAnalysisRecordKeys")
 @Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class NewRelicMetricAnalysisRecord extends Base implements Comparable<NewRelicMetricAnalysisRecord> {
+public class NewRelicMetricAnalysisRecord
+    extends Base implements Comparable<NewRelicMetricAnalysisRecord>, AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String message;
@@ -59,6 +61,8 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
   @NotEmpty private String workflowExecutionId;
 
   @NotEmpty @Indexed private String stateExecutionId;
+
+  @Indexed private String accountId;
 
   private String cvConfigId;
 
@@ -88,7 +92,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType, String message,
       RiskLevel riskLevel, String workflowExecutionId, String stateExecutionId, String cvConfigId, String groupName,
       String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType, List<NewRelicMetricAnalysis> metricAnalyses,
-      int analysisMinute, boolean showTimeSeries, String baseLineExecutionId) {
+      int analysisMinute, boolean showTimeSeries, String baseLineExecutionId, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.message = message;
@@ -104,6 +108,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
     this.showTimeSeries = showTimeSeries;
     this.baseLineExecutionId = baseLineExecutionId;
     this.groupName = groupName;
+    this.accountId = accountId;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
 
