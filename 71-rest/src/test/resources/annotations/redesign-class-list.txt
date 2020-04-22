@@ -49,6 +49,8 @@ io.harness.facilitator.children.ChildrenFacilitator
 io.harness.facilitator.children.ChildrenFacilitatorProducer
 io.harness.facilitator.sync.SyncFacilitator
 io.harness.facilitator.sync.SyncFacilitatorProducer
+io.harness.interrupts.Interrupt
+io.harness.interrupts.InterruptEffect
 io.harness.plan.ExecutionNode
 io.harness.plan.ExecutionPlan
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser
