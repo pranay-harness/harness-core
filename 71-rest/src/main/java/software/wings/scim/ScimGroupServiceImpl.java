@@ -11,6 +11,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -304,16 +305,15 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   }
 
   private UserGroup checkIfUserGroupAlreadyPresentByName(String accountId, String userGroupName) {
-    if (userGroupName == null) {
+    if (Strings.isEmpty(userGroupName)) {
       return null;
     }
 
-    Query<UserGroup> userGroupQuery =
-        wingsPersistence.createQuery(UserGroup.class).field(UserGroupKeys.accountId).equal(accountId);
-
-    if (StringUtils.isNotEmpty(userGroupName)) {
-      userGroupQuery.field(UserGroupKeys.name).equal(userGroupName);
-    }
+    Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
+                                          .field(UserGroupKeys.accountId)
+                                          .equal(accountId)
+                                          .field(UserGroupKeys.name)
+                                          .equal(userGroupName);
 
     List<UserGroup> userGroupList = userGroupQuery.asList();
     if (isNotEmpty(userGroupList)) {
@@ -327,6 +327,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     logger.info("SCIM: Creating group call: {}", groupQuery);
 
     UserGroup userGroupAlreadyPresent = checkIfUserGroupAlreadyPresentByName(accountId, groupQuery.getDisplayName());
+
     if (userGroupAlreadyPresent != null) {
       return getGroup(userGroupAlreadyPresent.getUuid(), accountId);
     }

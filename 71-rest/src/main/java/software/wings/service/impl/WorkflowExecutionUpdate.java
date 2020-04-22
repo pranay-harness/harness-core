@@ -27,6 +27,8 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.QueuePublisher;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -99,7 +101,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   /**
    * Instantiates a new workflow execution update.
    */
-  public WorkflowExecutionUpdate() {}
+  WorkflowExecutionUpdate() {}
 
   /**
    * Instantiates a new workflow execution update.
@@ -107,24 +109,26 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
    */
-  public WorkflowExecutionUpdate(String appId, String workflowExecutionId) {
+  WorkflowExecutionUpdate(String appId, String workflowExecutionId) {
     this.appId = appId;
     this.workflowExecutionId = workflowExecutionId;
   }
 
   @UtilityClass
+  @FieldDefaults(level = AccessLevel.PRIVATE)
   public static final class Keys {
-    public static final String SUCCESS = "Deployment Succeeded";
-    public static final String REJECTED = "Deployment Rejected";
-    public static final String EXPIRED = "Deployment Expired";
-    public static final String ABORTED = "Deployment Aborted";
-    public static final String FAILED = "Deployment Failed";
-    static final String MODULE = "module";
-    public static final String DEPLOYMENT = "Deployment";
-    static final String PRODUCTION = "production";
-    static final String DEPLOYMENT_ID = "deployment_id";
-    static final String DEPLOYMENT_TYPE = "deployment_type";
-    static final String WORKFLOW = "workflow";
+    private static final String SUCCESS = "Deployment Succeeded";
+    private static final String REJECTED = "Deployment Rejected";
+    private static final String EXPIRED = "Deployment Expired";
+    private static final String ABORTED = "Deployment Aborted";
+    private static final String FAILED = "Deployment Failed";
+    private static final String MODULE = "module";
+    private static final String DEPLOYMENT = "Deployment";
+    private static final String PRODUCTION = "production";
+    private static final String DEPLOYMENT_ID = "deployment_id";
+    private static final String SERVICE_ID = "service_id";
+    private static final String DEPLOYMENT_TYPE = "deployment_type";
+    private static final String WORKFLOW = "workflow";
   }
 
   /**
@@ -385,6 +389,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       properties.put(Keys.DEPLOYMENT_ID, workflowExecution.getUuid());
       if (workflowExecution.getWorkflowType() != null) {
         properties.put(Keys.DEPLOYMENT_TYPE, getDeploymentType(workflowExecution));
+        if (WorkflowType.ORCHESTRATION == workflowExecution.getWorkflowType()
+            && isNotEmpty(workflowExecution.getServiceIds())) {
+          properties.put(Keys.SERVICE_ID, workflowExecution.getServiceIds().get(0));
+        }
       }
 
       Map<String, Boolean> integrations = new HashMap<>();

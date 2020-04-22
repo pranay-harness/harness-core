@@ -58,7 +58,7 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
         continue;
       }
 
-      if (accountService.getAccountStatus(account.getUuid()).equals(AccountStatus.ACTIVE)) {
+      if (AccountStatus.ACTIVE.equals(accountService.getAccountStatus(account.getUuid()))) {
         logger.info("publishing segment group event. accountId={}", account.getUuid());
         accountChangeHandler.publishAccountEventToSegment(account);
       }
