@@ -1,6 +1,5 @@
 package io.harness.ccm.config;
 
-import io.harness.ccm.BillingReportConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,7 +10,6 @@ import software.wings.yaml.BaseYaml;
 @Builder
 public class CCMConfig {
   boolean cloudCostEnabled;
-  BillingReportConfig billingReportConfig;
 
   @Data
   @NoArgsConstructor
