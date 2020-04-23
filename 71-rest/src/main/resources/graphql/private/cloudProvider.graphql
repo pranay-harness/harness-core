@@ -1,0 +1,50 @@
+extend type Mutation {
+  createCloudProvider(input: CreateCloudProviderInput!): CreateCloudProviderPayload
+    @dataFetcher(name: createCloudProvider)
+  updateCloudProvider(input: UpdateCloudProviderInput!): UpdateCloudProviderPayload
+    @dataFetcher(name: updateCloudProvider)
+  deleteCloudProvider(input: DeleteCloudProviderInput!): DeleteCloudProviderPayload
+    @dataFetcher(name: deleteCloudProvider)
+}
+
+input CreateCloudProviderInput {
+  clientMutationId: String
+  cloudProviderType: CloudProviderType!
+  pcfCloudProvider: PcfCloudProviderInput
+}
+
+input UpdateCloudProviderInput {
+  clientMutationId: String
+  cloudProviderId: String!
+  cloudProviderType: CloudProviderType!
+  pcfCloudProvider: PcfCloudProviderInput
+}
+
+input DeleteCloudProviderInput {
+  clientMutationId: String
+  cloudProviderId: String!
+  cloudProviderType: CloudProviderType!
+}
+
+type CreateCloudProviderPayload {
+  clientMutationId: String
+  cloudProvider: CloudProvider
+}
+
+type UpdateCloudProviderPayload {
+  clientMutationId: String
+  cloudProvider: CloudProvider
+}
+
+type DeleteCloudProviderPayload {
+  clientMutationId: String
+}
+
+input PcfCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  endpointUrl: String
+  username: String
+  password: String
+}

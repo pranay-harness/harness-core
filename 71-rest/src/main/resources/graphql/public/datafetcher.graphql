@@ -20,6 +20,9 @@ enum DataFetcherEnum {
   cloudTrendStats
   cloudTimeSeriesStats
   cloudProvider
+  createCloudProvider
+  updateCloudProvider
+  deleteCloudProvider
   cloudProviderConnection
   cloudProviderStats
   cluster
