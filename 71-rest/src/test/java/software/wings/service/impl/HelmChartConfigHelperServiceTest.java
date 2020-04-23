@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.GeneralException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -25,6 +27,7 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
@@ -189,5 +192,33 @@ public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
     assertThat(helmChartConfigForToYaml.getChartName()).isEqualTo(helmChartConfig.getChartName());
     assertThat(helmChartConfigForToYaml.getChartUrl()).isEqualTo(helmChartConfig.getChartUrl());
     assertThat(helmChartConfigForToYaml.getChartVersion()).isEqualTo(helmChartConfig.getChartVersion());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetHelmChartConfigTaskParamsWithDeletedParentCP() {
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder()
+            .helmChartConfig(
+                HelmChartConfig.builder().connectorId("connectorId").chartName("test").chartVersion("0.1").build())
+            .storeType(StoreType.HelmChartRepo)
+            .build();
+
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setName("s3-helm-connector");
+    settingAttribute.setUuid("abc");
+    settingAttribute.setValue(AmazonS3HelmRepoConfig.builder().connectorId("cloudProviderId").build());
+
+    when(settingsService.get(anyString())).thenReturn(settingAttribute);
+    when(settingsService.get("cloudProviderId")).thenReturn(null);
+
+    try {
+      helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, appManifest);
+      fail("Should not reach here.");
+    } catch (GeneralException ex) {
+      assertThat(ex.getMessage())
+          .isEqualTo("Cloud provider deleted for helm repository connector [s3-helm-connector] selected in service");
+    }
   }
 }

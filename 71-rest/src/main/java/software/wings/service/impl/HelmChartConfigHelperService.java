@@ -153,9 +153,9 @@ public class HelmChartConfigHelperService {
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
-      notNullCheck(
-          format("Parent connector with id %s not found for helm repo config", helmRepoConfig.getConnectorId()),
-          settingAttribute);
+      notNullCheck(format("Cloud provider deleted for helm repository connector [%s] selected in service",
+                       settingAttribute.getName()),
+          connectorSettingAttribute);
 
       SettingValue value = connectorSettingAttribute.getValue();
       List<EncryptedDataDetail> connectorEncryptedDataDetails =
