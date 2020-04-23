@@ -19,6 +19,6 @@ public class OnSuccessHandler implements AdviseHandler {
     OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
     ExecutionNode nextNode =
         engineObtainmentHelper.fetchExecutionNode(onSuccessAdvise.getNextNodeId(), ambiance.getExecutionInstanceId());
-    engine.triggerExecution(ambiance.cloneBuilder(), nextNode);
+    engine.triggerExecution(ambiance.deepCopy(), nextNode);
   }
 }

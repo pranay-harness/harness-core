@@ -12,6 +12,7 @@ import io.harness.registries.RegistryType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.validation.Valid;
 
 @Redesign
 @Singleton
@@ -25,7 +26,7 @@ public class FacilitatorRegistry implements Registry {
     registry.put(facilitatorType, producer);
   }
 
-  public Facilitator obtain(FacilitatorObtainment facilitatorObtainment) {
+  public Facilitator obtain(@Valid FacilitatorObtainment facilitatorObtainment) {
     if (registry.containsKey(facilitatorObtainment.getType())) {
       FacilitatorProducer producer = registry.get(facilitatorObtainment.getType());
       return producer.produce(facilitatorObtainment.getParameters());

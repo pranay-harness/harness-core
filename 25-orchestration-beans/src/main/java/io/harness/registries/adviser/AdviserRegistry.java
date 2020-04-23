@@ -9,23 +9,25 @@ import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
+import lombok.NonNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.validation.Valid;
 
 @Redesign
 @Singleton
 public class AdviserRegistry implements Registry {
   private Map<AdviserType, AdviserProducer> registry = new ConcurrentHashMap<>();
 
-  public void register(AdviserType adviserType, AdviserProducer producer) {
+  public void register(@NonNull AdviserType adviserType, @NonNull AdviserProducer producer) {
     if (registry.containsKey(adviserType)) {
       throw new InvalidRequestException("Adviser Already Registered with this type: " + adviserType);
     }
     registry.put(adviserType, producer);
   }
 
-  public Adviser obtain(AdviserObtainment adviserObtainment) {
+  public Adviser obtain(@Valid AdviserObtainment adviserObtainment) {
     if (registry.containsKey(adviserObtainment.getType())) {
       AdviserProducer producer = registry.get(adviserObtainment.getType());
       return producer.produce(adviserObtainment.getParameters());

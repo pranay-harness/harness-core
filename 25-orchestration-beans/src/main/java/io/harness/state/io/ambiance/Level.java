@@ -2,6 +2,7 @@ package io.harness.state.io.ambiance;
 
 import io.harness.annotations.Redesign;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
@@ -14,6 +15,7 @@ import lombok.Value;
 @Builder
 @Redesign
 public class Level {
+  @NonNull String levelKey;
   String setupId;
   String runtimeId;
 }

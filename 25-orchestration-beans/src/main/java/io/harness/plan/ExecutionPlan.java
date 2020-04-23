@@ -41,7 +41,7 @@ public class ExecutionPlan implements PersistentEntity {
 
   @NotNull String startingNodeId;
 
-  Map<String, String> setupAbstractions;
+  @Singular Map<String, String> setupAbstractions;
 
   public boolean isEmpty() {
     return nodes.isEmpty();

@@ -25,7 +25,6 @@ import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.Ambiance.AmbianceBuilder;
 import io.harness.state.io.ambiance.Level;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -60,16 +59,17 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
     for (Child child : response.getChildren()) {
       String uuid = generateUuid();
       callbackIds.add(uuid);
-      AmbianceBuilder clonedBuilder = ambiance.cloneBuilder();
+      Ambiance clonedAmbiance = ambiance.deepCopy();
       ExecutionNode node = plan.fetchNode(child.getChildNodeId());
-      Ambiance clonedAmbiance =
-          clonedBuilder.level("currentNode", Level.builder().setupId(node.getUuid()).runtimeId(uuid).build()).build();
+      clonedAmbiance.addLevel(
+          Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelKey()).build());
       ExecutionNodeInstance childInstance = ExecutionNodeInstance.builder()
                                                 .uuid(uuid)
                                                 .node(node)
                                                 .ambiance(ambiance)
                                                 .status(NodeExecutionStatus.QUEUED)
                                                 .notifyId(uuid)
+                                                .parentId(nodeInstance.getUuid())
                                                 .additionalInputs(child.getAdditionalInputs())
                                                 .build();
       hPersistence.save(childInstance);
