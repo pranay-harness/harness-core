@@ -1,15 +1,19 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
 
 public interface DelegateSelectionLogsService {
-  void logIncludeScopeMatched(DelegateScope scope, String delegateId);
+  void save(BatchDelegateSelectionLog batch);
 
-  void logExcludeScopeMatched(DelegateScope scope, String delegateId);
+  BatchDelegateSelectionLog createBatch(String taskId);
 
-  void logMissingSelector(String selector, String delegateId);
+  void logExcludeScopeMatched(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateScope scope);
 
-  void logMissingAllSelectors(String delegateId);
+  void logMissingSelector(BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector);
 
-  void logNoIncludeScopeMatched(String delegateId);
+  void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
+  void logNoIncludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 }

@@ -264,7 +264,7 @@ public class AlertServiceImpl implements AlertService {
     try (HIterator<Alert> alerts = new HIterator<>(query.fetch())) {
       for (Alert alert : alerts) {
         NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-        if (assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
+        if (assignDelegateService.canAssign(null, delegateId, accountId, data.getAppId(), data.getEnvId(),
                 data.getInfraMappingId(), data.getTaskGroup(), data.getTags())) {
           close(alert);
         }

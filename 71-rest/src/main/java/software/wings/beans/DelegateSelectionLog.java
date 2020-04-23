@@ -38,9 +38,10 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @NotEmpty private String accountId;
-  @NotEmpty private Set<String> delegateId;
+  @NotEmpty private Set<String> delegateIds;
   @NotEmpty private String taskId;
   @NotEmpty private String message;
+  @NotEmpty private String conclusion;
 
   @Builder.Default
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

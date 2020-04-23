@@ -96,6 +96,7 @@ import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -816,7 +817,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAcquireTaskWhenQueued() {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
-    when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(true);
     Delegate delegate = BUILDER.build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
@@ -831,7 +834,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldAcquireTaskWhenQueued_notWhitelisted() {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(false);
     when(assignDelegateService.shouldValidate(any(DelegateTask.class), any(String.class))).thenReturn(true);
-    when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(true);
     Delegate delegate = BUILDER.build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
@@ -844,7 +849,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAcquireTaskWhenQueued_cannotAssign() {
-    when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(false);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(false);
     Delegate delegate = BUILDER.build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
@@ -859,7 +866,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldAcquireTaskWhenQueued_blacklisted() {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(false);
     when(assignDelegateService.shouldValidate(any(DelegateTask.class), any(String.class))).thenReturn(false);
-    when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(true);
     Delegate delegate = BUILDER.build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);

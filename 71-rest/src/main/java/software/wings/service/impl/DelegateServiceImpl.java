@@ -182,6 +182,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -293,6 +294,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private DelegateDao delegateDao;
   @Inject private ConfigurationController configurationController;
+  @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -1796,7 +1798,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
     List<String> eligibleDelegates = activeDelegates.stream()
-                                         .filter(delegateId -> assignDelegateService.canAssign(delegateId, task))
+                                         .filter(delegateId -> assignDelegateService.canAssign(null, delegateId, task))
                                          .collect(toList());
 
     if (activeDelegates.isEmpty()) {
@@ -1864,7 +1866,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
+        if (!assignDelegateService.canAssign(null, delegateId, delegateTask)) {
           logger.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;

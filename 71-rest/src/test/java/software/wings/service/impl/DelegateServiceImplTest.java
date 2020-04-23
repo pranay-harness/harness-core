@@ -42,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
@@ -83,7 +84,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
-    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.canAssign(any(BatchDelegateSelectionLog.class), anyString(), any())).thenReturn(true);
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
       DelegateTask task =
@@ -161,7 +162,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .when(spydelegateService)
         .assignTask(anyString(), anyString(), any(DelegateTask.class));
 
-    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
 
@@ -180,7 +181,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
 
-    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
 
@@ -199,7 +200,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
 
-    when(assignDelegateService.canAssign(anyString(), any())).thenReturn(true);
+    when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(false);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(true);
 
