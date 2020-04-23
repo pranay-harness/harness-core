@@ -25,6 +25,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
@@ -109,32 +110,34 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           });
 
   @Override
-  public boolean canAssign(String delegateId, DelegateTask task) {
+  public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task) {
     Delegate delegate = delegateService.get(task.getAccountId(), delegateId, false);
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(delegate, task) && canAssignSelectors(delegate, task.getTags());
+    return canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, task.getTags());
   }
 
   @Override
-  public boolean canAssign(String delegateId, String accountId, String appId, String envId, String infraMappingId,
-      TaskGroup taskGroup, List<String> tags) {
+  public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
+      String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags) {
     Delegate delegate = delegateService.get(accountId, delegateId, false);
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(delegate, appId, envId, infraMappingId, taskGroup) && canAssignSelectors(delegate, tags);
+    return canAssignScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
+        && canAssignSelectors(batch, delegate, tags);
   }
 
-  private boolean canAssignScopes(Delegate delegate, DelegateTask task) {
+  private boolean canAssignScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
     TaskGroup taskGroup =
         isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null;
-    return canAssignScopes(delegate, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(), taskGroup);
+    return canAssignScopes(
+        batch, delegate, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(), taskGroup);
   }
 
-  private boolean canAssignScopes(
-      Delegate delegate, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
+  private boolean canAssignScopes(BatchDelegateSelectionLog batch, Delegate delegate, String appId, String envId,
+      String infraMappingId, TaskGroup taskGroup) {
     List<DelegateScope> includeScopes = new ArrayList<>();
 
     if (isNotEmpty(delegate.getIncludeScopes())) {
@@ -144,14 +147,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     boolean includeMatched = includeScopes.isEmpty();
     for (DelegateScope scope : includeScopes) {
       if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
-        delegateSelectionLogsService.logIncludeScopeMatched(scope, delegate.getUuid());
         includeMatched = true;
         break;
       }
     }
 
     if (!includeMatched) {
-      delegateSelectionLogsService.logNoIncludeScopeMatched(delegate.getUuid());
+      delegateSelectionLogsService.logNoIncludeScopeMatched(batch, delegate.getAccountId(), delegate.getUuid());
       return false;
     }
 
@@ -162,7 +164,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     for (DelegateScope scope : excludeScopes) {
       if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
-        delegateSelectionLogsService.logExcludeScopeMatched(scope, delegate.getUuid());
+        delegateSelectionLogsService.logExcludeScopeMatched(batch, delegate.getAccountId(), delegate.getUuid(), scope);
         return false;
       }
     }
@@ -170,7 +172,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return true;
   }
 
-  private boolean canAssignSelectors(Delegate delegate, List<String> tags) {
+  private boolean canAssignSelectors(BatchDelegateSelectionLog batch, Delegate delegate, List<String> tags) {
     if (isEmpty(tags)) {
       return true;
     }
@@ -187,14 +189,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
 
     if (isEmpty(selectors)) {
-      delegateSelectionLogsService.logMissingAllSelectors(delegate.getUuid());
+      delegateSelectionLogsService.logMissingAllSelectors(batch, delegate.getAccountId(), delegate.getUuid());
       return false;
     }
 
     boolean canAssignSelector = true;
     for (String selector : trimmedLowercaseSet(tags)) {
       if (!selectors.contains(selector)) {
-        delegateSelectionLogsService.logMissingSelector(selector, delegate.getUuid());
+        delegateSelectionLogsService.logMissingSelector(batch, delegate.getAccountId(), delegate.getUuid(), selector);
         canAssignSelector = false;
       }
     }
@@ -300,10 +302,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public List<String> connectedWhitelistedDelegates(DelegateTask task) {
     List<String> delegateIds = new ArrayList<>();
     try {
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task.getUuid());
+
       List<String> connectedEligibleDelegates = accountConnectedDelegatesCache.get(task.getAccountId())
                                                     .stream()
-                                                    .filter(delegateId -> canAssign(delegateId, task))
+                                                    .filter(delegateId -> canAssign(batch, delegateId, task))
                                                     .collect(toList());
+
+      delegateSelectionLogsService.save(batch);
 
       for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
@@ -421,7 +427,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
-
       if (activeDelegates.isEmpty()) {
         errorMessage = "There were no active delegates to complete the task.";
       } else if (whitelistedDelegates.isEmpty()) {
@@ -430,8 +435,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateId, false);
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
-            boolean canAssignScope = canAssignScopes(delegate, delegateTask);
-            boolean canAssignTags = canAssignSelectors(delegate, delegateTask.getTags());
+            boolean canAssignScope = canAssignScopes(null, delegate, delegateTask);
+            boolean canAssignTags = canAssignSelectors(null, delegate, delegateTask.getTags());
             if (!canAssignScope) {
               msg.append("Not in scope");
             }

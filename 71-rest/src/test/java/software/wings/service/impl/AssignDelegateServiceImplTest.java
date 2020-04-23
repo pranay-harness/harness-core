@@ -52,6 +52,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
@@ -112,12 +113,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(emptyList())
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
-    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService, never())
+        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -139,12 +141,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
-    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService, never())
+        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -168,12 +171,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(includeScopes)
                             .excludeScopes(excludeScopes)
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
-    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService, never())
+        .logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -197,12 +201,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(includeScopes)
                             .excludeScopes(excludeScopes)
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
 
-    verify(delegateSelectionLogsService).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService).logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -224,12 +228,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
 
-    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(includeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService, never())
+        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+    verify(delegateSelectionLogsService).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -251,12 +256,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(emptyList())
                             .excludeScopes(excludeScopes)
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
-    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService, never()).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService, never())
+        .logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Test
@@ -279,12 +285,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .includeScopes(emptyList())
             .excludeScopes(ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
 
-    verify(delegateSelectionLogsService, never()).logIncludeScopeMatched(any(DelegateScope.class), anyString());
-    verify(delegateSelectionLogsService).logExcludeScopeMatched(excludeScopes.get(0), DELEGATE_ID);
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(anyString());
+    verify(delegateSelectionLogsService).logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
+    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
   }
 
   @Value
@@ -436,12 +442,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
-      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+      BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
+      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
 
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
-          .logMissingAllSelectors(DELEGATE_ID);
+          .logMissingAllSelectors(batch, ACCOUNT_ID, DELEGATE_ID);
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
-          .logMissingSelector(anyString(), eq(DELEGATE_ID));
+          .logMissingSelector(eq(batch), eq(ACCOUNT_ID), eq(DELEGATE_ID), anyString());
     }
 
     delegateTaskBuilder.envId(ENV_ID);
@@ -453,7 +460,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
-      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
+      BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
+      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
     }
   }
 
@@ -506,7 +514,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
-      assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+      BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
+      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
     }
   }
 
@@ -777,8 +786,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(singletonList(null))
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -798,8 +808,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(emptyList())
                             .excludeScopes(singletonList(null))
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -823,8 +834,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
   }
 
   @Test
@@ -873,11 +885,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .includeScopes(scopes)
                             .excludeScopes(emptyList())
                             .build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
-    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask2)).isFalse();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask2)).isFalse();
   }
 }
