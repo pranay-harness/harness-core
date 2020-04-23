@@ -32,7 +32,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
-import io.harness.exception.WingsException;
+import io.harness.govern.Switch;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -288,7 +288,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
           break;
         default:
-          throw WingsException.builder().message("Bad cluster level {} " + clusterLevel.name()).build();
+          Switch.unhandled(clusterLevel);
+          return false;
       }
       return true;
     } catch (Exception ex) {
@@ -372,7 +373,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
         break;
       default:
-        throw new WingsException("Bad cluster level {} " + clusterLevel.name());
+        Switch.unhandled(clusterLevel);
+        return false;
     }
     return true;
   }
@@ -501,10 +503,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean deleteFeedback(String feedbackId) {
-    if (isEmpty(feedbackId)) {
-      throw new WingsException("empty or null feedback id set ");
-    }
-
+    Preconditions.checkState(isNotEmpty(feedbackId), "empty or null feedback id set");
     return deleteFeedbackHelper(feedbackId);
   }
 

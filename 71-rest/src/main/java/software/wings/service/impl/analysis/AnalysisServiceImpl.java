@@ -33,6 +33,7 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
+import io.harness.govern.Switch;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -201,10 +202,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean deleteFeedback(String feedbackId) {
-    if (isEmpty(feedbackId)) {
-      throw new WingsException("empty or null feedback id set ");
-    }
-
+    Preconditions.checkNotNull(feedbackId, "empty or null feedback id set ");
     return deleteFeedbackHelper(feedbackId);
   }
 
@@ -289,10 +287,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     StateExecutionInstance stateExecutionInstance = wingsPersistence.getWithAppId(
         StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
 
-    if (stateExecutionInstance == null) {
-      throw new WingsException("Unable to find state execution for id " + feedback.getStateExecutionId());
-    }
-
+    Preconditions.checkNotNull(
+        stateExecutionInstance, "Unable to find state execution for id {}", feedback.getStateExecutionId());
     LogMLAnalysisSummary analysisSummary =
         getAnalysisSummary(feedback.getStateExecutionId(), feedback.getAppId(), stateType);
 
@@ -304,10 +300,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                    .stream()
                                                    .filter(contextElement -> contextElement instanceof PhaseElement)
                                                    .findFirst();
-    if (!optionalElement.isPresent()) {
-      throw new WingsException(
-          "Unable to find phase element for state execution id " + stateExecutionInstance.getUuid());
-    }
+    Preconditions.checkState(optionalElement.isPresent(), "Unable to find phase element for state execution id {}",
+        stateExecutionInstance.getUuid());
 
     PhaseElement phaseElement = (PhaseElement) optionalElement.get();
 
@@ -448,10 +442,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private String getEnvIdForStateExecutionId(String appId, String workflowExecutionId) {
     WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
-    if (execution == null) {
-      throw new WingsException(
-          ErrorCode.GENERAL_ERROR, "This stateExecutionId does not correspond to a valid workflow");
-    }
+    Preconditions.checkNotNull(execution, "This stateExecutionId does not correspond to a valid workflow");
     return execution.getEnvId();
   }
 
@@ -566,12 +557,10 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   private String getLogTextFromAnalysisSummary(LogMLAnalysisSummary analysisSummary, LogMLFeedback feedback) {
-    if (analysisSummary == null) {
-      throw new WingsException("Unable to find analysisSummary for feedback " + feedback);
-    }
+    Preconditions.checkNotNull(analysisSummary, "Unable to find analysisSummary for feedback " + feedback);
 
     String logText = "";
-    List<LogMLClusterSummary> logMLClusterSummaryList;
+    List<LogMLClusterSummary> logMLClusterSummaryList = new ArrayList<>();
     switch (feedback.getClusterType()) {
       case CONTROL:
         logMLClusterSummaryList = analysisSummary.getControlClusters();
@@ -583,7 +572,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         logMLClusterSummaryList = analysisSummary.getUnknownClusters();
         break;
       default:
-        throw new WingsException("unsupported cluster type " + feedback.getClusterType() + " in feedback");
+        Switch.unhandled(feedback.getClusterType());
     }
 
     for (LogMLClusterSummary clusterSummary : logMLClusterSummaryList) {
@@ -592,9 +581,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       }
     }
 
-    if (isEmpty(logText)) {
-      throw new WingsException("Unable to find logText for feedback " + feedback);
-    }
+    Preconditions.checkNotNull(logText, "Unable to find logText for feedback {}", feedback);
     return logText;
   }
 
@@ -1017,9 +1004,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   public Object getLogSample(
       String accountId, String analysisServerConfigId, String index, StateType stateType, int duration) {
     SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
-    }
+    Preconditions.checkNotNull(settingAttribute, "No {} setting with id: {} found", stateType, analysisServerConfigId);
+
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
@@ -1066,9 +1052,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       String query, String timeStampField, String timeStampFieldFormat, String messageField, String hostNameField,
       String hostName, StateType stateType) {
     SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
-    }
+    Preconditions.checkNotNull(settingAttribute, "No {} setting with id: {} found", stateType, analysisServerConfigId);
+
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
