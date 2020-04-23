@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -170,7 +169,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileNames() {
@@ -652,7 +651,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileName() {

@@ -28,7 +28,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
@@ -140,7 +140,8 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     when(mockServiceTemplateService.list(any(), anyBoolean(), any())).thenReturn(pageResponse);
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
     when(yamlHelper.getEnvironmentName(validYamlFilePath)).thenReturn(ENV_NAME);
-    when(yamlHelper.getEnvironmentName(invalidYamlFilePath)).thenThrow(new WingsException(ErrorCode.GENERAL_ERROR));
+    when(yamlHelper.getEnvironment(APP_ID, invalidYamlFilePath))
+        .thenThrow(new InvalidRequestException("env does not exist"));
     when(yamlHelper.getApplicationIfPresent(ACCOUNT_ID, validYamlFilePath))
         .thenReturn(Optional.of(anApplication().uuid(APP_ID).build()));
     when(yamlHelper.getEnvIfPresent(APP_ID, validYamlFilePath))

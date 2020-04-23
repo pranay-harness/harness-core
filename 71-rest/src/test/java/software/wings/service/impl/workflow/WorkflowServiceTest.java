@@ -16,7 +16,6 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -691,7 +690,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should update workflow.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateCustomWorkflow() {
     Workflow workflow = createCustomWorkflow();
@@ -809,7 +808,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void stencilsForPipeline() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
@@ -823,7 +822,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void stencilsForOrchestration() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
@@ -1336,7 +1335,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldValidateWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructEcsWorkflow());
@@ -1805,7 +1804,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdatePreDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1854,7 +1853,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdatePostDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1879,7 +1878,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldCreateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1912,7 +1911,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2131,7 +2130,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateWorkflowPhaseRollback() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2174,7 +2173,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateNode() {
     Workflow workflow = constructCanaryWithHttpStep();
@@ -2323,7 +2322,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateFailureStrategies() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2408,7 +2407,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldUpdateUserVariables() {
     Workflow workflow1 = createCanaryWorkflow();
