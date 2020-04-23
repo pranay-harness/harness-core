@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -19,6 +20,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
+import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -410,7 +412,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
 
-    boolean nodesOverridden = nodeSelectState.processExecutionHosts(APP_ID, Builder.aServiceInstanceSelectionParams(),
+    boolean nodesOverridden = nodeSelectState.processExecutionHosts(APP_ID, aServiceInstanceSelectionParams(),
         workflowStandardParams, new StringBuilder(), WingsTestConstants.WORKFLOW_EXECUTION_ID);
 
     assertThat(nodesOverridden).isFalse();
@@ -430,7 +432,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .when(workflowExecutionService)
         .getStateExecutionInstancesForPhases(WORKFLOW_EXECUTION_ID);
     StringBuilder message = new StringBuilder();
-    Builder selectionParams = Builder.aServiceInstanceSelectionParams();
+    Builder selectionParams = aServiceInstanceSelectionParams();
 
     boolean nodesOverridden = nodeSelectState.processExecutionHosts(
         APP_ID, selectionParams, workflowStandardParams, message, WingsTestConstants.WORKFLOW_EXECUTION_ID);
@@ -455,7 +457,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .when(workflowExecutionService)
         .getStateExecutionInstancesForPhases(WORKFLOW_EXECUTION_ID);
     StringBuilder message = new StringBuilder();
-    Builder selectionParams = Builder.aServiceInstanceSelectionParams();
+    Builder selectionParams = aServiceInstanceSelectionParams();
 
     boolean nodesOverridden = nodeSelectState.processExecutionHosts(
         APP_ID, selectionParams, workflowStandardParams, message, WingsTestConstants.WORKFLOW_EXECUTION_ID);
@@ -510,7 +512,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   private void testSelectionParamsForCountBasedHosts() {
-    Builder builder = Builder.aServiceInstanceSelectionParams()
+    Builder builder = aServiceInstanceSelectionParams()
                           .withSelectSpecificHosts(false)
                           .withExcludedServiceInstanceIds(asList("host-1"))
                           .withCount(5);
@@ -523,7 +525,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   private void testSelectionParamsForSpecificHosts() {
-    Builder builder = Builder.aServiceInstanceSelectionParams()
+    Builder builder = aServiceInstanceSelectionParams()
                           .withSelectSpecificHosts(true)
                           .withHostNames(asList("host-1", "host-2"))
                           .withCount(2);
@@ -630,5 +632,41 @@ public class NodeSelectStateTest extends WingsBaseTest {
     assertThat(instanceDetails.getPhysicalHost().getPublicDns()).isEqualTo(host.getPublicDns());
 
     assertThat(nodeSelectState.buildInstanceDetailFromHost(host, false).isNewInstance()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testErrorMessageWithSpecificHosts() {
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(asList("host-10"));
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "No nodes were selected. 'Use Specific Hosts' was chosen with host [host-10] and 0 instances have already been deployed. \n"
+            + "\n"
+            + "The service infrastructure [null] does not have this host.\n"
+            + "\n"
+            + "Check whether you've selected a unique set of host names for each phase. ");
   }
 }
