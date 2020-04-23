@@ -3301,6 +3301,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                               .workflowExecutionId(executionUuid)
                                                               .envId(stageExecution.getEnvId())
                                                               .serviceId(serviceId)
+                                                              .accountId(workflowExecution.getAccountId())
                                                               .build();
             executionBaseline.setAppId(stageExecution.getAppId());
             if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
@@ -3357,6 +3358,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .workflowId(baselineWorkflowExecution.getWorkflowId())
         .envId(baselineWorkflowExecution.getEnvId())
         .serviceId(serviceId)
+        .accountId(baselineWorkflowExecution.getAccountId())
         .workflowExecutionId(baselineWorkflowExecutionId)
         .pipelineExecutionId(baselineWorkflowExecution.getPipelineExecutionId())
         .build();

@@ -17,6 +17,7 @@ import migrations.all.AddAccountIdToTimeSeriesMetricGroupMigration;
 import migrations.all.AddAccountIdToTimeSeriesMetricTemplatesMigration;
 import migrations.all.AddAccountIdToTimeSeriesRiskSummary;
 import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
+import migrations.all.AddAccountIdToWorkflowExecutionBaselines;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAccountidToTimeSeriesMLScores;
 import migrations.all.AddAnalysisStatusMigration;
@@ -205,6 +206,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(119, AddAccountIdToTimeSeriesRiskSummary.class))
         .add(Pair.of(120, AddAccountIdToNewRelicMetricAnalysisRecords.class))
         .add(Pair.of(121, AddAccountidToTimeSeriesMLScores.class))
+        .add(Pair.of(122, AddAccountIdToWorkflowExecutionBaselines.class))
         .build();
   }
 }
