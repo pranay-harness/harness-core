@@ -13,7 +13,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
-import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -52,27 +51,23 @@ import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Base64;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import java.util.SimpleTimeZone;
 
 @JsonTypeName("DOWNLOAD_ARTIFACT")
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class DownloadArtifactCommandUnit extends ExecCommandUnit {
-  private static final String ALGORITHM = "HmacSHA1";
-  private static final Charset ENCODING = Charsets.UTF_8;
   private static final String NO_ARTIFACTS_ERROR_STRING = "There are no artifacts to download";
+  private static final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
+  private static final String EMPTY_BODY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
   @Inject private EncryptionService encryptionService;
   @Inject @Transient private transient DelegateLogService delegateLogService;
@@ -149,7 +144,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String command;
     switch (artifactStreamType) {
       case AMAZON_S3:
-        command = constructCommandStringForAmazonS3(artifactStreamAttributes, encryptionDetails, metadata);
+        command = constructCommandStringForAmazonS3V4(artifactStreamAttributes, encryptionDetails, metadata);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
@@ -261,70 +256,6 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     }
   }
 
-  private String constructCommandStringForAmazonS3(ArtifactStreamAttributes artifactStreamAttributes,
-      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
-    String date = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.RFC_1123_DATE_TIME);
-    String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);
-    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
-    String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
-
-    AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
-    String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
-    String hostName = getAmazonS3HostName(bucketName);
-    String url = getAmazonS3Url(bucketName, region, artifactPath);
-    String authorizationHeader = getAmazonS3AuthorizationHeader(date, awsConfig, encryptionDetails, metadata);
-    String command;
-    switch (this.getScriptType()) {
-      case POWERSHELL:
-        command = "$Headers = @{\n"
-            + "    Authorization = \"" + authorizationHeader + "\"\n"
-            + "    Date = \"" + date + "\"\n"
-            + "    Host = \"" + hostName + "\"\n"
-            + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile (New-Item -Path \""
-            + getCommandPath() + "\\" + artifactFileName + "\""
-            + " -Force)";
-        break;
-      case BASH:
-        int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
-        if (lastIndexOfSlash > 0) {
-          artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
-          logger.info("Got filename: " + artifactFileName);
-        }
-        command = "curl --progress-bar \"" + url + "\" -H \"Host: " + hostName + "\" \\\n"
-            + "-H \"Date: " + date + "\" \\\n"
-            + "-H \"Authorization: " + authorizationHeader + "\" -o \"" + getCommandPath() + "/" + artifactFileName
-            + "\"";
-        break;
-      default:
-        throw new InvalidRequestException("Invalid Script type", USER);
-    }
-    return command;
-  }
-
-  private String getAmazonS3AuthorizationHeader(
-      String date, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
-    String AWSAccessKeyId = awsConfig.getAccessKey();
-    String AWSSecretAccessKey = String.valueOf(awsConfig.getSecretKey());
-
-    String canonicalizedResource =
-        "/" + metadata.get(ArtifactMetadataKeys.bucketName) + "/" + metadata.get(ArtifactMetadataKeys.artifactFileName);
-    String stringToSign = "GET\n\n\n" + date + "\n" + canonicalizedResource;
-    String signature = Base64.getEncoder().encodeToString(hmacSHA1(stringToSign, AWSSecretAccessKey));
-    return "AWS"
-        + " " + AWSAccessKeyId + ":" + signature;
-  }
-
-  private byte[] hmacSHA1(String data, String key) {
-    try {
-      Mac mac = Mac.getInstance(ALGORITHM);
-      mac.init(new SecretKeySpec(key.getBytes(ENCODING), ALGORITHM));
-      return mac.doFinal(data.getBytes(ENCODING));
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      return new byte[] {};
-    }
-  }
-
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
     delegateLogService.save(context.getAccountId(),
         aLog()
@@ -336,10 +267,6 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             .withLogLine(line)
             .withExecutionResult(RUNNING)
             .build());
-  }
-
-  private String getAmazonS3HostName(String bucketName) {
-    return bucketName + ".s3.amazonaws.com";
   }
 
   private String getAmazonS3Url(String bucketName, String region, String artifactPath) {
@@ -369,6 +296,59 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("eu-north-1", "-eu-north-1");
     bucketRegions.put("sa-east-1", "-sa-east-1");
     bucketRegions.put("me-south-1", "-me-south-1");
+  }
+
+  private String constructCommandStringForAmazonS3V4(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
+    AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    String awsAccessKey = awsConfig.getAccessKey();
+    String awsSecretKey = String.valueOf(awsConfig.getSecretKey());
+    String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);
+    String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
+    String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
+    String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
+    URL endpointUrl;
+    String url = getAmazonS3Url(bucketName, region, artifactPath);
+    try {
+      endpointUrl = new URL(url);
+    } catch (MalformedURLException e) {
+      throw new InvalidRequestException("Unable to parse service endpoint: ", e);
+    }
+
+    Date now = new Date();
+    SimpleDateFormat dateTimeFormat = new SimpleDateFormat(ISO_8601_BASIC_FORMAT);
+    dateTimeFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
+    String dateTimeStamp = dateTimeFormat.format(now);
+    String authorizationHeader = AWS4SignerForAuthorizationHeader.getAWSV4AuthorizationHeader(
+        endpointUrl, region, awsAccessKey, awsSecretKey, now);
+    String command;
+    switch (this.getScriptType()) {
+      case POWERSHELL:
+        command = "$Headers = @{\n"
+            + "    Authorization = \"" + authorizationHeader + "\"\n"
+            + "    \"x-amz-content-sha256\" = \"" + EMPTY_BODY_SHA256 + "\"\n"
+            + "    \"x-amz-date\" = \"" + dateTimeStamp + "\"\n"
+            + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile (New-Item -Path \""
+            + getCommandPath() + "\\" + artifactFileName + "\""
+            + " -Force)";
+        break;
+      case BASH:
+        int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
+        if (lastIndexOfSlash > 0) {
+          artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
+          logger.info("Got filename: " + artifactFileName);
+        }
+        command = "curl --progress-bar " + url + " \\\n"
+            + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
+            + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
+            + "-H \"x-amz-date: " + dateTimeStamp + "\""
+            + " -o \"" + getCommandPath() + "/" + artifactFileName + "\"";
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Script type", USER);
+    }
+    return command;
   }
 
   private String constructCommandStringForSMB(ArtifactStreamAttributes artifactStreamAttributes,
