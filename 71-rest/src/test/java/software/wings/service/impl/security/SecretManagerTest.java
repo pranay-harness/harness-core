@@ -52,6 +52,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
@@ -93,6 +94,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public class SecretManagerTest extends CategoryTest {
@@ -456,6 +458,87 @@ public class SecretManagerTest extends CategoryTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  private MorphiaIterator<EncryptedData, EncryptedData> fetchmockMorphiaIterator(
+      Set<String> secretIds, String accountId) {
+    Query<EncryptedData> query = mock(Query.class);
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    MorphiaIterator<EncryptedData, EncryptedData> morphiaIterator = mock(MorphiaIterator.class);
+    when(wingsPersistence.createQuery(EncryptedData.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(fieldEnd);
+    when(fieldEnd.in(secretIds)).thenReturn(query);
+    when(fieldEnd.equal(accountId)).thenReturn(query);
+    when(query.fetch()).thenReturn(morphiaIterator);
+    when(morphiaIterator.getClazz()).thenReturn(EncryptedData.class);
+    when(morphiaIterator.getCollection()).thenReturn("encryptedRecords");
+    return morphiaIterator;
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_hasUpdateAccessToSecrets_shouldPass() {
+    String accountId = "accountId";
+    String secretId1 = "secretId1";
+    String secretId2 = "secretId2";
+    Set<String> secretIds = Sets.newHashSet(secretId1, secretId2);
+    MorphiaIterator<EncryptedData, EncryptedData> mockMorphiaIterator = fetchmockMorphiaIterator(secretIds, accountId);
+    EncryptedData encryptedData1 = mock(EncryptedData.class);
+    EncryptedData encryptedData2 = mock(EncryptedData.class);
+    when(mockMorphiaIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+    when(mockMorphiaIterator.next()).thenReturn(encryptedData1).thenReturn(encryptedData2);
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
+    when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+
+    boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
+    assertThat(isEditable).isTrue();
+    verify(mockMorphiaIterator, times(2)).next();
+    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_hasUpdateAccessToSecrets_shouldPass_notFoundSecrets() {
+    String accountId = "accountId";
+    String secretId1 = "secretId1";
+    String secretId2 = "secretId2";
+    Set<String> secretIds = Sets.newHashSet(secretId1, secretId2);
+    MorphiaIterator<EncryptedData, EncryptedData> mockMorphiaIterator = fetchmockMorphiaIterator(secretIds, accountId);
+    when(mockMorphiaIterator.hasNext()).thenReturn(false);
+    boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
+    assertThat(isEditable).isTrue();
+    verify(mockMorphiaIterator, times(0)).next();
+    verify(usageRestrictionsService, times(0)).userHasPermissionsToChangeEntity(any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_hasUpdateAccessToSecrets_shouldReturnFalse() {
+    String accountId = "accountId";
+    String secretId1 = "secretId1";
+    String secretId2 = "secretId2";
+    Set<String> secretIds = Sets.newHashSet(secretId1, secretId2);
+    MorphiaIterator<EncryptedData, EncryptedData> mockMorphiaIterator = fetchmockMorphiaIterator(secretIds, accountId);
+    EncryptedData encryptedData1 = mock(EncryptedData.class);
+    EncryptedData encryptedData2 = mock(EncryptedData.class);
+    when(mockMorphiaIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+    when(mockMorphiaIterator.next()).thenReturn(encryptedData1).thenReturn(encryptedData2);
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
+    when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions))
+        .thenReturn(true)
+        .thenReturn(false);
+
+    boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
+    assertThat(isEditable).isFalse();
+    verify(mockMorphiaIterator, times(2)).next();
+    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
   }
 
   @Test

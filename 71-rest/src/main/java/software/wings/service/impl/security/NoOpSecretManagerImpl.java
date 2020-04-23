@@ -257,6 +257,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public boolean hasUpdateAccessToSecrets(Set<String> secretIds, String accountId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean canUseSecretsInAppAndEnv(@NonNull Set<String> secretIds, @NonNull String accountId,
       String appIdFromRequest, String envIdFromRequest, boolean isAccountAdmin,
       UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions,
