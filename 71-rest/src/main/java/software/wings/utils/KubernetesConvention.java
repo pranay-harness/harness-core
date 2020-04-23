@@ -2,13 +2,17 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -31,6 +35,7 @@ public class KubernetesConvention {
   private static final int MAX_REVISIONS = 100000;
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
   private static final String HARNESS_INTERNAL = "harness-internal-";
+  private static final String GIT_REPO_URL_REGEX = "^(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+).git$";
 
   public static String getInternalHarnessConfigName(String infraMappingId) {
     return HARNESS_INTERNAL + getNormalizedInfraMappingIdLabelValue(infraMappingId);
@@ -98,6 +103,19 @@ public class KubernetesConvention {
       name = name.substring(0, maxLength);
     }
     return SECRET_PREFIX + name + SECRET_SUFFIX;
+  }
+
+  public static String getKubernetesGitSecretName(String repoUrl) {
+    Pattern gitUrlPattern = Pattern.compile(GIT_REPO_URL_REGEX);
+    Matcher matcher = gitUrlPattern.matcher(repoUrl);
+    if (!matcher.find()) {
+      throw new InvalidArgumentsException(format("Unrecognized GIT repository URL: %s", repoUrl), WingsException.USER);
+    }
+
+    String gitRepoName = matcher.group(5);
+    String gitRepoUsername = matcher.group(4);
+
+    return SECRET_PREFIX + gitRepoUsername + "-" + gitRepoName + SECRET_SUFFIX;
   }
 
   public static Optional<Integer> getRevisionFromControllerName(String name) {

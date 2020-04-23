@@ -45,6 +45,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.delegatetasks.citasks.CITaskFactoryModule;
 import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
@@ -150,6 +151,7 @@ public class DelegateApplication {
     }
     modules.add(new KubernetesClientFactoryModule());
     modules.add(new KubernetesApiClientFactoryModule());
+    modules.add(new CITaskFactoryModule());
     modules.add(new AppenderModule(Config.builder()
                                        .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
                                                           .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))

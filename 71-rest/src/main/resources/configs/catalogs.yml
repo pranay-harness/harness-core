@@ -463,6 +463,8 @@ TASK_TYPES:
       value: TERRAFORM
     - name: Trigger
       value: TRIGGER
+    - name: Continuous Integration
+      value: CI
 
 EXECUTION_STATUS:
     - name: Aborted
