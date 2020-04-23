@@ -49,8 +49,8 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   void cloneServiceGuardConfigs(String sourceEnvID, String targetEnvID);
 
   Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId);
-  boolean saveKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransactions);
-  boolean addToKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
+  boolean saveKeyTransactionsForCVConfiguration(String accountId, String cvConfigId, List<String> keyTransactions);
+  boolean addToKeyTransactionsForCVConfiguration(String accountId, String cvConfigId, List<String> keyTransaction);
   boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
   TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId);
   List<Boolean> is24x7GuardEnabledForAccounts(List<String> accountIdList);
