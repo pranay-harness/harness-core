@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import ch.qos.logback.classic.LoggerContext;
 import com.ning.http.client.AsyncHttpClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
@@ -43,7 +44,8 @@ import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegatetasks.citasks.CITaskFactoryModule;
 import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
@@ -196,7 +198,11 @@ public class DelegateApplication {
       injector.getInstance(AsyncHttpClient.class).close();
       logger.info("Async HTTP client has been closed.");
 
-      LogManager.shutdown();
+      ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+      if (loggerFactory instanceof LoggerContext) {
+        LoggerContext context = (LoggerContext) loggerFactory;
+        context.stop();
+      }
       logger.info("Log manager has been shutdown and logs have been flushed.");
     }));
   }
