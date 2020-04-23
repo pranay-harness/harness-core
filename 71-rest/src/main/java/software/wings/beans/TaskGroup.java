@@ -59,5 +59,6 @@ public enum TaskGroup {
   HELM_REPO_CONFIG_VALIDATION,
   HELM_VALUES_FETCH_TASK,
   GUARD_24x7,
+  CI,
   SLACK
 }
