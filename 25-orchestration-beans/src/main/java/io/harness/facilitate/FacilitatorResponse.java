@@ -3,6 +3,7 @@ package io.harness.facilitate;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.modes.ExecutionMode;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 import java.time.Duration;
@@ -12,7 +13,7 @@ import java.time.Duration;
 @Redesign
 public class FacilitatorResponse {
   Duration initialWait;
-  ExecutionMode executionMode;
+  @NonNull ExecutionMode executionMode;
   // This is for the micro level optimization during no mode evaluation you might do a bunch of work which you don't
   // want to repeat you can use this object to pass that data through
   PassThroughData passThroughData;

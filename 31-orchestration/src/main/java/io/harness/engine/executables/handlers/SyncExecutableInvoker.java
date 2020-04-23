@@ -22,6 +22,6 @@ public class SyncExecutableInvoker implements ExecutableInvoker {
     Ambiance ambiance = invokerPackage.getAmbiance();
     StateResponse stateResponse = syncExecutable.executeSync(
         ambiance, invokerPackage.getParameters(), invokerPackage.getInputs(), invokerPackage.getPassThroughData());
-    engine.handleStateResponse(ambiance.getLevels().get("currentNode").getRuntimeId(), stateResponse);
+    engine.handleStateResponse(ambiance.getCurrentRuntimeId(), stateResponse);
   }
 }

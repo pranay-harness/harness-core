@@ -28,4 +28,6 @@ public class ExecutionNode {
   // Hooks
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
+
+  @Builder.Default @NotNull String levelKey;
 }

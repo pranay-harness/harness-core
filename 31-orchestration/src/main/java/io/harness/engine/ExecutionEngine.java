@@ -38,7 +38,6 @@ import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.Ambiance.AmbianceBuilder;
 import io.harness.state.io.ambiance.Level;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -82,21 +81,21 @@ public class ExecutionEngine implements Engine {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
-    AmbianceBuilder ambianceBuilder = Ambiance.builder()
-                                          .setupAbstractions(executionPlan.getSetupAbstractions())
-                                          .executionInstanceId(instance.getUuid());
-    triggerExecution(ambianceBuilder, executionPlan.fetchStartingNode());
+    Ambiance ambiance = Ambiance.builder()
+                            .setupAbstractions(executionPlan.getSetupAbstractions())
+                            .executionInstanceId(instance.getUuid())
+                            .build();
+    triggerExecution(ambiance, executionPlan.fetchStartingNode());
     return instance;
   }
 
   public void startNodeExecution(Ambiance ambiance) {
-    startNodeInstance(ambiance, ambiance.getLevels().get("currentNode").getRuntimeId());
+    startNodeInstance(ambiance, ambiance.getCurrentRuntimeId());
   }
 
-  public void triggerExecution(AmbianceBuilder ambianceBuilder, ExecutionNode node) {
+  public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
     String uuid = generateUuid();
-    Ambiance ambiance =
-        ambianceBuilder.level("currentNode", Level.builder().setupId(node.getUuid()).runtimeId(uuid).build()).build();
+    ambiance.addLevel(Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelKey()).build());
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
                                              .uuid(uuid)
                                              .node(node)

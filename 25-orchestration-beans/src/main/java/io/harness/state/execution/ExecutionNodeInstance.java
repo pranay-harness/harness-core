@@ -18,7 +18,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -35,7 +34,10 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   @NotNull ExecutionNode node;
   @NotNull ExecutionMode mode;
 
+  // Relationships
   String notifyId;
+  String parentId;
+  String nextId;
 
   // Mutable
   long lastUpdatedAt;
@@ -45,5 +47,5 @@ public class ExecutionNodeInstance implements PersistentEntity, UuidAware, Creat
   private Long expiryTs;
 
   // Applicable only for child/children states
-  @Singular List<StateTransput> additionalInputs = new ArrayList<>();
+  @Singular List<StateTransput> additionalInputs;
 }

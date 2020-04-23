@@ -2,6 +2,7 @@ package io.harness.adviser;
 
 import io.harness.annotations.Redesign;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 @Value
@@ -23,5 +24,5 @@ public class AdviserType {
   public static final String PAUSE = "PAUSE";
   public static final String RESUME = "RESUME";
 
-  String type;
+  @NonNull String type;
 }
