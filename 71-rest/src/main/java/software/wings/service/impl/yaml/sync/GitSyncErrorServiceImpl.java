@@ -151,7 +151,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   @Override
   public PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName) {
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName,
+      Integer numberOfErrorsInSummary) {
     // Creating a page request to get the commits
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
@@ -177,10 +178,13 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .group(GitSyncErrorKeys.gitCommitId, grouping("failedCount", accumulator("$sum", 1)),
             grouping(GitToHarnessErrorCommitStatsKeys.commitTime, first(GitSyncErrorKeys.commitTime)),
             grouping(GitSyncErrorKeys.gitConnectorId, first(GitSyncErrorKeys.gitConnectorId)),
-            grouping(GitSyncErrorKeys.branchName, first(GitSyncErrorKeys.branchName)))
+            grouping(GitSyncErrorKeys.branchName, first(GitSyncErrorKeys.branchName)),
+            grouping(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView,
+                grouping("$push", projection(GitSyncErrorKeys.yamlFilePath, GitSyncErrorKeys.yamlFilePath),
+                    projection(GitSyncErrorKeys.failureReason, GitSyncErrorKeys.failureReason))))
         .project(projection("gitCommitId", "_id"), projection("failedCount"),
             projection(GitToHarnessErrorCommitStatsKeys.commitTime), projection(GitSyncErrorKeys.gitConnectorId),
-            projection(GitSyncErrorKeys.branchName))
+            projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
         .sort(Sort.descending(GitToHarnessErrorCommitStatsKeys.commitTime))
         .limit(limit)
         .skip(offset)
@@ -190,12 +194,29 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     List<GitToHarnessErrorCommitStats> filteredCommitDetails =
         filterCommitsWithValidConnectorAndPopulateConnectorName(commitWiseErrorDetails, accountId);
 
+    removeExtraErrorsFromCommitDetails(filteredCommitDetails, numberOfErrorsInSummary);
+
     return aPageResponse()
         .withTotal(filteredCommitDetails.size())
         .withLimit(String.valueOf(limit))
         .withOffset(String.valueOf(offset))
         .withResponse(filteredCommitDetails)
         .build();
+  }
+
+  private void removeExtraErrorsFromCommitDetails(
+      List<GitToHarnessErrorCommitStats> commitDetails, Integer numberOfErrorsInSummary) {
+    if (numberOfErrorsInSummary == null) {
+      return;
+    }
+
+    for (GitToHarnessErrorCommitStats commitDetail : commitDetails) {
+      List<GitSyncError> allErrors = commitDetail.getErrorsForSummaryView();
+      if (isNotEmpty(allErrors) && allErrors.size() > numberOfErrorsInSummary) {
+        sortErrorsByFileProcessingOrder(allErrors);
+        commitDetail.setErrorsForSummaryView(allErrors.subList(0, numberOfErrorsInSummary));
+      }
+    }
   }
 
   private List<GitToHarnessErrorCommitStats> filterCommitsWithValidConnectorAndPopulateConnectorName(

@@ -92,16 +92,18 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
         GitToHarnessErrorDetails.builder().gitCommitId(commitId).commitTime(Long.valueOf(123)).build();
     final GitSyncError gitSyncError = GitSyncError.builder()
                                           .accountId(accountId)
+                                          .yamlFilePath(yamlFilePath)
                                           .gitSyncDirection(GIT_TO_HARNESS.toString())
                                           .gitConnectorId(gitConnectorId)
                                           .branchName(branchName)
+                                          .failureReason("failureReason")
                                           .additionalErrorDetails(gitSyncErrorDetails)
                                           .build();
     String id = wingsPersistence.save(gitSyncError);
 
     PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitToHarnessErrorCommitStats> errorsList =
-        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, null, null).getResponse();
+        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, null, null, 2).getResponse();
     assertThat(errorsList.size()).isEqualTo(1);
     GitToHarnessErrorCommitStats error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(1);

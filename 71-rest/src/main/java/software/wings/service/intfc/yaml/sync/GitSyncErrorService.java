@@ -12,7 +12,8 @@ import java.util.List;
 
 public interface GitSyncErrorService {
   PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName);
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName,
+      Integer numberOfErrorsInSummary);
 
   PageResponse<GitSyncError> listAllGitToHarnessErrors(
       PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName);
