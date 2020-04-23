@@ -1204,9 +1204,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
-    if (!isFeatureFlagEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+    if (isFeatureFlagEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId)) {
       logger.info(
-          "CV Feedbacks feature flag is not enabled for account {}, not going to create a feedback task", accountId);
+          "DISABLE_LOGML_NEURAL_NET feature flag is enabled for account {}, not going to create a feedback task",
+          accountId);
       return;
     }
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);

@@ -248,7 +248,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
-    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
+    disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
@@ -309,7 +309,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testGetAnalysisSummaryFeedbackData() throws Exception {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
-    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
+    disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);

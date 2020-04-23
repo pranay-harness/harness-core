@@ -803,7 +803,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         : analysisRecord.getAnalysisSummaryMessage();
 
     // Update with the feedback clusters
-    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId)) {
       boolean isDemoPath = featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
       List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId, isDemoPath);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();

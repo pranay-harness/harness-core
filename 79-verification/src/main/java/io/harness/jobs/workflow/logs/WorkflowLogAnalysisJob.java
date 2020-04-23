@@ -207,10 +207,10 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
             try {
               logger.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
-              if (!managerClientHelper
-                       .callManagerWithRetry(
-                           managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
-                       .getResource()) {
+              if (managerClientHelper
+                      .callManagerWithRetry(
+                          managerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, context.getAccountId()))
+                      .getResource()) {
                 new LogMLAnalysisGenerator(context, logAnalysisMinute, false, analysisService, learningEngineService,
                     managerClient, managerClientHelper, MLAnalysisType.LOG_ML)
                     .sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);

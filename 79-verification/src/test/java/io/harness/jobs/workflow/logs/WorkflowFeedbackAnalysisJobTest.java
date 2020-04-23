@@ -1,6 +1,9 @@
 package io.harness.jobs.workflow.logs;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -10,8 +13,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.service.impl.analysis.MLAnalysisType.FEEDBACK_ANALYSIS;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
@@ -38,7 +43,10 @@ import org.quartz.Scheduler;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.FeatureName;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
@@ -46,6 +54,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
+  @Inject private WingsPersistence wingsPersistence;
+
   @Mock private JobExecutionContext jobExecutionContext;
   @Mock private VerificationManagerClient verificationManagerClient;
   @Mock private LogAnalysisService analysisService;
@@ -106,8 +116,19 @@ public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandle_feedbackIterator() throws Exception {
-    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     workflowFeedbackAnalysisJob.handle(analysisContext);
     verify(analysisService, times(2)).getLastWorkflowAnalysisMinute(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testHandle_feedbackIteratorWhenDisableLogmlNueralNetIsEnabled() throws Exception {
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    workflowFeedbackAnalysisJob.handle(analysisContext);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                   .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                   .count())
+        .isEqualTo(0);
   }
 }
