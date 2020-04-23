@@ -15,7 +15,6 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -145,11 +144,11 @@ public class LogMLAnalysisGenerator implements Runnable {
 
       String feedback_url = "";
 
-      boolean isNewFeedbacksEnabled =
+      boolean isOldFeedbacksEnabled =
           managerClientHelper
-              .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
+              .callManagerWithRetry(managerClient.isFeatureEnabled(DISABLE_LOGML_NEURAL_NET, context.getAccountId()))
               .getResource();
-      if (!isNewFeedbacksEnabled
+      if (isOldFeedbacksEnabled
           && (logAnalysisMinute == 0 || logAnalysisMinute == context.getStartDataCollectionMinute())) {
         feedback_url = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
             + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId

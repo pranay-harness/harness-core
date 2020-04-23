@@ -1486,8 +1486,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(managerFeatureFlagCall);
   }
 
@@ -2041,8 +2041,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // mock setup
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(managerFeatureFlagCall);
     setupFeedbacks(true);
 
@@ -2089,8 +2089,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // mock setup
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(managerFeatureFlagCall);
     setupFeedbacks(true);
 
@@ -3226,8 +3226,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testCreateFeedbackTask_featureFlagDisabled() throws Exception {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.clone()).thenReturn(managerFeatureFlagCall);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
         .thenReturn(managerFeatureFlagCall);
     writeField(continuousVerificationService, "verificationManagerClient", verificationManagerClient, true);
     // Save a previously analysed feedback record and log record.

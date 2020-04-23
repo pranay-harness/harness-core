@@ -354,7 +354,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
     long analysisEndMin = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
-    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
+    if (!featureFlagService.isEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, cvConfiguration.getAccountId())) {
       List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null, false);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {

@@ -3,15 +3,18 @@ package io.harness.jobs;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -57,7 +60,9 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
@@ -102,6 +107,8 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   @Mock private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Mock private JobExecutionContext timeSeriesContext;
   @Mock private JobExecutionContext logAnalysisExecutionContext;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private CVActivityLogService cvActivityLogService;
 
   private Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups;
 
@@ -170,6 +177,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     FieldUtils.writeField(workflowLogAnalysisJob, "managerClientHelper", managerClientHelper, true);
     FieldUtils.writeField(workflowLogAnalysisJob, "verificationManagerClient", verificationManagerClient, true);
     FieldUtils.writeField(workflowLogAnalysisJob, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(workflowLogAnalysisJob, "cvActivityLogService", cvActivityLogService, true);
 
     FieldUtils.writeField(workflowLogClusterJob, "managerClient", verificationManagerClient, true);
     FieldUtils.writeField(workflowLogClusterJob, "analysisService", logAnalysisService, true);
@@ -405,6 +413,70 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   public void testLogClusterCronEnabled() {
     workflowLogClusterJob.handle(logAnalysisContext);
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testHandle_LogAnalysisIteratorWhenDisableLogmlNeuralNetIsEnabled() throws IOException {
+    Set<String> collectedNodes = new HashSet<>();
+    collectedNodes.addAll(logAnalysisContext.getTestNodes().keySet());
+    when(logAnalysisService.getCollectionMinuteForLevel(
+             query, appId, stateExecutionId, StateType.SUMO, ClusterLevel.L2, collectedNodes))
+        .thenReturn(0L);
+    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.clone()).thenReturn(featureFlagRestMock);
+    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
+        .thenReturn(featureFlagRestMock);
+    workflowLogAnalysisJob.handle(logAnalysisContext);
+    List<LearningEngineAnalysisTask> analysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, LOG_ML)
+            .asList();
+    assertThat(analysisTasks.size()).isEqualTo(1);
+    assertThat(analysisTasks.get(0).getFeedback_url()).isNotEmpty();
+    assertThat(analysisTasks.get(0).getFeedback_url())
+        .isEqualTo("/verification/logml/user-feedback"
+            + "?accountId=" + accountId + "&appId=" + appId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
+            + "&workflowExecutionId=" + workflowExecutionId);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testHandle_LogAnalysisIteratorSendWhenDisableLogmlNeuralNetIsEnabledSendNotification()
+      throws IOException, IllegalAccessException {
+    FieldUtils.writeField(managerClientHelper, "managerClient", verificationManagerClient, true);
+    FieldUtils.writeField(managerClientHelper, "cvActivityLogService", cvActivityLogService, true);
+    when(logAnalysisService.isProcessingComplete(query, appId, stateExecutionId, StateType.SUMO, 15, 0, accountId))
+        .thenReturn(true);
+
+    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.clone()).thenReturn(featureFlagRestMock);
+    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId))
+        .thenReturn(featureFlagRestMock);
+    when(verificationManagerClient.sendNotifyForVerificationState(any(), any(), any())).thenReturn(featureFlagRestMock);
+
+    Call<RestResponse<List<String>>> versionsCall = mock(Call.class);
+    when(versionsCall.clone()).thenReturn(versionsCall);
+    when(versionsCall.execute()).thenReturn(Response.success(new RestResponse<>(Lists.newArrayList())));
+    when(verificationManagerClient.getListOfPublishedVersions(anyString())).thenReturn(versionsCall);
+
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString()))
+        .thenReturn(mock(CVActivityLogService.Logger.class));
+
+    workflowLogAnalysisJob.handle(logAnalysisContext);
+
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                                .filter(AnalysisContextKeys.stateType, StateType.SUMO)
+                                                .get();
+    assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    ArgumentCaptor<VerificationDataAnalysisResponse> taskCaptor =
+        ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
+    verify(managerClientHelper).notifyManagerForVerificationAnalysis(any(), taskCaptor.capture());
+    assertThat(taskCaptor.getValue().getExecutionStatus().name()).isEqualTo(ExecutionStatus.SUCCESS.name());
   }
 
   private void verifyTimeSeriesQueuedTasks() {
