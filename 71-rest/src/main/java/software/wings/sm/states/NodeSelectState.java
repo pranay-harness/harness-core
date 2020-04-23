@@ -357,7 +357,7 @@ public abstract class NodeSelectState extends State {
         if (isEmpty(hostNames)) {
           msg.append("but no host names were specified. ");
         } else {
-          msg.append("with these host names: ").append(hostNames).append(". ");
+          msg.append("with ").append(plural("host", hostNames.size())).append(' ').append(hostNames);
         }
       } else {
         if (instanceUnitType == PERCENTAGE) {
@@ -366,20 +366,21 @@ public abstract class NodeSelectState extends State {
           msg.append("This phase deploys to ")
               .append(instanceCount)
               .append(plural(" instance", instanceCount))
-              .append(" (cumulative) ");
+              .append(" (cumulative)");
         }
       }
 
-      msg.append("and ")
+      msg.append(" and ")
           .append(hostExclusionList.size())
           .append(hostExclusionList.size() == 1 ? " instance has" : " instances have")
-          .append(" already been deployed. \n\n"
-              + "The service infrastructure [")
-          .append(infraMapping.getName())
-          .append("] has ")
-          .append(totalAvailableInstances)
-          .append(plural(" instance", totalAvailableInstances))
-          .append(" available. ");
+          .append(" already been deployed. \n\n");
+
+      if (isNotEmpty(hostNames)) {
+        msg.append("The service infrastructure [")
+            .append(infraMapping.getName())
+            .append("] does not have ")
+            .append((hostNames.size() == 1) ? "this host." : "these hosts.");
+      }
 
       if (specificHosts) {
         msg.append("\n\nCheck whether you've selected a unique set of host names for each phase. ");
