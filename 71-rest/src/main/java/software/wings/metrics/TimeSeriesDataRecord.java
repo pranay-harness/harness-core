@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.UuidAware;
@@ -86,7 +87,7 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, CreatedAtAware {
+public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
 
   private StateType stateType; // could be null for older values
@@ -122,6 +123,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
   private transient TreeBasedTable<String, String, String> deeplinkUrl;
 
   private long createdAt;
+
+  @Indexed private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
@@ -197,6 +200,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.level, level == null ? null : level.name(), false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.tag, tag, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.groupName, groupName, false);
+    addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.accountId, accountId, false);
 
     if (isNotEmpty(valuesBytes)) {
       addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.valuesBytes, Blob.copyFrom(valuesBytes), true);
@@ -219,6 +223,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
             .serviceId(readString(entity, TimeSeriesMetricRecordKeys.serviceId))
             .cvConfigId(readString(entity, TimeSeriesMetricRecordKeys.cvConfigId))
             .stateExecutionId(readString(entity, TimeSeriesMetricRecordKeys.stateExecutionId))
+            .accountId(readString(entity, TimeSeriesMetricRecordKeys.accountId))
             .timeStamp(readLong(entity, TimeSeriesMetricRecordKeys.timeStamp))
             .dataCollectionMinute((int) readLong(entity, TimeSeriesMetricRecordKeys.dataCollectionMinute))
             .host(readString(entity, TimeSeriesMetricRecordKeys.host))
@@ -269,6 +274,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                                                       .workflowExecutionId(metric.getWorkflowExecutionId())
                                                       .serviceId(metric.getServiceId())
                                                       .cvConfigId(metric.getCvConfigId())
+                                                      .accountId(metric.getAccountId())
                                                       .stateExecutionId(metric.getStateExecutionId())
                                                       .groupName(metric.getGroupName())
                                                       .timeStamp(metric.getTimeStamp())
@@ -313,6 +319,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                                                                 .workflowExecutionId(metric.getWorkflowExecutionId())
                                                                 .serviceId(metric.getServiceId())
                                                                 .cvConfigId(metric.getCvConfigId())
+                                                                .accountId(metric.getAccountId())
                                                                 .stateExecutionId(metric.getStateExecutionId())
                                                                 .groupName(metric.getGroupName())
                                                                 .timeStamp(metric.getTimeStamp())
@@ -333,6 +340,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                   .workflowExecutionId(metric.getWorkflowExecutionId())
                   .serviceId(metric.getServiceId())
                   .cvConfigId(metric.getCvConfigId())
+                  .accountId(metric.getAccountId())
                   .stateExecutionId(metric.getStateExecutionId())
                   .groupName(metric.getGroupName())
                   .timeStamp(metric.getTimeStamp())
