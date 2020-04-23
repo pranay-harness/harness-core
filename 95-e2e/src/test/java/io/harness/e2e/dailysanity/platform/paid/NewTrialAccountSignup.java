@@ -18,7 +18,6 @@ import io.harness.testframework.restutils.MailinatorRestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -28,7 +27,6 @@ import javax.mail.MessagingException;
 
 @Slf4j
 public class NewTrialAccountSignup extends AbstractE2ETest {
-  @Test()
   @Owner(developers = NATARAJA, intermittent = false)
   @Category(E2ETests.class)
   public void testTrialSignUp() throws IOException, MessagingException {

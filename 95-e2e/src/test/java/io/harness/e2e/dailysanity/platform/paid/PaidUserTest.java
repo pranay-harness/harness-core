@@ -35,7 +35,6 @@ public class PaidUserTest extends AbstractE2ETest {
     assertThat(userList.size() > 0).isTrue();
   }
 
-  @Test()
   @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void testUserInvite() throws IOException, MessagingException {

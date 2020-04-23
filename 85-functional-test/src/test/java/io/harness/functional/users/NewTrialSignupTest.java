@@ -18,7 +18,6 @@ import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -47,7 +46,6 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     logger.info("Setup completed successfully");
   }
 
-  @Test()
   @Owner(developers = RAMA, intermittent = true)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() {
@@ -60,7 +58,6 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     assertThat(invite.getEmail()).isEqualTo(user.getEmail());
   }
 
-  @Test()
   @Owner(developers = RAMA, intermittent = true)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignupInvalidPassword() {
