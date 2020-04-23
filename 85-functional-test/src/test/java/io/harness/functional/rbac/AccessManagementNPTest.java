@@ -67,7 +67,6 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     logger.info("No permission test for GET ends");
   }
 
-  @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {

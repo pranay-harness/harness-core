@@ -59,7 +59,6 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
     Setup.signOut(userGroupManagementId, roBearerToken);
   }
 
-  @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amPermissionToPostForUser() {

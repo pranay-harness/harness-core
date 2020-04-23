@@ -175,7 +175,7 @@ public class UserGroupUtils {
     assertThat(userGroup).isNotNull();
 
     logger.info("Creating a Notification Settings with an email id and slack webhook");
-    String emailId = TestUtils.generateRandomUUID() + "@harness.mailinator.com";
+    String emailId = TestUtils.generateRandomUUID() + "@harness.io";
     String slackWebHook = new ScmSecret().decryptToString(new SecretName("slack_webhook_for_alert"));
     NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
     if (userGroup != null) {

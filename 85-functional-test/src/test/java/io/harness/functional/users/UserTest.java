@@ -70,7 +70,6 @@ public class UserTest extends AbstractFunctionalTest {
     assertThat(userList.size() > 0).isTrue();
   }
 
-  @Test()
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void testUserInvite() throws IOException, MessagingException {

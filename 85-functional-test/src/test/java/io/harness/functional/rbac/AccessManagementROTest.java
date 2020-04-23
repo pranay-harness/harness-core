@@ -52,7 +52,6 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
     AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUserid);
   }
 
-  @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
