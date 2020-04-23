@@ -2,6 +2,7 @@ package io.harness.delegate.logging;
 
 import static ch.qos.logback.classic.Level.INFO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.RemoteStackdriverLogAppender.MIN_BATCH_SIZE;
 import static io.harness.logging.RemoteStackdriverLogAppender.logLevelToSeverity;
 import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +87,9 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldSubmit() {
     String message = "my log message";
-    log(INFO, message);
+    for (int i = 0; i < MIN_BATCH_SIZE; ++i) {
+      log(INFO, message);
+    }
     waitForMessage(INFO, message);
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
     await().atMost(15L, TimeUnit.SECONDS).until(logQueue::isEmpty);

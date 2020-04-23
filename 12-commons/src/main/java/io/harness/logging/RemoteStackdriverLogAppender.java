@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
+  public static final int MIN_BATCH_SIZE = 100;
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String SEVERITY = "severity";
   private static final String LOG_NAME = "delegate";
@@ -84,8 +85,13 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       Executors
           .newSingleThreadScheduledExecutor(
               new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-submitter").build())
-          .scheduleWithFixedDelay(this ::submitLogs, 1L, 1L, TimeUnit.SECONDS);
+          .scheduleWithFixedDelay(this ::send, 1L, 3L, TimeUnit.SECONDS);
     }
+  }
+  @Override
+  public void stop() {
+    super.stop();
+    flush();
   }
 
   @Override
@@ -127,9 +133,24 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     }
   }
 
-  private void submitLogs() {
+  private void send() {
+    submitLogs(MIN_BATCH_SIZE);
+  }
+
+  private void flush() {
+    while (true) {
+      synchronized (this) {
+        if (logQueue.isEmpty()) {
+          return;
+        }
+        submitLogs(0);
+      }
+    }
+  }
+
+  private void submitLogs(int minimum) {
     synchronized (this) {
-      if (logQueue.isEmpty()) {
+      if (logQueue.size() < minimum) {
         return;
       }
 
