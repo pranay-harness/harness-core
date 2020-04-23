@@ -134,6 +134,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return false;
     }
     metricData.forEach(metric -> {
+      metric.setAccountId(accountId);
       if (isNotEmpty(metric.getCvConfigId())) {
         metric.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
       }

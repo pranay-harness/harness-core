@@ -390,6 +390,7 @@ newRelicMetricAnalysisRecords { "name" : "appId_1" , "background" : true} { "app
 newRelicMetricAnalysisRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 newRelicMetricAnalysisRecords { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
 newRelicMetricAnalysisRecords { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+newRelicMetricRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 newRelicMetricRecords { "name" : "appId_1" , "background" : true} { "appId" : 1}
 newRelicMetricRecords { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
 newRelicMetricRecords { "name" : "cvConfigId_1" , "background" : true} { "cvConfigId" : 1}
@@ -583,6 +584,7 @@ timeSeriesMetricGroup { "name" : "createdAt_1" , "background" : true} { "created
 timeSeriesMetricGroup { "name" : "stateExecutionId_1" , "background" : true} { "stateExecutionId" : 1}
 timeSeriesMetricGroup { "name" : "uniqueIdx" , "unique" : true} { "stateType" : 1 , "stateExecutionId" : 1}
 timeSeriesMetricGroup { "name" : "validUntil_1" , "background" : true , "expireAfterSeconds" : 0} { "validUntil" : 1}
+timeSeriesMetricRecords { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 timeSeriesMetricRecords { "name" : "cvConfigId_1" , "background" : true} { "cvConfigId" : 1}
 timeSeriesMetricRecords { "name" : "serviceGuardIdx" , "background" : true} { "dataCollectionMinute" : -1 , "cvConfigId" : 1}
 timeSeriesMetricRecords { "name" : "stateExIdx" , "background" : true} { "stateExecutionId" : 1 , "groupName" : 1 , "dataCollectionMinute" : -1}

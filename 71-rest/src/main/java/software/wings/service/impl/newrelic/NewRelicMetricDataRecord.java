@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -74,7 +75,7 @@ import java.util.Map;
 @IgnoreUnusedIndex
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
+public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 
   @NotEmpty private StateType stateType;
@@ -109,6 +110,8 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private transient Map<String, String> deeplinkUrl;
 
+  @Indexed private String accountId;
+
   public Map<String, Double> getValues() {
     if (values == null) {
       return new HashMap<>();
@@ -126,7 +129,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType, String name,
       String workflowId, String workflowExecutionId, String serviceId, String cvConfigId, String stateExecutionId,
       long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag, String groupName,
-      Map<String, Double> values, Map<String, String> deeplinkMetadata) {
+      Map<String, Double> values, Map<String, String> deeplinkMetadata, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.name = name;
@@ -134,6 +137,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     this.workflowExecutionId = workflowExecutionId;
     this.serviceId = serviceId;
     this.cvConfigId = cvConfigId;
+    this.accountId = accountId;
     this.stateExecutionId = stateExecutionId;
     this.timeStamp = timeStamp;
     this.dataCollectionMinute = dataCollectionMinute;
@@ -159,6 +163,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     addFieldIfNotEmpty(recordBuilder, "workflowExecutionId", workflowExecutionId, false);
     addFieldIfNotEmpty(recordBuilder, "serviceId", serviceId, true);
     addFieldIfNotEmpty(recordBuilder, "cvConfigId", cvConfigId, false);
+    addFieldIfNotEmpty(recordBuilder, "accountId", accountId, false);
     addFieldIfNotEmpty(recordBuilder, "stateExecutionId", stateExecutionId, false);
     recordBuilder.set("timeStamp", timeStamp);
     recordBuilder.set("dataCollectionMinute", dataCollectionMinute);
@@ -193,6 +198,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
             .workflowExecutionId(readString(entity, "workflowExecutionId"))
             .serviceId(readString(entity, "serviceId"))
             .cvConfigId(readString(entity, "cvConfigId"))
+            .accountId(readString(entity, "accountId"))
             .stateExecutionId(readString(entity, "stateExecutionId"))
             .timeStamp(readLong(entity, "timeStamp"))
             .dataCollectionMinute((int) readLong(entity, "dataCollectionMinute"))
