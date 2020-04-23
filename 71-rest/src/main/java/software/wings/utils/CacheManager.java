@@ -59,6 +59,8 @@ public class CacheManager {
     configuration.setTypes(keyType, valueType);
     configuration.setStoreByValue(true);
     configuration.setExpiryPolicyFactory(expiryPolicy);
+    configuration.setStatisticsEnabled(true);
+    configuration.setManagementEnabled(true);
 
     try {
       return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))

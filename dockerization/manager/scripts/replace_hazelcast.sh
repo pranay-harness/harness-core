@@ -7,7 +7,7 @@ if [[ -v "HZ_CLUSTER_NAME" ]]; then
     sed -i "s|<property name=\"tag-value\">cluster1|<property name=\"tag-value\">${HZ_CLUSTER_NAME}|" /opt/harness/hazelcast.xml
 fi
 
-if [[ -v "MANCENTER_URL" ]]; then
+if [[ "" != "$MANCENTER_URL" ]]; then
     sed -i "s|<management-center enabled=\"false\">http://localhost:8080/mancenter|<management-center enabled=\"true\">${MANCENTER_URL}|" /opt/harness/hazelcast.xml
 fi
 
