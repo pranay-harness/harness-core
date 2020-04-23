@@ -72,5 +72,6 @@ public class GitCommit extends Base {
     // Temporary
     public static final String lastUpdatedAt = "lastUpdatedAt";
     public static final String createdAt = "createdAt";
+    public static final String gitFileChanges = "yamlChangeSet.gitFileChanges";
   }
 }

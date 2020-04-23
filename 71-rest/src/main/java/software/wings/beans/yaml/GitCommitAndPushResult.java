@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 10/16/17.
  */
@@ -15,6 +17,7 @@ public class GitCommitAndPushResult extends GitCommandResult {
   private GitCommitResult gitCommitResult;
   private GitPushResult gitPushResult;
   private YamlGitConfig yamlGitConfig;
+  private List<GitFileChange> filesCommitedToGit;
 
   /**
    * Instantiates a new Git commit and push result.
@@ -29,11 +32,12 @@ public class GitCommitAndPushResult extends GitCommandResult {
    * @param gitCommitResult the git commit result
    * @param gitPushResult   the git push result
    */
-  public GitCommitAndPushResult(
-      GitCommitResult gitCommitResult, GitPushResult gitPushResult, YamlGitConfig yamlGitConfig) {
+  public GitCommitAndPushResult(GitCommitResult gitCommitResult, GitPushResult gitPushResult,
+      YamlGitConfig yamlGitConfig, List<GitFileChange> filesCommitedToGit) {
     super(GitCommandType.COMMIT_AND_PUSH);
     this.gitCommitResult = gitCommitResult;
     this.gitPushResult = gitPushResult;
     this.yamlGitConfig = yamlGitConfig;
+    this.filesCommitedToGit = filesCommitedToGit;
   }
 }
