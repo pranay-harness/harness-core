@@ -866,7 +866,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveKeyTransactionsNullInput() throws Exception {
-    cvConfigurationService.saveKeyTransactionsForCVConfiguration(generateUuid(), null);
+    cvConfigurationService.saveKeyTransactionsForCVConfiguration(accountId, generateUuid(), null);
   }
 
   @Test(expected = VerificationOperationException.class)
@@ -877,7 +877,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(cvConfiguration);
-    cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, null);
+    cvConfigurationService.saveKeyTransactionsForCVConfiguration(accountId, cvConfigId, null);
   }
 
   @Test
@@ -889,7 +889,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
-        cvConfigId, Arrays.asList("transaction1", "tranasaction2"));
+        accountId, cvConfigId, Arrays.asList("transaction1", "tranasaction2"));
     assertThat(saved).isTrue();
     TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
     assertThat(keyTxns).isNotNull();
@@ -907,14 +907,15 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
-        cvConfigId, Arrays.asList("transaction1", "transaction2"));
+        accountId, cvConfigId, Arrays.asList("transaction1", "transaction2"));
     assertThat(saved).isTrue();
     TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
     assertThat(keyTxns).isNotNull();
     assertThat(keyTxns.getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(keyTxns.getKeyTransactions().size()).isEqualTo(2);
     assertThat(keyTxns.getKeyTransactions().containsAll(Arrays.asList("transaction1", "transaction2"))).isTrue();
-    saved = cvConfigurationService.addToKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction3"));
+    saved = cvConfigurationService.addToKeyTransactionsForCVConfiguration(
+        accountId, cvConfigId, Arrays.asList("transaction3"));
 
     assertThat(saved).isTrue();
     keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
@@ -934,7 +935,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
-        cvConfigId, Arrays.asList("transaction1", "transaction2"));
+        accountId, cvConfigId, Arrays.asList("transaction1", "transaction2"));
     assertThat(saved).isTrue();
     TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
     assertThat(keyTxns).isNotNull();
@@ -960,8 +961,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
     wingsPersistence.save(cvConfiguration);
-    boolean saved =
-        cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, Arrays.asList("transaction1"));
+    boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
+        accountId, cvConfigId, Arrays.asList("transaction1"));
     assertThat(saved).isTrue();
     TimeSeriesKeyTransactions keyTxns = cvConfigurationService.getKeyTransactionsForCVConfiguration(cvConfigId);
     assertThat(keyTxns).isNotNull();

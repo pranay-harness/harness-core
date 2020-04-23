@@ -1113,7 +1113,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public boolean saveKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransactions) {
+  public boolean saveKeyTransactionsForCVConfiguration(
+      String accountId, String cvConfigId, List<String> keyTransactions) {
     if (isEmpty(cvConfigId) || getConfiguration(cvConfigId) == null) {
       final String errMsg = "CVConfigId is empty in saveKeyTransactionsForCVConfiguration";
       logger.error(errMsg);
@@ -1131,8 +1132,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
             .get();
     if (keyTransactionsForConfig == null) {
-      keyTransactionsForConfig =
-          TimeSeriesKeyTransactions.builder().cvConfigId(cvConfigId).keyTransactions(new HashSet<>()).build();
+      keyTransactionsForConfig = TimeSeriesKeyTransactions.builder()
+                                     .accountId(accountId)
+                                     .cvConfigId(cvConfigId)
+                                     .keyTransactions(new HashSet<>())
+                                     .build();
     }
     keyTransactionsForConfig.setKeyTransactions(new HashSet<>(keyTransactions));
     wingsPersistence.save(keyTransactionsForConfig);
@@ -1140,7 +1144,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public boolean addToKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction) {
+  public boolean addToKeyTransactionsForCVConfiguration(
+      String accountId, String cvConfigId, List<String> keyTransaction) {
     if (isEmpty(keyTransaction)) {
       final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
       logger.error(errMsg);
@@ -1149,8 +1154,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
     TimeSeriesKeyTransactions keyTransactionsForConfig = getKeyTransactionsForCVConfiguration(cvConfigId);
     if (keyTransactionsForConfig == null) {
-      keyTransactionsForConfig =
-          TimeSeriesKeyTransactions.builder().cvConfigId(cvConfigId).keyTransactions(new HashSet<>()).build();
+      keyTransactionsForConfig = TimeSeriesKeyTransactions.builder()
+                                     .accountId(accountId)
+                                     .cvConfigId(cvConfigId)
+                                     .keyTransactions(new HashSet<>())
+                                     .build();
     }
     logger.info("Adding {} to the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
     keyTransactionsForConfig.getKeyTransactions().addAll(keyTransaction);

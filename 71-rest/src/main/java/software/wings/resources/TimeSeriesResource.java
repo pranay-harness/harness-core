@@ -222,7 +222,7 @@ public class TimeSeriesResource {
   public RestResponse<Boolean> saveKeyTransactions(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, List<String> transactionNames) {
     return new RestResponse<>(
-        cvConfigurationService.saveKeyTransactionsForCVConfiguration(cvConfigId, transactionNames));
+        cvConfigurationService.saveKeyTransactionsForCVConfiguration(accountId, cvConfigId, transactionNames));
   }
 
   @POST
@@ -232,7 +232,7 @@ public class TimeSeriesResource {
   public RestResponse<Boolean> addToKeyTransactions(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, List<String> transactionName) {
     return new RestResponse<>(
-        cvConfigurationService.addToKeyTransactionsForCVConfiguration(cvConfigId, transactionName));
+        cvConfigurationService.addToKeyTransactionsForCVConfiguration(accountId, cvConfigId, transactionName));
   }
 
   @POST
