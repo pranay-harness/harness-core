@@ -394,13 +394,70 @@ public class GitClientImpl implements GitClient {
                                 .setAll(true)
                                 .setMessage(commitMessage.toString())
                                 .call();
-
       return GitCommitResult.builder().commitId(revCommit.getName()).commitTime(revCommit.getCommitTime()).build();
 
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException("Error in writing commit", ADMIN_SRE);
     }
+  }
+
+  private List<GitFileChange> getFilesCommited(String gitCommitId, GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
+      ObjectId commitId = ObjectId.fromString(gitCommitId);
+      RevCommit currentCommitObject = null;
+      try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+        currentCommitObject = revWalk.parseCommit(commitId);
+      }
+
+      if (currentCommitObject == null) {
+        String repoURL = StringUtils.defaultIfBlank(gitOperationContext.getGitConfig().getRepoUrl(), "");
+        throw new GitClientException(
+            String.format("No commit was found with the commitId (%s) in git repo (%s)", gitCommitId, repoURL), USER,
+            null);
+      }
+
+      RevCommit parentCommit = currentCommitObject.getParent(0);
+
+      ObjectId newCommitHead = git.getRepository().resolve(currentCommitObject.getName() + "^{tree}");
+      ObjectId oldCommitHead = null;
+      if (parentCommit != null) {
+        oldCommitHead = git.getRepository().resolve(parentCommit.getName() + "^{tree}");
+      }
+      List<DiffEntry> diffs = getDiffEntries(git.getRepository(), git, newCommitHead, oldCommitHead);
+      return getGitFileChangesFromDiff(diffs, git.getRepository(), gitConfig.getAccountId());
+    } catch (Exception ex) {
+      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      throw new YamlException("Error in getting the files commited to the git", USER_ADMIN);
+    }
+  }
+
+  private List<GitFileChange> getGitFileChangesFromDiff(List<DiffEntry> diffs, Repository repository, String accountId)
+      throws IOException {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    for (DiffEntry entry : diffs) {
+      ObjectId objectId;
+      String filePath;
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
+        filePath = entry.getOldPath();
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+      ObjectLoader loader = repository.open(objectId);
+      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
+                             .withAccountId(accountId)
+                             .withFilePath(filePath)
+                             .withFileContent(content)
+                             .withChangeType(gitClientHelper.getChangeType(entry.getChangeType()))
+                             .withSyncFromGit(false)
+                             .withChangeFromAnotherCommit(false)
+                             .build());
+    }
+    return gitFileChanges;
   }
 
   @NotNull
@@ -571,6 +628,8 @@ public class GitClientImpl implements GitClient {
         GitCommitAndPushResult.builder().gitCommitResult(commitResult).build();
     if (isNotBlank(commitResult.getCommitId())) {
       gitCommitAndPushResult.setGitPushResult(push(gitOperationContext));
+      List<GitFileChange> gitFileChanges = getFilesCommited(commitResult.getCommitId(), gitOperationContext);
+      gitCommitAndPushResult.setFilesCommitedToGit(gitFileChanges);
     } else {
       logger.warn(getGitLogMessagePrefix(gitOperationContext.getGitConfig().getGitRepoType())
               + "Null commitId. Nothing to push for request [{}]",
