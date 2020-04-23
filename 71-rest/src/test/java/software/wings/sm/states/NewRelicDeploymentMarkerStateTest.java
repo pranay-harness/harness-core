@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -47,7 +46,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
-public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
+public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestBase {
   @Inject private SettingsService settingsService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
@@ -95,6 +94,7 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
         .when(newRelicService)
         .resolveApplicationName(settingId, "valid_app");
     doThrow(new RuntimeException("Invalid app")).when(newRelicService).resolveApplicationName(settingId, "invalid_app");
+    setupCvActivityLogService(newRelicDeploymentMarkerState);
   }
 
   @Test

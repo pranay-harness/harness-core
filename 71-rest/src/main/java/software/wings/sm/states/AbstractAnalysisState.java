@@ -1147,13 +1147,20 @@ public abstract class AbstractAnalysisState extends State {
 
     if (isExpression(fieldName, fieldValue, getTemplateExpressions())) {
       String analysisServerConfigName = context.renderExpression(fieldValue);
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId())
+          .info("Expression " + fieldValue + " resolved to " + analysisServerConfigName);
       final SettingAttribute settingAttribute =
           settingsService.getSettingAttributeByName(context.getAccountId(), analysisServerConfigName);
       if (settingAttribute == null) {
+        cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId())
+            .error(
+                "The evaluated connector name " + analysisServerConfigName + " did not resolve to a valid connector");
         throw new DataCollectionException("Expression " + fieldValue + " resolved to " + analysisServerConfigName
             + ". There was no connector found with this name.");
       }
-
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId())
+          .info("The evaluated connector name " + analysisServerConfigName
+              + " successfully resolved to a valid connector");
       return settingAttribute.getUuid();
     }
 
@@ -1177,6 +1184,8 @@ public abstract class AbstractAnalysisState extends State {
 
     if (isExpression(fieldName, fieldValue, getTemplateExpressions())) {
       final String renderedValue = context.renderExpression(fieldValue);
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId())
+          .info("Expression " + fieldValue + " resolved to " + renderedValue);
       if (isExpression(fieldName, renderedValue, getTemplateExpressions())) {
         throw new DataCollectionException("Expression " + fieldValue + " could not be resolved");
       }

@@ -78,6 +78,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -110,6 +111,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Mock private InfrastructureMapping infrastructureMapping;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ExecutionContext executionContext;
+  @Mock private CVActivityLogService cvActivityLogService;
 
   private final String workflowId = UUID.randomUUID().toString();
   private final String envId = UUID.randomUUID().toString();
@@ -747,8 +749,10 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testGetResolvedFieldValue_whenExpressionInvalidValue() {
+  public void testGetResolvedFieldValue_whenExpressionInvalidValue() throws Exception {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    FieldUtils.writeField(abstractAnalysisState, "cvActivityLogService", cvActivityLogService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
     abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
     when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("${hostnameTemplate}");
 
@@ -762,8 +766,10 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testGetResolvedFieldValue_whenExpressionValidValue() {
+  public void testGetResolvedFieldValue_whenExpressionValidValue() throws Exception {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    FieldUtils.writeField(abstractAnalysisState, "cvActivityLogService", cvActivityLogService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
     abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
     when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("resolved template");
 

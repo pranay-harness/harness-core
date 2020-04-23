@@ -83,6 +83,7 @@ public class SumoLogicAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(configId).when(sumoLogicAnalysisState).getResolvedConnectorId(any(), any(), any());
     doReturn(workflowId).when(sumoLogicAnalysisState).getWorkflowId(any());
     doReturn(serviceId).when(sumoLogicAnalysisState).getPhaseServiceId(any());
+    setupCvActivityLogService(sumoLogicAnalysisState);
   }
 
   @Test

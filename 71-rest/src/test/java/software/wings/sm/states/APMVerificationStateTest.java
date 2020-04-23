@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -63,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class APMVerificationStateTest extends WingsBaseTest {
+public class APMVerificationStateTest extends APMStateVerificationTestBase {
   @Inject private Injector injector;
   @Mock private WorkflowStandardParams workflowStandardParameters;
 
@@ -100,6 +99,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     FieldUtils.writeField(apmVerificationState, "metricAnalysisService", metricAnalysisService, true);
     FieldUtils.writeField(apmVerificationState, "settingsService", settingsService, true);
     when(featureFlagService.isEnabled(FeatureName.CUSTOM_APM_CV_TASK, accountId)).thenReturn(true);
+    setupCvActivityLogService(apmVerificationState);
   }
 
   @Test
