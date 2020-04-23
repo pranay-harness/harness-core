@@ -2417,12 +2417,6 @@ public class SecretManagerImpl implements SecretManager {
 
   public boolean canUseSecretsInAppAndEnv(
       @NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest, String envIdFromRequest) {
-    Set<EncryptedData> encryptedDataSet = fetchSecretsFromSecretIds(secretIds, accountId);
-
-    if (encryptedDataSet.isEmpty()) {
-      return true;
-    }
-
     boolean isAccountAdmin = userService.isAccountAdmin(accountId);
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
@@ -2432,14 +2426,8 @@ public class SecretManagerImpl implements SecretManager {
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMapForAccount = envService.getAppIdEnvMap(appsByAccountId);
 
-    for (EncryptedData encryptedData : encryptedDataSet) {
-      if (!usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              encryptedData.getUsageRestrictions(), restrictionsFromUserPermissions, appEnvMapFromPermissions,
-              appIdEnvMapForAccount)) {
-        return false;
-      }
-    }
-    return true;
+    return canUseSecretsInAppAndEnv(secretIds, accountId, appIdFromRequest, envIdFromRequest, isAccountAdmin,
+        restrictionsFromUserPermissions, appEnvMapFromPermissions, appIdEnvMapForAccount);
   }
 
   public boolean canUseSecretsInAppAndEnv(@NonNull Set<String> secretIds, @NonNull String accountId,
@@ -2452,6 +2440,17 @@ public class SecretManagerImpl implements SecretManager {
       if (!usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
               encryptedData.getUsageRestrictions(), restrictionsFromUserPermissions, appEnvMapFromPermissions,
               appIdEnvMapForAccount)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean hasUpdateAccessToSecrets(@NonNull Set<String> secretIds, @NonNull String accountId) {
+    Set<EncryptedData> encryptedDataSet = fetchSecretsFromSecretIds(secretIds, accountId);
+
+    for (EncryptedData encryptedData : encryptedDataSet) {
+      if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
         return false;
       }
     }
