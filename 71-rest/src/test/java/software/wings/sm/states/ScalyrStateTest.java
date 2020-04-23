@@ -38,6 +38,7 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.scalyr.ScalyrService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.Collections;
@@ -61,13 +62,14 @@ public class ScalyrStateTest extends APMStateVerificationTestBase {
     setupCommonMocks();
     FieldUtils.writeField(scalyrState, "scalyrService", scalyrService, true);
     FieldUtils.writeField(scalyrState, "secretManager", secretManager, true);
-
+    FieldUtils.writeField(scalyrState, "cvActivityLogService", cvActivityLogService, true);
     scalyrState.setHostnameField("${host_name_expression}");
     scalyrState.setMessageField("${message_field_expression}");
     scalyrState.setTimestampField("${timestamp_field_expression}");
     when(executionContext.renderExpression("${host_name_expression}")).thenReturn("resolved_host_name");
     when(executionContext.renderExpression("${message_field_expression}")).thenReturn("resolved_message_field");
     when(executionContext.renderExpression("${timestamp_field_expression}")).thenReturn("resolved_timestamp_field");
+    setupCvActivityLogService(scalyrState);
   }
 
   @Test
@@ -132,6 +134,9 @@ public class ScalyrStateTest extends APMStateVerificationTestBase {
     hosts.put("host2", "default");
     hosts.put("host3", "default");
     String resolvedAnalysisServerConfigId = generateUuid();
+
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString()))
+        .thenReturn(mock(CVActivityLogService.Logger.class));
 
     ScalyrConfig scalyrConfig = ScalyrConfig.builder().url(generateUuid()).build();
     SettingAttribute settingAttribute =

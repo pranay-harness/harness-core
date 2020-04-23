@@ -18,6 +18,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -183,5 +184,11 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     FieldUtils.writeField(state, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(state, "versionInfoManager", versionInfoManager, true);
     FieldUtils.writeField(state, "cvActivityLogService", cvActivityLogService, true);
+  }
+
+  protected void setupCvActivityLogService(AbstractAnalysisState state) throws IllegalAccessException {
+    FieldUtils.writeField(state, "cvActivityLogService", cvActivityLogService, true);
+    PowerMockito.when(cvActivityLogService.getLoggerByStateExecutionId(anyString()))
+        .thenReturn(mock(CVActivityLogService.Logger.class));
   }
 }

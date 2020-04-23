@@ -69,6 +69,7 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
   @Mock DelegateService delegateService;
   @Mock SecretManager secretManager;
   @Mock AwsHelperResourceService awsHelperResourceService;
+
   @Before
   public void setup() throws IllegalAccessException {
     setupCommon();
@@ -77,6 +78,7 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
     when(workflowExecutionService.getWorkflowExecution(any(), any()))
         .thenReturn(WorkflowExecution.builder().uuid(generateUuid()).build());
     when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(Collections.emptyList());
+    setupCvActivityLogService(cloudWatchState);
   }
   @Test
   @Owner(developers = PRANJAL)
