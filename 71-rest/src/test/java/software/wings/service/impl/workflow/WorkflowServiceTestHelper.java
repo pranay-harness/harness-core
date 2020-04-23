@@ -621,6 +621,28 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static Workflow constructK8SBlueGreenWorkflow() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .deploymentType(DeploymentType.KUBERNETES)
+                                                         .phaseSteps(asList(aPhaseStep(K8S_PHASE_STEP, "Deploy")
+                                                                                .addStep(GraphNode.builder()
+                                                                                             .id(generateUuid())
+                                                                                             .type(SHELL_SCRIPT.name())
+                                                                                             .name("Shell Script")
+                                                                                             .build())
+                                                                                .build()))
+                                                         .build())
+                                   .build())
+        .build();
+  }
+
   public static Workflow constructAmiWorkflow() {
     return aWorkflow()
         .name(WORKFLOW_NAME)

@@ -16,6 +16,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -129,6 +130,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHELMInfra;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHelmWorkflowWithProperties;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHttpTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructK8SBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructK8SWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
@@ -202,7 +204,6 @@ import static software.wings.stencils.WorkflowStepType.CI_SYSTEM;
 import static software.wings.stencils.WorkflowStepType.DC_SSH;
 import static software.wings.stencils.WorkflowStepType.FLOW_CONTROL;
 import static software.wings.stencils.WorkflowStepType.ISSUE_TRACKING;
-import static software.wings.stencils.WorkflowStepType.KUBERNETES;
 import static software.wings.stencils.WorkflowStepType.LOG;
 import static software.wings.stencils.WorkflowStepType.NOTIFICATION;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
@@ -4296,7 +4297,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
-        .doesNotContain(KUBERNETES.name(), AWS_SSH.name());
+        .doesNotContain(WorkflowStepType.KUBERNETES.name(), AWS_SSH.name());
   }
 
   private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps) {
@@ -4423,7 +4424,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
-        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name(), KUBERNETES.name());
+        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name(), WorkflowStepType.KUBERNETES.name());
   }
 
   @Test
@@ -4442,8 +4443,43 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(KUBERNETES.name(), KUBERNETES.getDisplayName(),
-            asList(K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(),
+        .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
+            asList(K8S_CANARY_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(),
+                K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(), K8S_APPLY.name())));
+    validateCommonCategories(workflowCategorySteps, true);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(ARTIFACT.name());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void categoriesForK8sBlueGreenWorkflow() throws IllegalArgumentException {
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(aGcpKubernetesInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(DeploymentType.KUBERNETES.name())
+                        .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
+                        .withComputeProviderType(SettingVariableTypes.GCP.name())
+                        .build());
+
+    Workflow workflow = workflowService.createWorkflow(constructK8SBlueGreenWorkflow());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, K8S_PHASE_STEP.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
+            asList(K8S_BLUE_GREEN_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(),
                 KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(),
                 K8S_APPLY.name())));
     validateCommonCategories(workflowCategorySteps, true);
