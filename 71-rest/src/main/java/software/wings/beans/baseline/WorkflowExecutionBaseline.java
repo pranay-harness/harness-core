@@ -1,6 +1,7 @@
 package software.wings.beans.baseline;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +30,7 @@ import software.wings.beans.Base;
 @FieldNameConstants(innerTypeName = "WorkflowExecutionBaselineKeys")
 @Entity(value = "workflowExecutionBaselines", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class WorkflowExecutionBaseline extends Base {
+public class WorkflowExecutionBaseline extends Base implements AccountAccess {
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String ENV_ID_KEY = "envId";
   public static final String SERVICE_ID_KEY = "serviceId";
@@ -38,6 +39,7 @@ public class WorkflowExecutionBaseline extends Base {
   @NotEmpty private String envId;
   @NotEmpty private String serviceId;
   @NotEmpty @Indexed private String workflowExecutionId;
+  @Indexed private String accountId;
   private String pipelineExecutionId;
 
   @UtilityClass

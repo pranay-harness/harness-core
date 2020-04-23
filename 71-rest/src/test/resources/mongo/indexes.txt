@@ -660,6 +660,7 @@ waitInstances { "name" : "waitingOnCorrelationIds_1" , "background" : true} { "w
 whitelist { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 whitelist { "name" : "appId_1" , "background" : true} { "appId" : 1}
 whitelist { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
+workflowExecutionBaselines { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 workflowExecutionBaselines { "name" : "appId_1" , "background" : true} { "appId" : 1}
 workflowExecutionBaselines { "name" : "baselineUniqueIndex" , "unique" : true} { "workflowId" : 1 , "envId" : 1 , "serviceId" : 1}
 workflowExecutionBaselines { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
