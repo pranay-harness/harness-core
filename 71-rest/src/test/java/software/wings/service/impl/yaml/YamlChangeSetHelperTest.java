@@ -22,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.artifact.ArtifactStream;
@@ -103,9 +102,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, newValue, true);
     ArgumentCaptor<List> gitFileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
-    verify(yamlChangeSetService)
-        .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptor.capture(), entityCaptor.capture());
+    verify(yamlChangeSetService).saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptor.capture(), any());
 
     assertThat(gitFileChangesCaptor.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptor.getValue().get(0);
@@ -143,9 +140,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, oldValue, false);
     ArgumentCaptor<List> fileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
-    verify(yamlChangeSetService)
-        .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptor.capture(), entityCaptor.capture());
+    verify(yamlChangeSetService).saveChangeSet(accountIdCaptor.capture(), fileChangesCaptor.capture(), any());
 
     assertThat(fileChangesCaptor.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptor.getValue().get(0);
@@ -190,9 +185,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     ArgumentCaptor<List> gitFileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
-    verify(yamlChangeSetService)
-        .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptorForAS.capture(), entityCaptor.capture());
+    verify(yamlChangeSetService).saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptorForAS.capture(), any());
 
     assertThat(gitFileChangesCaptorForAS.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptorForAS.getValue().get(0);
@@ -227,9 +220,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     ArgumentCaptor<List> fileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
-    verify(yamlChangeSetService)
-        .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptorForAS.capture(), entityCaptor.capture());
+    verify(yamlChangeSetService).saveChangeSet(accountIdCaptor.capture(), fileChangesCaptorForAS.capture(), any());
 
     assertThat(fileChangesCaptorForAS.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptorForAS.getValue().get(0);

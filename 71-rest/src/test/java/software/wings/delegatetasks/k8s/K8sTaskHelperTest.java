@@ -369,7 +369,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     }
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    PowerMockito.verifyStatic();
+    PowerMockito.verifyStatic(Utils.class);
     Utils.executeScript(any(), captor.capture(), any(), any());
     assertThat(captor.getValue()).isEqualTo(expectedOutput);
   }

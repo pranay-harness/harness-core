@@ -10,8 +10,8 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -741,7 +741,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldListHostsForAzureSSHDeployment() {
     AzureInfrastructureMapping azureInfrastructureMapping = anAzureInfrastructureMapping()
@@ -1097,7 +1097,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldGetAzureInfraMappingTypes() {
     AzureInfrastructureMapping azureSSHInfrastructureMapping =
