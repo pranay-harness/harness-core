@@ -4308,11 +4308,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
-            WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
-    assertThat(workflowCategorySteps.getCategories())
-        .extracting(
-            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
         .contains(tuple(ISSUE_TRACKING.name(), ISSUE_TRACKING.getDisplayName(),
             asList(JIRA_CREATE_UPDATE.name(), SERVICENOW_CREATE_UPDATE.name())));
     assertThat(workflowCategorySteps.getCategories())
@@ -4334,11 +4329,22 @@ public class WorkflowServiceTest extends WingsBaseTest {
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(),
               asList(SHELL_SCRIPT.name(), HTTP.name(), NEW_RELIC_DEPLOYMENT_MARKER.name())));
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
+              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
+              asList(TERRAFORM_APPLY.name(), StepType.TERRAFORM_DESTROY.name())));
     } else {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(), asList(SHELL_SCRIPT.name(), HTTP.name())));
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
+              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
     }
   }
 
