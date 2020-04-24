@@ -46,8 +46,7 @@ public class TemplateResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Template>> list(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @BeanParam PageRequest<Template> pageRequest,
-      @QueryParam("galleryKey") List<String> galleryKeys) {
-    // TODO(abhinav): modify param to galleryKeys
+      @QueryParam("galleryKeys") List<String> galleryKeys) {
     pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId));
   }
