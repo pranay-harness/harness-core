@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogKeys;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
@@ -29,8 +30,11 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -46,6 +50,11 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "LogKeys")
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Indexes({
+  @Index(options = @IndexOptions(name = "appId_activityId"), fields = {
+    @Field(value = LogKeys.appId), @Field(value = LogKeys.activityId)
+  })
+})
 public class Log extends Base implements GoogleDataStoreAware {
   @NotEmpty private String activityId;
   private String hostName;
@@ -87,7 +96,7 @@ public class Log extends Base implements GoogleDataStoreAware {
                   com.google.cloud.datastore.StringValue.newBuilder(getCommandExecutionStatus().name())
                       .setExcludeFromIndexes(true)
                       .build())
-              .set(Log.CREATED_AT_KEY, currentTimeMillis());
+              .set(CREATED_AT_KEY, currentTimeMillis());
 
       if (getLogLine().length() <= 256) {
         logEntityBuilder.set("logLine", StringValue.newBuilder(getLogLine()).setExcludeFromIndexes(true).build());
@@ -124,7 +133,7 @@ public class Log extends Base implements GoogleDataStoreAware {
                         .withUuid(entity.getKey().getName())
                         .withActivityId(readString(entity, "activityId"))
                         .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
-                        .withCreatedAt(readLong(entity, Log.CREATED_AT_KEY))
+                        .withCreatedAt(readLong(entity, CREATED_AT_KEY))
                         .withHostName(readString(entity, "hostName"))
                         .withAppId(readString(entity, "appId"))
                         .withCommandUnitName(readString(entity, "commandUnitName"))
@@ -408,5 +417,13 @@ public class Log extends Base implements GoogleDataStoreAware {
       log.setLastUpdatedAt(lastUpdatedAt);
       return log;
     }
+  }
+
+  public static final class LogKeys {
+    private LogKeys() {}
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }
