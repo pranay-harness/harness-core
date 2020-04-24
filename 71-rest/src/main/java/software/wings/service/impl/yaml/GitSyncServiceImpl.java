@@ -5,6 +5,7 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 
 import com.google.common.base.Predicates;
@@ -89,6 +90,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                    .filePath(error.getYamlFilePath())
                    .fileContent(getYamlContentOfError(error))
                    .status(status)
+                   .commitMessage(getCommitMessageOfError(error))
                    .triggeredBy(GitFileActivity.TriggeredBy.USER)
                    .build())
         .collect(Collectors.toList());
@@ -212,6 +214,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                               .status(status)
                                                               .errorMessage(message)
                                                               .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
+                                                              .commitMessage(change.getCommitMessage())
                                                               .build())
                                                    .collect(Collectors.toList());
 
@@ -264,6 +267,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .processingCommitId(processingCommitIdToPersist)
         .filePath(change.getFilePath())
         .fileContent(change.getFileContent())
+        .commitMessage(change.getCommitMessage())
         .changeType(change.getChangeType())
         .changeFromAnotherCommit(changeFromAnotherCommit != null
                 ? changeFromAnotherCommit

@@ -12,6 +12,7 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
@@ -227,6 +228,7 @@ public class GitClientImpl implements GitClient {
       }
 
       diffResult.setCommitTimeMs(getCommitTimeMs(endCommitIdStr, repository));
+      diffResult.setCommitMessage(getCommitMessage(endCommitIdStr, repository));
 
       try (ObjectReader reader = repository.newObjectReader()) {
         CanonicalTreeParser startTreeIter = new CanonicalTreeParser();
@@ -236,7 +238,7 @@ public class GitClientImpl implements GitClient {
 
         List<DiffEntry> diffs = git.diff().setNewTree(endTreeIter).setOldTree(startTreeIter).call();
         addToGitDiffResult(diffs, diffResult, endCommitId, gitConfig, repository, excludeFilesOutsideSetupFolder,
-            diffResult.getCommitTimeMs());
+            diffResult.getCommitTimeMs(), getTruncatedCommitMessage(diffResult.getCommitMessage()));
       }
 
     } catch (IOException | GitAPIException ex) {
@@ -246,10 +248,24 @@ public class GitClientImpl implements GitClient {
     return diffResult;
   }
 
+  private String getTruncatedCommitMessage(String commitMessage) {
+    if (isBlank(commitMessage)) {
+      return commitMessage;
+    }
+    return commitMessage.substring(0, Math.min(commitMessage.length(), 500));
+  }
+
   private Long getCommitTimeMs(String endCommitIdStr, Repository repository) throws IOException {
     try (RevWalk revWalk = new RevWalk(repository)) {
       final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
       return endCommit != null ? endCommit.getCommitTime() * 1000L : null;
+    }
+  }
+
+  private String getCommitMessage(String endCommitIdStr, Repository repository) throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit != null ? endCommit.getFullMessage() : null;
     }
   }
 
@@ -288,7 +304,8 @@ public class GitClientImpl implements GitClient {
 
   @VisibleForTesting
   void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
-      Repository repository, boolean excludeFilesOutsideSetupFolder, Long commitTimeMs) throws IOException {
+      Repository repository, boolean excludeFilesOutsideSetupFolder, Long commitTimeMs, String commitMessage)
+      throws IOException {
     logger.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
     for (DiffEntry entry : diffs) {
       String content = null;
@@ -319,6 +336,7 @@ public class GitClientImpl implements GitClient {
                                         .withObjectId(objectId.name())
                                         .withAccountId(gitConfig.getAccountId())
                                         .withCommitTimeMs(commitTimeMs)
+                                        .withCommitMessage(commitMessage)
                                         .build();
       diffResult.addChangeFile(gitFileChange);
     }
@@ -394,7 +412,12 @@ public class GitClientImpl implements GitClient {
                                 .setAll(true)
                                 .setMessage(commitMessage.toString())
                                 .call();
-      return GitCommitResult.builder().commitId(revCommit.getName()).commitTime(revCommit.getCommitTime()).build();
+
+      return GitCommitResult.builder()
+          .commitId(revCommit.getName())
+          .commitTime(revCommit.getCommitTime())
+          .commitMessage(getTruncatedCommitMessage(commitMessage.toString()))
+          .build();
 
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);

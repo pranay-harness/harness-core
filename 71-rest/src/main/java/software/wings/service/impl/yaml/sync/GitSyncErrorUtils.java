@@ -44,4 +44,15 @@ public class GitSyncErrorUtils {
     logger.warn("The commitTime is specific to the git to harness error, it should not be called for harness to git");
     return DEFAULT_COMMIT_TIME;
   }
+
+  public static String getCommitMessageOfError(GitSyncError error) {
+    if (isGitToHarnessSyncError(error)) {
+      GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
+      return gitToHarnessErrorDetails.getCommitMessage();
+    }
+
+    logger.warn(
+        "The commitMessage is specific to the git to harness error, it should not be called for harness to git");
+    return EMPTY_STR;
+  }
 }

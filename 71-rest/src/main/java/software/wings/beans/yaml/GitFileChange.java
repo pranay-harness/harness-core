@@ -21,6 +21,7 @@ public class GitFileChange extends Change {
   private Boolean changeFromAnotherCommit;
   private Long commitTimeMs;
   private Long processingCommitTimeMs;
+  private String commitMessage;
 
   public static final class Builder {
     private String commitId;
@@ -36,6 +37,7 @@ public class GitFileChange extends Change {
     private Boolean changeFromAnotherCommit;
     private Long commitTimeMs;
     private Long processingCommitTimeMs;
+    private String commitMessage;
 
     private Builder() {}
 
@@ -106,6 +108,11 @@ public class GitFileChange extends Change {
       this.processingCommitTimeMs = processingCommitTimeMs;
       return this;
     }
+
+    public Builder withCommitMessage(String commitMessage) {
+      this.commitMessage = commitMessage;
+      return this;
+    }
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
@@ -120,7 +127,8 @@ public class GitFileChange extends Change {
           .withYamlGitConfig(yamlGitConfig)
           .withChangeFromAnotherCommit(changeFromAnotherCommit)
           .withCommitTimeMs(commitTimeMs)
-          .withProcessingCommitTimeMs(processingCommitTimeMs);
+          .withProcessingCommitTimeMs(processingCommitTimeMs)
+          .withCommitMessage(commitMessage);
     }
 
     public GitFileChange build() {
@@ -138,6 +146,7 @@ public class GitFileChange extends Change {
       gitFileChange.setChangeFromAnotherCommit(changeFromAnotherCommit);
       gitFileChange.setCommitTimeMs(commitTimeMs);
       gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
+      gitFileChange.setCommitMessage(commitMessage);
       return gitFileChange;
     }
   }

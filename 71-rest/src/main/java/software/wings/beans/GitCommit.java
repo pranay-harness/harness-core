@@ -56,6 +56,7 @@ public class GitCommit extends Base {
   private List<String> yamlChangeSetsProcessed;
   private List<String> yamlGitConfigIds;
   private GitFileProcessingSummary fileProcessingSummary;
+  private String commitMessage;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
 

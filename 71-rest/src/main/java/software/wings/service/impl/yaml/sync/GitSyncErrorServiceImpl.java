@@ -179,12 +179,14 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
             grouping(GitToHarnessErrorCommitStatsKeys.commitTime, first(GitSyncErrorKeys.commitTime)),
             grouping(GitSyncErrorKeys.gitConnectorId, first(GitSyncErrorKeys.gitConnectorId)),
             grouping(GitSyncErrorKeys.branchName, first(GitSyncErrorKeys.branchName)),
+            grouping(GitToHarnessErrorCommitStatsKeys.commitMessage, first(GitSyncErrorKeys.commitMessage)),
             grouping(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView,
                 grouping("$push", projection(GitSyncErrorKeys.yamlFilePath, GitSyncErrorKeys.yamlFilePath),
                     projection(GitSyncErrorKeys.failureReason, GitSyncErrorKeys.failureReason))))
         .project(projection("gitCommitId", "_id"), projection("failedCount"),
             projection(GitToHarnessErrorCommitStatsKeys.commitTime), projection(GitSyncErrorKeys.gitConnectorId),
-            projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
+            projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.commitMessage),
+            projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
         .sort(Sort.descending(GitToHarnessErrorCommitStatsKeys.commitTime))
         .limit(limit)
         .skip(offset)
@@ -531,6 +533,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .gitCommitId(failedCommitId)
         .yamlContent(failedGitFileChange.getFileContent())
         .commitTime(failedGitFileChange.getCommitTimeMs())
+        .commitMessage(failedGitFileChange.getCommitMessage())
         .build();
   }
 

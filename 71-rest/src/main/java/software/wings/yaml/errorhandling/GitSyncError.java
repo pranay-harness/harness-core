@@ -107,6 +107,8 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
         GitSyncErrorKeys.additionalErrorDetails + "." + HarnessToGitErrorDetailsKeys.fullSyncPath;
     public static final String previousCommitIds =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.previousCommitIdsWithError;
+    public static final String commitMessage =
+        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
   }
 
   public enum GitSyncDirection { GIT_TO_HARNESS, HARNESS_TO_GIT }

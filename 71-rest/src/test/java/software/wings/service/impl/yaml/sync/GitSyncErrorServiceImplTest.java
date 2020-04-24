@@ -88,8 +88,11 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                         .withValue(GitConfig.builder().build())
                                         .build();
     String gitConnectorId = wingsPersistence.save(gitConnector);
-    final GitToHarnessErrorDetails gitSyncErrorDetails =
-        GitToHarnessErrorDetails.builder().gitCommitId(commitId).commitTime(Long.valueOf(123)).build();
+    final GitToHarnessErrorDetails gitSyncErrorDetails = GitToHarnessErrorDetails.builder()
+                                                             .gitCommitId(commitId)
+                                                             .commitTime(Long.valueOf(123))
+                                                             .commitMessage("commitMessage")
+                                                             .build();
     final GitSyncError gitSyncError = GitSyncError.builder()
                                           .accountId(accountId)
                                           .yamlFilePath(yamlFilePath)
