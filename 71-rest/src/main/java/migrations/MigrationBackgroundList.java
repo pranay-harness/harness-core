@@ -36,6 +36,7 @@ import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
+import migrations.all.CreatePrimiryProfileForAllAccounts;
 import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
@@ -209,6 +210,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(121, AddAccountidToTimeSeriesMLScores.class))
         .add(Pair.of(122, AddAccountIdToWorkflowExecutionBaselines.class))
         .add(Pair.of(123, AddAccountIdToTimeSeriesKeyTransaction.class))
+        .add(Pair.of(124, CreatePrimiryProfileForAllAccounts.class))
         .build();
   }
 }
