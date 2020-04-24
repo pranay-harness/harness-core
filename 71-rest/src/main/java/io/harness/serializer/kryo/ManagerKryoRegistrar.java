@@ -696,6 +696,8 @@ import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
+import software.wings.service.impl.stackdriver.StackdriverGcpConfigTaskParams;
+import software.wings.service.impl.stackdriver.StackdriverLogGcpConfigTaskParams;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.settings.SettingValue;
@@ -1578,5 +1580,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerResourceParams.class, 7357);
     kryo.register(PodParams.class, 7358);
     kryo.register(CIClusterType.class, 7359);
+    kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
+    kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
   }
 }

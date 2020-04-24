@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GcpConfig;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.sm.StateType;
 
@@ -34,6 +33,6 @@ public class StackDriverLogDataCollectionInfo extends LogDataCollectionInfo {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(gcpConfig, getEncryptedDataDetails());
+    return StackdriverUtils.fetchRequiredExecutionCapabilitiesForLogs(getEncryptedDataDetails());
   }
 }

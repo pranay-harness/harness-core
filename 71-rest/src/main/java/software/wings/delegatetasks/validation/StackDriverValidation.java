@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackdriverGcpConfigTaskParams;
+import software.wings.service.impl.stackdriver.StackdriverLogGcpConfigTaskParams;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +49,12 @@ public class StackDriverValidation extends AbstractSecretManagerValidation {
       } else if (getParameters()[0] instanceof StackDriverLogDataCollectionInfo) {
         gcpConfig = ((StackDriverLogDataCollectionInfo) getParameters()[0]).getGcpConfig();
         encryptionDetails = ((StackDriverLogDataCollectionInfo) getParameters()[0]).getEncryptedDataDetails();
+      } else if (getParameters()[2] instanceof StackdriverGcpConfigTaskParams) {
+        gcpConfig = ((StackdriverGcpConfigTaskParams) getParameters()[2]).getGcpConfig();
+        encryptionDetails = ((StackdriverGcpConfigTaskParams) getParameters()[2]).getEncryptedDataDetails();
+      } else if (getParameters()[2] instanceof StackdriverLogGcpConfigTaskParams) {
+        gcpConfig = ((StackdriverLogGcpConfigTaskParams) getParameters()[2]).getGcpConfig();
+        encryptionDetails = ((StackdriverLogGcpConfigTaskParams) getParameters()[2]).getEncryptedDataDetails();
       } else {
         gcpConfig = (GcpConfig) getParameters()[2];
         encryptionDetails = (List<EncryptedDataDetail>) getParameters()[3];
