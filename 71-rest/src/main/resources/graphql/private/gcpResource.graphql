@@ -1,0 +1,33 @@
+extend type Query {
+  gcpServiceAccount(organizationSettingId: String): [GcpServiceAccount] @dataFetcher(name: gcpServiceAccount)
+  gcpOrganization(uuid: String): [GcpOrganization] @dataFetcher(name: gcpOrganization)
+  # Get details about a gcp Billing Account
+  gcpBillingAccount(uuid: String, organizationSettingId: String): [GcpBillingAccount]
+    @dataFetcher(name: gcpBillingAccount)
+}
+
+type GcpServiceAccount {
+  serviceAccountId: String
+  accountId: String
+  gcpUniqueId: String
+  email: String
+}
+
+type GcpOrganization {
+  uuid: String
+  accountId: String
+  organizationId: String
+  organizationName: String
+  serviceAccount: String
+}
+
+type GcpBillingAccount {
+  uuid: String
+  accountId: String
+  organizationSettingId: String
+  gcpBillingAccountId: String
+  gcpBillingAccountName: String
+  exportEnabled: Boolean
+  bqProjectId: String
+  bqDatasetId: String
+}

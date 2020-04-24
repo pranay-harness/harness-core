@@ -55,6 +55,7 @@ ceSetUpConfig:
   awsAccountId: awsAccountIdPlaceHolder
   masterAccountCloudFormationTemplateLink: masterAccountCloudFormationTemplateLinkPlaceHolder
   linkedAccountCloudFormationTemplateLink: cloudFormationTemplateLinkPlaceHolder
+  gcpProjectId: gcpProjectIdPlaceHolder
 
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder

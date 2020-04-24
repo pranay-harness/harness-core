@@ -229,6 +229,7 @@ externalServiceAuthTokens { "name" : "createdAt_1" , "background" : true} { "cre
 gcpBillingAccount { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "organizationSettingId" : 1}
 gcpBillingJobEntity { "name" : "accountId_1" , "background" : true} { "accountId" : 1}
 gcpBillingJobEntity { "name" : "nextIteration_1" , "background" : true} { "nextIteration" : 1}
+gcpServiceAccount { "name" : "no_dup" , "unique" : true} { "accountId" : 1 , "serviceAccountId" : 1}
 gcpUsageReport { "name" : "accountId_startTimestamp_unique_idx" , "unique" : true} { "accountId" : 1 , "startTimestamp" : 1}
 gcsFileMetadata { "name" : "appId_1" , "background" : true} { "appId" : 1}
 gcsFileMetadata { "name" : "createdAt_1" , "background" : true} { "createdAt" : 1}
