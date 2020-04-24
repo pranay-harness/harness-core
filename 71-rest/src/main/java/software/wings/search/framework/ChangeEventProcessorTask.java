@@ -31,6 +31,7 @@ public class ChangeEventProcessorTask implements Runnable {
   private WingsPersistence wingsPersistence;
   private ChangeEventMetricsTracker changeEventMetricsTracker;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue;
+  private long logMetricsCounter;
 
   ChangeEventProcessorTask(Set<SearchEntity<?>> searchEntities, WingsPersistence wingsPersistence,
       ChangeEventMetricsTracker changeEventMetricsTracker, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
@@ -38,6 +39,7 @@ public class ChangeEventProcessorTask implements Runnable {
     this.wingsPersistence = wingsPersistence;
     this.changeEventMetricsTracker = changeEventMetricsTracker;
     this.changeEventQueue = changeEventQueue;
+    this.logMetricsCounter = 0;
   }
 
   public void run() {
@@ -46,7 +48,6 @@ public class ChangeEventProcessorTask implements Runnable {
     try {
       boolean isRunningSuccessfully = true;
       while (isRunningSuccessfully) {
-        logger.info("Search change event blocking queue size {}", changeEventQueue.size());
         ChangeEvent<?> changeEvent = changeEventQueue.poll(Integer.MAX_VALUE, TimeUnit.MINUTES);
         if (changeEvent != null) {
           isRunningSuccessfully = processChange(changeEvent);
@@ -123,11 +124,19 @@ public class ChangeEventProcessorTask implements Runnable {
 
     double timeTaken = Duration.between(start, Instant.now()).toMillis();
     changeEventMetricsTracker.updateAverage(changeEvent.getEntityType().toString(), timeTaken);
-    logger.info(
-        "Time taken for changeEvent {}:{} is {}", changeEvent.getEntityType(), changeEvent.getChangeType(), timeTaken);
-    logger.info("Running average: {}", changeEventMetricsTracker.getRunningAverageTime());
-    logger.info("No. of change Events processed: {}", changeEventMetricsTracker.getNumChangeEvents());
-
+    logMetrics(changeEvent, timeTaken);
     return isSaved;
+  }
+
+  private void logMetrics(ChangeEvent<?> changeEvent, double timeTaken) {
+    logMetricsCounter++;
+    boolean shouldLogMetrics = (logMetricsCounter % 5000) == 0;
+    if (shouldLogMetrics) {
+      logger.info("Search change event blocking queue size {}", changeEventQueue.size());
+      logger.info("Time taken for changeEvent {}:{} is {}", changeEvent.getEntityType(), changeEvent.getChangeType(),
+          timeTaken);
+      logger.info("Running average: {}", changeEventMetricsTracker.getRunningAverageTime());
+      logger.info("No. of change Events processed: {}", changeEventMetricsTracker.getNumChangeEvents());
+    }
   }
 }

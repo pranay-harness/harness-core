@@ -1,6 +1,7 @@
 package io.harness.lock.redis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.SRE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -10,7 +11,8 @@ import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.GeneralException;
+import io.harness.exception.PersistentLockException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
@@ -63,13 +65,13 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(0, timeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
-        logger.info("Lock acquired on {} for timeout {}", name, timeout);
+        logger.debug("Lock acquired on {} for timeout {}", name, timeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {
-      throw new GeneralException(format(ERROR_MESSAGE, name), ex, SRE);
+      throw new UnexpectedException(format(ERROR_MESSAGE, name), ex);
     }
-    throw new GeneralException(format(ERROR_MESSAGE, name), SRE);
+    throw new PersistentLockException(format(ERROR_MESSAGE, name), FAILED_TO_ACQUIRE_PERSISTENT_LOCK, SRE);
   }
 
   @Override
@@ -123,13 +125,13 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(waitTimeout.toMillis(), lockTimeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
-        logger.info("Acquired lock on {} for {} having a wait Timeout of {}", name, lockTimeout, waitTimeout);
+        logger.debug("Acquired lock on {} for {} having a wait Timeout of {}", name, lockTimeout, waitTimeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {
-      throw new GeneralException(format(ERROR_MESSAGE, name), ex, SRE);
+      throw new UnexpectedException(format(ERROR_MESSAGE, name), ex);
     }
-    throw new GeneralException(format(ERROR_MESSAGE, name), SRE);
+    throw new PersistentLockException(format(ERROR_MESSAGE, name), FAILED_TO_ACQUIRE_PERSISTENT_LOCK, SRE);
   }
 
   @Override

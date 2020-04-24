@@ -406,7 +406,9 @@ public enum ErrorCode {
 
   ILLEGAL_STATE,
 
-  GIT_DIFF_COMMIT_NOT_IN_ORDER;
+  GIT_DIFF_COMMIT_NOT_IN_ORDER,
+
+  FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 
   private Status status = BAD_REQUEST;
   private String description;
