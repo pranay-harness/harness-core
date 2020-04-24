@@ -14,6 +14,7 @@ public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
   private String gitCommitId;
   private Long commitTime;
   private String yamlContent;
+  private String commitMessage;
   @Transient private LatestErrorDetailForFile latestErrorDetailForFile;
   private List<String> previousCommitIdsWithError;
   private List<GitSyncError> previousErrors;

@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 public class GitCommitResult extends GitCommandResult {
   private String commitId;
   private int commitTime;
+  private String commitMessage;
 
   /**
    * Instantiates a new Git commit result.
@@ -27,10 +28,11 @@ public class GitCommitResult extends GitCommandResult {
    * @param commitId   the commit id
    * @param commitTime the commit time
    */
-  public GitCommitResult(String commitId, int commitTime) {
+  public GitCommitResult(String commitId, int commitTime, String commitMessage) {
     super(GitCommandType.COMMIT);
     this.commitId = commitId;
     this.commitTime = commitTime;
+    this.commitMessage = commitMessage;
   }
 
   /**

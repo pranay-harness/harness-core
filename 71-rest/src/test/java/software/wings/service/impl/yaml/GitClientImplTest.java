@@ -226,8 +226,8 @@ public class GitClientImplTest extends WingsBaseTest {
                                    .repoName(gitConfig.getRepoUrl())
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
-    gitClient.addToGitDiffResult(
-        singletonList(entry), diffResult, headCommitId, gitConfig, repository, false, diffResult.getCommitTimeMs());
+    gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository, false,
+        diffResult.getCommitTimeMs(), diffResult.getCommitMessage());
     assertThat(diffResult.getGitFileChanges()).hasSize(1);
     GitFileChange gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertThat(gitFileChange.getObjectId()).isEqualTo(oldObjectIdString);
@@ -236,8 +236,8 @@ public class GitClientImplTest extends WingsBaseTest {
 
     diffResult.getGitFileChanges().clear();
 
-    gitClient.addToGitDiffResult(
-        singletonList(entry), diffResult, headCommitId, gitConfig, repository, false, diffResult.getCommitTimeMs());
+    gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository, false,
+        diffResult.getCommitTimeMs(), diffResult.getCommitMessage());
     assertThat(diffResult.getGitFileChanges()).hasSize(1);
     gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertThat(gitFileChange.getObjectId()).isEqualTo(newObjectIdString);

@@ -43,6 +43,7 @@ public class GitFileActivity extends Base {
   private Status status;
   private TriggeredBy triggeredBy;
   private boolean changeFromAnotherCommit;
+  private String commitMessage;
 
   public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }
 

@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.GitCommand.GitCommandType.DIFF;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitTimeOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
@@ -217,6 +218,7 @@ public class GitCommandCallback implements NotifyCallback {
         .withCommitId(getCommitIdOfError(gitSyncError))
         .withChangeFromAnotherCommit(Boolean.TRUE)
         .withCommitTimeMs(getCommitTimeOfError(gitSyncError))
+        .withCommitMessage(getCommitMessageOfError(gitSyncError))
         .build();
   }
   @VisibleForTesting
@@ -253,6 +255,7 @@ public class GitCommandCallback implements NotifyCallback {
                       .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
                       .gitCommandResult(gitCommitAndPushResult)
                       .yamlChangeSetsProcessed(yamlSetIdsProcessed)
+                      .commitMessage(gitCommitAndPushResult.getGitCommitResult().getCommitMessage())
                       .build());
   }
 

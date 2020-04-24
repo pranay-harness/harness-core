@@ -77,7 +77,8 @@ public class GitChangeSetProcesser {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes
       final String processingCommitId = gitDiffResult.getCommitId();
       final List<GitFileChange> gitFileChanges = gitDiffResult.getGitFileChanges();
-      preProcessGitFileActivityChanges(processingCommitId, gitDiffResult.getCommitTimeMs(), gitFileChanges);
+      preProcessGitFileActivityChanges(
+          processingCommitId, gitDiffResult.getCommitTimeMs(), gitDiffResult.getCommitMessage(), gitFileChanges);
       changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
       postProcessGitFileActivityChanges(processingCommitId, accountId, gitFileChanges);
       // Finalize audit.
@@ -88,9 +89,9 @@ public class GitChangeSetProcesser {
     }
   }
 
-  private void preProcessGitFileActivityChanges(
-      String processingCommitId, Long processingCommitTimeMs, List<GitFileChange> gitFileChanges) {
-    addProcessingCommitDetailsToChangeList(processingCommitId, processingCommitTimeMs, gitFileChanges);
+  private void preProcessGitFileActivityChanges(String processingCommitId, Long processingCommitTimeMs,
+      String commitMessage, List<GitFileChange> gitFileChanges) {
+    addProcessingCommitDetailsToChangeList(processingCommitId, processingCommitTimeMs, commitMessage, gitFileChanges);
     // All initial activities will be created with status QUEUED
     gitSyncService.logActivityForGitOperation(gitFileChanges, GitFileActivity.Status.QUEUED, true, false, "", "");
   }
@@ -102,8 +103,8 @@ public class GitChangeSetProcesser {
     gitSyncService.addFileProcessingSummaryToGitCommit(processingCommitId, accountId, gitFileChanges);
   }
 
-  private void addProcessingCommitDetailsToChangeList(
-      String processingCommitId, Long processingCommitTimeMs, List<GitFileChange> gitFileChanges) {
+  private void addProcessingCommitDetailsToChangeList(String processingCommitId, Long processingCommitTimeMs,
+      String commitMessage, List<GitFileChange> gitFileChanges) {
     if (EmptyPredicate.isEmpty(gitFileChanges)) {
       return;
     }

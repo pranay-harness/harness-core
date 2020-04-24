@@ -221,6 +221,7 @@ public class GitChangeSetHandler {
                       .status(gitCommitStatus)
                       .commitId(gitDiffResult.getCommitId())
                       .gitCommandResult(gitDiffResult)
+                      .commitMessage(gitDiffResult.getCommitMessage())
                       .build());
   }
 
