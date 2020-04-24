@@ -1,0 +1,91 @@
+extend type Mutation {
+  # Beta: Trigger a Workflow/Pipeline Execution.
+  startExecution(input: StartExecutionInput!): StartExecutionPayload @dataFetcher(name: startExecution)
+}
+
+input StartExecutionInput {
+  clientMutationId: String
+
+  #application Id to which the workflow/pipeline belongs
+  applicationId: String!
+  #Id for the workflow/pipeline
+  entityId: String!
+  #Workflow or Pipeline
+  executionType: ExecutionType!
+  #Values for the variables required for execution
+  variableInputs: [VariableInput]
+  #Service Inputs Required for the execution
+  serviceInputs: [ServiceInput]
+  #Execution notes
+  notes: String
+  #Skip Deployment on host if same artifact is already deplyed
+  excludeHostsWithSameArtifact: Boolean
+  #Set to true if targeting deployment only on the specified hosts. Please specify hostnames in specificHosts
+  targetToSpecificHosts: Boolean
+  #List of hostnames, if targetting to specific hosts
+  specificHosts: [String] #when the user want to deploy targetting to specific hosts
+}
+
+enum ExecutionType {
+  WORKFLOW
+  PIPELINE
+}
+
+input VariableInput {
+  #name of the variable
+  name: String!
+  #value of the variable
+  variableValue: VariableValue!
+}
+
+input VariableValue {
+  #type of the value: name or if
+  type: VariableValueType!
+  #value
+  value: String!
+}
+
+enum VariableValueType {
+  ID
+  NAME
+}
+
+input ServiceInput {
+  #name of the service providing input for
+  name: String!
+  #artifact inputs fot the service
+  artifactValueInput: ArtfifactValueInput
+}
+
+input ArtfifactValueInput {
+  #type of the artifactValue: Build number or artifactId
+  valueType: ArtifactInputType!
+
+  #artifact Id input if value type is ARTIFACT_ID
+  artifactId: ArtifactIdInput
+
+  #Build number input if value type is BUILD_NUMBER
+  buildNumber: BuildNumberInput
+}
+
+enum ArtifactInputType {
+  ARTIFACT_ID
+  BUILD_NUMBER
+}
+
+input ArtifactIdInput {
+  #artifactId
+  artifactId: String!
+}
+
+input BuildNumberInput {
+  #name of the artifact source to which the specified build number comes from
+  artifactSourceName: String!
+  #build number to deploy
+  buildNumber: String!
+}
+
+type StartExecutionPayload {
+  clientMutationId: String
+  execution: Execution
+}

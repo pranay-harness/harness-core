@@ -580,6 +580,20 @@ public class WorkflowUtils {
     return workflow;
   }
 
+  public Workflow getRollingK8sWorkflow(
+      String name, Service service, InfrastructureDefinition defaultInfrastructureDefinition) {
+    Workflow workflow = aWorkflow()
+                            .name(name + System.currentTimeMillis())
+                            .appId(service.getAppId())
+                            .envId(defaultInfrastructureDefinition.getEnvId())
+                            .infraDefinitionId(defaultInfrastructureDefinition.getUuid())
+                            .serviceId(service.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+                            .build();
+    return workflow;
+  }
+
   public Workflow createSpotinstCanaryWorkflowWithVerifyStep(
       String name, Service service, InfrastructureDefinition infrastructureDefinition, String elkConfigId) {
     List<PhaseStep> canaryPhaseSteps = new ArrayList<>();
@@ -901,7 +915,7 @@ public class WorkflowUtils {
         .build();
   }
 
-  private TemplateExpression getTemplateExpressionsForEnv() {
+  public static TemplateExpression getTemplateExpressionsForEnv() {
     Map<String, Object> metaData =
         ImmutableMap.<String, Object>builder().put("entityType", EntityType.ENVIRONMENT.name()).build();
     return TemplateExpression.builder()
@@ -913,7 +927,19 @@ public class WorkflowUtils {
         .build();
   }
 
-  private TemplateExpression getTemplateExpressionsForInfraDefinition(String expression) {
+  public static TemplateExpression getTemplateExpressionsForService() {
+    Map<String, Object> metaData =
+        ImmutableMap.<String, Object>builder().put("entityType", EntityType.SERVICE.name()).build();
+    return TemplateExpression.builder()
+        .fieldName("serviceId")
+        .expression("${Service}")
+        .mandatory(true)
+        .expressionAllowed(false)
+        .metadata(metaData)
+        .build();
+  }
+
+  public static TemplateExpression getTemplateExpressionsForInfraDefinition(String expression) {
     Map<String, Object> metaData =
         ImmutableMap.<String, Object>builder().put("entityType", EntityType.INFRASTRUCTURE_DEFINITION.name()).build();
     return TemplateExpression.builder()

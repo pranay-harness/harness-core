@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
+import static io.harness.beans.ApiKeyInfo.getEmbeddedUserFromApiKey;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
@@ -74,6 +75,8 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ApiKeyInfo;
+import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -137,6 +140,7 @@ import software.wings.api.WorkflowElement;
 import software.wings.api.WorkflowElement.WorkflowElementBuilder;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
@@ -213,6 +217,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -346,6 +351,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private RollbackStateMachineGenerator rollbackStateMachineGenerator;
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
   @Inject private PipelineResumeUtils pipelineResumeUtils;
+  @Inject private ApiKeyService apiKeyService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1424,19 +1430,39 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateCurrentUser(
       WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, Set<String> keywords) {
-    if (trigger != null) {
-      // Triggered by Auto Trigger
-      workflowExecution.setTriggeredBy(
-          EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
-      workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
-      workflowExecution.setDeploymentTriggerId(trigger.getUuid());
-    } else {
-      User user = UserThreadLocal.get();
-      if (user != null) {
-        EmbeddedUser triggeredBy =
-            EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
-        workflowExecution.setTriggeredBy(triggeredBy);
-        workflowExecution.setCreatedBy(triggeredBy);
+    // otherwise the all these fields are inherited from pipeline already
+    if (workflowExecution.getPipelineExecutionId() == null) {
+      if (trigger != null) {
+        // Triggered by Auto Trigger
+        workflowExecution.setTriggeredBy(
+            EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+        workflowExecution.setCreatedBy(
+            EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+        workflowExecution.setDeploymentTriggerId(trigger.getUuid());
+        workflowExecution.setCreatedByType(CreatedByType.TRIGGER);
+      } else if (workflowExecution.getExecutionArgs() != null
+          && CreatedByType.API_KEY == workflowExecution.getExecutionArgs().getCreatedByType()) {
+        String apiKeyId = workflowExecution.getExecutionArgs().getTriggeringApiKeyId();
+        String accountId = appService.getAccountIdByAppId(workflowExecution.getAppId());
+        ApiKeyEntry apiKeyEntry = apiKeyService.get(apiKeyId, accountId);
+        if (apiKeyEntry != null) {
+          ApiKeyInfo apiKeyInfo =
+              ApiKeyInfo.builder().appKeyId(apiKeyEntry.getUuid()).apiKeyName(apiKeyEntry.getName()).build();
+          workflowExecution.setTriggeringApiKeyInfo(apiKeyInfo);
+          EmbeddedUser triggeredBy = getEmbeddedUserFromApiKey(apiKeyInfo);
+          workflowExecution.setTriggeredBy(triggeredBy);
+          workflowExecution.setCreatedByType(CreatedByType.API_KEY);
+          workflowExecution.setCreatedBy(triggeredBy);
+        }
+      } else {
+        User user = UserThreadLocal.get();
+        if (user != null) {
+          EmbeddedUser triggeredBy =
+              EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+          workflowExecution.setTriggeredBy(triggeredBy);
+          workflowExecution.setCreatedByType(CreatedByType.USER);
+          workflowExecution.setCreatedBy(triggeredBy);
+        }
       }
     }
     if (workflowExecution.getCreatedBy() != null) {
@@ -1482,6 +1508,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .project(WorkflowExecutionKeys.triggeredBy, true)
                 .project(WorkflowExecutionKeys.createdBy, true)
                 .project(WorkflowExecutionKeys.deploymentTriggerId, true)
+                .project(WorkflowExecutionKeys.createdByType, true)
+                .project(WorkflowExecutionKeys.triggeringApiKeyInfo, true)
                 .project(WorkflowExecutionKeys.artifacts, true)
                 .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
                 .filter(WorkflowExecutionKeys.uuid, workflowExecution.getPipelineExecutionId())
@@ -1490,6 +1518,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowExecution.setTriggeredBy(pipelineExecution.getTriggeredBy());
           workflowExecution.setDeploymentTriggerId(pipelineExecution.getDeploymentTriggerId());
           workflowExecution.setCreatedBy(pipelineExecution.getCreatedBy());
+          workflowExecution.setTriggeringApiKeyInfo(pipelineExecution.getTriggeringApiKeyInfo());
         }
       }
     }

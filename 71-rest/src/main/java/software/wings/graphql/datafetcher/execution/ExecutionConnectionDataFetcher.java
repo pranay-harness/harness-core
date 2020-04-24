@@ -3,7 +3,9 @@ package software.wings.graphql.datafetcher.execution;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,9 +14,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
-import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLExecutionConnection;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionBuilder;
+import software.wings.graphql.schema.type.QLPipelineExecution;
+import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
+import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
@@ -29,7 +34,8 @@ import java.util.List;
 @Slf4j
 public class ExecutionConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLExecutionFilter, QLNoOpSortCriteria, QLExecutionConnection> {
-  @Inject private ExecutionController executionController;
+  @Inject private WorkflowExecutionController workflowExecutionController;
+  @Inject private PipelineExecutionController pipelineExecutionController;
   @Inject private ExecutionQueryHelper executionQueryHelper;
   @Inject private AppService appService;
   @Override
@@ -41,8 +47,19 @@ public class ExecutionConnectionDataFetcher
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, execution -> {
-      final QLExecution qlExecution = executionController.populateExecution(execution);
-      connectionBuilder.node(qlExecution);
+      if (execution.getWorkflowType() == WorkflowType.PIPELINE) {
+        final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
+        pipelineExecutionController.populatePipelineExecution(execution, builder);
+        connectionBuilder.node(builder.build());
+      } else if (execution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+        final QLWorkflowExecutionBuilder builder1 = QLWorkflowExecution.builder();
+        workflowExecutionController.populateWorkflowExecution(execution, builder1);
+        connectionBuilder.node(builder1.build());
+      } else {
+        String errorMgs = "Unsupported execution type: " + execution.getWorkflowType();
+        logger.error(errorMgs);
+        throw new UnexpectedException(errorMgs);
+      }
     }));
 
     return connectionBuilder.build();

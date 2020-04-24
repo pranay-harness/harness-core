@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.Getter;
@@ -42,6 +43,8 @@ public class ExecutionArgs {
   private Map<String, String> workflowVariables;
   private String notes;
   @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
+  @Getter @Setter private CreatedByType createdByType;
+  @Getter @Setter private String triggeringApiKeyId;
   private boolean excludeHostsWithSameArtifact;
   @Getter @Setter private boolean notifyTriggeredUserOnly;
   private List<ArtifactVariable> artifactVariables;

@@ -53,10 +53,16 @@ enum ExecutionStatus {
 
 enum ExecuteOptions {
   WEB_UI
+  GRAPHQL_API
 }
 
 type ExecutedByUser {
   user: User
+  using: ExecuteOptions
+}
+
+type ExecutedByAPIKey {
+  apiKey: APIKey
   using: ExecuteOptions
 }
 
@@ -68,7 +74,7 @@ type ExecutedByTrigger {
   trigger: Trigger @dataFetcher(name: trigger)
 }
 
-union Cause = ExecutedByUser | ExecutedAlongPipeline | ExecutedByTrigger
+union Cause = ExecutedByUser | ExecutedAlongPipeline | ExecutedByTrigger | ExecutedByAPIKey
 
 interface Execution {
   id: String

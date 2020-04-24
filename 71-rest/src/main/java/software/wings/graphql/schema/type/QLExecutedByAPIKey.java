@@ -6,8 +6,8 @@ import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "QLExecutedByUserKeys")
-public class QLExecutedByUser implements QLCause {
-  private QLUser user;
+@FieldNameConstants(innerTypeName = "QLExecutedByAPIKeyKeys")
+public class QLExecutedByAPIKey implements QLCause {
+  private QLApiKey apiKey;
   private QLExecuteOptions using;
 }

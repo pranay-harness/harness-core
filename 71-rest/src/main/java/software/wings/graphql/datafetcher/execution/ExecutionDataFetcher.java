@@ -26,6 +26,7 @@ import software.wings.security.annotations.AuthRule;
 public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution, QLExecutionQueryParameters> {
   @Inject protected WingsPersistence persistence;
   @Inject private WorkflowExecutionController workflowExecutionController;
+  @Inject private PipelineExecutionController pipelineExecutionController;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -44,7 +45,7 @@ public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution,
 
     if (execution.getWorkflowType() == WorkflowType.PIPELINE) {
       final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
-      PipelineExecutionController.populatePipelineExecution(execution, builder);
+      pipelineExecutionController.populatePipelineExecution(execution, builder);
       return builder.build();
     }
 

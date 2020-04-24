@@ -98,4 +98,5 @@ enum DataFetcherEnum {
   secretManager
   secretManagers
   getSecret
+  startExecution
 }

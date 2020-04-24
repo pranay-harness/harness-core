@@ -7,6 +7,7 @@ import graphql.schema.TypeResolver;
 import lombok.experimental.UtilityClass;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
+import software.wings.graphql.schema.type.QLExecutedByAPIKey;
 import software.wings.graphql.schema.type.QLExecutedByTrigger;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLPipelineExecution;
@@ -110,6 +111,7 @@ public class TypeResolverManager {
     public static final String ExecutedAlongPipeline = "ExecutedAlongPipeline";
     public static final String ExecutedByTrigger = "ExecutedByTrigger";
     public static final String ExecutedByUser = "ExecutedByUser";
+    public static final String ExecutedByAPIKey = "ExecutedByAPIKey";
     public static final String GcpCloudProvider = "GcpCloudProvider";
     public static final String K8sPodInstance = "K8sPodInstance";
     public static final String KubernetesCloudProvider = "KubernetesCloudProvider";
@@ -180,6 +182,7 @@ public class TypeResolverManager {
         .put(TypeResolverManagerUnifaces.Cause,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()
+                    .put(QLExecutedByAPIKey.class, TypeResolverManagerTypes.ExecutedByAPIKey)
                     .put(QLExecutedByUser.class, TypeResolverManagerTypes.ExecutedByUser)
                     .put(QLExecutedAlongPipeline.class, TypeResolverManagerTypes.ExecutedAlongPipeline)
                     .put(QLExecutedByTrigger.class, TypeResolverManagerTypes.ExecutedByTrigger)

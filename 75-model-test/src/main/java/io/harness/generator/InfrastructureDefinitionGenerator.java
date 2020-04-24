@@ -692,7 +692,7 @@ public class InfrastructureDefinitionGenerator {
                                                             .build();
     return GeneratorUtils.suppressDuplicateException(
         ()
-            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
+            -> infrastructureDefinitionService.save(infrastructureDefinition, false, true),
         () -> exists(infrastructureDefinition));
   }
 
