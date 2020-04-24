@@ -67,6 +67,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * The Class WorkflowExecutionUpdate.
@@ -75,6 +76,8 @@ import java.util.Set;
  */
 @Slf4j
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
+  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
+
   private String appId;
   private String workflowExecutionId;
   private boolean needToNotifyPipeline;
@@ -305,8 +308,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         // checking string equals null as the jexl library seems to be returning the string "null" in some cases when
         // the expression can't be evaluated instead of returning the original expression
         // if key can't be evaluated, don't store it
+        // if the evaluated key contains . or contains some unresolved expressions like ${service.name} don't store it
         if (isEmpty(tagKey) || tagKey.equals("null")
-            || (harnessTagLink.getKey().startsWith("${") && harnessTagLink.getKey().equals(tagKey))) {
+            || (harnessTagLink.getKey().startsWith("${") && harnessTagLink.getKey().equals(tagKey))
+            || tagKey.contains(".") || tagKey.contains("${") || wingsVariablePattern.matcher(tagKey).find()) {
           continue;
         }
         String tagValue = context.renderExpression(harnessTagLink.getValue());
