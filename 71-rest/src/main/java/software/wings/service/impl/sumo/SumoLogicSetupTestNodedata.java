@@ -31,6 +31,9 @@ public class SumoLogicSetupTestNodedata extends SetupTestNodeData {
   }
 
   public String getHostNameField() {
+    if (hostNameField == null) {
+      return null;
+    }
     switch (hostNameField) {
       case "_sourceHost":
         return hostNameField.toLowerCase();
