@@ -171,7 +171,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
     TemplateFolder updatedTemplateFolder = get(savedTemplateFolder.getUuid());
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
     auditServiceHelper.reportForAuditingUsingAccountId(
         updatedTemplateFolder.getAccountId(), savedTemplateFolder, updatedTemplateFolder, Type.UPDATE);
     return updatedTemplateFolder;
