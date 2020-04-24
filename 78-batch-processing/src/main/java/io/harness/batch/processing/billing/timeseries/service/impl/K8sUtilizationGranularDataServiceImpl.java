@@ -33,11 +33,11 @@ public class K8sUtilizationGranularDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
-      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   static final String SELECT_DISTINCT_INSTANCEID =
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s'";
   static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(CPU) as CPUUTILIZATIONMAX, MAX(MEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
+      "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
 
@@ -78,11 +78,13 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setTimestamp(2, new Timestamp(k8sGranularUtilizationData.getEndTimestamp()), utils.getDefaultCalendar());
     statement.setDouble(3, k8sGranularUtilizationData.getCpu());
     statement.setDouble(4, k8sGranularUtilizationData.getMemory());
-    statement.setString(5, k8sGranularUtilizationData.getInstanceId());
-    statement.setString(6, k8sGranularUtilizationData.getInstanceType());
-    statement.setString(7, k8sGranularUtilizationData.getClusterId());
-    statement.setString(8, k8sGranularUtilizationData.getAccountId());
-    statement.setString(9, k8sGranularUtilizationData.getSettingId());
+    statement.setDouble(5, k8sGranularUtilizationData.getMaxCpu());
+    statement.setDouble(6, k8sGranularUtilizationData.getMaxMemory());
+    statement.setString(7, k8sGranularUtilizationData.getInstanceId());
+    statement.setString(8, k8sGranularUtilizationData.getInstanceType());
+    statement.setString(9, k8sGranularUtilizationData.getClusterId());
+    statement.setString(10, k8sGranularUtilizationData.getAccountId());
+    statement.setString(11, k8sGranularUtilizationData.getSettingId());
   }
 
   public List<String> getDistinctInstantIds(String accountId, long startDate, long endDate) {

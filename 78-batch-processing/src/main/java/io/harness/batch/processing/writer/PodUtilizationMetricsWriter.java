@@ -9,8 +9,8 @@ import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizatio
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
-import io.harness.event.payloads.PodMetric.Container;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,32 +34,36 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
           PodMetric podUtilizationMetric = (PodMetric) publishedMessage.getMessage();
           logger.debug("Pod Utilization {} ", podUtilizationMetric);
 
-          long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
-          long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);
+          AggregatedUsage aggregatedUsage = podUtilizationMetric.getAggregatedUsage();
 
-          double cpuUnits = 0.0;
-          double memoryMb = 0.0;
+          if (aggregatedUsage.getMaxCpuNano() > 0) {
+            long endTime = podUtilizationMetric.getTimestamp().getSeconds() * 1000;
+            long startTime = endTime - (podUtilizationMetric.getWindow().getSeconds() * 1000);
+            double cpuUnits = K8sResourceUtils.getCpuUnits(aggregatedUsage.getAvgCpuNano());
+            double memoryMb = K8sResourceUtils.getMemoryMb(aggregatedUsage.getAvgMemoryByte());
+            double maxCpuUnits = K8sResourceUtils.getCpuUnits(aggregatedUsage.getMaxCpuNano());
+            double maxMemoryMb = K8sResourceUtils.getMemoryMb(aggregatedUsage.getMaxMemoryByte());
 
-          for (Container container : podUtilizationMetric.getContainersList()) {
-            cpuUnits += K8sResourceUtils.getCpuUnits(container.getUsage().getCpuNano());
-            memoryMb += K8sResourceUtils.getMemoryMb(container.getUsage().getMemoryByte());
+            K8sGranularUtilizationData k8sGranularUtilizationData =
+                K8sGranularUtilizationData.builder()
+                    .accountId(accountId)
+                    .instanceId(podUtilizationMetric.getName())
+                    .instanceType(K8S_POD)
+                    .clusterId(podUtilizationMetric.getClusterId())
+                    .settingId(podUtilizationMetric.getCloudProviderId())
+                    .startTimestamp(startTime)
+                    .endTimestamp(endTime)
+                    .cpu(cpuUnits)
+                    .memory(memoryMb)
+                    .maxCpu(maxCpuUnits)
+                    .maxMemory(maxMemoryMb)
+                    .build();
+
+            k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
           }
-
-          K8sGranularUtilizationData k8sGranularUtilizationData =
-              K8sGranularUtilizationData.builder()
-                  .accountId(accountId)
-                  .instanceId(podUtilizationMetric.getName())
-                  .instanceType(K8S_POD)
-                  .clusterId(podUtilizationMetric.getClusterId())
-                  .settingId(podUtilizationMetric.getCloudProviderId())
-                  .startTimestamp(startTime)
-                  .endTimestamp(endTime)
-                  .cpu(cpuUnits)
-                  .memory(memoryMb)
-                  .build();
-
-          k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
         });
-    k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
+    if (!k8sGranularUtilizationDataList.isEmpty()) {
+      k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
+    }
   }
 }

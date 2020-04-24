@@ -156,6 +156,45 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.AWS.name());
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnAwsSpotInstance() {
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
+    label.put("kubernetes.io/lifecycle", "spot");
+    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AWS, label);
+    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnAzureSpotInstance() {
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    label.put(K8sCCMConstants.AZURE_LIFECYCLE_KEY, "spot");
+    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AZURE, label);
+    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnAzureOndemandInstance() {
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AZURE, label);
+    assertThat(instanceCategory).isEqualTo(InstanceCategory.ON_DEMAND);
+  }
+
   private Quantity getQuantity(long amount, String unit) {
     return Quantity.newBuilder().setAmount(amount).setUnit(unit).build();
   }

@@ -9,6 +9,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizatio
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.NodeMetric;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
@@ -33,26 +34,35 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
           NodeMetric nodeUtilizationMetric = (NodeMetric) publishedMessage.getMessage();
           logger.debug("Node Utilization {} ", nodeUtilizationMetric);
 
-          long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
-          long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);
-          double cpuUnits = K8sResourceUtils.getCpuUnits(nodeUtilizationMetric.getUsage().getCpuNano());
-          double memoryMb = K8sResourceUtils.getMemoryMb(nodeUtilizationMetric.getUsage().getMemoryByte());
+          AggregatedUsage aggregatedUsage = nodeUtilizationMetric.getAggregatedUsage();
+          if (aggregatedUsage.getMaxCpuNano() > 0) {
+            long endTime = nodeUtilizationMetric.getTimestamp().getSeconds() * 1000;
+            long startTime = endTime - (nodeUtilizationMetric.getWindow().getSeconds() * 1000);
+            double cpuUnits = K8sResourceUtils.getCpuUnits(aggregatedUsage.getAvgCpuNano());
+            double memoryMb = K8sResourceUtils.getMemoryMb(aggregatedUsage.getAvgMemoryByte());
+            double maxCpuUnits = K8sResourceUtils.getCpuUnits(aggregatedUsage.getMaxCpuNano());
+            double maxMemoryMb = K8sResourceUtils.getMemoryMb(aggregatedUsage.getMaxMemoryByte());
 
-          K8sGranularUtilizationData k8sGranularUtilizationData =
-              K8sGranularUtilizationData.builder()
-                  .accountId(accountId)
-                  .instanceId(nodeUtilizationMetric.getName())
-                  .instanceType(K8S_NODE)
-                  .clusterId(nodeUtilizationMetric.getClusterId())
-                  .settingId(nodeUtilizationMetric.getCloudProviderId())
-                  .startTimestamp(startTime)
-                  .endTimestamp(endTime)
-                  .cpu(cpuUnits)
-                  .memory(memoryMb)
-                  .build();
+            K8sGranularUtilizationData k8sGranularUtilizationData =
+                K8sGranularUtilizationData.builder()
+                    .accountId(accountId)
+                    .instanceId(nodeUtilizationMetric.getName())
+                    .instanceType(K8S_NODE)
+                    .clusterId(nodeUtilizationMetric.getClusterId())
+                    .settingId(nodeUtilizationMetric.getCloudProviderId())
+                    .startTimestamp(startTime)
+                    .endTimestamp(endTime)
+                    .cpu(cpuUnits)
+                    .memory(memoryMb)
+                    .maxCpu(maxCpuUnits)
+                    .maxMemory(maxMemoryMb)
+                    .build();
 
-          k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
+            k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
+          }
         });
-    k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
+    if (!k8sGranularUtilizationDataList.isEmpty()) {
+      k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
+    }
   }
 }
