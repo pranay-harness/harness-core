@@ -339,7 +339,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
           logger.info("Got filename: " + artifactFileName);
         }
-        command = "curl --progress-bar " + url + " \\\n"
+        command = "curl --progress-bar \"" + url + "\""
+            + " \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
             + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
             + "-H \"x-amz-date: " + dateTimeStamp + "\""
