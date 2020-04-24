@@ -368,6 +368,7 @@ public class AccountServiceImpl implements AccountService {
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
     featureFlagService.enableAccount(FeatureName.SECRET_PARENTS_MIGRATED, account.getUuid());
+    featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     if (!fromDataGen) {
       featureFlagService.enableAccount(FeatureName.USE_PCF_CLI, account.getUuid());
     }
