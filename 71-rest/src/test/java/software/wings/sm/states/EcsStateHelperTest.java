@@ -11,6 +11,7 @@ import static org.assertj.core.util.Maps.newHashMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,7 @@ import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -50,6 +52,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -87,6 +90,7 @@ import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -100,6 +104,7 @@ import java.util.List;
 import java.util.Map;
 
 public class EcsStateHelperTest extends WingsBaseTest {
+  @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private EcsStateHelper helper;
 
   @Test
@@ -344,6 +349,11 @@ public class EcsStateHelperTest extends WingsBaseTest {
         return (String) args[0];
       }
     });
+
+    doReturn(false)
+        .doReturn(true)
+        .when(featureFlagService)
+        .isEnabled(eq(DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC), anyString());
     Map<String, String> serviceVars = newHashMap("sk", "sv");
     Map<String, String> safeDisplayVars = newHashMap("dk", "dv");
     doReturn(serviceVars).when(mockContext).getServiceVariables();
@@ -354,6 +364,11 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(holder.getServiceVariables().get("sk")).isEqualTo("sv");
     assertThat(holder.getSafeDisplayServiceVariables().size()).isEqualTo(1);
     assertThat(holder.getSafeDisplayServiceVariables().get("dk")).isEqualTo("dv");
+
+    // DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC = true
+    holder = helper.renderEcsSetupContextVariables(mockContext);
+    assertThat(holder.getServiceVariables()).isEmpty();
+    assertThat(holder.getSafeDisplayServiceVariables()).isEmpty();
   }
 
   @Test

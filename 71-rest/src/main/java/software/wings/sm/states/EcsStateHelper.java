@@ -13,12 +13,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
@@ -82,6 +84,7 @@ import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -107,6 +110,8 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class EcsStateHelper {
+  @Inject private FeatureFlagService featureFlagService;
+
   public ContainerSetupParams buildContainerSetupParams(
       ExecutionContext context, EcsSetupStateConfig ecsSetupStateConfig) {
     Application app = ecsSetupStateConfig.getApp();
@@ -451,6 +456,13 @@ public class EcsStateHelper {
   }
 
   public EcsSetupContextVariableHolder renderEcsSetupContextVariables(ExecutionContext context) {
+    if (featureFlagService.isEnabled(DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, context.getAccountId())) {
+      return EcsSetupContextVariableHolder.builder()
+          .serviceVariables(Collections.EMPTY_MAP)
+          .safeDisplayServiceVariables(Collections.EMPTY_MAP)
+          .build();
+    }
+
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     EcsSetupContextVariableHolderBuilder builder = EcsSetupContextVariableHolder.builder();
