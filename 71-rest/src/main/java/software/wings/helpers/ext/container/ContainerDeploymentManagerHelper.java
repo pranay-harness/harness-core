@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.mongodb.morphia.Key;
 import software.wings.annotation.EncryptableSetting;
@@ -77,18 +78,20 @@ public class ContainerDeploymentManagerHelper {
                                       .ip(containerInfo.getIp())
                                       .ec2Instance(containerInfo.getEc2Instance())
                                       .build();
-        InstanceElement instanceElement = anInstanceElement()
-                                              .uuid(containerInfo.getContainerId())
-                                              .dockerId(containerInfo.getContainerId())
-                                              .hostName(containerInfo.getHostName())
-                                              .host(hostElement)
-                                              .serviceTemplateElement(serviceTemplateElement)
-                                              .displayName(containerInfo.getContainerId())
-                                              .podName(containerInfo.getPodName())
-                                              .workloadName(containerInfo.getWorkloadName())
-                                              .ecsContainerDetails(containerInfo.getEcsContainerDetails())
-                                              .newInstance(containerInfo.isNewContainer())
-                                              .build();
+        InstanceElement instanceElement =
+            anInstanceElement()
+                .uuid(containerInfo.getContainerId() == null ? UUIDGenerator.generateUuid()
+                                                             : containerInfo.getContainerId())
+                .dockerId(containerInfo.getContainerId())
+                .hostName(containerInfo.getHostName())
+                .host(hostElement)
+                .serviceTemplateElement(serviceTemplateElement)
+                .displayName(containerInfo.getContainerId())
+                .podName(containerInfo.getPodName())
+                .workloadName(containerInfo.getWorkloadName())
+                .ecsContainerDetails(containerInfo.getEcsContainerDetails())
+                .newInstance(containerInfo.isNewContainer())
+                .build();
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
         instanceStatusSummaries.add(
