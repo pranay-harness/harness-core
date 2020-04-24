@@ -196,4 +196,30 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     assertThat(wingsPersistence.get(DelegateProfile.class, nonAssignedDelegateProfile.getUuid())).isNull();
   }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpdateShouldUpdateProfile() {
+    // String uuid = generateUuid();
+    String updatedName = "updatedName";
+    String updatedDescription = "updatedDescription";
+    String updatedScript = "updatedScript";
+
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder() /*.uuid(uuid)*/.startupScript("script").approvalRequired(false).build();
+    wingsPersistence.save(delegateProfile);
+
+    delegateProfile.setName(updatedName);
+    delegateProfile.setDescription(updatedDescription);
+    delegateProfile.setStartupScript(updatedScript);
+    delegateProfile.setApprovalRequired(true);
+
+    DelegateProfile updatedDelegateProfile = delegateProfileService.update(delegateProfile);
+
+    assertThat(updatedDelegateProfile.getName()).isEqualTo(updatedName);
+    assertThat(updatedDelegateProfile.getDescription()).isEqualTo(updatedDescription);
+    assertThat(updatedDelegateProfile.getStartupScript()).isEqualTo(updatedScript);
+    assertThat(updatedDelegateProfile.isApprovalRequired()).isEqualTo(true);
+  }
 }

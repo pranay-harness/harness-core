@@ -74,6 +74,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     setUnset(updateOperations, DelegateProfileKeys.name, delegateProfile.getName());
     setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
     setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
+    setUnset(updateOperations, DelegateProfileKeys.approvalRequired, delegateProfile.isApprovalRequired());
 
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
