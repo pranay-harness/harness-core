@@ -17,7 +17,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +64,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
     final String[] message = new String[1];
     Arrays.fill(message, "");
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
-      outputStream.write(command.getBytes(Charset.forName("UTF-8")));
+      outputStream.write(command.getBytes(StandardCharsets.UTF_8));
       String[] commandList = new String[] {"/bin/bash", scriptFilename};
 
       ProcessExecutor processExecutor = new ProcessExecutor()
@@ -74,7 +74,9 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                logger.info(line);
+                                                if (logger.isTraceEnabled()) {
+                                                  logger.trace("std: " + line);
+                                                }
                                               }
                                             })
                                             .redirectError(new LogOutputStream() {
@@ -85,7 +87,9 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
                                                   String trimmed = matcher.replaceAll("");
                                                   message[0] = trimmed;
                                                 }
-                                                logger.warn(line);
+                                                if (logger.isTraceEnabled()) {
+                                                  logger.trace("err:" + line);
+                                                }
                                               }
                                             });
       logger.info("Executing the script ");
