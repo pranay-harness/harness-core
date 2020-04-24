@@ -5,4 +5,5 @@ import com.google.cloud.bigquery.BigQuery;
 public interface BigQueryService {
   BigQuery get();
   BigQuery get(String projectId, String impersonatedServiceAccount);
+  boolean canAccessDataset(BigQuery bigQuery, String projectId, String datasetId);
 }

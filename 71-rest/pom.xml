@@ -171,6 +171,10 @@
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-cloudbilling</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-cloudcommerceprocurement</artifactId>
         </dependency>
         <dependency>
@@ -180,6 +184,10 @@
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-container</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-iam</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
@@ -200,7 +208,6 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-bigquery</artifactId>
-            <version>1.106.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -212,17 +219,15 @@
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-iamcredentials</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-kms</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>libraries-bom</artifactId>
-            <version>3.3.0</version>
-            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

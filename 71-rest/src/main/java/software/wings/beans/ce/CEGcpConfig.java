@@ -15,10 +15,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class CEGcpConfig extends SettingValue {
-  private String organizationId;
-  private String organizationName;
-
-  private String serviceAccount;
+  private String organizationSettingId;
 
   @Override
   public String fetchResourceCategory() {
@@ -35,9 +32,8 @@ public class CEGcpConfig extends SettingValue {
   }
 
   @Builder
-  public CEGcpConfig(String organizationId, String organizationName) {
+  public CEGcpConfig(String organizationSettingId) {
     this();
-    this.organizationId = organizationId;
-    this.organizationName = organizationName;
+    this.organizationSettingId = organizationSettingId;
   }
 }

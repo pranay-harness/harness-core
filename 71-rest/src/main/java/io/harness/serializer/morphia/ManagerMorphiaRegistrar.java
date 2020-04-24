@@ -14,6 +14,8 @@ import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.GcpBillingAccount;
+import io.harness.ccm.config.GcpOrganization;
+import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -850,6 +852,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(FeatureFlag.class);
     set.add(GcpBillingAccount.class);
     set.add(GCPBillingJobEntity.class);
+    set.add(GcpOrganization.class);
+    set.add(GcpServiceAccount.class);
     set.add(GcpKmsConfig.class);
     set.add(GcpKubernetesInfrastructureMapping.class);
     set.add(GCPUsageReport.class);
