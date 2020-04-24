@@ -14,9 +14,8 @@ import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizatio
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
-import io.harness.event.payloads.PodMetric.Container;
-import io.harness.event.payloads.Usage;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,7 +43,9 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final long END_TIME_STAMP = 1200000000L;
   private final long WINDOW = 200000000L;
   private final long CPU = 2 * 1_000_000_000L;
+  private final long MAX_CPU = 3 * CPU;
   private final long MEMORY = 1024 * (1 << 20);
+  private final long MAX_MEMORY = 2 * MEMORY;
 
   @Captor private ArgumentCaptor<List<K8sGranularUtilizationData>> K8sGranularUtilizationDataArgumentCaptor;
 
@@ -57,7 +58,9 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     verify(k8sUtilizationGranularDataService).create(K8sGranularUtilizationDataArgumentCaptor.capture());
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationDataArgumentCaptor.getValue().get(0);
     assertThat(k8sGranularUtilizationData.getCpu()).isEqualTo(2048);
+    assertThat(k8sGranularUtilizationData.getMaxCpu()).isEqualTo(6144);
     assertThat(k8sGranularUtilizationData.getMemory()).isEqualTo(1024);
+    assertThat(k8sGranularUtilizationData.getMaxMemory()).isEqualTo(2048);
     assertThat(k8sGranularUtilizationData.getStartTimestamp()).isEqualTo(START_TIME_STAMP * 1000);
     assertThat(k8sGranularUtilizationData.getEndTimestamp()).isEqualTo(END_TIME_STAMP * 1000);
     assertThat(k8sGranularUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
@@ -67,17 +70,19 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   }
 
   PublishedMessage getPodUtilizationMetricsMessages() {
-    PodMetric podMetric =
-        PodMetric.newBuilder()
-            .setName(INSTANCEID)
-            .setCloudProviderId(SETTINGID)
-            .setClusterId(CLUSTERID)
-            .setTimestamp(Timestamp.newBuilder().setSeconds(END_TIME_STAMP).build())
-            .setWindow(Duration.newBuilder().setSeconds(WINDOW).build())
-            .addContainers(Container.newBuilder()
-                               .setUsage(Usage.newBuilder().setCpuNano(CPU).setMemoryByte(MEMORY).build())
-                               .build())
-            .build();
+    PodMetric podMetric = PodMetric.newBuilder()
+                              .setName(INSTANCEID)
+                              .setCloudProviderId(SETTINGID)
+                              .setClusterId(CLUSTERID)
+                              .setTimestamp(Timestamp.newBuilder().setSeconds(END_TIME_STAMP).build())
+                              .setWindow(Duration.newBuilder().setSeconds(WINDOW).build())
+                              .setAggregatedUsage(AggregatedUsage.newBuilder()
+                                                      .setAvgCpuNano(CPU)
+                                                      .setAvgMemoryByte(MEMORY)
+                                                      .setMaxCpuNano(MAX_CPU)
+                                                      .setMaxMemoryByte(MAX_MEMORY)
+                                                      .build())
+                              .build();
 
     return getPublishedMessage(ACCOUNT_ID, podMetric);
   }

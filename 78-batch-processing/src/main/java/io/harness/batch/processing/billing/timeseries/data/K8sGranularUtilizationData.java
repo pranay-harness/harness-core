@@ -13,6 +13,8 @@ public class K8sGranularUtilizationData {
   private String settingId;
   private double cpu;
   private double memory;
+  private double maxCpu;
+  private double maxMemory;
   private long endTimestamp;
   private long startTimestamp;
 }
