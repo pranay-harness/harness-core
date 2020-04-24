@@ -45,6 +45,6 @@ input PcfCloudProviderInput {
   usageScope: UsageScopeInput
 
   endpointUrl: String
-  username: String
+  userName: String
   password: String
 }

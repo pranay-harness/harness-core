@@ -71,7 +71,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .pcfCloudProvider(QLPcfCloudProviderInput.builder()
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .endpointUrl(RequestField.ofNullable("URL"))
-                                                             .username(RequestField.ofNullable("USER"))
+                                                             .userName(RequestField.ofNullable("USER"))
                                                              .password(RequestField.ofNullable("PASS"))
                                                              .usageScope(RequestField.ofNull())
                                                              .build())

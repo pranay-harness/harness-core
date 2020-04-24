@@ -12,7 +12,6 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLDeleteCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLDeleteCloudProviderPayload;
-import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
@@ -43,15 +42,15 @@ public class DeleteCloudProviderDataFetcher
 
     SettingAttribute settingAttribute = settingsService.getByAccount(accountId, cloudProviderId);
 
-    if (settingAttribute == null || settingAttribute.getValue() == null
-        || CLOUD_PROVIDER != settingAttribute.getCategory()
-        || QLCloudProviderType.valueOf(settingAttribute.getValue().getType()) == null) {
-      throw new InvalidRequestException(
-          String.format("No cloud provider exists with the cloudProviderId %s", cloudProviderId));
+    if (validForDeletion(settingAttribute)) {
+      settingsService.delete(null, cloudProviderId);
     }
 
-    settingsService.delete(null, cloudProviderId);
-
     return QLDeleteCloudProviderPayload.builder().clientMutationId(input.getClientMutationId()).build();
+  }
+
+  private boolean validForDeletion(SettingAttribute settingAttribute) {
+    return settingAttribute != null && settingAttribute.getValue() != null
+        && CLOUD_PROVIDER == settingAttribute.getCategory();
   }
 }

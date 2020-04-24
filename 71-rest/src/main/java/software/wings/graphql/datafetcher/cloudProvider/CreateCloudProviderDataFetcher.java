@@ -6,6 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfConfig.PcfConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -35,7 +36,7 @@ public class CreateCloudProviderDataFetcher
   protected QLCreateCloudProviderPayload mutateAndFetch(
       QLCreateCloudProviderInput input, MutationContext mutationContext) {
     QLCreateCloudProviderPayloadBuilder builder =
-        QLCreateCloudProviderPayload.builder().clientMutationId(mutationContext.getAccountId());
+        QLCreateCloudProviderPayload.builder().clientMutationId(input.getClientMutationId());
 
     if (input.getCloudProviderType() == null) {
       throw new InvalidRequestException("Invalid cloudProviderType provided in the request");
@@ -56,33 +57,32 @@ public class CreateCloudProviderDataFetcher
   }
 
   private SettingAttribute toSettingAttribute(QLPcfCloudProviderInput input, String accountId) {
-    PcfConfig pcfConfig = PcfConfig.builder().accountId(accountId).build();
+    PcfConfigBuilder pcfConfigBuilder = PcfConfig.builder().accountId(accountId);
 
     if (input.getEndpointUrl().isPresent()) {
-      input.getEndpointUrl().getValue().ifPresent(pcfConfig::setEndpointUrl);
+      input.getEndpointUrl().getValue().ifPresent(pcfConfigBuilder::endpointUrl);
     }
-    if (input.getUsername().isPresent()) {
-      input.getUsername().getValue().ifPresent(pcfConfig::setUsername);
+    if (input.getUserName().isPresent()) {
+      input.getUserName().getValue().ifPresent(pcfConfigBuilder::username);
     }
     if (input.getPassword().isPresent()) {
-      input.getPassword().getValue().map(String::toCharArray).ifPresent(pcfConfig::setPassword);
+      input.getPassword().getValue().map(String::toCharArray).ifPresent(pcfConfigBuilder::password);
     }
 
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withValue(pcfConfig)
-                                            .withAccountId(accountId)
-                                            .withCategory(SettingAttribute.SettingCategory.SETTING)
-                                            .build();
+    SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
+                                                           .withValue(pcfConfigBuilder.build())
+                                                           .withAccountId(accountId)
+                                                           .withCategory(SettingAttribute.SettingCategory.SETTING);
 
     if (input.getName().isPresent()) {
-      input.getName().getValue().ifPresent(settingAttribute::setName);
+      input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
     }
 
     if (input.getUsageScope().isPresent()) {
-      settingAttribute.setUsageRestrictions(
+      settingAttributeBuilder.withUsageRestrictions(
           usageScopeController.populateUsageRestrictions(input.getUsageScope().getValue().orElse(null), accountId));
     }
 
-    return settingAttribute;
+    return settingAttributeBuilder.build();
   }
 }

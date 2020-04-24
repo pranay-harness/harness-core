@@ -63,6 +63,22 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
+  public void deleteWithoutIdParameter() {
+    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderType(QLCloudProviderType.PCF).build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void deleteWithoutTypeParameter() {
+    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
   public void deleteOfWrongCategory() {
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.AZURE_ARTIFACTS)
@@ -76,9 +92,11 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .cloudProviderType(QLCloudProviderType.PCF)
                                    .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(0)).delete(null, CLOUD_PROVIDER_ID);
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void deleteOfNonExistingSetting() {
@@ -89,21 +107,7 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .cloudProviderType(QLCloudProviderType.PCF)
                                    .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
-  }
 
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = IGOR)
-  @Category(UnitTests.class)
-  public void deleteWithoutIdParameter() {
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderType(QLCloudProviderType.PCF).build(),
-        MutationContext.builder().accountId(ACCOUNT_ID).build());
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = IGOR)
-  @Category(UnitTests.class)
-  public void deleteWithoutTypeParameter() {
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
-        MutationContext.builder().accountId(ACCOUNT_ID).build());
+    verify(settingsService, times(0)).delete(null, CLOUD_PROVIDER_ID);
   }
 }
