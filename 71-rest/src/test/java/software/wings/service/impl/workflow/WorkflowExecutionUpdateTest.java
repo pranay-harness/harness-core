@@ -243,6 +243,9 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     harnessTagLinkList.add(constructHarnessTagLink("${account.defaults.owner}", ""));
     harnessTagLinkList.add(constructHarnessTagLink("${workflow.variables.mytag}", ""));
     harnessTagLinkList.add(constructHarnessTagLink("${workflow.variables.mytag2}", ""));
+    harnessTagLinkList.add(constructHarnessTagLink("${app.defaults.RUNTIME_PATH}", ""));
+    harnessTagLinkList.add(constructHarnessTagLink("${mytag}", ""));
+    harnessTagLinkList.add(constructHarnessTagLink("${mytag1}", ""));
     when(harnessTagService.getTagLinksWithEntityId(anyString(), anyString())).thenReturn(harnessTagLinkList);
     when(context.renderExpression(eq("foo"))).thenReturn("foo");
     when(context.renderExpression(eq(""))).thenReturn("");
@@ -253,12 +256,16 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     when(context.renderExpression(eq("${account.defaults.owner}"))).thenReturn("${account.defaults.owner}");
     when(context.renderExpression(eq("${workflow.variables.mytag}"))).thenReturn("");
     when(context.renderExpression(eq("${workflow.variables.mytag2}"))).thenReturn(null);
+    when(context.renderExpression(eq("${app.defaults.RUNTIME_PATH}")))
+        .thenReturn("$HOME/my app/${service.name}/${env.name}/runtime");
+    when(context.renderExpression(eq("${mytag}"))).thenReturn("$HOME/my app/");
+    when(context.renderExpression(eq("${mytag1}"))).thenReturn("${HOME}");
     List<NameValuePair> tags = workflowExecutionUpdate.resolveDeploymentTags(context, WORKFLOW_ID);
     assertThat(tags).isNotEmpty();
-    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags.size()).isEqualTo(4);
     assertThat(tags)
         .extracting(NameValuePair::getName, NameValuePair::getValue)
-        .containsExactly(tuple("foo", ""), tuple("env", ""), tuple("company", "foobar"));
+        .containsExactly(tuple("foo", ""), tuple("env", ""), tuple("company", "foobar"), tuple("$HOME/my app/", ""));
   }
 
   private HarnessTagLink constructHarnessTagLink(String key, String value) {
