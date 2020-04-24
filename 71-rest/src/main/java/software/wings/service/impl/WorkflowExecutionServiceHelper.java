@@ -99,6 +99,7 @@ public class WorkflowExecutionServiceHelper {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, boolean infraRefactor) {
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(workflow.getAppId());
+    workflowExecution.setAccountId(workflow.getAccountId());
 
     if (resolveEnvId != null) {
       workflowExecution.setEnvId(resolveEnvId);

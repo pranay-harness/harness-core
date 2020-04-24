@@ -3,3 +3,8 @@ type User {
   name: String
   email: String
 }
+
+type APIKey {
+  id: String
+  name: String
+}

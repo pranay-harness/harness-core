@@ -10,6 +10,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApiKeyInfo;
+import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -123,6 +125,7 @@ public class WorkflowExecution
   @Id @NotNull(groups = {Update.class}) private String uuid;
   @Indexed @NotNull protected String appId;
   private EmbeddedUser createdBy;
+  private CreatedByType createdByType;
   @Indexed private long createdAt;
   @Indexed private String accountId;
 
@@ -184,6 +187,7 @@ public class WorkflowExecution
   private boolean isBaseline;
 
   private String deploymentTriggerId;
+  private ApiKeyInfo triggeringApiKeyInfo;
 
   private List<Artifact> artifacts;
 

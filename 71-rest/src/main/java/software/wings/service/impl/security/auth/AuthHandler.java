@@ -776,6 +776,10 @@ public class AuthHandler {
     return true;
   }
 
+  public void checkIfUserAllowedToDeployToEnv(String appId, String envId) {
+    authService.checkIfUserAllowedToDeployToEnv(appId, envId);
+  }
+
   public void setEntityIdFilter(List<PermissionAttribute> requiredPermissionAttributes,
       UserRequestContext userRequestContext, List<String> appIds) {
     String entityFieldName = getEntityFieldName(requiredPermissionAttributes);

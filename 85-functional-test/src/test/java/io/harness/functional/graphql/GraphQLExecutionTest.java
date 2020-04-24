@@ -42,7 +42,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
-import software.wings.graphql.schema.type.QLExecutedByUser.QLExecuteOptions;
+import software.wings.graphql.schema.type.QLExecuteOptions;
 import software.wings.graphql.schema.type.QLExecutedByUser.QLExecutedByUserKeys;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionKeys;
 import software.wings.graphql.schema.type.QLExecutionStatus;

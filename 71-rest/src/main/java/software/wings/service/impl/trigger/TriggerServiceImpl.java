@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
@@ -41,6 +40,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -753,6 +753,7 @@ public class TriggerServiceImpl implements TriggerService {
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setWorkflowType(trigger.getWorkflowType());
     executionArgs.setExcludeHostsWithSameArtifact(trigger.isExcludeHostsWithSameArtifact());
+    executionArgs.setCreatedByType(CreatedByType.TRIGGER);
 
     if (parameters != null) {
       executionArgs.setWorkflowVariables(parameters);
@@ -1010,6 +1011,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         triggerExecution.setEnvId(envId);
         triggerExecutionService.save(triggerExecution);
+
         workflowExecution =
             workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
       } else {
@@ -1112,6 +1114,9 @@ public class TriggerServiceImpl implements TriggerService {
           logger.info("Triggering workflow execution {}  for appId {} and infraMappingId {}",
               workflowExecution.getUuid(), workflowExecution.getWorkflowId(), infraMappingId);
           // TODO: Refactor later
+          if (workflowExecution.getExecutionArgs() != null) {
+            workflowExecution.getExecutionArgs().setCreatedByType(CreatedByType.TRIGGER);
+          }
           workflowExecutionService.triggerEnvExecution(
               appId, workflowExecution.getEnvId(), workflowExecution.getExecutionArgs(), null);
         }
@@ -1135,6 +1140,9 @@ public class TriggerServiceImpl implements TriggerService {
         if (triggerDeploymentNeededResponse.isDeploymentNeeded()) {
           try {
             logger.info("File path content changed for the trigger {}.", trigger.getUuid());
+            if (triggerExecution.getExecutionArgs() != null) {
+              triggerExecution.getExecutionArgs().setCreatedByType(CreatedByType.TRIGGER);
+            }
             switch (trigger.getWorkflowType()) {
               case ORCHESTRATION:
                 logger.info("Starting deployment for the workflow {}", trigger.getWorkflowId());
@@ -1144,7 +1152,9 @@ public class TriggerServiceImpl implements TriggerService {
                 break;
               case PIPELINE:
                 logger.info("Starting deployment for the pipeline {}", trigger.getPipelineId());
-                triggerExecution.getExecutionArgs().setPipelineId(trigger.getWorkflowId());
+                if (triggerExecution.getExecutionArgs() != null) {
+                  triggerExecution.getExecutionArgs().setPipelineId(trigger.getWorkflowId());
+                }
                 workflowExecutionService.triggerEnvExecution(
                     trigger.getAppId(), null, triggerExecution.getExecutionArgs(), trigger);
                 triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");

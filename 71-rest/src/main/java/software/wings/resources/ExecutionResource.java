@@ -18,6 +18,7 @@ import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.CreatedByType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -222,6 +223,7 @@ public class ExecutionResource {
           }
         }
       }
+      executionArgs.setCreatedByType(CreatedByType.USER);
     }
 
     final WorkflowExecution workflowExecution =
