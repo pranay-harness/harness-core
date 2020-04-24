@@ -2057,8 +2057,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private DelegateTaskPackage resolvePreAssignmentExpressions(
       DelegateTask delegateTask, SecretManagerFunctor.Mode mode) {
-    logger.info("Entering resolvePreAssignmentExpressions");
-
     try {
       ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(mode, serviceTemplateService, configService,
@@ -2077,7 +2075,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         return delegateTaskPackageBuilder.build();
       }
 
-      logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegate task");
       ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
           value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
 
@@ -2110,8 +2107,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .build();
       handleResponse(delegateTask, taskQuery, response, ERROR);
       return null;
-    } finally {
-      logger.info("Exiting resolvePreAssignmentExpressions");
     }
   }
 
