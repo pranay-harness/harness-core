@@ -28,9 +28,11 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static software.wings.beans.Log.LogColor.Green;
 import static software.wings.beans.Log.LogColor.Red;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -87,7 +89,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.beans.Log.LogWeight;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -119,6 +120,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PcfClientImpl implements PcfClient {
   public static final String BIN_SH = "/bin/sh";
+  public static final String SUCCESS = "SUCCESS";
 
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
@@ -725,7 +727,13 @@ public class PcfClientImpl implements PcfClient {
                                             }
                                           });
     ProcessResult processResult = processExecutor.execute();
-    return processResult.getExitValue();
+    int result = processResult.getExitValue();
+    if (result != 0) {
+      executionLogCallback.saveExecutionLog(format(processResult.outputUTF8(), Bold, Red), ERROR);
+    } else {
+      executionLogCallback.saveExecutionLog(format(SUCCESS, Bold, Green));
+    }
+    return result;
   }
 
   private String constructCfPushCommand(PcfCreateApplicationRequestData requestData, String finalFilePath) {
@@ -775,7 +783,13 @@ public class PcfClientImpl implements PcfClient {
                                      }
                                    });
     ProcessResult result = executor.execute();
-    return result.getExitValue();
+    int resultCode = result.getExitValue();
+    if (resultCode != 0) {
+      logCallback.saveExecutionLog(format(result.outputUTF8(), Bold, Red), ERROR);
+    } else {
+      logCallback.saveExecutionLog(format(SUCCESS, Bold, Green));
+    }
+    return resultCode;
   }
 
   boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, String configPathVar)
@@ -1330,8 +1344,12 @@ public class PcfClientImpl implements PcfClient {
                   }
                 });
         ProcessResult processResult = runProcessExecutor(processExecutor);
-        executionLogCallback.saveExecutionLog("# Exit value =" + processResult.getExitValue());
         exitCode = processResult.getExitValue();
+        if (exitCode == 0) {
+          executionLogCallback.saveExecutionLog(format(SUCCESS, Bold, Green));
+        } else {
+          executionLogCallback.saveExecutionLog(format(processResult.outputUTF8(), Bold, Red), ERROR);
+        }
       }
     } catch (Exception e) {
       throw new PivotalClientApiException("Exception occurred while running pcf plugin script", e);
@@ -1357,7 +1375,7 @@ public class PcfClientImpl implements PcfClient {
           : doLogin(pcfRequestConfig, executionLogCallback, pcfRequestConfig.getCfHomeDirPath());
 
       if (!loginSuccessful) {
-        executionLogCallback.saveExecutionLog(color("Failed to login", Red, LogWeight.Bold));
+        executionLogCallback.saveExecutionLog(color("Failed to login", Red, Bold));
         throw new PivotalClientApiException("Failed to login");
       }
 
@@ -1478,7 +1496,7 @@ public class PcfClientImpl implements PcfClient {
       if (!pcfRequestConfig.isLoggedin()) {
         if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
           String errorMessage = format("Failed to login when performing: [%s]", operation);
-          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
           throw new InvalidRequestException(errorMessage);
         }
         pcfRequestConfig.setLoggedin(true);
@@ -1536,7 +1554,7 @@ public class PcfClientImpl implements PcfClient {
       if (!pcfRequestConfig.isLoggedin()) {
         if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
           String errorMessage = "Failed to login when performing: set-env";
-          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
           throw new InvalidRequestException(errorMessage);
         }
       }
@@ -1545,9 +1563,8 @@ public class PcfClientImpl implements PcfClient {
         int exitcode;
         String command;
         Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
-        logCallback.saveExecutionLog(
-            color("\n # Set Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White,
-                LogWeight.Bold));
+        logCallback.saveExecutionLog(color(
+            "\n # Set Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White, Bold));
         for (Map.Entry<String, Object> entry : envVars.entrySet()) {
           logCallback.saveExecutionLog(new StringBuilder(128)
                                            .append("Environment Variable- ")
@@ -1593,7 +1610,7 @@ public class PcfClientImpl implements PcfClient {
       if (!pcfRequestConfig.isLoggedin()) {
         if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
           String errorMessage = "Failed to login when performing: set-env";
-          logCallback.saveExecutionLog(color(errorMessage, Red, LogWeight.Bold));
+          logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
           throw new InvalidRequestException(errorMessage);
         }
       }
@@ -1602,9 +1619,8 @@ public class PcfClientImpl implements PcfClient {
         int exitcode;
         String command;
         Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
-        logCallback.saveExecutionLog(
-            color("\n # Unset Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White,
-                LogWeight.Bold));
+        logCallback.saveExecutionLog(color(
+            "\n # Unset Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White, Bold));
         for (String var : varNames) {
           logCallback.saveExecutionLog(new StringBuilder(128).append("Environment Variable: ").append(var).toString());
 
