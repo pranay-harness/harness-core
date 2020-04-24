@@ -1000,7 +1000,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
       properties.forEach(property -> {
         property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
-        property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+        if (isNotEmpty(property.getFields())) {
+          property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+        }
       });
     }
   }

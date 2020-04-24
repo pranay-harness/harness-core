@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -31,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -74,10 +76,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
+import software.wings.infra.AwsEcsInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -674,5 +679,27 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .build();
     wingsPersistence.save(existingProvisioner);
     provisionerService.checkForDuplicate(provisioner);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNPEInResolveExpressions() {
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .infrastructure(AwsEcsInfrastructure.builder().expressions(ImmutableMap.of("key", "value")).build())
+            .build();
+
+    String provisionerVariable = "${shellScriptProvisioner.value}";
+    Map<String, Object> contextMap = null;
+    List<NameValuePair> properties = new ArrayList<>();
+    properties.add(NameValuePair.builder().value(provisionerVariable).build());
+    ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
+    Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
+    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn("VAL");
+
+    Map<String, Object> resolveExpressions = infrastructureProvisionerService.resolveExpressions(
+        infrastructureDefinition, contextMap, ShellScriptInfrastructureProvisioner.builder().build());
+    assertThat(resolveExpressions.get("key")).isEqualTo("VAL");
   }
 }
