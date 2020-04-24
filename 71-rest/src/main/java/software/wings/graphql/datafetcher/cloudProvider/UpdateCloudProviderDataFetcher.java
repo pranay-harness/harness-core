@@ -17,7 +17,6 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderIn
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload.QLUpdateCloudProviderPayloadBuilder;
-import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -54,14 +53,13 @@ public class UpdateCloudProviderDataFetcher
     SettingAttribute settingAttribute = settingsService.getByAccount(accountId, cloudProviderId);
 
     if (settingAttribute == null || settingAttribute.getValue() == null
-        || CLOUD_PROVIDER != settingAttribute.getCategory()
-        || QLCloudProviderType.valueOf(settingAttribute.getValue().getType()) == null) {
+        || CLOUD_PROVIDER != settingAttribute.getCategory()) {
       throw new InvalidRequestException(
           String.format("No cloud provider exists with the cloudProviderId %s", cloudProviderId));
     }
 
     QLUpdateCloudProviderPayloadBuilder builder =
-        QLUpdateCloudProviderPayload.builder().clientMutationId(mutationContext.getAccountId());
+        QLUpdateCloudProviderPayload.builder().clientMutationId(input.getClientMutationId());
 
     switch (input.getCloudProviderType()) {
       case PCF:
@@ -84,8 +82,8 @@ public class UpdateCloudProviderDataFetcher
     if (input.getEndpointUrl().isPresent()) {
       input.getEndpointUrl().getValue().ifPresent(pcfConfig::setEndpointUrl);
     }
-    if (input.getUsername().isPresent()) {
-      input.getUsername().getValue().ifPresent(pcfConfig::setUsername);
+    if (input.getUserName().isPresent()) {
+      input.getUserName().getValue().ifPresent(pcfConfig::setUsername);
     }
     pcfConfig.setPassword(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
     if (input.getPassword().isPresent()) {

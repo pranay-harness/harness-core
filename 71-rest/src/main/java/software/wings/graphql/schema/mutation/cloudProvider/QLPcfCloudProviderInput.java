@@ -15,6 +15,6 @@ public class QLPcfCloudProviderInput {
   private RequestField<QLUsageScope> usageScope;
 
   private RequestField<String> endpointUrl;
-  private RequestField<String> username;
+  private RequestField<String> userName;
   private RequestField<String> password;
 }
