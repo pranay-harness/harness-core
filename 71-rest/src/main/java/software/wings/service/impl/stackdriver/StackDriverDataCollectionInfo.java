@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GcpConfig;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
@@ -65,6 +64,6 @@ public class StackDriverDataCollectionInfo
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(gcpConfig, encryptedDataDetails);
+    return StackdriverUtils.fetchRequiredExecutionCapabilitiesForMetrics(getEncryptedDataDetails());
   }
 }

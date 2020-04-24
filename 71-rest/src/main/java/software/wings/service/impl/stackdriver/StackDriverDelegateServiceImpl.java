@@ -82,9 +82,11 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   @Inject private DelegateCVActivityLogService delegateCVActivityLogService;
 
   @Override
-  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(GcpConfig gcpConfig,
-      List<EncryptedDataDetail> encryptionDetails, StackDriverSetupTestNodeData setupTestNodeData, String hostName,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(StackdriverGcpConfigTaskParams taskParams,
+      StackDriverSetupTestNodeData setupTestNodeData, String hostName, ThirdPartyApiCallLog apiCallLog)
+      throws IOException {
+    GcpConfig gcpConfig = taskParams.getGcpConfig();
+    List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
     Monitoring monitoring = gcpHelperService.getMonitoringService(gcpConfig, encryptionDetails, projectId);
@@ -135,7 +137,9 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   @Override
-  public List<String> listRegions(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+  public List<String> listRegions(StackdriverGcpConfigTaskParams taskParams) {
+    GcpConfig gcpConfig = taskParams.getGcpConfig();
+    List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
     try {
@@ -154,8 +158,9 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   @Override
-  public Map<String, String> listForwardingRules(
-      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String region) throws IOException {
+  public Map<String, String> listForwardingRules(StackdriverGcpConfigTaskParams taskParams, String region) {
+    GcpConfig gcpConfig = taskParams.getGcpConfig();
+    List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
     try {
@@ -259,8 +264,10 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   @Override
-  public VerificationNodeDataSetupResponse getLogWithDataForNode(String stateExecutionId, GcpConfig gcpConfig,
-      List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData) {
+  public VerificationNodeDataSetupResponse getLogWithDataForNode(StackdriverLogGcpConfigTaskParams taskParams,
+      String stateExecutionId, String hostName, StackDriverSetupTestNodeData setupTestNodeData) {
+    GcpConfig gcpConfig = taskParams.getGcpConfig();
+    List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     List<LogEntry> entries;
     List<LogEntry> serviceLevelLoad;
     final long startTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime());
@@ -481,8 +488,10 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   @Override
-  public Object getLogSample(String guid, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String query, long startTime, long endTime) {
+  public Object getLogSample(
+      StackdriverLogGcpConfigTaskParams taskParams, String guid, String query, long startTime, long endTime) {
+    GcpConfig gcpConfig = taskParams.getGcpConfig();
+    List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     final List<LogEntry> logEntries = fetchLogs(StackDriverLogDataCollectionInfo.builder()
                                                     .stateExecutionId(guid)
                                                     .query(query)

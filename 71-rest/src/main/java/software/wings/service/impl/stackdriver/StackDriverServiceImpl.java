@@ -94,12 +94,19 @@ public class StackDriverServiceImpl implements StackDriverService {
 
       if (StateType.STACK_DRIVER_LOG == setupTestNodeData.getStateType()) {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode(setupTestNodeData.getGuid(), (GcpConfig) settingAttribute.getValue(),
-                encryptionDetails, hostName, setupTestNodeData);
+            .getLogWithDataForNode(StackdriverLogGcpConfigTaskParams.builder()
+                                       .gcpConfig((GcpConfig) settingAttribute.getValue())
+                                       .encryptedDataDetails(encryptionDetails)
+                                       .build(),
+                setupTestNodeData.getGuid(), hostName, setupTestNodeData);
       } else {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-                hostName, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
+            .getMetricsWithDataForNode(StackdriverGcpConfigTaskParams.builder()
+                                           .gcpConfig((GcpConfig) settingAttribute.getValue())
+                                           .encryptedDataDetails(encryptionDetails)
+                                           .build(),
+                setupTestNodeData, hostName,
+                createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
       }
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
@@ -121,8 +128,11 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .build();
 
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-          .getLogSample(guid, (GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
-              System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), System.currentTimeMillis());
+          .getLogSample(StackdriverLogGcpConfigTaskParams.builder()
+                            .gcpConfig((GcpConfig) settingAttribute.getValue())
+                            .encryptedDataDetails(encryptionDetails)
+                            .build(),
+              guid, query, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), System.currentTimeMillis());
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
@@ -150,7 +160,10 @@ public class StackDriverServiceImpl implements StackDriverService {
                                           .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-        .listRegions((GcpConfig) settingAttribute.getValue(), encryptionDetails);
+        .listRegions(StackdriverGcpConfigTaskParams.builder()
+                         .gcpConfig((GcpConfig) settingAttribute.getValue())
+                         .encryptedDataDetails(encryptionDetails)
+                         .build());
   }
 
   @Override
@@ -168,7 +181,11 @@ public class StackDriverServiceImpl implements StackDriverService {
                                           .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-        .listForwardingRules((GcpConfig) settingAttribute.getValue(), encryptionDetails, region);
+        .listForwardingRules(StackdriverGcpConfigTaskParams.builder()
+                                 .gcpConfig((GcpConfig) settingAttribute.getValue())
+                                 .encryptedDataDetails(encryptionDetails)
+                                 .build(),
+            region);
   }
 
   @Override
@@ -198,8 +215,11 @@ public class StackDriverServiceImpl implements StackDriverService {
             .build();
     VerificationNodeDataSetupResponse nodeDataSetupResponse =
         delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode(
-                null, (GcpConfig) settingAttribute.getValue(), encryptionDetails, null, stackDriverSetupTestNodeData);
+            .getLogWithDataForNode(StackdriverLogGcpConfigTaskParams.builder()
+                                       .gcpConfig((GcpConfig) settingAttribute.getValue())
+                                       .encryptedDataDetails(encryptionDetails)
+                                       .build(),
+                null, null, stackDriverSetupTestNodeData);
     List<LogElement> response = nodeDataSetupResponse.getDataForNode() != null
         ? (List<LogElement>) nodeDataSetupResponse.getDataForNode()
         : Collections.emptyList();
