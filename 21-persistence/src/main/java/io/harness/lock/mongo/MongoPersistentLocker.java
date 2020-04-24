@@ -1,6 +1,7 @@
 package io.harness.lock.mongo;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -21,6 +22,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.GeneralException;
+import io.harness.exception.PersistentLockException;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
@@ -83,7 +85,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
 
     try {
       if (lock.tryLock()) {
-        logger.info("Lock acquired on {} for timeout {}", name, timeout);
+        logger.debug("Lock acquired on {} for timeout {}", name, timeout);
         long start = AcquiredDistributedLock.monotonicTimestamp();
         return builder.lock(lock).startTimestamp(start).build();
       }
@@ -92,7 +94,8 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
       // object is deleted in the middle of tryLock. Ignore the exception and assume that we failed to obtain the lock.
     }
 
-    throw new GeneralException(format("Failed to acquire distributed lock for %s", name), NOBODY);
+    throw new PersistentLockException(
+        format("Failed to acquire distributed lock for %s", name), FAILED_TO_ACQUIRE_PERSISTENT_LOCK, NOBODY);
   }
 
   @Override
@@ -148,8 +151,8 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
         }
       }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
-      throw new GeneralException(
-          format("Failed to acquire distributed lock for %s within %s", name, waitTimeout), e, NOBODY);
+      throw new PersistentLockException(
+          format("Failed to acquire distributed lock for %s", name), e, FAILED_TO_ACQUIRE_PERSISTENT_LOCK, NOBODY);
     }
   }
 
