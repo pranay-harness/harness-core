@@ -29,5 +29,5 @@ public class ExecutionNode {
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
-  @Builder.Default @NotNull String levelKey;
+  @NotNull String levelName;
 }
