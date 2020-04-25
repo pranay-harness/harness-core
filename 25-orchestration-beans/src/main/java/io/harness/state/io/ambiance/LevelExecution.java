@@ -14,7 +14,7 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class Level {
+public class LevelExecution {
   @NonNull String levelKey;
   String setupId;
   String runtimeId;

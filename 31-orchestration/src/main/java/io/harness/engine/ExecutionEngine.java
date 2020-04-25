@@ -38,7 +38,7 @@ import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.Level;
+import io.harness.state.io.ambiance.LevelExecution;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +95,8 @@ public class ExecutionEngine implements Engine {
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
     String uuid = generateUuid();
-    ambiance.addLevel(Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
+    ambiance.addLevel(
+        LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
                                              .uuid(uuid)
                                              .node(node)
