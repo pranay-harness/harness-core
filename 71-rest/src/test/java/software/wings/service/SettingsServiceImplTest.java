@@ -306,6 +306,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .build();
     when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
 
     settingsService.delete(APP_ID, SETTING_ID);
     verify(mockWingsPersistence).delete(any(SettingAttribute.class));
@@ -342,6 +344,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(artifactStreamService.listBySettingId(anyString()))
         .thenReturn(
             aPageResponse().withResponse(asList(JenkinsArtifactStream.builder().sourceName(JOB_NAME).build())).build());
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
@@ -366,6 +370,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                .withComputeProviderType(AWS.name())
                                .withComputeProviderName("NAME")
                                .build()));
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage("Cloud provider [SETTING_NAME] is referenced by 1 Service Infrastructure [NAME].");

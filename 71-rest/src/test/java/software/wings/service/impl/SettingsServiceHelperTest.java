@@ -3,8 +3,11 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +18,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +30,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
@@ -44,8 +49,11 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.UsageRestrictions;
+import software.wings.yaml.YamlHelper;
 
 import java.util.List;
 
@@ -53,10 +61,12 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String PAT = "PAT";
   private static final String RANDOM = "RANDOM";
+  private static final String DOCKER_REGISTRY_URL = "DOCKER_REGISTRY_URL";
 
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private UsageRestrictionsService usageRestrictionsService;
 
   @InjectMocks @Inject private SettingServiceHelper settingServiceHelper;
 
@@ -242,5 +252,130 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(kubernetesClusterConfig);
     assertThat(encryptedSecrets).isNotNull();
     assertThat(encryptedSecrets).contains(secret, password, clientId);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetUsageRestrictions() {
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    SettingAttribute settingAttribute = prepareSettingAttributeWithoutSecrets();
+    settingAttribute.setUsageRestrictions(usageRestrictions);
+    assertThat(settingServiceHelper.getUsageRestrictions(settingAttribute)).isEqualTo(usageRestrictions);
+
+    settingAttribute = prepareSettingAttributeWithSecrets();
+    assertThat(settingServiceHelper.getUsageRestrictions(settingAttribute)).isNull();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidateUsageRestrictionsOnEntitySave() {
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(true);
+    SettingAttribute settingAttribute = prepareSettingAttributeWithoutSecrets();
+    settingServiceHelper.validateUsageRestrictionsOnEntitySave(settingAttribute, ACCOUNT_ID, usageRestrictions);
+    verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1))
+        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), eq(usageRestrictions));
+
+    settingAttribute = prepareSettingAttributeWithSecrets();
+    settingServiceHelper.validateUsageRestrictionsOnEntitySave(settingAttribute, ACCOUNT_ID, usageRestrictions);
+    verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1))
+        .validateUsageRestrictionsOnEntitySave(eq(ACCOUNT_ID), eq(usageRestrictions));
+
+    SettingAttribute settingAttributeFinal = settingAttribute;
+    when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(false);
+    assertThatThrownBy(()
+                           -> settingServiceHelper.validateUsageRestrictionsOnEntitySave(
+                               settingAttributeFinal, ACCOUNT_ID, usageRestrictions))
+        .isInstanceOf(UnauthorizedUsageRestrictionsException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidateUsageRestrictionsOnEntityUpdate() {
+    UsageRestrictions usageRestrictions1 = mock(UsageRestrictions.class);
+    UsageRestrictions usageRestrictions2 = mock(UsageRestrictions.class);
+    when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(true);
+    SettingAttribute settingAttribute = prepareSettingAttributeWithoutSecrets();
+    settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(
+        settingAttribute, ACCOUNT_ID, usageRestrictions1, usageRestrictions2);
+    verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1))
+        .validateUsageRestrictionsOnEntityUpdate(eq(ACCOUNT_ID), eq(usageRestrictions1), eq(usageRestrictions2));
+
+    settingAttribute = prepareSettingAttributeWithSecrets();
+    settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(
+        settingAttribute, ACCOUNT_ID, usageRestrictions1, usageRestrictions2);
+    verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1))
+        .validateUsageRestrictionsOnEntityUpdate(eq(ACCOUNT_ID), eq(usageRestrictions1), eq(usageRestrictions2));
+
+    SettingAttribute settingAttributeFinal = settingAttribute;
+    when(secretManager.hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID))).thenReturn(false);
+    assertThatThrownBy(()
+                           -> settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(
+                               settingAttributeFinal, ACCOUNT_ID, usageRestrictions1, usageRestrictions2))
+        .isInstanceOf(UnauthorizedUsageRestrictionsException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUserHasPermissionsToChangeEntity() {
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    SettingAttribute settingAttribute = prepareSettingAttributeWithoutSecrets();
+    settingServiceHelper.userHasPermissionsToChangeEntity(settingAttribute, ACCOUNT_ID, usageRestrictions);
+    verify(secretManager, never()).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), eq(usageRestrictions));
+
+    settingAttribute = prepareSettingAttributeWithSecrets();
+    settingServiceHelper.userHasPermissionsToChangeEntity(settingAttribute, ACCOUNT_ID, usageRestrictions);
+    verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), eq(usageRestrictions));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetUsedSecretIds() {
+    SettingAttribute settingAttribute = aSettingAttribute().build();
+    assertThat(settingServiceHelper.getUsedSecretIds(settingAttribute)).isNullOrEmpty();
+
+    settingAttribute = prepareSettingAttributeWithoutSecrets();
+    assertThat(settingServiceHelper.getUsedSecretIds(settingAttribute)).isNullOrEmpty();
+
+    settingAttribute = prepareSettingAttributeWithPlaceholderSecrets();
+    assertThat(settingServiceHelper.getUsedSecretIds(settingAttribute)).isNullOrEmpty();
+
+    settingAttribute = prepareSettingAttributeWithSecrets();
+    assertThat(settingServiceHelper.getUsedSecretIds(settingAttribute)).containsExactly(PAT);
+  }
+
+  private SettingAttribute prepareSettingAttributeWithoutSecrets() {
+    return aSettingAttribute()
+        .withAccountId(ACCOUNT_ID)
+        .withValue(DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build())
+        .build();
+  }
+
+  private SettingAttribute prepareSettingAttributeWithSecrets() {
+    return aSettingAttribute()
+        .withAccountId(ACCOUNT_ID)
+        .withValue(DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).encryptedPassword(PAT).build())
+        .build();
+  }
+
+  private SettingAttribute prepareSettingAttributeWithPlaceholderSecrets() {
+    return aSettingAttribute()
+        .withAccountId(ACCOUNT_ID)
+        .withValue(DockerConfig.builder()
+                       .dockerRegistryUrl(DOCKER_REGISTRY_URL)
+                       .encryptedPassword(YamlHelper.ENCRYPTED_VALUE_STR)
+                       .build())
+        .build();
   }
 }
