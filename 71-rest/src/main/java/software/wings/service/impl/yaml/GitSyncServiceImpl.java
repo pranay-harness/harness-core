@@ -189,6 +189,14 @@ public class GitSyncServiceImpl implements GitSyncService {
     if (gitToHarness != null) {
       pageRequest.addFilter("yamlChangeSet.gitToHarness", SearchFilter.Operator.HAS, gitToHarness);
     }
+    /* Only these attributes are sufficient for UI consumption, removing other attributes from api response since it was
+     * bloating the api response*/
+    pageRequest.addFieldsIncluded(GitCommitKeys.accountId);
+    pageRequest.addFieldsIncluded(GitCommitKeys.commitId);
+    pageRequest.addFieldsIncluded(GitCommitKeys.commitMessage);
+    pageRequest.addFieldsIncluded(GitCommitKeys.createdAt);
+    pageRequest.addFieldsIncluded(GitCommitKeys.fileProcessingSummary);
+    pageRequest.addFieldsIncluded(GitCommitKeys.yamlGitConfigIds);
     return wingsPersistence.query(GitCommit.class, pageRequest);
   }
 
