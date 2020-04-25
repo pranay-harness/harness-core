@@ -15,7 +15,7 @@ public class AmbianceHelper {
   @Inject private HPersistence hPersistence;
 
   public ExecutionNodeInstance obtainNodeInstance(Ambiance ambiance) {
-    String nodeInstanceId = ambiance.getCurrentRuntimeId();
+    String nodeInstanceId = ambiance.obtainCurrentRuntimeId();
     return hPersistence.createQuery(ExecutionNodeInstance.class)
         .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
         .get();

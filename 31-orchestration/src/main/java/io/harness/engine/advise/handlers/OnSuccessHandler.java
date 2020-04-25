@@ -8,10 +8,12 @@ import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.plan.ExecutionNode;
+import io.harness.registries.level.LevelRegistry;
 import io.harness.state.io.ambiance.Ambiance;
 
 public class OnSuccessHandler implements AdviseHandler {
   @Inject private ExecutionEngine engine;
+  @Inject private LevelRegistry levelRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
 
   @Override
@@ -19,6 +21,6 @@ public class OnSuccessHandler implements AdviseHandler {
     OnSuccessAdvise onSuccessAdvise = (OnSuccessAdvise) advise;
     ExecutionNode nextNode =
         engineObtainmentHelper.fetchExecutionNode(onSuccessAdvise.getNextNodeId(), ambiance.getExecutionInstanceId());
-    engine.triggerExecution(ambiance.deepCopy(), nextNode);
+    engine.triggerExecution(ambiance.cloneForFinish(levelRegistry.obtain(nextNode.getLevelName())), nextNode);
   }
 }
