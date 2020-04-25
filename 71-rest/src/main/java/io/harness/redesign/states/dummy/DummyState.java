@@ -20,7 +20,7 @@ public class DummyState implements State, SyncExecutable {
   public StateResponse executeSync(
       Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData) {
     logger.info("Dummy State getting executed");
-    return StateResponse.builder().executionStatus(NodeExecutionStatus.SUCCEEDED).build();
+    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 
   @Override

@@ -17,6 +17,7 @@ import io.harness.state.State;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
+import io.harness.state.io.StateResponse.FailureInfo;
 import io.harness.state.io.StateResponse.StateResponseBuilder;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
@@ -65,8 +66,14 @@ public class BasicHttpState implements State, AsyncExecutable {
     StateResponseBuilder responseBuilder = StateResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      responseBuilder.executionStatus(NodeExecutionStatus.FAILED);
-      responseBuilder.errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
+      responseBuilder.status(NodeExecutionStatus.FAILED);
+      responseBuilder
+          .failureInfo(FailureInfo.builder()
+                           .errorMessage(errorNotifyResponseData.getErrorMessage())
+                           .failureTypes(errorNotifyResponseData.getFailureTypes())
+                           .build())
+          .build();
     } else {
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
       HttpStateExecutionData executionData = HttpStateExecutionData.builder()
@@ -75,9 +82,8 @@ public class BasicHttpState implements State, AsyncExecutable {
                                                  .status(httpStateExecutionResponse.getExecutionStatus())
                                                  .errorMsg(httpStateExecutionResponse.getErrorMessage())
                                                  .build();
-      responseBuilder.executionStatus(NodeExecutionStatus.SUCCEEDED);
+      responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
       responseBuilder.output(executionData);
-      responseBuilder.errorMessage(httpStateExecutionResponse.getErrorMessage());
     }
     return responseBuilder.build();
   }

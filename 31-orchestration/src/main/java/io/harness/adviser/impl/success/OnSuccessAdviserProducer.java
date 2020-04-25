@@ -12,9 +12,7 @@ import io.harness.registries.adviser.AdviserProducer;
 public class OnSuccessAdviserProducer implements AdviserProducer {
   @Override
   public Adviser produce(AdviserParameters adviserParameters) {
-    return OnSuccessAdviser.builder()
-        .onSuccessAdviserParameters((OnSuccessAdviserParameters) adviserParameters)
-        .build();
+    return OnSuccessAdviser.builder().parameters((OnSuccessAdviserParameters) adviserParameters).build();
   }
 
   @Override

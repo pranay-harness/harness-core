@@ -14,6 +14,7 @@ import io.harness.registries.state.StateRegistry;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
+import io.harness.state.io.StateResponse.FailureInfo;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,11 @@ public class EngineResumeExecutor implements Runnable {
       if (asyncError) {
         ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
         StateResponse stateResponse = StateResponse.builder()
-                                          .executionStatus(NodeExecutionStatus.ERRORED)
-                                          .errorMessage(errorNotifyResponseData.getErrorMessage())
+                                          .status(NodeExecutionStatus.ERRORED)
+                                          .failureInfo(FailureInfo.builder()
+                                                           .failureTypes(errorNotifyResponseData.getFailureTypes())
+                                                           .errorMessage(errorNotifyResponseData.getErrorMessage())
+                                                           .build())
                                           .build();
         executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
         return;
