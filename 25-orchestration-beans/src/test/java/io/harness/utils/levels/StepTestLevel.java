@@ -7,6 +7,7 @@ import lombok.Value;
 @Value
 @Builder
 public class StepTestLevel implements Level {
-  String name = "STEP";
+  public static final String LEVEL_NAME = "STEP_TEST";
+  String name = LEVEL_NAME;
   int order = 2;
 }

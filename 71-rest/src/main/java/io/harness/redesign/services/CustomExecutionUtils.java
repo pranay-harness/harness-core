@@ -13,6 +13,7 @@ import io.harness.facilitate.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
+import io.harness.redesign.levels.StepLevel;
 import io.harness.redesign.states.http.BasicHttpStateParameters;
 import io.harness.redesign.states.wait.WaitStateParameters;
 import io.harness.state.core.fork.ForkStateParameters;
@@ -43,7 +44,7 @@ public class CustomExecutionUtils {
                   .name("Basic Http")
                   .stateType("BASIC_HTTP")
                   .stateParameters(basicHttpStateParameters)
-                  .levelName("STEP")
+                  .levelName(StepLevel.LEVEL_NAME)
                   .adviserObtainment(AdviserObtainment.builder()
                                          .type(AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build())
                                          .parameters(HttpResponseCodeSwitchAdviserParameters.builder()
@@ -61,7 +62,7 @@ public class CustomExecutionUtils {
                 .uuid(dummyNode1Id)
                 .name("Dummy Node 1")
                 .stateType(DUMMY_STATE_TYPE)
-                .levelName("STEP")
+                .levelName(StepLevel.LEVEL_NAME)
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())
@@ -74,7 +75,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(dummyNode2Id)
                 .stateType(DUMMY_STATE_TYPE)
-                .levelName("STEP")
+                .levelName(StepLevel.LEVEL_NAME)
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())
@@ -87,7 +88,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(dummyNode3Id)
                 .name("Dummy Node 3")
-                .levelName("STEP")
+                .levelName(StepLevel.LEVEL_NAME)
                 .stateType(DUMMY_STATE_TYPE)
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -100,7 +101,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(waitNodeId)
                   .name("Wait Node")
-                  .levelName("STEP")
+                  .levelName(StepLevel.LEVEL_NAME)
                   .stateType(StateType.WAIT.name())
                   .stateParameters(WaitStateParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -135,7 +136,7 @@ public class CustomExecutionUtils {
                   .uuid(httpNodeId1)
                   .name("Basic Http")
                   .stateType("BASIC_HTTP")
-                  .levelName("STEP")
+                  .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
@@ -145,7 +146,7 @@ public class CustomExecutionUtils {
                   .uuid(httpNodeId2)
                   .name("Basic Http")
                   .stateType("BASIC_HTTP")
-                  .levelName("STEP")
+                  .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
@@ -156,7 +157,7 @@ public class CustomExecutionUtils {
                 .uuid(forkNodeId)
                 .name("FORK")
                 .stateType("FORK")
-                .levelName("FORK")
+                .levelName(StepLevel.LEVEL_NAME)
                 .stateParameters(
                     ForkStateParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
                 .adviserObtainment(AdviserObtainment.builder()
@@ -170,7 +171,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
-                  .levelName("STEP")
+                  .levelName(StepLevel.LEVEL_NAME)
                   .stateType(DUMMY_STATE_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())

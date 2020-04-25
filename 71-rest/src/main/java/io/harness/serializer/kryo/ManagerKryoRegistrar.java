@@ -20,6 +20,9 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
+import io.harness.redesign.levels.PhaseLevel;
+import io.harness.redesign.levels.SectionLevel;
+import io.harness.redesign.levels.StepLevel;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
@@ -1582,5 +1585,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CIClusterType.class, 7359);
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
+    kryo.register(PhaseLevel.class, 7362);
+    kryo.register(SectionLevel.class, 7363);
+    kryo.register(StepLevel.class, 7364);
   }
 }
