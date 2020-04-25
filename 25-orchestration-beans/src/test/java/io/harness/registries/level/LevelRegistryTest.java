@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import io.harness.state.io.ambiance.Level;
 import io.harness.utils.levels.PhaseTestLevel;
 import io.harness.utils.levels.SectionTestLevel;
+import io.harness.utils.levels.StepTestLevel;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -30,15 +31,15 @@ public class LevelRegistryTest extends OrchestrationBeansTest {
     levelRegistry.register(phaseLevel);
     levelRegistry.register(sectionLevel);
 
-    Level registeredPhaseLevel = levelRegistry.obtain("PHASE");
+    Level registeredPhaseLevel = levelRegistry.obtain(PhaseTestLevel.LEVEL_NAME);
     assertThat(registeredPhaseLevel).isNotNull();
 
-    Level registeredSectionLevel = levelRegistry.obtain("SECTION");
+    Level registeredSectionLevel = levelRegistry.obtain(SectionTestLevel.LEVEL_NAME);
     assertThat(registeredSectionLevel).isNotNull();
 
     assertThatThrownBy(() -> levelRegistry.register(phaseLevel)).isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> levelRegistry.obtain("STEP")).isInstanceOf(UnregisteredKeyAccess.class);
+    assertThatThrownBy(() -> levelRegistry.obtain(StepTestLevel.LEVEL_NAME)).isInstanceOf(UnregisteredKeyAccess.class);
   }
 
   @Test

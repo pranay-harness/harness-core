@@ -58,6 +58,9 @@ io.harness.plan.ExecutionPlan
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserProducer
+io.harness.redesign.levels.PhaseLevel
+io.harness.redesign.levels.SectionLevel
+io.harness.redesign.levels.StepLevel
 io.harness.redesign.services.CustomExecutionService
 io.harness.redesign.services.CustomExecutionServiceImpl
 io.harness.redesign.services.CustomExecutionUtils

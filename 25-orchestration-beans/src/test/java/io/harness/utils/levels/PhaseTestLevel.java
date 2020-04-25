@@ -7,6 +7,7 @@ import lombok.Value;
 @Value
 @Builder
 public class PhaseTestLevel implements Level {
-  String name = "PHASE";
-  int order;
+  public static final String LEVEL_NAME = "PHASE_TEST";
+  String name = LEVEL_NAME;
+  int order = 0;
 }
