@@ -96,6 +96,6 @@ io.harness.state.io.StateResponse
 io.harness.state.io.StateTransput
 io.harness.state.io.StatusNotifyResponseData
 io.harness.state.io.ambiance.Ambiance
-io.harness.state.io.ambiance.Level
+io.harness.state.io.ambiance.LevelExecution
 io.harness.state.metadata.StateMetadata
 software.wings.resources.CustomExecutionResource

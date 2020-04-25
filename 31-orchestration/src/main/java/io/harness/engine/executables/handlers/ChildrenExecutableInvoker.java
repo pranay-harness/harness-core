@@ -25,7 +25,7 @@ import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.Level;
+import io.harness.state.io.ambiance.LevelExecution;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -62,7 +62,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
       Ambiance clonedAmbiance = ambiance.deepCopy();
       ExecutionNode node = plan.fetchNode(child.getChildNodeId());
       clonedAmbiance.addLevel(
-          Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
+          LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
       ExecutionNodeInstance childInstance = ExecutionNodeInstance.builder()
                                                 .uuid(uuid)
                                                 .node(node)

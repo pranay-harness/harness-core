@@ -27,14 +27,14 @@ public class Ambiance {
   @Singular Map<String, String> setupAbstractions;
 
   // These is a combination of setup/execution Id for a particular level
-  @Builder.Default @NonFinal List<Level> levels = new ArrayList<>();
+  @Builder.Default @NonFinal List<LevelExecution> levelExecutions = new ArrayList<>();
 
   @NotNull String executionInstanceId;
 
   public AutoLogContext autoLogContext() {
     ImmutableMap.Builder<String, String> logContext = ImmutableMap.builder();
     logContext.putAll(setupAbstractions);
-    levels.forEach(level -> logContext.put(level.getLevelKey() + "ExecutionId", level.getRuntimeId()));
+    levelExecutions.forEach(level -> logContext.put(level.getLevelKey() + "ExecutionId", level.getRuntimeId()));
     return new AutoLogContext(logContext.build(), OVERRIDE_ERROR);
   }
 
@@ -42,19 +42,19 @@ public class Ambiance {
     return KryoUtils.clone(this);
   }
 
-  public void addLevel(@Valid @NotNull Level level) {
-    int existingIndex = getExistingIndex(level);
+  public void addLevel(@Valid @NotNull LevelExecution levelExecution) {
+    int existingIndex = getExistingIndex(levelExecution);
     if (existingIndex > -1) {
-      levels.subList(existingIndex, levels.size()).clear();
+      levelExecutions.subList(existingIndex, levelExecutions.size()).clear();
     }
-    levels.add(level);
+    levelExecutions.add(levelExecution);
   }
 
-  private int getExistingIndex(@NotNull @Valid Level level) {
+  private int getExistingIndex(@NotNull @Valid LevelExecution levelExecution) {
     int existingIndex = -1;
     int idx = 0;
-    for (Level existingLevel : levels) {
-      if (existingLevel.getLevelKey().equals(level.getLevelKey())) {
+    for (LevelExecution existingLevelExecution : levelExecutions) {
+      if (existingLevelExecution.getLevelKey().equals(levelExecution.getLevelKey())) {
         existingIndex = idx;
         break;
       }
@@ -64,9 +64,9 @@ public class Ambiance {
   }
 
   public String getCurrentRuntimeId() {
-    if (isEmpty(levels)) {
+    if (isEmpty(levelExecutions)) {
       return null;
     }
-    return levels.get(levels.size() - 1).getRuntimeId();
+    return levelExecutions.get(levelExecutions.size() - 1).getRuntimeId();
   }
 }
