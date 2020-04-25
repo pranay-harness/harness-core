@@ -1043,10 +1043,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         return Collections.EMPTY_MAP;
       }
 
-      return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
-          .listLoadBalancers(computeProviderSetting, region, appId)
-          .stream()
-          .collect(toMap(identity(), identity()));
+      List<String> lbs = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+                             .listLoadBalancers(computeProviderSetting, region, appId);
+      Map<String, String> lbMap = new HashMap<>();
+      for (String lbName : lbs) {
+        lbMap.put(lbName, lbName);
+      }
+
+      return lbMap;
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       return settingsService
           .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
@@ -1083,10 +1087,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
     notNullCheck("ComputeProvider", computeProviderSetting);
-    return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
-        .listElasticBalancers(computeProviderSetting, region, appId)
-        .stream()
-        .collect(toMap(identity(), identity()));
+    List<String> elasticBalancers = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+                                        .listElasticBalancers(computeProviderSetting, region, appId);
+    Map<String, String> lbMap = new HashMap<>();
+    for (String lbName : elasticBalancers) {
+      lbMap.put(lbName, lbName);
+    }
+
+    return lbMap;
   }
 
   @Override

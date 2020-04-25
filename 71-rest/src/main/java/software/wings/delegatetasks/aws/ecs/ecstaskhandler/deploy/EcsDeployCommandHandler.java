@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import com.google.inject.Inject;
@@ -11,10 +12,10 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TimeoutException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
@@ -114,12 +115,17 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
       resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
       resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+    } catch (TimeoutException ex) {
+      logger.error(ex.getMessage());
+      logger.error(ExceptionUtils.getMessage(ex), ex);
+      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR);
+      ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      ecsServiceDeployResponse.setOutput(ex.getMessage());
     } catch (Exception ex) {
       logger.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       logger.error("Completed operation with errors");
-      executionLogCallback.saveExecutionLog(
-          format("Completed operation with errors%n%s%n", DASH_STRING), LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(format("Completed operation with errors%n%s%n", DASH_STRING), ERROR);
       ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       ecsServiceDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
     } finally {

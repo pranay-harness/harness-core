@@ -13,4 +13,9 @@ public class TimeoutException extends WingsException {
     super(message, null, REQUEST_TIMEOUT, Level.ERROR, reportTargets, null);
     super.param(NAME_ARG, name);
   }
+
+  public TimeoutException(String message, String name, Throwable cause, EnumSet<ReportTarget> reportTargets) {
+    super(message, cause, REQUEST_TIMEOUT, Level.ERROR, reportTargets, null);
+    super.param(NAME_ARG, name);
+  }
 }

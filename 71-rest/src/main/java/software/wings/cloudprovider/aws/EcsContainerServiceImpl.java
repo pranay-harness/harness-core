@@ -64,6 +64,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -943,7 +944,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         return true;
       }, 10L, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for tasks to be in running state");
+      throw new TimeoutException(
+          "Timed out waiting for tasks to be in running state", "Timeout", e, WingsException.SRE);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -955,6 +957,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData) {
     try {
       waitForTasksToBeInRunningState(requestData);
+    } catch (TimeoutException e) {
+      throw e;
     } catch (WingsException e) {
       if (e.getCode() == INIT_TIMEOUT) {
         throw e;
@@ -1055,6 +1059,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       return getContainerInfosAfterEcsWait(
           region, awsConfig, encryptedDataDetails, clusterName, serviceName, originalTaskArns, executionLogCallback);
+    } catch (TimeoutException e) {
+      throw e;
     } catch (Exception ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
@@ -1346,9 +1352,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      String msg = "Timed out waiting for service to reach steady state";
+      String msg = new StringBuilder(128)
+                       .append("Timed out waiting for service: ")
+                       .append(requestData.getServiceName())
+                       .append(" to reach steady state")
+                       .toString();
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      throw new WingsException(INIT_TIMEOUT).addParam("message", msg);
+      throw new TimeoutException(msg, "Timeout", e, WingsException.SRE);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
