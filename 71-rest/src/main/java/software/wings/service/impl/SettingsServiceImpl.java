@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
@@ -147,7 +146,6 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
-import software.wings.yaml.YamlHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -449,12 +447,7 @@ public class SettingsServiceImpl implements SettingsService {
       SettingAttribute settingAttributeWithUsageRestrictions) {
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
-      List<String> secretIds = emptyIfNull(settingAttributeWithUsageRestrictions.fetchRelevantSecretIds());
-      Set<String> usedSecretIds =
-          secretIds.stream()
-              .filter(secretId -> isNotEmpty(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
-              .collect(Collectors.toSet());
-
+      Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
         // Runtime check using intersection of usage scopes of secretIds.
         return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest,
@@ -547,8 +540,8 @@ public class SettingsServiceImpl implements SettingsService {
       settingServiceHelper.resetEncryptedFields((EncryptableSetting) settingAttribute.getValue());
     }
 
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
-        settingAttribute.getAccountId(), getUsageRestrictions(settingAttribute));
+    settingServiceHelper.validateUsageRestrictionsOnEntitySave(
+        settingAttribute, settingAttribute.getAccountId(), getUsageRestrictions(settingAttribute));
 
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof EncryptableSetting) {
@@ -800,7 +793,7 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
     validateSettingAttribute(settingAttribute, existingSetting);
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(settingAttribute.getAccountId(),
+    settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(settingAttribute, settingAttribute.getAccountId(),
         existingSetting.getUsageRestrictions(), getUsageRestrictions(settingAttribute));
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
@@ -973,8 +966,8 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     String accountId = settingAttribute.getAccountId();
-    if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
-            accountId, settingAttribute.getUsageRestrictions())) {
+    if (!settingServiceHelper.userHasPermissionsToChangeEntity(
+            settingAttribute, accountId, settingAttribute.getUsageRestrictions())) {
       throw new UnauthorizedUsageRestrictionsException(USER);
     }
 

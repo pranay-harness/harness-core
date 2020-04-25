@@ -37,7 +37,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.yaml.YamlHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -180,28 +179,21 @@ public class SettingsServiceImplTest extends WingsBaseTest {
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
 
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(true);
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(null);
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
     verify(secretManager, never())
         .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
     verify(usageRestrictionsService, times(2))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
 
-    helmConnector.setValue(HttpHelmRepoConfig.builder()
-                               .chartRepoUrl("http://stable-charts")
-                               .encryptedPassword(YamlHelper.ENCRYPTED_VALUE_STR)
-                               .accountId(ACCOUNT_ID)
-                               .build());
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.emptySet());
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
     verify(secretManager, never())
         .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any());
 
-    helmConnector.setValue(HttpHelmRepoConfig.builder()
-                               .chartRepoUrl("http://stable-charts")
-                               .encryptedPassword(PASSWORD)
-                               .accountId(ACCOUNT_ID)
-                               .build());
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.singleton(PASSWORD));
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
     verify(secretManager, times(1))
         .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());

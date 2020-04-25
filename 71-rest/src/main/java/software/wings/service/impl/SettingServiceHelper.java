@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
@@ -48,21 +50,27 @@ import io.harness.beans.Encryptable;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedUsageRestrictionsException;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
+import software.wings.yaml.YamlHelper;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Singleton
 public class SettingServiceHelper {
@@ -76,6 +84,7 @@ public class SettingServiceHelper {
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
     if (settingAttribute == null) {
@@ -263,5 +272,61 @@ public class SettingServiceHelper {
       }
     }
     return encryptedSecrets;
+  }
+
+  public UsageRestrictions getUsageRestrictions(SettingAttribute settingAttribute) {
+    if (isNotEmpty(getUsedSecretIds(settingAttribute))) {
+      return null;
+    }
+
+    return settingAttribute.getUsageRestrictions();
+  }
+
+  public void validateUsageRestrictionsOnEntitySave(
+      SettingAttribute settingAttribute, String accountId, UsageRestrictions newUsageRestrictions) {
+    Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
+    if (isNotEmpty(usedSecretIds)) {
+      if (!secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId)) {
+        throw new UnauthorizedUsageRestrictionsException(WingsException.USER);
+      }
+      return;
+    }
+
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, newUsageRestrictions);
+  }
+
+  public void validateUsageRestrictionsOnEntityUpdate(SettingAttribute settingAttribute, String accountId,
+      UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions) {
+    Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
+    if (isNotEmpty(usedSecretIds)) {
+      if (!secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId)) {
+        throw new UnauthorizedUsageRestrictionsException(WingsException.USER);
+      }
+      return;
+    }
+
+    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+        accountId, oldUsageRestrictions, newUsageRestrictions);
+  }
+
+  public boolean userHasPermissionsToChangeEntity(
+      SettingAttribute settingAttribute, String accountId, UsageRestrictions entityUsageRestrictions) {
+    Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
+    if (isNotEmpty(usedSecretIds)) {
+      return secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId);
+    }
+
+    return usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions);
+  }
+
+  public Set<String> getUsedSecretIds(SettingAttribute settingAttribute) {
+    if (hasReferencedSecrets(settingAttribute)) {
+      List<String> secretIds = emptyIfNull(settingAttribute.fetchRelevantSecretIds());
+      return secretIds.stream()
+          .filter(secretId -> isNotEmpty(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
+          .collect(Collectors.toSet());
+    }
+
+    return null;
   }
 }
