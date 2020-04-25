@@ -10,5 +10,5 @@ public class PhaseLevel implements Level {
   public static final String LEVEL_NAME = "PHASE";
 
   String name = LEVEL_NAME;
-  int order = 0;
+  int order = 1;
 }

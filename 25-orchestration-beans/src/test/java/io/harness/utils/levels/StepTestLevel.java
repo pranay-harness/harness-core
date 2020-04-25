@@ -9,5 +9,5 @@ import lombok.Value;
 public class StepTestLevel implements Level {
   public static final String LEVEL_NAME = "STEP_TEST";
   String name = LEVEL_NAME;
-  int order = 2;
+  int order = 3;
 }
