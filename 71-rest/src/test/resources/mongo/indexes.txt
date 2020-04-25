@@ -675,6 +675,7 @@ workflowExecutions { "name" : "accountId_appId_tags_createdAt" , "background" : 
 workflowExecutions { "name" : "accountId_createdAt2" , "background" : true} { "accountId" : 1 , "createdAt" : -1}
 workflowExecutions { "name" : "accountId_endTs" , "background" : true} { "accountId" : 1 , "endTs" : -1}
 workflowExecutions { "name" : "accountId_pipExecutionId_createdAt" , "background" : true} { "accountId" : 1 , "pipelineExecutionId" : 1 , "createdAt" : -1}
+workflowExecutions { "name" : "accountId_pipExecutionId_keywords_createdAt" , "background" : true} { "accountId" : 1 , "pipelineExecutionId" : 1 , "keywords" : 1 , "createdAt" : -1}
 workflowExecutions { "name" : "accountId_tags_createdAt" , "background" : true} { "accountId" : 1 , "tags.name" : 1 , "createdAt" : -1}
 workflowExecutions { "name" : "appId_1" , "background" : true} { "appId" : 1}
 workflowExecutions { "name" : "appId_endTs" , "background" : true} { "appId" : 1 , "endTs" : 1}
