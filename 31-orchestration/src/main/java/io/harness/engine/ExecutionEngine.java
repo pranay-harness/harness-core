@@ -27,6 +27,7 @@ import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
+import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
 import io.harness.state.execution.ExecutionInstance;
@@ -61,6 +62,7 @@ public class ExecutionEngine implements Engine {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   // Registries
   @Inject private StateRegistry stateRegistry;
+  @Inject private LevelRegistry levelRegistry;
 
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private EngineStatusHelper engineStatusHelper;
@@ -90,13 +92,16 @@ public class ExecutionEngine implements Engine {
   }
 
   public void startNodeExecution(Ambiance ambiance) {
-    startNodeInstance(ambiance, ambiance.getCurrentRuntimeId());
+    startNodeInstance(ambiance, ambiance.obtainCurrentRuntimeId());
   }
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
     String uuid = generateUuid();
-    ambiance.addLevel(
-        LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
+    ambiance.addLevelExecution(LevelExecution.builder()
+                                   .setupId(node.getUuid())
+                                   .runtimeId(uuid)
+                                   .level(levelRegistry.obtain(node.getLevelName()))
+                                   .build());
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
                                              .uuid(uuid)
                                              .node(node)

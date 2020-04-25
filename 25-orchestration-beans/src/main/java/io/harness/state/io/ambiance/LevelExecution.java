@@ -15,7 +15,15 @@ import lombok.Value;
 @Builder
 @Redesign
 public class LevelExecution {
-  @NonNull String levelKey;
   String setupId;
   String runtimeId;
+  @NonNull Level level;
+
+  public String getLevelName() {
+    return level.getName();
+  }
+
+  public int getLevelPriority() {
+    return level.getOrder();
+  }
 }

@@ -2,13 +2,18 @@ package io.harness.state.io.ambiance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.annotations.Redesign;
+import io.harness.data.structure.HarnessStringUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -16,6 +21,7 @@ import lombok.experimental.NonFinal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -34,39 +40,55 @@ public class Ambiance {
   public AutoLogContext autoLogContext() {
     ImmutableMap.Builder<String, String> logContext = ImmutableMap.builder();
     logContext.putAll(setupAbstractions);
-    levelExecutions.forEach(level -> logContext.put(level.getLevelKey() + "ExecutionId", level.getRuntimeId()));
+    levelExecutions.forEach(level -> logContext.put(level.getLevelName() + "ExecutionId", level.getRuntimeId()));
     return new AutoLogContext(logContext.build(), OVERRIDE_ERROR);
   }
 
-  public Ambiance deepCopy() {
-    return KryoUtils.clone(this);
-  }
-
-  public void addLevel(@Valid @NotNull LevelExecution levelExecution) {
-    int existingIndex = getExistingIndex(levelExecution);
-    if (existingIndex > -1) {
-      levelExecutions.subList(existingIndex, levelExecutions.size()).clear();
-    }
+  public void addLevelExecution(@Valid @NotNull LevelExecution levelExecution) {
+    Level targetLevel = levelExecution.getLevel();
+    levelExecutions = levelExecutions.stream()
+                          .filter(ex -> ex.getLevelPriority() < targetLevel.getOrder())
+                          .collect(Collectors.toList());
     levelExecutions.add(levelExecution);
   }
 
-  private int getExistingIndex(@NotNull @Valid LevelExecution levelExecution) {
-    int existingIndex = -1;
-    int idx = 0;
-    for (LevelExecution existingLevelExecution : levelExecutions) {
-      if (existingLevelExecution.getLevelKey().equals(levelExecution.getLevelKey())) {
-        existingIndex = idx;
-        break;
-      }
-      idx++;
-    }
-    return existingIndex;
+  public Ambiance cloneForFinish(@NonNull @Valid Level upcomingLevel) {
+    Ambiance cloned = deepCopy();
+    Level finishedLevel = obtainCurrentLevel();
+    Level cleanerLevel = finishedLevel.getOrder() <= upcomingLevel.getOrder() ? finishedLevel : upcomingLevel;
+    cloned.levelExecutions = cloned.levelExecutions.stream()
+                                 .filter(ex -> ex.getLevelPriority() < cleanerLevel.getOrder())
+                                 .collect(Collectors.toList());
+    return cloned;
   }
 
-  public String getCurrentRuntimeId() {
-    if (isEmpty(levelExecutions)) {
-      return null;
+  public Ambiance cloneForChild(@NonNull @Valid Level childLevel) {
+    Ambiance cloned = deepCopy();
+    Level parentLevel = obtainCurrentLevel();
+    if (parentLevel.getOrder() >= childLevel.getOrder()) {
+      throw new InvalidRequestException(HarnessStringUtils.join(SPACE, "Parent Level cannot have order",
+          String.valueOf(parentLevel.getOrder()), "greater than the child", String.valueOf(childLevel.getOrder())));
     }
-    return levelExecutions.get(levelExecutions.size() - 1).getRuntimeId();
+    return cloned;
+  }
+
+  public Level obtainCurrentLevel() {
+    return obtainCurrentLevelExecution().getLevel();
+  }
+
+  public String obtainCurrentRuntimeId() {
+    return obtainCurrentLevelExecution().getRuntimeId();
+  }
+
+  public LevelExecution obtainCurrentLevelExecution() {
+    if (isEmpty(levelExecutions)) {
+      throw new InvalidRequestException("Current Level execution is null");
+    }
+    return levelExecutions.get(levelExecutions.size() - 1);
+  }
+
+  @VisibleForTesting
+  Ambiance deepCopy() {
+    return KryoUtils.clone(this);
   }
 }
