@@ -2,6 +2,7 @@ package io.harness.registries.adviser;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
@@ -13,6 +14,9 @@ import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.category.element.UnitTests;
+import io.harness.registries.DuplicateRegistryException;
+import io.harness.registries.RegistryType;
+import io.harness.registries.UnregisteredKeyAccess;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Value;
@@ -36,6 +40,22 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     Type1Adviser type1Adviser = (Type1Adviser) adviser;
     assertThat(type1Adviser.getParameters()).isEqualTo(parameters);
     assertThat(type1Adviser.getParameters().getName()).isEqualTo("paramName");
+
+    assertThatThrownBy(() -> adviserRegistry.register(adviserType, new Type1AdviserProducer()))
+        .isInstanceOf(DuplicateRegistryException.class);
+
+    assertThatThrownBy(
+        ()
+            -> adviserRegistry.obtain(
+                AdviserObtainment.builder().type(AdviserType.builder().type(AdviserType.IGNORE).build()).build()))
+        .isInstanceOf(UnregisteredKeyAccess.class);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestGetType() {
+    assertThat(adviserRegistry.getType()).isEqualTo(RegistryType.ADVISER);
   }
 
   private static class Type1AdviserProducer implements AdviserProducer {

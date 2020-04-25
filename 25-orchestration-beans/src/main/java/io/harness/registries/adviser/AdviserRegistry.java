@@ -6,9 +6,10 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.annotations.Redesign;
-import io.harness.exception.InvalidRequestException;
+import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
+import io.harness.registries.UnregisteredKeyAccess;
 import lombok.NonNull;
 
 import java.util.Map;
@@ -22,7 +23,7 @@ public class AdviserRegistry implements Registry {
 
   public void register(@NonNull AdviserType adviserType, @NonNull AdviserProducer producer) {
     if (registry.containsKey(adviserType)) {
-      throw new InvalidRequestException("Adviser Already Registered with this type: " + adviserType);
+      throw new DuplicateRegistryException(getType(), "Adviser Already Registered with this type: " + adviserType);
     }
     registry.put(adviserType, producer);
   }
@@ -32,7 +33,7 @@ public class AdviserRegistry implements Registry {
       AdviserProducer producer = registry.get(adviserObtainment.getType());
       return producer.produce(adviserObtainment.getParameters());
     }
-    throw new InvalidRequestException("No Adviser registered for type: " + adviserObtainment.getType());
+    throw new UnregisteredKeyAccess(getType(), "No Adviser registered for type: " + adviserObtainment.getType());
   }
 
   @Override

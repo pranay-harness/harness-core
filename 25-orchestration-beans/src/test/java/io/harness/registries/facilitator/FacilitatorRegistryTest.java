@@ -2,6 +2,7 @@ package io.harness.registries.facilitator;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
@@ -12,6 +13,9 @@ import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.facilitate.io.FacilitatorParameters;
+import io.harness.registries.DuplicateRegistryException;
+import io.harness.registries.RegistryType;
+import io.harness.registries.UnregisteredKeyAccess;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
@@ -40,6 +44,23 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
     Type1Facilitator type1Adviser = (Type1Facilitator) facilitator;
     assertThat(type1Adviser.getParameters()).isEqualTo(parameters);
     assertThat(type1Adviser.getParameters().getName()).isEqualTo("paramName");
+
+    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1FacilitatorProducer()))
+        .isInstanceOf(DuplicateRegistryException.class);
+
+    assertThatThrownBy(
+        ()
+            -> facilitatorRegistry.obtain(FacilitatorObtainment.builder()
+                                              .type(FacilitatorType.builder().type(FacilitatorType.SKIP).build())
+                                              .build()))
+        .isInstanceOf(UnregisteredKeyAccess.class);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestGetType() {
+    assertThat(facilitatorRegistry.getType()).isEqualTo(RegistryType.FACILITATOR);
   }
 
   private static class Type1FacilitatorProducer implements FacilitatorProducer {
