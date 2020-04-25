@@ -37,6 +37,6 @@ public class ForkState implements State, ChildrenExecutable {
   @Override
   public StateResponse handleAsyncResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap) {
-    return StateResponse.builder().executionStatus(NodeExecutionStatus.SUCCEEDED).build();
+    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 }

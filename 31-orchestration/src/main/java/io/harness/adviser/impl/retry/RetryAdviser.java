@@ -9,11 +9,16 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
 @Redesign
 public class RetryAdviser implements Adviser {
-  RetryAdviserParameters parameters;
   AdviserType type = AdviserType.builder().type(AdviserType.RETRY).build();
+
+  RetryAdviserParameters parameters;
+
+  @Builder
+  RetryAdviser(RetryAdviserParameters parameters) {
+    this.parameters = parameters;
+  }
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {

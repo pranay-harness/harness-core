@@ -160,9 +160,8 @@ public class ExecutionEngine implements Engine {
   }
 
   public void handleStateResponse(String nodeInstanceId, StateResponse stateResponse) {
-    ExecutionNodeInstance nodeInstance =
-        engineStatusHelper.updateNodeInstance(nodeInstanceId, stateResponse.getExecutionStatus(),
-            ops -> ops.set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
+    ExecutionNodeInstance nodeInstance = engineStatusHelper.updateNodeInstance(nodeInstanceId,
+        stateResponse.getStatus(), ops -> ops.set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
     // TODO handle Failure
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
