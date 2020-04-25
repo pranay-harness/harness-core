@@ -9,5 +9,5 @@ import lombok.Value;
 public class PhaseTestLevel implements Level {
   public static final String LEVEL_NAME = "PHASE_TEST";
   String name = LEVEL_NAME;
-  int order = 0;
+  int order = 1;
 }
