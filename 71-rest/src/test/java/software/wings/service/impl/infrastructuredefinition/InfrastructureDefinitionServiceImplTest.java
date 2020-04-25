@@ -44,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -51,6 +52,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -94,9 +96,11 @@ import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBui
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -124,6 +128,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private Map<String, InfrastructureProvider> infrastructureProviderMap;
   @Mock private YamlPushService yamlPushService;
   @Mock private EventPublishHelper eventPublishHelper;
 
@@ -1121,6 +1126,55 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(() -> infrastructureDefinitionService.list(pageRequest))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Cannot load infra for different deployment type services [ssh, k8s]");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testListElasticLoadBalancers() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doReturn(Arrays.asList("a", "b", "c", "a"))
+        .when(awsInfrastructureProvider)
+        .listElasticBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    assertThat(loadBalancers.keySet()).containsOnly("a", "b", "c");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testListLoadBalancers() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doReturn(Arrays.asList("a", "b", "c", "a"))
+        .when(awsInfrastructureProvider)
+        .listLoadBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers = infrastructureDefinitionService.listLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    assertThat(loadBalancers.keySet()).containsOnly("a", "b", "c");
   }
 
   @Test

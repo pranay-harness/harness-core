@@ -1823,10 +1823,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return Collections.emptyMap();
     }
 
-    return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
-        .listElasticBalancers(computeProviderSetting, region, appId)
-        .stream()
-        .collect(toMap(identity(), identity()));
+    List<String> elasticBalancers =
+        ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
+            .listElasticBalancers(computeProviderSetting, region, appId);
+
+    Map<String, String> lbMap = new HashMap<>();
+    for (String lbName : elasticBalancers) {
+      lbMap.put(lbName, lbName);
+    }
+
+    return lbMap;
   }
 
   @Override
