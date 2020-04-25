@@ -95,7 +95,7 @@ public class ExecutionEngine implements Engine {
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
     String uuid = generateUuid();
-    ambiance.addLevel(Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelKey()).build());
+    ambiance.addLevel(Level.builder().setupId(node.getUuid()).runtimeId(uuid).levelKey(node.getLevelName()).build());
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
                                              .uuid(uuid)
                                              .node(node)
