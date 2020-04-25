@@ -6,7 +6,7 @@ import io.harness.resolvers.Resolver;
 
 @Redesign
 public interface ResolverProducer {
-  Resolver produceResolver(RefType refType);
+  Resolver produceResolver();
 
   RefType getType();
 }

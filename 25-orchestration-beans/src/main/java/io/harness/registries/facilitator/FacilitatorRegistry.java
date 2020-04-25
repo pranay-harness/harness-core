@@ -3,12 +3,13 @@ package io.harness.registries.facilitator;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
-import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorType;
+import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
+import io.harness.registries.UnregisteredKeyAccess;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +22,7 @@ public class FacilitatorRegistry implements Registry {
 
   public void register(FacilitatorType facilitatorType, FacilitatorProducer producer) {
     if (registry.containsKey(facilitatorType)) {
-      throw new InvalidRequestException("Adviser Already Registered with this type: " + facilitatorType);
+      throw new DuplicateRegistryException(getType(), "Facilitator Already Registered with type: " + facilitatorType);
     }
     registry.put(facilitatorType, producer);
   }
@@ -31,7 +32,8 @@ public class FacilitatorRegistry implements Registry {
       FacilitatorProducer producer = registry.get(facilitatorObtainment.getType());
       return producer.produce(facilitatorObtainment.getParameters());
     }
-    throw new InvalidRequestException("No Facilitator registered for type: " + facilitatorObtainment.getType());
+    throw new UnregisteredKeyAccess(
+        getType(), "No Facilitator registered for type: " + facilitatorObtainment.getType());
   }
 
   @Override

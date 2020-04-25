@@ -66,6 +66,14 @@ public class ExecutionPlanTest extends OrchestrationBeansTest {
     assertThat(startingNode.getName()).isEqualTo("Dummy Node 1");
   }
 
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestIsEmpty() {
+    ExecutionPlan plan = ExecutionPlan.builder().uuid(generateUuid()).build();
+    assertThat(plan.isEmpty()).isEqualTo(true);
+  }
+
   private ExecutionPlan buildDummyPlan() {
     return ExecutionPlan.builder()
         .node(ExecutionNode.builder().uuid(dummyNode1Id).name("Dummy Node 1").stateType("DUMMY1").build())

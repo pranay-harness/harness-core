@@ -1,3 +1,5 @@
 package io.harness.facilitate.modes;
 
-public enum ExecutionMode { SYNC, ASYNC, SKIP, ASYNC_CHAIN, CHILDREN, CHILD }
+import io.harness.annotations.Redesign;
+
+@Redesign public enum ExecutionMode { SYNC, ASYNC, SKIP, ASYNC_CHAIN, CHILDREN, CHILD }

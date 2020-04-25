@@ -1,9 +1,11 @@
 package io.harness.plan;
 
 import io.harness.annotations.Redesign;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -35,7 +37,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "executionPlan", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "ExecutionPlanKeys")
 public class ExecutionPlan implements PersistentEntity {
-  @Id @NotNull String uuid;
+  @Id @NonNull String uuid;
 
   @Singular List<ExecutionNode> nodes;
 
@@ -44,7 +46,7 @@ public class ExecutionPlan implements PersistentEntity {
   @Singular Map<String, String> setupAbstractions;
 
   public boolean isEmpty() {
-    return nodes.isEmpty();
+    return EmptyPredicate.isEmpty(nodes);
   }
 
   public ExecutionNode fetchStartingNode() {
@@ -62,6 +64,9 @@ public class ExecutionPlan implements PersistentEntity {
 
   public static class ExecutionPlanBuilder {
     public ExecutionPlan build() {
+      if (EmptyPredicate.isEmpty(nodes)) {
+        return internalBuild();
+      }
       nodes.sort(Comparator.comparing(ExecutionNode::getUuid));
       return internalBuild();
     }

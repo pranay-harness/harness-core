@@ -3,10 +3,11 @@ package io.harness.registries.resolver;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
-import io.harness.exception.InvalidRequestException;
 import io.harness.references.RefType;
+import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
+import io.harness.registries.UnregisteredKeyAccess;
 import io.harness.resolvers.Resolver;
 
 import java.util.Map;
@@ -19,7 +20,7 @@ public class ResolverRegistry implements Registry {
 
   public void register(RefType refType, ResolverProducer producer) {
     if (registry.containsKey(refType)) {
-      throw new InvalidRequestException("Resolver Already Registered with this type: " + refType);
+      throw new DuplicateRegistryException(getType(), "Resolver Already Registered with this type: " + refType);
     }
     registry.put(refType, producer);
   }
@@ -27,9 +28,9 @@ public class ResolverRegistry implements Registry {
   public Resolver obtain(RefType refType) {
     if (registry.containsKey(refType)) {
       ResolverProducer producer = registry.get(refType);
-      return producer.produceResolver(refType);
+      return producer.produceResolver();
     }
-    throw new InvalidRequestException("No Resolver registered for type: " + refType);
+    throw new UnregisteredKeyAccess(getType(), "No Resolver registered for type: " + refType);
   }
 
   @Override

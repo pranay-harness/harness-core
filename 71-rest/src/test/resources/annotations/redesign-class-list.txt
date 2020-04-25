@@ -34,6 +34,7 @@ io.harness.facilitate.FacilitatorResponse
 io.harness.facilitate.FacilitatorType
 io.harness.facilitate.PassThroughData
 io.harness.facilitate.io.FacilitatorParameters
+io.harness.facilitate.modes.ExecutionMode
 io.harness.facilitate.modes.async.AsyncExecutable
 io.harness.facilitate.modes.async.AsyncExecutableResponse
 io.harness.facilitate.modes.chain.AsyncChainExecutable
