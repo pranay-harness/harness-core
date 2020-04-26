@@ -10,7 +10,9 @@ import io.harness.state.State;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
+import io.harness.state.io.StateResponse.StateResponseBuilder;
 import io.harness.state.io.StateTransput;
+import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.ambiance.Ambiance;
 
 import java.util.List;
@@ -37,6 +39,13 @@ public class ForkState implements State, ChildrenExecutable {
   @Override
   public StateResponse handleAsyncResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap) {
-    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    StateResponseBuilder responseBuilder = StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      NodeExecutionStatus executionStatus = ((StatusNotifyResponseData) responseData).getStatus();
+      if (executionStatus != NodeExecutionStatus.SUCCEEDED) {
+        responseBuilder.status(executionStatus);
+      }
+    }
+    return responseBuilder.build();
   }
 }

@@ -10,5 +10,5 @@ public class SectionLevel implements Level {
   public static final String LEVEL_NAME = "SECTION";
 
   String name = LEVEL_NAME;
-  int order = 1;
+  int order = 2;
 }

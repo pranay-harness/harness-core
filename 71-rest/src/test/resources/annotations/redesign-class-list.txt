@@ -25,6 +25,7 @@ io.harness.engine.executables.ExecutableInvoker
 io.harness.engine.executables.ExecutableInvokerFactory
 io.harness.engine.executables.InvokerPackage
 io.harness.engine.executables.handlers.AsyncExecutableInvoker
+io.harness.engine.executables.handlers.ChildExecutableInvoker
 io.harness.engine.executables.handlers.ChildrenExecutableInvoker
 io.harness.engine.executables.handlers.SyncExecutableInvoker
 io.harness.engine.resume.EngineResumeCallback
@@ -47,6 +48,8 @@ io.harness.facilitate.modes.children.ChildrenExecutableResponse
 io.harness.facilitate.modes.sync.SyncExecutable
 io.harness.facilitator.async.AsyncFacilitator
 io.harness.facilitator.async.AsyncFacilitatorProducer
+io.harness.facilitator.child.ChildFacilitator
+io.harness.facilitator.child.ChildFacilitatorProducer
 io.harness.facilitator.children.ChildrenFacilitator
 io.harness.facilitator.children.ChildrenFacilitatorProducer
 io.harness.facilitator.sync.SyncFacilitator

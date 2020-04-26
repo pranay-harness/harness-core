@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.state.execution.status.NodeExecutionStatus.TASK_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
@@ -17,6 +18,7 @@ import io.harness.facilitate.modes.async.AsyncExecutable;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
 import io.harness.plan.ExecutionNode;
 import io.harness.state.execution.ExecutionNodeInstance;
+import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.io.ambiance.Ambiance;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -39,7 +41,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
-    ExecutionNodeInstance nodeInstance = ambianceHelper.obtainNodeInstance(ambiance);
+    ExecutionNodeInstance nodeInstance = Preconditions.checkNotNull(ambianceHelper.obtainNodeInstance(ambiance));
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     if (isEmpty(response.getCallbackIds())) {
       logger.error("executionResponse is null, but no correlationId - currentState : " + nodeDefinition.getName()
@@ -50,6 +52,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, response.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstance(nodeInstance.getUuid(), TASK_WAITING, operations -> {});
+    engineStatusHelper.updateNodeInstance(
+        nodeInstance.getUuid(), ops -> ops.set(ExecutionNodeInstanceKeys.status, TASK_WAITING));
   }
 }

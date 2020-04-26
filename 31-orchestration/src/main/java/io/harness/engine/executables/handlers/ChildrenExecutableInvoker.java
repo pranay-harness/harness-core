@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.state.execution.status.NodeExecutionStatus.CHILDREN_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -24,6 +25,7 @@ import io.harness.plan.ExecutionPlan;
 import io.harness.registries.level.LevelRegistry;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
+import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.ambiance.Ambiance;
 import io.harness.state.io.ambiance.LevelExecution;
@@ -54,8 +56,8 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
-    ExecutionInstance executionInstance = ambianceHelper.obtainExecutionInstance(ambiance);
-    ExecutionNodeInstance nodeInstance = ambianceHelper.obtainNodeInstance(ambiance);
+    ExecutionInstance executionInstance = Preconditions.checkNotNull(ambianceHelper.obtainExecutionInstance(ambiance));
+    ExecutionNodeInstance nodeInstance = Preconditions.checkNotNull(ambianceHelper.obtainNodeInstance(ambiance));
     ExecutionPlan plan = executionInstance.getExecutionPlan();
     List<String> callbackIds = new ArrayList<>();
     for (Child child : response.getChildren()) {
@@ -83,6 +85,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
     }
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeInstance.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, callbackIds.toArray(new String[0]));
-    engineStatusHelper.updateNodeInstance(nodeInstance.getUuid(), CHILDREN_WAITING, operations -> {});
+    engineStatusHelper.updateNodeInstance(
+        nodeInstance.getUuid(), ops -> ops.set(ExecutionNodeInstanceKeys.status, CHILDREN_WAITING));
   }
 }

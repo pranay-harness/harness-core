@@ -10,5 +10,5 @@ public class StepLevel implements Level {
   public static final String LEVEL_NAME = "STEP";
 
   String name = LEVEL_NAME;
-  int order = 2;
+  int order = 3;
 }

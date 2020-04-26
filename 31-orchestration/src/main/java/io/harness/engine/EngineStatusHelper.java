@@ -9,7 +9,7 @@ import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
-import io.harness.state.execution.status.NodeExecutionStatus;
+import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -20,14 +20,12 @@ public class EngineStatusHelper {
   @Inject HPersistence hPersistence;
 
   public ExecutionNodeInstance updateNodeInstance(
-      String nodeInstanceId, NodeExecutionStatus status, Consumer<UpdateOperations<ExecutionNodeInstance>> ops) {
+      String nodeInstanceId, @NonNull Consumer<UpdateOperations<ExecutionNodeInstance>> ops) {
     Query<ExecutionNodeInstance> findQuery =
         hPersistence.createQuery(ExecutionNodeInstance.class).filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId);
     UpdateOperations<ExecutionNodeInstance> operations =
-        hPersistence.createUpdateOperations(ExecutionNodeInstance.class).set(ExecutionNodeInstanceKeys.status, status);
-    if (ops != null) {
-      ops.accept(operations);
-    }
+        hPersistence.createUpdateOperations(ExecutionNodeInstance.class);
+    ops.accept(operations);
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
   }
 
