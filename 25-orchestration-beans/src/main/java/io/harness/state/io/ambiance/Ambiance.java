@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "AmbianceKeys")
 public class Ambiance {
   // Setup details accountId, appId
   @Singular Map<String, String> setupAbstractions;
@@ -40,7 +42,11 @@ public class Ambiance {
   public AutoLogContext autoLogContext() {
     ImmutableMap.Builder<String, String> logContext = ImmutableMap.builder();
     logContext.putAll(setupAbstractions);
-    levelExecutions.forEach(level -> logContext.put(level.getLevelName() + "ExecutionId", level.getRuntimeId()));
+    logContext.put(AmbianceKeys.executionInstanceId, executionInstanceId);
+    levelExecutions.forEach(level -> {
+      logContext.put(level.getLevelName() + "ExecutionId", level.getRuntimeId());
+      logContext.put(level.getLevelName() + "SetupId", level.getSetupId());
+    });
     return new AutoLogContext(logContext.build(), OVERRIDE_ERROR);
   }
 
