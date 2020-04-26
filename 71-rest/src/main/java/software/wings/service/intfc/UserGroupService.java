@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
@@ -172,6 +173,8 @@ public interface UserGroupService extends OwnedByAccount {
    * @return list of user groups
    */
   List<UserGroup> getUserGroupsBySsoId(@NotBlank String accountId, @NotBlank String ssoId);
+
+  List<UserGroup> getUserGroupsFromUserInvite(UserInvite userInvite);
 
   UserGroup fetchUserGroupByName(@NotEmpty String accountId, @NotEmpty String groupName);
 

@@ -108,8 +108,8 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     assertThat(ldapResponse.getStatus().name().equals("SUCCESS")).isTrue();
     logger.info("Testing the LDAP login - Succeeded");
     logger.info("Logging in using LDAP credentials");
-    User user = UserUtils.getUser(bearerToken, getAccount().getUuid(), LDAP_LOGIN_ID);
-    User user2 = UserUtils.getUser(bearerToken, getAccount().getUuid(), "ldaptest1@harness.io");
+    User user = UserUtils.getUser(bearerToken, getAccount().getUuid(), LDAP_LOGIN_ID).getUser();
+    User user2 = UserUtils.getUser(bearerToken, getAccount().getUuid(), "ldaptest1@harness.io").getUser();
     assertThat(SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "LDAP") == HttpStatus.SC_OK)
         .isTrue();
     TestUtils.sleep(30);

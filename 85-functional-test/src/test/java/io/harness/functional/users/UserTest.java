@@ -29,8 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.beans.PublicUser;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
@@ -65,7 +65,7 @@ public class UserTest extends AbstractFunctionalTest {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
     UserRestUtils urUtil = new UserRestUtils();
-    List<User> userList = urUtil.getUserList(bearerToken, account.getUuid());
+    List<PublicUser> userList = urUtil.getUserList(bearerToken, account.getUuid());
     assertThat(userList).isNotNull();
     assertThat(userList.size() > 0).isTrue();
   }

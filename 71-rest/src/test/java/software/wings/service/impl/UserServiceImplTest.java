@@ -1,10 +1,14 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MOHIT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
 import com.google.inject.Inject;
@@ -21,15 +25,20 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
+
+import java.util.Arrays;
 
 public class UserServiceImplTest extends WingsBaseTest {
   @Mock AccountService accountService;
   @Inject @InjectMocks UserServiceImpl userServiceImpl;
   @Mock SignupService signupService;
   @Mock EventPublishHelper eventPublishHelper;
+  @Inject WingsPersistence wingsPersistence;
 
   @Test
   @Owner(developers = DEEPAK)
@@ -63,5 +72,16 @@ public class UserServiceImplTest extends WingsBaseTest {
     doThrow(new InvalidRequestException("")).when(accountService).validateAccount(any(Account.class));
     userServiceImpl.validateAccountName("someInvalidName", "someInvalidName");
     Mockito.verify(accountService, times(1)).validateAccount(any(Account.class));
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void testGetUserCountForPendingAccounts() {
+    Account account = anAccount().withUuid("accountId").build();
+    wingsPersistence.save(account);
+    User user = anUser().pendingAccounts(Arrays.asList(account)).build();
+    wingsPersistence.save(user);
+    assertThat(userServiceImpl.getTotalUserCount("accountId", true)).isEqualTo(1);
   }
 }

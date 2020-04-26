@@ -112,8 +112,8 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     assertThat(ldapResponse.getStatus().name().equals("SUCCESS")).isTrue();
     logger.info("Testing the LDAP login - Succeeded");
     logger.info("Logging in using LDAP credentials");
-    User user = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), LDAP_LOGIN_ID);
-    User user2 = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), "ldaptest1@harness.io");
+    User user = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), LDAP_LOGIN_ID).getUser();
+    User user2 = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), "ldaptest1@harness.io").getUser();
 
     assertThat(
         SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK)

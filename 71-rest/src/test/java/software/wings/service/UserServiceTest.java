@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.AccountType.PAID;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
@@ -45,6 +47,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
+import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.SIGNUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -90,6 +94,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -111,6 +116,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
@@ -118,7 +124,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
-import software.wings.beans.AccountType;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Event.Type;
@@ -257,6 +262,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
+    when(query.order(any(Sort.class))).thenReturn(query);
 
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
@@ -268,6 +274,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(UserInvite.class)).thenReturn(userInviteQuery);
     when(userInviteQuery.filter(any(), any())).thenReturn(userInviteQuery);
+    when(userInviteQuery.order(any(Sort.class))).thenReturn(userInviteQuery);
+    when(userInviteQuery.order(anyString())).thenReturn(userInviteQuery);
     when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
         .thenReturn(WingsTestConstants.mockChecker());
 
@@ -834,7 +842,6 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
-    verify(wingsPersistence).getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
     verify(cache).remove(USER_ID);
     verify(auditServiceHelper, times(userInvite.getEmails().size()))
@@ -978,11 +985,22 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCompleteInvite() {
-    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
-    when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
+    Account temp = Account.Builder.anAccount()
+                       .withAccountName("harness")
+                       .withCompanyName("harness")
+                       .withAppId(GLOBAL_APP_ID)
+                       .withUuid("uuid")
+                       .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                       .build();
+
+    User user = User.Builder.anUser().uuid(USER_ID).email(USER_EMAIL).build();
+    user.getAccounts().add(temp);
+
+    when(accountService.get(anyString())).thenReturn(temp);
+    when(query.get()).thenReturn(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(temp);
     when(userInviteQuery.get())
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
-    when(query.get()).thenReturn(userBuilder.uuid(USER_ID).build());
     when(loginSettingsService.verifyPasswordStrength(Mockito.any(Account.class), Mockito.any(char[].class)))
         .thenReturn(true);
 
@@ -992,7 +1010,73 @@ public class UserServiceTest extends WingsBaseTest {
     userInvite.setPassword(USER_PASSWORD);
     userService.completeInvite(userInvite);
 
-    verify(wingsPersistence).updateFields(eq(User.class), eq(USER_ID), any(HashMap.class));
+    verify(wingsPersistence, times(3)).updateFields(any(Class.class), anyString(), any(HashMap.class));
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void testCheckInvite() {
+    // When the auth mechanism is User_password, user should be redirected to Password_signup page.
+    when(accountService.get(anyString()))
+        .thenReturn(Account.Builder.anAccount()
+                        .withUuid("acct")
+                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                        .build());
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("url");
+    UserInvite userInvite1 = anUserInvite().withAccountId("acct").withEmail("testinviteuser1@harness.io").build();
+    when(userInviteQuery.get()).thenReturn(userInvite1);
+    when(query.get()).thenReturn(new User());
+    assertThat(userService.checkInviteStatus(userInvite1)).isEqualTo(ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD);
+
+    // When the auth mechanism is User_password, user should be redirected to login page.
+    UserInvite userInvite2 = anUserInvite().withAccountId("acct").withEmail("testinviteuser2@harness.io").build();
+    when(accountService.get(anyString()))
+        .thenReturn(Account.Builder.anAccount()
+                        .withUuid("acct")
+                        .withAuthenticationMechanism(AuthenticationMechanism.LDAP)
+                        .build());
+    userService.inviteUserNew(userInvite2);
+    assertThat(userService.checkInviteStatus(userInvite2)).isEqualTo(ACCOUNT_INVITE_ACCEPTED);
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void testResendInvitationEmail() {
+    when(accountService.get(any())).thenReturn(anAccount().withUuid(UUIDGenerator.generateUuid()).build());
+    when(userInviteQuery.get()).thenReturn(new UserInvite());
+    when(query.get()).thenReturn(anUser().build());
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
+    when(wingsPersistence.delete((Query<PersistentEntity>) any())).thenReturn(true);
+    assertThat(userService.resendInvitationEmail(ACCOUNT_ID, "testinviteuser2@harness.io")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldResendEmailIfUserGroupsChange() {
+    UserInvite userInvite = anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
+                                .withUserGroups(asList(UserGroup.builder().uuid(UUIDGenerator.generateUuid()).build()))
+                                .build();
+    User user =
+        userBuilder.uuid(USER_ID).pendingAccounts(Arrays.asList(anAccount().withUuid(ACCOUNT_ID).build())).build();
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(userInviteQuery.get())
+        .thenReturn(anUserInvite()
+                        .withUserGroups(Arrays.asList(UserGroup.builder().uuid(UUIDGenerator.generateUuid()).build()))
+                        .build());
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
+    when(query.get()).thenReturn(user);
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    doNothing().when(signupService).checkIfEmailIsValid(any());
+    userService.inviteUserNew(userInvite);
+    verify(signupService, times(1)).sendEmail(any(), anyString(), any());
   }
 
   /**
@@ -1240,11 +1324,13 @@ public class UserServiceTest extends WingsBaseTest {
     when(mockedUserService.deleteInvites(ACCOUNT_ID, USER_EMAIL)).thenCallRealMethod();
     doCallRealMethod().when(mockedUserService).sendNewInvitationMail(userInvite, account, user);
     when(authenticationUtils.getDefaultAccount(user)).thenReturn(account);
-    userService.resendInvitationEmail(mockedUserService, ACCOUNT_ID, USER_EMAIL);
-    verify(accountService).get(ACCOUNT_ID);
-    verify(wingsPersistence).delete(any(Query.class));
-    verify(wingsPersistence).save(userInvite);
+    when(userInviteQuery.get()).thenReturn(userInvite);
+    when(query.get()).thenReturn(user);
+    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
 
+    userService.resendInvitationEmail(ACCOUNT_ID, USER_EMAIL);
+
+    verify(accountService, times(2)).get(ACCOUNT_ID);
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
   }
@@ -1286,7 +1372,7 @@ public class UserServiceTest extends WingsBaseTest {
     String logoutUrl = "logout_url";
     String userName = "user_name";
 
-    Account account = getAccount(AccountType.PAID);
+    Account account = getAccount(PAID);
     account.setUuid("accountId");
 
     User user = anUser()
@@ -1334,7 +1420,7 @@ public class UserServiceTest extends WingsBaseTest {
     String token = "token";
     String userName = "user_name";
 
-    Account account = getAccount(AccountType.PAID);
+    Account account = getAccount(PAID);
     account.setUuid("accountId");
 
     User user = anUser()

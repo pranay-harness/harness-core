@@ -76,6 +76,9 @@ public class CollectionUtils {
    * @return
    */
   public static <T> boolean isPresent(List<T> collection, Predicate<T> predicate) {
+    if (collection == null) {
+      return false;
+    }
     return filterAndGetFirst(collection, predicate).isPresent();
   }
 

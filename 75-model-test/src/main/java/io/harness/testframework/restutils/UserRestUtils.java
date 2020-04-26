@@ -12,6 +12,7 @@ import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.Account;
 import software.wings.beans.LoginRequest;
+import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.resources.UserResource;
@@ -23,14 +24,14 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 public class UserRestUtils {
-  public static List<User> getUserList(String bearerToken, String accountId) {
-    RestResponse<PageResponse<User>> userRestResponse =
+  public static List<PublicUser> getUserList(String bearerToken, String accountId) {
+    RestResponse<PageResponse<PublicUser>> userRestResponse =
         Setup.portal()
             .auth()
             .oauth2(bearerToken)
             .queryParam("accountId", accountId)
             .get("/users")
-            .as(new GenericType<RestResponse<PageResponse<User>>>() {}.getType());
+            .as(new GenericType<RestResponse<PageResponse<PublicUser>>>() {}.getType());
     return userRestResponse.getResource().getResponse();
   }
 

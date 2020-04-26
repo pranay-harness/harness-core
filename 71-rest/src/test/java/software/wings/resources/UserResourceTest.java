@@ -2,12 +2,13 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -15,12 +16,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -33,6 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
@@ -99,15 +103,13 @@ public class UserResourceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldListUsers() {
-    when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))
+    PageRequest pageRequest = mock(PageRequest.class);
+    when(pageRequest.getOffset()).thenReturn("0");
+    when(pageRequest.getPageSize()).thenReturn(30);
+    when(USER_SERVICE.listUsers(any(), anyBoolean(), anyInt(), anyInt(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
-    RestResponse<PageResponse<User>> restResponse = RESOURCES.client()
-                                                        .target("/users?accountId=ACCOUNT_ID")
-                                                        .request()
-                                                        .get(new GenericType<RestResponse<PageResponse<User>>>() {});
-
-    assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
-    verify(USER_SERVICE).list(any(PageRequest.class), anyBoolean());
+    userResource.list(pageRequest, UUIDGenerator.generateUuid(), false);
+    verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());
   }
 
   @Test(expected = BadRequestException.class)
@@ -130,5 +132,37 @@ public class UserResourceTest extends WingsBaseTest {
     String authorization = "Basic " + BasicBase64format;
     userResource.login(LoginRequest.builder().authorization(authorization).build(), null, null);
     verify(AUTHENTICATION_MANAGER, times(1)).defaultLoginAccount(anyString(), anyString());
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldCheckInvite() {
+    String accountId = UUIDGenerator.generateUuid();
+    String inviteId = UUIDGenerator.generateUuid();
+    userResource.checkInvite(accountId, inviteId);
+    verify(USER_SERVICE, times(1)).checkInviteStatus(any());
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldCompleteInvite() {
+    String accountId = UUIDGenerator.generateUuid();
+    String inviteId = UUIDGenerator.generateUuid();
+    UserInvite userInvite = anUserInvite().build();
+    userResource.completeInvite(accountId, inviteId, userInvite);
+    verify(USER_SERVICE, times(1)).completeInvite(any());
+  }
+
+  @Test
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldInviteUsers() {
+    String accountId = UUIDGenerator.generateUuid();
+    String inviteId = UUIDGenerator.generateUuid();
+    UserInvite userInvite = anUserInvite().build();
+    userResource.inviteUsers(accountId, userInvite);
+    verify(USER_SERVICE, times(1)).inviteUsers(any());
   }
 }

@@ -16,6 +16,7 @@ import io.harness.testframework.restutils.UserRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 
@@ -43,7 +44,7 @@ public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {
         defaultUser, defaultPassword, getAccount().getUuid(), otpSettings.getTotpSecretKey());
     assertThat("bearer token should not be null" + user.getToken()).isNotNull();
     UserRestUtils urUtil = new UserRestUtils();
-    List<User> userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
+    List<PublicUser> userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
     assertThat(userList.size() > 0).isTrue();
     TwoFactorAuthRestUtils.disableTwoFactorAuthentication(getAccount().getUuid(), user.getToken());
     Setup.signOut(user.getUuid(), user.getToken());

@@ -77,7 +77,7 @@ public class ScimUserServiceImpl implements ScimUserService {
                                 .withImportedByScim(true)
                                 .build();
 
-    userService.inviteUser(userInvite);
+    userService.inviteUserOld(userInvite);
 
     user = userService.getUserByEmail(primaryEmail, accountId);
 

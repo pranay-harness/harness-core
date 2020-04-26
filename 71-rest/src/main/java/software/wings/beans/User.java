@@ -66,6 +66,11 @@ public class User extends Base implements Principal {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
 
+  @Getter
+  @Setter
+  @Reference(idOnly = true, ignoreMissing = true)
+  private List<Account> pendingAccounts = new ArrayList<>();
+
   @Transient private List<Account> supportAccounts = new ArrayList<>();
 
   private long lastLogin;
@@ -658,6 +663,7 @@ public class User extends Base implements Principal {
     private List<Role> roles = new ArrayList<>();
     private List<UserGroup> userGroups = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
+    private List<Account> pendingAccounts = new ArrayList<>();
     private List<Account> supportAccounts = new ArrayList<>();
     private String defaultAccountId;
     private long lastLogin;
@@ -745,6 +751,11 @@ public class User extends Base implements Principal {
 
     public Builder accounts(List<Account> accounts) {
       this.accounts = accounts;
+      return this;
+    }
+
+    public Builder pendingAccounts(List<Account> accounts) {
+      this.pendingAccounts = accounts;
       return this;
     }
 
@@ -862,6 +873,7 @@ public class User extends Base implements Principal {
           .roles(roles)
           .userGroups(userGroups)
           .accounts(accounts)
+          .pendingAccounts(pendingAccounts)
           .supportAccounts(supportAccounts)
           .defaultAccountId(defaultAccountId)
           .lastLogin(lastLogin)
@@ -897,6 +909,7 @@ public class User extends Base implements Principal {
       user.setRoles(roles);
       user.setUserGroups(userGroups);
       user.setAccounts(accounts);
+      user.setPendingAccounts(pendingAccounts);
       user.setSupportAccounts(supportAccounts);
       user.setDefaultAccountId(defaultAccountId);
       user.setLastLogin(lastLogin);

@@ -27,6 +27,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
+import software.wings.service.impl.InviteOperationResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.net.URISyntaxException;
@@ -234,7 +235,7 @@ public interface UserService extends OwnedByAccount {
    * @param email     email address
    * @return the boolean
    */
-  boolean resendInvitationEmail(@NotNull UserService userService, @NotBlank String accountId, @NotBlank String email);
+  boolean resendInvitationEmail(@NotBlank String accountId, @NotBlank String email);
 
   /**
    * Verify email string.
@@ -250,7 +251,7 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite the user invite
    * @return the user invite
    */
-  List<UserInvite> inviteUsers(UserInvite userInvite);
+  List<InviteOperationResponse> inviteUsers(UserInvite userInvite);
 
   /**
    * Invite single user
@@ -258,7 +259,9 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite the user invite
    * @return the user invite
    */
-  UserInvite inviteUser(UserInvite userInvite);
+  InviteOperationResponse inviteUserNew(UserInvite userInvite);
+
+  UserInvite inviteUserOld(UserInvite userInvite);
 
   String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException;
 
@@ -299,6 +302,14 @@ public interface UserService extends OwnedByAccount {
   PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest);
 
   /**
+   * Gets invites from accountId.
+   *
+   * @param accountId the account id
+   * @return the invites
+   */
+  List<UserInvite> getInvitesFromAccountId(String accountId);
+
+  /**
    * Gets invite.
    *
    * @param accountId the account id
@@ -313,7 +324,7 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite the user invite
    * @return the user invite
    */
-  UserInvite completeInvite(UserInvite userInvite);
+  InviteOperationResponse completeInvite(UserInvite userInvite);
 
   /**
    * Complete the user invite and login the user in one call.
@@ -511,4 +522,13 @@ public interface UserService extends OwnedByAccount {
   User save(User user, String accountId);
 
   String saveUserInvite(UserInvite userInvite);
+
+  List<User> listUsers(
+      String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, boolean listPendingUsers);
+
+  long getTotalUserCount(String accountId, boolean listPendingUsers);
+
+  InviteOperationResponse checkInviteStatus(UserInvite userInvite);
+
+  void loadUserGroupsForUsers(List<User> users, String accountId);
 }

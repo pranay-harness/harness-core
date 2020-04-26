@@ -41,7 +41,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   @Before
   public void rbacManageUsersAndGroupsSetup() {
     logger.info("Running RBAC setup");
-    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER).getUser();
     assertThat(readOnlyUser).isNotNull();
     userGroupManagementId = readOnlyUser.getUuid();
     userGroup = UserGroupUtils.createUserGroup(

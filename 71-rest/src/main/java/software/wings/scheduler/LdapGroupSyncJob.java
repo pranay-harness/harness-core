@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -199,17 +200,53 @@ public class LdapGroupSyncJob implements Job {
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
-    removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users, false));
-
-    addedGroupMembers.forEach((member, userGroups) -> {
+    Map<String, String> emailToName = new HashMap<>();
+    createEmailToNameMap(emailToName, addedGroupMembers.keySet());
+    createEmailToNameMap(emailToName, removedGroupMembers.values());
+    Map<String, Set<UserGroup>> emailToUserGroups =
+        getUserGroupsByEmailMap(accountId, addedGroupMembers, removedGroupMembers);
+    emailToUserGroups.forEach((email, userGroups) -> {
       UserInvite userInvite = UserInviteBuilder.anUserInvite()
                                   .withAccountId(accountId)
-                                  .withEmail(member.getEmail())
-                                  .withName(member.getName())
+                                  .withEmail(email)
+                                  .withName(emailToName.get(email))
                                   .withUserGroups(Lists.newArrayList(userGroups))
                                   .build();
-      userService.inviteUser(userInvite);
+      userService.inviteUserNew(userInvite);
     });
+  }
+
+  private void createEmailToNameMap(Map<String, String> emailToNameMap, Collection<Set<User>> collection) {
+    collection.forEach(users -> users.forEach(user -> emailToNameMap.put(user.getEmail(), user.getName())));
+  }
+
+  private void createEmailToNameMap(Map<String, String> emailToNameMap, Set<LdapUserResponse> collection) {
+    collection.forEach(ldapUserResponse -> emailToNameMap.put(ldapUserResponse.getEmail(), ldapUserResponse.getName()));
+  }
+
+  @VisibleForTesting
+  Map<String, Set<UserGroup>> getUserGroupsByEmailMap(
+      String accountId, Map<LdapUserResponse, Set<UserGroup>> addedGroups, Map<UserGroup, Set<User>> removedGroups) {
+    Set<User> usersSet = new HashSet<>();
+    for (Set<User> userSet : removedGroups.values()) {
+      usersSet.addAll(userSet);
+    }
+    Map<String, Set<UserGroup>> emailToUserGroups = new HashMap<>();
+    addedGroups.forEach((member, userGroups) -> {
+      emailToUserGroups.computeIfAbsent(member.getEmail(), k -> new HashSet<>()).addAll(userGroups);
+      User user = userService.getUserByEmail(member.getEmail());
+      if (user != null) {
+        usersSet.add(user);
+      }
+    });
+    userService.loadUserGroupsForUsers(new ArrayList<>(usersSet), accountId);
+    usersSet.forEach(user -> emailToUserGroups.get(user.getEmail()).addAll(user.getUserGroups()));
+    removedGroups.forEach((userGroup, users) -> users.forEach(user -> {
+      emailToUserGroups.computeIfAbsent(user.getEmail(), k -> new HashSet<>(user.getUserGroups()));
+      emailToUserGroups.get(user.getEmail()).remove(userGroup);
+    }));
+
+    return emailToUserGroups;
   }
 
   @VisibleForTesting

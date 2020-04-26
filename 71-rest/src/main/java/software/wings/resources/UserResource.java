@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
@@ -20,7 +22,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
@@ -45,8 +46,8 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.LoginTypeRequest;
+import software.wings.beans.PublicUser;
 import software.wings.beans.User;
-import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
@@ -67,6 +68,7 @@ import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.impl.InviteOperationResponse;
 import software.wings.service.impl.MarketplaceTypeLogContext;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
@@ -81,8 +83,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -164,21 +167,26 @@ public class UserResource {
    * @param accountId   the account id
    * @return the rest response
    */
+
   @GET
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = USER_PERMISSION_READ)
-  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
+  public RestResponse<PageResponse<PublicUser>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
-    Account account = accountService.get(accountId);
-    pageRequest.addFilter(UserKeys.accounts, Operator.HAS, account);
-    PageResponse<User> pageResponse = userService.list(pageRequest, loadUserGroups);
-    List<User> userList = pageResponse.getResponse();
-    if (isNotEmpty(userList)) {
-      userList.forEach(user -> user.setAccounts(Arrays.asList(account)));
-    }
-    return getPublicUsers(pageResponse);
+    Integer offset = Integer.valueOf(pageRequest.getOffset());
+    Integer pageSize = Math.min(DEFAULT_PAGE_SIZE, pageRequest.getPageSize());
+    List<User> userList = userService.listUsers(accountId, loadUserGroups, pageSize, offset, true);
+
+    PageResponse<PublicUser> pageResponse = aPageResponse()
+                                                .withOffset(offset.toString())
+                                                .withLimit(pageSize.toString())
+                                                .withResponse(getPublicUsers(userList, accountId))
+                                                .withTotal(userService.getTotalUserCount(accountId, true))
+                                                .build();
+
+    return new RestResponse<>(pageResponse);
   }
 
   /**
@@ -379,8 +387,7 @@ public class UserResource {
   @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse resendInvitationEmail(@QueryParam("accountId") @NotBlank String accountId,
       @Valid @NotNull ResendInvitationEmailRequest invitationEmailRequest) {
-    return new RestResponse<>(
-        userService.resendInvitationEmail(userService, accountId, invitationEmailRequest.getEmail()));
+    return new RestResponse<>(userService.resendInvitationEmail(accountId, invitationEmailRequest.getEmail()));
   }
 
   /**
@@ -943,11 +950,36 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
-  public RestResponse<List<UserInvite>> inviteUsers(
+  public RestResponse<List<InviteOperationResponse>> inviteUsers(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setAppId(GLOBAL_APP_ID);
-    return getPublicUserInvites(userService.inviteUsers(userInvite));
+    return new RestResponse<>(userService.inviteUsers(userInvite));
+  }
+
+  /**
+   * Checks the status of the invite and either redirects on the login page with corresponding message or to the
+   * password sign-up page.
+   * @param accountId  the account id
+   * @param inviteId   the invite id
+   * @return the rest response
+   */
+  @PublicApi
+  @GET
+  @Path("invites/{inviteId}/status")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<InviteOperationResponse> checkInvite(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("inviteId") @NotEmpty String inviteId) {
+    UserInvite userInvite = new UserInvite();
+    userInvite.setAccountId(accountId);
+    userInvite.setUuid(inviteId);
+    try {
+      return new RestResponse<>(userService.checkInviteStatus(userInvite));
+    } catch (Exception e) {
+      logger.error("error checking invite", e);
+      return new RestResponse<>(InviteOperationResponse.FAIL);
+    }
   }
 
   @POST
@@ -981,11 +1013,11 @@ public class UserResource {
   @Path("invites/{inviteId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<UserInvite> completeInvite(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<InviteOperationResponse> completeInvite(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
-    return getPublicUserInvite(userService.completeInvite(userInvite));
+    return new RestResponse<>(userService.completeInvite(userInvite));
   }
 
   /**
@@ -1134,14 +1166,6 @@ public class UserResource {
     return new RestResponse<>(pageResponse);
   }
 
-  private RestResponse<List<UserInvite>> getPublicUserInvites(List<UserInvite> userInvites) {
-    if (isEmpty(userInvites)) {
-      return new RestResponse<>(userInvites);
-    }
-    userInvites.forEach(this ::setUserGroupSummary);
-    return new RestResponse<>(userInvites);
-  }
-
   private void setUserGroupSummary(UserInvite userInvite) {
     List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(userInvite.getUserGroups());
     userInvite.setUserGroups(userGroupSummaryList);
@@ -1158,24 +1182,36 @@ public class UserResource {
     return new RestResponse<>(user);
   }
 
-  private RestResponse<PageResponse<User>> getPublicUsers(PageResponse<User> pageResponse) {
-    if (pageResponse == null) {
-      return new RestResponse<>();
-    }
-
-    List<User> users = pageResponse.getResponse();
+  private List<PublicUser> getPublicUsers(List<User> users, String accountId) {
     if (isEmpty(users)) {
-      return new RestResponse<>(pageResponse);
+      return Collections.emptyList();
     }
-
+    List<PublicUser> publicUserList = new ArrayList<>();
     AtomicInteger index = new AtomicInteger(0);
     users.forEach(user -> {
       List<UserGroup> userGroups = user.getUserGroups();
+      boolean inviteAccepted = checkIfInvitationIsAccepted(user, accountId);
+      if (!inviteAccepted) {
+        maskUserNameWithPendingInvitation(user);
+      }
       user = userService.getUserSummary(user);
       setUserGroupSummary(user, userGroups);
       users.set(index.getAndIncrement(), user);
+      publicUserList.add(PublicUser.builder().user(user).inviteAccepted(inviteAccepted).build());
     });
-    return new RestResponse<>(pageResponse);
+    return publicUserList;
+  }
+
+  private void maskUserNameWithPendingInvitation(User user) {
+    user.setName("User with pending invitation");
+  }
+
+  private boolean checkIfInvitationIsAccepted(User user, String accountId) {
+    List<Account> accounts = user.getAccounts();
+    if (!(isNotEmpty(accounts) && accounts.contains(accountService.get(accountId)))) {
+      return false;
+    }
+    return true;
   }
 
   private void setUserGroupSummary(User user, List<UserGroup> userGroups) {

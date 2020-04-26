@@ -11,8 +11,7 @@ import software.wings.security.authentication.SamlUserAuthorization;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -30,9 +29,9 @@ public class SamlUserGroupSync {
 
   private void updateUserGroups(
       List<UserGroup> userGroupsToSync, SamlUserAuthorization samlUserAuthorization, String accountId) {
-    List<UserGroup> userAddedToGroups = new ArrayList<>();
     User user = userService.getUserByEmail(samlUserAuthorization.getEmail());
-
+    userService.loadUserGroupsForUsers(Collections.singletonList(user), accountId);
+    List<UserGroup> finalUserGroupsOfUser = user.getUserGroups();
     List<String> newUserGroups = samlUserAuthorization.getUserGroups();
 
     logger.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
@@ -40,20 +39,18 @@ public class SamlUserGroupSync {
 
     userGroupsToSync.forEach(userGroup -> {
       if (userGroup.getMembers().contains(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
-        userGroupService.removeMembers(userGroup, Arrays.asList(user), false);
+        finalUserGroupsOfUser.remove(userGroup);
       } else if (!userGroup.getMembers().contains(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
-        userAddedToGroups.add(userGroup);
+        finalUserGroupsOfUser.add(userGroup);
       }
     });
 
-    if (!userAddedToGroups.isEmpty()) {
-      UserInvite userInvite = UserInviteBuilder.anUserInvite()
-                                  .withAccountId(accountId)
-                                  .withEmail(user.getEmail())
-                                  .withName(user.getName())
-                                  .withUserGroups(userAddedToGroups)
-                                  .build();
-      userService.inviteUser(userInvite);
-    }
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAccountId(accountId)
+                                .withEmail(user.getEmail())
+                                .withName(user.getName())
+                                .withUserGroups(finalUserGroupsOfUser)
+                                .build();
+    userService.inviteUserNew(userInvite);
   }
 }

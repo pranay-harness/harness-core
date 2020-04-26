@@ -48,6 +48,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
+import software.wings.beans.UserInvite;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
@@ -644,6 +645,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!retainMembers) {
+      removeUserGroupFromInvites(accountId, userGroupId);
       group.setMembers(Collections.emptyList());
       group = updateMembers(group, false);
     }
@@ -657,6 +659,12 @@ public class UserGroupServiceImpl implements UserGroupService {
     logger.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
 
     return save(group);
+  }
+
+  private void removeUserGroupFromInvites(String accountId, String userGroupId) {
+    List<UserInvite> invites = userService.getInvitesFromAccountId(accountId);
+    invites.forEach(invite -> invite.getUserGroups().removeIf(x -> x.getUuid().equals(userGroupId)));
+    wingsPersistence.save(invites);
   }
 
   @Override
@@ -715,5 +723,15 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     return true;
+  }
+
+  @Override
+  public List<UserGroup> getUserGroupsFromUserInvite(UserInvite userInvite) {
+    Object[] userIds = userInvite.getUserGroups().stream().map(UuidAware::getUuid).toArray();
+    if (isEmpty(userIds)) {
+      return Collections.emptyList();
+    }
+    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY, Operator.IN, userIds);
+    return list(userInvite.getAccountId(), pageRequest.build(), true).getResponse();
   }
 }
