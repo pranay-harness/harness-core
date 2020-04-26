@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 terraform workspace select freemium
-terraform apply
+terraform apply -input=false -auto-approve
 
 terraform workspace select prod
-terraform apply
+terraform apply -input=false -auto-approve
 
 terraform workspace select qa
-terraform apply
+terraform apply -input=false -auto-approve
 
 terraform workspace select stress
-terraform apply
+terraform apply -input=false -auto-approve
