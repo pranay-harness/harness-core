@@ -4,6 +4,7 @@ import io.harness.annotations.ProducesState;
 import io.harness.annotations.Redesign;
 import io.harness.registries.state.StateProducer;
 import io.harness.state.State;
+import io.harness.state.StateType;
 
 @Redesign
 @ProducesState
@@ -14,7 +15,7 @@ public class ForkStateProducer implements StateProducer {
   }
 
   @Override
-  public String getType() {
-    return "FORK";
+  public StateType getType() {
+    return StateType.builder().type(StateType.FORK).build();
   }
 }

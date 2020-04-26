@@ -91,6 +91,7 @@ io.harness.registries.state.StateProducer
 io.harness.registries.state.StateRegistry
 io.harness.resolvers.Resolver
 io.harness.state.State
+io.harness.state.StateType
 io.harness.state.core.fork.ForkState
 io.harness.state.core.fork.ForkStateParameters
 io.harness.state.core.fork.ForkStateProducer

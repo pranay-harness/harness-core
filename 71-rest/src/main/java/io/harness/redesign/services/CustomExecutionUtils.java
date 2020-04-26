@@ -16,9 +16,9 @@ import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.levels.StepLevel;
 import io.harness.redesign.states.http.BasicHttpStateParameters;
 import io.harness.redesign.states.wait.WaitStateParameters;
+import io.harness.state.StateType;
 import io.harness.state.core.fork.ForkStateParameters;
 import lombok.experimental.UtilityClass;
-import software.wings.sm.StateType;
 
 @Redesign
 @UtilityClass
@@ -34,7 +34,7 @@ public class CustomExecutionUtils {
     String dummyNode3Id = generateUuid();
     String waitNodeId = generateUuid();
 
-    String DUMMY_STATE_TYPE = "DUMMY";
+    StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
 
     BasicHttpStateParameters basicHttpStateParameters =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
@@ -42,7 +42,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
-                  .stateType("BASIC_HTTP")
+                  .stateType(StateType.builder().type("BASIC_HTTP").build())
                   .stateParameters(basicHttpStateParameters)
                   .levelName(StepLevel.LEVEL_NAME)
                   .adviserObtainment(AdviserObtainment.builder()
@@ -102,7 +102,7 @@ public class CustomExecutionUtils {
                   .uuid(waitNodeId)
                   .name("Wait Node")
                   .levelName(StepLevel.LEVEL_NAME)
-                  .stateType(StateType.WAIT.name())
+                  .stateType(StateType.builder().type("WAIT").build())
                   .stateParameters(WaitStateParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
@@ -124,7 +124,7 @@ public class CustomExecutionUtils {
     String forkNodeId = generateUuid();
     String dummyNodeId = generateUuid();
 
-    String DUMMY_STATE_TYPE = "DUMMY";
+    StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
 
     BasicHttpStateParameters basicHttpStateParameters1 =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
@@ -135,7 +135,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http")
-                  .stateType("BASIC_HTTP")
+                  .stateType(StateType.builder().type("BASIC_HTTP").build())
                   .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -145,7 +145,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http")
-                  .stateType("BASIC_HTTP")
+                  .stateType(StateType.builder().type("BASIC_HTTP").build())
                   .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -156,7 +156,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(forkNodeId)
                 .name("FORK")
-                .stateType("FORK")
+                .stateType(StateType.builder().type("FORK").build())
                 .levelName(StepLevel.LEVEL_NAME)
                 .stateParameters(
                     ForkStateParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
