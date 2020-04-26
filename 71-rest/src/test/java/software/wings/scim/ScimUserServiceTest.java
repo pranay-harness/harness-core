@@ -104,7 +104,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setEmail("username@harness.io");
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
-    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
     assertThat(response).isNotNull();
@@ -133,7 +133,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
-    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
@@ -165,7 +165,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
-    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
@@ -196,7 +196,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
-    when(userService.inviteUser(any(UserInvite.class))).thenReturn(userInvite);
+    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());

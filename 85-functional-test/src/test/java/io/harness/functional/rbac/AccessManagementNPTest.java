@@ -29,7 +29,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER).getUser();
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
     assertThat(readOnlyUser).isNotNull();

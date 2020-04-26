@@ -35,7 +35,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Before
   public void rbacSetup() {
     logger.info("Running RBAC setup");
-    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER).getUser();
     assertThat(readOnlyUser).isNotNull();
     readOnlyUserid = readOnlyUser.getUuid();
     userGroup = UserGroupUtils.createUserGroup(

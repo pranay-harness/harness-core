@@ -68,7 +68,7 @@ public class AccessManagementUtils {
   public static void runUserPostTest(
       Account account, String bearerToken, String userName, String email, String password, int expectedInviteStatus) {
     logger.info("Creating the user : " + userName);
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userName);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userName).getUser();
     logger.info("Logging in as user : " + userName);
     String roBearerToken = Setup.getAuthToken(userName, password);
     UserInvite invite = UserUtils.createUserInvite(account, email);
@@ -84,7 +84,7 @@ public class AccessManagementUtils {
     final String IP_WHITELIST_VAL = "0.0.0.0";
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
     UserGroup userGroup = UserGroupUtils.getUserGroup(account, bearerToken, "Account Administrator");
     List<String> userIdsToAdd = new ArrayList<>();
     userIdsToAdd.add(readOnlyUser.getUuid());
@@ -173,7 +173,7 @@ public class AccessManagementUtils {
       Account account, String bearerToken, String userId, String password, int expectedResult) {
     final String READ_ONLY_USER = userId;
     logger.info("Starting with the ReadOnly Test");
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
     logger.info("Creating a new user group without permission. It should fail");
@@ -200,7 +200,7 @@ public class AccessManagementUtils {
     final String IP_WHITELIST_VAL = "0.0.0.0";
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
 
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
@@ -234,7 +234,7 @@ public class AccessManagementUtils {
     final String READ_ONLY_USER = userId;
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
 
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
@@ -253,7 +253,7 @@ public class AccessManagementUtils {
     final String READ_ONLY_USER = userId;
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
 
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
@@ -288,7 +288,7 @@ public class AccessManagementUtils {
     final String READ_ONLY_USER = userId;
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
 
@@ -326,7 +326,7 @@ public class AccessManagementUtils {
     logger.info("Validating created APIKeys");
     assertThat(postCreationEntry).isNotNull();
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
 
@@ -373,7 +373,7 @@ public class AccessManagementUtils {
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(account.getUuid(), bearerToken, ipToWhiteList);
     assertThat(ipAdded).isNotNull();
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
     assertThat(Setup.portal()
@@ -395,7 +395,7 @@ public class AccessManagementUtils {
       int statusCodeExpected, UserGroup userGroup) {
     logger.info("Starting with the ReadOnly Test");
     final String READ_ONLY_USER = userId;
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
 
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);

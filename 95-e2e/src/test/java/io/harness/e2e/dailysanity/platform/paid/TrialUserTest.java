@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.beans.User;
+import software.wings.beans.PublicUser;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class TrialUserTest extends AbstractE2ETest {
   public void listUsers() {
     logger.info("Starting the list users test");
     UserRestUtils urUtil = new UserRestUtils();
-    List<User> userList = urUtil.getUserList(trialBearerToken, getTrialAccount().getUuid());
+    List<PublicUser> userList = urUtil.getUserList(trialBearerToken, getTrialAccount().getUuid());
     assertThat(userList).isNotNull();
     assertThat(userList.size() > 0).isTrue();
   }

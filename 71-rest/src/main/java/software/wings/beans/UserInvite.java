@@ -41,7 +41,7 @@ public class UserInvite extends Base implements AccountAccess {
   private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
-  @Transient private List<UserGroup> userGroups = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true) private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
   private UserInviteSource source = UserInviteSource.builder().build();

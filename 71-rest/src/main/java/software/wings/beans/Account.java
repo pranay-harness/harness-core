@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AccountKeys")
@@ -603,6 +604,10 @@ public class Account extends Base implements PersistentRegularIterable {
       super(type, harnessApiVersion);
       this.defaults = defaults;
     }
+  }
+
+  public List<String> toAccountIds(List<Account> accounts) {
+    return accounts.stream().map(account -> getUuid()).collect(Collectors.toList());
   }
 
   @UtilityClass

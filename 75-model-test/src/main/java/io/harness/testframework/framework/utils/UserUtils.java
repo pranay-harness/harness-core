@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import software.wings.beans.Account;
-import software.wings.beans.User;
+import software.wings.beans.PublicUser;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
@@ -28,10 +28,10 @@ import javax.mail.MessagingException;
 public class UserUtils {
   static final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
 
-  public static User getUser(String bearerToken, String accountId, String emailId) {
-    List<User> userList = UserRestUtils.getUserList(bearerToken, accountId);
-    for (User user : userList) {
-      if (user.getEmail().equals(emailId)) {
+  public static PublicUser getUser(String bearerToken, String accountId, String emailId) {
+    List<PublicUser> userList = UserRestUtils.getUserList(bearerToken, accountId);
+    for (PublicUser user : userList) {
+      if (user.getUser().getEmail().equals(emailId)) {
         return user;
       }
     }
