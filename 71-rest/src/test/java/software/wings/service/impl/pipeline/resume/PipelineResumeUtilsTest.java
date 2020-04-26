@@ -166,7 +166,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
             .withPipelineStageExecutions(asList(stageExecution1, stageExecution2, stageExecution3, stageExecution4))
             .build());
 
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     Pipeline resumePipeline =
         pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
     assertThat(resumePipeline).isNotNull();
@@ -229,7 +229,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
 
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
   }
 
@@ -258,7 +258,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
 
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
   }
 
@@ -267,7 +267,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetPipelineForResumeEmptyPipeline() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(null);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(null);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
   }
 
@@ -277,7 +277,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   public void testGetPipelineForResumeEmptyPipelineStages() {
     Pipeline pipeline = Pipeline.builder().build();
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
   }
 
@@ -289,7 +289,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         Pipeline.builder().pipelineStages(Collections.singletonList(PipelineStage.builder().build())).build();
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineExecution(aPipelineExecution().build());
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 0, workflowExecution, null);
   }
 
@@ -367,7 +367,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
                                                .withPipelineStageExecutions(asList(stageExecution1, stageExecution21,
                                                    stageExecution22, stageExecution23, stageExecution3))
                                                .build());
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     List<PipelineStageGroupedInfo> groupedInfoList = pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
     assertThat(groupedInfoList).isNotNull();
     assertThat(groupedInfoList.size()).isEqualTo(2);
@@ -405,7 +405,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
     workflowExecution.setPipelineExecution(
         aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
 
@@ -414,7 +414,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetResumeStagesEmptyPipeline() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(null);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(null);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
 
@@ -424,7 +424,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   public void testGetResumeStagesEmptyPipelineStages() {
     Pipeline pipeline = Pipeline.builder().build();
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
 
@@ -436,7 +436,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         Pipeline.builder().pipelineStages(Collections.singletonList(PipelineStage.builder().build())).build();
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineExecution(aPipelineExecution().build());
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any())).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
   }
 

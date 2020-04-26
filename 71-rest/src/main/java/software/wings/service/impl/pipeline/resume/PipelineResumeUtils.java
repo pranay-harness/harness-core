@@ -77,8 +77,8 @@ public class PipelineResumeUtils {
     authorizeTriggerPipelineResume(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
     ExecutionArgs executionArgs = prevWorkflowExecution.getExecutionArgs();
-    Pipeline pipeline =
-        pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
+    Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+        appId, pipelineId, executionArgs.getWorkflowVariables(), true);
     if (pipeline == null) {
       throw new InvalidRequestException("Pipeline does not exist");
     }
@@ -206,8 +206,8 @@ public class PipelineResumeUtils {
     authorizeReadPipelineResume(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
     ExecutionArgs executionArgs = prevWorkflowExecution.getExecutionArgs();
-    Pipeline pipeline =
-        pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
+    Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+        appId, pipelineId, executionArgs.getWorkflowVariables(), true);
     if (pipeline == null) {
       throw new InvalidRequestException("Pipeline does not exist");
     }
