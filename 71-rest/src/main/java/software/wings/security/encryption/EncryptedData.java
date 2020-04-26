@@ -37,6 +37,7 @@ import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.usage.scope.ScopedEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,7 +69,7 @@ import javax.validation.constraints.NotNull;
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
-    extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess {
+    extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity {
   @Inject @SchemaIgnore @Transient private static FeatureFlagService featureFlagService;
 
   @NotEmpty @Indexed private String name;
@@ -113,6 +114,8 @@ public class EncryptedData
   private Set<String> serviceVariableIds;
 
   private Map<String, AtomicInteger> searchTags;
+
+  private boolean scopedToAccount;
 
   private UsageRestrictions usageRestrictions;
 

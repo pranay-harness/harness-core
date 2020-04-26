@@ -13,6 +13,7 @@ import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
+import migrations.all.AddScopedToAccountAttributeToEncryptedData;
 import migrations.all.AddTagManagementPermissionToAdminUserGroup;
 import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
@@ -329,6 +330,7 @@ public class MigrationList {
         .add(Pair.of(305, ImportedTemplateGalleryMigration.class))
         .add(Pair.of(306, DropUniqueIndexOnTemplateGallery.class))
         .add(Pair.of(307, AddHarnessCommandLibraryToAccount.class))
+        .add(Pair.of(308, AddScopedToAccountAttributeToEncryptedData.class))
         .build();
   }
 }

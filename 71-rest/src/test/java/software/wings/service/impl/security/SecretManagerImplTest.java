@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -39,6 +40,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.User;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
@@ -62,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -561,5 +564,64 @@ public class SecretManagerImplTest extends WingsBaseTest {
     Set<SecretSetupUsage> usages = secretManager.getSecretUsage(accountId, encryptedData.getUuid());
     assertThat(usages).isNotNull();
     assertThat(usages.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testSaveEncryptedData_whenUsageRestrictionIsNotPresent() {
+    Account newAccount = getAccount(AccountType.PAID);
+    String accountId = wingsPersistence.save(newAccount);
+    newAccount.setUuid(accountId);
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(accountId)
+                                      .enabled(true)
+                                      .kmsId(accountId)
+                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.SECRET_TEXT)
+                                      .build();
+    String secretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedData);
+
+    EncryptedData encryptedDataInDB = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedDataInDB).isNotNull();
+    assertThat(encryptedDataInDB.isScopedToAccount()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testSaveEncryptedData_whenUsageRestrictionIsPresent() {
+    Account newAccount = getAccount(AccountType.PAID);
+    String accountId = wingsPersistence.save(newAccount);
+    newAccount.setUuid(accountId);
+
+    Set<AppEnvRestriction> appEnvRestrictions = new HashSet();
+    appEnvRestrictions.add(
+        AppEnvRestriction.builder()
+            .appFilter(GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build())
+            .build());
+    UsageRestrictions usageRestrictions = UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
+
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(accountId)
+                                      .enabled(true)
+                                      .kmsId(accountId)
+                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.SECRET_TEXT)
+                                      .usageRestrictions(usageRestrictions)
+                                      .build();
+    String secretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedData);
+
+    EncryptedData encryptedDataInDB = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedDataInDB).isNotNull();
+    assertThat(encryptedDataInDB.isScopedToAccount()).isFalse();
   }
 }
