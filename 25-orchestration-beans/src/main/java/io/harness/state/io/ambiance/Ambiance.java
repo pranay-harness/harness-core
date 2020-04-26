@@ -55,6 +55,9 @@ public class Ambiance {
   public Ambiance cloneForFinish(@NonNull @Valid Level upcomingLevel) {
     Ambiance cloned = deepCopy();
     Level finishedLevel = obtainCurrentLevel();
+    if (finishedLevel == null) {
+      throw new InvalidRequestException("Finished Level Cannot be null");
+    }
     Level cleanerLevel = finishedLevel.getOrder() <= upcomingLevel.getOrder() ? finishedLevel : upcomingLevel;
     cloned.levelExecutions = cloned.levelExecutions.stream()
                                  .filter(ex -> ex.getLevelPriority() < cleanerLevel.getOrder())
@@ -65,7 +68,10 @@ public class Ambiance {
   public Ambiance cloneForChild(@NonNull @Valid Level childLevel) {
     Ambiance cloned = deepCopy();
     Level parentLevel = obtainCurrentLevel();
-    if (parentLevel.getOrder() >= childLevel.getOrder()) {
+    if (parentLevel == null) {
+      throw new InvalidRequestException("Parent Level Cannot be null");
+    }
+    if (parentLevel.getOrder() > childLevel.getOrder()) {
       throw new InvalidRequestException(HarnessStringUtils.join(SPACE, "Parent Level cannot have order",
           String.valueOf(parentLevel.getOrder()), "greater than the child", String.valueOf(childLevel.getOrder())));
     }
@@ -73,16 +79,18 @@ public class Ambiance {
   }
 
   public Level obtainCurrentLevel() {
-    return obtainCurrentLevelExecution().getLevel();
+    LevelExecution levelExecution = obtainCurrentLevelExecution();
+    return levelExecution == null ? null : levelExecution.getLevel();
   }
 
   public String obtainCurrentRuntimeId() {
-    return obtainCurrentLevelExecution().getRuntimeId();
+    LevelExecution levelExecution = obtainCurrentLevelExecution();
+    return levelExecution == null ? null : levelExecution.getRuntimeId();
   }
 
   public LevelExecution obtainCurrentLevelExecution() {
     if (isEmpty(levelExecutions)) {
-      throw new InvalidRequestException("Current Level execution is null");
+      return null;
     }
     return levelExecutions.get(levelExecutions.size() - 1);
   }

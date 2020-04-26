@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
@@ -20,7 +21,6 @@ import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeExecutor;
-import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.modes.ExecutionMode;
@@ -64,9 +64,22 @@ public class ExecutionEngine implements Engine {
   @Inject private StateRegistry stateRegistry;
   @Inject private LevelRegistry levelRegistry;
 
+  // Helpers
+
+  // For obtaining ambiance related information
+  @Inject private AmbianceHelper ambianceHelper;
+
+  // Obtain concrete entities from obtainments
+  // States | Advisers | Facilitators | Inputs
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
+
+  // Helper methods for status updates and related methods
   @Inject private EngineStatusHelper engineStatusHelper;
+
+  // Obtain appropriate invoker
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
+
+  // Obtain appropriate advise Handler
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
 
   public ExecutionInstance startExecution(@Valid ExecutionPlan executionPlan, EmbeddedUser createdBy) {
@@ -96,28 +109,41 @@ public class ExecutionEngine implements Engine {
   }
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
+    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null
+        ? ambiance
+        : ambiance.cloneForFinish(levelRegistry.obtain(node.getLevelName()));
     String uuid = generateUuid();
-    ambiance.addLevelExecution(LevelExecution.builder()
-                                   .setupId(node.getUuid())
-                                   .runtimeId(uuid)
-                                   .level(levelRegistry.obtain(node.getLevelName()))
-                                   .build());
+    ExecutionNodeInstance previousInstance = null;
+    if (ambiance.obtainCurrentRuntimeId() != null) {
+      previousInstance = engineStatusHelper.updateNodeInstance(
+          ambiance.obtainCurrentRuntimeId(), ops -> ops.set(ExecutionNodeInstanceKeys.nextId, uuid));
+    }
+    cloned.addLevelExecution(LevelExecution.builder()
+                                 .setupId(node.getUuid())
+                                 .runtimeId(uuid)
+                                 .level(levelRegistry.obtain(node.getLevelName()))
+                                 .build());
+
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
                                              .uuid(uuid)
+                                             .ambiance(cloned)
                                              .node(node)
-                                             .ambiance(ambiance)
                                              .startTs(System.currentTimeMillis())
                                              .status(NodeExecutionStatus.QUEUED)
+                                             .notifyId(previousInstance == null ? null : previousInstance.getNotifyId())
+                                             .parentId(previousInstance == null ? null : previousInstance.getParentId())
+                                             .previousId(previousInstance == null ? null : previousInstance.getUuid())
                                              .build();
     hPersistence.save(nodeInstance);
-    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(this).build());
+    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
   }
 
-  public void startNodeInstance(Ambiance ambiance, String nodeInstanceId) {
+  public void startNodeInstance(Ambiance ambiance, @NotNull String nodeInstanceId) {
     // Update to Running Status
-    ExecutionNodeInstance nodeInstance = hPersistence.createQuery(ExecutionNodeInstance.class)
-                                             .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
-                                             .get();
+    ExecutionNodeInstance nodeInstance =
+        Preconditions.checkNotNull(hPersistence.createQuery(ExecutionNodeInstance.class)
+                                       .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
+                                       .get());
 
     ExecutionNode node = nodeInstance.getNode();
     // Audit and execute
@@ -131,27 +157,24 @@ public class ExecutionEngine implements Engine {
         break;
       }
     }
-    if (facilitatorResponse == null) {
-      throw new InvalidRequestException(
-          "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
-    }
+    Preconditions.checkNotNull(facilitatorResponse,
+        "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
     ExecutionMode mode = facilitatorResponse.getExecutionMode();
-    ExecutionNodeInstance updatedNodeInstance = engineStatusHelper.updateNodeInstance(
-        nodeInstanceId, NodeExecutionStatus.RUNNING, ops -> ops.set(ExecutionNodeInstanceKeys.mode, mode));
-    if (updatedNodeInstance == null) {
-      throw new InvalidRequestException(
-          "Cannot set the Node Execution instance in running state id: " + nodeInstanceId);
-    }
+
+    ExecutionNodeInstance updatedNodeInstance =
+        Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(nodeInstanceId,
+            ops
+            -> ops.set(ExecutionNodeInstanceKeys.mode, mode)
+                   .set(ExecutionNodeInstanceKeys.status, NodeExecutionStatus.RUNNING)));
+
     invokeState(ambiance, facilitatorResponse, updatedNodeInstance);
   }
 
   private void invokeState(
       Ambiance ambiance, FacilitatorResponse facilitatorResponse, ExecutionNodeInstance nodeInstance) {
     ExecutionNode node = nodeInstance.getNode();
-    State currentState = engineObtainmentHelper.obtainState(node.getStateType());
-    if (currentState == null) {
-      throw new InvalidRequestException("Cannot find state for state type: " + node.getStateType());
-    }
+    State currentState = Preconditions.checkNotNull(engineObtainmentHelper.obtainState(node.getStateType()),
+        "Cannot find state for state type: " + node.getStateType());
     injector.injectMembers(currentState);
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(node.getRefObjects(), nodeInstance.getAdditionalInputs());
@@ -165,9 +188,12 @@ public class ExecutionEngine implements Engine {
                                  .build());
   }
 
-  public void handleStateResponse(String nodeInstanceId, StateResponse stateResponse) {
+  public void handleStateResponse(@NotNull String nodeInstanceId, StateResponse stateResponse) {
     ExecutionNodeInstance nodeInstance = engineStatusHelper.updateNodeInstance(nodeInstanceId,
-        stateResponse.getStatus(), ops -> ops.set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
+        ops
+        -> ops.set(ExecutionNodeInstanceKeys.status, stateResponse.getStatus())
+               .set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
+
     // TODO handle Failure
     ExecutionNode nodeDefinition = nodeInstance.getNode();
     List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
@@ -208,8 +234,9 @@ public class ExecutionEngine implements Engine {
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
-    ExecutionNodeInstance nodeInstance =
-        engineStatusHelper.updateNodeInstance(nodeInstanceId, NodeExecutionStatus.RUNNING, operations -> {});
+    ExecutionNodeInstance nodeInstance = engineStatusHelper.updateNodeInstance(
+        nodeInstanceId, ops -> ops.set(ExecutionNodeInstanceKeys.status, NodeExecutionStatus.RUNNING));
+
     ExecutionNode node = nodeInstance.getNode();
     State currentState = engineObtainmentHelper.obtainState(node.getStateType());
     injector.injectMembers(currentState);

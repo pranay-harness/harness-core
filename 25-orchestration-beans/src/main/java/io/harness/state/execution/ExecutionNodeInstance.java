@@ -29,21 +29,24 @@ import javax.validation.constraints.NotNull;
 public class ExecutionNodeInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
   @Id String uuid;
-  @Indexed long createdAt;
   @NotNull Ambiance ambiance;
   @NotNull ExecutionNode node;
   @NotNull ExecutionMode mode;
+  @Indexed long createdAt;
+  private Long startTs;
+  private Long endTs;
+
+  // For Wait Notify
+  String notifyId;
 
   // Relationships
-  String notifyId;
   String parentId;
   String nextId;
+  String previousId;
 
   // Mutable
   long lastUpdatedAt;
   NodeExecutionStatus status;
-  private Long startTs;
-  private Long endTs;
   private Long expiryTs;
 
   // Applicable only for child/children states
