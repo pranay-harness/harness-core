@@ -148,7 +148,7 @@ public class ExecutionEngine implements Engine {
     ExecutionNode node = nodeInstance.getNode();
     // Audit and execute
     List<StateTransput> inputs =
-        engineObtainmentHelper.obtainInputs(node.getRefObjects(), nodeInstance.getAdditionalInputs());
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
     List<Facilitator> facilitators = engineObtainmentHelper.obtainFacilitators(node.getFacilitatorObtainments());
     FacilitatorResponse facilitatorResponse = null;
     for (Facilitator facilitator : facilitators) {
@@ -177,7 +177,7 @@ public class ExecutionEngine implements Engine {
         "Cannot find state for state type: " + node.getStateType());
     injector.injectMembers(currentState);
     List<StateTransput> inputs =
-        engineObtainmentHelper.obtainInputs(node.getRefObjects(), nodeInstance.getAdditionalInputs());
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .state(currentState)
