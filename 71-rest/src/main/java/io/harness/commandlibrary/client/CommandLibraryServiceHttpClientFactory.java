@@ -1,5 +1,6 @@
 package io.harness.commandlibrary.client;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -16,6 +17,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.Interceptor;
@@ -25,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.jersey.JsonViews;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -43,16 +46,27 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
   @Override
   public CommandLibraryServiceHttpClient get() {
     logger.info(" Create Command Library service retrofit client");
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new JavaTimeModule());
+    ObjectMapper objectMapper = getObjectMapper();
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .client(getUnsafeOkHttpClient(baseUrl))
                                   .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                                   .build();
     return retrofit.create(CommandLibraryServiceHttpClient.class);
+  }
+
+  @NotNull
+  @VisibleForTesting
+  ObjectMapper getObjectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new Jdk8Module());
+    objectMapper.registerModule(new GuavaModule());
+    objectMapper.registerModule(new JavaTimeModule());
+    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
+    objectMapper.setConfig(objectMapper.getSerializationConfig().withView(JsonViews.Public.class));
+    objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
+
+    return objectMapper;
   }
 
   private OkHttpClient getUnsafeOkHttpClient(String baseUrl) {
