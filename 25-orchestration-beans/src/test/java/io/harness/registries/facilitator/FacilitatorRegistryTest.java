@@ -13,9 +13,9 @@ import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.facilitate.io.FacilitatorParameters;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.ambiance.Ambiance;
@@ -53,7 +53,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
             -> facilitatorRegistry.obtain(FacilitatorObtainment.builder()
                                               .type(FacilitatorType.builder().type(FacilitatorType.SKIP).build())
                                               .build()))
-        .isInstanceOf(UnregisteredKeyAccess.class);
+        .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
   @Test

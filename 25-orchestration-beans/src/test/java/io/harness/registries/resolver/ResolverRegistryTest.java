@@ -10,9 +10,9 @@ import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.references.RefObject;
 import io.harness.references.RefType;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.resolvers.Resolver;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
@@ -37,7 +37,7 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> resolverRegistry.obtain(RefType.builder().type("RANDOM").build()))
-        .isInstanceOf(UnregisteredKeyAccess.class);
+        .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
   @Test

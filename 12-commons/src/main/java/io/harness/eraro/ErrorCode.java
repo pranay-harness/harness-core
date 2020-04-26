@@ -410,7 +410,9 @@ public enum ErrorCode {
 
   GIT_DIFF_COMMIT_NOT_IN_ORDER,
 
-  FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
+  FAILED_TO_ACQUIRE_PERSISTENT_LOCK,
+
+  ENGINE_REGISTRY_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

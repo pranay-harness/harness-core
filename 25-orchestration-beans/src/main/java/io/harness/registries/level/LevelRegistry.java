@@ -3,10 +3,10 @@ package io.harness.registries.level;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.state.io.ambiance.Level;
 import lombok.NonNull;
 
@@ -30,7 +30,7 @@ public class LevelRegistry implements Registry {
     if (registry.containsKey(levelName)) {
       return registry.get(levelName);
     }
-    throw new UnregisteredKeyAccess(getType(), "No Level registered for name: " + levelName);
+    throw new UnregisteredKeyAccessException(getType(), "No Level registered for name: " + levelName);
   }
 
   @Override

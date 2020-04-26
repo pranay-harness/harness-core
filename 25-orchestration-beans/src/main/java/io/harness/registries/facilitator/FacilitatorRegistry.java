@@ -6,10 +6,10 @@ import io.harness.annotations.Redesign;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorType;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +32,7 @@ public class FacilitatorRegistry implements Registry {
       FacilitatorProducer producer = registry.get(facilitatorObtainment.getType());
       return producer.produce(facilitatorObtainment.getParameters());
     }
-    throw new UnregisteredKeyAccess(
+    throw new UnregisteredKeyAccessException(
         getType(), "No Facilitator registered for type: " + facilitatorObtainment.getType());
   }
 
