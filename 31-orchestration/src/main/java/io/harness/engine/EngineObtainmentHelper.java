@@ -23,6 +23,7 @@ import io.harness.state.StateType;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.io.StateTransput;
+import io.harness.state.io.ambiance.Ambiance;
 import lombok.NonNull;
 
 import java.util.Collections;
@@ -51,13 +52,14 @@ public class EngineObtainmentHelper {
     return obtainments.stream().map(obtainment -> facilitatorRegistry.obtain(obtainment)).collect(Collectors.toList());
   }
 
-  public List<StateTransput> obtainInputs(List<RefObject> refObjects, List<StateTransput> additionalInputs) {
+  public List<StateTransput> obtainInputs(
+      Ambiance ambiance, List<RefObject> refObjects, List<StateTransput> additionalInputs) {
     if (isEmpty(refObjects)) {
       return Collections.emptyList();
     }
     List<StateTransput> inputs =
         refObjects.stream()
-            .map(refObject -> resolverRegistry.obtain(refObject.getRefType()).resolve(refObject))
+            .map(refObject -> resolverRegistry.obtain(refObject.getRefType()).resolve(ambiance, refObject))
             .collect(Collectors.toList());
     inputs.addAll(additionalInputs);
     return inputs;

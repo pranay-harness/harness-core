@@ -16,6 +16,7 @@ import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.resolvers.Resolver;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
+import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -63,7 +64,7 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
   @Builder
   private static class SweepingOutputResolver implements Resolver {
     @Override
-    public StateTransput resolve(RefObject refObject) {
+    public StateTransput resolve(Ambiance ambiance, RefObject refObject) {
       return null;
     }
   }
