@@ -4,10 +4,10 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.references.RefType;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.resolvers.Resolver;
 
 import java.util.Map;
@@ -30,7 +30,7 @@ public class ResolverRegistry implements Registry {
       ResolverProducer producer = registry.get(refType);
       return producer.produceResolver();
     }
-    throw new UnregisteredKeyAccess(getType(), "No Resolver registered for type: " + refType);
+    throw new UnregisteredKeyAccessException(getType(), "No Resolver registered for type: " + refType);
   }
 
   @Override

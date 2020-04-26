@@ -3,10 +3,10 @@ package io.harness.registries.state;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.state.State;
 import lombok.NonNull;
 
@@ -30,7 +30,7 @@ public class StateRegistry implements Registry {
       StateProducer producer = registry.get(stateType);
       return producer.produce();
     }
-    throw new UnregisteredKeyAccess(getType(), "No State registered for type: " + stateType);
+    throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
   }
 
   @Override

@@ -14,9 +14,9 @@ import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.category.element.UnitTests;
-import io.harness.registries.DuplicateRegistryException;
 import io.harness.registries.RegistryType;
-import io.harness.registries.UnregisteredKeyAccess;
+import io.harness.registries.exceptions.DuplicateRegistryException;
+import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Value;
@@ -48,7 +48,7 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
         ()
             -> adviserRegistry.obtain(
                 AdviserObtainment.builder().type(AdviserType.builder().type(AdviserType.IGNORE).build()).build()))
-        .isInstanceOf(UnregisteredKeyAccess.class);
+        .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
   @Test
