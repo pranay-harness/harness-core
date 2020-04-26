@@ -41,6 +41,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HelmDeployContextElement;
@@ -153,6 +154,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 3/25/18.
  */
 @Slf4j
+@FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
 public class HelmDeployState extends State {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

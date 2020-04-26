@@ -36,13 +36,17 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
+import software.wings.sm.StepType;
+import software.wings.sm.states.HelmDeployState.HelmDeployStateKeys;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 @Singleton
 public class WorkflowServiceTemplateHelper {
@@ -129,6 +133,7 @@ public class WorkflowServiceTemplateHelper {
       StepSkipStrategy.validateStepSkipStrategies(phaseStep.getStepSkipStrategies());
     }
     if (phaseStep != null && phaseStep.getSteps() != null) {
+      compareOldNewProperties(oldPhaseStep, phaseStep, fromYaml);
       phaseStep.getSteps().stream().filter(step -> step.getTemplateUuid() != null).forEach((GraphNode step) -> {
         GraphNode oldTemplateStep = null;
         if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
@@ -161,6 +166,29 @@ public class WorkflowServiceTemplateHelper {
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), oldTemplateVariables));
         }
       });
+    }
+  }
+
+  private void compareOldNewProperties(PhaseStep oldPhaseStep, PhaseStep newPhaseStep, boolean fromYaml) {
+    if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
+      final Function<GraphNode, String> keyDecider = gn -> fromYaml ? gn.getName() : gn.getId();
+      final Map<String, GraphNode> oldGraphNodeMap = oldPhaseStep.getSteps().stream().collect(
+          Collectors.toMap(keyDecider, Function.identity(), (key1, key2) -> null));
+      newPhaseStep.getSteps().forEach(step -> {
+        GraphNode oldStep = oldGraphNodeMap.get(keyDecider.apply(step));
+        if (oldStep != null) {
+          checkStepProperties(oldStep, step);
+        }
+      });
+    }
+  }
+
+  private void checkStepProperties(GraphNode oldNode, GraphNode newNode) {
+    if (StepType.HELM_DEPLOY.toString().equals(oldNode.getType()) && oldNode.getType().equals(newNode.getType())) {
+      String oldValue = (String) oldNode.getProperties().get(HelmDeployStateKeys.helmReleaseNamePrefix);
+      if (isNotEmpty(oldValue)) {
+        newNode.getProperties().put(HelmDeployStateKeys.helmReleaseNamePrefix, oldValue);
+      }
     }
   }
 
