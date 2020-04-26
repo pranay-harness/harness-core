@@ -4,6 +4,7 @@ import io.harness.adviser.AdviserObtainment;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.references.RefObject;
+import io.harness.state.StateType;
 import io.harness.state.io.StateParameters;
 import lombok.Builder;
 import lombok.Singular;
@@ -19,7 +20,7 @@ public class ExecutionNode {
   // Identifiers
   @NotNull String uuid;
   @NotNull String name;
-  @NotNull String stateType;
+  @NotNull StateType stateType;
 
   // Input/Outputs
   StateParameters stateParameters;

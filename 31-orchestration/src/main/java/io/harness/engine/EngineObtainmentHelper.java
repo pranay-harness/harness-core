@@ -19,9 +19,11 @@ import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
+import io.harness.state.StateType;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.io.StateTransput;
+import lombok.NonNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,10 +63,7 @@ public class EngineObtainmentHelper {
     return inputs;
   }
 
-  public State obtainState(String stateType) {
-    if (isEmpty(stateType)) {
-      return null;
-    }
+  public State obtainState(@NonNull StateType stateType) {
     return stateRegistry.obtain(stateType);
   }
 

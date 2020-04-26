@@ -14,14 +14,17 @@ import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionPlan.ExecutionPlanKeys;
 import io.harness.rule.Owner;
 import io.harness.rule.RealMongo;
+import io.harness.state.StateType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ExecutionPlanTest extends OrchestrationBeansTest {
-  String planId = generateUuid();
-  String dummyNode1Id = generateUuid();
-  String dummyNode2Id = generateUuid();
-  String dummyNode3Id = generateUuid();
+  private static final String PLAN_ID = generateUuid();
+  private static final String DUMMY_NODE_1_ID = generateUuid();
+  private static final String DUMMY_NODE_2_ID = generateUuid();
+  private static final String DUMMY_NODE_3_ID = generateUuid();
+
+  private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
 
   @Inject private HPersistence hPersistence;
 
@@ -32,7 +35,7 @@ public class ExecutionPlanTest extends OrchestrationBeansTest {
   public void shouldTestExecutionPlanSave() {
     String savedPlanId = hPersistence.save(buildDummyPlan());
     assertThat(savedPlanId).isNotNull();
-    assertThat(savedPlanId).isEqualTo(planId);
+    assertThat(savedPlanId).isEqualTo(PLAN_ID);
     ExecutionPlan savedPlan =
         hPersistence.createQuery(ExecutionPlan.class).filter(ExecutionPlanKeys.uuid, savedPlanId).get();
 
@@ -45,11 +48,11 @@ public class ExecutionPlanTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestFetchNode() {
     ExecutionPlan plan = buildDummyPlan();
-    ExecutionNode node1 = plan.fetchNode(dummyNode1Id);
+    ExecutionNode node1 = plan.fetchNode(DUMMY_NODE_1_ID);
     assertThat(node1).isNotNull();
     assertThat(node1.getName()).isEqualTo("Dummy Node 1");
 
-    ExecutionNode node2 = plan.fetchNode(dummyNode2Id);
+    ExecutionNode node2 = plan.fetchNode(DUMMY_NODE_2_ID);
     assertThat(node2).isNotNull();
     assertThat(node2.getName()).isEqualTo("Dummy Node 2");
 
@@ -76,11 +79,11 @@ public class ExecutionPlanTest extends OrchestrationBeansTest {
 
   private ExecutionPlan buildDummyPlan() {
     return ExecutionPlan.builder()
-        .node(ExecutionNode.builder().uuid(dummyNode1Id).name("Dummy Node 1").stateType("DUMMY1").build())
-        .node(ExecutionNode.builder().uuid(dummyNode2Id).name("Dummy Node 2").stateType("DUMMY1").build())
-        .node(ExecutionNode.builder().uuid(dummyNode3Id).name("Dummy Node 3").stateType("DUMMY3").build())
-        .startingNodeId(dummyNode1Id)
-        .uuid(planId)
+        .node(ExecutionNode.builder().uuid(DUMMY_NODE_1_ID).name("Dummy Node 1").stateType(DUMMY_STATE_TYPE).build())
+        .node(ExecutionNode.builder().uuid(DUMMY_NODE_2_ID).name("Dummy Node 2").stateType(DUMMY_STATE_TYPE).build())
+        .node(ExecutionNode.builder().uuid(DUMMY_NODE_3_ID).name("Dummy Node 3").stateType(DUMMY_STATE_TYPE).build())
+        .startingNodeId(DUMMY_NODE_1_ID)
+        .uuid(PLAN_ID)
         .build();
   }
 }
