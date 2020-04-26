@@ -36,7 +36,7 @@ public class CommandVersionServiceImpl implements CommandVersionService {
   @Override
   public List<CommandVersionEntity> getAllVersionEntitiesForCommand(String commandStoreName, String commandName) {
     return emptyIfNull(wingsPersistence.createQuery(CommandVersionEntity.class, HQuery.excludeAuthority)
-                           .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandStoreName)
+                           .filter(CommandVersionEntity.CommandVersionsKeys.commandStoreName, commandStoreName)
                            .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandName)
                            .order(Sort.descending(CommandVersionEntity.CommandVersionsKeys.createdAt))
                            .asList());

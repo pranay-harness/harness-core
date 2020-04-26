@@ -157,7 +157,9 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
                             .appId(appId)
                             .accountId(changeContext.getChange().getAccountId())
                             .type(yaml.getType())
+                            .description(yaml.getDescription())
                             .folderId(templateFolder.getUuid())
+                            .variables(templateVariableYamlToVariable(yaml.getVariables()))
                             .build();
     setBaseTemplate(template, changeContext, changeSetContext);
     return template;
