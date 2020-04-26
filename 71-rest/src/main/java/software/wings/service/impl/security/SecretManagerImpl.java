@@ -45,6 +45,7 @@ import static software.wings.service.intfc.security.VaultService.DEFAULT_KEY_NAM
 import static software.wings.service.intfc.security.VaultService.KEY_SPEARATOR;
 import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -348,7 +349,7 @@ public class SecretManagerImpl implements SecretManager {
       logger.info("Encrypting a secret");
       EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
           null, null, UUID.randomUUID().toString(), usageRestrictions);
-      String recordId = wingsPersistence.save(encryptedData);
+      String recordId = saveEncryptedData(encryptedData);
       generateAuditForEncryptedRecord(accountId, null, recordId);
       return recordId;
     }
@@ -818,7 +819,7 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setPath(vaultSecretRef.fullPath);
     }
 
-    String encryptedDataId = wingsPersistence.save(encryptedData);
+    String encryptedDataId = saveEncryptedData(encryptedData);
     generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
     encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
@@ -1106,7 +1107,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setBackupEncryptedValue(encrypted.getBackupEncryptedValue());
     encryptedData.setBackupEncryptionType(encrypted.getBackupEncryptionType());
 
-    String recordId = wingsPersistence.save(encryptedData);
+    String recordId = saveEncryptedData(encryptedData);
     generateAuditForEncryptedRecord(accountId, existingEncryptedData, recordId);
   }
 
@@ -1203,7 +1204,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setBackupEncryptionKey(encryptedFileData.getBackupEncryptionKey());
     encryptedData.setBackupEncryptedValue(encryptedFileData.getBackupEncryptedValue());
     encryptedData.setBackupEncryptionType(encryptedFileData.getBackupEncryptionType());
-    String recordId = wingsPersistence.save(encryptedData);
+    String recordId = saveEncryptedData(encryptedData);
     generateAuditForEncryptedRecord(accountId, existingEncryptedRecord, recordId);
   }
 
@@ -1436,7 +1437,7 @@ public class SecretManagerImpl implements SecretManager {
           encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, encrypted, name, usageRestrictions);
       encryptedData.addSearchTag(name);
       try {
-        encryptedDataId = wingsPersistence.save(encryptedData);
+        encryptedDataId = saveEncryptedData(encryptedData);
         generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
       } catch (DuplicateKeyException e) {
         String reason = "Variable " + name + " already exists";
@@ -1551,7 +1552,7 @@ public class SecretManagerImpl implements SecretManager {
         savedData.setBackupEncryptionKey(encryptedData.getBackupEncryptionKey());
       }
       savedData.setUsageRestrictions(usageRestrictions);
-      wingsPersistence.save(savedData);
+      saveEncryptedData(savedData);
       if (eligibleForCrudAudit(savedData)) {
         auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
       }
@@ -1616,7 +1617,7 @@ public class SecretManagerImpl implements SecretManager {
     savedData.setUsageRestrictions(usageRestrictions);
 
     try {
-      wingsPersistence.save(savedData);
+      saveEncryptedData(savedData);
     } catch (DuplicateKeyException e) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to save Restrictions", USER);
     }
@@ -2016,7 +2017,7 @@ public class SecretManagerImpl implements SecretManager {
 
     String recordId;
     try {
-      recordId = wingsPersistence.save(encryptedData);
+      recordId = saveEncryptedData(encryptedData);
       generateAuditForEncryptedRecord(accountId, oldEntityData, recordId);
     } catch (DuplicateKeyException e) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "File " + name + " already exists", USER);
@@ -2055,6 +2056,19 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return recordId;
+  }
+
+  @VisibleForTesting
+  String saveEncryptedData(EncryptedData encryptedData) {
+    if (encryptedData == null) {
+      return null;
+    }
+
+    if (usageRestrictionsService.hasNoRestrictions(encryptedData.getUsageRestrictions())) {
+      encryptedData.setScopedToAccount(true);
+    }
+
+    return wingsPersistence.save(encryptedData);
   }
 
   private void generateAuditForEncryptedRecord(String accountId, EncryptedData oldEntityData, String newRecordId) {

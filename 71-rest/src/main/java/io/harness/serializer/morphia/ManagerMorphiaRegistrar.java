@@ -713,6 +713,7 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupExecutionDa
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecutionData;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
+import software.wings.usage.scope.ScopedEntity;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -1025,6 +1026,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CommandVersionEntity.class);
     set.add(ImportedTemplate.class);
     set.add(CeExceptionRecord.class);
+    set.add(ScopedEntity.class);
   }
 
   @Override
