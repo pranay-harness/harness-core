@@ -10,7 +10,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Variable;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.service.intfc.ownership.OwnedByApplication;
@@ -62,13 +61,14 @@ public interface PipelineService extends OwnedByApplication {
   Pipeline readPipelineWithResolvedVariables(String appId, String pipelineId, Map<String, String> workflowVariables);
 
   Pipeline readPipelineWithResolvedVariables(
-      String appId, String pipelineId, Map<String, String> pipelineVariables, Map<String, Workflow> workflowCache);
+      String appId, String pipelineId, Map<String, String> pipelineVariables, boolean preExecutionChecks);
 
   Pipeline getPipelineByName(String appId, String pipelineName);
 
   void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly);
 
   List<Variable> getPipelineVariables(String appId, String pipelineId);
+
   /**
    * Create pipeline pipeline.
    *

@@ -13,6 +13,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -2401,6 +2402,50 @@ public class WorkflowServiceHelper {
   public boolean isK8sV2Service(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId, false);
     return service != null && service.isK8sV2();
+  }
+
+  public static void checkWorkflowVariablesOverrides(String stageElementName, List<Variable> variables,
+      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
+    if (isEmpty(variables)) {
+      return;
+    }
+
+    List<Variable> requiredVariables =
+        variables.stream().filter(variable -> variable.isMandatory() && !variable.isFixed()).collect(toList());
+    if (isEmpty(requiredVariables)) {
+      return;
+    }
+
+    for (Variable variable : requiredVariables) {
+      boolean isEntity = variable.obtainEntityType() != null;
+      String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
+      String finalValue;
+      if (isEmpty(workflowVariableValue)) {
+        finalValue = extractMapValue(pipelineVariables, variable.getName());
+      } else {
+        // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
+        // such a pattern, we throw an error.
+        if (ExpressionEvaluator.matchesVariablePattern(workflowVariableValue) && !workflowVariableValue.contains(".")) {
+          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
+          finalValue = extractMapValue(pipelineVariables, pipelineVariableName);
+        } else {
+          finalValue = workflowVariableValue;
+        }
+      }
+
+      String prefix = isEntity ? "Templatized" : "Required";
+      if (isEmpty(finalValue)) {
+        throw new InvalidRequestException(
+            format("%s variable %s is not set for stage %s", prefix, variable.getName(), stageElementName));
+      } else if (ExpressionEvaluator.matchesVariablePattern(finalValue) && (isEntity || !finalValue.contains("."))) {
+        throw new InvalidRequestException(format("%s variable %s for stage %s cannot be left as an expression", prefix,
+            variable.getName(), stageElementName));
+      }
+    }
+  }
+
+  private static String extractMapValue(Map<String, String> map, String key) {
+    return map == null ? null : map.getOrDefault(key, null);
   }
 
   public static Map<String, String> overrideWorkflowVariables(
