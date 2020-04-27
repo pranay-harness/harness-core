@@ -78,6 +78,7 @@ import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -539,6 +540,45 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.description, newDescription));
 
     return get(accountId, delegateId, true);
+  }
+
+  @Override
+  public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) {
+    Delegate.Status newDelegateStatus = mapApprovalActionToDelegateStatus(action);
+
+    Delegate currentDelegate = wingsPersistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .filter(DelegateKeys.uuid, delegateId)
+                                   .get();
+
+    Query<Delegate> updateQuery = wingsPersistence.createQuery(Delegate.class)
+                                      .filter(DelegateKeys.accountId, accountId)
+                                      .filter(DelegateKeys.uuid, delegateId)
+                                      .filter(DelegateKeys.status, Status.WAITING_FOR_APPROVAL);
+
+    UpdateOperations<Delegate> updateOperations =
+        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, newDelegateStatus);
+
+    logger.debug("Updating approval status from {} to {}", currentDelegate.getStatus(), newDelegateStatus);
+    Delegate updatedDelegate =
+        wingsPersistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, currentDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
+
+    if (Status.DELETED == newDelegateStatus) {
+      broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
+    }
+
+    return updatedDelegate;
+  }
+
+  private Status mapApprovalActionToDelegateStatus(DelegateApproval action) {
+    if (DelegateApproval.ACTIVATE == action) {
+      return Status.ENABLED;
+    } else {
+      return Status.DELETED;
+    }
   }
 
   @Override

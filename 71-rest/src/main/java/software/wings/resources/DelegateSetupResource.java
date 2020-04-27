@@ -21,6 +21,7 @@ import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -314,6 +316,20 @@ public class DelegateSetupResource {
       return new RestResponse<>(delegateService.updateDescription(accountId, delegateId, newDescription));
     }
   }
+
+  @PUT
+  @Path("{delegateId}/approval")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Delegate> updateApprovalStatus(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("action") @NotNull DelegateApproval action) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.updateApprovalStatus(accountId, delegateId, action));
+    }
+  }
+
   @DELETE
   @Path("{delegateId}")
   @Timed

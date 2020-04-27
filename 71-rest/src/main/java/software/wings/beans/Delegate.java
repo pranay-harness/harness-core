@@ -65,5 +65,5 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
 
   @SchemaIgnore private List<String> keywords;
 
-  public enum Status { ENABLED, DISABLED, DELETED }
+  public enum Status { ENABLED, WAITING_FOR_APPROVAL, DISABLED, DELETED }
 }
