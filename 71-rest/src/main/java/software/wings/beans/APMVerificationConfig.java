@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 public class APMVerificationConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
-  @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";
+  @Transient @SchemaIgnore public static final String MASKED_STRING = "*****";
   @Transient @SchemaIgnore private static final String SECRET_REGEX = "\\$\\{secretRef:([^,]*),([^}]*)}";
 
   @Attributes(title = "Base Url") private String url;
