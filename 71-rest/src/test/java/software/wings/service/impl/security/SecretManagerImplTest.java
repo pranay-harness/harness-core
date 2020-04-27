@@ -624,4 +624,46 @@ public class SecretManagerImplTest extends WingsBaseTest {
     assertThat(encryptedDataInDB).isNotNull();
     assertThat(encryptedDataInDB.isScopedToAccount()).isFalse();
   }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testSaveEncryptedData_whenUsageRestrictionIsEdited() {
+    Account newAccount = getAccount(AccountType.PAID);
+    String accountId = wingsPersistence.save(newAccount);
+    newAccount.setUuid(accountId);
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(accountId)
+                                      .enabled(true)
+                                      .kmsId(accountId)
+                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .scopedToAccount(true)
+                                      .type(SettingVariableTypes.SECRET_TEXT)
+                                      .build();
+
+    String secretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedData);
+
+    EncryptedData encryptedDataInDB = wingsPersistence.get(EncryptedData.class, secretId);
+    assertThat(encryptedDataInDB).isNotNull();
+    assertThat(encryptedDataInDB.isScopedToAccount()).isTrue();
+
+    Set<AppEnvRestriction> appEnvRestrictions = new HashSet();
+    appEnvRestrictions.add(
+        AppEnvRestriction.builder()
+            .appFilter(GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build())
+            .build());
+    UsageRestrictions usageRestrictions = UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
+    encryptedDataInDB.setUsageRestrictions(usageRestrictions);
+
+    String editedSecretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedDataInDB);
+
+    EncryptedData editedEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, editedSecretId);
+    assertThat(editedEncryptedDataInDB).isNotNull();
+    assertThat(editedEncryptedDataInDB.isScopedToAccount()).isFalse();
+    assertThat(editedSecretId).isEqualTo(secretId);
+  }
 }
