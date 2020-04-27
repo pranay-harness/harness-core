@@ -100,7 +100,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             public List<String> load(String accountId) {
               return wingsPersistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)
-                  .field("lastHeartBeat")
+                  .field(DelegateKeys.lastHeartBeat)
                   .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                   .asKeyList()
                   .stream()

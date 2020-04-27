@@ -220,7 +220,7 @@ import javax.validation.constraints.NotNull;
 
 @Singleton
 @Slf4j
-public class DelegateServiceImpl implements DelegateService {
+public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int MAX_CONNECT_ATTEMPTS = 3;
   private static final int RECONNECT_INTERVAL_SECONDS = 3;
   private static final int POLL_INTERVAL_SECONDS = 3;

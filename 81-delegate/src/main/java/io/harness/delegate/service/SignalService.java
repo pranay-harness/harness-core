@@ -7,15 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Created by peeyushaggarwal on 1/4/17.
- */
 @Singleton
 @Slf4j
 public class SignalService {
   private AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
 
-  @Inject private DelegateService delegateService;
+  @Inject private DelegateAgentService delegateService;
 
   void pause() {
     if (state.compareAndSet(State.RUNNING, State.PAUSE)) {

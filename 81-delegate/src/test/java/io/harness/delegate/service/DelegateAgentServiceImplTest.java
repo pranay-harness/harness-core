@@ -37,14 +37,14 @@ import software.wings.security.encryption.EncryptedData;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DelegateServiceImplTest extends CategoryTest {
+public class DelegateAgentServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ManagerClientV2 managerClient;
   @Mock private Call<DelegateTaskPackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 
-  @InjectMocks @Inject DelegateServiceImpl delegateService;
+  @InjectMocks @Inject DelegateAgentServiceImpl delegateService;
 
   @Before
   public void setUp() {

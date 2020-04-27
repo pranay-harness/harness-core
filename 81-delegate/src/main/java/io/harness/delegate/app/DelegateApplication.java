@@ -10,7 +10,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
-import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -27,7 +27,7 @@ import ch.qos.logback.classic.LoggerContext;
 import com.ning.http.client.AsyncHttpClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
-import io.harness.delegate.service.DelegateService;
+import io.harness.delegate.service.DelegateAgentService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
@@ -180,7 +180,7 @@ public class DelegateApplication {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
-    DelegateService delegateService = injector.getInstance(DelegateService.class);
+    DelegateAgentService delegateService = injector.getInstance(DelegateAgentService.class);
     delegateService.run(watched);
     System.exit(0);
   }

@@ -1,6 +1,6 @@
 package io.harness.perpetualtask;
 
-import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;

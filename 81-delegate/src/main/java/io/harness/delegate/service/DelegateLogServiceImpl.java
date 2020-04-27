@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.network.SafeHttpCall.execute;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;

@@ -14,13 +14,13 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
+import io.harness.delegate.service.DelegateAgentService;
+import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.delegate.service.DelegateCVActivityLogServiceImpl;
 import io.harness.delegate.service.DelegateCVTaskServiceImpl;
 import io.harness.delegate.service.DelegateConfigServiceImpl;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.delegate.service.DelegateLogServiceImpl;
-import io.harness.delegate.service.DelegateService;
-import io.harness.delegate.service.DelegateServiceImpl;
 import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
@@ -416,7 +416,7 @@ public class DelegateModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(DelegateService.class).to(DelegateServiceImpl.class);
+    bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
