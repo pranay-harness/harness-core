@@ -39,6 +39,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
     return new DelegateAuthCallCredentials(
         new TokenGenerator(config.accountId, config.accountSecret), config.accountId, true);
   }
+
   @Named("manager-channel")
   @Singleton
   @Provides
@@ -72,13 +73,12 @@ public class ManagerGrpcClientModule extends ProviderModule {
   }
 
   private static boolean isValidAuthority(String authority) {
-    boolean valid = true;
     try {
       GrpcUtil.checkAuthority(authority);
-    } catch (Exception e) {
-      valid = false;
+    } catch (Exception ignore) {
+      return false;
     }
-    return valid;
+    return true;
   }
 
   @Value
