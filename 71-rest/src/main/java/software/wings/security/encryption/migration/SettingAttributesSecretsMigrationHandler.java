@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
@@ -43,6 +45,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Singleton
@@ -87,10 +90,9 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
       if (!featureFlagService.isEnabled(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId())) {
         return;
       }
-      boolean isMigrationSuccess = false;
+      boolean isMigrationSuccess;
       if (settingAttribute.getValue().getSettingType() == APM_VERIFICATION) {
-        // Add function for migrating secrets for APM_VERIFICATION
-        return;
+        isMigrationSuccess = migrateApmConnector(settingAttribute);
       } else {
         isMigrationSuccess = migrateSecrets(settingAttribute);
       }
@@ -136,7 +138,8 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
       try {
         String secretId = (String) encryptedRefField.get(settingValue);
         if (secretId != null) {
-          isMigrationSuccess = isMigrationSuccess && migrateSecret(secretId, encryptedField, settingAttribute);
+          isMigrationSuccess = isMigrationSuccess
+              && migrateSecret(secretId, EncryptionReflectUtils.getEncryptedFieldTag(encryptedField), settingAttribute);
         }
       } catch (IllegalAccessException e) {
         logger.error("Unable to access encrypted field {} for settingAttribute {}", encryptedField.getName(),
@@ -147,7 +150,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
   }
 
   private boolean migrateSecret(
-      @NonNull String secretId, @NonNull Field encryptedField, @NonNull SettingAttribute settingAttribute) {
+      @NonNull String secretId, @NonNull String encryptedFieldName, @NonNull SettingAttribute settingAttribute) {
     EncryptedData secret = wingsPersistence.get(EncryptedData.class, secretId);
     if (secret == null || secret.getType() == SECRET_TEXT) {
       return true;
@@ -155,9 +158,9 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
 
     SettingValue settingValue = settingAttribute.getValue();
     String secretName = Optional.ofNullable(settingAttribute.getName()).orElse(UUIDGenerator.generateUuid());
-    secretName = secretName.concat("_").concat(settingValue.getType()).concat("_").concat(encryptedField.getName());
-    String fieldName = EncryptionReflectUtils.getEncryptedFieldTag(encryptedField);
-    secret.addParent(new EncryptedDataParent(settingAttribute.getUuid(), settingValue.getSettingType(), fieldName));
+    secretName = secretName.concat("_").concat(settingValue.getType()).concat("_").concat(encryptedFieldName);
+    secret.addParent(
+        new EncryptedDataParent(settingAttribute.getUuid(), settingValue.getSettingType(), encryptedFieldName));
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .field(ID_KEY)
@@ -175,5 +178,38 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
     }
 
     return wingsPersistence.findAndModify(query, updateOperations, returnNewOptions) != null;
+  }
+
+  private boolean migrateApmConnector(SettingAttribute settingAttribute) {
+    logger.info("migrating apm connector {}", settingAttribute.getUuid());
+    APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+    final AtomicBoolean isMigrated = new AtomicBoolean(true);
+    if (apmVerificationConfig.getHeadersList() != null) {
+      apmVerificationConfig.getHeadersList()
+          .stream()
+          .filter(keyValues
+              -> keyValues.isEncrypted() && APMVerificationConfig.MASKED_STRING.equals(keyValues.getValue())
+                  && isNotEmpty(keyValues.getEncryptedValue()))
+          .forEach(keyValues -> {
+            isMigrated.compareAndSet(
+                true, migrateSecret(keyValues.getEncryptedValue(), "header." + keyValues.getKey(), settingAttribute));
+            keyValues.setValue(keyValues.getEncryptedValue());
+          });
+    }
+
+    if (apmVerificationConfig.getOptionsList() != null) {
+      apmVerificationConfig.getOptionsList()
+          .stream()
+          .filter(keyValues
+              -> keyValues.isEncrypted() && APMVerificationConfig.MASKED_STRING.equals(keyValues.getValue())
+                  && isNotEmpty(keyValues.getEncryptedValue()))
+          .forEach(keyValues -> {
+            isMigrated.compareAndSet(
+                true, migrateSecret(keyValues.getEncryptedValue(), "option." + keyValues.getKey(), settingAttribute));
+            keyValues.setValue(keyValues.getEncryptedValue());
+          });
+    }
+    wingsPersistence.save(settingAttribute);
+    return isMigrated.get();
   }
 }
