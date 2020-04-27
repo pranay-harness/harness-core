@@ -121,7 +121,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     try (VerificationLogContext ignored = new VerificationLogContext(context.getAccountId(), null,
              context.getStateExecutionInstanceId(), StateType.valueOf(getStateType()), OVERRIDE_ERROR)) {
       getLogger().info("Executing state {}", context.getStateExecutionInstanceId());
-      Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId());
+      Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(
+          context.getAccountId(), context.getStateExecutionInstanceId());
       String corelationId = UUID.randomUUID().toString();
       String delegateTaskId = null;
       VerificationStateAnalysisExecutionData executionData;

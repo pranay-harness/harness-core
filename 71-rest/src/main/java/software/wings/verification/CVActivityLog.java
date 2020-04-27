@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -42,7 +43,7 @@ import java.util.List;
     , @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field(value = "createdAt", type = IndexType.ASC)
   }, options = @IndexOptions(name = "service_guard_idx"))
 })
-public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
   @Indexed private String cvConfigId;
   @Indexed private String stateExecutionId;
@@ -52,6 +53,7 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   @NonNull private String log;
   @NonNull private LogLevel logLevel;
   private List<Long> timestampParams;
+  @Indexed private String accountId;
 
   @Default
   @JsonIgnore

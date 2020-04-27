@@ -124,8 +124,9 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     FieldUtils.writeField(service, "cvActivityLogService", cvActivityLogService, true);
     FieldUtils.writeField(service, "prometheusAnalysisService", prometheusAnalysisService, true);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
-    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyString(), anyLong()))
+        .thenReturn(mock(Logger.class));
   }
 
   @Test

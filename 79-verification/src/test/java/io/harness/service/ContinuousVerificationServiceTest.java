@@ -294,8 +294,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
     writeField(alertService, "injector", injector, true);
     writeField(managerVerificationService, "alertService", alertService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
-    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyString(), anyLong())).thenReturn(activityLogger);
     when(verificationManagerClient.triggerCVDataCollection(anyString(), anyObject(), anyLong(), anyLong()))
         .then(invocation -> {
           Object[] args = invocation.getArguments();

@@ -741,7 +741,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .dataCollectionInfo(dataCollectionInfo)
                         .build();
     cvTaskService.saveCVTask(cvTask);
-    cvActivityLogService.getLoggerByCVConfigId(cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
+    cvActivityLogService
+        .getLoggerByCVConfigId(
+            cvConfiguration.getAccountId(), cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
         .info("Enqueued service guard task for data collection for time range %t to %t", startTime, endTime);
   }
 

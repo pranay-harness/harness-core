@@ -37,8 +37,10 @@ import java.util.stream.IntStream;
 public class CVActivityLogServiceTest extends WingsBaseTest {
   @Inject CVActivityLogService cvActivityLogService;
   private String stateExecutionId;
+  private String accountId;
   @Before
   public void setupTests() {
+    accountId = generateUuid();
     stateExecutionId = generateUuid();
   }
   @Test
@@ -49,7 +51,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
 
-    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
+    cvActivityLogService.getLoggerByCVConfigId(accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
         .info("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
@@ -65,7 +67,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
     long nextMinute = Instant.ofEpochMilli(now).plus(1, ChronoUnit.MINUTES).toEpochMilli();
-    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
+    cvActivityLogService.getLoggerByCVConfigId(accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
         .info("activity log from test at minute %t and another minute %t", now, nextMinute);
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
@@ -80,14 +82,14 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   public void testGetAnsi() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
-    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
+    cvActivityLogService.getLoggerByCVConfigId(accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
         .error("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
     assertThat(cvActivityLog.getAnsiLog()).isEqualTo("\u001B[31mactivity log from test\u001B[0m");
 
     cvConfigId = generateUuid();
-    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
+    cvActivityLogService.getLoggerByCVConfigId(accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
         .info("activity log from test");
     cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
@@ -131,7 +133,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   public void testFindByStateExecutionId() {
     String stateExecutionId = generateUuid();
     String logLine = "test log message: " + generateUuid();
-    cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).info(logLine);
+    cvActivityLogService.getLoggerByStateExecutionId(accountId, stateExecutionId).info(logLine);
     List<CVActivityLog> activityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
     assertThat(activityLogs).hasSize(1);
     assertThat(activityLogs.get(0).getStateExecutionId()).isEqualTo(stateExecutionId);
@@ -179,7 +181,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetActivityLogs_whenNoAnalysisContextAvailable() {
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
+    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(accountId, stateExecutionId, null, 0, 0);
     assertThat(result).hasSize(1);
     CVActivityLog placeholder = result.get(0);
     assertThat(placeholder.getDataCollectionMinute()).isEqualTo(0);
@@ -201,7 +203,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
         AnalysisContext.builder().stateExecutionId(stateExecutionId).appId(appId).accountId(generateUuid()).build();
     wingsPersistence.save(analysisContext);
     when(workflowService.getExecutionStatus(eq(appId), eq(stateExecutionId))).thenReturn(ExecutionStatus.FAILED);
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
+    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(accountId, stateExecutionId, null, 0, 0);
     assertThat(result).hasSize(1);
     CVActivityLog placeholder = result.get(0);
     assertThat(placeholder.getDataCollectionMinute()).isEqualTo(0);
@@ -223,7 +225,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
         AnalysisContext.builder().stateExecutionId(stateExecutionId).appId(appId).accountId(generateUuid()).build();
     wingsPersistence.save(analysisContext);
     when(workflowService.getExecutionStatus(eq(appId), eq(stateExecutionId))).thenReturn(ExecutionStatus.RUNNING);
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
+    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(accountId, stateExecutionId, null, 0, 0);
     assertThat(result).isEmpty();
   }
 
@@ -239,7 +241,8 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     createLog(cvConfigId, nowMinute + 1, "log line");
     assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, nowMinute, nowMinute - 1))
         .isEqualTo(Collections.emptyList());
-    List<CVActivityLog> activityLogs = cvActivityLogService.getActivityLogs(null, cvConfigId, nowMinute, nowMinute);
+    List<CVActivityLog> activityLogs =
+        cvActivityLogService.getActivityLogs(accountId, null, cvConfigId, nowMinute, nowMinute);
     assertThat(activityLogs).hasSize(1);
     assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(activityLogs.get(0).getStateExecutionId()).isNull();

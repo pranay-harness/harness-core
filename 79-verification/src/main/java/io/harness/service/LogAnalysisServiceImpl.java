@@ -276,8 +276,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               ClusterLevel.getHeartBeatLevel(ClusterLevel.L0), ClusterLevel.getHeartBeatLevel(ClusterLevel.L1));
           deleteClusterLevel(stateType, stateExecutionId, appId, query, Collections.singleton(node),
               logCollectionMinute, ClusterLevel.L0);
-          learningEngineService.markCompleted(
-              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
+          learningEngineService.markCompleted(accountId, workflowExecutionId, stateExecutionId, logCollectionMinute,
+              MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
           break;
         case L2:
           bumpClusterLevel(stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute,
@@ -285,7 +285,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           deleteClusterLevel(
               stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute, ClusterLevel.L1);
           learningEngineService.markCompleted(
-              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
+              accountId, workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
           break;
         default:
           Switch.unhandled(clusterLevel);
@@ -359,8 +359,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         deleteClusterLevel(cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
         if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0, H0))) {
           try {
-            learningEngineService.markCompleted(null, "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute,
-                logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
+            learningEngineService.markCompleted(logsCVConfiguration.getAccountId(), null,
+                "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute, logCollectionMinute,
+                MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
           } catch (DuplicateKeyException e) {
             logger.info(
                 "for {} task for L1 clustering min {} has already marked completed", cvConfigId, logCollectionMinute);
@@ -369,8 +370,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         break;
       case L2:
         deleteClusterLevel(cvConfigId, null, logCollectionMinute, ClusterLevel.L1, L2);
-        learningEngineService.markCompleted(null, "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute,
-            logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
+        learningEngineService.markCompleted(logsCVConfiguration.getAccountId(), null,
+            "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute, logCollectionMinute,
+            MLAnalysisType.LOG_CLUSTER, L2);
         break;
       default:
         Switch.unhandled(clusterLevel);
@@ -605,8 +607,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   private void logAnalysisSummaryMessage(LogMLAnalysisRecord mlAnalysisResponse) {
     if (isNotEmpty(mlAnalysisResponse.getAnalysisSummaryMessage())) {
       cvActivityLogService
-          .getLogger(mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getLogCollectionMinute(),
-              mlAnalysisResponse.getStateExecutionId())
+          .getLogger(mlAnalysisResponse.getAccountId(), mlAnalysisResponse.getCvConfigId(),
+              mlAnalysisResponse.getLogCollectionMinute(), mlAnalysisResponse.getStateExecutionId())
           .warn("Learning engine: " + mlAnalysisResponse.getAnalysisSummaryMessage());
     }
   }

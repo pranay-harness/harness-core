@@ -51,6 +51,7 @@ public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogSe
                                       .stateExecutionId(stateExecutionId)
                                       .dataCollectionMinute(dataCollectionMinute)
                                       .timestampParams(timestampParamList)
+                                      .accountId(accountId)
                                       .build();
       delegateLogService.save(accountId, activityLog);
     }

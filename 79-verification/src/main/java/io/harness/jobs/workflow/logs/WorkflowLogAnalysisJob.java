@@ -127,7 +127,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
         }
 
         if (managerClientHelper.isFeatureFlagEnabled(FeatureName.OUTAGE_CV_DISABLE, context.getAccountId())) {
-          cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+          cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionId())
               .info("Continuous Verification is disabled for your account. Please contact harness support.");
           completeCron = true;
         }

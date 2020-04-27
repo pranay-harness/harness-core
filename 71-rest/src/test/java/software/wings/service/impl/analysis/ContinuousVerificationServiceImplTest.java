@@ -176,7 +176,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
       { put(appId, buildAppPermissionSummary()); }
     });
 
-    when(cvActivityLogService.getLoggerByStateExecutionId(any())).thenReturn(logger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(any(), any())).thenReturn(logger);
 
     when(featureFlagService.isEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId)).thenReturn(false);
 

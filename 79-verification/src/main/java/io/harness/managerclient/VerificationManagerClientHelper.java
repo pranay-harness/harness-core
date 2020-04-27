@@ -54,9 +54,10 @@ public class VerificationManagerClientHelper {
   public void notifyManagerForVerificationAnalysis(AnalysisContext context, VerificationDataAnalysisResponse response) {
     Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
     if (response.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info("Analysis successful");
+      cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionId())
+          .info("Analysis successful");
     } else {
-      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+      cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionId())
           .error("Analysis failed with error: " + response.getStateExecutionData().getErrorMsg());
     }
     callManagerWithRetry(managerClient.sendNotifyForVerificationState(headers, context.getCorrelationId(), response));

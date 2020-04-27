@@ -242,20 +242,26 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (task != null && task.getMl_analysis_type() == MLAnalysisType.TIME_SERIES) {
       if (isAnalysisMinuteAbsoluteTimestamp(task.getAnalysis_minute())) {
         if (task.is24x7Task()) {
-          cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+          cvActivityLogService
+              .getLogger(
+                  task.getAccountId(), task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
               .info("Time series analysis started for time range %t to %t",
                   TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES
                       + 1), // both startTime and endTime are inclusive
                   TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()));
         } else {
-          cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+          cvActivityLogService
+              .getLogger(
+                  task.getAccountId(), task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
               .info("Time series analysis started for time range %t to %t",
                   TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
                   TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
         }
 
       } else {
-        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+        cvActivityLogService
+            .getLogger(
+                task.getAccountId(), task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
             .info("Time series analysis started for minute " + task.getAnalysis_minute() + ".");
       }
     }
@@ -306,7 +312,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public void markCompleted(String workflowExecutionId, String stateExecutionId, long analysisMinute,
+  public void markCompleted(String accountId, String workflowExecutionId, String stateExecutionId, long analysisMinute,
       MLAnalysisType type, ClusterLevel level) {
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -320,8 +326,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     wingsPersistence.update(query, updateOperations);
-    logActivityOnAnalysisComplete(
-        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), level, type, analysisMinute, false);
+    logActivityOnAnalysisComplete(cvActivityLogService.getLoggerByStateExecutionId(accountId, stateExecutionId), level,
+        type, analysisMinute, false);
   }
 
   @Override
@@ -333,8 +339,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
         LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
-    logActivityOnAnalysisComplete(
-        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id()),
+    logActivityOnAnalysisComplete(cvActivityLogService.getLogger(task.getAccountId(), task.getCvConfigId(),
+                                      task.getAnalysis_minute(), task.getState_execution_id()),
         ClusterLevel.valueOf(task.getCluster_level()), task.getMl_analysis_type(), task.getAnalysis_minute(),
         task.is24x7Task());
     logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
@@ -467,8 +473,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     // TODO: Looks like this is not getting called from LE now. Test this once LE start calling this method.
     cvActivityLogService
-        .getLogger(
-            analysisTask.getCvConfigId(), analysisTask.getAnalysis_minute(), analysisTask.getState_execution_id())
+        .getLogger(analysisTask.getAccountId(), analysisTask.getCvConfigId(), analysisTask.getAnalysis_minute(),
+            analysisTask.getState_execution_id())
         .warn("Error while processing analysis task for "
                 + ClusterLevel.valueOf(analysisTask.getCluster_level()).getClusteringPhase()
                 + ". Analysis minute %t Error: " + learningEngineError.getErrorMsg(),

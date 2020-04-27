@@ -1702,9 +1702,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         ? "The state was marked " + status.name().toLowerCase()
         : "The state was marked " + status.name().toLowerCase() + " by " + user.getName() + "(" + user.getEmail() + ")";
     if (status == ExecutionStatus.SUCCESS) {
-      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).info(message);
+      cvActivityLogService.getLoggerByStateExecutionId(analysisContext.getAccountId(), stateExecutionId).info(message);
     } else {
-      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).error(message);
+      cvActivityLogService.getLoggerByStateExecutionId(analysisContext.getAccountId(), stateExecutionId).error(message);
     }
     if (getLogAnalysisStates().contains(analysisContext.getStateType())) {
       final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
@@ -1850,7 +1850,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build(),
         waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
-    cvActivityLogService.getLoggerByCVConfigId(cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
+    cvActivityLogService
+        .getLoggerByCVConfigId(
+            cvConfiguration.getAccountId(), cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
         .info("Submitting service guard data collection task for time range %t to %t.", startTime, endTime);
     delegateService.queueTask(task);
     return true;

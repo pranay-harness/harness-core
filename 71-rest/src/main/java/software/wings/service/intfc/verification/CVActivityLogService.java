@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface CVActivityLogService {
   List<CVActivityLog> findByCVConfigId(String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
-  Logger getLogger(String cvConfigId, long dataCollectionMinute, String stateExecutionId);
-  Logger getLoggerByCVConfigId(String cvConfigId, long dataCollectionMinute);
-  Logger getLoggerByStateExecutionId(String stateExecutionId);
+  Logger getLogger(String accountId, String cvConfigId, long dataCollectionMinute, String stateExecutionId);
+  Logger getLoggerByCVConfigId(String accountId, String cvConfigId, long dataCollectionMinute);
+  Logger getLoggerByStateExecutionId(String accountId, String stateExecutionId);
   List<CVActivityLog> findByStateExecutionId(String stateExecutionId);
   void saveActivityLogs(List<CVActivityLog> cvActivityLogs);
   List<CVActivityLog> getActivityLogs(
-      String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
+      String accountId, String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute);
 
   interface Logger {
     default void info(String log, long... timestampParams) {
