@@ -4,6 +4,7 @@ import io.harness.annotations.Redesign;
 import io.harness.facilitate.PassThroughData;
 import io.harness.facilitate.modes.sync.SyncExecutable;
 import io.harness.state.State;
+import io.harness.state.StateType;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
@@ -16,6 +17,8 @@ import java.util.List;
 @Slf4j
 @Redesign
 public class DummyState implements State, SyncExecutable {
+  public static final String STATE_TYPE = "DUMMY";
+
   @Override
   public StateResponse executeSync(
       Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData) {
@@ -24,7 +27,7 @@ public class DummyState implements State, SyncExecutable {
   }
 
   @Override
-  public String getStateType() {
-    return "DUMMY";
+  public StateType getStateType() {
+    return StateType.builder().type(STATE_TYPE).build();
   }
 }

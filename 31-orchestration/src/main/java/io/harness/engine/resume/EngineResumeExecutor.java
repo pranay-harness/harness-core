@@ -8,6 +8,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.modes.async.AsyncExecutable;
+import io.harness.facilitate.modes.child.ChildExecutable;
 import io.harness.facilitate.modes.children.ChildrenExecutable;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StateRegistry;
@@ -57,6 +58,9 @@ public class EngineResumeExecutor implements Runnable {
         case ASYNC:
           resumeAsyncExecutable(node);
           break;
+        case CHILD:
+          resumeChildExecutable(node);
+          break;
         default:
           throw new InvalidRequestException(
               "Resume not handled for execution Mode : " + executionNodeInstance.getMode());
@@ -78,6 +82,13 @@ public class EngineResumeExecutor implements Runnable {
     ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
     StateResponse stateResponse = childrenExecutable.handleAsyncResponse(
         executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
+    executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
+  }
+
+  private void resumeChildExecutable(ExecutionNode node) {
+    ChildExecutable childExecutable = (ChildExecutable) stateRegistry.obtain(node.getStateType());
+    StateResponse stateResponse =
+        childExecutable.handleAsyncResponse(executionNodeInstance.getAmbiance(), node.getStateParameters(), response);
     executionEngine.handleStateResponse(executionNodeInstance.getUuid(), stateResponse);
   }
 }

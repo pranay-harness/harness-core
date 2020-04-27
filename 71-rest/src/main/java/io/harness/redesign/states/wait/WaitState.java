@@ -11,6 +11,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitate.modes.async.AsyncExecutable;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
 import io.harness.state.State;
+import io.harness.state.StateType;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
@@ -20,7 +21,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.sm.ExecutionStatusData;
-import software.wings.sm.StateType;
 import software.wings.sm.states.SimpleNotifier;
 
 import java.util.List;
@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 @Redesign
 public class WaitState implements State, AsyncExecutable {
+  public static final String STATE_TYPE = "WAIT";
+
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -54,7 +56,7 @@ public class WaitState implements State, AsyncExecutable {
   }
 
   @Override
-  public String getStateType() {
-    return StateType.WAIT.name();
+  public StateType getStateType() {
+    return StateType.builder().type(STATE_TYPE).build();
   }
 }
