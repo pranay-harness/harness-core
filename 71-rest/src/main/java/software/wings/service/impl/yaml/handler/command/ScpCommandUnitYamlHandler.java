@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.command;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -40,7 +39,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
   }
 
   @Override
-  protected ScpCommandUnit toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  protected ScpCommandUnit toBean(ChangeContext<Yaml> changeContext) {
     ScpCommandUnit scpCommandUnit = super.toBean(changeContext);
     Yaml yaml = changeContext.getYaml();
     scpCommandUnit.setDestinationDirectoryPath(yaml.getDestinationDirectoryPath());

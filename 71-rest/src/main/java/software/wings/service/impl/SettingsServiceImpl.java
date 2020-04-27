@@ -146,6 +146,8 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1033,6 +1035,8 @@ public class SettingsServiceImpl implements SettingsService {
     } else if (settingAttribute.getCategory() == SettingCategory.HELM_REPO) {
       ensureHelmConnectorSafeToDelete(settingAttribute);
     }
+
+    ensureNotReferencedInServiceGuard(settingAttribute);
   }
 
   private void ensureHelmConnectorSafeToDelete(SettingAttribute settingAttribute) {
@@ -1199,6 +1203,22 @@ public class SettingsServiceImpl implements SettingsService {
         format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
             artifactStreamNames.size(), plural("Source", artifactStreamNames.size()), join(", ", artifactStreamNames)),
         USER);
+  }
+
+  private void ensureNotReferencedInServiceGuard(SettingAttribute settingAttribute) {
+    final List<CVConfiguration> cvConfigurations =
+        wingsPersistence.createQuery(CVConfiguration.class)
+            .filter(CVConfigurationKeys.accountId, settingAttribute.getAccountId())
+            .filter(CVConfigurationKeys.connectorId, settingAttribute.getUuid())
+            .asList();
+
+    if (isNotEmpty(cvConfigurations)) {
+      List<String> cvConfigNames = cvConfigurations.stream().map(CVConfiguration::getName).collect(toList());
+      throw new InvalidRequestException(
+          format("Connector %s is referenced by %d Service Guard(s). %s [%s].", settingAttribute.getName(),
+              cvConfigurations.size(), plural("Source", cvConfigurations.size()), join(", ", cvConfigNames)),
+          USER);
+    }
   }
 
   /* (non-Javadoc)

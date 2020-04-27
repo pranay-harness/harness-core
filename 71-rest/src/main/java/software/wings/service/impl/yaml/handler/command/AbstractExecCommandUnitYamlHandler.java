@@ -10,7 +10,6 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
@@ -67,7 +66,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   }
 
   @Override
-  protected B toBean(ChangeContext<Y> changeContext) throws HarnessException {
+  protected B toBean(ChangeContext<Y> changeContext) {
     B bean = super.toBean(changeContext);
     Y yaml = changeContext.getYaml();
     ScriptType scriptType = isEmpty(yaml.getScriptType())

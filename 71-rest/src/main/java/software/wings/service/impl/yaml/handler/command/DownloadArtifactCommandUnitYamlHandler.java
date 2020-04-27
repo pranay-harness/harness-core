@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.DownloadArtifactCommandUnit;
 import software.wings.beans.command.DownloadArtifactCommandUnit.Yaml;
@@ -38,8 +37,7 @@ public class DownloadArtifactCommandUnitYamlHandler
   }
 
   @Override
-  protected DownloadArtifactCommandUnit toBean(ChangeContext<DownloadArtifactCommandUnit.Yaml> changeContext)
-      throws HarnessException {
+  protected DownloadArtifactCommandUnit toBean(ChangeContext<DownloadArtifactCommandUnit.Yaml> changeContext) {
     DownloadArtifactCommandUnit.Yaml yaml = changeContext.getYaml();
     DownloadArtifactCommandUnit downloadArtifactCommandUnit = super.toBean(changeContext);
     downloadArtifactCommandUnit.setArtifactVariableName(yaml.getArtifactVariableName());

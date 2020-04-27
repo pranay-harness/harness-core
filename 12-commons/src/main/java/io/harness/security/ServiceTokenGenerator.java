@@ -1,7 +1,6 @@
 package io.harness.security;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 
 import com.google.common.base.Preconditions;
 
@@ -9,7 +8,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -47,7 +46,7 @@ public class ServiceTokenGenerator {
           .withIssuedAt(new Date())
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+      throw new InvalidRequestException("error creating jwt token", exception);
     }
   }
 }

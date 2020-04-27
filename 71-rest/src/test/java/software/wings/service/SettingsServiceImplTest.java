@@ -77,6 +77,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -291,7 +292,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
-  public void shouldDelete() {
+  public void shouldDelete() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withAppId("APP_ID")
                                             .withAccountId("ACCOUNT_ID")

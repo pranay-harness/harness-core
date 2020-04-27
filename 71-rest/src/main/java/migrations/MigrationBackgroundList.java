@@ -41,6 +41,7 @@ import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
+import migrations.all.DisableServiceGuardsWithDeletedConnectorsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
@@ -211,6 +212,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(122, AddAccountIdToWorkflowExecutionBaselines.class))
         .add(Pair.of(123, AddAccountIdToTimeSeriesKeyTransaction.class))
         .add(Pair.of(124, CreatePrimiryProfileForAllAccounts.class))
+        .add(Pair.of(125, DisableServiceGuardsWithDeletedConnectorsMigration.class))
         .build();
   }
 }

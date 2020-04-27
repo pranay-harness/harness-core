@@ -7,7 +7,6 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
@@ -45,8 +44,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
   }
 
   @Override
-  public Command upsertFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public Command upsertFromYaml(ChangeContext<CommandRefYaml> changeContext, List<ChangeContext> changeSetContext) {
     Command commandRef = super.toBean(changeContext);
     CommandRefYaml yaml = changeContext.getYaml();
     commandRef.setReferenceId(yaml.getName());
@@ -92,7 +90,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
         notNullCheck("No command found with the given name:" + commandName, serviceCommand, USER);
 
       } else {
-        throw new HarnessException("No command with the given name: " + yaml.getName());
+        throw new IllegalArgumentException("No command with the given name: " + yaml.getName());
       }
     }
 

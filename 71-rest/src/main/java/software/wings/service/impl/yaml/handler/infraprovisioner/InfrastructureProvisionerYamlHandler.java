@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.FeatureName;
@@ -204,7 +203,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
   }
 
   @Override
-  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Y> changeContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

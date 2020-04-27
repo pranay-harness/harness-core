@@ -4,7 +4,6 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
@@ -37,8 +36,7 @@ public class CopyConfigCommandUnitYamlHandler
   }
 
   @Override
-  protected CopyConfigCommandUnit toBean(ChangeContext<CopyConfigCommandUnit.Yaml> changeContext)
-      throws HarnessException {
+  protected CopyConfigCommandUnit toBean(ChangeContext<CopyConfigCommandUnit.Yaml> changeContext) {
     CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(changeContext);
     Yaml yaml = changeContext.getYaml();
     copyConfigCommandUnit.setDestinationParentPath(yaml.getDestinationParentPath());
