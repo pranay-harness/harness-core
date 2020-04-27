@@ -130,6 +130,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
+import org.apache.http.client.utils.URIBuilder;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
@@ -177,6 +178,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.net.ConnectException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -296,7 +298,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
 
   private Socket socket;
-  private RequestBuilder request;
+  private RequestBuilder requestBuilder;
   private String upgradeVersion;
   private String migrateTo;
   private long startTime;
@@ -415,29 +417,33 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
 
+        URIBuilder uriBuilder =
+            new URIBuilder(delegateConfiguration.getManagerUrl())
+                .setPath("/stream/delegate/" + accountId)
+                .addParameter("delegateId", delegateId)
+                .addParameter("delegateConnectionId", delegateConnectionId)
+                .addParameter("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
+                .addParameter("sequenceNum", getSequenceNumForEcsDelegate())
+                .addParameter("delegateToken", getRandomTokenForEcsDelegate());
+
+        String uri = uriBuilder.build().toString();
+
         // Stream the request body
         RequestBuilder reqBuilder =
-            client.newRequestBuilder()
-                .method(METHOD.GET)
-                .uri(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
-                .queryString("delegateId", delegateId)
-                .queryString("delegateConnectionId", delegateConnectionId)
-                .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
-                .queryString("sequenceNum", getSequenceNumForEcsDelegate())
-                .queryString("delegateToken", getRandomTokenForEcsDelegate())
-                .header("Version", getVersion());
+            client.newRequestBuilder().method(METHOD.GET).uri(uri).header("Version", getVersion());
         if (delegateConfiguration.isProxy()) {
           reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
         }
 
-        request = reqBuilder
-                      .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
-                        @Override
-                        public Reader encode(Delegate s) {
-                          return new StringReader(JsonUtils.asJson(s));
-                        }
-                      })
-                      .transport(TRANSPORT.WEBSOCKET);
+        requestBuilder =
+            reqBuilder
+                .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
+                  @Override
+                  public Reader encode(Delegate s) {
+                    return new StringReader(JsonUtils.asJson(s));
+                  }
+                })
+                .transport(TRANSPORT.WEBSOCKET);
 
         Options clientOptions =
             client.newOptionsBuilder()
@@ -476,7 +482,7 @@ public class DelegateServiceImpl implements DelegateService {
               }
             });
 
-        socket.open(request.build());
+        socket.open(requestBuilder.build());
 
         startHeartbeat(builder, socket);
         startKeepAlivePacket(builder, socket);
@@ -574,7 +580,8 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Exception while starting/running delegate", e);
-    } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
+    } catch (
+        RuntimeException | URISyntaxException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
       logger.error("Exception while starting/running delegate", e);
     }
   }
@@ -644,7 +651,7 @@ public class DelegateServiceImpl implements DelegateService {
         // Ignore
       }
       try {
-        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
+        FibonacciBackOff.executeForEver(() -> socket.open(requestBuilder.build()));
       } catch (IOException ex) {
         logger.error("Unable to open socket", e);
       }
@@ -741,7 +748,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void resume() {
     try {
       if (!delegateConfiguration.isPollForTasks()) {
-        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
+        FibonacciBackOff.executeForEver(() -> socket.open(requestBuilder.build()));
       }
       upgradePending.set(false);
       upgradeNeeded.set(false);
