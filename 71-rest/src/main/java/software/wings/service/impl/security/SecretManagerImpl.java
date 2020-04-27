@@ -2063,11 +2063,7 @@ public class SecretManagerImpl implements SecretManager {
     if (encryptedData == null) {
       return null;
     }
-
-    if (usageRestrictionsService.hasNoRestrictions(encryptedData.getUsageRestrictions())) {
-      encryptedData.setScopedToAccount(true);
-    }
-
+    encryptedData.setScopedToAccount(usageRestrictionsService.hasNoRestrictions(encryptedData.getUsageRestrictions()));
     return wingsPersistence.save(encryptedData);
   }
 
