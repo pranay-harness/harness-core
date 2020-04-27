@@ -9,6 +9,7 @@ import com.google.inject.name.Names;
 
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
+import io.harness.ccm.setup.graphql.CeConnectorDataFetcher;
 import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
 import io.harness.ccm.setup.graphql.LinkedAccountStatsDataFetcher;
@@ -220,6 +221,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ClusterDataFetcher.class);
     bindDataFetcherWithAnnotation(ClusterConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ConnectorConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(CeConnectorDataFetcher.class);
     bindDataFetcherWithAnnotation(ConnectorStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderStatsDataFetcher.class);

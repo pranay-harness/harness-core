@@ -12,9 +12,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECloudAccount.AccountStatus;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.security.UserThreadLocal;
 
 import java.sql.SQLException;
@@ -35,15 +37,55 @@ public class LinkedAccountStatsDataFetcherTest extends AbstractDataFetcherTest {
     UserThreadLocal.set(user);
 
     createAccount(ACCOUNT1_ID, getLicenseInfo());
-    CECloudAccount ceCloudAccount = CECloudAccount.builder()
-                                        .accountId(ACCOUNT1_ID)
-                                        .infraAccountId(INFRA_ACCOUNT_ID)
-                                        .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
-                                        .accountArn(INFRA_ACCOUNT_ARN)
-                                        .accountName(INFRA_ACCOUNT_NAME)
-                                        .masterAccountSettingId(SETTING_ID1)
-                                        .build();
-    createCECloudAccount(ceCloudAccount);
+    CECloudAccount ceCloudAccountConnected = CECloudAccount.builder()
+                                                 .accountId(ACCOUNT1_ID)
+                                                 .infraAccountId(INFRA_ACCOUNT_ID)
+                                                 .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
+                                                 .accountArn(INFRA_ACCOUNT_ARN)
+                                                 .accountName(INFRA_ACCOUNT_NAME)
+                                                 .masterAccountSettingId(SETTING_ID1)
+                                                 .accountStatus(AccountStatus.CONNECTED)
+                                                 .build();
+
+    CECloudAccount ceCloudAccountNotConnected = CECloudAccount.builder()
+                                                    .accountId(ACCOUNT1_ID)
+                                                    .infraAccountId(INFRA_ACCOUNT_ID)
+                                                    .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
+                                                    .accountArn(INFRA_ACCOUNT_ARN)
+                                                    .accountName(INFRA_ACCOUNT_NAME)
+                                                    .masterAccountSettingId(SETTING_ID1)
+                                                    .accountStatus(AccountStatus.NOT_CONNECTED)
+                                                    .build();
+
+    CECloudAccount ceCloudAccountNotVerified = CECloudAccount.builder()
+                                                   .accountId(ACCOUNT1_ID)
+                                                   .infraAccountId(INFRA_ACCOUNT_ID)
+                                                   .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
+                                                   .accountArn(INFRA_ACCOUNT_ARN)
+                                                   .accountName(INFRA_ACCOUNT_NAME)
+                                                   .masterAccountSettingId(SETTING_ID1)
+                                                   .accountStatus(AccountStatus.NOT_VERIFIED)
+                                                   .build();
+
+    createCECloudAccount(ceCloudAccountConnected);
+    createCECloudAccount(ceCloudAccountNotConnected);
+    createCECloudAccount(ceCloudAccountNotVerified);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testFetchConnectionWithASCSort() {
+    List<QLCESetupFilter> filters = Arrays.asList(getMasterAccountSettingIdFilter());
+    List<QLCESetupSortCriteria> sortCriteria = Arrays.asList(getSortByASCAccountStatus());
+    QLLinkedAccountData data = linkedAccountStatsDataFetcher.fetchConnection(filters, null, sortCriteria);
+    assertThat(data.getLinkedAccounts().get(0).getId()).isEqualTo(INFRA_ACCOUNT_ID);
+    assertThat(data.getLinkedAccounts().get(0).getName()).isEqualTo(INFRA_ACCOUNT_NAME);
+    assertThat(data.getLinkedAccounts().get(0).getArn()).isEqualTo(INFRA_ACCOUNT_ARN);
+    assertThat(data.getLinkedAccounts().get(0).getMasterAccountId()).isEqualTo(INFRA_MASTER_ACCOUNT_ID);
+    assertThat(data.getLinkedAccounts().get(0).getAccountStatus()).isEqualTo(AccountStatus.CONNECTED);
+    assertThat(data.getLinkedAccounts().get(1).getAccountStatus()).isEqualTo(AccountStatus.NOT_CONNECTED);
+    assertThat(data.getLinkedAccounts().get(2).getAccountStatus()).isEqualTo(AccountStatus.NOT_VERIFIED);
   }
 
   @Test
@@ -51,12 +93,14 @@ public class LinkedAccountStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testFetchConnection() {
     List<QLCESetupFilter> filters = Arrays.asList(getMasterAccountSettingIdFilter());
-    QLLinkedAccountData data = linkedAccountStatsDataFetcher.fetchConnection(filters, null, null);
-    assertThat(data.getCount()).isEqualTo(1);
-    assertThat(data.getLinkedAccounts().get(0).getId()).isEqualTo(INFRA_ACCOUNT_ID);
-    assertThat(data.getLinkedAccounts().get(0).getName()).isEqualTo(INFRA_ACCOUNT_NAME);
-    assertThat(data.getLinkedAccounts().get(0).getArn()).isEqualTo(INFRA_ACCOUNT_ARN);
-    assertThat(data.getLinkedAccounts().get(0).getMasterAccountId()).isEqualTo(INFRA_MASTER_ACCOUNT_ID);
+    List<QLCESetupSortCriteria> sortCriteria = Arrays.asList(getSortByDESCAccountStatus());
+    QLLinkedAccountData data = linkedAccountStatsDataFetcher.fetchConnection(filters, null, sortCriteria);
+    assertThat(data.getCount().getCountOfConnected()).isEqualTo(1);
+    assertThat(data.getCount().getCountOfNotConnected()).isEqualTo(1);
+    assertThat(data.getCount().getCountOfNotVerified()).isEqualTo(1);
+    assertThat(data.getLinkedAccounts().get(0).getAccountStatus()).isEqualTo(AccountStatus.NOT_VERIFIED);
+    assertThat(data.getLinkedAccounts().get(1).getAccountStatus()).isEqualTo(AccountStatus.NOT_CONNECTED);
+    assertThat(data.getLinkedAccounts().get(2).getAccountStatus()).isEqualTo(AccountStatus.CONNECTED);
   }
 
   private QLCESetupFilter getMasterAccountSettingIdFilter() {
@@ -64,6 +108,14 @@ public class LinkedAccountStatsDataFetcherTest extends AbstractDataFetcherTest {
         .masterAccountSettingId(
             QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {SETTING_ID1}).build())
         .build();
+  }
+
+  private QLCESetupSortCriteria getSortByDESCAccountStatus() {
+    return QLCESetupSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLCESetupSortType.status).build();
+  }
+
+  private QLCESetupSortCriteria getSortByASCAccountStatus() {
+    return QLCESetupSortCriteria.builder().sortOrder(QLSortOrder.ASCENDING).sortType(QLCESetupSortType.status).build();
   }
 
   @Test

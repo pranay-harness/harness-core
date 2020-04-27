@@ -13,20 +13,20 @@ import com.amazonaws.services.eks.AmazonEKSClient;
 import com.amazonaws.services.eks.model.AmazonEKSException;
 import com.amazonaws.services.eks.model.ListClustersRequest;
 import com.amazonaws.services.eks.model.ListClustersResult;
+import com.amazonaws.services.securitytoken.model.AWSSecurityTokenServiceException;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.util.List;
 
 public class AwsEKSHelperServiceImplTest extends CategoryTest {
-  @Spy @InjectMocks private AwsEKSHelperServiceImpl awsEKSHelperService;
+  @Spy private AwsEKSHelperServiceImpl awsEKSHelperService;
 
   @Before
   public void setUp() throws Exception {
@@ -68,5 +68,33 @@ public class AwsEKSHelperServiceImplTest extends CategoryTest {
         .listClusters(new ListClustersRequest().withNextToken(null));
     List<String> eksClusters = awsEKSHelperService.listEKSClusters(any(), any());
     assertThat(eksClusters).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testVerifyAccessWhenAccessIsNotGiven() {
+    AmazonEKSClient mockClient = mock(AmazonEKSClient.class);
+    doReturn(mockClient).when(awsEKSHelperService).getAmazonEKSClient(any(), any());
+
+    doThrow(new AWSSecurityTokenServiceException("Security Exception"))
+        .when(mockClient)
+        .listClusters(new ListClustersRequest().withNextToken(null));
+    boolean verifyAccess = awsEKSHelperService.verifyAccess(any(), any());
+    assertThat(verifyAccess).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testVerifyAccessWhenAccessIsGiven() {
+    AmazonEKSClient mockClient = mock(AmazonEKSClient.class);
+    doReturn(mockClient).when(awsEKSHelperService).getAmazonEKSClient(any(), any());
+
+    doReturn(new ListClustersResult().withClusters(ImmutableList.of("cluster3", "cluster4")).withNextToken(null))
+        .when(mockClient)
+        .listClusters(new ListClustersRequest().withNextToken(null));
+    boolean verifyAccess = awsEKSHelperService.verifyAccess(any(), any());
+    assertThat(verifyAccess).isTrue();
   }
 }

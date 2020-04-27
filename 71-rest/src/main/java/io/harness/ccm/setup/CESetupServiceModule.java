@@ -12,8 +12,10 @@ import io.harness.ccm.setup.service.impl.AWSAccountServiceImpl;
 import io.harness.ccm.setup.service.impl.AwsEKSClusterServiceImpl;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
+import io.harness.ccm.setup.service.support.impl.AWSCEConfigValidationServiceImpl;
 import io.harness.ccm.setup.service.support.impl.AWSOrganizationHelperServiceImpl;
 import io.harness.ccm.setup.service.support.impl.AwsEKSHelperServiceImpl;
+import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 
@@ -34,6 +36,7 @@ public class CESetupServiceModule extends AbstractModule {
     bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
     bind(AWSAccountService.class).to(AWSAccountServiceImpl.class);
     bind(GcpBillingAccountService.class).to(GcpBillingAccountServiceImpl.class);
+    bind(AWSCEConfigValidationService.class).to(AWSCEConfigValidationServiceImpl.class);
     bind(GcpOrganizationService.class).to(GcpOrganizationServiceImpl.class);
     bind(CEGcpServiceAccountService.class).to(CEGcpServiceAccountServiceImpl.class);
   }

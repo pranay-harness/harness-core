@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountService;
+import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -24,11 +25,14 @@ import javax.ws.rs.QueryParam;
 @Path("/billing-accounts")
 @Produces("application/json")
 public class GcpBillingAccountResource {
-  private GcpBillingAccountService gcpBillingAccountService;
+  private final GcpBillingAccountService gcpBillingAccountService;
+  private final AWSAccountService awsAccountService;
 
   @Inject
-  public GcpBillingAccountResource(GcpBillingAccountService gcpBillingAccountService) {
+  public GcpBillingAccountResource(
+      GcpBillingAccountService gcpBillingAccountService, AWSAccountService awsAccountService) {
     this.gcpBillingAccountService = gcpBillingAccountService;
+    this.awsAccountService = awsAccountService;
   }
 
   @POST
@@ -37,6 +41,16 @@ public class GcpBillingAccountResource {
   public RestResponse<String> save(@QueryParam("accountId") String accountId, GcpBillingAccount billingAccount) {
     billingAccount.setAccountId(accountId);
     return new RestResponse<>(gcpBillingAccountService.create(billingAccount));
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("/verify-account")
+  public RestResponse verifyAccess(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
+    awsAccountService.updateAccountPermission(accountId, settingId);
+    return new RestResponse();
   }
 
   @GET

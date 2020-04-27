@@ -1,4 +1,4 @@
-package io.harness.ccm.setup.graphql;
+package io.harness.ccm.setup;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.setup.CEClusterDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

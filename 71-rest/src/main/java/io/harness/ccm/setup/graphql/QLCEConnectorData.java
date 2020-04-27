@@ -10,8 +10,7 @@ import java.util.List;
 
 @Value
 @Builder
-@Scope(PermissionAttribute.ResourceType.LINKED_ACCOUNT)
-public class QLLinkedAccountData implements QLObject {
-  private QLAccountCountStats count;
-  private List<QLLinkedAccount> linkedAccounts;
+@Scope(PermissionAttribute.ResourceType.CE_CONNECTOR)
+public class QLCEConnectorData implements QLObject {
+  private List<QLCEConnector> ceConnectors;
 }

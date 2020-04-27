@@ -3,23 +3,37 @@ package io.harness.ccm.setup.service.impl;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.organizations.model.Account;
+import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
+import io.harness.ccm.setup.util.InfraSetUpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECloudAccount.AccountStatus;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 public class AWSAccountServiceImpl implements AWSAccountService {
+  private final SettingsService settingsService;
+  private final CECloudAccountDao ceCloudAccountDao;
+  private final AwsCEInfraSetupHandler awsCEInfraSetupHandler;
   private final AWSOrganizationHelperService awsOrganizationHelperService;
 
   @Inject
-  public AWSAccountServiceImpl(AWSOrganizationHelperService awsOrganizationHelperService) {
+  public AWSAccountServiceImpl(AWSOrganizationHelperService awsOrganizationHelperService,
+      SettingsService settingsService, CECloudAccountDao ceCloudAccountDao,
+      AwsCEInfraSetupHandler awsCEInfraSetupHandler) {
     this.awsOrganizationHelperService = awsOrganizationHelperService;
+    this.settingsService = settingsService;
+    this.ceCloudAccountDao = ceCloudAccountDao;
+    this.awsCEInfraSetupHandler = awsCEInfraSetupHandler;
   }
 
   @Override
@@ -29,22 +43,47 @@ public class AWSAccountServiceImpl implements AWSAccountService {
         awsOrganizationHelperService.listAwsAccounts(ceAwsConfig.getAwsCrossAccountAttributes());
     String masterAwsAccountId =
         getMasterAccountIdFromArn(ceAwsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn());
+    String externalId = ceAwsConfig.getAwsCrossAccountAttributes().getExternalId();
     accountList.forEach(account -> {
       String awsAccountId = getAccountIdFromArn(account.getArn());
       if (!awsAccountId.equals(masterAwsAccountId)) {
+        AwsCrossAccountAttributes linkedAwsCrossAccountAttributes =
+            AwsCrossAccountAttributes.builder()
+                .externalId(externalId)
+                .crossAccountRoleArn(InfraSetUpUtils.getLinkedAccountArn(awsAccountId))
+                .build();
         CECloudAccount cloudAccount = CECloudAccount.builder()
                                           .accountId(accountId)
                                           .accountArn(account.getArn())
+                                          .accountStatus(AccountStatus.NOT_VERIFIED)
                                           .accountName(account.getName())
                                           .infraAccountId(awsAccountId)
                                           .infraMasterAccountId(ceAwsConfig.getAwsMasterAccountId())
                                           .masterAccountSettingId(settingId)
+                                          .awsCrossAccountAttributes(linkedAwsCrossAccountAttributes)
                                           .build();
         ceCloudAccounts.add(cloudAccount);
       }
     });
     logger.info("CE cloud account {}", ceCloudAccounts);
     return ceCloudAccounts;
+  }
+
+  @Override
+  public void updateAccountPermission(String accountId, String settingId) {
+    updateAccountPermission(settingsService.getById(accountId, settingId));
+  }
+
+  @Override
+  public void updateAccountPermission(SettingAttribute settingAttribute) {
+    if (null != settingAttribute) {
+      if (settingAttribute.getValue() instanceof CEAwsConfig) {
+        CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
+        List<CECloudAccount> ceCloudAccounts = ceCloudAccountDao.getByMasterAccountId(
+            settingAttribute.getAccountId(), settingAttribute.getUuid(), ceAwsConfig.getAwsAccountId());
+        ceCloudAccounts.forEach(awsCEInfraSetupHandler::updateAccountPermission);
+      }
+    }
   }
 
   public static String getAccountIdFromArn(String arn) {

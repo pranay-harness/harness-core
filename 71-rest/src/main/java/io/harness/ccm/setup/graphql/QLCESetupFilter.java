@@ -13,4 +13,5 @@ public class QLCESetupFilter implements EntityFilter {
   QLIdFilter cloudProviderId;
   QLIdFilter infraMasterAccountId;
   QLIdFilter masterAccountSettingId;
+  QLIdFilter settingId;
 }

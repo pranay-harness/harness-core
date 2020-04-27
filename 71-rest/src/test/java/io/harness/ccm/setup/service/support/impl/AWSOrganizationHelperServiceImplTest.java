@@ -18,14 +18,13 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.util.List;
 
 public class AWSOrganizationHelperServiceImplTest extends CategoryTest {
-  @Spy @InjectMocks private AWSOrganizationHelperServiceImpl awsOrganizationHelperService;
+  @Spy private AWSOrganizationHelperServiceImpl awsOrganizationHelperService;
 
   @Before
   public void setUp() throws Exception {

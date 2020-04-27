@@ -2,6 +2,7 @@ package io.harness.ccm.setup.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,7 @@ import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.CEClusterDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
+import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +41,7 @@ public class AwsCEInfraSetupHandlerTest extends CategoryTest {
   @Mock private CEClusterDao ceClusterDao;
   @Mock private AWSAccountService awsAccountService;
   @Mock private AwsEKSClusterService awsEKSClusterService;
+  @Mock private AwsEKSHelperService awsEKSHelperService;
 
   @Captor private ArgumentCaptor<CECloudAccount> ceCloudCreateAccountArgumentCaptor;
   @Captor private ArgumentCaptor<String> ceCloudDeleteAccountArgumentCaptor;
@@ -93,31 +96,50 @@ public class AwsCEInfraSetupHandlerTest extends CategoryTest {
     List<CECloudAccount> savedCEAccounts = ImmutableList.of(ceCloudAccountSaved);
     List<CECloudAccount> infraAccounts = ImmutableList.of(ceCloudAccount);
 
-    CECluster ceCluster = getCECluster(clusterName, region);
-    CECluster ceClusterCreate = getCECluster(clusterNameCreate, region);
-    CECluster ceClusterDelete = getCECluster(clusterNameDelete, region);
-    ceClusterDelete.setUuid(deleteRecordUUID);
-
-    List<CECluster> savedCEClusters = ImmutableList.of(ceCluster, ceClusterDelete);
-    List<CECluster> infraClusters = ImmutableList.of(ceCluster, ceClusterCreate);
-
-    when(ceCloudAccountDao.getByMasterAccountId(accountId, infraMasterAccountId)).thenReturn(savedCEAccounts);
+    when(ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId))
+        .thenReturn(savedCEAccounts);
     when(awsAccountService.getAWSAccounts(accountId, masterAccountSettingId, ceAwsConfig)).thenReturn(infraAccounts);
-
-    when(ceClusterDao.getByInfraAccountId(accountId, infraMasterAccountId)).thenReturn(savedCEClusters);
-    when(awsEKSClusterService.getEKSCluster(accountId, masterAccountSettingId, ceAwsConfig)).thenReturn(infraClusters);
 
     awsCEInfraSetupHandler.syncCEInfra(settingAttribute);
     verify(ceCloudAccountDao).create(ceCloudCreateAccountArgumentCaptor.capture());
     verify(ceCloudAccountDao).deleteAccount(ceCloudDeleteAccountArgumentCaptor.capture());
-    verify(ceClusterDao).create(ceCreateClusterArgumentCaptor.capture());
-    verify(ceClusterDao).deleteCluster(ceDeleteClusterArgumentCaptor.capture());
     CECloudAccount createCECloudAccount = ceCloudCreateAccountArgumentCaptor.getValue();
     String deleteCECloudAccountUUID = ceCloudDeleteAccountArgumentCaptor.getValue();
-    CECluster createCECluster = ceCreateClusterArgumentCaptor.getValue();
-    String deleteClusterUUID = ceDeleteClusterArgumentCaptor.getValue();
     assertThat(createCECloudAccount.getAccountArn()).isEqualTo(accountArn);
     assertThat(deleteCECloudAccountUUID).isEqualTo(deleteRecordUUID);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testUpdateAccountPermission() {
+    CECloudAccount ceCloudAccount = getCECloudAccount(accountNameDelete, accountArnDelete, infraAccountIdDelete);
+    when(awsEKSHelperService.verifyAccess("us-east-1", ceCloudAccount.getAwsCrossAccountAttributes())).thenReturn(true);
+    boolean verifyAccess = awsCEInfraSetupHandler.updateAccountPermission(ceCloudAccount);
+    assertThat(verifyAccess).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testSyncCEClusters() {
+    CECloudAccount ceCloudAccount = getCECloudAccount(accountNameDelete, accountArnDelete, infraAccountIdDelete);
+    CECluster ceCluster = getCECluster(clusterName, region);
+    CECluster ceClusterCreate = getCECluster(clusterNameCreate, region);
+    CECluster ceClusterDelete = getCECluster(clusterNameDelete, region);
+    ceClusterDelete.setUuid(deleteRecordUUID);
+    List<CECluster> savedCEClusters = ImmutableList.of(ceCluster, ceClusterDelete);
+    List<CECluster> infraClusters = ImmutableList.of(ceCluster, ceClusterCreate);
+
+    when(ceClusterDao.getByInfraAccountId(accountId, infraAccountIdDelete)).thenReturn(savedCEClusters);
+    when(awsEKSClusterService.getEKSCluster(any(), any(), any())).thenReturn(infraClusters);
+    awsCEInfraSetupHandler.syncCEClusters(ceCloudAccount);
+
+    verify(ceClusterDao).create(ceCreateClusterArgumentCaptor.capture());
+    verify(ceClusterDao).deleteCluster(ceDeleteClusterArgumentCaptor.capture());
+
+    CECluster createCECluster = ceCreateClusterArgumentCaptor.getValue();
+    String deleteClusterUUID = ceDeleteClusterArgumentCaptor.getValue();
     assertThat(createCECluster.getClusterName()).isEqualTo(clusterNameCreate);
     assertThat(deleteClusterUUID).isEqualTo(deleteRecordUUID);
   }

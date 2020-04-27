@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -26,10 +28,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.service.intfc.AppService;
@@ -46,6 +51,9 @@ import java.util.stream.Stream;
 
 public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String PASSWORD = "PASSWORD";
+  private static final String S3_REGION = "us-east-1";
+  private static final String S3_BUCKET_NAME = "ceBucket";
+  private static final String ROLE_ARN = "arn:aws:iam::830767422336:role/harnessCERole";
 
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private EnvironmentService environmentService;
@@ -54,8 +62,30 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private AWSCEConfigValidationService awsCeConfigService;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
+
+  @Test
+  @Owner(developers = OwnerRule.ROHIT)
+  @Category(UnitTests.class)
+  public void testValidateAndUpdateCEDetailsMethod() {
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setCategory(SettingCategory.CE_CONNECTOR);
+    CEAwsConfig ceAwsConfig =
+        CEAwsConfig.builder()
+            .s3BucketDetails(AwsS3BucketDetails.builder().s3BucketName(S3_BUCKET_NAME).build())
+            .awsCrossAccountAttributes(AwsCrossAccountAttributes.builder().crossAccountRoleArn(ROLE_ARN).build())
+            .build();
+    attribute.setValue(ceAwsConfig);
+    doReturn(S3_REGION).when(awsCeConfigService).validateCURReportAccessAndReturnS3Region(ceAwsConfig);
+    settingsService.validateAndUpdateCEDetails(attribute);
+    CEAwsConfig modifiedConfig = (CEAwsConfig) attribute.getValue();
+    assertThat(modifiedConfig.getAwsAccountId()).isEqualTo("830767422336");
+    assertThat(modifiedConfig.getAwsMasterAccountId()).isEqualTo("830767422336");
+    assertThat(modifiedConfig.getS3BucketDetails())
+        .isEqualTo(AwsS3BucketDetails.builder().s3BucketName(S3_BUCKET_NAME).region(S3_REGION).build());
+  }
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)

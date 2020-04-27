@@ -1,12 +1,23 @@
 extend type Query {
   eksClusterStats(filters: [CESetupFilter]): eksClusterData @dataFetcher(name: eksClusterStats)
-  linkedAccountStats(filters: [CESetupFilter]): linkedAccountData @dataFetcher(name: linkedAccountStats)
+  linkedAccountStats(filters: [CESetupFilter], sortCriteria: [CESetupSortCriteria]): linkedAccountData
+    @dataFetcher(name: linkedAccountStats)
+  ceConnector(filters: [CESetupFilter]): ceConnectorData @dataFetcher(name: ceConnector)
   infraAccountConnectionDetail(infraType: infraTypesEnum): infraAccountConnectionData
     @dataFetcher(name: infraAccountConnection)
 }
 
+input CESetupSortCriteria {
+  sortType: CESetupSortType
+  sortOrder: SortOrder
+}
+
+enum CESetupSortType {
+  status
+}
+
 type linkedAccountData {
-  count: Number
+  count: countStats
   linkedAccounts: [linkedAccount]
 }
 
@@ -19,11 +30,36 @@ type infraAccountConnectionData {
   linkedAccountLaunchTemplateLink: String
 }
 
+type ceConnectorData {
+  ceConnectors: [ceConnector]
+}
+
+type ceConnector {
+  settingId: String
+  accountName: String
+  s3BucketName: String
+  curReportName: String
+  crossAccountRoleArn: String
+  infraType: infraTypesEnum
+  ceHealthStatus: ConnectorHealthStatus
+}
+
+type ConnectorHealthStatus {
+  isHealthy: Boolean
+}
+
+type countStats {
+  countOfConnected: Number
+  countOfNotConnected: Number
+  countOfNotVerified: Number
+}
+
 type linkedAccount {
   id: String
   name: String
   arn: String
   masterAccountId: String
+  accountStatus: accountStatusEnum
 }
 
 type eksClusterData {
@@ -45,8 +81,15 @@ input CESetupFilter {
   cloudProviderId: IdFilter
   infraMasterAccountId: IdFilter
   masterAccountSettingId: IdFilter
+  settingId: IdFilter
 }
 
 enum infraTypesEnum {
   AWS
+}
+
+enum accountStatusEnum {
+  NOT_VERIFIED
+  CONNECTED
+  NOT_CONNECTED
 }

@@ -25,6 +25,7 @@ import com.splunk.Job;
 import com.splunk.JobArgs;
 import com.splunk.JobCollection;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -99,6 +100,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ElkAnalysisService elkAnalysisService;
+  @Mock private AWSCEConfigValidationService awsceConfigValidationService;
 
   private String accountId;
   private SplunkDelegateService spySplunkDelegateService;

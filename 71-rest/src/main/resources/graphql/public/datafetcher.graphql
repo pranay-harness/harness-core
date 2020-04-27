@@ -10,6 +10,7 @@ enum DataFetcherEnum {
   budget
   budgetList
   budgetTrendStats
+  ceConnector
   ceHealthStatusta
   cloudEntityStats
   cloudFilterValues

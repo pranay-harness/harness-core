@@ -52,7 +52,9 @@ fileStorageMode: MONGO
 clusterName: ""
 
 ceSetUpConfig:
-  awsAccountId: awsAccountIdPlaceHolder
+  awsAccountId: 108817434118
+  awsAccessKey: awsAccessKeyPlaceHolder
+  awsSecretKey: awsSecretKeyPlaceHolder
   masterAccountCloudFormationTemplateLink: masterAccountCloudFormationTemplateLinkPlaceHolder
   linkedAccountCloudFormationTemplateLink: cloudFormationTemplateLinkPlaceHolder
   gcpProjectId: gcpProjectIdPlaceHolder

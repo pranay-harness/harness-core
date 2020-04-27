@@ -7,7 +7,9 @@ import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
@@ -42,6 +44,26 @@ public class CESetupQueryHelper {
         QLIdFilter masterAccountSettingIdFilter = filter.getMasterAccountSettingId();
         utils.setIdFilter(field, masterAccountSettingIdFilter);
       }
+
+      if (filter.getSettingId() != null) {
+        field = query.field("_id");
+        QLIdFilter settingIdFilter = filter.getSettingId();
+        utils.setIdFilter(field, settingIdFilter);
+      }
     });
+  }
+
+  public Sort getSort(QLCESetupSortCriteria sort) {
+    String sortField = null;
+    if (sort.getSortType() == QLCESetupSortType.status) {
+      sortField = CECloudAccountKeys.accountStatus;
+    }
+    switch (sort.getSortOrder()) {
+      case DESCENDING:
+        return Sort.descending(sortField);
+      case ASCENDING:
+      default:
+        return Sort.ascending(sortField);
+    }
   }
 }
