@@ -42,6 +42,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
@@ -123,7 +124,10 @@ import java.util.stream.Collectors;
  */
 public class ApprovalStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
-      aWorkflowStandardParams().withArtifactIds(asList(ARTIFACT_ID)).build();
+      aWorkflowStandardParams()
+          .withArtifactIds(asList(ARTIFACT_ID))
+          .withCurrentUser(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).email(USER_EMAIL).build())
+          .build();
   private static final String USER_NAME_1_KEY = "UserName1";
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
   @Mock private ExecutionContextImpl context;
@@ -463,6 +467,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD))
         .thenReturn(
             aWorkflowStandardParams()
+                .withCurrentUser(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).email(USER_EMAIL).build())
                 .withWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(PIPELINE_EXECUTION_ID).build())
                 .build());
 
