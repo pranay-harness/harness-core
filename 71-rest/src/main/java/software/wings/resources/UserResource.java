@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -176,7 +175,7 @@ public class UserResource {
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
-    Integer pageSize = Math.min(DEFAULT_PAGE_SIZE, pageRequest.getPageSize());
+    Integer pageSize = pageRequest.getPageSize();
     List<User> userList = userService.listUsers(accountId, loadUserGroups, pageSize, offset, true);
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
