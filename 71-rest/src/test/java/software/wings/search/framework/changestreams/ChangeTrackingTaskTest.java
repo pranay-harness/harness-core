@@ -11,8 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import com.mongodb.DBObject;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.ServerAddress;
@@ -29,8 +27,11 @@ import org.bson.BsonDocument;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -41,8 +42,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(ChangeStreamDocument.class)
+@PowerMockIgnore("javax.net.*")
 public class ChangeTrackingTaskTest extends WingsBaseTest {
-  @Inject private MainConfiguration mainConfiguration;
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
@@ -65,7 +68,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
 
     mockChangeTrackingTaskDependencies(changeStreamSubscriber, collection, latch, changeStreamIterable, testLatch);
 
-    Future f = threadPoolExecutor.submit(changeTrackingTask);
+    Future<?> f = threadPoolExecutor.submit(changeTrackingTask);
     testLatch.await(50, TimeUnit.SECONDS);
 
     verify(collection, times(1)).watch();
@@ -96,8 +99,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
 
     doAnswer(i -> {
       try {
-        ChangeStreamDocument<DBObject> changeStreamDocument =
-            new ChangeStreamDocument<>(null, null, null, null, null, null);
+        ChangeStreamDocument<DBObject> changeStreamDocument = mock(ChangeStreamDocument.class);
         Consumer<ChangeStreamDocument<DBObject>> changeStreamSubscriberConsumer = i.getArgumentAt(0, Consumer.class);
         changeStreamSubscriberConsumer.accept(changeStreamDocument);
         testLatch.countDown();

@@ -36,9 +36,8 @@ public class PersistenceIteratorTest extends PersistenceTest {
 
     assertThat(query.toString().replace(" ", "")).isEqualTo("{query:{}}");
     assertThat(iterator.createQuery(5).toString().replace(" ", ""))
-        .isEqualTo("{query:{\"$or\":"
-            + "[{\"nextIterations\":{\"$lt\":5}},"
-            + "{\"nextIterations\":{\"$exists\":false}}]}}");
+        .isEqualTo(
+            "{query:{\"$or\":[{\"nextIterations\":{\"$lt\":{\"$numberLong\":\"5\"}}},{\"nextIterations\":{\"$exists\":false}}]}}");
   }
 
   @Test
@@ -57,9 +56,8 @@ public class PersistenceIteratorTest extends PersistenceTest {
 
     assertThat(query.toString().replace(" ", "")).isEqualTo("{query:{\"name\":\"foo\"}}");
     assertThat(iterator.createQuery(5).toString().replace(" ", ""))
-        .isEqualTo("{query:{\"name\":\"foo\",\"$or\":"
-            + "[{\"nextIterations\":{\"$lt\":5}},"
-            + "{\"nextIterations\":{\"$exists\":false}}]}}");
+        .isEqualTo(
+            "{query:{\"name\":\"foo\",\"$or\":[{\"nextIterations\":{\"$lt\":{\"$numberLong\":\"5\"}}},{\"nextIterations\":{\"$exists\":false}}]}}");
   }
 
   @Test
@@ -81,8 +79,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
     assertThat(query.toString().replace(" ", ""))
         .isEqualTo("{query:{\"$and\":[{\"name\":{\"$exists\":true}},{\"name\":\"foo\"}]}}");
     assertThat(iterator.createQuery(5).toString().replace(" ", ""))
-        .isEqualTo("{query:{\"$and\":[{\"$and\":[{\"name\":{\"$exists\":true}},{\"name\":\"foo\"}]},"
-            + "{\"$or\":[{\"nextIterations\":{\"$lt\":5}},"
-            + "{\"nextIterations\":{\"$exists\":false}}]}]}}");
+        .isEqualTo(
+            "{query:{\"$and\":[{\"$and\":[{\"name\":{\"$exists\":true}},{\"name\":\"foo\"}]},{\"$or\":[{\"nextIterations\":{\"$lt\":{\"$numberLong\":\"5\"}}},{\"nextIterations\":{\"$exists\":false}}]}]}}");
   }
 }
