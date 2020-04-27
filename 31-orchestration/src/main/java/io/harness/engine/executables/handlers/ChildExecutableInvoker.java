@@ -66,7 +66,7 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
     ExecutionNodeInstance childInstance = ExecutionNodeInstance.builder()
                                               .uuid(childInstanceId)
                                               .node(node)
-                                              .ambiance(ambiance)
+                                              .ambiance(clonedAmbiance)
                                               .status(NodeExecutionStatus.QUEUED)
                                               .notifyId(childInstanceId)
                                               .parentId(nodeInstance.getUuid())

@@ -7,6 +7,7 @@ import io.harness.facilitate.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitate.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.facilitate.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.State;
+import io.harness.state.StateType;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
@@ -20,10 +21,7 @@ import java.util.Map;
 
 @Redesign
 public class ForkState implements State, ChildrenExecutable {
-  @Override
-  public String getStateType() {
-    return "FORK";
-  }
+  public static final String STATE_TYPE = "FORK";
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
@@ -47,5 +45,10 @@ public class ForkState implements State, ChildrenExecutable {
       }
     }
     return responseBuilder.build();
+  }
+
+  @Override
+  public StateType getStateType() {
+    return StateType.builder().type(STATE_TYPE).build();
   }
 }

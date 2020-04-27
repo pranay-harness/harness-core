@@ -16,6 +16,6 @@ public class ForkStateProducer implements StateProducer {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(StateType.FORK).build();
+    return StateType.builder().type(ForkState.STATE_TYPE).build();
   }
 }

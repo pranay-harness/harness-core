@@ -23,7 +23,14 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public ExecutionInstance executeHttpFork() {
     User user = UserThreadLocal.get();
-    return engine.startExecution(CustomExecutionUtils.provideForkPlan(),
+    return engine.startExecution(CustomExecutionUtils.provideHttpForkPlan(),
+        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
+  }
+
+  @Override
+  public ExecutionInstance executeSectionPlan() {
+    User user = UserThreadLocal.get();
+    return engine.startExecution(CustomExecutionUtils.provideHttpSectionPlan(),
         EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
   }
 }

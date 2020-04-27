@@ -14,6 +14,6 @@ public class WaitStateProducer implements StateProducer {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type("WAIT").build();
+    return StateType.builder().type(WaitState.STATE_TYPE).build();
   }
 }

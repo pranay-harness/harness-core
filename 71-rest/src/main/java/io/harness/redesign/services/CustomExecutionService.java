@@ -8,4 +8,6 @@ public interface CustomExecutionService {
   ExecutionInstance executeHttpSwitch();
 
   ExecutionInstance executeHttpFork();
+
+  ExecutionInstance executeSectionPlan();
 }

@@ -1,4 +1,4 @@
-package io.harness.redesign.states.dummy;
+package io.harness.state.core.section;
 
 import io.harness.annotations.ProducesState;
 import io.harness.annotations.Redesign;
@@ -6,16 +6,16 @@ import io.harness.registries.state.StateProducer;
 import io.harness.state.State;
 import io.harness.state.StateType;
 
-@ProducesState
 @Redesign
-public class DummyStateProducer implements StateProducer {
+@ProducesState
+public class SectionStateProducer implements StateProducer {
   @Override
   public State produce() {
-    return new DummyState();
+    return new SectionState();
   }
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(DummyState.STATE_TYPE).build();
+    return StateType.builder().type(SectionState.STATE_TYPE).build();
   }
 }

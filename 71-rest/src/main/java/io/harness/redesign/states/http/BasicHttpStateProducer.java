@@ -16,6 +16,6 @@ public class BasicHttpStateProducer implements StateProducer {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type("BASIC_HTTP").build();
+    return StateType.builder().type(BasicHttpState.STATE_TYPE).build();
   }
 }

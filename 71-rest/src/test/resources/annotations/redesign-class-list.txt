@@ -95,6 +95,9 @@ io.harness.state.StateType
 io.harness.state.core.fork.ForkState
 io.harness.state.core.fork.ForkStateParameters
 io.harness.state.core.fork.ForkStateProducer
+io.harness.state.core.section.SectionState
+io.harness.state.core.section.SectionStateParameters
+io.harness.state.core.section.SectionStateProducer
 io.harness.state.execution.ExecutionInstance
 io.harness.state.execution.ExecutionNodeInstance
 io.harness.state.execution.status.ExecutionInstanceStatus

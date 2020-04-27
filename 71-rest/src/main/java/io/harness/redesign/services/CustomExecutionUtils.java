@@ -13,11 +13,13 @@ import io.harness.facilitate.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
+import io.harness.redesign.levels.SectionLevel;
 import io.harness.redesign.levels.StepLevel;
 import io.harness.redesign.states.http.BasicHttpStateParameters;
 import io.harness.redesign.states.wait.WaitStateParameters;
 import io.harness.state.StateType;
 import io.harness.state.core.fork.ForkStateParameters;
+import io.harness.state.core.section.SectionStateParameters;
 import lombok.experimental.UtilityClass;
 
 @Redesign
@@ -25,6 +27,8 @@ import lombok.experimental.UtilityClass;
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
+  private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
+  private static final StateType BASIC_HTTP_STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
   public static ExecutionPlan provideHttpSwitchPlan() {
     String planId = generateUuid();
@@ -34,15 +38,13 @@ public class CustomExecutionUtils {
     String dummyNode3Id = generateUuid();
     String waitNodeId = generateUuid();
 
-    StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
-
     BasicHttpStateParameters basicHttpStateParameters =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
     return ExecutionPlan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
-                  .stateType(StateType.builder().type("BASIC_HTTP").build())
+                  .stateType(BASIC_HTTP_STATE_TYPE)
                   .stateParameters(basicHttpStateParameters)
                   .levelName(StepLevel.LEVEL_NAME)
                   .adviserObtainment(AdviserObtainment.builder()
@@ -117,14 +119,12 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static ExecutionPlan provideForkPlan() {
+  public static ExecutionPlan provideHttpForkPlan() {
     String planId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
     String forkNodeId = generateUuid();
     String dummyNodeId = generateUuid();
-
-    StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
 
     BasicHttpStateParameters basicHttpStateParameters1 =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
@@ -135,7 +135,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http")
-                  .stateType(StateType.builder().type("BASIC_HTTP").build())
+                  .stateType(BASIC_HTTP_STATE_TYPE)
                   .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -145,7 +145,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http")
-                  .stateType(StateType.builder().type("BASIC_HTTP").build())
+                  .stateType(BASIC_HTTP_STATE_TYPE)
                   .levelName(StepLevel.LEVEL_NAME)
                   .stateParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -178,6 +178,77 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(forkNodeId)
+        .setupAbstractions(ImmutableMap.<String, String>builder()
+                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
+                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
+                               .build())
+        .uuid(planId)
+        .build();
+  }
+
+  public static ExecutionPlan provideHttpSectionPlan() {
+    String planId = generateUuid();
+    String sectionNodeId = generateUuid();
+    String httpNodeId1 = generateUuid();
+    String httpNodeId2 = generateUuid();
+    String dummyNodeId = generateUuid();
+
+    BasicHttpStateParameters basicHttpStateParameters1 =
+        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+
+    BasicHttpStateParameters basicHttpStateParameters2 =
+        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+    return ExecutionPlan.builder()
+        .node(
+            ExecutionNode.builder()
+                .uuid(httpNodeId1)
+                .name("Basic Http 1")
+                .stateType(BASIC_HTTP_STATE_TYPE)
+                .levelName(StepLevel.LEVEL_NAME)
+                .stateParameters(basicHttpStateParameters1)
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(httpNodeId2).build())
+                                       .build())
+                .build())
+        .node(ExecutionNode.builder()
+                  .uuid(httpNodeId2)
+                  .name("Basic Http 2")
+                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .levelName(StepLevel.LEVEL_NAME)
+                  .stateParameters(basicHttpStateParameters2)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .build())
+        .node(
+            ExecutionNode.builder()
+                .uuid(sectionNodeId)
+                .name("Section")
+                .stateType(StateType.builder().type("SECTION").build())
+                .levelName(SectionLevel.LEVEL_NAME)
+                .stateParameters(SectionStateParameters.builder().childNodeId(httpNodeId1).build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(ExecutionNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .levelName(StepLevel.LEVEL_NAME)
+                  .stateType(DUMMY_STATE_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionNodeId)
         .setupAbstractions(ImmutableMap.<String, String>builder()
                                .put("accountId", "kmpySmUISimoRrJL6NL73w")
                                .put("appId", "XEsfW6D_RJm1IaGpDidD3g")

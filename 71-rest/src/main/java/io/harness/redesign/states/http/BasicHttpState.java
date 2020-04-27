@@ -14,6 +14,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.facilitate.modes.async.AsyncExecutable;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
 import io.harness.state.State;
+import io.harness.state.StateType;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
@@ -31,7 +32,10 @@ import java.util.Map;
 
 @Redesign
 public class BasicHttpState implements State, AsyncExecutable {
+  public static final String STATE_TYPE = "BASIC_HTTP";
+
   @Inject private DelegateService delegateService;
+
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
@@ -89,7 +93,7 @@ public class BasicHttpState implements State, AsyncExecutable {
   }
 
   @Override
-  public String getStateType() {
-    return "BASIC_HTTP";
+  public StateType getStateType() {
+    return StateType.builder().type(STATE_TYPE).build();
   }
 }

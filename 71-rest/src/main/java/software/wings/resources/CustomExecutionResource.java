@@ -5,8 +5,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 
 import com.google.inject.Inject;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.Redesign;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
@@ -24,8 +22,6 @@ public class CustomExecutionResource {
   @Inject CustomExecutionService customExecutionService;
 
   @GET
-  @Timed
-  @ExceptionMetered
   @Path("/http-switch")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<ExecutionInstance> executeHttpSwitch() {
@@ -33,11 +29,16 @@ public class CustomExecutionResource {
   }
 
   @GET
-  @Timed
-  @ExceptionMetered
   @Path("/http-fork")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<ExecutionInstance> executeHttpFork() {
     return new RestResponse<>(customExecutionService.executeHttpFork());
+  }
+
+  @GET
+  @Path("/http-section")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<ExecutionInstance> executeSectionPlan() {
+    return new RestResponse<>(customExecutionService.executeSectionPlan());
   }
 }
