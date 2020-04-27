@@ -73,6 +73,8 @@ public class BillingDataTableSchema {
   DbColumn avgCpuUtilization;
   DbColumn avgMemoryUtilization;
   DbColumn actualIdleCost;
+  DbColumn cpuActualIdleCost;
+  DbColumn memoryActualIdleCost;
   DbColumn unallocatedCost;
 
   private static String varcharType = "varchar(40)";
@@ -118,6 +120,8 @@ public class BillingDataTableSchema {
     avgCpuUtilization = billingDataTable.addColumn("avgcpuutilization", doubleType, null);
     avgMemoryUtilization = billingDataTable.addColumn("avgmemoryutilization", doubleType, null);
     actualIdleCost = billingDataTable.addColumn("actualidlecost", doubleType, null);
+    cpuActualIdleCost = billingDataTable.addColumn("cpuactualidlecost", doubleType, null);
+    memoryActualIdleCost = billingDataTable.addColumn("memoryactualidlecost", doubleType, null);
     unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
   }
 }

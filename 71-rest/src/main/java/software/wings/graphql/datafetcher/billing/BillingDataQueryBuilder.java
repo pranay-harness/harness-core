@@ -306,7 +306,7 @@ public class BillingDataQueryBuilder {
         fieldNames.add(BillingDataMetaDataFields.SUM);
       } else if (aggregationFunction.getColumnName().equals(schema.getIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
-            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getIdleCost()),
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getActualIdleCost()),
                 BillingDataMetaDataFields.IDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.IDLECOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getUnallocatedCost().getColumnNameSQL())) {
@@ -316,12 +316,12 @@ public class BillingDataQueryBuilder {
         fieldNames.add(BillingDataMetaDataFields.UNALLOCATEDCOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getCpuIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
-            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuIdleCost()),
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuActualIdleCost()),
                 BillingDataMetaDataFields.CPUIDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.CPUIDLECOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getMemoryIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
-            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryIdleCost()),
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryActualIdleCost()),
                 BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MEMORYIDLECOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getCpuBillingAmount().getColumnNameSQL())) {
