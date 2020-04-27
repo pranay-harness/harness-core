@@ -158,7 +158,6 @@ public class YamlResource {
   @Path("/templates/{templateId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.TEMPLATE_MANAGEMENT, action = Action.READ)
   public RestResponse<YamlPayload> getTemplateLibrary(@QueryParam("accountId") String accountId,
       @PathParam("templateId") String templateId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
     return yamlResourceService.getTemplateLibrary(accountId, appId, templateId);
@@ -412,7 +411,6 @@ public class YamlResource {
   @Path("/settings")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getSettingAttributesList(
       @QueryParam("accountId") String accountId, @QueryParam("type") String type) {
     return yamlResourceService.getGlobalSettingAttributesList(accountId, type);
@@ -429,7 +427,6 @@ public class YamlResource {
   @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getSettingAttribute(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getSettingAttribute(accountId, uuid);
@@ -446,7 +443,6 @@ public class YamlResource {
   @Path("/defaults/{uuid}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getDefaults(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getDefaultVariables(accountId, uuid);
