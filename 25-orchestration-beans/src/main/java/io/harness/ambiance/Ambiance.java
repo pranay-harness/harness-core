@@ -1,4 +1,4 @@
-package io.harness.state.io.ambiance;
+package io.harness.ambiance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;

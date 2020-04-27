@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 
 import io.harness.adviser.Advise;
 import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.ambiance.Ambiance;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.level.LevelRegistry;
-import io.harness.state.io.ambiance.Ambiance;
 
 public class OnSuccessHandler implements AdviseHandler {
   @Inject private ExecutionEngine engine;

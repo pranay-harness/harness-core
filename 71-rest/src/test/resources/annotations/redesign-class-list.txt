@@ -15,6 +15,9 @@ io.harness.adviser.impl.success.OnSuccessAdvise
 io.harness.adviser.impl.success.OnSuccessAdviser
 io.harness.adviser.impl.success.OnSuccessAdviserParameters
 io.harness.adviser.impl.success.OnSuccessAdviserProducer
+io.harness.ambiance.Ambiance
+io.harness.ambiance.Level
+io.harness.ambiance.LevelExecution
 io.harness.engine.AmbianceHelper
 io.harness.engine.Engine
 io.harness.engine.EngineObtainmentHelper
@@ -107,8 +110,5 @@ io.harness.state.io.StateParameters
 io.harness.state.io.StateResponse
 io.harness.state.io.StateTransput
 io.harness.state.io.StatusNotifyResponseData
-io.harness.state.io.ambiance.Ambiance
-io.harness.state.io.ambiance.Level
-io.harness.state.io.ambiance.LevelExecution
 io.harness.state.metadata.StateMetadata
 software.wings.resources.CustomExecutionResource

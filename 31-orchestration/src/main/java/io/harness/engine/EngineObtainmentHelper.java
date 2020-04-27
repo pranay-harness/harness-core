@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.Facilitator;
@@ -23,7 +24,6 @@ import io.harness.state.StateType;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.NonNull;
 
 import java.util.Collections;

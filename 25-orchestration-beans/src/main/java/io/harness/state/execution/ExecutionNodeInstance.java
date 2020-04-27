@@ -1,5 +1,6 @@
 package io.harness.state.execution;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.CreatedAtAware;
@@ -9,7 +10,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.plan.ExecutionNode;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;

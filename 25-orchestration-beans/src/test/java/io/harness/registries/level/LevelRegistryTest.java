@@ -7,12 +7,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
+import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
-import io.harness.state.io.ambiance.Level;
 import io.harness.utils.levels.PhaseTestLevel;
 import io.harness.utils.levels.SectionTestLevel;
 import io.harness.utils.levels.StepTestLevel;

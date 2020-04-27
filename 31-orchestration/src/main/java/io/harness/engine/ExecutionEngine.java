@@ -12,6 +12,8 @@ import com.google.inject.name.Named;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ResponseData;
@@ -38,8 +40,6 @@ import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.LevelExecution;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 

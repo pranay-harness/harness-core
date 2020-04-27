@@ -4,6 +4,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.spi.ProvisionListener;
 
+import io.harness.ambiance.Level;
 import io.harness.annotations.ProducesAdviser;
 import io.harness.annotations.ProducesFacilitator;
 import io.harness.annotations.ProducesLevel;
@@ -22,7 +23,6 @@ import io.harness.registries.resolver.ResolverProducer;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateProducer;
 import io.harness.registries.state.StateRegistry;
-import io.harness.state.io.ambiance.Level;
 import org.reflections.Reflections;
 
 import java.util.Set;

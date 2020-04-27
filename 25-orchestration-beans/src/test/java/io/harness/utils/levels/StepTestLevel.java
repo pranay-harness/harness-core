@@ -1,6 +1,6 @@
 package io.harness.utils.levels;
 
-import io.harness.state.io.ambiance.Level;
+import io.harness.ambiance.Level;
 import lombok.Builder;
 import lombok.Value;
 

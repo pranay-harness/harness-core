@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
+import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitate.modes.children.ChildrenExecutableResponse;
@@ -18,7 +19,6 @@ import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.ambiance.Ambiance;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

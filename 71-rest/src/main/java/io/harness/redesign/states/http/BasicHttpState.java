@@ -5,6 +5,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -21,7 +22,6 @@ import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateResponse.FailureInfo;
 import io.harness.state.io.StateResponse.StateResponseBuilder;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
