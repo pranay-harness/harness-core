@@ -277,6 +277,14 @@ if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.awsAccountId "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCESS_KEY" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.awsAccessKey "$CE_SETUP_CONFIG_AWS_ACCESS_KEY"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_AWS_SECRET_KEY" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.awsSecretKey "$CE_SETUP_CONFIG_AWS_SECRET_KEY"
+fi
+
 if [[ "" != "$CE_SETUP_CONFIG_MASTER_CLOUD_FORMATION" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.masterAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_MASTER_CLOUD_FORMATION"
 fi

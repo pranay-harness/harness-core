@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 
 @Data
@@ -23,9 +24,10 @@ import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCloudAccount", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup", unique = true), fields = {
+  @Index(options = @IndexOptions(name = "no_dup_account", unique = true), fields = {
     @Field(CECloudAccountKeys.accountId)
-    , @Field(CECloudAccountKeys.infraAccountId), @Field(CECloudAccountKeys.infraMasterAccountId)
+    , @Field(CECloudAccountKeys.infraAccountId), @Field(CECloudAccountKeys.infraMasterAccountId),
+        @Field(CECloudAccountKeys.masterAccountSettingId)
   })
 })
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
@@ -36,7 +38,12 @@ public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAwa
   String accountName;
   String infraAccountId;
   String infraMasterAccountId; // master account id
+  AccountStatus accountStatus;
   String masterAccountSettingId; // setting id of ce connectors
+  AwsCrossAccountAttributes awsCrossAccountAttributes;
+
   long createdAt;
   long lastUpdatedAt;
+
+  public enum AccountStatus { NOT_VERIFIED, CONNECTED, NOT_CONNECTED }
 }

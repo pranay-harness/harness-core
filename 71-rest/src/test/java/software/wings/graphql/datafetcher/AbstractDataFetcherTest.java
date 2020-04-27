@@ -11,6 +11,7 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.CEClusterDao;
+import io.harness.persistence.HPersistence;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -130,6 +131,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   @Inject ClusterRecordService clusterRecordService;
   @Inject CEClusterDao clusterDao;
   @Inject CECloudAccountDao cloudAccountDao;
+  @Inject HPersistence hPersistence;
   @Inject protected TestUtils testUtils;
 
   public Account createAccount(String accountId, LicenseInfo licenseInfo) {
@@ -229,6 +231,17 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
                                          .withCategory(SettingCategory.CLOUD_PROVIDER)
                                          .build();
     settingsService.save(cloudProvider, false);
+  }
+
+  public void createCEConnector(String uuid, String accountId, String name, SettingValue settingValue) {
+    SettingAttribute ceConnector = SettingAttribute.Builder.aSettingAttribute()
+                                       .withName(name)
+                                       .withUuid(uuid)
+                                       .withValue(settingValue)
+                                       .withAccountId(accountId)
+                                       .withCategory(SettingCategory.CE_CONNECTOR)
+                                       .build();
+    hPersistence.save(ceConnector);
   }
 
   public void createClusterRecord(

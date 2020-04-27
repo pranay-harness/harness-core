@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 @Singleton
 public class CESetUpConfig {
   private String awsAccountId;
+  private String awsAccessKey;
+  private String awsSecretKey;
   private String masterAccountCloudFormationTemplateLink;
   private String linkedAccountCloudFormationTemplateLink;
   private String gcpProjectId;

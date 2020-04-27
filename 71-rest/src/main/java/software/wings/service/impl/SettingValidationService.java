@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -67,6 +68,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -137,6 +139,7 @@ public class SettingValidationService {
   @Inject private ServiceNowServiceImpl servicenowServiceImpl;
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
   @Inject private CCMSettingService ccmSettingService;
+  @Inject private AWSCEConfigValidationService awsceConfigValidationService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -297,6 +300,8 @@ public class SettingValidationService {
             "Enable Feature Flag INFRA_MAPPING_REFACTOR to create Spotinst Cloud Provider", USER);
       }
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
+    } else if (settingValue instanceof CEAwsConfig) {
+      validateCEAwsConfig(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -316,6 +321,10 @@ public class SettingValidationService {
     }
 
     return true;
+  }
+
+  private void validateCEAwsConfig(SettingAttribute settingAttribute) {
+    awsceConfigValidationService.verifyCrossAccountAttributes(settingAttribute);
   }
 
   private void validateSpotInstConfig(

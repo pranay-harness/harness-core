@@ -21,14 +21,15 @@ public class InfraAccountConnectionDataFetcher
   private static final String stackNameKey = "stackName";
   private static final String templateUrlKey = "templateURL";
   private static final String paramExternalIdKey = "param_ExternalId";
-  private static final String stackNameValue = "harness-iam-stack-";
+  private static final String stackNameValue = "harness-ce-iam-role-stack";
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLInfraAccountConnectionData fetch(QLInfraType parameters, String accountId) {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
 
+    String awsAccountId = InfraSetUpUtils.getCEAwsAccountId(ceSetUpConfig.getAwsAccountId());
     if (parameters.getInfraType() == QLInfraTypesEnum.AWS) {
-      String awsExternalId = InfraSetUpUtils.getAwsExternalId(ceSetUpConfig.getAwsAccountId(), accountId);
+      String awsExternalId = InfraSetUpUtils.getAwsExternalId(awsAccountId, accountId);
       String masterLaunchTemplateUrl =
           new SimpleUrlBuilder(stackBaseUrl)
               .addQueryParam(stackNameKey, stackNameValue)
@@ -38,7 +39,7 @@ public class InfraAccountConnectionDataFetcher
 
       return QLInfraAccountConnectionData.builder()
           .externalId(awsExternalId)
-          .harnessAccountId(ceSetUpConfig.getAwsAccountId())
+          .harnessAccountId(awsAccountId)
           .masterAccountCloudFormationTemplateLink(ceSetUpConfig.getMasterAccountCloudFormationTemplateLink())
           .linkedAccountCloudFormationTemplateLink(ceSetUpConfig.getLinkedAccountCloudFormationTemplateLink())
           .masterAccountLaunchTemplateLink(masterLaunchTemplateUrl)

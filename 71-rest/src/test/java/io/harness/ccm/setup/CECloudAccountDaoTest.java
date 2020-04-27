@@ -1,4 +1,4 @@
-package io.harness.ccm.setup.graphql;
+package io.harness.ccm.setup;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECloudAccount.AccountStatus;
 
 import java.util.List;
 
@@ -30,7 +30,8 @@ public class CECloudAccountDaoTest extends WingsBaseTest {
   public void shouldReturnAccountForMasterAccountId() {
     boolean savedAccount = ceCloudAccountDao.create(getCECloudAccount());
     assertThat(savedAccount).isTrue();
-    List<CECloudAccount> ceCloudAccounts = ceCloudAccountDao.getByMasterAccountId(accountId, infraMasterAccountId);
+    List<CECloudAccount> ceCloudAccounts =
+        ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
     CECloudAccount savedCECloudAccount = ceCloudAccounts.get(0);
     assertThat(savedCECloudAccount.getAccountId()).isEqualTo(accountId);
     assertThat(savedCECloudAccount.getAccountName()).isEqualTo(accountName);
@@ -56,10 +57,28 @@ public class CECloudAccountDaoTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteCECloudAccount() {
     ceCloudAccountDao.create(getCECloudAccount());
-    List<CECloudAccount> ceCloudAccounts = ceCloudAccountDao.getByMasterAccountId(accountId, infraMasterAccountId);
+    List<CECloudAccount> ceCloudAccounts =
+        ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
     CECloudAccount savedCECloudAccount = ceCloudAccounts.get(0);
     ceCloudAccountDao.deleteAccount(savedCECloudAccount.getUuid());
-    List<CECloudAccount> ceCloudAccountList = ceCloudAccountDao.getByMasterAccountId(accountId, infraMasterAccountId);
+    List<CECloudAccount> ceCloudAccountList =
+        ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
     assertThat(ceCloudAccountList).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateCECloudAccountStatus() {
+    AccountStatus accountStatus = AccountStatus.CONNECTED;
+    ceCloudAccountDao.create(getCECloudAccount());
+    List<CECloudAccount> ceCloudAccounts =
+        ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
+    CECloudAccount savedCECloudAccount = ceCloudAccounts.get(0);
+    ceCloudAccountDao.updateAccountStatus(savedCECloudAccount, accountStatus);
+    List<CECloudAccount> ceCloudAccountList =
+        ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
+    CECloudAccount ceCloudAccount = ceCloudAccountList.get(0);
+    assertThat(ceCloudAccount.getAccountStatus()).isEqualTo(accountStatus);
   }
 }

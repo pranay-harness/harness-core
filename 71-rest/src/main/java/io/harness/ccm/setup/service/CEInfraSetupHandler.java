@@ -8,6 +8,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECloudAccount.AccountStatus;
 import software.wings.beans.ce.CECluster;
 
 import java.util.List;
@@ -21,6 +22,10 @@ public abstract class CEInfraSetupHandler {
   @Inject protected CEClusterDao ceClusterDao;
 
   public abstract void syncCEInfra(SettingAttribute settingAttribute);
+
+  public abstract void syncCEClusters(CECloudAccount ceCloudAccount);
+
+  public abstract boolean updateAccountPermission(CECloudAccount ceCloudAccount);
 
   @Value
   private static class AccountIdentifierKey {
@@ -38,10 +43,11 @@ public abstract class CEInfraSetupHandler {
   }
 
   protected void updateLinkedAccounts(
-      String accountId, String infraMasterAccountId, List<CECloudAccount> infraAccounts) {
+      String accountId, String settingId, String infraMasterAccountId, List<CECloudAccount> infraAccounts) {
     Map<AccountIdentifierKey, CECloudAccount> infraAccountMap = createAccountMap(infraAccounts);
 
-    List<CECloudAccount> ceExistingAccounts = ceCloudAccountDao.getByMasterAccountId(accountId, infraMasterAccountId);
+    List<CECloudAccount> ceExistingAccounts =
+        ceCloudAccountDao.getByMasterAccountId(accountId, settingId, infraMasterAccountId);
     Map<AccountIdentifierKey, CECloudAccount> ceExistingAccountMap = createAccountMap(ceExistingAccounts);
 
     infraAccountMap.forEach((accountIdentifierKey, ceCloudAccount) -> {
@@ -74,6 +80,14 @@ public abstract class CEInfraSetupHandler {
         ceClusterDao.deleteCluster(ceCluster.getUuid());
       }
     });
+  }
+
+  protected void updateAccountStatus(CECloudAccount ceCloudAccount, boolean verifyAccess) {
+    AccountStatus accountStatus = AccountStatus.NOT_CONNECTED;
+    if (verifyAccess) {
+      accountStatus = AccountStatus.CONNECTED;
+    }
+    ceCloudAccountDao.updateAccountStatus(ceCloudAccount, accountStatus);
   }
 
   private Map<AccountIdentifierKey, CECloudAccount> createAccountMap(List<CECloudAccount> cloudAccounts) {

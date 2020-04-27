@@ -28,6 +28,7 @@ import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
 import static software.wings.beans.SettingAttribute.NAME_KEY;
+import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
@@ -52,11 +53,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.amazonaws.arn.Arn;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
+import io.harness.ccm.setup.service.CEInfraSetupHandler;
+import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
+import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -83,6 +88,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.Base;
 import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.Event.Type;
@@ -108,6 +114,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -187,6 +194,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactService artifactService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private CCMSettingService ccmSettingService;
+  @Inject private CEInfraSetupHandlerFactory ceInfraSetupHandlerFactory;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheManager cacheManager;
@@ -204,6 +212,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ApmVerificationService apmVerificationService;
+  @Inject private AWSCEConfigValidationService awsCeConfigService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
@@ -663,6 +672,7 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
     settingValidationService.validate(settingAttribute);
+    validateAndUpdateCEDetails(settingAttribute);
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
     autoGenerateFieldsIfRequired(settingAttribute);
@@ -684,7 +694,35 @@ public class SettingsServiceImpl implements SettingsService {
       logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
+    syncCEInfra(settingAttribute);
     return newSettingAttribute;
+  }
+
+  @VisibleForTesting
+  void validateAndUpdateCEDetails(SettingAttribute settingAttribute) {
+    if (CE_CONNECTOR == settingAttribute.getCategory()) {
+      if (settingAttribute.getValue() instanceof CEAwsConfig) {
+        // Extract AWS Master AccountId
+        CEAwsConfig awsConfig = (CEAwsConfig) settingAttribute.getValue();
+        Arn roleArn = Arn.fromString(awsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn());
+        String masterAwsAccountId = roleArn.getAccountId();
+        awsConfig.setAwsAccountId(masterAwsAccountId);
+        awsConfig.setAwsMasterAccountId(masterAwsAccountId);
+
+        // Bucket Details
+        AwsS3BucketDetails s3BucketDetails = awsConfig.getS3BucketDetails();
+        String s3BucketRegion = awsCeConfigService.validateCURReportAccessAndReturnS3Region(awsConfig);
+        s3BucketDetails.setRegion(s3BucketRegion);
+      }
+    }
+  }
+
+  private void syncCEInfra(SettingAttribute settingAttribute) {
+    if (CE_CONNECTOR == settingAttribute.getCategory()) {
+      CEInfraSetupHandler ceInfraSetupHandler =
+          ceInfraSetupHandlerFactory.getCEInfraSetupHandler(settingAttribute.getValue());
+      ceInfraSetupHandler.syncCEInfra(settingAttribute);
+    }
   }
 
   private void autoGenerateFieldsIfRequired(SettingAttribute settingAttribute) {
@@ -742,6 +780,14 @@ public class SettingsServiceImpl implements SettingsService {
       return null;
     }
     return settingAttribute.getAccountId().equals(accountId) ? settingAttribute : null;
+  }
+
+  @Override
+  public SettingAttribute getById(String accountId, String settingId) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .filter(SettingAttributeKeys.uuid, settingId)
+        .filter(SettingAttributeKeys.accountId, accountId)
+        .get();
   }
 
   private void setInternal(SettingAttribute settingAttribute) {

@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountService;
+import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -32,9 +33,12 @@ public class GcpBillingAccountResourceTest extends CategoryTest {
   private GcpBillingAccount gcpBillingAccount;
 
   private static GcpBillingAccountService gcpBillingAccountService = mock(GcpBillingAccountService.class);
+  private static AWSAccountService awsAccountService = mock(AWSAccountService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new GcpBillingAccountResource(gcpBillingAccountService)).build();
+      ResourceTestRule.builder()
+          .addResource(new GcpBillingAccountResource(gcpBillingAccountService, awsAccountService))
+          .build();
 
   @Before
   public void setUp() {
