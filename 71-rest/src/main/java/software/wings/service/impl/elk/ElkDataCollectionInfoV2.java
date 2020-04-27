@@ -119,6 +119,5 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
     Preconditions.checkNotNull(messageField, ElkDataCollectionInfoV2Keys.messageField);
     Preconditions.checkNotNull(timestampField, ElkDataCollectionInfoV2Keys.timestampField);
     Preconditions.checkNotNull(timestampFieldFormat, ElkDataCollectionInfoV2Keys.timestampFieldFormat);
-    Preconditions.checkNotNull(queryType, ElkDataCollectionInfoV2Keys.queryType);
   }
 }

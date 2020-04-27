@@ -21,7 +21,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -104,7 +103,6 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setQuery("query1");
     yaml.setBaselineStartMinute(16);
     yaml.setBaselineEndMinute(30);
-    yaml.setQueryType(ElkQueryType.MATCH.name());
     yaml.setIndex("index1");
     yaml.setHostnameField("hostName1");
     yaml.setMessageField("message1");
@@ -123,7 +121,6 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setQuery(generateUUID());
     cvServiceConfiguration.setBaselineStartMinute(16);
     cvServiceConfiguration.setBaselineEndMinute(30);
-    cvServiceConfiguration.setQueryType(ElkQueryType.MATCH);
     cvServiceConfiguration.setIndex(generateUUID());
     cvServiceConfiguration.setHostnameField(generateUUID());
     cvServiceConfiguration.setMessageField(generateUUID());
@@ -136,7 +133,6 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
     assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
-    assertThat(ElkQueryType.valueOf(yaml.getQueryType())).isEqualTo(cvServiceConfiguration.getQueryType());
     assertThat(yaml.getIndex()).isEqualTo(cvServiceConfiguration.getIndex());
     assertThat(yaml.getHostnameField()).isEqualTo(cvServiceConfiguration.getHostnameField());
     assertThat(yaml.getMessageField()).isEqualTo(cvServiceConfiguration.getMessageField());
@@ -165,7 +161,6 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getQuery()).isEqualTo("query1");
     assertThat(bean.getBaselineStartMinute()).isEqualTo(16);
     assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
-    assertThat(bean.getQueryType()).isEqualTo(ElkQueryType.MATCH);
     assertThat(bean.getIndex()).isEqualTo("index1");
     assertThat(bean.getHostnameField()).isEqualTo("hostName1");
     assertThat(bean.getMessageField()).isEqualTo("message1");

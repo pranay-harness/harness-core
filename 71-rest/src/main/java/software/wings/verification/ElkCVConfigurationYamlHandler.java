@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -19,7 +18,6 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
     }
 
     ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) bean;
-    yaml.setQueryType(elkCVConfiguration.getQueryType().name());
     yaml.setIndex(elkCVConfiguration.getIndex());
     yaml.setHostnameField(elkCVConfiguration.getHostnameField());
     yaml.setMessageField(elkCVConfiguration.getMessageField());
@@ -38,7 +36,6 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
     super.toBean(bean, changeContext, appId);
 
     ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) changeContext.getYaml();
-    bean.setQueryType(ElkQueryType.valueOf(yaml.getQueryType()));
     bean.setIndex(yaml.getIndex());
     bean.setHostnameField(yaml.getHostnameField());
     bean.setMessageField(yaml.getMessageField());

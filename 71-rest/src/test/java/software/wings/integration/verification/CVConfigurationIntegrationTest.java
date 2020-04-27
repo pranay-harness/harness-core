@@ -74,7 +74,6 @@ import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
@@ -331,7 +330,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     elkCVConfiguration.setBaselineEndMinute(200);
 
     elkCVConfiguration.setQuery("query1");
-    elkCVConfiguration.setQueryType(ElkQueryType.TERM);
     elkCVConfiguration.setIndex("filebeat-*");
     elkCVConfiguration.setHostnameField("host1");
     elkCVConfiguration.setMessageField("message1");
@@ -951,7 +949,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getBaselineEndMinute()).isEqualTo(195);
 
     assertThat(fetchedObject.getQuery()).isEqualTo("query1");
-    assertThat(fetchedObject.getQueryType()).isEqualTo(ElkQueryType.TERM);
     assertThat(fetchedObject.getIndex()).isEqualTo("filebeat-*");
     assertThat(fetchedObject.getHostnameField()).isEqualTo("host1");
     assertThat(fetchedObject.getMessageField()).isEqualTo("message1");
@@ -988,7 +985,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     elkCVServiceConfiguration.setQuery("query2");
-    elkCVServiceConfiguration.setQueryType(ElkQueryType.MATCH);
     elkCVServiceConfiguration.setIndex("filebeat-*");
     elkCVServiceConfiguration.setHostnameField("host2");
     elkCVServiceConfiguration.setMessageField("message2");
@@ -1013,7 +1009,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getBaselineEndMinute()).isEqualTo(330);
     assertThat(fetchedObject.getName()).isEqualTo("Config 2");
     assertThat(fetchedObject.getQuery()).isEqualTo("query2");
-    assertThat(fetchedObject.getQueryType()).isEqualTo(ElkQueryType.MATCH);
     assertThat(fetchedObject.getIndex()).isEqualTo("filebeat-*");
     assertThat(fetchedObject.getHostnameField()).isEqualTo("host2");
     assertThat(fetchedObject.getMessageField()).isEqualTo("message2");

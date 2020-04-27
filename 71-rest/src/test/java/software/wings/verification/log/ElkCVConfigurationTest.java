@@ -46,7 +46,6 @@ public class ElkCVConfigurationTest extends WingsBaseTest {
     config.setStateType(stateType);
     config.setEnabled24x7(true);
 
-    config.setQueryType(queryType);
     config.setIndex(index);
     config.setHostnameField(hostnameField);
     config.setMessageField(messageField);
@@ -73,7 +72,6 @@ public class ElkCVConfigurationTest extends WingsBaseTest {
     assertThat(clonedConfig.getStateType()).isEqualTo(stateType);
     assertThat(clonedConfig.isEnabled24x7()).isTrue();
 
-    assertThat(clonedConfig.getQueryType()).isEqualTo(queryType);
     assertThat(clonedConfig.getIndex()).isEqualTo(index);
     assertThat(clonedConfig.getHostnameField()).isEqualTo(hostnameField);
     assertThat(clonedConfig.getMessageField()).isEqualTo(messageField);

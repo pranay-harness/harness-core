@@ -787,7 +787,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations.set("query", elkCVConfiguration.getQuery())
             .set("baselineStartMinute", elkCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", elkCVConfiguration.getBaselineEndMinute())
-            .set("queryType", elkCVConfiguration.getQueryType())
             .set("index", elkCVConfiguration.getIndex())
             .set("hostnameField", elkCVConfiguration.getHostnameField())
             .set("messageField", elkCVConfiguration.getMessageField())

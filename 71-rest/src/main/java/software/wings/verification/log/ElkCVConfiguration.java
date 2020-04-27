@@ -2,6 +2,7 @@ package software.wings.verification.log;
 
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
@@ -20,9 +20,8 @@ import software.wings.verification.CVConfiguration;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ElkCVConfiguration extends LogsCVConfiguration {
-  @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private ElkQueryType queryType;
-
   @Attributes(title = "Elastic search indices to search", required = true) @DefaultValue("_all") protected String index;
 
   @Attributes(required = true, title = "Host Name Field") @DefaultValue("hostname") protected String hostnameField;
@@ -50,7 +49,6 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setHostnameField(this.getHostnameField());
     clonedConfig.setIndex(this.getIndex());
     clonedConfig.setMessageField(this.getMessageField());
-    clonedConfig.setQueryType(this.getQueryType());
     clonedConfig.setTimestampField(this.getTimestampField());
     clonedConfig.setTimestampFormat(this.getTimestampFormat());
     return clonedConfig;
@@ -65,7 +63,6 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
                                                           .messageField(this.getMessageField())
                                                           .timestampField(this.getTimestampField())
                                                           .timestampFieldFormat(this.getTimestampFormat())
-                                                          .queryType(this.getQueryType())
                                                           .build();
     fillDataCollectionInfoWithCommonFields(elkDataCollectionInfoV2);
     return elkDataCollectionInfoV2;
@@ -74,8 +71,8 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static final class ElkCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String queryType;
     private String index;
     private String hostnameField;
     private String messageField;
