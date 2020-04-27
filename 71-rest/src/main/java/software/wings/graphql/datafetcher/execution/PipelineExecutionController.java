@@ -33,6 +33,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionIn
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
 import software.wings.graphql.schema.type.QLApiKey;
 import software.wings.graphql.schema.type.QLCause;
@@ -47,6 +48,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AppLogContext;
+import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -286,5 +288,30 @@ public class PipelineExecutionController {
         permissionAttributeList, Collections.singletonList(appId), triggerExecutionInput.getEntityId());
     logger.info("Authorization successful for executing pipeline: {} for User {}", triggerExecutionInput.getEntityId(),
         UserThreadLocal.get());
+  }
+
+  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters, String accountId) {
+    String appId = parameters.getApplicationId();
+    try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      String pipelineId = parameters.getEntityId();
+      Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
+      notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
+      try (
+          AutoLogContext ignore1 = new WorkflowLogContext(pipelineId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+        String envId = resolveEnvId(pipeline, parameters.getVariableInputs());
+        Map<String, String> variableValues =
+            validateAndResolvePipelineVariables(pipeline, parameters.getVariableInputs(), envId);
+        DeploymentMetadata finalDeploymentMetadata =
+            pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
+        if (finalDeploymentMetadata != null) {
+          List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
+          if (isNotEmpty(artifactNeededServiceIds)) {
+            return artifactNeededServiceIds;
+          }
+        }
+        logger.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
+        return new ArrayList<>();
+      }
+    }
   }
 }

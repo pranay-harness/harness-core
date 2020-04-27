@@ -142,6 +142,8 @@ public interface PipelineService extends OwnedByApplication {
    */
   List<String> obtainPipelineNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
 
+  DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline, Map<String, String> pipelineVariables);
+
   DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId, Map<String, String> pipelineVariables,
       List<String> artifactNeededServiceIds, List<String> envIds, boolean withDefaultArtifact,
       WorkflowExecution workflowExecution, DeploymentMetadata.Include... includeList);

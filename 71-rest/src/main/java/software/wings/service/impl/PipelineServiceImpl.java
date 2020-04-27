@@ -560,6 +560,12 @@ public class PipelineServiceImpl implements PipelineService {
       Map<String, String> pipelineVariables, boolean preExecutionChecks, Map<String, Workflow> workflowCache) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
+    readPipelineWithResolvedVariables(appId, pipeline, pipelineVariables, workflowCache, preExecutionChecks);
+    return pipeline;
+  }
+
+  private void readPipelineWithResolvedVariables(String appId, Pipeline pipeline, Map<String, String> pipelineVariables,
+      Map<String, Workflow> workflowCache, boolean preExecutionChecks) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
@@ -627,7 +633,6 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setInfraMappingIds(infraMappingIds);
     pipeline.setInfraDefinitionIds(infraDefinitionIds);
     pipeline.setWorkflowIds(workflowIds);
-    return pipeline;
   }
 
   private List<Service> resolveServices(
@@ -1509,6 +1514,13 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, workflowCache);
     return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, withDefaultArtifact,
         workflowExecution, workflowCache, includeList);
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadata(
+      String appId, Pipeline pipeline, Map<String, String> pipelineVariables) {
+    readPipelineWithResolvedVariables(appId, pipeline, pipelineVariables, null, false);
+    return fetchDeploymentMetadata(appId, pipeline, null, null, false, null, null);
   }
 
   @Override

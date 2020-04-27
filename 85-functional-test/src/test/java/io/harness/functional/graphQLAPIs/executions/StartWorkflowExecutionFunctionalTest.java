@@ -1,4 +1,4 @@
-package io.harness.functional.graphQLAPIs;
+package io.harness.functional.graphQLAPIs.executions;
 
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForEnv;
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForInfraDefinition;
@@ -23,7 +23,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,6 +55,7 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
   private Service service;
   private Environment environment;
   private InfrastructureDefinition infrastructureDefinition;
+  private Workflow templatizedWorkflow;
 
   private final Randomizer.Seed seed = new Randomizer.Seed(0);
   private OwnerManager.Owners owners;
@@ -76,12 +77,7 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
         seed, owners, InfrastructureType.GCP_KUBERNETES_ENGINE, bearerToken);
-  }
 
-  @Test
-  @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
-  public void shouldTriggerTemplatisedWorkflow() {
     Workflow workflow = workflowUtils.getRollingK8sWorkflow("GraphQLAPI-test-", service, infrastructureDefinition);
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
@@ -91,11 +87,16 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
     savedWorkflow.setTemplateExpressions(Arrays.asList(getTemplateExpressionsForEnv(),
         getTemplateExpressionsForService(), getTemplateExpressionsForInfraDefinition("${InfraDefinition_Kubernetes}")));
 
-    Workflow templatizedWorkflow =
+    templatizedWorkflow =
         WorkflowRestUtils.updateWorkflow(bearerToken, application.getAccountId(), application.getUuid(), savedWorkflow);
     assertThat(templatizedWorkflow.isEnvTemplatized()).isTrue();
     assertThat(templatizedWorkflow.isTemplatized()).isTrue();
+  }
 
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void shouldTriggerTemplatisedWorkflow() {
     ImmutableMap<String, String> workflowVariables =
         ImmutableMap.<String, String>builder()
             .put("Environment", environment.getName())
@@ -104,10 +105,10 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
             .build();
     Artifact artifact = getArtifact(service, service.getAppId());
 
-    String mutation = getGraphqlQueryForWorkflow("123", application.getAppId(), templatizedWorkflow.getUuid(),
+    String mutation = getGraphqlQueryForWorkflowExecution("123", application.getAppId(), templatizedWorkflow.getUuid(),
         workflowVariables, artifact.getUuid(), service.getName());
     Map<Object, Object> response =
-        GraphQLRestUtils.executeMutationGraphQLQuery(bearerToken, application.getAccountId(), mutation);
+        GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), mutation);
 
     assertThat(response).isNotEmpty();
     assertThat(response.get("startExecution")).isNotNull();
@@ -121,19 +122,9 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
         bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
   }
 
-  private String getGraphqlQueryForWorkflow(String clientMutationId, String appId, String workflowId,
+  private String getGraphqlQueryForWorkflowExecution(String clientMutationId, String appId, String workflowId,
       Map<String, String> variableValues, String artifactId, String serviceName) {
-    List<String> variableInputs = new ArrayList<>();
-    for (Map.Entry<String, String> entry : variableValues.entrySet()) {
-      String queryVariableInput = $GQL(/*{
-      name: "%s"
-      variableValue: {
-          value: "%s"
-          type: NAME
-          }}*/ entry.getKey(), entry.getValue());
-      variableInputs.add(queryVariableInput);
-    }
-    String variableInputsQuery = "[" + String.join(",", variableInputs) + "]";
+    String variableInputsQuery = getVariableInputsQuery(variableValues);
     String serviceInputQuery =
         $GQL(/*[{
 name: "%s"
@@ -164,14 +155,64 @@ execution {
 }*/ mutationInputQuery);
   }
 
-  @Data
-  private static class QLStartExecutionResult {
-    private String clientMutationId;
-    private QLExecutionResult execution;
+  @NotNull
+  private String getVariableInputsQuery(Map<String, String> variableValues) {
+    List<String> variableInputs = new ArrayList<>();
+    for (Map.Entry<String, String> entry : variableValues.entrySet()) {
+      String queryVariableInput = $GQL(/*{
+      name: "%s"
+      variableValue: {
+          value: "%s"
+          type: NAME
+          }}*/ entry.getKey(), entry.getValue());
+      variableInputs.add(queryVariableInput);
+    }
+    return "[" + String.join(",", variableInputs) + "]";
   }
 
-  @Data
-  private static class QLExecutionResult {
-    private String status;
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void getExecutionInputsWorkflow() {
+    ImmutableMap<String, String> workflowVariables =
+        ImmutableMap.<String, String>builder()
+            .put("Environment", environment.getName())
+            .put("Service", service.getName())
+            .put("InfraDefinition_Kubernetes", infrastructureDefinition.getName())
+            .build();
+
+    String query =
+        getGraphqlQueryForExecutionInputs(application.getAppId(), templatizedWorkflow.getUuid(), workflowVariables);
+    Map<Object, Object> response = GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), query);
+
+    assertThat(response).isNotEmpty();
+    assertThat(response.get("executionInputs")).isNotNull();
+    Map<String, Object> executionInputs = (Map<String, Object>) response.get("executionInputs");
+    assertThat(executionInputs.get("serviceInputs")).isNotNull();
+    List<Object> serviceInputs = (List<Object>) executionInputs.get("serviceInputs");
+
+    assertThat(serviceInputs.size()).isEqualTo(1);
+    Map<String, Object> serviceInput0 = (Map<String, Object>) serviceInputs.get(0);
+    assertThat(serviceInput0.get("id")).isEqualTo(service.getUuid());
+  }
+
+  private String getGraphqlQueryForExecutionInputs(
+      String appId, String workflowId, ImmutableMap<String, String> workflowVariables) {
+    String variableInputsQuery = getVariableInputsQuery(workflowVariables);
+
+    return $GQL(/*
+query{
+executionInputs(entityId: "%s",
+applicationId: "%s",
+executionType: WORKFLOW,
+variableInputs: %s
+){
+    serviceInputs {
+      id
+      name
+      artifactType
+    }
+  }
+}*/ workflowId, appId, variableInputsQuery);
   }
 }
