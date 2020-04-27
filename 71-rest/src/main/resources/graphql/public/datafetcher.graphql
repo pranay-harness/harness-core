@@ -100,4 +100,5 @@ enum DataFetcherEnum {
   secretManagers
   getSecret
   startExecution
+  executionInputs
 }

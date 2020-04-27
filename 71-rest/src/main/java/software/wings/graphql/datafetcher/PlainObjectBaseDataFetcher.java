@@ -107,13 +107,6 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
   private static final Objenesis objenesis = new ObjenesisStd(true);
 
   private P fetchParameters(Class<P> clazz, DataFetchingEnvironment dataFetchingEnvironment) {
-    ModelMapper modelMapper = new ModelMapper();
-    modelMapper.getConfiguration()
-        .setMatchingStrategy(MatchingStrategies.STANDARD)
-        .setFieldMatchingEnabled(true)
-        .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
-
-    P parameters = objenesis.newInstance(clazz);
     Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
     if (dataFetchingEnvironment.getSource() instanceof QLContextedObject) {
       map.putAll(((QLContextedObject) dataFetchingEnvironment.getSource()).getContext());
@@ -125,7 +118,7 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
       contextFieldArgsMap.forEach(
           (key, value) -> map.put(key, utils.getFieldValue(dataFetchingEnvironment.getSource(), value)));
     }
-    modelMapper.map(map, parameters);
+    P parameters = convertToObject(map, clazz);
     if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
       try {
         FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
@@ -144,6 +137,17 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
       }
     }
 
+    return parameters;
+  }
+
+  protected P convertToObject(Map<String, Object> map, Class<P> clazz) {
+    ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration()
+        .setMatchingStrategy(MatchingStrategies.STANDARD)
+        .setFieldMatchingEnabled(true)
+        .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
+    P parameters = objenesis.newInstance(clazz);
+    modelMapper.map(map, parameters);
     return parameters;
   }
 

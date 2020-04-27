@@ -35,6 +35,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
 import software.wings.graphql.schema.query.QLExecutionQueryParameters.QLExecutionQueryParametersKeys;
+import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
 import software.wings.graphql.schema.type.QLApiKey;
 import software.wings.graphql.schema.type.QLCause;
@@ -143,11 +144,11 @@ public class WorkflowExecutionController {
       notNullCheck(
           "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
 
-      String envId = resolveEnvId(workflow, triggerExecutionInput.getVariableInputs());
-      authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
-
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+        String envId = resolveEnvId(workflow, triggerExecutionInput.getVariableInputs());
+        authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
+
         Map<String, String> variableValues =
             validateAndResolveWorkflowVariables(workflow, triggerExecutionInput.getVariableInputs(), envId);
         List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(
@@ -288,5 +289,34 @@ public class WorkflowExecutionController {
     }
     throw new InvalidRequestException(
         "Workflow [" + workflow.getName() + "] has environment parameterized. However, the value not supplied", USER);
+  }
+
+  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters, String accountId) {
+    String appId = parameters.getApplicationId();
+    try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      String workflowId = parameters.getEntityId();
+      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+      notNullCheck("Workflow " + workflowId + " doesn't exist in the specified application " + appId, workflow, USER);
+      notNullCheck(
+          "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
+      try (
+          AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+        String envId = resolveEnvId(workflow, parameters.getVariableInputs());
+
+        Map<String, String> variableValues =
+            validateAndResolveWorkflowVariables(workflow, parameters.getVariableInputs(), envId);
+
+        DeploymentMetadata finalDeploymentMetadata =
+            workflowService.fetchDeploymentMetadata(appId, workflow, variableValues, null, null, false, null);
+        if (finalDeploymentMetadata != null) {
+          List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
+          if (isNotEmpty(artifactNeededServiceIds)) {
+            return artifactNeededServiceIds;
+          }
+        }
+        logger.info("No Services requires artifact inputs for this workflow: " + workflowId);
+        return new ArrayList<>();
+      }
+    }
   }
 }

@@ -14,8 +14,7 @@ public class GraphQLRestUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  public static Map<Object, Object> executeMutationGraphQLQuery(
-      String bearerToken, String accountId, String mutationQuery) {
+  public static Map<Object, Object> executeGraphQLQuery(String bearerToken, String accountId, String mutationQuery) {
     Map<String, Object> query = new HashMap<>();
     query.put("query", mutationQuery);
     query.put("variables", null);

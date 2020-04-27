@@ -3,6 +3,19 @@ extend type Mutation {
   startExecution(input: StartExecutionInput!): StartExecutionPayload @dataFetcher(name: startExecution)
 }
 
+extend type Query {
+  executionInputs(
+    entityId: String!
+    applicationId: String!
+    executionType: ExecutionType!
+    variableInputs: [VariableInput]
+  ): ExecutionInputs @dataFetcher(name: executionInputs)
+}
+
+type ExecutionInputs {
+  serviceInputs: [Service]
+}
+
 input StartExecutionInput {
   clientMutationId: String
 
