@@ -334,12 +334,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAdd() {
-    Delegate delegate = BUILDER.build();
-    DelegateProfile primaryDelegateProfile =
-        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+    Delegate delegate = BUILDER.uuid(generateUuid()).build();
 
-    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
+    wingsPersistence.save(delegateProfile);
+    delegate.setDelegateProfileId(delegateProfile.getUuid());
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
 
     delegate = delegateService.add(delegate);
 
@@ -347,6 +349,40 @@ public class DelegateServiceTest extends WingsBaseTest {
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldAddWithPrimaryProfile() {
+    Delegate delegateWithoutProfile = BUILDER.uuid(generateUuid()).build();
+
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegateWithoutProfile.getAccountId()).primary(true).build();
+    when(delegateProfileService.fetchPrimaryProfile(delegateWithoutProfile.getAccountId()))
+        .thenReturn(primaryDelegateProfile);
+
+    delegateWithoutProfile = delegateService.add(delegateWithoutProfile);
+
+    Delegate savedDelegate = wingsPersistence.get(Delegate.class, delegateWithoutProfile.getUuid());
+    assertThat(savedDelegate).isEqualToIgnoringGivenFields(delegateWithoutProfile, DelegateKeys.delegateProfileId);
+    assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegateWithoutProfile.getUuid()).withType(Type.CREATE).build());
+
+    Delegate delegateWithNonExistingProfile = BUILDER.uuid(generateUuid()).build();
+    delegateWithNonExistingProfile.setDelegateProfileId("nonExistingProfile");
+    when(delegateProfileService.get(
+             delegateWithoutProfile.getAccountId(), delegateWithNonExistingProfile.getDelegateProfileId()))
+        .thenReturn(null);
+
+    delegateWithNonExistingProfile = delegateService.add(delegateWithNonExistingProfile);
+
+    savedDelegate = wingsPersistence.get(Delegate.class, delegateWithNonExistingProfile.getUuid());
+    assertThat(savedDelegate)
+        .isEqualToIgnoringGivenFields(delegateWithNonExistingProfile, DelegateKeys.delegateProfileId);
+    assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
   }
 
   @Test

@@ -1255,7 +1255,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate savedDelegate;
     String accountId = delegate.getAccountId();
 
-    if (isBlank(delegate.getDelegateProfileId())) {
+    if (isBlank(delegate.getDelegateProfileId())
+        || delegateProfileService.get(accountId, delegate.getDelegateProfileId()) == null) {
       DelegateProfile primaryDelegateProfile = delegateProfileService.fetchPrimaryProfile(accountId);
       delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     }
