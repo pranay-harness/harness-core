@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.exception.HarnessException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityVersion;
@@ -62,8 +61,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   @Inject EnvironmentService environmentService;
   @Inject TemplateService templateService;
 
-  private ServiceCommand toBean(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext,
-      boolean isCreate) throws HarnessException {
+  private ServiceCommand toBean(
+      ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext, boolean isCreate) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
 
@@ -243,8 +242,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   }
 
   @Override
-  public ServiceCommand upsertFromYaml(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public ServiceCommand upsertFromYaml(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
 
     ServiceCommand previous = get(accountId, changeContext.getChange().getFilePath());

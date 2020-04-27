@@ -19,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -59,7 +60,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmConnectorSafeToDelete() {
+  public void testEnsureHelmConnectorSafeToDelete() throws IllegalAccessException {
+    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
     SettingAttribute helmConnector =
         SettingAttribute.Builder.aSettingAttribute()
             .withAccountId(ACCOUNT_ID)

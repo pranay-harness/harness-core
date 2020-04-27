@@ -11,7 +11,9 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.sm.StateType.APM_VERIFICATION;
 
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
@@ -37,6 +40,7 @@ import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Application;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -59,6 +63,7 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState;
@@ -97,6 +102,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private AlertService alertService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private SettingsService settingsService;
 
   private String accountId;
   private String appId;
@@ -984,7 +990,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testWhenDeleteConfiguration_DeletesAlerts() {
     final APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     apmVerificationConfig.setAccountId(accountId);
-    final String connectorId = wingsPersistence.save(SettingAttribute.Builder.aSettingAttribute()
+    final String connectorId = wingsPersistence.save(aSettingAttribute()
                                                          .withAccountId(accountId)
                                                          .withAppId(appId)
                                                          .withName(generateUuid())
@@ -1054,6 +1060,33 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
                    .filter(AlertKeys.status, AlertStatus.Closed)
                    .count())
         .isEqualTo(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testDeleteSettingAttribute_whenUsedInServiceGuard() throws Exception {
+    String connectorName = generateUuid();
+    final String connectorId =
+        wingsPersistence.save(aSettingAttribute()
+                                  .withName(connectorName)
+                                  .withAccountId(accountId)
+                                  .withValue(DatadogConfig.builder().url(generateUuid()).accountId(accountId).build())
+                                  .build());
+
+    final DatadogCVServiceConfiguration datadogCVConfiguration = createDatadogCVConfiguration(false, false);
+    datadogCVConfiguration.setConnectorId(connectorId);
+    final String cvConfigId = wingsPersistence.save(datadogCVConfiguration);
+    assertThatThrownBy(() -> settingsService.delete(appId, connectorId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector " + connectorName + " is referenced by 1 Service Guard(s). Source ["
+            + datadogCVConfiguration.getName() + "].");
+
+    assertThat(wingsPersistence.get(SettingAttribute.class, connectorId)).isNotNull();
+
+    wingsPersistence.delete(CVConfiguration.class, cvConfigId);
+    settingsService.delete(appId, connectorId);
+    assertThat(wingsPersistence.get(SettingAttribute.class, connectorId)).isNull();
   }
 
   private long waitTillAlertsSteady(long numOfExpectedAlerts) {

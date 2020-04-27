@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.command;
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -45,7 +44,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     return new HashMap<>();
   }
 
-  protected C toBean(ChangeContext<Y> changeContext) throws HarnessException {
+  protected C toBean(ChangeContext<Y> changeContext) {
     Y yaml = changeContext.getYaml();
     CommandUnitType commandUnitType = Utils.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType());
     C commandUnit = getCommandUnit();
@@ -76,13 +75,12 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   }
 
   @Override
-  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Y> changeContext) {
     // do nothing
   }
 
   @Override
-  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 }

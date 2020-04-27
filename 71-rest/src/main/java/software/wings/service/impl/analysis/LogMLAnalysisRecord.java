@@ -13,7 +13,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
-import io.harness.exception.WingsException;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
@@ -267,7 +266,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
 
         this.setProtoSerializedAnalyisDetails(null);
       } catch (InvalidProtocolBufferException e) {
-        throw new WingsException(e);
+        throw new IllegalStateException(e);
       }
       return;
     }
@@ -285,7 +284,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
         this.setTest_clusters(logAnalysisDetails.getTest_clusters());
         this.setIgnore_clusters(logAnalysisDetails.getIgnore_clusters());
       } catch (IOException e) {
-        throw new WingsException(e);
+        throw new IllegalStateException(e);
       }
     }
   }
