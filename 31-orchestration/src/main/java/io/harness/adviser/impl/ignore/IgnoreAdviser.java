@@ -16,7 +16,6 @@ import lombok.Value;
 @Redesign
 public class IgnoreAdviser implements Adviser {
   IgnoreAdviserParameters parameters;
-  AdviserType type = AdviserType.builder().type(AdviserType.IGNORE).build();
 
   @Builder
   public IgnoreAdviser(IgnoreAdviserParameters parameters) {
@@ -34,5 +33,10 @@ public class IgnoreAdviser implements Adviser {
       return OnSuccessAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
     }
     return null;
+  }
+
+  @Override
+  public AdviserType getType() {
+    return AdviserType.builder().type(AdviserType.IGNORE).build();
   }
 }

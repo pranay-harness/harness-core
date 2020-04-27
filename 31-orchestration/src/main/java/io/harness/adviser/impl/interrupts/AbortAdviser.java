@@ -12,10 +12,13 @@ import lombok.Value;
 @Builder
 @Redesign
 public class AbortAdviser implements Adviser {
-  AdviserType type = AdviserType.builder().type(AdviserType.ABORT).build();
-
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     return null;
+  }
+
+  @Override
+  public AdviserType getType() {
+    return AdviserType.builder().type(AdviserType.ABORT).build();
   }
 }
