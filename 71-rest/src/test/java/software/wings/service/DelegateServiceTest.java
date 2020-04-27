@@ -67,6 +67,7 @@ import io.harness.configuration.DeployMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -487,8 +488,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
-    delegate = delegateService.register(delegate);
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
 
@@ -537,8 +538,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate = delegateService.add(delegate);
     when(licenseService.isAccountDeleted(accountId)).thenReturn(true);
 
-    Delegate registered = delegateService.register(delegate);
-    assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
+    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
   }
 
   @Test
@@ -555,8 +556,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .build();
     when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
 
-    Delegate registered = delegateService.register(delegate);
-    assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
+    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
   }
 
   @Test
