@@ -7,4 +7,5 @@ import lombok.Value;
 @Builder
 public class QLCloudProviderQueryParameters {
   private String cloudProviderId;
+  private String name;
 }
