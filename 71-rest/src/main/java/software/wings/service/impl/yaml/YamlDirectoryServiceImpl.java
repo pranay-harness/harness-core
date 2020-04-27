@@ -2118,11 +2118,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
     final FolderNode templateLibraryFolder = new FolderNode(accountId, templateLibraryFolderName,
         SettingAttribute.class, directoryPath.add(templateLibraryFolderName), yamlGitSyncService);
-    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      if (!userHasTemplateLibraryPermissions(accountId, UserThreadLocal.get())) {
-        return templateLibraryFolder;
-      }
-    }
+
     // get the whole template folder tree  structure
     final TemplateFolder templateTree =
         templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
