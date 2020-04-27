@@ -128,8 +128,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
              executionContext.getStateExecutionInstanceId(), StateType.valueOf(getStateType()), OVERRIDE_ERROR)) {
       getLogger().info("Executing state {}", executionContext.getStateExecutionInstanceId());
       String correlationId = UUID.randomUUID().toString();
-      Logger activityLogger =
-          cvActivityLogService.getLoggerByStateExecutionId(executionContext.getStateExecutionInstanceId());
+      Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(
+          executionContext.getAccountId(), executionContext.getStateExecutionInstanceId());
       String delegateTaskId = null;
       try {
         renderedQuery = executionContext.renderExpression(query);

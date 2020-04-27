@@ -752,7 +752,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   public void testGetResolvedFieldValue_whenExpressionInvalidValue() throws Exception {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
     FieldUtils.writeField(abstractAnalysisState, "cvActivityLogService", cvActivityLogService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
     abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
     when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("${hostnameTemplate}");
 
@@ -769,7 +769,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   public void testGetResolvedFieldValue_whenExpressionValidValue() throws Exception {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
     FieldUtils.writeField(abstractAnalysisState, "cvActivityLogService", cvActivityLogService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
     abstractAnalysisState.setHostnameTemplate("${hostnameTemplate}");
     when(executionContext.renderExpression("${hostnameTemplate}")).thenReturn("resolved template");
 

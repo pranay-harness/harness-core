@@ -62,6 +62,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   private final ServiceApiVersion serviceApiVersion = ServiceApiVersion.V1;
   private final String experimentName = "ts";
   private final String serviceId = "serviceId";
+  private final String accountId = "accountId";
 
   private LearningEngineAnalysisTask analysisTask;
   private LearningEngineExperimentalAnalysisTask experimentalAnalysisTask;
@@ -537,7 +538,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     wingsPersistence.save(analysisTask);
 
     learningEngineService.markCompleted(
-        workflowExecutionId, stateExecutionId, 0, MLAnalysisType.LOG_ML, ClusterLevel.L0);
+        accountId, workflowExecutionId, stateExecutionId, 0, MLAnalysisType.LOG_ML, ClusterLevel.L0);
 
     LearningEngineAnalysisTask analysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)

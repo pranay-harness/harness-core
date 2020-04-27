@@ -188,7 +188,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
 
   protected void setupCvActivityLogService(AbstractAnalysisState state) throws IllegalAccessException {
     FieldUtils.writeField(state, "cvActivityLogService", cvActivityLogService, true);
-    PowerMockito.when(cvActivityLogService.getLoggerByStateExecutionId(anyString()))
+    PowerMockito.when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString()))
         .thenReturn(mock(CVActivityLogService.Logger.class));
   }
 }

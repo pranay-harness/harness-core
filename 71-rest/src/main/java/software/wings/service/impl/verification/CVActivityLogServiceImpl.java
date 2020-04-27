@@ -46,19 +46,19 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
   }
 
   @Override
-  public Logger getLogger(String cvConfigId, long dataCollectionMinute, String stateExecutionId) {
-    return Strings.isNullOrEmpty(cvConfigId) ? getLoggerByStateExecutionId(stateExecutionId)
-                                             : getLoggerByCVConfigId(cvConfigId, dataCollectionMinute);
+  public Logger getLogger(String accountId, String cvConfigId, long dataCollectionMinute, String stateExecutionId) {
+    return Strings.isNullOrEmpty(cvConfigId) ? getLoggerByStateExecutionId(accountId, stateExecutionId)
+                                             : getLoggerByCVConfigId(accountId, cvConfigId, dataCollectionMinute);
   }
 
   @Override
-  public Logger getLoggerByCVConfigId(String cvConfigId, long dataCollectionMinute) {
-    return new LoggerImpl(cvConfigId, dataCollectionMinute);
+  public Logger getLoggerByCVConfigId(String accountId, String cvConfigId, long dataCollectionMinute) {
+    return new LoggerImpl(accountId, cvConfigId, dataCollectionMinute);
   }
 
   @Override
-  public Logger getLoggerByStateExecutionId(String stateExecutionId) {
-    return new LoggerImpl(stateExecutionId);
+  public Logger getLoggerByStateExecutionId(String accountId, String stateExecutionId) {
+    return new LoggerImpl(accountId, stateExecutionId);
   }
 
   @Override
@@ -80,8 +80,8 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
   }
 
   @Override
-  public List<CVActivityLog> getActivityLogs(
-      String stateExecutionId, String cvConfigId, long startTimeEpochMinute, long endTimeEpochMinute) {
+  public List<CVActivityLog> getActivityLogs(String accountId, String stateExecutionId, String cvConfigId,
+      long startTimeEpochMinute, long endTimeEpochMinute) {
     List<CVActivityLog> cvActivityLogs;
     if (stateExecutionId != null) {
       AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
@@ -98,6 +98,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
                                                    .logLevel(LogLevel.INFO)
                                                    .createdAt(System.currentTimeMillis())
                                                    .lastUpdatedAt(System.currentTimeMillis())
+                                                   .accountId(accountId)
                                                    .build();
         cvActivityLogs = new ArrayList<>();
         cvActivityLogs.add(placeholderActivityLog);
@@ -112,15 +113,18 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
     private String cvConfigId;
     private long dataCollectionMinute;
     private String stateExecutionId;
-    LoggerImpl(String cvConfigId, long dataCollectionMinute) {
+    private String accountId;
+    LoggerImpl(String accountId, String cvConfigId, long dataCollectionMinute) {
       Preconditions.checkNotNull(cvConfigId);
       this.cvConfigId = cvConfigId;
       this.dataCollectionMinute = dataCollectionMinute;
+      this.accountId = accountId;
     }
 
-    LoggerImpl(String stateExecutionId) {
+    LoggerImpl(String accountId, String stateExecutionId) {
       Preconditions.checkNotNull(stateExecutionId);
       this.stateExecutionId = stateExecutionId;
+      this.accountId = accountId;
     }
 
     @Override
@@ -133,6 +137,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
               .log(log)
               .logLevel(logLevel)
               .timestampParams(Arrays.stream(timestampParams).boxed().collect(Collectors.toList()))
+              .accountId(accountId)
               .build();
       wingsPersistence.save(cvActivityLog);
     }

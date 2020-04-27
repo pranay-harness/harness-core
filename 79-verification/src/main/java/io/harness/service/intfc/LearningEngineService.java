@@ -38,8 +38,8 @@ public interface LearningEngineService {
 
   void markStatus(
       String workflowExecutionId, String stateExecutionId, long analysisMinute, ExecutionStatus executionStatus);
-  void markCompleted(String workflowExecutionId, String stateExecutionId, long analysisMinute, MLAnalysisType type,
-      ClusterLevel level);
+  void markCompleted(String accountId, String workflowExecutionId, String stateExecutionId, long analysisMinute,
+      MLAnalysisType type, ClusterLevel level);
 
   AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion);
 

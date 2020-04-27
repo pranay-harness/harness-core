@@ -86,7 +86,7 @@ public class InstanaStateTest extends APMStateVerificationTestBase {
     setupCommonFields(instanaState);
     FieldUtils.writeField(instanaState, "accountService", accountService, true);
     FieldUtils.writeField(instanaState, "metricAnalysisService", metricAnalysisService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
   }
 
   @Test

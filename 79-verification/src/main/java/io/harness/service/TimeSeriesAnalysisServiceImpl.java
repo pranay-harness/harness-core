@@ -187,8 +187,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   private void logLearningEngineAnalysisMessage(NewRelicMetricAnalysisRecord metricAnalysisRecord) {
     if (isNotEmpty(metricAnalysisRecord.getMessage())) {
       cvActivityLogService
-          .getLogger(metricAnalysisRecord.getCvConfigId(), metricAnalysisRecord.getAnalysisMinute(),
-              metricAnalysisRecord.getStateExecutionId())
+          .getLogger(metricAnalysisRecord.getAccountId(), metricAnalysisRecord.getCvConfigId(),
+              metricAnalysisRecord.getAnalysisMinute(), metricAnalysisRecord.getStateExecutionId())
           .warn(metricAnalysisRecord.getMessage());
     }
   }
@@ -196,8 +196,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   private void logLearningEngineAnalysisMessage(MetricAnalysisRecord mlAnalysisResponse) {
     if (isNotEmpty(mlAnalysisResponse.getMessage())) {
       cvActivityLogService
-          .getLogger(mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getAnalysisMinute(),
-              mlAnalysisResponse.getStateExecutionId())
+          .getLogger(mlAnalysisResponse.getAccountId(), mlAnalysisResponse.getCvConfigId(),
+              mlAnalysisResponse.getAnalysisMinute(), mlAnalysisResponse.getStateExecutionId())
           .warn(mlAnalysisResponse.getMessage());
     }
   }

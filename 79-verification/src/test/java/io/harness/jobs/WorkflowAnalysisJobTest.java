@@ -464,7 +464,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
     when(versionsCall.execute()).thenReturn(Response.success(new RestResponse<>(Lists.newArrayList())));
     when(verificationManagerClient.getListOfPublishedVersions(anyString())).thenReturn(versionsCall);
 
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString()))
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString()))
         .thenReturn(mock(CVActivityLogService.Logger.class));
 
     workflowLogAnalysisJob.handle(logAnalysisContext);

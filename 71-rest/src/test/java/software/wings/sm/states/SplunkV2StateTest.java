@@ -68,7 +68,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     AppService appService = mock(AppService.class);
     when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
     when(appService.get(anyString()))
@@ -168,7 +168,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
@@ -203,7 +203,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage())
@@ -227,7 +227,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage())
@@ -269,7 +269,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void handleAsyncSummaryPassNoData() {
     doReturn("exception").when(executionContext).renderExpression(anyString());
     Logger activityLogger = mock(Logger.class);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     VerificationStateAnalysisExecutionData logAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder()
             .correlationId(UUID.randomUUID().toString())

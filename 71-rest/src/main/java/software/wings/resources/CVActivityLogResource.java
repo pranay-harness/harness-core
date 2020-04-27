@@ -40,7 +40,7 @@ public class CVActivityLogResource {
       @QueryParam("endTime") long endTime) {
     // keeping external API same as other apis but we need to fix this. API has to add one minute to startTime to get
     // the data for the heatmap.
-    return new RestResponse<>(cvActivityLogService.getActivityLogs(stateExecutionId, cvConfigId,
+    return new RestResponse<>(cvActivityLogService.getActivityLogs(accountId, stateExecutionId, cvConfigId,
         TimeUnit.MILLISECONDS.toMinutes(startTime), TimeUnit.MILLISECONDS.toMinutes(endTime)));
   }
 }

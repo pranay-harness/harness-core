@@ -231,7 +231,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   public void testUpdateTaskStatusWhenTaskResultIsSuccessful() throws IllegalAccessException {
     CVActivityLogService activityLogService = mock(CVActivityLogService.class);
     Logger logger = mock(Logger.class);
-    when(activityLogService.getLogger(any(), anyLong(), any())).thenReturn(logger);
+    when(activityLogService.getLogger(any(), any(), anyLong(), any())).thenReturn(logger);
     FieldUtils.writeField(cvTaskService, "activityLogService", activityLogService, true);
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
@@ -253,7 +253,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   public void testUpdateTaskStatusWhenTaskHasFailed() throws IllegalAccessException {
     CVActivityLogService activityLogService = mock(CVActivityLogService.class);
     Logger logger = mock(Logger.class);
-    when(activityLogService.getLogger(any(), anyLong(), any())).thenReturn(logger);
+    when(activityLogService.getLogger(any(), any(), anyLong(), any())).thenReturn(logger);
     FieldUtils.writeField(cvTaskService, "activityLogService", activityLogService, true);
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);

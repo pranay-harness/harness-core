@@ -101,7 +101,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "accountService", accountService, true);
     FieldUtils.writeField(dynatraceState, "cvActivityLogService", cvActivityLogService, true);
     FieldUtils.writeField(dynatraceState, "dynaTraceService", dynaTraceService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
   }
 
   @Test

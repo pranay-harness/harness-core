@@ -302,7 +302,7 @@ public class CVTaskServiceImpl implements CVTaskService {
   }
 
   private Logger getActivityLogger(CVTask cvTask) {
-    return activityLogService.getLogger(cvTask.getCvConfigId(),
+    return activityLogService.getLogger(cvTask.getAccountId(), cvTask.getCvConfigId(),
         cvTask.getDataCollectionInfo().getEndTime().toEpochMilli(), cvTask.getStateExecutionId());
   }
 

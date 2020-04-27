@@ -160,7 +160,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(newRelicState, "appService", appService, true);
     FieldUtils.writeField(newRelicState, "accountService", accountService, true);
     FieldUtils.writeField(newRelicState, "cvActivityLogService", cvActivityLogService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
 
     setupCommonMocks();
   }

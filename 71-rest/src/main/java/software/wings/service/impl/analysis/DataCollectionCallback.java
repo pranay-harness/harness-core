@@ -73,8 +73,10 @@ public class DataCollectionCallback implements NotifyCallback {
   }
 
   private void activityLog(DataCollectionTaskResult result) {
+    String accountId = appService.getAccountIdByAppId(appId);
+
     Logger activityLogger = cvActivityLogService.getLogger(
-        cvConfigId, TimeUnit.MILLISECONDS.toMinutes(dataCollectionEndTime), stateExecutionId);
+        accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(dataCollectionEndTime), stateExecutionId);
     if (result.getStatus() == DataCollectionTaskStatus.SUCCESS) {
       activityLogger.info(
           "Data collection successful for time range %t to %t", dataCollectionStartTime, dataCollectionEndTime);
