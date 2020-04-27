@@ -187,7 +187,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
     final Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).order(Sort.ascending(fieldName));
     filterExpander.filter(query);
-    assertThat(query.toString()).contains("accountId\" : { \"$exists\" : true}");
+    assertThat(query.toString()).contains("accountId\": {\"$exists\": true}");
   }
 
   @Test
@@ -226,7 +226,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
         wingsPersistence.createQuery(EncryptedData.class).order(Sort.ascending(fieldName));
     filterExpander.filter(query);
     String queryString = query.toString();
-    assertThat(queryString).contains("accountId\" : { \"$in\" : [ \"");
+    assertThat(queryString).contains("accountId\": {\"$in\": [\"");
     assertThat(queryString).contains(testAccount1);
     assertThat(queryString).contains(testAccount2);
   }
