@@ -11,7 +11,6 @@ import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNE
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -128,8 +127,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       helmChartInfo = getHelmChartDetails(commandRequest);
 
-      List<Pod> existingPods = getExistingPods(commandRequest);
-
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = helmClient.install(commandRequest);
@@ -149,9 +146,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       List<ContainerInfo> containerInfos = new ArrayList<>();
       LogCallback finalExecutionLogCallback = executionLogCallback;
-      timeLimiter.callWithTimeout(
-          ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, existingPods)),
+      timeLimiter.callWithTimeout(()
+                                      -> containerInfos.addAll(fetchContainerInfo(
+                                          commandRequest, finalExecutionLogCallback, new ArrayList<>())),
           commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
 
@@ -186,19 +183,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         deleteAndPurgeHelmRelease(commandRequest, executionLogCallback);
       }
       FileIo.deleteDirectoryAndItsContentIfExists(getWorkingDirectory(commandRequest));
-    }
-  }
-
-  private List<Pod> getExistingPods(HelmCommandRequest commandRequest) {
-    try {
-      final ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
-      final KubernetesConfig kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
-      return containerDeploymentDelegateHelper.getExistingPodsByLabels(
-          containerServiceParams, kubernetesConfig, ImmutableMap.of("release", commandRequest.getReleaseName()));
-    } catch (Exception ex) {
-      logger.error("Could not get existing pods using release name label:" + commandRequest.getReleaseName(), ex);
-      return new ArrayList<>();
     }
   }
 
@@ -306,12 +290,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
-      List<Pod> existingPods = getExistingPods(commandRequest);
       List<ContainerInfo> containerInfos = new ArrayList<>();
       LogCallback finalExecutionLogCallback = executionLogCallback;
-      timeLimiter.callWithTimeout(
-          ()
-              -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, existingPods)),
+      timeLimiter.callWithTimeout(()
+                                      -> containerInfos.addAll(fetchContainerInfo(
+                                          commandRequest, finalExecutionLogCallback, new ArrayList<>())),
           commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
       commandResponse.setContainerInfoList(containerInfos);
 
