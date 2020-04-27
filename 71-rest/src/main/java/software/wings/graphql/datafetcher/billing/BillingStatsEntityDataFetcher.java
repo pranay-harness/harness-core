@@ -92,18 +92,10 @@ public class BillingStatsEntityDataFetcher
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
             accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
 
-    // Calculate Unallocated Cost for Clusters
-    Map<String, Double> unallocatedCostForClusters = new HashMap<>();
-    if (billingDataQueryBuilder.isUnallocatedCostAggregationPresent(aggregateFunction)) {
-      unallocatedCostForClusters = getUnallocatedCostDataForClusters(
-          accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
-    }
-
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
-      return generateEntityData(
-          queryData, resultSet, entityIdToPrevBillingAmountData, filters, unallocatedCostForClusters);
+      return generateEntityData(queryData, resultSet, entityIdToPrevBillingAmountData, filters);
     } catch (SQLException e) {
       logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
     } finally {
@@ -113,8 +105,8 @@ public class BillingStatsEntityDataFetcher
   }
 
   private QLEntityTableListData generateEntityData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters,
-      Map<String, Double> unallocatedCostForCluster) throws SQLException {
+      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters)
+      throws SQLException {
     List<QLEntityTableData> entityTableListData = new ArrayList<>();
     while (resultSet != null && resultSet.next()) {
       String entityId = BillingStatsDefaultKeys.ENTITYID;
@@ -221,6 +213,9 @@ public class BillingStatsEntityDataFetcher
           case TOTALWORKLOADS:
             // Todo: query db to get total workloads in a given namespace
             break;
+          case UNALLOCATEDCOST:
+            unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           default:
             break;
         }
@@ -230,10 +225,6 @@ public class BillingStatsEntityDataFetcher
         costTrend =
             billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityId), filters);
         prevBillingAmount = entityIdToPrevBillingAmountData.get(entityId).getCost().doubleValue();
-      }
-
-      if (unallocatedCostForCluster.containsKey(clusterId)) {
-        unallocatedCost = unallocatedCostForCluster.get(clusterId);
       }
 
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();

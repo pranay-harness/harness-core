@@ -79,9 +79,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       BigDecimal forecastCost = billingDataHelper.getForecastCost(
           billingAmountData.getTotalCostData(), billingDataHelper.getEndInstant(filters));
       BigDecimal unallocatedCost = null;
-      if (isUnallocatedCostRequired(aggregateFunction)) {
-        unallocatedCost = idleCostTrendStatsDataFetcher.getUnallocatedCostData(accountId, aggregateFunction, filters)
-                              .getUnallocatedCost();
+      if (isUnallocatedCostRequired(aggregateFunction) && billingAmountData.getUnallocatedCostData() != null) {
+        unallocatedCost = billingAmountData.getUnallocatedCostData().getCost();
       }
       return QLBillingTrendStats.builder()
           .totalCost(getTotalBillingStats(billingAmountData.getTotalCostData(), filters))
@@ -90,7 +89,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
               billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
           .idleCost(getIdleCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData()))
           .unallocatedCost(getUnallocatedCostStats(unallocatedCost, billingAmountData.getTotalCostData()))
-          .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData()))
+          .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData(),
+              billingAmountData.getUnallocatedCostData()))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
@@ -168,11 +168,15 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .build();
   }
 
-  private QLBillingStatsInfo getUtilizedCostStats(QLBillingAmountData idleCostData, QLBillingAmountData totalCostData) {
+  private QLBillingStatsInfo getUtilizedCostStats(
+      QLBillingAmountData idleCostData, QLBillingAmountData totalCostData, QLBillingAmountData unallocatedCostData) {
     String utilizedCostDescription = EMPTY_VALUE;
     String utilizedCostValue = EMPTY_VALUE;
     if (idleCostData != null && totalCostData != null) {
       double utilizedCost = totalCostData.getCost().doubleValue() - idleCostData.getCost().doubleValue();
+      if (unallocatedCostData != null) {
+        utilizedCost -= unallocatedCostData.getCost().doubleValue();
+      }
       utilizedCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(utilizedCost));
       double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
           BigDecimal.valueOf(utilizedCost / totalCostData.getCost().doubleValue()));
@@ -249,6 +253,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       throws SQLException {
     QLBillingAmountData totalCostData = null;
     QLBillingAmountData idleCostData = null;
+    QLBillingAmountData unallocatedCostData = null;
     while (null != resultSet && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -283,11 +288,31 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
                                  .build();
             }
             break;
+          case UNALLOCATEDCOST:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              unallocatedCostData =
+                  QLBillingAmountData.builder()
+                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
+                      .minStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .maxStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .build();
+            }
+            break;
           default:
         }
       }
     }
-    return QLTrendStatsCostData.builder().totalCostData(totalCostData).idleCostData(idleCostData).build();
+    return QLTrendStatsCostData.builder()
+        .totalCostData(totalCostData)
+        .idleCostData(idleCostData)
+        .unallocatedCostData(unallocatedCostData)
+        .build();
   }
 
   private boolean isUnallocatedCostRequired(List<QLCCMAggregationFunction> aggregateFunctions) {

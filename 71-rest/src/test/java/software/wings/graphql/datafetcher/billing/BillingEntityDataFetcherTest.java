@@ -219,10 +219,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeTimeFilter(filterTime));
     filters.add(makeClusterFilter(clusterValues));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
     QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, Collections.EMPTY_LIST, LIMIT, OFFSET);
-    assertThat(data.getData().size()).isEqualTo(0);
+        ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET);
+    assertThat(data.getData().size()).isEqualTo(5);
   }
 
   @Test
@@ -683,8 +682,12 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getBigDecimal("COST"))
         .thenAnswer((Answer<BigDecimal>) invocation -> BigDecimal.TEN.add(BigDecimal.valueOf(doubleVal[0]++)));
     when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 5.0);
+    when(resultSet.getDouble("ACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 5.0);
+    when(resultSet.getDouble("UNALLOCATEDCOST")).thenAnswer((Answer<Double>) invocation -> 4.0);
     when(resultSet.getDouble("CPUIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
     when(resultSet.getDouble("MEMORYIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
+    when(resultSet.getDouble("CPUACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
+    when(resultSet.getDouble("MEMORYACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
     when(resultSet.getInt("TOTALNAMESPACES")).thenAnswer((Answer<Integer>) invocation -> 0);
     when(resultSet.getInt("TOTALWORKLOADS")).thenAnswer((Answer<Integer>) invocation -> 0);
     when(resultSet.getDouble("MAXCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);

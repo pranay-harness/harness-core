@@ -118,6 +118,9 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           case UNALLOCATEDCOST:
             unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
+          case SYSTEMCOST:
+            systemCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           default:
             break;
         }

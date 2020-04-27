@@ -600,15 +600,15 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
-    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(95.0);
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(115.0);
 
     assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
-    assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+    assertThat(data.getCpuIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(120.0);
 
     assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getKey().getType()).isEqualTo("K8sLabel");
-    assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+    assertThat(data.getMemoryIdleCost().get(0).getValues().get(0).getValue()).isEqualTo(125.0);
 
     assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getKey().getId()).isEqualTo(LABEL);
     assertThat(data.getCpuUtilMetrics().get(0).getValues().get(0).getKey().getName()).isEqualTo("MAX");

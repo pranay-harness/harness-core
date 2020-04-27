@@ -319,6 +319,9 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getBigDecimal("IDLECOST")).thenReturn(IDLE_COST);
     when(resultSet.getBigDecimal("CPUIDLECOST")).thenReturn(CPU_IDLE_COST);
     when(resultSet.getBigDecimal("MEMORYIDLECOST")).thenReturn(MEMORY_IDLE_COST);
+    when(resultSet.getBigDecimal("ACTUALIDLECOST")).thenReturn(IDLE_COST);
+    when(resultSet.getBigDecimal("CPUACTUALIDLECOST")).thenReturn(CPU_IDLE_COST);
+    when(resultSet.getBigDecimal("MEMORYACTUALIDLECOST")).thenReturn(MEMORY_IDLE_COST);
     when(resultSet.getBigDecimal("AVGCPUUTILIZATION")).thenReturn(AVG_CPU_UTILIZATION);
     when(resultSet.getBigDecimal("AVGMEMORYUTILIZATION")).thenReturn(AVG_MEMORY_UTILIZATION);
     when(resultSet.getBigDecimal("CPUBILLINGAMOUNT")).thenReturn(CPU_BILLING_AMOUNT);

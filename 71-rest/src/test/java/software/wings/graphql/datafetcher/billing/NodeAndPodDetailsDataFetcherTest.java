@@ -205,6 +205,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
 
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> 10.0 + doubleVal[0]++);
     when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[1]++);
+    when(resultSet.getDouble("ACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[1]++);
     when(resultSet.getDouble("UNALLOCATEDCOST")).thenAnswer((Answer<Double>) invocation -> 4.0 + doubleVal[2]++);
     when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> INSTANCE_ID);
 
