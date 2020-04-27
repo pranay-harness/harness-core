@@ -80,6 +80,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
@@ -1388,10 +1389,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public Delegate register(Delegate delegate) {
+  public DelegateRegisterResponse register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
-      return Delegate.builder().uuid(SELF_DESTRUCT).build();
+      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
@@ -1406,7 +1407,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (accountService.isAccountMigrated(delegate.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(migrateMsg);
-      return Delegate.builder().uuid(migrateMsg).build();
+      return DelegateRegisterResponse.builder()
+          .action(DelegateRegisterResponse.Action.MIGRATE)
+          .migrateUrl(accountService.get(delegate.getAccountId()).getMigratedToClusterUrl())
+          .build();
     }
 
     Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
@@ -1426,15 +1430,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
-      return Delegate.builder().uuid(SELF_DESTRUCT).build();
+      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
     logger.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
 
     if (ECS.equals(delegate.getDelegateType())) {
-      return handleEcsDelegateRequest(delegate);
+      return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
     } else {
-      return upsertDelegateOperation(existingDelegate, delegate);
+      return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
     }
   }
 
@@ -1493,6 +1497,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       logger.info("^^^^SEQ: " + message.toString());
     }
+  }
+
+  private DelegateRegisterResponse registerResponseFromDelegate(Delegate delegate) {
+    return DelegateRegisterResponse.builder()
+        .delegateId(delegate.getUuid())
+        .sequenceNum(delegate.getSequenceNum())
+        .delegateRandomToken(delegate.getDelegateRandomToken())
+        .build();
   }
 
   @VisibleForTesting

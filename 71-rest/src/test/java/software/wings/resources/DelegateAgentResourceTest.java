@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -142,23 +143,17 @@ public class DelegateAgentResourceTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
-    when(delegateService.register(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
-    RestResponse<Delegate> restResponse =
+    DelegateRegisterResponse registerResponse = DelegateRegisterResponse.builder().delegateId(ID_KEY).build();
+    when(delegateService.register(any(Delegate.class))).thenReturn(registerResponse);
+    RestResponse<DelegateRegisterResponse> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/register?accountId=" + ACCOUNT_ID)
             .request()
             .post(entity(Delegate.builder().uuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
-                new GenericType<RestResponse<Delegate>>() {});
+                new GenericType<RestResponse<DelegateRegisterResponse>>() {});
 
-    ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
-    verify(delegateService, atLeastOnce()).register(captor.capture());
-    Delegate captorValue = captor.getValue();
-    assertThat(captorValue.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(captorValue.getUuid()).isEqualTo(ID_KEY);
-    Delegate resource = restResponse.getResource();
-    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+    DelegateRegisterResponse resourceResponse = restResponse.getResource();
+    assertThat(registerResponse).isEqualTo(resourceResponse);
   }
 
   @Test

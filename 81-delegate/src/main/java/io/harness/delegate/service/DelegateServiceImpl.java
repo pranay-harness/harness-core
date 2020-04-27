@@ -87,6 +87,7 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
@@ -772,7 +773,7 @@ public class DelegateServiceImpl implements DelegateService {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get()) {
-      RestResponse<Delegate> delegateResponse;
+      RestResponse<DelegateRegisterResponse> restResponse;
       try {
         attempts.incrementAndGet();
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
@@ -780,14 +781,14 @@ public class DelegateServiceImpl implements DelegateService {
         Delegate delegate = builder.build();
         delegate.setStatus(Status.ENABLED);
         delegate.setLastHeartBeat(clock.millis());
-        delegateResponse = execute(managerClient.registerDelegate(accountId, delegate));
+        restResponse = execute(managerClient.registerDelegate(accountId, delegate));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         logger.error(msg, e);
         sleep(ofMinutes(1));
         continue;
       }
-      if (delegateResponse == null || delegateResponse.getResource() == null) {
+      if (restResponse == null || restResponse.getResource() == null) {
         logger.error(
             "Error occurred while registering delegate with manager for account {}. Please see the manager log for more information",
             accountId);
@@ -795,23 +796,22 @@ public class DelegateServiceImpl implements DelegateService {
         continue;
       }
 
-      Delegate delegate = delegateResponse.getResource();
-      String delegateId = delegate.getUuid();
-      handleEcsDelegateRegistrationResponse(delegate);
+      DelegateRegisterResponse delegateResponse = restResponse.getResource();
+      String responseDelegateId = delegateResponse.getDelegateId();
+      handleEcsDelegateRegistrationResponse(delegateResponse);
 
-      if (StringUtils.equals(delegateId, SELF_DESTRUCT)) {
+      if (StringUtils.equals(responseDelegateId, DelegateRegisterResponse.Action.SELF_DESTRUCT.getValue())) {
         initiateSelfDestruct();
         sleep(ofMinutes(1));
         continue;
       }
-      if (StringUtils.startsWith(delegateId, MIGRATE)) {
-        migrate(StringUtils.substringAfter(delegateId, MIGRATE));
+      if (StringUtils.startsWith(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.getValue())) {
+        migrate(StringUtils.substringAfter(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.getValue()));
         continue;
       }
-      builder.uuid(delegateId).status(delegateResponse.getResource().getStatus());
-      logger.info(
-          "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
-      return delegateId;
+      builder.uuid(responseDelegateId);
+      logger.info("Delegate registered with id {}", responseDelegateId);
+      return responseDelegateId;
     }
 
     // Didn't register and not acquiring. Exiting.
@@ -2039,15 +2039,15 @@ public class DelegateServiceImpl implements DelegateService {
     return isBlank(token) ? null : token;
   }
 
-  private void handleEcsDelegateRegistrationResponse(Delegate delegate) {
+  private void handleEcsDelegateRegistrationResponse(DelegateRegisterResponse delegateResponse) {
     if (!isEcsDelegate()) {
       return;
     }
 
     try {
       FileIo.writeWithExclusiveLockAcrossProcesses(
-          TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum(), DELEGATE_SEQUENCE_CONFIG_FILE,
-          StandardOpenOption.TRUNCATE_EXISTING);
+          TOKEN + delegateResponse.getDelegateRandomToken() + SEQ + delegateResponse.getSequenceNum(),
+          DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (Exception e) {
       logger.error("Failed to write registration response into delegate_sequence file");
     }
