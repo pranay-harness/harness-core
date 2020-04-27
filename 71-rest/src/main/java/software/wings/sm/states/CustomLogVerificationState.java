@@ -249,7 +249,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
         ResponseMapper.builder()
             .fieldName("timestamp")
             .jsonPath(timestampJsonList)
-            .timestampFormat(responseMapping.getTimeStampFormat())
+            .timestampFormat(responseMapping.getTimestampFormat())
             .build());
 
     logMsgList.add(responseMapping.getLogMessageJsonPath());
@@ -279,7 +279,12 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     private String hostJsonPath;
     private String hostRegex;
     private String timestampJsonPath;
-    private String timeStampFormat;
+    @Deprecated private String timeStampFormat;
+    private String timestampFormat;
+
+    public String getTimestampFormat() {
+      return isNotEmpty(timestampFormat) ? timestampFormat : timeStampFormat;
+    }
   }
   public enum ResponseType { JSON }
 
