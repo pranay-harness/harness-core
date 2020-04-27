@@ -1,12 +1,12 @@
 package io.harness.facilitate.modes.chain;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 
 import java.util.List;
 import java.util.Map;

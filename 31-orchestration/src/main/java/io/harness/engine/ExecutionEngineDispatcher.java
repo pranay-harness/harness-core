@@ -2,11 +2,11 @@ package io.harness.engine;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;

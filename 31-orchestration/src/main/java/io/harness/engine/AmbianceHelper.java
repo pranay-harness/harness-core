@@ -2,13 +2,13 @@ package io.harness.engine;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.persistence.HPersistence;
 import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
-import io.harness.state.io.ambiance.Ambiance;
 
 @Redesign
 public class AmbianceHelper {

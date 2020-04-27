@@ -1,9 +1,9 @@
 package io.harness.resolvers;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.references.RefObject;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 
 @Redesign
 public interface Resolver {

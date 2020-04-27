@@ -8,6 +8,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.EngineStatusHelper;
@@ -27,8 +29,6 @@ import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
 import io.harness.state.execution.status.NodeExecutionStatus;
-import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.LevelExecution;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 

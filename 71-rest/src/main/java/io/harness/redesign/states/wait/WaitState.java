@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
@@ -16,7 +17,6 @@ import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;

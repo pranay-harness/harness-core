@@ -1,4 +1,4 @@
-package io.harness.state.io.ambiance;
+package io.harness.ambiance;
 
 import io.harness.annotations.Redesign;
 import lombok.Builder;

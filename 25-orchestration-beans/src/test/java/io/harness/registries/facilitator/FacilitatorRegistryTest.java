@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
+import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
@@ -18,7 +19,6 @@ import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;

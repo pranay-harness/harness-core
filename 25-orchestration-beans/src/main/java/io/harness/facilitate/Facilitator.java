@@ -1,8 +1,8 @@
 package io.harness.facilitate;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 
 import java.util.List;
 

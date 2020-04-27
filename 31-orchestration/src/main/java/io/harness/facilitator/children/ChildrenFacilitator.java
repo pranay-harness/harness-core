@@ -1,12 +1,12 @@
 package io.harness.facilitator.children;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Value;
 

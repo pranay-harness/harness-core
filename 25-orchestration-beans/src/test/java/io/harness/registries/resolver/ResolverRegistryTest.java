@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
+import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.references.RefObject;
 import io.harness.references.RefType;
@@ -16,7 +17,6 @@ import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.resolvers.Resolver;
 import io.harness.rule.Owner;
 import io.harness.state.io.StateTransput;
-import io.harness.state.io.ambiance.Ambiance;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;

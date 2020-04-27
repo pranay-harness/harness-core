@@ -1,12 +1,12 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.LevelExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.ambiance.Ambiance;
-import io.harness.state.io.ambiance.LevelExecution;
 
 public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
