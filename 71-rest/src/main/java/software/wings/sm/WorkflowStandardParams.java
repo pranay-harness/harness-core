@@ -642,6 +642,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return this;
     }
 
+    public Builder withCurrentUser(EmbeddedUser currentUser) {
+      this.currentUser = currentUser;
+      return this;
+    }
+
     public Builder withExecutionHosts(List<String> executionHosts) {
       this.executionHosts = executionHosts;
       return this;

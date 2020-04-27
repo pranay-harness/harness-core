@@ -46,6 +46,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   private String workflowId;
   private String appId;
   private Integer timeoutMillis;
+  private EmbeddedUser triggeredBy;
 
   private ApprovalStateType approvalStateType;
 
@@ -122,6 +123,15 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       Integer timeoutMins = timeoutMillis / (60 * 1000);
       putNotNull(executionDetails, "timeoutMins",
           ExecutionDataValue.builder().displayName("Timeout").value(timeoutMins + " minutes").build());
+      if (getStatus() == ExecutionStatus.PAUSED) {
+        putNotNull(executionDetails, "expiryTs",
+            ExecutionDataValue.builder().displayName("Will Expire At").value(timeoutMillis + getStartTs()).build());
+      }
+    }
+
+    if (triggeredBy != null) {
+      putNotNull(executionDetails, "triggeredBy",
+          ExecutionDataValue.builder().displayName("Triggered By").value(triggeredBy.getName()).build());
     }
 
     if (EmptyPredicate.isNotEmpty(approvalField) && EmptyPredicate.isNotEmpty(approvalValue)) {

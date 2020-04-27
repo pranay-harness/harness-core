@@ -177,11 +177,14 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId(approvalId)
                                                    .approvalStateType(approvalStateType)
                                                    .timeoutMillis(getTimeoutMillis())
                                                    .variables(getVariables())
+                                                   .triggeredBy(workflowStandardParams.getCurrentUser())
                                                    .build();
     if (disableAssertion != null && disableAssertion.equals("true")) {
       return respondWithStatus(context, executionData, null,
