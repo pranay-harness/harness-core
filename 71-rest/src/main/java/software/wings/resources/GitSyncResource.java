@@ -133,6 +133,7 @@ public class GitSyncResource {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
     PageResponse<GitSyncError> pageResponse =
         gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
+
     return new RestResponse<>(pageResponse);
   }
 

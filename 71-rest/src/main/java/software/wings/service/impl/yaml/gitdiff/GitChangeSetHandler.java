@@ -216,6 +216,7 @@ public class GitChangeSetHandler {
                                          .gitToHarness(true)
                                          .status(Status.COMPLETED)
                                          .gitFileChanges(gitDiffResult.getGitFileChanges())
+                                         .retryCount(0)
                                          .build())
                       .yamlGitConfigIds(yamlGitConfigIds)
                       .status(gitCommitStatus)

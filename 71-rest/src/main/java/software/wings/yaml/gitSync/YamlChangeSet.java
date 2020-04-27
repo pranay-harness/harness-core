@@ -2,6 +2,7 @@ package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -27,17 +28,22 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
   @Index(fields = { @Field("accountId")
-                    , @Field("status") }, options = @IndexOptions(name = "searchIdx"))
-  , @Index(fields = {
-    @Field("accountId"), @Field(value = "createdAt", type = IndexType.DESC)
-  }, options = @IndexOptions(name = "accountId_createdAt_index", background = true)), @Index(fields = {
-    @Field("accountId"), @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt")
-  }, options = @IndexOptions(name = "accountId_status_gitToHarness_createdAt_index", background = true))
+                    , @Field("status"), @Field("retryCount") },
+      options = @IndexOptions(name = "searchIdx_1", background = true))
+  ,
+      @Index(fields = { @Field("accountId")
+                        , @Field(value = "createdAt", type = IndexType.DESC) },
+          options = @IndexOptions(name = "accountId_createdAt_index", background = true)),
+
+      @Index(fields = {
+        @Field("accountId"), @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt")
+      }, options = @IndexOptions(name = "accountId_status_gitToHarness_createdAt_index", background = true))
 })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")
 @HarnessEntity(exportable = false)
 public class YamlChangeSet extends Base {
+  public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
   @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
   @Indexed @NotNull private Status status;
@@ -47,13 +53,15 @@ public class YamlChangeSet extends Base {
   private boolean fullSync;
   private String parentYamlChangeSetId;
   private GitWebhookRequestAttributes gitWebhookRequestAttributes;
+  @Default private Integer retryCount = 0;
+  private String messageCode;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
 
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
       boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,
-      GitWebhookRequestAttributes gitWebhookRequestAttributes) {
+      GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String messageCode) {
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
@@ -64,5 +72,7 @@ public class YamlChangeSet extends Base {
     this.fullSync = fullSync;
     this.parentYamlChangeSetId = parentYamlChangeSetId;
     this.gitWebhookRequestAttributes = gitWebhookRequestAttributes;
+    this.retryCount = retryCount;
+    this.messageCode = messageCode;
   }
 }

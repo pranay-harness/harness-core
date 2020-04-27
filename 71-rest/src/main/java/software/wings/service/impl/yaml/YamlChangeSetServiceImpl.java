@@ -7,6 +7,9 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static java.lang.Boolean.TRUE;
+import static software.wings.yaml.gitSync.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
+import static software.wings.yaml.gitSync.YamlChangeSet.Status.QUEUED;
+import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,6 +57,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private PersistentLocker persistentLocker;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityUpdateService entityUpdateService;
+  private static final Integer MAX_RETRY_COUNT = 3;
 
   @Override
   public YamlChangeSet save(YamlChangeSet yamlChangeSet) {
@@ -244,25 +248,40 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public boolean updateStatusForGivenYamlChangeSets(
+  public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId) {
+    UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
+    setUnset(ops, YamlChangeSetKeys.status, SKIPPED);
+    setUnset(ops, YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
+
+    Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
+                                                  .filter(YamlChangeSetKeys.accountId, accountId)
+                                                  .filter(YamlChangeSetKeys.status, QUEUED)
+                                                  .field(YamlChangeSetKeys.retryCount)
+                                                  .greaterThan(MAX_RETRY_COUNT);
+    UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
+    logger.info("Updated the status of [{}] YamlChangeSets to Skipped", status.getUpdatedCount());
+  }
+
+  @Override
+  public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       if (isEmpty(yamlChangeSetIds)) {
         return true;
       }
 
-      UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
-      setUnset(ops, "status", newStatus);
+      UpdateOperations<YamlChangeSet> ops =
+          wingsPersistence.createUpdateOperations(YamlChangeSet.class).inc(YamlChangeSetKeys.retryCount);
+      setUnset(ops, YamlChangeSetKeys.status, newStatus);
 
       Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                                     .filter(YamlChangeSetKeys.accountId, accountId)
-                                                    .field("status")
+                                                    .field(YamlChangeSetKeys.status)
                                                     .in(currentStatuses)
                                                     .field("_id")
                                                     .in(yamlChangeSetIds);
 
       UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
-
       return status.getUpdatedCount() != 0;
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
@@ -322,6 +341,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                       .gitFileChanges(gitFileChanges)
                                       .status(Status.QUEUED)
                                       .queuedOn(System.currentTimeMillis())
+                                      .retryCount(0)
                                       .build();
 
     yamlChangeSet.setAppId(entityUpdateService.obtainAppIdFromEntity(entity));

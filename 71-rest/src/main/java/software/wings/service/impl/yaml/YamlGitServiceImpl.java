@@ -391,6 +391,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .gitFileChanges(gitFileChangeList)
         .appId(appId)
         .fullSync(true)
+        .retryCount(0)
         .build();
   }
 
@@ -404,6 +405,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .gitFileChanges(gitFileChangeList)
         .appId(appId)
         .fullSync(false)
+        .retryCount(0)
         .build();
   }
 
@@ -736,6 +738,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                .headCommitId(headCommitId)
                                                .build())
               .gitFileChanges(new ArrayList<>())
+              .retryCount(0)
               .build();
       final YamlChangeSet savedYamlChangeSet = yamlChangeSetService.save(yamlChangeSet);
       try (ProcessTimeLogContext ignore3 =
