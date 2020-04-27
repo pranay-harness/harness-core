@@ -1,6 +1,6 @@
 set -x
 
-mvn clean install -DskipTests -Dmaven.repo.local=/home/jenkins/maven-repositories/0
+#mvn clean install -DskipTests -Dmaven.repo.local=/home/jenkins/maven-repositories/0
 
 mvn ${MAVEN_ARGS} sortpom:sort -Dmaven.repo.local=/home/jenkins/maven-repositories/0 > /dev/null
 
