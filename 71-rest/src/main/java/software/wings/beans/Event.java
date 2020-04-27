@@ -243,7 +243,11 @@ public class Event {
     /**
      * for removal of users from user groups and un assigning user groups to users
      */
-    REMOVE
+    REMOVE,
+    /**
+     * Delegate Approval type.
+     */
+    DELEGATE_APPROVAL
   }
 
   /**

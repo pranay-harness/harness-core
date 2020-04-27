@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static java.util.Arrays.asList;
@@ -25,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateApproval;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
@@ -209,6 +211,25 @@ public class DelegateSetupResourceTest {
 
     verify(delegateService, atLeastOnce()).updateDescription(anyString(), anyString(), anyString());
     assertThat(restResponse.getResource()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldUpdateApprovalStatus() {
+    String delegateId = generateUuid();
+    Delegate delegate = Delegate.builder().uuid(delegateId).build();
+
+    when(delegateService.updateApprovalStatus(ACCOUNT_ID, delegateId, DelegateApproval.ACTIVATE)).thenReturn(delegate);
+    RestResponse<Delegate> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/" + delegateId + "/approval?delegateId=" + delegateId + "&accountId=" + ACCOUNT_ID
+                + "&action=ACTIVATE")
+            .request()
+            .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+
+    verify(delegateService).updateApprovalStatus(ACCOUNT_ID, delegateId, DelegateApproval.ACTIVATE);
+    assertThat(restResponse.getResource()).isEqualTo(delegate);
   }
 
   @Test

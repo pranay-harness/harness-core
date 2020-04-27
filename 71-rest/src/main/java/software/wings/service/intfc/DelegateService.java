@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
@@ -47,6 +48,8 @@ public interface DelegateService extends OwnedByAccount {
   Delegate updateTags(@Valid Delegate delegate);
 
   Delegate updateDescription(String accountId, String delegateId, String newDescription);
+
+  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
 
   Delegate updateScopes(@Valid Delegate delegate);
 

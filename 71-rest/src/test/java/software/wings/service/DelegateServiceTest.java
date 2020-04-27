@@ -64,6 +64,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
+import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
@@ -128,6 +129,7 @@ import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -200,6 +202,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -256,16 +259,17 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version(VERSION).build());
-    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+    //    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
   }
 
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldList() {
-    Delegate delegate = BUILDER.build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     wingsPersistence.save(delegate);
-    assertThat(delegateService.list(aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, ACCOUNT_ID).build()))
+    assertThat(delegateService.list(aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build()))
         .hasSize(1)
         .containsExactly(delegate);
   }
@@ -274,22 +278,24 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGet() {
-    Delegate delegate = BUILDER.build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     wingsPersistence.save(delegate);
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
+    assertThat(delegateService.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetDelegateStatus() {
+    String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(
-        DelegateConnection.builder().accountId(ACCOUNT_ID).delegateId(delegate.getUuid()).version(VERSION).build());
-    DelegateStatus delegateStatus = delegateService.getDelegateStatus(ACCOUNT_ID);
+        DelegateConnection.builder().accountId(accountId).delegateId(delegate.getUuid()).version(VERSION).build());
+    DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
     assertThat(delegateStatus.getDelegates().get(0)).hasFieldOrPropertyWithValue("uuid", delegate.getUuid());
@@ -302,7 +308,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdate() {
-    Delegate delegate = BUILDER.build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(Status.DISABLED);
@@ -311,14 +318,54 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(updatedDelegate).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
-            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
+            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpdateApprovalStatusShouldSetStatusToEnabled() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    Delegate existingDelegate =
+        BUILDER.uuid(delegateId).accountId(accountId).status(Status.WAITING_FOR_APPROVAL).build();
+    wingsPersistence.save(existingDelegate);
+
+    Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.ACTIVATE);
+
+    assertThat(existingDelegate).isEqualToIgnoringGivenFields(updatedDelegate, DelegateKeys.status);
+    assertThat(Status.ENABLED).isEqualTo(updatedDelegate.getStatus());
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpdateApprovalStatusShouldSetStatusToDeleted() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    Delegate existingDelegate =
+        BUILDER.uuid(delegateId).accountId(accountId).status(Status.WAITING_FOR_APPROVAL).build();
+    wingsPersistence.save(existingDelegate);
+
+    Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.REJECT);
+
+    assertThat(existingDelegate).isEqualToIgnoringGivenFields(updatedDelegate, DelegateKeys.status);
+    assertThat(Status.DELETED).isEqualTo(updatedDelegate.getStatus());
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
+    verify(broadcaster).broadcast(SELF_DESTRUCT + delegateId);
   }
 
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdateEcs() {
-    Delegate delegate = BUILDER.delegateType(ECS).build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).delegateType(ECS).build();
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(Status.DISABLED);
@@ -327,14 +374,17 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(updatedDelegate).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
-            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
+            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
   }
 
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAdd() {
-    Delegate delegate = BUILDER.uuid(generateUuid()).build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).uuid(generateUuid()).build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).primary(true).build();
 
     DelegateProfile delegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
@@ -343,24 +393,29 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
 
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
     delegate = delegateService.add(delegate);
 
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
-            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldAddWithPrimaryProfile() {
-    Delegate delegateWithoutProfile = BUILDER.uuid(generateUuid()).build();
+    String accountId = generateUuid();
+    Delegate delegateWithoutProfile = BUILDER.accountId(accountId).uuid(generateUuid()).build();
 
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegateWithoutProfile.getAccountId()).primary(true).build();
     when(delegateProfileService.fetchPrimaryProfile(delegateWithoutProfile.getAccountId()))
         .thenReturn(primaryDelegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     delegateWithoutProfile = delegateService.add(delegateWithoutProfile);
 
@@ -369,7 +424,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
     verify(eventEmitter)
         .send(Channel.DELEGATES,
-            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegateWithoutProfile.getUuid()).withType(Type.CREATE).build());
+            anEvent().withOrgId(accountId).withUuid(delegateWithoutProfile.getUuid()).withType(Type.CREATE).build());
 
     Delegate delegateWithNonExistingProfile = BUILDER.uuid(generateUuid()).build();
     delegateWithNonExistingProfile.setDelegateProfileId("nonExistingProfile");
@@ -389,10 +444,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void shouldNotAddMoreThanAllowedDelegates() {
+    String accountId = generateUuid();
     int maxDelegatesAllowed = 1;
-    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(maxDelegatesAllowed);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(maxDelegatesAllowed);
 
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
@@ -401,7 +457,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(delegate));
     try {
-      delegateService.add(BUILDER.build());
+      delegateService.add(BUILDER.accountId(accountId).build());
       fail("");
     } catch (WingsException ignored) {
     }
@@ -421,15 +477,18 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegister() {
-    Delegate delegate = BUILDER.build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
     delegate = delegateService.register(delegate);
-    Delegate delegateFromDb = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
 
@@ -437,16 +496,19 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegisterExistingDelegate() {
-    Delegate delegate = BUILDER.build();
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).build();
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
     delegate = delegateService.add(delegate);
     delegateService.register(delegate);
-    Delegate registeredDelegate = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
+    Delegate registeredDelegate = delegateService.get(accountId, delegate.getUuid(), true);
     assertThat(registeredDelegate).isEqualTo(delegate);
   }
 
@@ -454,8 +516,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotRegisterExistingDelegateForDeletedAccount() {
+    String accountId = generateUuid();
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
+                            .accountId(accountId)
                             .ip("127.0.0.1")
                             .hostName("localhost")
                             .version(VERSION)
@@ -469,8 +532,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
     delegate = delegateService.add(delegate);
-    when(licenseService.isAccountDeleted(ACCOUNT_ID)).thenReturn(true);
+    when(licenseService.isAccountDeleted(accountId)).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
