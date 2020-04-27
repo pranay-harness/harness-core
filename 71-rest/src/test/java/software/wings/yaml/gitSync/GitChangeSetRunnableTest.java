@@ -58,11 +58,12 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
     doReturn(Arrays.asList(yamlChangeSet)).when(gitChangeSetRunnableHelper).getStuckYamlChangeSets(any(), anyList());
     doReturn(true)
         .when(yamlChangeSetService)
-        .updateStatusForGivenYamlChangeSets(anyString(), any(), anyList(), anyList());
+        .updateStatusAndIncrementRetryCountForYamlChangeSets(anyString(), any(), anyList(), anyList());
 
     gitChangeSetRunnable.retryAnyStuckYamlChangeSet(Arrays.asList("12345"));
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(yamlChangeSetService).updateStatusForGivenYamlChangeSets(anyString(), any(), anyList(), captor.capture());
+    verify(yamlChangeSetService)
+        .updateStatusAndIncrementRetryCountForYamlChangeSets(anyString(), any(), anyList(), captor.capture());
     List stuckChangeSetIds = captor.getValue();
     assertThat(stuckChangeSetIds).isNotNull();
     assertThat(stuckChangeSetIds).hasSize(1);

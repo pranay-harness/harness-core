@@ -69,7 +69,9 @@ public interface YamlChangeSetService {
 
   <T> YamlChangeSet saveChangeSet(String accountId, List<GitFileChange> changeSet, T entity);
 
-  boolean updateStatusForGivenYamlChangeSets(
+  void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId);
+
+  boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);
 
   boolean updateStatusForYamlChangeSets(String accountId, Status newStatus, Status currentStatus);

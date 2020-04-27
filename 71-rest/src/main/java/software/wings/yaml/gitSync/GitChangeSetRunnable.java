@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -20,7 +21,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Base;
+import org.jetbrains.annotations.NotNull;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class GitChangeSetRunnable implements Runnable {
+  public static final List<Status> RUNNING_STATUS_LIST = singletonList(Status.RUNNING);
   private static AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
 
   @Inject private YamlGitService yamlGitSyncService;
@@ -131,7 +132,6 @@ public class GitChangeSetRunnable implements Runnable {
   /**
    * This job runs every few seconds. We dont need to check for stuck job every time.
    * We will check it every 30 mins.
-   * @return
    */
   boolean shouldPerformStuckJobCheck() {
     return lastTimestampForStuckJobCheck.get() == 0
@@ -143,7 +143,6 @@ public class GitChangeSetRunnable implements Runnable {
    * (somehow delegate response was lost or something, mark that changeset as Queued again)
    * So let it be processed again as we don't know if that was applied.
    * If it was already applied, delegate won't do anything.
-   * @param runningAccountIdList
    */
   void retryAnyStuckYamlChangeSet(List<String> runningAccountIdList) {
     if (isEmpty(runningAccountIdList)) {
@@ -160,10 +159,19 @@ public class GitChangeSetRunnable implements Runnable {
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
 
       // Mark these yamlChagneSets as Queued.
-      accountIdToStuckChangeSets.forEach(
-          (k, v)
-              -> yamlChangeSetService.updateStatusForGivenYamlChangeSets(
-                  k, Status.QUEUED, Arrays.asList(Status.RUNNING), v.stream().map(Base::getUuid).collect(toList())));
+      accountIdToStuckChangeSets.forEach(this ::retryOrSkipStuckChangeSets);
     }
+  }
+
+  private void retryOrSkipStuckChangeSets(String accountId, List<YamlChangeSet> changeSets) {
+    yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
+        accountId, Status.QUEUED, RUNNING_STATUS_LIST, uuidsOfChangeSets(changeSets));
+
+    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId);
+  }
+
+  @NotNull
+  private List<String> uuidsOfChangeSets(List<YamlChangeSet> changeSets) {
+    return changeSets.stream().map(YamlChangeSet::getUuid).collect(toList());
   }
 }

@@ -705,7 +705,7 @@ yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accoun
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}
 yamlChangeSet {"name": "appId_1", "background": true} {"appId": 1}
 yamlChangeSet {"name": "createdAt_1", "background": true} {"createdAt": 1}
-yamlChangeSet {"name": "searchIdx", "background": true} {"accountId": 1, "status": 1}
+yamlChangeSet {"name": "searchIdx_1", "background": true} {"accountId": 1, "status": 1, "retryCount": 1}
 yamlChangeSet {"name": "status_1", "background": true} {"status": 1}
 yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
 yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
