@@ -16,7 +16,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateServiceImpl;
+import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.event.PingPongServiceGrpc;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
@@ -51,7 +51,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
     mockServerLogger = mock(Logger.class);
     setStaticFieldValue(PingPongClient.class, "logger", mockClientLogger);
     setStaticFieldValue(PingPongService.class, "logger", mockServerLogger);
-    setStaticFieldValue(DelegateServiceImpl.class, "delegateId", "DELEGATE_ID");
+    setStaticFieldValue(DelegateAgentServiceImpl.class, "delegateId", "DELEGATE_ID");
     String serverName = InProcessServerBuilder.generateName();
     Channel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).build());
     final TokenGenerator tokenGenerator = mock(TokenGenerator.class);

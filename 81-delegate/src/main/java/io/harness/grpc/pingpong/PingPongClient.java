@@ -3,7 +3,7 @@ package io.harness.grpc.pingpong;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import io.harness.delegate.service.DelegateServiceImpl;
+import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.event.Ping;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.utils.HTimestamps;
@@ -31,7 +31,7 @@ public class PingPongClient extends AbstractScheduledService {
     try {
       Instant timestamp = Instant.now();
       Ping ping = Ping.newBuilder()
-                      .setDelegateId(DelegateServiceImpl.getDelegateId().orElse("UNREGISTERED"))
+                      .setDelegateId(DelegateAgentServiceImpl.getDelegateId().orElse("UNREGISTERED"))
                       .setPingTimestamp(HTimestamps.fromInstant(timestamp))
                       .setProcessId(PROCESS_ID)
                       .setVersion(version)
