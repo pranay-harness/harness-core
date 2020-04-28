@@ -94,6 +94,7 @@ public class DashboardAuthHandler {
           if (actions == null) {
             actions = dashboardActionMap.get(dashboardSettings.getUuid());
           }
+
           actions.addAll(permission.getAllowedActions());
         });
       }
@@ -179,8 +180,25 @@ public class DashboardAuthHandler {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
 
-    if (!actions.contains(action)) {
+    if (!isActionAllowed(actions, action)) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+  }
+
+  private boolean isActionAllowed(Set<Action> allowedActions, Action action) {
+    if (allowedActions.contains(action)) {
+      return true;
+    }
+
+    switch (action) {
+      case READ:
+        return allowedActions.contains(Action.UPDATE) || allowedActions.contains(Action.MANAGE);
+      case UPDATE:
+      case DELETE:
+      case MANAGE:
+        return allowedActions.contains(Action.MANAGE);
+      default:
+        return false;
     }
   }
 

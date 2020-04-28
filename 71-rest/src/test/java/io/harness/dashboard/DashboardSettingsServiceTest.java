@@ -1,7 +1,12 @@
 package io.harness.dashboard;
 
+import static io.harness.dashboard.Action.MANAGE;
+import static io.harness.dashboard.Action.READ;
+import static io.harness.dashboard.Action.UPDATE;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -27,6 +32,9 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
 import software.wings.utils.WingsTestConstants;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardSettingsServiceTest extends WingsBaseTest {
   @Inject private AccountService accountService;
@@ -85,6 +93,165 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
     updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
 
     assertThat(updatedSettings.getAccountId()).isEqualTo(accountId);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions1() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG2")).allowedActions(asList(READ)).build();
+    DashboardAccessPermissions permissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG2")).allowedActions(asList(MANAGE)).build();
+    permissionsList.add(permissions1);
+    permissionsList.add(permissions2);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(2);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(MANAGE)).build();
+    DashboardAccessPermissions updatedPermissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG2")).allowedActions(asList(MANAGE)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+    assertThat(updatedPermissions).contains(updatedPermissions2);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions2() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG2")).allowedActions(asList(READ)).build();
+    permissionsList.add(permissions1);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(2);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(READ)).build();
+    DashboardAccessPermissions updatedPermissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG2")).allowedActions(asList(READ)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+    assertThat(updatedPermissions).contains(updatedPermissions2);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions3() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG2")).allowedActions(asList(READ)).build();
+    DashboardAccessPermissions permissions2 =
+        DashboardAccessPermissions.builder().allowedActions(asList(MANAGE)).build();
+    permissionsList.add(permissions1);
+    permissionsList.add(permissions2);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(2);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(READ)).build();
+    DashboardAccessPermissions updatedPermissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG2")).allowedActions(asList(READ)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+    assertThat(updatedPermissions).contains(updatedPermissions2);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions4() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG3")).allowedActions(asList(UPDATE)).build();
+    DashboardAccessPermissions permissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG3", "UG4")).build();
+    permissionsList.add(permissions1);
+    permissionsList.add(permissions2);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(2);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(UPDATE)).build();
+    DashboardAccessPermissions updatedPermissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG3")).allowedActions(asList(UPDATE)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+    assertThat(updatedPermissions).contains(updatedPermissions2);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions5() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(UPDATE)).build();
+    DashboardAccessPermissions permissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(READ)).build();
+    permissionsList.add(permissions1);
+    permissionsList.add(permissions2);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(1);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(UPDATE)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testDashboardUpdatePermissions6() {
+    DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
+    DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
+    validateSettings(dashboardSettings, settings);
+    List<DashboardAccessPermissions> permissionsList = new ArrayList<>();
+    DashboardAccessPermissions permissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG4")).allowedActions(asList(READ)).build();
+    DashboardAccessPermissions permissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG3", "UG2")).allowedActions(asList(MANAGE)).build();
+    DashboardAccessPermissions permissions3 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1", "UG3")).allowedActions(asList(UPDATE)).build();
+    permissionsList.add(permissions1);
+    permissionsList.add(permissions2);
+    permissionsList.add(permissions3);
+    settings.setPermissions(permissionsList);
+    DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
+    List<DashboardAccessPermissions> updatedPermissions = updatedSettings.getPermissions();
+    assertThat(updatedPermissions).hasSize(4);
+    DashboardAccessPermissions updatedPermissions1 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG1")).allowedActions(asList(UPDATE)).build();
+    DashboardAccessPermissions updatedPermissions2 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG2")).allowedActions(asList(MANAGE)).build();
+    DashboardAccessPermissions updatedPermissions3 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG3")).allowedActions(asList(MANAGE)).build();
+    DashboardAccessPermissions updatedPermissions4 =
+        DashboardAccessPermissions.builder().userGroups(asList("UG4")).allowedActions(asList(READ)).build();
+    assertThat(updatedPermissions).contains(updatedPermissions1);
+    assertThat(updatedPermissions).contains(updatedPermissions2);
+    assertThat(updatedPermissions).contains(updatedPermissions3);
+    assertThat(updatedPermissions).contains(updatedPermissions4);
   }
 
   @Test
