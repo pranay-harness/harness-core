@@ -588,11 +588,10 @@ public class UserServiceImpl implements UserService {
   public User getUserByEmail(String email, String accountId) {
     User user = null;
     if (isNotEmpty(email)) {
-      user = wingsPersistence.createQuery(User.class)
-                 .filter(UserKeys.email, email.trim().toLowerCase())
-                 .field(UserKeys.accounts)
-                 .hasThisOne(accountId)
-                 .get();
+      Query<User> query = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase());
+      query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+          query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+      user = query.get();
       loadSupportAccounts(user);
     }
 
