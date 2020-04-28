@@ -25,8 +25,12 @@ import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
     @Field(value = TemplateVersionKeys.accountId)
     , @Field(value = TemplateVersionKeys.templateUuid),
         @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
-  })
+  }), @Index(options = @IndexOptions(name = "account_imported_template_version"), fields = {
+    @Field(value = TemplateVersionKeys.accountId)
+    , @Field(value = TemplateVersionKeys.templateUuid), @Field(value = TemplateVersionKeys.importedTemplateVersion)
+  }),
 })
+// TODO(abhinav): May have to look at ordering for importedTemplateVersion later.
 @Data
 @Builder
 @NoArgsConstructor

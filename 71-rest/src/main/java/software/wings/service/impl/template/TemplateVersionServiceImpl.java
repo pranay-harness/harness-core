@@ -112,7 +112,6 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
                                           .filter(TemplateVersionKeys.accountId, accountId)
                                           .filter(TemplateVersionKeys.templateUuid, templateUuid)
-                                          .filter(TemplateVersionKeys.version, version)
                                           .filter(TemplateVersionKeys.importedTemplateVersion, version)
                                           .get();
     return templateVersion != null;
