@@ -38,6 +38,8 @@ import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncCo
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceConnectionDataFetcher;
+import software.wings.graphql.datafetcher.artifactSource.ServiceArtifactSourceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeContentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeSetConnectionDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsEntityDataFetcher;
@@ -208,6 +210,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactSourceConnectionDataFetcher.class);
 
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
@@ -262,6 +265,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
+    bindDataFetcherWithAnnotation(ServiceArtifactSourceConnectionDataFetcher.class);
+
     bindDataFetcherWithAnnotation(ServiceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(SunburstChartStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsInUseConnectionDataFetcher.class);

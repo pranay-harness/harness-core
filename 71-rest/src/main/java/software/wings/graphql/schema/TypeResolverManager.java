@@ -17,6 +17,21 @@ import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
+import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAMIArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAmazonS3ArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLArtifactoryArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLAzureArtifactsArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLBambooArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLCustomArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLDockerArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLECRArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLGCRArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLGCSArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLJenkinsArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLSFTPArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
 import software.wings.graphql.schema.type.audit.QLGenericChangeSet;
 import software.wings.graphql.schema.type.audit.QLGitChangeSet;
@@ -89,6 +104,7 @@ public class TypeResolverManager {
     public static final String Connector = "Connector";
     public static final String Data = "Data";
     public static final String Execution = "Execution";
+    public static final String ArtifactSource = "ArtifactSource";
     public static final String Instance = "Instance";
     public static final String Outcome = "Outcome";
     public static final String PhysicalInstance = "PhysicalInstance";
@@ -125,6 +141,22 @@ public class TypeResolverManager {
     public static final String StackedTimeSeriesData = "StackedTimeSeriesData";
     public static final String TimeSeriesData = "TimeSeriesData";
     public static final String WorkflowExecution = "WorkflowExecution";
+
+    public static final String ACRArtifactSource = "ACRArtifactSource";
+    public static final String AmazonS3ArtifactSource = "AmazonS3ArtifactSource";
+    public static final String AMIArtifactSource = "AMIArtifactSource";
+    public static final String ArtifactoryArtifactSource = "ArtifactoryArtifactSource";
+    public static final String AzureArtifactsArtifactSource = "AzureArtifactsArtifactSource";
+    public static final String BambooArtifactSource = "BambooArtifactSource";
+    public static final String CustomArtifactSource = "CustomArtifactSource";
+    public static final String DockerArtifactSource = "DockerArtifactSource";
+    public static final String ECRArtifactSource = "ECRArtifactSource";
+    public static final String GCRArtifactSource = "GCRArtifactSource";
+    public static final String GCSArtifactSource = "GCSArtifactSource";
+    public static final String JenkinsArtifactSource = "JenkinsArtifactSource";
+    public static final String NexusArtifactSource = "NexusArtifactSource";
+    public static final String SFTPArtifactSource = "SFTPArtifactSource";
+    public static final String SMBArtifactSource = "SMBArtifactSource";
 
     public static final String AmazonS3Connector = "AmazonS3Connector";
     public static final String ApmVerificationConnector = "ApmVerificationConnector";
@@ -239,6 +271,26 @@ public class TypeResolverManager {
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .put(QLWorkflowExecution.class, TypeResolverManagerTypes.WorkflowExecution)
                                       .build()))
+        .put(TypeResolverManagerUnifaces.ArtifactSource,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLACRArtifactSource.class, TypeResolverManagerTypes.ACRArtifactSource)
+                    .put(QLAmazonS3ArtifactSource.class, TypeResolverManagerTypes.AmazonS3ArtifactSource)
+                    .put(QLAMIArtifactSource.class, TypeResolverManagerTypes.AMIArtifactSource)
+                    .put(QLArtifactoryArtifactSource.class, TypeResolverManagerTypes.ArtifactoryArtifactSource)
+                    .put(QLAzureArtifactsArtifactSource.class, TypeResolverManagerTypes.AzureArtifactsArtifactSource)
+                    .put(QLBambooArtifactSource.class, TypeResolverManagerTypes.BambooArtifactSource)
+                    .put(QLCustomArtifactSource.class, TypeResolverManagerTypes.CustomArtifactSource)
+                    .put(QLDockerArtifactSource.class, TypeResolverManagerTypes.DockerArtifactSource)
+                    .put(QLECRArtifactSource.class, TypeResolverManagerTypes.ECRArtifactSource)
+                    .put(QLGCRArtifactSource.class, TypeResolverManagerTypes.GCRArtifactSource)
+                    .put(QLGCSArtifactSource.class, TypeResolverManagerTypes.GCSArtifactSource)
+                    .put(QLJenkinsArtifactSource.class, TypeResolverManagerTypes.JenkinsArtifactSource)
+                    .put(QLNexusArtifactSource.class, TypeResolverManagerTypes.NexusArtifactSource)
+                    .put(QLSFTPArtifactSource.class, TypeResolverManagerTypes.SFTPArtifactSource)
+                    .put(QLSMBArtifactSource.class, TypeResolverManagerTypes.SMBArtifactSource)
+
+                    .build()))
         .put(TypeResolverManagerUnifaces.Instance,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()

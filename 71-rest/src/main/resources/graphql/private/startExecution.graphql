@@ -4,15 +4,21 @@ extend type Mutation {
 }
 
 extend type Query {
+  #Beta: Get Inputs required to trigger an execution of workflow/pipeline
   executionInputs(
+    #Id of the workflow/pipeline. Use WorkflowByName/PipelineByName APis to get this
     entityId: String!
+    #Application Id to which orkflow/pipeline belongs.Use applicationByNameAPI to get this.
     applicationId: String!
+    # Execution type: workflow/ pipeline
     executionType: ExecutionType!
+    #Variable values if the workflow/pipeline is templatised. Required variable values should be provided here to know inputs required.
     variableInputs: [VariableInput]
   ): ExecutionInputs @dataFetcher(name: executionInputs)
 }
 
 type ExecutionInputs {
+  #List of services that need artifact inputs.
   serviceInputs: [Service]
 }
 

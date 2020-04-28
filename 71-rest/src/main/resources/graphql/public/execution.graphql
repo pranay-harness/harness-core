@@ -115,6 +115,8 @@ type WorkflowExecution implements Execution {
   # DateTime when execution ended
   endedAt: DateTime
 
+  artifacts: [Artifact]
+
   # Status of the workflow
   status: ExecutionStatus
 

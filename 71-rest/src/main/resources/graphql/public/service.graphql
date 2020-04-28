@@ -21,6 +21,12 @@ type Service {
 
   createdAt: DateTime
   createdBy: User
+
+  artifactSources: [ArtifactSource]
+    @dataFetcher(
+      name: serviceArtifactSourceConnection
+      contextFieldArgsMap: "{ \"serviceId\": \"id\", \"applicationId\": \"applicationId\"}"
+    )
 }
 
 type ServiceConnection {
