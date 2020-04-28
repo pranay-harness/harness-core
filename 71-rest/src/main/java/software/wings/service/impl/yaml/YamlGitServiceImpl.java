@@ -916,12 +916,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == gitSyncFailureAlertDetails.getErrorCode()) {
       return;
     }
+    // We get some exception in delegate while processing git commands, out of those
+    // exceptions, we show the git connection error in UI and create alert so that
+    // the user is directed to the git connectivity issue page
     if (ErrorCode.GIT_CONNECTION_ERROR == gitSyncFailureAlertDetails.getErrorCode()) {
       alertService.openAlert(accountId, appId, AlertType.GitConnectionError,
           getGitConnectionErrorAlert(accountId, gitSyncFailureAlertDetails));
-    } else {
-      alertService.openAlert(accountId, appId, AlertType.GitSyncError,
-          getGitSyncErrorAlert(accountId, gitSyncFailureAlertDetails.getErrorMessage(), false));
     }
   }
 

@@ -161,7 +161,7 @@ public class GitClientImpl implements GitClient {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
   }
@@ -639,7 +639,7 @@ public class GitClientImpl implements GitClient {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
 
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException(errorMsg, USER);
     }
   }
@@ -941,7 +941,7 @@ public class GitClientImpl implements GitClient {
       logger.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
   }
@@ -957,7 +957,7 @@ public class GitClientImpl implements GitClient {
       logger.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
   }
@@ -985,7 +985,7 @@ public class GitClientImpl implements GitClient {
       logger.info("Successfully Checked out Branch: " + branch);
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + branch, USER);
     }
   }
@@ -999,7 +999,7 @@ public class GitClientImpl implements GitClient {
       logger.info("Resetting repo completed successfully");
     } catch (Exception ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      gitClientHelper.checkIfTransportException(ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
   }
@@ -1078,7 +1078,7 @@ public class GitClientImpl implements GitClient {
           logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
               gitConfig.getBranch());
           logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-          gitClientHelper.checkIfTransportException(ex);
+          gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
         if (exceptionOccured) {
@@ -1126,7 +1126,7 @@ public class GitClientImpl implements GitClient {
             logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
                 gitConfig.getBranch());
             logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-            gitClientHelper.checkIfTransportException(ex);
+            gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }
       } finally {
