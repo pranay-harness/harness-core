@@ -47,6 +47,7 @@ type CloudEntityData {
   awsUsageType: String
   awsInstanceType: String
   awsService: String
+  costTrend: Number
   awsBlendedCost: Number
   awsUnblendedCost: Number
 }

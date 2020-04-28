@@ -45,8 +45,8 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +66,7 @@ public class PreAggregatedBillingDataHelper {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
 
-    Map<Timestamp, List<QLBillingDataPoint>> timeSeriesDataPointsMap = new HashMap();
+    Map<Timestamp, List<QLBillingDataPoint>> timeSeriesDataPointsMap = new LinkedHashMap();
     for (FieldValueList row : result.iterateAll()) {
       QLBillingDataPointBuilder billingDataPointBuilder = QLBillingDataPoint.builder();
       Timestamp startTimeTruncatedTimestamp = null;
@@ -80,7 +80,8 @@ public class PreAggregatedBillingDataHelper {
             billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
             break;
           case FLOAT64:
-            billingDataPointBuilder.value(row.get(field.getName()).getNumericValue());
+            billingDataPointBuilder.value(
+                billingDataHelper.getRoundedDoubleValue(row.get(field.getName()).getDoubleValue()));
             break;
           default:
             break;
@@ -239,15 +240,18 @@ public class PreAggregatedBillingDataHelper {
           dataPointBuilder.awsInstanceType(value);
           break;
         case entityConstantAwsBlendedCost:
-          dataPointBuilder.awsBlendedCost(row.get(field.getName()).getDoubleValue());
+          dataPointBuilder.awsBlendedCost(
+              billingDataHelper.getRoundedDoubleValue(row.get(field.getName()).getDoubleValue()));
           break;
         case entityConstantAwsUnBlendedCost:
-          dataPointBuilder.awsUnblendedCost(row.get(field.getName()).getDoubleValue());
+          dataPointBuilder.awsUnblendedCost(
+              billingDataHelper.getRoundedDoubleValue(row.get(field.getName()).getDoubleValue()));
           break;
         default:
           break;
       }
     }
+    dataPointBuilder.costTrend(2.44);
     dataPointList.add(dataPointBuilder.build());
   }
 
@@ -305,6 +309,7 @@ public class PreAggregatedBillingDataHelper {
         .statsLabel(label)
         .statsDescription(totalCostDescription)
         .statsValue(totalCostValue)
+        .statsTrend(2.44)
         .build();
   }
 

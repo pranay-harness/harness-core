@@ -20,8 +20,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   private BigQueryService bigQueryService;
   private PreAggregatedBillingDataHelper dataHelper;
 
-  private static final String BLENDED_COST_LABEL = "Blended Cost";
-  private static final String UN_BLENDED_COST_LABEL = "Unblended Cost";
+  private static final String TOTAL_COST_LABEL = "Total Cost";
 
   @Inject
   PreAggregateBillingServiceImpl(BigQueryService bigQueryService, PreAggregatedBillingDataHelper dataHelper) {
@@ -79,9 +78,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     if (preAggregatedCostDataStats != null) {
       return PreAggregateBillingTrendStatsDTO.builder()
           .blendedCost(
-              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(), filters, BLENDED_COST_LABEL))
-          .unBlendedCost(dataHelper.getCostBillingStats(
-              preAggregatedCostDataStats.getUnBlendedCost(), filters, UN_BLENDED_COST_LABEL))
+              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(), filters, TOTAL_COST_LABEL))
+          .unBlendedCost(
+              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getUnBlendedCost(), filters, TOTAL_COST_LABEL))
           .build();
     } else {
       return PreAggregateBillingTrendStatsDTO.builder().build();

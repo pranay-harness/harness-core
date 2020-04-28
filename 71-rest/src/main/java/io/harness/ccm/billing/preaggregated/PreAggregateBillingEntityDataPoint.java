@@ -12,6 +12,7 @@ public class PreAggregateBillingEntityDataPoint {
   String awsUsageType;
   String awsInstanceType;
   String awsService;
+  double costTrend;
   double awsBlendedCost;
   double awsUnblendedCost;
 }
