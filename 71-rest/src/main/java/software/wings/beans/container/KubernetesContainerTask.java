@@ -321,6 +321,11 @@ public class KubernetesContainerTask extends ContainerTask {
     return newContainerTask;
   }
 
+  @Override
+  public void validate() {
+    // Do Nothing
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

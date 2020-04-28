@@ -330,4 +330,19 @@ public class EcsContainerTask extends ContainerTask {
       super(type, harnessApiVersion, advancedConfig, containerDefinition);
     }
   }
+
+  @Override
+  public void validate() {
+    if (isNotEmpty(getAdvancedConfig())) {
+      return;
+    }
+
+    List<ContainerDefinition> containerDefinitions = getContainerDefinitions();
+    for (ContainerDefinition containerDefinition : containerDefinitions) {
+      List<PortMapping> portMappings = containerDefinition.getPortMappings();
+      List<PortMapping> portMappingList =
+          portMappings.stream().filter(portMapping -> portMapping.getContainerPort() != null).collect(toList());
+      containerDefinition.setPortMappings(portMappingList);
+    }
+  }
 }

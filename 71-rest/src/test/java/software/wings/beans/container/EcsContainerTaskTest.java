@@ -12,6 +12,8 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.List;
+
 public class EcsContainerTaskTest extends CategoryTest {
   public static final String CONTAINER_NAME = "containerName";
   public static final String IMAGE_NAME = "imageName";
@@ -81,6 +83,38 @@ public class EcsContainerTaskTest extends CategoryTest {
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
     assertThat(taskDefinition).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testValidate() {
+    EcsContainerTask ecsContainerTask = new EcsContainerTask();
+    ecsContainerTask.setAdvancedConfig(null);
+    PortMapping portMapping = PortMapping.builder().containerPort(80).build();
+    ContainerDefinition containerDefinition =
+        ContainerDefinition.builder()
+            .cpu(256d)
+            .memory(1024)
+            .portMappings(asList(portMapping))
+            .logConfiguration(LogConfiguration.builder().logDriver("awslog").build())
+            .build();
+
+    ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
+    ecsContainerTask.validate();
+
+    PortMapping portMapping2 = PortMapping.builder().build();
+    containerDefinition = ContainerDefinition.builder()
+                              .cpu(256d)
+                              .memory(1024)
+                              .portMappings(asList(portMapping, portMapping2))
+                              .logConfiguration(LogConfiguration.builder().logDriver("awslog").build())
+                              .build();
+    ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
+    ecsContainerTask.validate();
+    List<PortMapping> portMappings = ecsContainerTask.getContainerDefinitions().get(0).getPortMappings();
+    assertThat(portMappings.size()).isEqualTo(1);
+    assertThat(portMappings.get(0).getContainerPort()).isEqualTo(80);
   }
 
   @Test
