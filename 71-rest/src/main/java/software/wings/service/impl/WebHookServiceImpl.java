@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookEventType.RELEASE;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
@@ -42,6 +43,7 @@ import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PrAction;
+import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
@@ -637,13 +639,21 @@ public class WebHookServiceImpl implements WebHookService {
           "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event [" + gitHubEvent + "]";
 
       validateEventType(triggerCondition, content, errorMsg, webhookEventType);
-      if (PULL_REQUEST == webhookEventType) {
-        Object prAction = content.get("action");
-        if (prAction != null && triggerCondition.getActions() != null
-            && !triggerCondition.getActions().contains(PrAction.find(prAction.toString()))) {
-          String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub action ["
-              + prAction + "]";
-          throw new InvalidRequestException(msg, USER);
+      if (PULL_REQUEST == webhookEventType || RELEASE == webhookEventType) {
+        Object gitEventAction = content.get("action");
+
+        String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub action ["
+            + gitEventAction + "]";
+
+        if (gitEventAction != null) {
+          if (triggerCondition.getActions() != null && webhookEventType == PULL_REQUEST
+              && !triggerCondition.getActions().contains(PrAction.find(gitEventAction.toString()))) {
+            throw new InvalidRequestException(msg, USER);
+          }
+          if (triggerCondition.getReleaseActions() != null && webhookEventType == RELEASE
+              && !triggerCondition.getReleaseActions().contains(ReleaseAction.find(gitEventAction.toString()))) {
+            throw new InvalidRequestException(msg, USER);
+          }
         }
       }
     }

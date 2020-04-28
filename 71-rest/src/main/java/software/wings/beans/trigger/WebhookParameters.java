@@ -41,6 +41,14 @@ public class WebhookParameters {
   public static final String GH_PR_STATE = "${pull_request.state}";
   public static final String GH_PR_URL = "${pull_request.url}";
 
+  // Git Hub Release event suggestions
+  public static final String GH_RELEASE_ID = "${release.id}";
+  public static final String GH_RELEASE_NAME = "${release.name}";
+  public static final String GH_RELEASE_TAG = "${release.tag_name}";
+  public static final String GH_RELEASE_URL = "${release.url}";
+  public static final String GH_RELEASE_COMMITISH = "${release.target_commitish}";
+  public static final String GH_RELEASE_PRERELEASE = "${release.prerelease}";
+
   // Git Hub Push event suggestions
   public static final String GH_PUSH_REF = "${ref}";
   public static final String GH_PUSH_REF_BRANCH = "${ref.split('refs/heads/')[1]}";
@@ -82,6 +90,17 @@ public class WebhookParameters {
     return prSuggestions;
   }
 
+  public static List<String> gitHubReleaseExpressions() {
+    List<String> releaseSuggestions = new ArrayList<>();
+    releaseSuggestions.add(GH_RELEASE_NAME);
+    releaseSuggestions.add(GH_RELEASE_ID);
+    releaseSuggestions.add(GH_RELEASE_TAG);
+    releaseSuggestions.add(GH_RELEASE_PRERELEASE);
+    releaseSuggestions.add(GH_RELEASE_COMMITISH);
+    releaseSuggestions.add(GH_RELEASE_URL);
+    return releaseSuggestions;
+  }
+
   public static List<String> gitHubPushEventExpressions() {
     List<String> pushSuggestions = new ArrayList<>();
     pushSuggestions.add(GH_PUSH_REF);
@@ -118,6 +137,8 @@ public class WebhookParameters {
             return gitHubPullRequestExpressions();
           case PUSH:
             return gitHubPushEventExpressions();
+          case RELEASE:
+            return gitHubReleaseExpressions();
           default:
             return new ArrayList<>();
         }

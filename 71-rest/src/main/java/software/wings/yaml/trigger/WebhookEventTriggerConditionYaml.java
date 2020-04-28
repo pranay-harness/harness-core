@@ -16,6 +16,7 @@ public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
   private String repositoryType;
   private List<String> eventType = new ArrayList<>();
   private List<String> action = new ArrayList<>();
+  private List<String> releaseActions = new ArrayList<>();
   private String branchName;
 
   public WebhookEventTriggerConditionYaml() {
@@ -23,11 +24,12 @@ public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
   }
 
   @lombok.Builder
-  WebhookEventTriggerConditionYaml(
-      String repositoryType, String branchName, List<String> eventType, List<String> action) {
+  WebhookEventTriggerConditionYaml(String repositoryType, String branchName, List<String> eventType,
+      List<String> action, List<String> releaseActions) {
     super.setType("WEBHOOK");
     this.eventType = eventType;
     this.action = action;
+    this.releaseActions = releaseActions;
     this.repositoryType = repositoryType;
     this.branchName = branchName;
   }

@@ -14,7 +14,8 @@ public enum WebhookEventType {
   PING("On Ping", "ping"),
   DELETE("On Delete", "delete"),
   ANY("Any", "any"),
-  OTHER("Other", "other");
+  OTHER("Other", "other"),
+  RELEASE("On Release", "release");
 
   @Getter private String displayName;
   @Getter private String value;
