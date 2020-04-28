@@ -67,7 +67,7 @@ public class UpdateCloudProviderDataFetcher
         SettingAttribute updatedSettings =
             settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
 
-        settingServiceHelper.updateEncryptedFieldsInResponse(updatedSettings, false);
+        settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettings, false);
 
         return builder.cloudProvider(CloudProviderController.populateCloudProvider(updatedSettings).build()).build();
       default:

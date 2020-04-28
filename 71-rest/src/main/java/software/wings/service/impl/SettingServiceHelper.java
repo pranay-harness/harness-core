@@ -103,7 +103,13 @@ public class SettingServiceHelper {
     return true;
   }
 
-  public void updateEncryptedFieldsInResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
+  public void updateSettingAttributeBeforeResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
+    if (settingAttribute == null) {
+      return;
+    }
+
+    // Update usage restrictions if referenced secrets are used.
+    updateUsageRestrictions(settingAttribute);
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue instanceof EncryptableSetting) {
       if (hasReferencedSecrets(settingAttribute)) {
@@ -272,6 +278,12 @@ public class SettingServiceHelper {
       }
     }
     return encryptedSecrets;
+  }
+
+  public void updateUsageRestrictions(SettingAttribute settingAttribute) {
+    if (isNotEmpty(getUsedSecretIds(settingAttribute))) {
+      settingAttribute.setUsageRestrictions(null);
+    }
   }
 
   public UsageRestrictions getUsageRestrictions(SettingAttribute settingAttribute) {

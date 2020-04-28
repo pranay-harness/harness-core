@@ -879,7 +879,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     // To revisit
     if (settingAttribute.getUsageRestrictions() != null) {
-      fields.put("usageRestrictions", settingAttribute.getUsageRestrictions());
+      fields.put(SettingAttributeKeys.usageRestrictions, settingAttribute.getUsageRestrictions());
     }
 
     fields.put(SettingAttributeKeys.secretsMigrated, settingAttribute.isSecretsMigrated());

@@ -149,23 +149,32 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testUpdateEncryptedFieldsInResponse() {
-    SettingAttribute settingAttribute = aSettingAttribute().withAccountId(ACCOUNT_ID).withCategory(CONNECTOR).build();
+  public void testUpdateSettingAttributeBeforeResponse() {
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withCategory(CONNECTOR)
+                                            .withUsageRestrictions(usageRestrictions)
+                                            .build();
     // Should not throw an exception.
-    settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true);
+    assertThat(settingAttribute.getUsageRestrictions()).isEqualTo(usageRestrictions);
 
     AzureArtifactsPATConfig azureArtifactsPATConfig =
         AzureArtifactsPATConfig.builder().pat(RANDOM.toCharArray()).encryptedPat(PAT).build();
     settingAttribute.setValue(azureArtifactsPATConfig);
-    settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true);
     assertThat(azureArtifactsPATConfig.getEncryptedPat()).isNull();
     assertThat(azureArtifactsPATConfig.getPat()).isEqualTo(PAT.toCharArray());
+    assertThat(settingAttribute.getUsageRestrictions()).isNull();
 
+    settingAttribute.setUsageRestrictions(usageRestrictions);
     SplunkConfig splunkConfig = SplunkConfig.builder().password(RANDOM.toCharArray()).encryptedPassword(PAT).build();
     settingAttribute.setValue(splunkConfig);
-    settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true);
     assertThat(splunkConfig.getEncryptedPassword()).isNull();
     assertThat(splunkConfig.getPassword()).isEqualTo(PAT.toCharArray());
+    assertThat(settingAttribute.getUsageRestrictions()).isNull();
   }
 
   @Test
@@ -336,6 +345,21 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     settingServiceHelper.userHasPermissionsToChangeEntity(settingAttribute, ACCOUNT_ID, usageRestrictions);
     verify(secretManager, times(1)).hasUpdateAccessToSecrets(any(), eq(ACCOUNT_ID));
     verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(eq(ACCOUNT_ID), eq(usageRestrictions));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUpdateUsageRestrictions() {
+    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
+    SettingAttribute settingAttribute = prepareSettingAttributeWithoutSecrets();
+    settingAttribute.setUsageRestrictions(usageRestrictions);
+    settingServiceHelper.updateUsageRestrictions(settingAttribute);
+    assertThat(settingAttribute.getUsageRestrictions()).isEqualTo(usageRestrictions);
+
+    settingAttribute = prepareSettingAttributeWithPlaceholderSecrets();
+    settingServiceHelper.updateUsageRestrictions(settingAttribute);
+    assertThat(settingAttribute.getUsageRestrictions()).isNull();
   }
 
   @Test
