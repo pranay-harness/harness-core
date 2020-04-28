@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.pcf.model.PcfConstants.CF_APP_AUTOSCALAR_VALIDATION;
+import static io.harness.pcf.model.PcfConstants.CF_CLI_NEED_TO_BE_INSTALLED;
 import static java.util.Collections.singletonList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -143,22 +144,19 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   @VisibleForTesting
   String getCriteria(PcfCommandRequest pcfCommandRequest) {
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-    String criteria = new StringBuilder()
-                          .append("Pcf:")
-                          .append(pcfConfig.getEndpointUrl())
-                          .append("/")
-                          .append(pcfConfig.getUsername())
-                          .toString();
 
+    StringBuilder criteria = new StringBuilder(256);
     if (pcfCliValidationRequired(pcfCommandRequest)) {
-      criteria = new StringBuilder(128).append(criteria).append('_').append("cf_cli").toString();
+      criteria.append(CF_CLI_NEED_TO_BE_INSTALLED).append('_');
     }
 
     if (needToCheckAppAutoscalarPluginInstall(pcfCommandRequest)) {
-      criteria = new StringBuilder(128).append(criteria).append('_').append(CF_APP_AUTOSCALAR_VALIDATION).toString();
+      criteria.append(CF_APP_AUTOSCALAR_VALIDATION).append('_');
     }
 
-    return criteria;
+    criteria.append("Pcf:").append(pcfConfig.getEndpointUrl()).append('/').append(pcfConfig.getUsername());
+
+    return criteria.toString();
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(PcfCommandRequest pcfCommandRequest) {

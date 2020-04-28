@@ -260,11 +260,7 @@ public class PcfSetupState extends State {
       serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
 
-    boolean useCliForSetup = featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId());
-    if (!useCliForSetup && useAppAutoscalar) {
-      throw new InvalidRequestException(
-          "USE_PCF_CLI flag is needed for using Autoscalar. Please check with Harness Support");
-    }
+    boolean useCliForSetup = true;
 
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
@@ -602,7 +598,7 @@ public class PcfSetupState extends State {
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
-            .isUseCfCli(featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, context.getAccountId()));
+            .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
       setupSweepingOutputPcfBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
