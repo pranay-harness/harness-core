@@ -11,6 +11,7 @@ import com.google.inject.name.Named;
 
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
+import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
@@ -24,11 +25,14 @@ import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.facilitate.Facilitator;
+import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
+import io.harness.registries.adviser.AdviserRegistry;
+import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
@@ -63,6 +67,8 @@ public class ExecutionEngine implements Engine {
   // Registries
   @Inject private StateRegistry stateRegistry;
   @Inject private LevelRegistry levelRegistry;
+  @Inject private AdviserRegistry adviserRegistry;
+  @Inject private FacilitatorRegistry facilitatorRegistry;
 
   // Helpers
 
@@ -149,10 +155,10 @@ public class ExecutionEngine implements Engine {
     // Audit and execute
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
-    List<Facilitator> facilitators = engineObtainmentHelper.obtainFacilitators(node.getFacilitatorObtainments());
     FacilitatorResponse facilitatorResponse = null;
-    for (Facilitator facilitator : facilitators) {
-      facilitatorResponse = facilitator.facilitate(ambiance, inputs);
+    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
+      Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
+      facilitatorResponse = facilitator.facilitate(ambiance, obtainment.getParameters(), inputs);
       if (facilitatorResponse != null) {
         break;
       }
@@ -173,8 +179,8 @@ public class ExecutionEngine implements Engine {
   private void invokeState(
       Ambiance ambiance, FacilitatorResponse facilitatorResponse, ExecutionNodeInstance nodeInstance) {
     ExecutionNode node = nodeInstance.getNode();
-    State currentState = Preconditions.checkNotNull(engineObtainmentHelper.obtainState(node.getStateType()),
-        "Cannot find state for state type: " + node.getStateType());
+    State currentState = Preconditions.checkNotNull(
+        stateRegistry.obtain(node.getStateType()), "Cannot find state for state type: " + node.getStateType());
     injector.injectMembers(currentState);
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
@@ -195,15 +201,16 @@ public class ExecutionEngine implements Engine {
                .set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
 
     // TODO handle Failure
-    ExecutionNode nodeDefinition = nodeInstance.getNode();
-    List<Adviser> advisers = engineObtainmentHelper.obtainAdvisers(nodeDefinition.getAdviserObtainments());
-    if (isEmpty(advisers)) {
+    ExecutionNode node = nodeInstance.getNode();
+    if (isEmpty(node.getAdviserObtainments())) {
       endTransition(nodeInstance);
       return;
     }
     Advise advise = null;
-    for (Adviser adviser : advisers) {
-      advise = adviser.onAdviseEvent(AdvisingEvent.builder().stateResponse(stateResponse).build());
+    for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
+      Adviser adviser = adviserRegistry.obtain(obtainment.getType());
+      advise = adviser.onAdviseEvent(
+          AdvisingEvent.builder().stateResponse(stateResponse).adviserParameters(obtainment.getParameters()).build());
       if (advise != null) {
         break;
       }
@@ -238,7 +245,7 @@ public class ExecutionEngine implements Engine {
         nodeInstanceId, ops -> ops.set(ExecutionNodeInstanceKeys.status, NodeExecutionStatus.RUNNING));
 
     ExecutionNode node = nodeInstance.getNode();
-    State currentState = engineObtainmentHelper.obtainState(node.getStateType());
+    State currentState = stateRegistry.obtain(node.getStateType());
     injector.injectMembers(currentState);
     if (nodeInstance.getStatus() != NodeExecutionStatus.RUNNING) {
       logger.warn(

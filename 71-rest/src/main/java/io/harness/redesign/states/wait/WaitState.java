@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
@@ -29,6 +30,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Redesign
+@Produces(State.class)
 public class WaitState implements State, AsyncExecutable {
   public static final String STATE_TYPE = "WAIT";
 
@@ -56,7 +58,7 @@ public class WaitState implements State, AsyncExecutable {
   }
 
   @Override
-  public StateType getStateType() {
+  public StateType getType() {
     return StateType.builder().type(STATE_TYPE).build();
   }
 }

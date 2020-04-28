@@ -14,4 +14,5 @@ import javax.validation.constraints.NotNull;
 public class AdvisingEvent {
   @NotNull StateResponse stateResponse;
   StateParameters stateParameters;
+  AdviserParameters adviserParameters;
 }

@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @Redesign
+@Produces(State.class)
 public class BasicHttpState implements State, AsyncExecutable {
   public static final String STATE_TYPE = "BASIC_HTTP";
 
@@ -93,7 +95,7 @@ public class BasicHttpState implements State, AsyncExecutable {
   }
 
   @Override
-  public StateType getStateType() {
+  public StateType getType() {
     return StateType.builder().type(STATE_TYPE).build();
   }
 }

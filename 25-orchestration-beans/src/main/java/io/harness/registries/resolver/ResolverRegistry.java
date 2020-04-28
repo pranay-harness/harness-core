@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Redesign
 @Singleton
 public class ResolverRegistry implements Registry {
-  private Map<RefType, ResolverProducer> registry = new ConcurrentHashMap<>();
+  private Map<RefType, Resolver> registry = new ConcurrentHashMap<>();
 
-  public void register(RefType refType, ResolverProducer producer) {
+  public void register(RefType refType, Resolver producer) {
     if (registry.containsKey(refType)) {
       throw new DuplicateRegistryException(getType(), "Resolver Already Registered with this type: " + refType);
     }
@@ -27,8 +27,7 @@ public class ResolverRegistry implements Registry {
 
   public Resolver obtain(RefType refType) {
     if (registry.containsKey(refType)) {
-      ResolverProducer producer = registry.get(refType);
-      return producer.produceResolver();
+      return registry.get(refType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Resolver registered for type: " + refType);
   }

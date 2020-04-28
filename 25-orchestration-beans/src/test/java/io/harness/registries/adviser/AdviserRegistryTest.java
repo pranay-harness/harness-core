@@ -33,21 +33,16 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     AdviserType adviserType = AdviserType.builder().type("Type1").build();
     AdviserParameters parameters = Type1AdviserParameters.builder().name("paramName").build();
     AdviserObtainment obtainment = AdviserObtainment.builder().type(adviserType).parameters(parameters).build();
-    adviserRegistry.register(adviserType, new Type1AdviserProducer());
-    Adviser adviser = adviserRegistry.obtain(obtainment);
+    adviserRegistry.register(adviserType, new Type1Adviser());
+    Adviser adviser = adviserRegistry.obtain(adviserType);
     assertThat(adviser).isNotNull();
     assertThat(adviser.getType()).isEqualTo(adviserType);
     Type1Adviser type1Adviser = (Type1Adviser) adviser;
-    assertThat(type1Adviser.getParameters()).isEqualTo(parameters);
-    assertThat(type1Adviser.getParameters().getName()).isEqualTo("paramName");
 
-    assertThatThrownBy(() -> adviserRegistry.register(adviserType, new Type1AdviserProducer()))
+    assertThatThrownBy(() -> adviserRegistry.register(adviserType, new Type1Adviser()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(
-        ()
-            -> adviserRegistry.obtain(
-                AdviserObtainment.builder().type(AdviserType.builder().type(AdviserType.IGNORE).build()).build()))
+    assertThatThrownBy(() -> adviserRegistry.obtain(AdviserType.builder().type(AdviserType.IGNORE).build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
@@ -58,29 +53,13 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     assertThat(adviserRegistry.getType()).isEqualTo(RegistryType.ADVISER);
   }
 
-  private static class Type1AdviserProducer implements AdviserProducer {
-    @Override
-    public AdviserType getType() {
-      return AdviserType.builder().type("Type1").build();
-    }
-
-    @Override
-    public Adviser produce(AdviserParameters adviserParameters) {
-      return Type1Adviser.builder().parameters((Type1AdviserParameters) adviserParameters).build();
-    }
-  }
-
   @Value
   @Builder
   private static class Type1AdviserParameters implements AdviserParameters {
     String name;
   }
 
-  @Value
-  @Builder
   private static class Type1Adviser implements Adviser {
-    Type1AdviserParameters parameters;
-
     @Override
     public AdviserType getType() {
       return AdviserType.builder().type("Type1").build();

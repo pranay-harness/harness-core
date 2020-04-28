@@ -4,19 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
-import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
-import io.harness.facilitate.Facilitator;
-import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.ExecutionPlan;
 import io.harness.references.RefObject;
-import io.harness.registries.adviser.AdviserRegistry;
-import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
@@ -34,23 +28,7 @@ import java.util.stream.Collectors;
 public class EngineObtainmentHelper {
   @Inject private HPersistence hPersistence;
   @Inject private StateRegistry stateRegistry;
-  @Inject private AdviserRegistry adviserRegistry;
-  @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
-
-  public List<Adviser> obtainAdvisers(List<AdviserObtainment> obtainments) {
-    if (isEmpty(obtainments)) {
-      return Collections.emptyList();
-    }
-    return obtainments.stream().map(obtainment -> adviserRegistry.obtain(obtainment)).collect(Collectors.toList());
-  }
-
-  public List<Facilitator> obtainFacilitators(List<FacilitatorObtainment> obtainments) {
-    if (isEmpty(obtainments)) {
-      return Collections.emptyList();
-    }
-    return obtainments.stream().map(obtainment -> facilitatorRegistry.obtain(obtainment)).collect(Collectors.toList());
-  }
 
   public List<StateTransput> obtainInputs(
       Ambiance ambiance, List<RefObject> refObjects, List<StateTransput> additionalInputs) {

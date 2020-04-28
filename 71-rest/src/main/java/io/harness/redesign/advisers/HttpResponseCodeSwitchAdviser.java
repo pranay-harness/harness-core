@@ -2,17 +2,18 @@ package io.harness.redesign.advisers;
 
 import static io.harness.data.structure.CollectionUtils.filterAndGetFirst;
 
+import com.google.common.base.Preconditions;
+
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
-import lombok.Builder;
-import lombok.Value;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.sm.StateType;
 
@@ -21,15 +22,18 @@ import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
-@Value
-@Builder
 @Redesign
+@Produces(Adviser.class)
 public class HttpResponseCodeSwitchAdviser implements Adviser {
-  HttpResponseCodeSwitchAdviserParameters parameters;
-  @Builder.Default AdviserType type = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
+  @Override
+  public AdviserType getType() {
+    return AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
+  }
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
+    HttpResponseCodeSwitchAdviserParameters parameters =
+        (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(adviseEvent.getAdviserParameters());
     StateResponse stateResponse = adviseEvent.getStateResponse();
     // This will be changed to obtain via output type
     HttpStateExecutionData httpStateExecutionData = getOutputByType(StateType.HTTP.name(), stateResponse.getOutputs());

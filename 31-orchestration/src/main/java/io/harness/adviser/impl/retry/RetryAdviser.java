@@ -4,20 +4,12 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import lombok.Builder;
-import lombok.Value;
 
-@Value
 @Redesign
+@Produces(Adviser.class)
 public class RetryAdviser implements Adviser {
-  RetryAdviserParameters parameters;
-
-  @Builder
-  RetryAdviser(RetryAdviserParameters parameters) {
-    this.parameters = parameters;
-  }
-
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     return null;

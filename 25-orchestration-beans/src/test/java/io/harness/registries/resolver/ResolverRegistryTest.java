@@ -30,11 +30,11 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     RefType refType = RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
-    resolverRegistry.register(refType, new SweepingOutputResolverProducer());
+    resolverRegistry.register(refType, new SweepingOutputResolver());
     Resolver resolver = resolverRegistry.obtain(refType);
     assertThat(resolver).isNotNull();
 
-    assertThatThrownBy(() -> resolverRegistry.register(refType, new SweepingOutputResolverProducer()))
+    assertThatThrownBy(() -> resolverRegistry.register(refType, new SweepingOutputResolver()))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> resolverRegistry.obtain(RefType.builder().type("RANDOM").build()))
@@ -48,24 +48,17 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
     assertThat(resolverRegistry.getType()).isEqualTo(RegistryType.RESOLVER);
   }
 
-  private static class SweepingOutputResolverProducer implements ResolverProducer {
-    @Override
-    public Resolver produceResolver() {
-      return new SweepingOutputResolver();
-    }
-
-    @Override
-    public RefType getType() {
-      return RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
-    }
-  }
-
   @Value
   @Builder
   private static class SweepingOutputResolver implements Resolver {
     @Override
     public StateTransput resolve(Ambiance ambiance, RefObject refObject) {
       return null;
+    }
+
+    @Override
+    public RefType getType() {
+      return RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
     }
   }
 }

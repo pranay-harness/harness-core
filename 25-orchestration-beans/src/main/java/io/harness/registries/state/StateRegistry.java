@@ -17,19 +17,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Redesign
 @Singleton
 public class StateRegistry implements Registry {
-  Map<StateType, StateProducer> registry = new ConcurrentHashMap<>();
+  Map<StateType, State> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull StateType stateType, @NonNull StateProducer producer) {
+  public void register(@NonNull StateType stateType, @NonNull State state) {
     if (registry.containsKey(stateType)) {
       throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stateType);
     }
-    registry.put(stateType, producer);
+    registry.put(stateType, state);
   }
 
   public State obtain(@NonNull StateType stateType) {
     if (registry.containsKey(stateType)) {
-      StateProducer producer = registry.get(stateType);
-      return producer.produce();
+      return registry.get(stateType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
   }
