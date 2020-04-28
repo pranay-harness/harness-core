@@ -5,6 +5,8 @@ extend type Query {
   # Get a list of Workflows, by applicationId. This returns paginated data.
   workflows(filters: [WorkflowFilter], limit: Int!, offset: Int): WorkflowConnection
     @dataFetcher(name: workflowConnection)
+  # Fetch details about a  Workflow by it's name
+  workflowByName(workflowName: String!, applicationId: String!): Workflow @dataFetcher(name: workflow)
 }
 
 # Type Workflow
@@ -20,6 +22,32 @@ type Workflow {
 
   createdAt: DateTime
   createdBy: User
+
+  workflowVariables: [Variable]
+    @dataFetcher(
+      name: workflowVariableConnection
+      contextFieldArgsMap: "{ \"workflowId\": \"id\", \"applicationId\": \"applicationId\"}"
+    )
+}
+
+type Variable {
+  #name of the variable
+  name: String
+
+  #Type of the variable
+  type: String
+
+  #If the variable is a required variable
+  required: Boolean
+
+  #allowed values. Only for text variables.
+  allowedValues: [String]
+
+  #Default value, Only for text variables
+  defaultValue: String
+
+  #If a variable id fixed variable.
+  fixed: Boolean
 }
 
 type WorkflowConnection {

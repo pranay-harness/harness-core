@@ -1,4 +1,4 @@
-package io.harness.functional.graphQLAPIs.executions;
+package io.harness.functional.graphQLAPIs.pipeline;
 
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForEnv;
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForInfraDefinition;
@@ -21,11 +21,9 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.PipelineUtils;
-import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,16 +35,16 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest {
+public class GetPipelineByIdAndNameFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
@@ -55,9 +53,9 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
   @Inject private WorkflowUtils workflowUtils;
 
   private Application application;
+  private Pipeline templatisedPipeline;
   private Service service;
   private Environment environment;
-  private Pipeline savedPipeline;
   private InfrastructureDefinition infrastructureDefinition;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -82,6 +80,10 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
     infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
         seed, owners, InfrastructureType.GCP_KUBERNETES_ENGINE, bearerToken);
 
+    createTemplatisedPipeline();
+  }
+
+  private void createTemplatisedPipeline() {
     Workflow workflow =
         workflowUtils.getRollingK8sWorkflow("gcp-k8s-templatized-pooja-", service, infrastructureDefinition);
     Workflow savedWorkflow =
@@ -119,129 +121,81 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
     pipelineStages.add(executionStage);
     createdPipeline.setPipelineStages(pipelineStages);
 
-    savedPipeline = PipelineRestUtils.updatePipeline(application.getAppId(), createdPipeline, bearerToken);
-    assertThat(createdPipeline).isNotNull();
+    templatisedPipeline = PipelineRestUtils.updatePipeline(application.getAppId(), createdPipeline, bearerToken);
   }
 
   @Test
   @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
-  public void shouldTriggerTemplatisedWorkflow() {
-    Artifact artifact = getArtifact(service, service.getAppId());
-
-    ImmutableMap<String, String> pipelineVariables = ImmutableMap.<String, String>builder()
-                                                         .put("env", environment.getName())
-                                                         .put("service", service.getName())
-                                                         .put("infra", infrastructureDefinition.getName())
-                                                         .build();
-
-    String mutation = getGraphqlQueryForPipeline("123", application.getAppId(), savedPipeline.getUuid(),
-        pipelineVariables, artifact.getUuid(), service.getName());
-    Map<Object, Object> response =
-        GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), mutation);
-
-    assertThat(response).isNotEmpty();
-    assertThat(response.get("startExecution")).isNotNull();
-    Map<String, Object> executionData = (Map<String, Object>) response.get("startExecution");
-    assertThat(executionData.get("clientMutationId")).isEqualTo("123");
-    assertThat(executionData.get("execution")).isNotNull();
-  }
-
-  private String getGraphqlQueryForPipeline(String clientMutationId, String appId, String pipelineId,
-      ImmutableMap<String, String> workflowVariables, String artifactId, String serviceName) {
-    String variableInputsQuery = getVariableInputsQuery(workflowVariables);
-    String serviceInputQuery =
-        $GQL(/*[{
-name: "%s"
-artifactValueInput: {
-valueType: ARTIFACT_ID
-artifactId: {
-artifactId: "%s"
-}}}]*/ serviceName, artifactId);
-
-    String mutationInputQuery = $GQL(/*
-{
-entityId: "%s",
-applicationId: "%s",
-executionType: PIPELINE,
-variableInputs: %s,
-serviceInputs: %s,
-clientMutationId: "%s"
-}*/ pipelineId, appId, variableInputsQuery, serviceInputQuery, clientMutationId);
-
-    return $GQL(/*
-mutation{
-startExecution(input:%s) {
-clientMutationId
-execution {
- status
-}
-}
-}*/ mutationInputQuery);
-  }
-
-  @NotNull
-  private String getVariableInputsQuery(ImmutableMap<String, String> workflowVariables) {
-    List<String> variableInputs = new ArrayList<>();
-    for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
-      String queryVariableInput = $GQL(/*{
-      name: "%s"
-      variableValue: {
-          value: "%s"
-          type: NAME
-          }}*/ entry.getKey(), entry.getValue());
-      variableInputs.add(queryVariableInput);
-    }
-    return "[" + String.join(",", variableInputs) + "]";
-  }
-
-  private Artifact getArtifact(Service service, String appId) {
-    return ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
-        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
-  }
-
-  @Test
-  @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
-  public void getExecutionInputsWorkflow() {
-    ImmutableMap<String, String> pipelineVariables = ImmutableMap.<String, String>builder()
-                                                         .put("env", environment.getName())
-                                                         .put("service", service.getName())
-                                                         .put("infra", infrastructureDefinition.getName())
-                                                         .build();
-
-    String query =
-        getGraphqlQueryForExecutionInputs(application.getAppId(), savedPipeline.getUuid(), pipelineVariables);
+  public void getTemplatisedPipelineWithVarsById() {
+    String query = getGraphQLQueryById(templatisedPipeline.getUuid());
     Map<Object, Object> response = GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), query);
-
     assertThat(response).isNotEmpty();
-    assertThat(response.get("executionInputs")).isNotNull();
-    Map<String, Object> executionInputs = (Map<String, Object>) response.get("executionInputs");
-    assertThat(executionInputs.get("serviceInputs")).isNotNull();
-    List<Object> serviceInputs = (List<Object>) executionInputs.get("serviceInputs");
-
-    assertThat(serviceInputs.size()).isEqualTo(1);
-    Map<String, Object> serviceInput0 = (Map<String, Object>) serviceInputs.get(0);
-    assertThat(serviceInput0.get("id")).isEqualTo(service.getUuid());
+    validateResponse(response, "pipeline");
   }
 
-  private String getGraphqlQueryForExecutionInputs(
-      String appId, String pipelineId, ImmutableMap<String, String> pipelineVariables) {
-    String variableInputsQuery = getVariableInputsQuery(pipelineVariables);
+  private void validateResponse(Map<Object, Object> response, String apiName) {
+    assertThat(response).isNotEmpty();
+    assertThat(response.get(apiName)).isNotNull();
+    Map<String, Object> pipeline = (Map<String, Object>) response.get(apiName);
+    assertThat(pipeline.get("name")).isEqualTo(templatisedPipeline.getName());
+    assertThat(pipeline.get("id")).isEqualTo(templatisedPipeline.getUuid());
+    assertThat(pipeline.get("pipelineVariables")).isNotNull();
+    List<HashMap<String, Object>> pipelineVariables = (List<HashMap<String, Object>>) pipeline.get("pipelineVariables");
+    assertThat(pipelineVariables.size()).isEqualTo(3);
+    Map<String, Object> envVar = pipelineVariables.get(0);
+    assertThat(envVar.get("name")).isEqualTo("env");
+    assertThat(envVar.get("type")).isEqualTo("Environment");
+    assertThat(envVar.get("required")).isEqualTo(Boolean.TRUE);
 
+    Map<String, Object> serviceVar = pipelineVariables.get(1);
+    assertThat(serviceVar.get("name")).isEqualTo("service");
+    assertThat(serviceVar.get("type")).isEqualTo("Service");
+    assertThat(serviceVar.get("required")).isEqualTo(Boolean.TRUE);
+
+    Map<String, Object> infraVar = pipelineVariables.get(2);
+    assertThat(infraVar.get("name")).isEqualTo("infra");
+    assertThat(infraVar.get("type")).isEqualTo("Infrastructure definition");
+    assertThat(infraVar.get("required")).isEqualTo(Boolean.TRUE);
+  }
+
+  private String getGraphQLQueryById(String pipelineId) {
     return $GQL(/*
 query{
-executionInputs(entityId: "%s",
-applicationId: "%s",
-executionType: PIPELINE,
-variableInputs: %s
-){
-    serviceInputs {
-      id
-      name
-      artifactType
-    }
+pipeline(pipelineId: "%s"){
+name
+id
+pipelineVariables {
+  name
+  type
+  required
+}
+}
+}*/ pipelineId);
   }
-}*/ pipelineId, appId, variableInputsQuery);
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(FunctionalTests.class)
+  public void getTemplatisedPipelineWithVarsByName() {
+    String query = getGraphQLQueryByName(templatisedPipeline.getName(), templatisedPipeline.getAppId());
+    Map<Object, Object> response = GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), query);
+    assertThat(response).isNotEmpty();
+    validateResponse(response, "pipelineByName");
+  }
+
+  private String getGraphQLQueryByName(String pipelineName, String appId) {
+    return $GQL(/*
+query{
+pipelineByName(pipelineName: "%s", applicationId: "%s"){
+name
+id
+pipelineVariables {
+  name
+  type
+  required
+}
+}
+}*/ pipelineName, appId);
   }
 }

@@ -7,6 +7,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -28,6 +29,11 @@ public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, Q
     Pipeline pipeline = null;
     if (qlQuery.getPipelineId() != null) {
       pipeline = persistence.get(Pipeline.class, qlQuery.getPipelineId());
+    } else if (qlQuery.getPipelineName() != null) {
+      pipeline = persistence.createQuery(Pipeline.class)
+                     .filter(PipelineKeys.appId, qlQuery.getApplicationId())
+                     .filter(PipelineKeys.name, qlQuery.getPipelineName())
+                     .get();
     } else if (qlQuery.getExecutionId() != null) {
       // TODO: add this to in memory cache
       final String pipelineId = persistence.createQuery(WorkflowExecution.class)

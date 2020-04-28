@@ -13,6 +13,7 @@ import software.wings.security.annotations.Scope;
 public class QLPipeline implements QLObject {
   private String id;
   private String name;
+  private String appId;
   private String description;
   private Long createdAt;
   private QLUser createdBy;

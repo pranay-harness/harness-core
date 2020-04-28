@@ -5,6 +5,9 @@ extend type Query {
   # Get details about one or multiple Pipelines.
   pipelines(filters: [PipelineFilter], limit: Int!, offset: Int): PipelineConnection
     @dataFetcher(name: pipelineConnection)
+
+  # Get a Pipeline object by ID.
+  pipelineByName(pipelineName: String!, applicationId: String!): Pipeline @dataFetcher(name: pipeline)
 }
 
 enum PipelineFilterType {
@@ -40,6 +43,12 @@ type Pipeline {
 
   createdAt: DateTime
   createdBy: User
+
+  pipelineVariables: [Variable]
+    @dataFetcher(
+      name: pipelineVariableConnection
+      contextFieldArgsMap: "{ \"pipelineId\": \"id\", \"applicationId\": \"appId\" }"
+    )
 }
 
 type PipelineConnection {

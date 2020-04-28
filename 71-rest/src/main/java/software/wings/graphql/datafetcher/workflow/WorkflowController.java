@@ -17,6 +17,7 @@ public class WorkflowController {
   public static void populateWorkflow(@NotNull Workflow workflow, QLWorkflowBuilder builder) {
     builder.id(workflow.getUuid())
         .name(workflow.getName())
+        .applicationId(workflow.getAppId())
         .description(workflow.getDescription())
         .createdAt(workflow.getCreatedAt())
         .createdBy(UserController.populateUser(workflow.getCreatedBy()));

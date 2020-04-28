@@ -14,15 +14,15 @@ public class GraphQLRestUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  public static Map<Object, Object> executeGraphQLQuery(String bearerToken, String accountId, String mutationQuery) {
-    Map<String, Object> query = new HashMap<>();
-    query.put("query", mutationQuery);
-    query.put("variables", null);
+  public static Map<Object, Object> executeGraphQLQuery(String bearerToken, String accountId, String query) {
+    Map<String, Object> queryObj = new HashMap<>();
+    queryObj.put("query", query);
+    queryObj.put("variables", null);
     JsonPath jsonPath = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
                             .queryParam("accountId", accountId)
-                            .body(query, ObjectMapperType.GSON)
+                            .body(queryObj, ObjectMapperType.GSON)
                             .contentType(ContentType.JSON)
                             .post("/graphql")
                             .jsonPath();
