@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.interrupts;
 
 public enum RepairActionCode {
   MANUAL_INTERVENTION,

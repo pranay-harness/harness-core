@@ -34,6 +34,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.RepairActionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;

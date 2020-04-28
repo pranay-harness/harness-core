@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.exception.FailureType;
+import io.harness.interrupts.RepairActionCode;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
