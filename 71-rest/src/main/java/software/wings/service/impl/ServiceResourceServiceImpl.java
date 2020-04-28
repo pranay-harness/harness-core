@@ -1347,6 +1347,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private ContainerTask upsertContainerTask(ContainerTask containerTask, boolean advanced, boolean isCreate) {
+    containerTask.validate();
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");

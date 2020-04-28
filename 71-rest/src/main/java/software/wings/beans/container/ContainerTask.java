@@ -139,6 +139,8 @@ public abstract class ContainerTask extends DeploymentSpecification {
     throw new UnsupportedOperationException();
   }
 
+  public abstract void validate();
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
