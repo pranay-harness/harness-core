@@ -21,6 +21,7 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommand.ImportedCommandBuilder;
@@ -63,6 +64,27 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                .filter(ImportedTemplateKeys.accountId, accountId)
                .get()
         != null;
+  }
+
+  @Override
+  public String getImportedTemplateVersionFromTemplateVersion(String templateId, String version, String accountId) {
+    TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
+                                          .filter(TemplateVersionKeys.templateUuid, templateId)
+                                          .filter(TemplateVersionKeys.accountId, accountId)
+                                          .filter(TemplateVersionKeys.version, Long.valueOf(version))
+                                          .get();
+    return templateVersion.getImportedTemplateVersion();
+  }
+
+  @Override
+  public String getTemplateVersionFromImportedTemplateVersion(
+      String templateId, String importedVersion, String accountId) {
+    TemplateVersion templateVersion = wingsPersistence.createQuery(TemplateVersion.class)
+                                          .filter(TemplateVersionKeys.templateUuid, templateId)
+                                          .filter(TemplateVersionKeys.accountId, accountId)
+                                          .filter(TemplateVersionKeys.importedTemplateVersion, importedVersion)
+                                          .get();
+    return String.valueOf(templateVersion.getVersion());
   }
 
   @Override

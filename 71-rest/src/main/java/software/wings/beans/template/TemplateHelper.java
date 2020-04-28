@@ -14,6 +14,8 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
+import static software.wings.common.TemplateConstants.GALLERY_TOP_LEVEL_PATH_DELIMITER;
+import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -231,26 +233,42 @@ public class TemplateHelper {
     return templateVariables;
   }
 
+  // Don't directly use this method as it isn't imported template version aware.
   public static String obtainTemplateVersion(String templateUri) {
     String[] templateUris = fetchTemplateUris(templateUri);
     if (templateUris.length == 1) {
       return TemplateConstants.LATEST_TAG;
     }
-    return templateUris[1];
+    return templateUris[templateUris.length - 1];
   }
 
   public static String obtainTemplateName(String templateUri) {
+    String cleanedTemplatePath = templateUri;
     if (templateUri.contains(":")) {
       String[] templateUris = fetchTemplateUris(templateUri);
-      templateUri = templateUris[0];
+      if (templateUris.length == 1) {
+        cleanedTemplatePath = templateUris[0];
+      } else {
+        cleanedTemplatePath = templateUris[templateUris.length - 1 - 1];
+      }
     }
-    return templateUri.substring(templateUri.lastIndexOf('/') + 1);
+    return cleanedTemplatePath.substring(cleanedTemplatePath.lastIndexOf(PATH_DELIMITER) + 1);
+  }
+
+  public static String obtainTemplateNameForImportedCommands(String templateUri) {
+    return templateUri.split(String.valueOf(GALLERY_TOP_LEVEL_PATH_DELIMITER))[1];
   }
 
   public static String obtainTemplateFolderPath(String templateUri) {
     String[] templateUris = fetchTemplateUris(templateUri);
-    int endIndex = templateUri.lastIndexOf('/');
-    return templateUris[0].substring(0, endIndex);
+    String cleanedTemplateUri;
+    if (templateUris.length == 1) {
+      cleanedTemplateUri = templateUris[0];
+    } else {
+      cleanedTemplateUri = templateUris[templateUris.length - 1 - 1];
+    }
+    int endIndex = cleanedTemplateUri.lastIndexOf('/');
+    return cleanedTemplateUri.substring(0, endIndex);
   }
 
   private static String[] fetchTemplateUris(String templateUri) {

@@ -36,6 +36,7 @@ import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_PREFIX;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V3_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.SSH;
@@ -387,13 +388,35 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     String templateUri = templateService.fetchTemplateUri(template.getUuid());
-    assertTemplateUri(templateUri);
+    assertTemplateUri(templateUri, "Harness/Tomcat Commands/My Start Command", "Harness/Tomcat Commands");
   }
 
-  private void assertTemplateUri(String templateUri) {
+  private void assertTemplateUri(String templateUri, String expectedUri, String expectedFolderPath) {
     assertThat(templateUri).isNotEmpty();
-    assertThat(obtainTemplateFolderPath(templateUri)).isEqualTo("Harness/Tomcat Commands");
+    assertThat(templateUri).isEqualTo(expectedUri);
+    assertThat(obtainTemplateFolderPath(templateUri)).isEqualTo(expectedFolderPath);
     assertThat(obtainTemplateName(templateUri)).isEqualTo(MY_START_COMMAND);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldFetchNameSpacedTemplateUri() {
+    Template template = getSshCommandTemplate();
+
+    // Case 1: Non Imported.
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    String templateUri = templateService.makeNamespacedTemplareUri(template.getUuid(), "1");
+    assertTemplateUri(templateUri, "Harness/Tomcat Commands/My Start Command:1", "Harness/Tomcat Commands");
+
+    // Case 2: Imported - harness gallery.
+    Template importedTemplate = saveImportedTemplate(
+        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5");
+    assertThat(importedTemplate).isNotNull();
+    String templateUriImported = templateService.makeNamespacedTemplareUri(importedTemplate.getUuid(), "1");
+    assertTemplateUri(
+        templateUriImported, IMPORTED_TEMPLATE_PREFIX + "Harness/" + MY_START_COMMAND + ":1.5", "Harness");
   }
 
   @Test
@@ -412,7 +435,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
     String templateUri = templateService.fetchTemplateUri(template.getUuid());
-    assertTemplateUri(templateUri);
+    assertTemplateUri(templateUri, "Harness/Tomcat Commands/My Start Command", "Harness/Tomcat Commands");
 
     String templateUuid = templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, templateUri);
     assertThat(templateUuid).isNotEmpty().isEqualTo(savedTemplate.getUuid());
@@ -1011,19 +1034,38 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void shouldFetchTemplateFromUri() {
+  public void shouldFetchTemplateFromNameSpacedUri() {
     Template template = getSshCommandTemplate();
     Template savedTemplate = templateService.save(template);
     assertThat(savedTemplate).isNotNull();
 
+    // Case 1: Account Template.
     String templateUri = templateService.fetchTemplateUri(template.getUuid());
-    assertTemplateUri(templateUri);
+    assertTemplateUri(templateUri, "Harness/Tomcat Commands/My Start Command", "Harness/Tomcat Commands");
 
     Template returnedTemplate = templateService.fetchTemplateFromUri(templateUri, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
     assertThat(returnedTemplate.getVersion()).isNotNull();
     assertThat(returnedTemplate.getAccountId()).isNotNull();
     assertThat(returnedTemplate.getAppId()).isNotNull();
     assertThat(returnedTemplate.getFolderId()).isNotNull();
+    assertThat(templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, templateUri))
+        .isEqualTo(savedTemplate.getUuid());
+
+    // Case 2: Imported Template.
+    Template importedTemplate = saveImportedTemplate(
+        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5");
+    String importedTemplateUri = templateService.makeNamespacedTemplareUri(importedTemplate.getUuid(), "1");
+    assertTemplateUri(
+        importedTemplateUri, IMPORTED_TEMPLATE_PREFIX + "Harness/" + MY_START_COMMAND + ":1.5", "Harness");
+
+    Template returnedImportedemplate =
+        templateService.fetchTemplateFromUri(importedTemplateUri, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
+    assertThat(returnedImportedemplate.getVersion()).isNotNull();
+    assertThat(returnedImportedemplate.getAccountId()).isNotNull();
+    assertThat(returnedImportedemplate.getAppId()).isNotNull();
+    assertThat(returnedImportedemplate.getFolderId()).isNotNull();
+    assertThat(templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, importedTemplateUri))
+        .isEqualTo(importedTemplate.getUuid());
   }
 
   @Test

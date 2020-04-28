@@ -13,6 +13,7 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.REF_COMMAND_UNIT;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandRefUuid;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateRefUri;
+import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateUri;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedReturnCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.variable;
@@ -65,8 +66,8 @@ public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
   public void testToBean() throws IOException {
     when(yamlHandlerFactory.getYamlHandler(YamlType.GLOBAL_TEMPLATE_LIBRARY, SSH)).thenReturn(yamlHandler);
     when(yamlHandler.upsertFromYaml(any(), any())).thenReturn(null);
-    when(templateService.fetchTemplateFromUri(any(), any(), any())).thenReturn(null, expectedReturnCommandTemplate);
     when(templateService.get(any())).thenReturn(Template.builder().version(1).build());
+
     ChangeContext<CommandRefYaml> changeContext =
         getChangeContext(REF_COMMAND_UNIT, REF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, commandTemplateRefYamlHandler);
     CommandRefYaml yamlObject = (CommandRefYaml) getYaml(REF_COMMAND_UNIT, CommandRefYaml.class);
@@ -81,6 +82,14 @@ public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
     changeContextForSecond.getChange().setAccountId(GLOBAL_ACCOUNT_ID);
 
     List<ChangeContext> changeSetContext = Arrays.asList(changeContext, changeContextForSecond);
+
+    when(templateService.fetchTemplateFromUri(
+             commandTemplateUri, changeContext.getChange().getAccountId(), GLOBAL_APP_ID))
+        .thenReturn(null, expectedCommandTemplate);
+    when(templateService.fetchTemplateFromUri(
+             commandTemplateRefUri, changeContextForSecond.getChange().getAccountId(), GLOBAL_APP_ID))
+        .thenReturn(expectedReturnCommandTemplate);
+    when(templateService.fetchTemplateVersionFromUri(any(), any())).thenReturn("1");
     assertThat(commandTemplateRefYamlHandler.upsertFromYaml(changeContext, changeSetContext)).isNotNull();
   }
 
@@ -106,6 +115,7 @@ public class CommandTemplateRefYamlHandlerTest extends BaseYamlHandlerTest {
   public void testToYaml() {
     when(templateService.fetchTemplateUri(commandRefUuid)).thenReturn(commandTemplateRefUri);
     when(templateService.get(commandRefUuid)).thenReturn(expectedCommandTemplate);
+    when(templateService.makeNamespacedTemplareUri(commandRefUuid, "2")).thenReturn(commandTemplateRefUri);
     Command refCommand =
         Command.Builder.aCommand()
             .withName("Child")

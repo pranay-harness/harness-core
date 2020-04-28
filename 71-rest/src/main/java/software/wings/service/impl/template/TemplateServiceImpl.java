@@ -18,11 +18,13 @@ import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
-import static software.wings.beans.template.TemplateGallery.GalleryKey;
+import static software.wings.beans.template.TemplateGallery.GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateNameForImportedCommands;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.beans.template.TemplateType.HTTP;
 import static software.wings.beans.template.TemplateType.PCF_PLUGIN;
@@ -31,7 +33,9 @@ import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.VersionedTemplate.TEMPLATE_ID_KEY;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_PREFIX;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
@@ -551,7 +555,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private ImportedTemplateDetails setImportedDetailsOfTemplate(Template template, TemplateVersion templateVersion) {
-    if (GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(
+    if (HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(
             templateGalleryHelper.getGalleryKeyNameByGalleryId(template.getGalleryId()))) {
       ImportedTemplate importedCommandDetails =
           importedTemplateService.getCommandByTemplateId(template.getUuid(), template.getAccountId());
@@ -775,6 +779,10 @@ public class TemplateServiceImpl implements TemplateService {
       logger.error("Linked template for http template  {} was deleted ", templateUuid);
       return null;
     }
+    if (HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(
+            templateGalleryHelper.getGalleryKeyNameByGalleryId(template.getGalleryId()))) {
+      return template.getName();
+    }
     List<String> folderUuids = Arrays.stream(template.getFolderPathId().split("/")).collect(Collectors.toList());
     Map<String, String> templateUuidNameMap =
         templateFolderService.fetchTemplateFolderNames(template.getAccountId(), folderUuids, template.getGalleryId());
@@ -787,6 +795,32 @@ public class TemplateServiceImpl implements TemplateService {
       i++;
     }
     return templateFolderPath.append("/").append(template.getName()).toString();
+  }
+
+  @Override
+  public String makeNamespacedTemplareUri(String templateUuid, String version) {
+    if (templateUuid == null) {
+      return null;
+    }
+    String templateUri = fetchTemplateUri(templateUuid);
+    if (templateUri == null) {
+      logger.error("Linked template {} was deleted.", templateUuid);
+      return null;
+    }
+    if (version != null) {
+      String templateVersion = fetchTemplateVersionFromVersion(templateUuid, version);
+      templateUri = templateUri + ":" + templateVersion;
+    }
+    Template template = get(templateUuid);
+    String galleryKeyName = templateGalleryHelper.getGalleryKeyNameByGalleryId(template.getGalleryId());
+    if (HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(galleryKeyName)) {
+      templateUri = IMPORTED_TEMPLATE_PREFIX + templateUri;
+    } else {
+      if (!template.getAppId().equals(GLOBAL_APP_ID)) {
+        templateUri = APP_PREFIX + templateUri;
+      }
+    }
+    return templateUri;
   }
 
   @Override
@@ -810,16 +844,16 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public String fetchTemplateIdFromUri(String accountId, String appId, String templateUri) {
     String folderPath = obtainTemplateFolderPath(templateUri);
-    // TODO: Making account gallery as default for now for uri. Make it generic to make galleryId aware.
     String galleryId =
         templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
-    if (folderPath.contains("/")) { // app level folder
+    if (templateUri.startsWith(APP_PREFIX)) { // app level folder
       templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
+    } else if (templateUri.startsWith(IMPORTED_TEMPLATE_PREFIX)) {
+      return getImportedTemplate(accountId, templateUri, appId).getUuid();
     } else { // root level folder
       templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
     }
-
     if (templateFolder == null) {
       throw new WingsException("No template folder found with the uri  [" + templateUri + "]");
     }
@@ -843,13 +877,17 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public Template fetchTemplateFromUri(String templateUri, String accountId, String appId) {
     String folderPath = obtainTemplateFolderPath(templateUri);
-    // TODO: Making account gallery as default for now for uri. Make it generic to make galleryId aware.
-    String galleryId =
-        templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
-    if (folderPath.contains("/")) { // app level folder
+    String galleryId;
+    if (templateUri.startsWith(APP_PREFIX)) { // app level folder
+      galleryId =
+          templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
       templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
-    } else { // root level folder
+    } else if (templateUri.startsWith(IMPORTED_TEMPLATE_PREFIX)) {
+      return getImportedTemplate(accountId, templateUri, appId);
+    } else { // account level folder
+      galleryId =
+          templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
       templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
     }
 
@@ -869,6 +907,42 @@ public class TemplateServiceImpl implements TemplateService {
       return null;
     }
     return template;
+  }
+
+  @Override
+  public String fetchTemplateVersionFromVersion(String templateUuid, String templateVersion) {
+    Template template = get(templateUuid);
+    if (importedTemplateService.isImported(templateUuid, template.getAccountId())) {
+      if (LATEST_TAG.equals(templateVersion)) {
+        throw new InvalidRequestException("Latest is not supported for imported templates", USER);
+      }
+      return importedTemplateService.getImportedTemplateVersionFromTemplateVersion(
+          templateUuid, templateVersion, template.getAccountId());
+    }
+    return templateVersion;
+  }
+
+  @Override
+  public String fetchTemplateVersionFromUri(String templateUuid, String templateUri) {
+    Template template = get(templateUuid);
+    String templateVersion = obtainTemplateVersion(templateUri);
+    if (importedTemplateService.isImported(templateUuid, template.getAccountId())) {
+      return importedTemplateService.getTemplateVersionFromImportedTemplateVersion(
+          templateUuid, templateVersion, template.getAccountId());
+    }
+    return templateVersion;
+  }
+
+  private Template getImportedTemplate(String accountId, String templateUri, String appId) {
+    TemplateGallery gallery =
+        templateGalleryHelper.getGalleryByGalleryKey(HARNESS_COMMAND_LIBRARY_GALLERY.name(), accountId);
+    String templateName = obtainTemplateNameForImportedCommands(templateUri);
+    return wingsPersistence.createQuery(Template.class)
+        .filter(Template.ACCOUNT_ID_KEY, accountId)
+        .filter(NAME_KEY, templateName)
+        .filter(TemplateKeys.appId, appId)
+        .filter(TemplateKeys.galleryId, gallery.getUuid())
+        .get();
   }
 
   @Override

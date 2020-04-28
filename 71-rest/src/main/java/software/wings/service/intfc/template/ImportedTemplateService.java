@@ -11,6 +11,10 @@ import java.util.Map;
 public interface ImportedTemplateService {
   boolean isImported(String templateId, String accountId);
 
+  String getImportedTemplateVersionFromTemplateVersion(String templateId, String version, String accountId);
+
+  String getTemplateVersionFromImportedTemplateVersion(String templateId, String importedVersion, String accountId);
+
   List<Template> getTemplatesByCommandNames(List<String> commandNames, String commandStoreName, String accountId);
 
   Template getTemplateByCommandName(String commandName, String commandStoreName, String accountId);

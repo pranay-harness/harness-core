@@ -20,6 +20,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.HTTP_VERIFICATION;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
+import static software.wings.common.TemplateConstants.PREFIX_FOR_APP;
 import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
 
 import com.google.inject.Inject;
@@ -105,6 +106,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
           : parentFolder.getPathId() + PATH_DELIMITER + parentFolder.getUuid();
       templateFolder.setPathId(pathId);
     }
+    throwExceptionIfRestrictedFolderName(templateFolder);
     templateFolder.setKeywords(getKeywords(templateFolder));
     TemplateFolder savedTemplateFolder = saveStrategy.apply(templateFolder);
 
@@ -146,6 +148,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   @ValidationGroups(Update.class)
   public TemplateFolder update(TemplateFolder templateFolder) {
+    throwExceptionIfRestrictedFolderName(templateFolder);
     TemplateFolder savedTemplateFolder = get(templateFolder.getUuid());
     if (savedTemplateFolder == null) {
       throw new WingsException("Template Folder [" + templateFolder.getName() + "] was deleted", USER);
@@ -563,5 +566,11 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   public TemplateFolder getImportedTemplateFolder(String accountId, String galleryId, String appId) {
     return getRootLevelFolder(accountId, galleryId);
+  }
+
+  private void throwExceptionIfRestrictedFolderName(TemplateFolder templateFolder) {
+    if (templateFolder.getName().equals(PREFIX_FOR_APP) && templateFolder.getParentId() == null) {
+      throw new InvalidRequestException("Folder name cannot be " + PREFIX_FOR_APP, USER);
+    }
   }
 }

@@ -78,7 +78,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
                 }
 
                 String commandNameFromYamlPath = yamlHelper.getNameFromYamlFilePath(commandFilePath);
-                return commandNameFromYamlPath.equals(commandName);
+                return commandName.equals(commandNameFromYamlPath);
               })
               .findFirst();
 

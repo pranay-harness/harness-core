@@ -6,9 +6,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
-import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -54,7 +53,6 @@ import java.util.TreeMap;
 @Singleton
 @Slf4j
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
-  private static final String APP_PREFIX = "App/";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -116,7 +114,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       } else {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
       }
-      templateVersion = obtainTemplateVersion(templateUri);
+      templateVersion = templateService.fetchTemplateVersionFromUri(templateUuid, templateUri);
     }
 
     return GraphNode.builder()
@@ -164,22 +162,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
               .collect(toList());
     }
 
-    String templateUri = null;
     String templateUuid = step.getTemplateUuid();
+    String templateUri = null;
     if (templateUuid != null) {
-      // Step is linkedH
-      templateUri = templateService.fetchTemplateUri(templateUuid);
-      if (templateUri == null) {
-        logger.warn("Linked template for http template  {} was deleted", templateUuid);
-      }
-      if (step.getTemplateVersion() != null) {
-        templateUri = templateUri + ":" + step.getTemplateVersion();
-      }
-      Template template = templateService.get(templateUuid);
-      if (template != null) {
-        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
-          templateUri = APP_PREFIX + templateUri;
-        }
+      // Step is linked
+      templateUri = templateService.makeNamespacedTemplareUri(templateUuid, step.getTemplateVersion());
+      if (templateUri != null) {
+        Template template = templateService.get(templateUuid);
         List<String> templateProperties = templateService.fetchTemplateProperties(template);
         if (templateProperties != null && outputProperties != null) {
           outputProperties.keySet().removeAll(templateProperties);

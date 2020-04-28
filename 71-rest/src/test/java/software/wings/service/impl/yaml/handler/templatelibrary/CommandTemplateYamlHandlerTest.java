@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -13,7 +14,6 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.VALID_COMMAND_TEMPLATE_WITHOUT_VARIABLE;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateForSetup;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.commandTemplateName;
-import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedReturnCommandTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 
@@ -55,7 +55,7 @@ public class CommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTe
         .thenReturn(rootTemplateFolder);
     when(templateService.findByFolder(rootTemplateFolder, commandTemplateName, GLOBAL_APP_ID))
         .thenReturn(commandTemplateForSetup);
-    when(templateService.update(expectedCommandTemplate)).thenReturn(expectedReturnCommandTemplate);
+    when(templateService.update(any())).thenReturn(expectedReturnCommandTemplate);
     ChangeContext<CommandTemplateYaml> changeContext =
         getChangeContext(VALID_COMMAND_TEMPLATE_WITHOUT_VARIABLE, COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, yamlHandler);
     CommandTemplateYaml yamlObject =
