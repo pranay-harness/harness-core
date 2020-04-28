@@ -29,8 +29,12 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -88,7 +92,8 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     updateOperations.set(DashboardSettings.keys.name, dashboardSettings.getName());
     updateOperations.set(DashboardSettings.keys.description, dashboardSettings.getDescription());
     if (isNotEmpty(dashboardSettings.getPermissions())) {
-      updateOperations.set(keys.permissions, dashboardSettings.getPermissions());
+      List<DashboardAccessPermissions> flattenedList = flattenPermissions(dashboardSettings.getPermissions());
+      updateOperations.set(keys.permissions, flattenedList);
     } else {
       updateOperations.unset(keys.permissions);
     }
@@ -99,6 +104,66 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
         accountId, dashboardSettingsBeforeUpdate, updatedDashboardSettings, Type.UPDATE);
     logger.info("Updated dashboard {}", id);
     return updatedDashboardSettings;
+  }
+
+  private Action compareAction(Action lhs, Action rhs) {
+    if (lhs == null && rhs == null) {
+      return null;
+    }
+
+    if (lhs == null) {
+      return rhs;
+    }
+
+    if (rhs == null) {
+      return lhs;
+    }
+
+    int comparison = rhs.compareTo(lhs);
+    return comparison >= 0 ? rhs : lhs;
+  }
+
+  private List<Action> removeDuplicates(Set<Action> actions) {
+    Action finalAction = null;
+    for (Action action : actions) {
+      finalAction = compareAction(action, finalAction);
+    }
+    return asList(finalAction);
+  }
+
+  public List<DashboardAccessPermissions> flattenPermissions(List<DashboardAccessPermissions> permissions) {
+    if (isEmpty(permissions)) {
+      return permissions;
+    }
+
+    List<DashboardAccessPermissions> finalPermissions = new ArrayList<>();
+    Map<String, Set<Action>> map = new HashMap<>();
+    permissions.forEach(permission -> {
+      List<String> userGroups = permission.getUserGroups();
+      if (isEmpty(userGroups)) {
+        return;
+      }
+
+      userGroups.forEach(userGroup -> {
+        if (isEmpty(permission.getAllowedActions())) {
+          return;
+        }
+
+        Set<Action> currentActions = map.get(userGroup);
+        if (isEmpty(currentActions)) {
+          currentActions = new HashSet<>();
+          map.put(userGroup, currentActions);
+        }
+        currentActions.addAll(permission.getAllowedActions());
+      });
+    });
+
+    map.forEach((userGroup, actions)
+                    -> finalPermissions.add(DashboardAccessPermissions.builder()
+                                                .userGroups(asList(userGroup))
+                                                .allowedActions(removeDuplicates(actions))
+                                                .build()));
+    return finalPermissions;
   }
 
   @Override
