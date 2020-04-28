@@ -78,6 +78,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
   private transient ImportedTemplateDetails importedTemplateDetails;
+  private TemplateMetadata templateMetadata;
   private transient String referencedTemplateUri;
   @SchemaIgnore private Set<String> keywords;
 
@@ -87,7 +88,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
       String referencedTemplateId, Long referencedTemplateVersion, String versionDetails,
-      ImportedTemplateDetails importedTemplateDetails) {
+      ImportedTemplateDetails importedTemplateDetails, TemplateMetadata templateMetadata) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
@@ -107,6 +108,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
     this.keywords = keywords;
     this.versionDetails = versionDetails;
     this.importedTemplateDetails = importedTemplateDetails;
+    this.templateMetadata = templateMetadata;
   }
 
   @Override
