@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.trigger.PrAction;
+import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
@@ -33,6 +34,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
     return WebhookEventTriggerConditionYaml.builder()
         .action(getYAMLActions(webHookTriggerCondition))
+        .releaseActions(getYAMLReleaseActions(webHookTriggerCondition))
         .repositoryType(getBeanWebhookSourceForYAML(webHookTriggerCondition.getWebhookSource()))
         .eventType(getYAMLEventTypes(webHookTriggerCondition.getEventTypes()))
         .branchName(webHookTriggerCondition.getBranchRegex())
@@ -61,6 +63,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       if (webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
         webHookTriggerCondition.setActions(
             getPRActionTypes(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
+        webHookTriggerCondition.setReleaseActions(
+            getReleaseActionTypes(webhookConditionYaml.getReleaseActions(), webhookConditionYaml.getRepositoryType()));
       } else if (webhookConditionYaml.getRepositoryType().equals(BITBUCKET.name())) {
         webHookTriggerCondition.setBitBucketEvents(
             getBitBucketEventType(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
@@ -117,6 +121,15 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     }
   }
 
+  private List<ReleaseAction> getReleaseActionTypes(List<String> actions, String webhookSource) {
+    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
+        && webhookSource.equals(GITHUB.name())) {
+      return actions.stream().map(ReleaseAction::find).collect(Collectors.toList());
+    } else {
+      return null;
+    }
+  }
+
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
         && webhookSource.equals("BITBUCKET")) {
@@ -155,6 +168,19 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     } else {
       return null;
     }
+  }
+
+  private List<String> getYAMLReleaseActions(WebHookTriggerCondition webHookTriggerCondition) {
+    if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
+        && webHookTriggerCondition.getWebhookSource() == GITHUB) {
+      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getReleaseActions())) {
+        return webHookTriggerCondition.getReleaseActions()
+            .stream()
+            .map(ReleaseAction::getValue)
+            .collect(Collectors.toList());
+      }
+    }
+    return null;
   }
 
   @Override
