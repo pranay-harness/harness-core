@@ -274,8 +274,10 @@ hosts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 hosts {"name": "hostName_1", "background": true} {"hostName": 1}
 hosts {"name": "serviceTemplateId_1", "background": true} {"serviceTemplateId": 1}
 idempotent_locks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+importedTemplates {"name": "account_command_idx", "unique": true} {"accountId": 1, "commandStoreName": 1, "commandName": 1}
 importedTemplates {"name": "appId_1", "background": true} {"appId": 1}
 importedTemplates {"name": "createdAt_1", "background": true} {"createdAt": 1}
+importedTemplates {"name": "template_idx", "unique": true} {"templateId": 1}
 infrastructureDefinitions {"name": "accountId_1", "background": true} {"accountId": 1}
 infrastructureDefinitions {"name": "infraDefinitionIdx", "unique": true} {"appId": 1, "envId": 1, "name": 1}
 infrastructureDefinitions {"name": "infrastructure_cloudProviderId", "background": true} {"infrastructure.cloudProviderId": 1}
@@ -551,6 +553,7 @@ templateFolders {"name": "duplicateKey", "unique": true} {"accountId": 1, "name"
 templateGalleries {"name": "account_gallery_key_idx", "background": true} {"accountId": 1, "galleryKey": 1}
 templateGalleries {"name": "appId_1", "background": true} {"appId": 1}
 templateGalleries {"name": "createdAt_1", "background": true} {"createdAt": 1}
+templateVersions {"name": "account_imported_template_version", "background": true} {"accountId": 1, "templateUuid": 1, "importedTemplateVersion": 1}
 templateVersions {"name": "account_template_version", "background": true} {"accountId": 1, "templateUuid": 1, "version": -1}
 templateVersions {"name": "appId_1", "background": true} {"appId": 1}
 templateVersions {"name": "createdAt_1", "background": true} {"createdAt": 1}

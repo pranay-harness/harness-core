@@ -19,8 +19,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
 import javax.validation.constraints.NotNull;
@@ -30,6 +34,13 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
+@Indexes({
+  @Index(options = @IndexOptions(name = "account_command_idx", unique = true),
+      fields = { @Field("accountId")
+                 , @Field("commandStoreName"), @Field("commandName") })
+  ,
+      @Index(options = @IndexOptions(name = "template_idx", unique = true), fields = { @Field("templateId") })
+})
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
