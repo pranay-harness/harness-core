@@ -43,7 +43,7 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
     String input = $GQL(/*
     {
     secretType: WINRM_CREDENTIAL,
-    id: "%s",
+    secretId: "%s",
     winRMCredential: {
         name: "%s",
         userName: "%s",

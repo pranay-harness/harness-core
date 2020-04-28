@@ -46,7 +46,7 @@ public class UpdateEncryptedTextTest extends GraphQLTest {
   private String getUpdateEncryptedTextInput() {
     String encryptedText = $GQL(/*{
      secretType: ENCRYPTED_TEXT,
-     id : "%s",
+     secretId : "%s",
      encryptedText: {
          name: "%s",
          value: "secret",
@@ -93,7 +93,7 @@ public class UpdateEncryptedTextTest extends GraphQLTest {
   private String getUpdateEncryptedTextInputWithInvalidId() {
     String encryptedText = $GQL(/*{
      secretType: ENCRYPTED_TEXT,
-     id : "%s",
+     secretId : "%s",
      encryptedText: {
          name: "%s",
          value: "%s",

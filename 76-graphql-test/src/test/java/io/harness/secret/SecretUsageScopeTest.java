@@ -48,7 +48,7 @@ public class SecretUsageScopeTest extends GraphQLTest {
     String input = $GQL(/*
 {
 secretType: WINRM_CREDENTIAL,
-id: "%s",
+secretId: "%s",
 winRMCredential: {
     authenticationScheme:  NTLM,
     useSSL: false,

@@ -18,7 +18,7 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class QLUpdateSecretInput implements QLMutationInput {
   String clientMutationId;
-  String id;
+  String secretId;
   QLSecretType secretType;
   RequestField<QLEncryptedTextUpdate> encryptedText;
   RequestField<QLWinRMCredentialUpdate> winRMCredential;
