@@ -33,6 +33,7 @@ public class CommandVersionEntity
   @Id @NotNull(groups = {Update.class}) String uuid;
   String commandName;
   String commandStoreName;
+  String commandId;
   String version;
   String description;
   String yamlContent;

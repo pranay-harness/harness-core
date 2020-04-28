@@ -2,6 +2,7 @@ package io.harness.commandlibrary.server.resources;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import com.google.common.collect.HashMultimap;
@@ -9,11 +10,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 
+import io.dropwizard.testing.ResourceHelpers;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.commandlibrary.api.dto.CommandDTO;
 import io.harness.commandlibrary.api.dto.CommandStoreDTO;
+import io.harness.commandlibrary.api.dto.CommandVersionDTO;
 import io.harness.commandlibrary.server.CommandLibraryServerBaseTest;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -27,6 +31,9 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -135,6 +142,42 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
         commandStoreResource.saveCommandVersion("Accountid", commandVersionEntity1).getResource();
     assertThat(savedVersion.getVersion()).isEqualTo(commandVersionEntity1.getVersion());
     assertThat(savedVersion.getCommandName()).isEqualTo(commandVersionEntity1.getCommandName());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_upload_version() throws FileNotFoundException {
+    {
+      final CommandVersionDTO commandVersionDTO =
+          commandStoreResource.publishCommand("accountid", "harness", readFile("Archive.zip")).getResource();
+      assertThat(commandVersionDTO.getVersion()).isEqualTo("1.0.4");
+      assertThat(commandVersionDTO.getCommandName()).isEqualTo("command1");
+    }
+    {
+      assertThatExceptionOfType(InvalidRequestException.class)
+          .isThrownBy(
+              () -> commandStoreResource.publishCommand("accountid", "harness", readFile("Archive.zip")).getResource());
+    }
+
+    {
+      final CommandVersionDTO commandVersionDTO =
+          commandStoreResource.publishCommand("accountid", "harness", readFile("Archive1.zip")).getResource();
+      assertThat(commandVersionDTO.getVersion()).isEqualTo("2.0.0");
+      assertThat(commandVersionDTO.getCommandName()).isEqualTo("command1");
+    }
+    {
+      final CommandDTO commandDTO =
+          commandStoreResource.getCommandDetails("accountid", "harness", "command1").getResource();
+      assertThat(commandDTO.getLatestVersion().getVersion()).isEqualTo("2.0.0");
+      assertThat(commandDTO.getVersionList().get(0).getVersion()).isEqualTo("2.0.0");
+      assertThat(commandDTO.getVersionList().get(1).getVersion()).isEqualTo("1.0.4");
+      assertThat(commandDTO.getVersionList().size()).isEqualTo(2);
+    }
+  }
+
+  private InputStream readFile(String fileName) throws FileNotFoundException {
+    return new FileInputStream(ResourceHelpers.resourceFilePath(fileName));
   }
 
   private void createCommands() {

@@ -20,7 +20,7 @@ import java.util.List;
  * @author rktummala on 10/16/17
  */
 public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
-  @Inject protected HarnessTagYamlHelper harnessTagYamlHelper;
+  @Inject(optional = true) protected HarnessTagYamlHelper harnessTagYamlHelper;
 
   public abstract void delete(ChangeContext<Y> changeContext) throws HarnessException;
 

@@ -1,4 +1,4 @@
-package io.harness.commandlibrary.server.common;
+package io.harness.commandlibrary.server.utils;
 
 import lombok.experimental.UtilityClass;
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO.EnrichedCommandVersionDTOBuilder;

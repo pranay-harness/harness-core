@@ -1,6 +1,6 @@
-package io.harness.commandlibrary.server.common;
+package io.harness.commandlibrary.server.utils;
 
-import static io.harness.commandlibrary.server.common.CommandVersionUtils.populateCommandVersionDTO;
+import static io.harness.commandlibrary.server.utils.CommandVersionUtils.populateCommandVersionDTO;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
@@ -23,7 +23,7 @@ public class CommandUtils {
           .type(commandEntity.getType())
           .name(commandEntity.getName())
           .description(commandEntity.getDescription())
-          .category(commandEntity.getDescription())
+          .category(commandEntity.getCategory())
           .imageUrl(commandEntity.getImageUrl())
           .latestVersion(latestCommandVersionEntity != null
                   ? populateCommandVersionDTO(EnrichedCommandVersionDTO.builder(), latestCommandVersionEntity).build()

@@ -20,7 +20,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.commandlibrary.server.common.CommandLibraryServerConstants;
+import io.harness.commandlibrary.server.utils.CommandLibraryServerConstants;
 import io.harness.mongo.MongoConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
