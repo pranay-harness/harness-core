@@ -79,6 +79,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.WorkflowType;
+import io.harness.interrupts.RepairActionCode;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
@@ -98,7 +99,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
-import software.wings.beans.RepairActionCode;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
