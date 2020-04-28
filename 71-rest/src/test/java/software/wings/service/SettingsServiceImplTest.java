@@ -496,7 +496,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     settingsService.update(settingAttribute, false, false);
     verify(mockWingsPersistence).updateFields(any(), any(), fields.capture(), fieldsToRemove.capture());
     assertThat(fields.getValue().get(SettingAttributeKeys.connectivityError)).isEqualTo(errMsg);
-    assertThat(fieldsToRemove.getValue()).isNullOrEmpty();
+    assertThat(fieldsToRemove.getValue()).doesNotContain(SettingAttributeKeys.connectivityError);
   }
 
   private SettingAttribute prepareSettingAttributeForUpdate() {

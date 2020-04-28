@@ -112,6 +112,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Mock private UserService userService;
   @Mock private EnvironmentService envService;
   @Mock private SettingsService settingsService;
+  @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private SecretManager secretManager;
   @Mock private Query<SettingAttribute> query;
 
@@ -786,6 +787,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(query2.fetch()).thenReturn(iterator2);
     doReturn(false).when(iterator2).hasNext();
 
+    when(settingServiceHelper.getUsageRestrictions(settingAttribute))
+        .thenReturn(settingAttribute.getUsageRestrictions());
     return usageRestrictions;
   }
 

@@ -63,7 +63,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     doNothing()
         .when(settingServiceHelper)
-        .updateEncryptedFieldsInResponse(isA(SettingAttribute.class), isA(Boolean.class));
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
 
     QLCreateCloudProviderPayload payload =
         dataFetcher.mutateAndFetch(QLCreateCloudProviderInput.builder()
@@ -81,7 +81,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     verify(settingsService, times(1))
         .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
     verify(settingServiceHelper, times(1))
-        .updateEncryptedFieldsInResponse(isA(SettingAttribute.class), isA(Boolean.class));
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLPcfCloudProvider.class);

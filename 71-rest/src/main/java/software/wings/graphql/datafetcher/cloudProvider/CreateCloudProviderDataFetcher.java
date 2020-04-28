@@ -48,7 +48,7 @@ public class CreateCloudProviderDataFetcher
             toSettingAttribute(input.getPcfCloudProvider(), mutationContext.getAccountId()), Application.GLOBAL_APP_ID,
             mutationContext.getAccountId());
 
-        settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, false);
+        settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
         return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
       default:

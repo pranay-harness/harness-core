@@ -89,6 +89,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private SettingsService settingsService;
+  @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -994,7 +995,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       if (settingAttribute == null || !accountId.equals(settingAttribute.getAccountId())) {
         return false;
       }
-      return userHasPermissionsToChangeEntity(accountId, settingAttribute.getUsageRestrictions());
+      return settingServiceHelper.userHasPermissionsToChangeEntity(
+          settingAttribute, accountId, settingAttribute.getUsageRestrictions());
     }
   }
 
@@ -1005,7 +1007,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
-        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        UsageRestrictions usageRestrictions = settingServiceHelper.getUsageRestrictions(settingAttribute);
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
           if (FilterType.SELECTED.equals(appFilter.getFilterType()) && appFilter.getIds().contains(appId)) {
@@ -1046,7 +1048,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
-        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        UsageRestrictions usageRestrictions = settingServiceHelper.getUsageRestrictions(settingAttribute);
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           EnvFilter envFilter = appEnvRestriction.getEnvFilter();
           if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && envFilter.getIds().contains(envId)) {

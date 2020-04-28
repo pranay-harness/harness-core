@@ -155,7 +155,8 @@ public class SettingResource {
     } else {
       result = settingsService.list(pageRequest, currentAppId, currentEnvId);
     }
-    result.forEach(settingAttribute -> settingServiceHelper.updateEncryptedFieldsInResponse(settingAttribute, true));
+    result.forEach(
+        settingAttribute -> settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true));
     return new RestResponse<>(result);
   }
 
@@ -172,7 +173,7 @@ public class SettingResource {
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
-    settingServiceHelper.updateEncryptedFieldsInResponse(savedSettingAttribute, false);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(savedSettingAttribute, false);
     return new RestResponse<>(savedSettingAttribute);
   }
 
@@ -253,7 +254,7 @@ public class SettingResource {
   public RestResponse<SettingAttribute> get(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     SettingAttribute result = settingsService.get(appId, attrId);
-    settingServiceHelper.updateEncryptedFieldsInResponse(result, true);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(result, true);
     return new RestResponse<>(result);
   }
 
@@ -264,7 +265,7 @@ public class SettingResource {
   public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("attrId") String attrId, SettingAttribute variable) {
     SettingAttribute updatedSettingAttribute = settingsService.updateWithSettingFields(variable, attrId, appId);
-    settingServiceHelper.updateEncryptedFieldsInResponse(updatedSettingAttribute, false);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettingAttribute, false);
     return new RestResponse<>(updatedSettingAttribute);
   }
 
