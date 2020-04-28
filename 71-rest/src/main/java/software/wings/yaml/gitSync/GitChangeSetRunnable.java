@@ -5,32 +5,46 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.first;
+import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.lock.PersistentLocker;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.impl.yaml.YamlProcessingLogContext;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
+import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -41,15 +55,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitChangeSetRunnable implements Runnable {
   public static final List<Status> RUNNING_STATUS_LIST = singletonList(Status.RUNNING);
-  private static AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
+  //  marking this 1 for now to suit migration. Should be increases to a higher number once migration succeeds
+  public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 1;
+  private static final AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
 
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigurationController configurationController;
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
-  @Inject private PersistentLocker persistentLocker;
 
   @Override
   public void run() {
@@ -57,76 +71,121 @@ public class GitChangeSetRunnable implements Runnable {
     logger.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
 
     try {
-      if (getMaintenanceFilename() || configurationController.isNotPrimary()) {
+      if (!shouldRun()) {
         logger.info("Not continuing with GitChangeSetRunnable job");
         return;
       }
 
-      // TODO:: Use aggregate query for this group by??
-      // Get ACCId list having yamlChangeSets in Queued state
-      List<String> queuedAccountIdList = gitChangeSetRunnableHelper.getQueuedAccountIdList(wingsPersistence);
+      handleStuckChangeSets();
 
-      // Get ACCId list having yamlChangeSets in Running state
-      List<String> runningAccountIdList = gitChangeSetRunnableHelper.getRunningAccountIdList(wingsPersistence);
+      final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
-      // Check if any YamlChangeSet is stuck in Running state
-      if (isNotEmpty(runningAccountIdList) && shouldPerformStuckJobCheck()) {
-        lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
-        retryAnyStuckYamlChangeSet(runningAccountIdList);
+      if (yamlChangeSets.isEmpty()) {
+        logger.info("No changesets found for processing");
+      } else {
+        yamlChangeSets.forEach(this ::processChangeSet);
       }
-
-      List<String> waitingAccountIdList =
-          queuedAccountIdList.stream().filter(accountId -> !runningAccountIdList.contains(accountId)).collect(toList());
-
-      if (waitingAccountIdList.isEmpty()) {
-        logger.info(GIT_YAML_LOG_PREFIX + "No waiting accounts found. Skip picking new changesets for processing");
-        return;
-      }
-
-      logger.info(
-          GIT_YAML_LOG_PREFIX + "queuedAccountIdList:[{}], runningAccountIdList:[{}], waitingAccountIdList:[{}]",
-          queuedAccountIdList, runningAccountIdList, waitingAccountIdList);
-
-      if (isNotEmpty(runningAccountIdList)) {
-        logger.info(GIT_YAML_LOG_PREFIX
-                + " Skipping processing of GitChangeSet for Accounts :[{}], as there is already running task for these accounts",
-            runningAccountIdList);
-      }
-
-      waitingAccountIdList.forEach(accountId -> {
-        YamlChangeSet queuedChangeSet = null;
-        try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-          queuedChangeSet = yamlChangeSetService.getQueuedChangeSetForWaitingAccount(accountId);
-          if (queuedChangeSet != null) {
-            logger.info(GIT_YAML_LOG_PREFIX + "Processing  " + CHANGESET_ID + ": [{}]", queuedChangeSet.getUuid());
-            if (queuedChangeSet.isGitToHarness()) {
-              yamlGitSyncService.handleGitChangeSet(queuedChangeSet, accountId);
-            } else {
-              yamlGitSyncService.handleHarnessChangeSet(queuedChangeSet, accountId);
-            }
-          } else {
-            logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for account");
-          }
-        } catch (Exception ex) {
-          StringBuilder stringBuilder =
-              new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
-          if (queuedChangeSet != null) {
-            yamlChangeSetService.updateStatusForYamlChangeSets(accountId, Status.FAILED, Status.RUNNING);
-            stringBuilder.append(" and for " + CHANGESET_ID + ": ").append(queuedChangeSet.getUuid()).append("  ");
-          }
-          stringBuilder.append(" Reason: ").append(ExceptionUtils.getMessage(ex));
-          logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);
-        }
-      });
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Successfully handled changsets for waiting accounts");
+        logger.info(GIT_YAML_LOG_PREFIX + "Successfully handled changesets for waiting accounts");
       }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }
+  }
+
+  private List<YamlChangeSet> getYamlChangeSetsToProcess() {
+    return getYamlChangeSetsPerQueueKey();
+  }
+
+  private AutoLogContext createLogContextForChangeSet(YamlChangeSet yamlChangeSet) {
+    return YamlProcessingLogContext.builder()
+        .changeSetQueueKey(yamlChangeSet.getQueueKey())
+        .changeSetId(yamlChangeSet.getUuid())
+        .build(OVERRIDE_ERROR);
+  }
+
+  private void processChangeSet(YamlChangeSet yamlChangeSet) {
+    final String accountId = yamlChangeSet.getAccountId();
+    try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
+      logger.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
+
+      if (yamlChangeSet.isGitToHarness()) {
+        yamlGitSyncService.handleGitChangeSet(yamlChangeSet, accountId);
+      } else {
+        yamlGitSyncService.handleHarnessChangeSet(yamlChangeSet, accountId);
+      }
+    } catch (Exception ex) {
+      logger.error(format("Unexpected error while processing commit for accountId: [%s], changeSetId =[%s] ", accountId,
+                       yamlChangeSet.getUuid()),
+          ex);
+      yamlChangeSetService.updateStatusForGivenYamlChangeSets(
+          accountId, Status.FAILED, RUNNING_STATUS_LIST, singletonList(yamlChangeSet.getUuid()));
+    }
+  }
+
+  @NotNull
+  private List<YamlChangeSet> getYamlChangeSetsPerQueueKey() {
+    final Set<ChangeSetGroupingKey> queuedChangeSetKeys = getQueuedChangesetKeys();
+    final Set<ChangeSetGroupingKey> runningChangeSetKeys = getRunningChangesetKeys();
+    final Set<String> maxedOutAccountIds = getMaxedOutAccountIds(runningChangeSetKeys);
+    final Set<ChangeSetGroupingKey> eligibleChangeSetKeysForPicking =
+        getEligibleQueueKeysForPicking(queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds);
+
+    logger.info(GIT_YAML_LOG_PREFIX
+            + "queuedChangeSetKeys:{}, runningChangeSetKeys:{}, maxedOutAccountIds: {} ,eligibleChangeSetKeysForPicking:{}",
+        queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds, eligibleChangeSetKeysForPicking);
+
+    if (isNotEmpty(maxedOutAccountIds)) {
+      logger.info(GIT_YAML_LOG_PREFIX
+              + " Skipping processing of GitChangeSet for Accounts :[{}], as concurrently running tasks have maxed out",
+          maxedOutAccountIds);
+    }
+
+    return eligibleChangeSetKeysForPicking.stream()
+        .map(changeSetGroupingKey
+            -> getQueuedChangeSetForWaitingQueueKey(
+                changeSetGroupingKey.getAccountId(), changeSetGroupingKey.getQueueKey()))
+        .filter(Objects::nonNull)
+        .collect(toList());
+  }
+
+  private YamlChangeSet getQueuedChangeSetForWaitingQueueKey(String accountId, String queueKey) {
+    try (
+        AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+        AutoLogContext ignore2 = YamlProcessingLogContext.builder().changeSetQueueKey(queueKey).build(OVERRIDE_ERROR)) {
+      final YamlChangeSet yamlChangeSet = yamlChangeSetService.getQueuedChangeSetForWaitingQueueKey(
+          accountId, queueKey, getMaxRunningChangesetsForAccount());
+      if (yamlChangeSet == null) {
+        logger.info("no changeset found to process");
+      }
+      return yamlChangeSet;
+    } catch (Exception ex) {
+      logger.error(
+          format("error while finding changeset to process for accountId=[%s], queueKey=[%s]", accountId, queueKey),
+          ex);
+    }
+    return null;
+  }
+
+  private boolean shouldRun() {
+    return !getMaintenanceFilename() && configurationController.isPrimary();
+  }
+
+  private void handleStuckChangeSets() {
+    if (shouldPerformStuckJobCheck()) {
+      lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
+      gitChangeSetRunnableHelper.handleOldQueuedChangeSets(wingsPersistence);
+      handleStuckRunningChangesets();
+    }
+  }
+
+  private void handleStuckRunningChangesets() {
+    List<String> runningAccountIdList = gitChangeSetRunnableHelper.getRunningAccountIdList(wingsPersistence);
+    retryAnyStuckYamlChangeSet(runningAccountIdList);
   }
 
   /**
@@ -164,8 +223,10 @@ public class GitChangeSetRunnable implements Runnable {
   }
 
   private void retryOrSkipStuckChangeSets(String accountId, List<YamlChangeSet> changeSets) {
+    final List<String> yamlChangeSetIds = uuidsOfChangeSets(changeSets);
     yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
-        accountId, Status.QUEUED, RUNNING_STATUS_LIST, uuidsOfChangeSets(changeSets));
+        accountId, Status.QUEUED, RUNNING_STATUS_LIST, yamlChangeSetIds);
+    logger.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
 
     yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId);
   }
@@ -173,5 +234,72 @@ public class GitChangeSetRunnable implements Runnable {
   @NotNull
   private List<String> uuidsOfChangeSets(List<YamlChangeSet> changeSets) {
     return changeSets.stream().map(YamlChangeSet::getUuid).collect(toList());
+  }
+
+  private Set<String> getMaxedOutAccountIds(Set<ChangeSetGroupingKey> runningQueueKeys) {
+    return runningQueueKeys.stream()
+        .collect(Collectors.groupingBy(
+            ChangeSetGroupingKey::getAccountId, Collectors.summingInt(ChangeSetGroupingKey::getCount)))
+        .entrySet()
+        .stream()
+        .filter(accountIdTotalCountEntry -> accountIdTotalCountEntry.getValue() >= getMaxRunningChangesetsForAccount())
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toSet());
+  }
+
+  private Set<ChangeSetGroupingKey> getEligibleQueueKeysForPicking(Set<ChangeSetGroupingKey> queuedChangesetKeys,
+      Set<ChangeSetGroupingKey> runningQueueKeys, Set<String> maxedOutAccountIds) {
+    return Sets.difference(queuedChangesetKeys, runningQueueKeys)
+        .stream()
+        .filter(changeSetGroupingKey -> !maxedOutAccountIds.contains(changeSetGroupingKey.getAccountId()))
+        .collect(Collectors.toSet());
+  }
+
+  private Set<ChangeSetGroupingKey> getQueuedChangesetKeys() {
+    final Query<YamlChangeSet> query =
+        wingsPersistence.createAuthorizedQuery(YamlChangeSet.class).filter(YamlChangeSetKeys.status, Status.QUEUED);
+    return getChangesetGroupingKeys(query);
+  }
+
+  private Set<ChangeSetGroupingKey> getRunningChangesetKeys() {
+    final Query<YamlChangeSet> query =
+        wingsPersistence.createAuthorizedQuery(YamlChangeSet.class).filter(YamlChangeSetKeys.status, Status.RUNNING);
+    return getChangesetGroupingKeys(query);
+  }
+
+  @NotNull
+  private Set<ChangeSetGroupingKey> getChangesetGroupingKeys(Query<YamlChangeSet> query) {
+    final Iterator<ChangeSetGroupingKey> groupingKeyIterator =
+        wingsPersistence.getDatastore(YamlChangeSet.class)
+            .createAggregation(YamlChangeSet.class)
+            .match(query)
+            .group(Group.id(grouping(YamlChangeSetKeys.accountId), grouping(YamlChangeSetKeys.queueKey)),
+                grouping(YamlChangeSetKeys.accountId, first(YamlChangeSetKeys.accountId)),
+                grouping(YamlChangeSetKeys.queueKey, first(YamlChangeSetKeys.queueKey)),
+                grouping("count", accumulator("$sum", 1)))
+            .aggregate(ChangeSetGroupingKey.class);
+
+    final Set<ChangeSetGroupingKey> keys = new HashSet<>();
+    groupingKeyIterator.forEachRemaining(keys::add);
+    return keys;
+  }
+
+  @VisibleForTesting
+  int getMaxRunningChangesetsForAccount() {
+    return MAX_RUNNING_CHANGESETS_FOR_ACCOUNT;
+  }
+
+  @Value
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  public static class ChangeSetGroupingKey {
+    @Include String accountId;
+    @Include String queueKey;
+    int count;
+
+    @Override
+    public String toString() {
+      return "{"
+          + "accountId='" + accountId + '\'' + ", queueKey='" + queueKey + '\'' + ", count=" + count + '}';
+    }
   }
 }

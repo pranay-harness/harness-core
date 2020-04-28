@@ -85,6 +85,8 @@ public interface YamlGitService {
   List<String> getAllYamlErrorsForAccount(String accountId);
   List<String> getAllYamlErrorsForAllAccounts();
 
+  YamlGitConfig getYamlGitConfigForHarnessToGitChangeSet(YamlChangeSet harnessToGitChangeSet);
+
   /**
    *  Handle change set boolean.
    * @param yamlChangeSet
@@ -92,6 +94,8 @@ public interface YamlGitService {
    * @return
    */
   void handleHarnessChangeSet(YamlChangeSet yamlChangeSet, String accountId);
+
+  List<YamlGitConfig> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet);
 
   void handleGitChangeSet(YamlChangeSet yamlChangeSets, String accountId);
 

@@ -740,6 +740,7 @@ import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.errorhandling.HarnessToGitErrorDetails;
 import software.wings.yaml.gitSync.GitFileActivity;
+import software.wings.yaml.gitSync.GitSyncMetadata;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -1177,6 +1178,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.GcpConfig", GcpConfig.class);
     w.put("beans.GcpKmsConfig", GcpKmsConfig.class);
     w.put("beans.GitConfig", GitConfig.class);
+    w.put("yaml.gitSync.GitSyncMetadata", GitSyncMetadata.class);
     w.put("beans.HostConnectionAttributes", HostConnectionAttributes.class);
     w.put("beans.InstanaConfig", InstanaConfig.class);
     w.put("beans.JenkinsConfig", JenkinsConfig.class);

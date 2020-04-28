@@ -31,6 +31,8 @@ public interface YamlChangeSetService {
    */
   @ValidationGroups(Update.class) void update(@Valid YamlChangeSet yamlChangeSet);
 
+  void populateGitSyncMetadata(YamlChangeSet yamlChangeSet);
+
   /**
    * Get yaml change set.
    *
@@ -41,14 +43,6 @@ public interface YamlChangeSetService {
   YamlChangeSet get(@NotEmpty String accountId, @NotEmpty String changeSetId);
 
   /**
-   * Gets queued change set.
-   *
-   * @param accountId the account id
-   * @return the queued change set
-   */
-  YamlChangeSet getQueuedChangeSetForWaitingAccount(String accountId);
-
-  /**
    * Update status boolean.
    *
    * @param accountId   the account id
@@ -57,6 +51,9 @@ public interface YamlChangeSetService {
    * @return the boolean
    */
   boolean updateStatus(@NotEmpty String accountId, @NotEmpty String changeSetId, @NotNull Status newStatus);
+
+  boolean updateStatusForGivenYamlChangeSets(
+      String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds);
 
   /**
    * Delete change set boolean.
@@ -75,6 +72,9 @@ public interface YamlChangeSetService {
       String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);
 
   boolean updateStatusForYamlChangeSets(String accountId, Status newStatus, Status currentStatus);
+
+  YamlChangeSet getQueuedChangeSetForWaitingQueueKey(
+      String accountId, String queueKey, int maxRunningChangesetsForAccount);
 
   List<YamlChangeSet> getChangeSetsToBeMarkedSkipped(String accountId);
 
