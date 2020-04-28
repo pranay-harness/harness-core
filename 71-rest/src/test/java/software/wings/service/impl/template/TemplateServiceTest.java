@@ -1094,10 +1094,9 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCopyOfImportedTemplate() {
-    final String commandName = "COMMAND_ID";
+    final String commandName = "COMMAND_NAME";
     final String commandStoreName = "COMMAND_STORE_ID";
     final String version = "1.2";
-    final String copiedTemplateName = "copied";
 
     Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
     CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
@@ -1110,14 +1109,14 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template copiedTemplate = Template.builder()
                                   .appId(template.getAppId())
                                   .templateMetadata(copiedTemplateMetadata)
-                                  .name(copiedTemplateName)
+                                  .name(commandName)
                                   .accountId(template.getAccountId())
                                   .templateObject(template.getTemplateObject())
                                   .build();
     copiedTemplate = templateService.save(copiedTemplate);
 
     assertThat(copiedTemplate).isNotNull();
-    assertThat(copiedTemplate.getName()).isEqualTo(copiedTemplateName);
+    assertThat(copiedTemplate.getName()).isEqualTo(commandName);
     assertThat(copiedTemplate.getTemplateObject()).isNotNull();
   }
 
@@ -1216,6 +1215,42 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(returnedTemplate.getTemplateMetadata()).isEqualTo(copiedTemplateMetadata);
     assertThat(returnedTemplate.getName()).isEqualTo(copiedTemplateName);
     assertThat(returnedTemplate.getTemplateObject()).isEqualTo(copiedTemplate.getTemplateObject());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void everyCopyOfImportedTemplateShouldHaveUniqueName() {
+    final String commandName = "COMMAND_NAME";
+    final String commandStoreName = "COMMAND_STORE_NAME";
+    final String version = "1.2";
+    final String copiedTemplateName = "copied";
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                        .parentTemplateId(template.getUuid())
+                                                        .parentTemplateVersion(template.getVersion())
+                                                        .parentCommandVersion(version)
+                                                        .parentCommandName(commandName)
+                                                        .parentCommandStoreName(commandStoreName)
+                                                        .build();
+    Template copiedTemplate = Template.builder()
+                                  .appId(template.getAppId())
+                                  .templateMetadata(copiedTemplateMetadata)
+                                  .name(copiedTemplateName)
+                                  .accountId(template.getAccountId())
+                                  .templateObject(template.getTemplateObject())
+                                  .build();
+    copiedTemplate = templateService.save(copiedTemplate);
+    Template copiedTemplate_1 = Template.builder()
+                                    .appId(template.getAppId())
+                                    .templateMetadata(copiedTemplateMetadata)
+                                    .name(copiedTemplateName)
+                                    .accountId(template.getAccountId())
+                                    .templateObject(template.getTemplateObject())
+                                    .build();
+    templateService.save(copiedTemplate_1);
+
+    assertThat(templateService.get(copiedTemplate_1.getUuid()).equals(copiedTemplateName + "_" + 1));
   }
 
   @Test
