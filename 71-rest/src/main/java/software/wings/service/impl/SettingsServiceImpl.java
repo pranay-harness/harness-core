@@ -215,6 +215,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AWSCEConfigValidationService awsCeConfigService;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
+  @Inject @Getter private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
 
   private static final String OPEN_SSH = "OPENSSH";
 
@@ -695,6 +696,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     syncCEInfra(settingAttribute);
+    artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
     return newSettingAttribute;
   }
 
@@ -947,6 +949,7 @@ public class SettingsServiceImpl implements SettingsService {
       logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
+    artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
     return updatedSettingAttribute;
   }
 
@@ -1043,6 +1046,8 @@ public class SettingsServiceImpl implements SettingsService {
     } else {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }
+
+    artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
   }
 
   /**
@@ -1508,7 +1513,7 @@ public class SettingsServiceImpl implements SettingsService {
         .forEach(artifactStream -> {
           // remove artifact stream bindings
           removeArtifactStreamBindings(artifactStream);
-          artifactStreamService.pruneArtifactStream(appId, artifactStream.getUuid());
+          artifactStreamService.pruneArtifactStream(artifactStream);
           auditServiceHelper.reportDeleteForAuditing(appId, artifactStream);
         });
   }
