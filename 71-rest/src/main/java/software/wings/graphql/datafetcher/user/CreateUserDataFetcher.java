@@ -12,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource;
+import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.userGroup.UserGroupController;
@@ -20,6 +21,7 @@ import software.wings.graphql.schema.type.user.QLCreateUserInput;
 import software.wings.graphql.schema.type.user.QLCreateUserPayload;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
@@ -27,11 +29,13 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserInput, QLCreateUserPayload> {
   @Inject private UserService userService;
   @Inject UserGroupController userGroupController;
+  @Inject UserGroupService userGroupService;
   private final String INVALID_VAL_INP_PARAM_ERR_MSSG = "cannot be empty or blank";
 
   @Inject
@@ -54,13 +58,7 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     validate(qlCreateUserInput, mutationContext.getAccountId());
     String accountId = mutationContext.getAccountId();
     inviteUser(qlCreateUserInput, accountId);
-    List<String> userGroupIds = new LinkedList<>();
-    final RequestField<List<String>> userGroupIdsFromInput = qlCreateUserInput.getUserGroupIds();
-    if (userGroupIdsFromInput != null && userGroupIdsFromInput.isPresent()) {
-      userGroupIds = getValue(qlCreateUserInput.getUserGroupIds()).orElse(Collections.emptyList());
-    }
     final User savedUser = userService.getUserByEmail(qlCreateUserInput.getEmail(), accountId);
-    userGroupController.addUserToUserGroups(savedUser, userGroupIds, accountId);
 
     return prepareQLCreateUserPayload(prepareQLUser(savedUser), qlCreateUserInput.getClientMutationId());
   }
@@ -72,6 +70,15 @@ public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserIn
     userInvite.setSource(UserInviteSource.builder().type(UserInviteSource.SourceType.MANUAL).uuid("").build());
     userInvite.setEmails(Arrays.asList(qlCreateUserInput.getEmail()));
     userInvite.setAppId(GLOBAL_APP_ID);
+    List<UserGroup> userGroups = new LinkedList<>();
+    final RequestField<List<String>> userGroupIdsFromInput = qlCreateUserInput.getUserGroupIds();
+    if (userGroupIdsFromInput != null && userGroupIdsFromInput.isPresent()) {
+      List<String> userGroupIds = getValue(qlCreateUserInput.getUserGroupIds()).orElse(Collections.emptyList());
+      userGroups.addAll(userGroupIds.stream()
+                            .map(userGroupId -> UserGroup.builder().uuid(userGroupId).build())
+                            .collect(Collectors.toList()));
+    }
+    userInvite.setUserGroups(userGroups);
     userService.inviteUsers(userInvite);
   }
 
