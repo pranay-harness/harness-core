@@ -39,7 +39,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
       throw new InvalidRequestException(String.format(
           "No SSH credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
-    return sshCredentialController.updateSSHCredential(sshCredential, updateSecretInput.getId(), accountId);
+    return sshCredentialController.updateSSHCredential(sshCredential, updateSecretInput.getSecretId(), accountId);
   }
 
   private SettingAttribute updateWinRMCredential(QLUpdateSecretInput updateSecretInput, String accountId) {
@@ -52,7 +52,8 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
       throw new InvalidRequestException(String.format(
           "No winRM credential input provided with the request with secretType %s", updateSecretInput.getSecretType()));
     }
-    return winRMCredentialController.updateWinRMCredential(encryptedTextUpdate, updateSecretInput.getId(), accountId);
+    return winRMCredentialController.updateWinRMCredential(
+        encryptedTextUpdate, updateSecretInput.getSecretId(), accountId);
   }
 
   private EncryptedData updateEncryptedText(QLUpdateSecretInput updateSecretInput, String accountId) {
@@ -66,8 +67,8 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
                 String.format("No encrypted text input provided with the request with secretType %s",
                     updateSecretInput.getSecretType())));
 
-    encryptedTextController.updateEncryptedText(encryptedTextUpdate, updateSecretInput.getId(), accountId);
-    return secretManager.getSecretById(accountId, updateSecretInput.getId());
+    encryptedTextController.updateEncryptedText(encryptedTextUpdate, updateSecretInput.getSecretId(), accountId);
+    return secretManager.getSecretById(accountId, updateSecretInput.getSecretId());
   }
 
   @Override

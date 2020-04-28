@@ -80,7 +80,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
     String queryVariable = $GQL(/*
   {
       secretType: SSH_CREDENTIAL,
-      id: "%s",
+      secretId: "%s",
       sshCredential: {
       name: "%s",
       authenticationScheme: SSH,
@@ -126,7 +126,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
 
     {
       secretType: SSH_CREDENTIAL,
-      id: "%s",
+      secretId: "%s",
       sshCredential: {
         name: "%s",
         authenticationScheme: KERBEROS,
