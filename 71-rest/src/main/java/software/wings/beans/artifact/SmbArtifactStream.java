@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -7,6 +8,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,11 +19,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @JsonTypeName("SMB")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SmbArtifactStream extends ArtifactStream {
+  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^.{}]*}");
   @NotEmpty private List<String> artifactPaths;
 
   public SmbArtifactStream() {
@@ -57,6 +61,29 @@ public class SmbArtifactStream extends ArtifactStream {
   @Override
   public String generateSourceName() {
     return getArtifactPaths().stream().map(artifactPath -> artifactPath + "").collect(joining(""));
+  }
+
+  @Override
+  public boolean checkIfStreamParameterized() {
+    if (isNotEmpty(artifactPaths)) {
+      for (String artifactPath : artifactPaths) {
+        if (artifactPath.contains("${")) {
+          return validatePathMatchesPattern(artifactPath);
+        }
+      }
+    }
+    return false;
+  }
+
+  private boolean validatePathMatchesPattern(String artifactPath) {
+    String[] paths = artifactPath.split("/");
+    for (String path : paths) {
+      if (path.startsWith("${") && !wingsVariablePattern.matcher(path).find()) {
+        throw new InvalidRequestException(
+            format("Parameterized fields should match regex: [%s]", wingsVariablePattern.toString()));
+      }
+    }
+    return true;
   }
 
   @Data
