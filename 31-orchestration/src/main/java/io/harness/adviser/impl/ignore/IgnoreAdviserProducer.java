@@ -3,12 +3,12 @@ package io.harness.adviser.impl.ignore;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.AdviserType;
-import io.harness.annotations.ProducesAdviser;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.registries.adviser.AdviserProducer;
 
 @Redesign
-@ProducesAdviser
+@Produces(Adviser.class)
 public class IgnoreAdviserProducer implements AdviserProducer {
   @Override
   public AdviserType getType() {
