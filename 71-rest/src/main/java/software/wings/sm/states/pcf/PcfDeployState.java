@@ -35,7 +35,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -320,8 +319,7 @@ public class PcfDeployState extends State {
         .useAppAutoscalar(useAppAutoscalar)
         .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
         .pcfManifestsPackage(setupSweepingOutputPcf.getPcfManifestsPackage())
-        .useCfCLI(useAppAutoscalar ? useAppAutoscalar
-                                   : featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, application.getAccountId()))
+        .useCfCLI(true)
         .build();
   }
 

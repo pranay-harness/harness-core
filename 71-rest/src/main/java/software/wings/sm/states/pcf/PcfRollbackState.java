@@ -13,7 +13,6 @@ import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -96,7 +95,7 @@ public class PcfRollbackState extends PcfDeployState {
         .isStandardBlueGreenWorkflow(setupSweepingOutputPcf.isStandardBlueGreenWorkflow())
         .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
         .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
-        .useCfCLI(featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, application.getAccountId()))
+        .useCfCLI(true)
         .build();
   }
 

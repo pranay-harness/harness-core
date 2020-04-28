@@ -69,7 +69,7 @@ public class PcfCommandValidationTest extends CategoryTest {
 
     request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).useCLIForPcfAppCreation(true).build();
     criteria = pcfCommandValidation.getCriteria(request);
-    assertThat(criteria).isEqualTo("Pcf:url/user_cf_cli");
+    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_Pcf:url/user");
 
     request = PcfCommandSetupRequest.builder()
                   .pcfConfig(pcfConfig)
@@ -77,7 +77,7 @@ public class PcfCommandValidationTest extends CategoryTest {
                   .useAppAutoscalar(true)
                   .build();
     criteria = pcfCommandValidation.getCriteria(request);
-    assertThat(criteria).isEqualTo("Pcf:url/user_cf_cli_cf_appautoscalar");
+    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_cf_appautoscalar_Pcf:url/user");
   }
 
   @Test

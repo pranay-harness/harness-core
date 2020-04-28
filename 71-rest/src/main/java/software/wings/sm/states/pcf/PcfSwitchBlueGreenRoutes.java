@@ -30,7 +30,6 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -153,7 +152,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
             .downsizeOldApps(downsizeOldApps)
-            .useCfCli(featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId()))
+            .useCfCli(true)
             .build(),
         setupSweepingOutputPcf);
   }

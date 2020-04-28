@@ -59,8 +59,6 @@ public class PcfFunctionalTest extends AbstractFunctionalTest {
   public void setUp() {
     owners = ownerManager.create();
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-
-    featureFlagService.enableAccount(FeatureName.USE_PCF_CLI, owners.obtainAccount().getUuid());
     featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, owners.obtainAccount().getUuid());
     resetCache(owners.obtainAccount().getUuid());
   }
