@@ -1,11 +1,11 @@
 package io.harness.redesign.states.wait;
 
-import io.harness.annotations.ProducesState;
+import io.harness.annotations.Produces;
 import io.harness.registries.state.StateProducer;
 import io.harness.state.State;
 import io.harness.state.StateType;
 
-@ProducesState
+@Produces(State.class)
 public class WaitStateProducer implements StateProducer {
   @Override
   public State produce() {
