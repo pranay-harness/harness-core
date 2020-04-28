@@ -406,6 +406,7 @@ public class TemplateServiceImpl implements TemplateService {
       template.setTemplateMetadata(getTemplateMetadata(template.getUuid()));
     } else {
       CopiedTemplateMetadata copiedTemplateMetadata = (CopiedTemplateMetadata) template.getTemplateMetadata();
+      resolveNameConflictOfTemplate(template);
       validateCopiedFromImportedTemplate(copiedTemplateMetadata, template.getAccountId());
       TemplateGallery templateGallery =
           templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
@@ -429,6 +430,29 @@ public class TemplateServiceImpl implements TemplateService {
   private TemplateMetadata getTemplateMetadata(String templateId) {
     Template template = wingsPersistence.get(Template.class, templateId);
     return template.getTemplateMetadata();
+  }
+
+  private void resolveNameConflictOfTemplate(Template template) {
+    String name = template.getName();
+    int additionToName = 1;
+    final String seprator = "_";
+    if (fetchImportedTemplateByName(name, template.getAccountId()) == null) {
+      return;
+    }
+    while (fetchImportedTemplateByName(name + seprator + additionToName, template.getAccountId()) != null) {
+      additionToName = additionToName + 1;
+    }
+    template.setName(name + seprator + additionToName);
+  }
+
+  private Template fetchImportedTemplateByName(String name, String accountId) {
+    TemplateGallery templateGallery =
+        templateGalleryHelper.getGalleryByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), accountId);
+    return wingsPersistence.createQuery(Template.class)
+        .filter(TemplateKeys.name, name)
+        .filter(TemplateKeys.accountId, accountId)
+        .filter(TemplateKeys.galleryId, templateGallery.getUuid())
+        .get();
   }
 
   private void validateScope(Template template, Template oldTemplate) {

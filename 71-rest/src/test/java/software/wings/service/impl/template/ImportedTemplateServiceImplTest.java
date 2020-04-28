@@ -24,9 +24,11 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
+import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
 public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
+  @Inject private TemplateGalleryService templateGalleryService;
   @Inject TemplateService templateService;
   @Spy @Inject private ImportedTemplateServiceImpl importedTemplateService;
 
