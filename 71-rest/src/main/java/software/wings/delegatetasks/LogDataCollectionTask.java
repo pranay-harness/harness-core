@@ -3,15 +3,12 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.common.VerificationConstants.BODY_STRING;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
-import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -25,18 +22,15 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -46,7 +40,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +57,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
-
+  @Inject private RequestExecutor requestExecutor;
   @Inject private DelegateLogService delegateLogService;
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
@@ -189,6 +182,13 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
       return input;
     }
+    private Map<String, String> getStringsToMask() {
+      Map<String, String> maskFields = new HashMap<>();
+      if (isNotEmpty(decryptedFields)) {
+        decryptedFields.forEach((k, v) -> { maskFields.put(v, "<" + k + ">"); });
+      }
+      return maskFields;
+    }
 
     private String fetchLogs(String url, Map<String, String> headers, Map<String, String> options,
         Map<String, Object> body, String query, String host, String hostNameSeparator) {
@@ -226,42 +226,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         } else {
           request = getRestClient(dataCollectionInfo.getBaseUrl()).collect(resolvedUrl, headersBiMap, optionsBiMap);
         }
-
-        // mask sensitive information from urls
-        String urlToLog = request.request().url().toString();
-        urlToLog = CustomDataCollectionUtils.getMaskedString(
-            urlToLog, DATADOG_API_MASK, Lists.newArrayList("<apiKey>", "<appKey>"));
-
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-        apiCallLog.setTitle("Fetch request to " + urlToLog);
-        apiCallLog.addFieldToRequest(
-            ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
-        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.setTitle("Fetch request to: " + dataCollectionInfo.getBaseUrl());
+        Object response = requestExecutor.executeRequest(apiCallLog, request, getStringsToMask());
+        return JsonUtils.asJson(response);
 
-        if (isNotEmpty(bodyToLog)) {
-          apiCallLog.addFieldToRequest(
-              ThirdPartyApiCallField.builder().name(BODY_STRING).value(bodyToLog).type(FieldType.JSON).build());
-        }
-        Response<Object> response;
-        try {
-          response = request.execute();
-        } catch (Exception e) {
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          throw new WingsException(
-              "Unsuccessful response while fetching data from provider. Error message: " + e.getMessage());
-        }
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (response.isSuccessful()) {
-          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          return JsonUtils.asJson(response.body());
-        } else {
-          apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          throw new WingsException("Exception while fetching logs from provider. Error code " + response.code());
-        }
       } catch (Exception ex) {
         String err = ex.getMessage()
             + "Exception occurred while fetching logs. StateExecutionId: " + dataCollectionInfo.getStateExecutionId();

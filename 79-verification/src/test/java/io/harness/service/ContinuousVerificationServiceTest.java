@@ -2375,7 +2375,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN, intermittent = true)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -2396,7 +2396,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(managerFeatureFlagCall);
 
     // save some L2 records
-    for (long time = logConfig.getBaselineStartMinute(); time < currentMinute - 15; time++) {
+    for (long time = logConfig.getBaselineStartMinute(); time <= logConfig.getBaselineEndMinute(); time++) {
       LogDataRecord record = LogDataRecord.builder()
                                  .cvConfigId(sumoConfig.getUuid())
                                  .clusterLevel(ClusterLevel.L2)
