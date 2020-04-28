@@ -297,6 +297,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
         }
         SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+        if (keySettingAttribute == null) {
+          keySettingAttribute =
+              settingsService.getSettingAttributeByName(executionContext.getApp().getAccountId(), sshKeyRef);
+        }
 
         if (keySettingAttribute == null) {
           throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
@@ -489,7 +493,14 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
     }
 
-    winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+    SettingAttribute keySettingAttribute = settingsService.get(connectionAttributes);
+    if (keySettingAttribute == null) {
+      keySettingAttribute =
+          settingsService.getSettingAttributeByName(context.getApp().getAccountId(), connectionAttributes);
+    }
+
+    winRmConnectionAttributes = (WinRmConnectionAttributes) keySettingAttribute.getValue();
+
     if (winRmConnectionAttributes == null) {
       throw new ShellScriptException("WinRM Connection Attribute provided in Shell Script Step not found",
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
