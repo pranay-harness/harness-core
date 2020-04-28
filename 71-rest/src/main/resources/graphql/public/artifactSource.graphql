@@ -1,0 +1,114 @@
+interface ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+
+type ACRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type AmazonS3ArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type AMIArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type ArtifactoryArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type AzureAtifactsArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type BambooArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type CustomArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type DockerArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type ECRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type GCRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type GCSArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type JenkinsArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type NexusArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+type SFTPArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}
+
+type SMBArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+}

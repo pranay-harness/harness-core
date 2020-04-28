@@ -47,6 +47,7 @@ import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
+import software.wings.graphql.schema.type.artifact.QLArtifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.AppLogContext;
@@ -83,6 +84,7 @@ public class WorkflowExecutionController {
       @NotNull WorkflowExecution workflowExecution, QLWorkflowExecutionBuilder builder) {
     QLCause cause = null;
     List<QLDeploymentTag> tags = new ArrayList<>();
+    List<QLArtifact> artifacts = new ArrayList<>();
 
     if (workflowExecution.getPipelineExecutionId() != null) {
       cause =
@@ -121,6 +123,18 @@ public class WorkflowExecutionController {
                  .collect(Collectors.toList());
     }
 
+    if (isNotEmpty(workflowExecution.getArtifacts())) {
+      artifacts = workflowExecution.getArtifacts()
+                      .stream()
+                      .map(artifact
+                          -> QLArtifact.builder()
+                                 .id(artifact.getUuid())
+                                 .buildNo(artifact.getBuildNo())
+                                 .collectedAt(artifact.getCreatedAt())
+                                 .build())
+                      .collect(Collectors.toList());
+    }
+
     builder.id(workflowExecution.getUuid())
         .appId(workflowExecution.getAppId())
         .createdAt(workflowExecution.getCreatedAt())
@@ -129,7 +143,8 @@ public class WorkflowExecutionController {
         .status(ExecutionController.convertStatus(workflowExecution.getStatus()))
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
-        .tags(tags);
+        .tags(tags)
+        .artifacts(artifacts);
   }
 
   public QLWorkflowExecution startWorkflowExecution(QLStartExecutionInput triggerExecutionInput,

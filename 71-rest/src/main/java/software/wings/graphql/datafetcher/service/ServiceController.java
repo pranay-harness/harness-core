@@ -10,6 +10,7 @@ public class ServiceController {
   public static void populateService(Service service, QLServiceBuilder builder) {
     builder.id(service.getUuid())
         .name(service.getName())
+        .applicationId(service.getAppId())
         .description(service.getDescription())
         .artifactType(service.getArtifactType())
         .deploymentType(service.getDeploymentType())

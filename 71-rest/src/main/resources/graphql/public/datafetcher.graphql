@@ -103,4 +103,6 @@ enum DataFetcherEnum {
   executionInputs
   workflowVariableConnection
   pipelineVariableConnection
+  serviceArtifactSourceConnection
+  artifactSourceConnection
 }

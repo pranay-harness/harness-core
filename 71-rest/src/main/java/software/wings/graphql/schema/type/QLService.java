@@ -14,6 +14,7 @@ import software.wings.utils.ArtifactType;
 @Scope(ResourceType.APPLICATION)
 public class QLService implements QLObject {
   private String id;
+  private String applicationId;
   private String name;
   private String description;
   private ArtifactType artifactType;
