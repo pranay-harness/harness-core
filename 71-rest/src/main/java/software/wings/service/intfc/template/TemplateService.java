@@ -59,6 +59,8 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   String fetchTemplateUri(@NotEmpty String templateUuid);
 
+  String makeNamespacedTemplareUri(String templateUuid, String version);
+
   Object constructEntityFromTemplate(@NotEmpty String templateId, String version, EntityType entityType);
 
   Object constructEntityFromTemplate(Template template, EntityType entityType);
@@ -88,6 +90,10 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   Template findByFolder(TemplateFolder templateFolder, String templateName, String appId);
 
   Template fetchTemplateFromUri(String templateUri, String accountId, String appId);
+
+  String fetchTemplateVersionFromVersion(String templateUuid, String templateVersion);
+
+  String fetchTemplateVersionFromUri(String templateUuid, String templateUri);
 
   String getTemplateFolderPathString(Template template);
 }

@@ -5,7 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 
 import com.google.inject.Inject;
 
@@ -16,7 +16,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.Yaml;
-import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -36,7 +35,6 @@ import java.util.Optional;
 @Slf4j
 public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
-  private static final String APP_PREFIX = "App/";
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject YamlHelper yamlHelper;
@@ -125,24 +123,9 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       }
     }
     yaml.setHarnessApiVersion(getHarnessApiVersion());
-    String templateUri = null;
     String templateUuid = bean.getTemplateUuid();
-    if (templateUuid != null) {
-      // ArtifactStream is linked
-      templateUri = templateService.fetchTemplateUri(templateUuid);
-      if (templateUri == null) {
-        logger.warn("Linked template for Artifact Source template  {} was deleted", templateUuid);
-      }
-      if (bean.getTemplateVersion() != null) {
-        templateUri = templateUri + ":" + bean.getTemplateVersion();
-      }
-      Template template = templateService.get(templateUuid);
-      if (template != null) {
-        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
-          templateUri = APP_PREFIX + templateUri;
-        }
-      }
-    }
+    String templateUri = templateService.makeNamespacedTemplareUri(templateUuid, bean.getTemplateVersion());
+
     yaml.setTemplateUri(templateUri);
     yaml.setTemplateVariables(TemplateHelper.convertToTemplateVariables(bean.getTemplateVariables()));
   }
@@ -214,7 +197,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
       }
       bean.setTemplateUuid(templateUuid);
-      bean.setTemplateVersion(obtainTemplateVersion(templateUri));
+      bean.setTemplateVersion(TemplateHelper.obtainTemplateVersion(templateUri));
     }
     bean.setTemplateVariables(TemplateHelper.convertToEntityVariables(yaml.getTemplateVariables()));
   }

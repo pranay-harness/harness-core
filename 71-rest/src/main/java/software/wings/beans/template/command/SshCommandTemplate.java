@@ -3,6 +3,7 @@ package software.wings.beans.template.command;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import software.wings.beans.template.ReferencedTemplate;
 import java.util.List;
 
 @JsonTypeName("SSH")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
 public class SshCommandTemplate implements BaseTemplate {

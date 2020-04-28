@@ -240,6 +240,7 @@ public class TemplateLibaryYamlConstants {
                                                              .type(SSH)
                                                              .accountId(GLOBAL_ACCOUNT_ID)
                                                              .appId(GLOBAL_APP_ID)
+                                                             .version(1L)
                                                              .templateObject(baseCommandTemplateObject)
                                                              .build();
 
@@ -254,13 +255,14 @@ public class TemplateLibaryYamlConstants {
 
   //  Ref command.
   public static String refCommandTemplateName = "test-command-template-ref";
+  public static final String commandTemplateUri = "Harness/" + commandTemplateName + ":1";
 
   public static final String REF_COMMAND_TEMPLATE_VALID_YAML_FILE_PATH =
       "Setup/Template Library/Harness/" + refCommandTemplateName + ".yaml";
 
   public static final String REF_COMMAND_UNIT = "commandUnitType: COMMAND\n"
       + "name: child\n"
-      + "templateUri: Harness/" + commandTemplateName + ":1\n";
+      + "templateUri: " + commandTemplateUri;
 
   public static final String EXEC_COMMAND_UNIT = "command: ./startup.sh\n"
       + "commandUnitType: EXEC\n"
@@ -270,7 +272,7 @@ public class TemplateLibaryYamlConstants {
       + "workingDirectory: ${RuntimePath}/tomcat/bin\n";
 
   public static final String commandRefUuid = "refuuid";
-  public static final String commandTemplateRefUri = "Harness/abc";
+  public static final String commandTemplateRefUri = "Harness/abc:1";
 
   // artifact source template constants.
   public static final String artifactTemplateName = "test-artifact-template";

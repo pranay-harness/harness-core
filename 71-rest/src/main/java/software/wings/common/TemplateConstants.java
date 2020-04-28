@@ -6,8 +6,11 @@ import java.util.List;
 
 public interface TemplateConstants {
   String LATEST_TAG = "latest";
-  String PATH_DELIMITER = "/";
-
+  char PATH_DELIMITER = '/';
+  String PREFIX_FOR_APP = "App";
+  String APP_PREFIX = PREFIX_FOR_APP + PATH_DELIMITER;
+  char GALLERY_TOP_LEVEL_PATH_DELIMITER = ':';
+  String IMPORTED_TEMPLATE_PREFIX = "imported" + GALLERY_TOP_LEVEL_PATH_DELIMITER;
   /**
    * Gallery constants
    */

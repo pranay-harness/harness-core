@@ -11,6 +11,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -62,7 +63,8 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     CustomArtifactSourceTemplate customArtifactSourceTemplate =
         CustomArtifactSourceTemplate.builder().script(SCRIPT_STRING).customRepositoryMapping(mapping).build();
     Template template = createTemplate(customArtifactSourceTemplate, APP_ID);
-    when(templateService.fetchTemplateUri(TEMPLATE_ID)).thenReturn(TEMPLATE_URI);
+    when(templateService.makeNamespacedTemplareUri(TEMPLATE_ID, "LATEST"))
+        .thenReturn(APP_PREFIX + TEMPLATE_URI + ":LATEST");
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
     CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
     assertThat(yaml.getType()).isEqualTo("CUSTOM");
@@ -81,7 +83,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     CustomArtifactSourceTemplate customArtifactSourceTemplate =
         CustomArtifactSourceTemplate.builder().script(SCRIPT_STRING).customRepositoryMapping(mapping).build();
     Template template = createTemplate(customArtifactSourceTemplate, GLOBAL_APP_ID);
-    when(templateService.fetchTemplateUri(TEMPLATE_ID)).thenReturn(TEMPLATE_URI);
+    when(templateService.makeNamespacedTemplareUri(TEMPLATE_ID, "LATEST")).thenReturn(TEMPLATE_URI + ":LATEST");
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
     CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
     assertThat(yaml.getType()).isEqualTo("CUSTOM");

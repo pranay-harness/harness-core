@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 import static software.wings.common.TemplateConstants.SSH;
 
 import com.google.inject.Inject;
@@ -19,7 +20,6 @@ import software.wings.beans.Application;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.template.Template;
-import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.TemplateReference.TemplateReferenceBuilder;
 import software.wings.beans.yaml.ChangeContext;
@@ -38,7 +38,6 @@ import java.util.Optional;
 @Singleton
 @Slf4j
 public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command> {
-  private final String APP_PREFIX = "App/";
   @Inject TemplateService templateService;
   @Inject YamlHelper yamlHelper;
   @Inject YamlHandlerFactory yamlHandlerFactory;
@@ -56,24 +55,13 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
     super.toYaml(yaml, bean);
     yaml.setVariables(TemplateLibraryYamlHandler.variablesToTemplateVariableYaml(bean.getTemplateVariables()));
 
-    String templateUri = null;
     final String templateUuid = bean.getReferenceUuid();
-    if (templateUuid != null) {
-      // Command is linked
-      templateUri = templateService.fetchTemplateUri(templateUuid);
-      if (templateUri == null) {
-        logger.error("Linked template for service command {} was deleted ", bean.getUuid());
-      }
-      if (bean.getTemplateReference() != null && bean.getTemplateReference().getTemplateVersion() != null) {
-        templateUri = templateUri + ":" + bean.getTemplateReference().getTemplateVersion();
-      }
-      Template template = templateService.get(templateUuid);
-      if (template != null) {
-        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
-          templateUri = APP_PREFIX + templateUri;
-        }
-      }
+    String version = null;
+    if (bean.getTemplateReference() != null && bean.getTemplateReference().getTemplateVersion() != null) {
+      version = String.valueOf(bean.getTemplateReference().getTemplateVersion());
     }
+    String templateUri = templateService.makeNamespacedTemplareUri(templateUuid, version);
+
     yaml.setTemplateUri(templateUri);
     return yaml;
   }
@@ -111,7 +99,7 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
     TemplateReferenceBuilder templateReferenceBuilder = TemplateReference.builder();
     String templateUuid = template.getUuid();
     templateReferenceBuilder.templateUuid(templateUuid);
-    String templateVersion = TemplateHelper.obtainTemplateVersion(templateUri);
+    String templateVersion = templateService.fetchTemplateVersionFromUri(templateUuid, templateUri);
     try {
       templateReferenceBuilder.templateVersion(Long.valueOf(templateVersion));
     } catch (Exception e) {
