@@ -16,4 +16,5 @@ public class QLBillingStatsInfo implements QLObject {
   String statsLabel;
   String statsDescription;
   String statsValue;
+  Number statsTrend;
 }

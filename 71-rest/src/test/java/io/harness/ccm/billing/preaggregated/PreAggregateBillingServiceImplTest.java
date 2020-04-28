@@ -56,7 +56,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private static final String TABLE_NAME = "tableName";
   private static final String SERVICE_NAME = "service";
   private static final String CLOUD_PROVIDER = "AWS";
-  private static final String BLENDED_COST_LABEL = "Blended Cost";
+  private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String STATS_LABEL = "statsLabel";
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
@@ -104,7 +104,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     when(dataHelper.convertToAggregatedCostData(tableResult))
         .thenReturn(PreAggregatedCostDataStats.builder().blendedCost(blendedCostData).build());
 
-    when(dataHelper.getCostBillingStats(blendedCostData, filters, BLENDED_COST_LABEL))
+    when(dataHelper.getCostBillingStats(blendedCostData, filters, TOTAL_COST_LABEL))
         .thenReturn(QLBillingStatsInfo.builder()
                         .statsValue(STATS_VALUE)
                         .statsDescription(STATS_DESCRIPTION)

@@ -75,6 +75,8 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   private static final long MIN_START_TIME = 0L;
   private static final long MAX_START_TIME = currentMillis;
   private static final Double COST = 1.4433;
+  private static final Double UNBLENDED_COST = 2.0;
+  private static final Double BLENDED_COST = 1.0;
 
   @Before
   public void setup() {
@@ -122,6 +124,9 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
         Field.newBuilder(entityConstantAwsBlendedCost, StandardSQLTypeName.FLOAT64).build(),
         Field.newBuilder(entityConstantAwsUnBlendedCost, StandardSQLTypeName.FLOAT64).build());
 
+    when(billingDataHelper.getRoundedDoubleValue(UNBLENDED_COST)).thenReturn(UNBLENDED_COST);
+    when(billingDataHelper.getRoundedDoubleValue(BLENDED_COST)).thenReturn(BLENDED_COST);
+
     List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
     dataHelper.ProcessDataPointAndAppendToList(fieldList, row, dataPointList);
     assertThat(dataPointList.size()).isEqualTo(1);
@@ -130,8 +135,8 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     assertThat(dataPointList.get(0).getAwsLinkedAccount()).isEqualTo(entityConstantAwsLinkedAccount);
     assertThat(dataPointList.get(0).getAwsUsageType()).isEqualTo(entityConstantAwsUsageType);
     assertThat(dataPointList.get(0).getAwsService()).isEqualTo(entityConstantAwsService);
-    assertThat(dataPointList.get(0).getAwsUnblendedCost()).isEqualTo(2.0);
-    assertThat(dataPointList.get(0).getAwsBlendedCost()).isEqualTo(1.0);
+    assertThat(dataPointList.get(0).getAwsUnblendedCost()).isEqualTo(UNBLENDED_COST);
+    assertThat(dataPointList.get(0).getAwsBlendedCost()).isEqualTo(BLENDED_COST);
   }
 
   @Test
@@ -151,8 +156,8 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     PreAggregatedCostData blendedCost = blendedCostDataBuilder.build();
     PreAggregatedCostData unBlendedCost = unBlendedCostDataBuilder.build();
 
-    assertThat(blendedCost.getCost()).isEqualTo(1.0);
-    assertThat(unBlendedCost.getCost()).isEqualTo(2.0);
+    assertThat(blendedCost.getCost()).isEqualTo(BLENDED_COST);
+    assertThat(unBlendedCost.getCost()).isEqualTo(UNBLENDED_COST);
     assertThat(blendedCost.getMinStartTime()).isEqualTo(0L);
     assertThat(unBlendedCost.getMaxStartTime()).isEqualTo(1586895998000000L);
   }
