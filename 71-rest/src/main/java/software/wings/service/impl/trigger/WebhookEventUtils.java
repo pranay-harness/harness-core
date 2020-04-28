@@ -10,6 +10,7 @@ import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REFS_CHANGED_REF;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_HEAD_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REF_BRANCH;
@@ -190,6 +191,8 @@ public class WebhookEventUtils {
           switch (bitBucketEventType) {
             case PUSH:
               return expressionEvaluator.substitute(BIT_BUCKET_COMMIT_ID, payload);
+            case REFS_CHANGED:
+              return expressionEvaluator.substitute(BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID, payload);
             default:
               return null;
           }
