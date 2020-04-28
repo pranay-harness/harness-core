@@ -52,31 +52,6 @@ public interface NodeMetricOrBuilder extends
   com.google.protobuf.DurationOrBuilder getWindowOrBuilder();
 
   /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  boolean hasUsage();
-  /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  io.harness.event.payloads.Usage getUsage();
-  /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder();
-
-  /**
    * <code>string cluster_id = 6;</code>
    */
   java.lang.String getClusterId();

@@ -82,19 +82,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
 
             break;
           }
-          case 42: {
-            io.harness.event.payloads.Usage.Builder subBuilder = null;
-            if (usage_ != null) {
-              subBuilder = usage_.toBuilder();
-            }
-            usage_ = input.readMessage(io.harness.event.payloads.Usage.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(usage_);
-              usage_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
           case 50: {
             java.lang.String s = input.readStringRequireUtf8();
 
@@ -252,39 +239,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     return getWindow();
   }
 
-  public static final int USAGE_FIELD_NUMBER = 5;
-  private io.harness.event.payloads.Usage usage_;
-  /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  public boolean hasUsage() {
-    return usage_ != null;
-  }
-  /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  public io.harness.event.payloads.Usage getUsage() {
-    return usage_ == null ? io.harness.event.payloads.Usage.getDefaultInstance() : usage_;
-  }
-  /**
-   * <pre>
-   * Deprecated - use aggregated_usage
-   * </pre>
-   *
-   * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-   */
-  public io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder() {
-    return getUsage();
-  }
-
   public static final int CLUSTER_ID_FIELD_NUMBER = 6;
   private volatile java.lang.Object clusterId_;
   /**
@@ -393,9 +347,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     if (window_ != null) {
       output.writeMessage(4, getWindow());
     }
-    if (usage_ != null) {
-      output.writeMessage(5, getUsage());
-    }
     if (!getClusterIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 6, clusterId_);
     }
@@ -426,9 +377,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     }
     if (window_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, getWindow());
-    }
-    if (usage_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getUsage());
     }
     if (!getClusterIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, clusterId_);
@@ -470,12 +418,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       if (!getWindow().equals(other.getWindow()))
         return false;
     }
-    if (hasUsage() != other.hasUsage())
-      return false;
-    if (hasUsage()) {
-      if (!getUsage().equals(other.getUsage()))
-        return false;
-    }
     if (!getClusterId().equals(other.getClusterId()))
       return false;
     if (!getKubeSystemUid().equals(other.getKubeSystemUid()))
@@ -509,10 +451,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
     if (hasWindow()) {
       hash = (37 * hash) + WINDOW_FIELD_NUMBER;
       hash = (53 * hash) + getWindow().hashCode();
-    }
-    if (hasUsage()) {
-      hash = (37 * hash) + USAGE_FIELD_NUMBER;
-      hash = (53 * hash) + getUsage().hashCode();
     }
     hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
     hash = (53 * hash) + getClusterId().hashCode();
@@ -649,12 +587,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
         window_ = null;
         windowBuilder_ = null;
       }
-      if (usageBuilder_ == null) {
-        usage_ = null;
-      } else {
-        usage_ = null;
-        usageBuilder_ = null;
-      }
       clusterId_ = "";
 
       kubeSystemUid_ = "";
@@ -706,11 +638,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
         result.window_ = window_;
       } else {
         result.window_ = windowBuilder_.build();
-      }
-      if (usageBuilder_ == null) {
-        result.usage_ = usage_;
-      } else {
-        result.usage_ = usageBuilder_.build();
       }
       result.clusterId_ = clusterId_;
       result.kubeSystemUid_ = kubeSystemUid_;
@@ -774,9 +701,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
       }
       if (other.hasWindow()) {
         mergeWindow(other.getWindow());
-      }
-      if (other.hasUsage()) {
-        mergeUsage(other.getUsage());
       }
       if (!other.getClusterId().isEmpty()) {
         clusterId_ = other.clusterId_;
@@ -1160,153 +1084,6 @@ public final class NodeMetric extends com.google.protobuf.GeneratedMessageV3 imp
         window_ = null;
       }
       return windowBuilder_;
-    }
-
-    private io.harness.event.payloads.Usage usage_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Usage,
-        io.harness.event.payloads.Usage.Builder, io.harness.event.payloads.UsageOrBuilder> usageBuilder_;
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public boolean hasUsage() {
-      return usageBuilder_ != null || usage_ != null;
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public io.harness.event.payloads.Usage getUsage() {
-      if (usageBuilder_ == null) {
-        return usage_ == null ? io.harness.event.payloads.Usage.getDefaultInstance() : usage_;
-      } else {
-        return usageBuilder_.getMessage();
-      }
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public Builder setUsage(io.harness.event.payloads.Usage value) {
-      if (usageBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        usage_ = value;
-        onChanged();
-      } else {
-        usageBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public Builder setUsage(io.harness.event.payloads.Usage.Builder builderForValue) {
-      if (usageBuilder_ == null) {
-        usage_ = builderForValue.build();
-        onChanged();
-      } else {
-        usageBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public Builder mergeUsage(io.harness.event.payloads.Usage value) {
-      if (usageBuilder_ == null) {
-        if (usage_ != null) {
-          usage_ = io.harness.event.payloads.Usage.newBuilder(usage_).mergeFrom(value).buildPartial();
-        } else {
-          usage_ = value;
-        }
-        onChanged();
-      } else {
-        usageBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public Builder clearUsage() {
-      if (usageBuilder_ == null) {
-        usage_ = null;
-        onChanged();
-      } else {
-        usage_ = null;
-        usageBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public io.harness.event.payloads.Usage.Builder getUsageBuilder() {
-      onChanged();
-      return getUsageFieldBuilder().getBuilder();
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    public io.harness.event.payloads.UsageOrBuilder getUsageOrBuilder() {
-      if (usageBuilder_ != null) {
-        return usageBuilder_.getMessageOrBuilder();
-      } else {
-        return usage_ == null ? io.harness.event.payloads.Usage.getDefaultInstance() : usage_;
-      }
-    }
-    /**
-     * <pre>
-     * Deprecated - use aggregated_usage
-     * </pre>
-     *
-     * <code>.io.harness.event.payloads.Usage usage = 5;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Usage,
-        io.harness.event.payloads.Usage.Builder, io.harness.event.payloads.UsageOrBuilder>
-    getUsageFieldBuilder() {
-      if (usageBuilder_ == null) {
-        usageBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Usage,
-            io.harness.event.payloads.Usage.Builder, io.harness.event.payloads.UsageOrBuilder>(
-            getUsage(), getParentForChildren(), isClean());
-        usage_ = null;
-      }
-      return usageBuilder_;
     }
 
     private java.lang.Object clusterId_ = "";

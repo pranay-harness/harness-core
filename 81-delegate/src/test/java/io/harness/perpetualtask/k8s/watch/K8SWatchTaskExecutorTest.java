@@ -25,9 +25,6 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
-import io.harness.event.payloads.NodeMetric;
-import io.harness.event.payloads.PodMetric;
-import io.harness.grpc.utils.HDurations;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
@@ -175,45 +172,6 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldPublishNodeMetrics() throws Exception {
-    Instant heartbeatTime = Instant.now();
-    doNothing()
-        .when(eventPublisher)
-        .publishMessage(
-            messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)), mapArgumentCaptor.capture());
-    K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
-    assertThat(messageArgumentCaptor.getAllValues())
-        .hasSize(2)
-        .containsExactlyInAnyOrder(NodeMetric.newBuilder()
-                                       .setCloudProviderId(CLOUD_PROVIDER_ID)
-                                       .setClusterId(CLUSTER_ID)
-                                       .setKubeSystemUid(KUBE_SYSTEM_ID)
-                                       .setName("node1-name")
-                                       .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
-                                       .setWindow(HDurations.parse("30s"))
-                                       .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                     .setCpuNano(746640510L)
-                                                     .setMemoryByte(6825124L * 1024)
-                                                     .build())
-                                       .build(),
-            NodeMetric.newBuilder()
-                .setCloudProviderId(CLOUD_PROVIDER_ID)
-                .setClusterId(CLUSTER_ID)
-                .setKubeSystemUid(KUBE_SYSTEM_ID)
-                .setName("node2-name")
-                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
-                .setWindow(HDurations.parse("30s"))
-                .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                              .setCpuNano(2938773795L)
-                              .setMemoryByte(18281752L * 1024)
-                              .build())
-                .build());
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
-  }
-
   private K8sWatchTaskParams getK8sWatchTaskParams() {
     K8sClusterConfig config = K8sClusterConfig.builder().build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(config));
@@ -280,59 +238,5 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
     firstPod.setMetadata(getObjectMeta(podUid));
     firstPod.setStatus(new PodStatusBuilder().withPhase("Running").build());
     return firstPod;
-  }
-
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldPublishPodMetrics() throws Exception {
-    Instant heartbeatTime = Instant.now();
-    doNothing()
-        .when(eventPublisher)
-        .publishMessage(
-            messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)), mapArgumentCaptor.capture());
-    K8SWatchTaskExecutor.publishPodMetrics(k8sMetricClient, eventPublisher, getK8sWatchTaskParams(), heartbeatTime);
-    assertThat(messageArgumentCaptor.getAllValues())
-        .hasSize(2)
-        .containsExactlyInAnyOrder(PodMetric.newBuilder()
-                                       .setCloudProviderId(CLOUD_PROVIDER_ID)
-                                       .setClusterId(CLUSTER_ID)
-                                       .setKubeSystemUid(KUBE_SYSTEM_ID)
-                                       .setName("pod1")
-                                       .setNamespace("ns1")
-                                       .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
-                                       .setWindow(HDurations.parse("30s"))
-                                       .addContainers(PodMetric.Container.newBuilder()
-                                                          .setName("p1-ctr1")
-                                                          .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                                        .setCpuNano(41181421L)
-                                                                        .setMemoryByte(139304L * 1024)
-                                                                        .build())
-                                                          .build())
-                                       .build(),
-            PodMetric.newBuilder()
-                .setCloudProviderId(CLOUD_PROVIDER_ID)
-                .setClusterId(CLUSTER_ID)
-                .setKubeSystemUid(KUBE_SYSTEM_ID)
-                .setName("pod2")
-                .setNamespace("ns1")
-                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
-                .setWindow(HDurations.parse("30s"))
-                .addContainers(PodMetric.Container.newBuilder()
-                                   .setName("p2-ctr1")
-                                   .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                 .setCpuNano(185503L)
-                                                 .setMemoryByte(7460L * 1024)
-                                                 .build())
-                                   .build())
-                .addContainers(PodMetric.Container.newBuilder()
-                                   .setName("p2-ctr2")
-                                   .setUsage(io.harness.event.payloads.Usage.newBuilder()
-                                                 .setCpuNano(735522992L)
-                                                 .setMemoryByte(225144L * 1024)
-                                                 .build())
-                                   .build())
-                .build());
-    assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 }

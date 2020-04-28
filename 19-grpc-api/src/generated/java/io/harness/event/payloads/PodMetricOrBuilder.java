@@ -61,47 +61,6 @@ public interface PodMetricOrBuilder extends
   com.google.protobuf.DurationOrBuilder getWindowOrBuilder();
 
   /**
-   * <pre>
-   * Deprecated - container metrics are aggregated in top level itself
-   * </pre>
-   *
-   * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
-   */
-  java.util.List<io.harness.event.payloads.PodMetric.Container> getContainersList();
-  /**
-   * <pre>
-   * Deprecated - container metrics are aggregated in top level itself
-   * </pre>
-   *
-   * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
-   */
-  io.harness.event.payloads.PodMetric.Container getContainers(int index);
-  /**
-   * <pre>
-   * Deprecated - container metrics are aggregated in top level itself
-   * </pre>
-   *
-   * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
-   */
-  int getContainersCount();
-  /**
-   * <pre>
-   * Deprecated - container metrics are aggregated in top level itself
-   * </pre>
-   *
-   * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
-   */
-  java.util.List<? extends io.harness.event.payloads.PodMetric.ContainerOrBuilder> getContainersOrBuilderList();
-  /**
-   * <pre>
-   * Deprecated - container metrics are aggregated in top level itself
-   * </pre>
-   *
-   * <code>repeated .io.harness.event.payloads.PodMetric.Container containers = 6;</code>
-   */
-  io.harness.event.payloads.PodMetric.ContainerOrBuilder getContainersOrBuilder(int index);
-
-  /**
    * <code>string cluster_id = 7;</code>
    */
   java.lang.String getClusterId();

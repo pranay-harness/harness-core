@@ -1,8 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -16,11 +14,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
-import io.harness.event.payloads.NodeMetric;
-import io.harness.event.payloads.PodMetric;
-import io.harness.event.payloads.Usage;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.grpc.utils.HDurations;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -96,8 +90,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
           .collectAndPublishMetrics(now);
 
       // to be removed after batch processing changes
-      publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
-      publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams, heartbeatTime);
     } catch (K8sClusterException ke) {
       try {
         eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
@@ -149,70 +141,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .build();
     eventPublisher.publishMessage(
         k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId()));
-  }
-
-  @VisibleForTesting
-  static void publishNodeMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
-      K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
-    String kubeSystemUid = K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient);
-    k8sMetricsClient.nodeMetrics()
-        .list()
-        .getItems()
-        .stream()
-        .map(nodeMetric -> {
-          return NodeMetric.newBuilder()
-              .setCloudProviderId(watchTaskParams.getCloudProviderId())
-              .setClusterId(watchTaskParams.getClusterId())
-              .setKubeSystemUid(kubeSystemUid)
-              .setName(nodeMetric.getMetadata().getName())
-              .setTimestamp(HTimestamps.parse(nodeMetric.getTimestamp()))
-              .setWindow(HDurations.parse(nodeMetric.getWindow()))
-              .setUsage(Usage.newBuilder()
-                            .setCpuNano(K8sResourceStandardizer.getCpuNano(nodeMetric.getUsage().getCpu()))
-                            .setMemoryByte(K8sResourceStandardizer.getMemoryByte(nodeMetric.getUsage().getMemory())))
-              .build();
-        })
-        .forEach(nodeMetric
-            -> eventPublisher.publishMessage(nodeMetric, HTimestamps.fromInstant(heartbeatTime),
-                ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId())));
-  }
-
-  @VisibleForTesting
-  static void publishPodMetrics(K8sMetricsClient k8sMetricsClient, EventPublisher eventPublisher,
-      K8sWatchTaskParams watchTaskParams, Instant heartbeatTime) {
-    String kubeSystemUid = K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient);
-    k8sMetricsClient.podMetrics()
-        .inAnyNamespace()
-        .list()
-        .getItems()
-        .stream()
-        .filter(podMetric -> isNotEmpty(podMetric.getContainers()))
-        .map(podMetric
-            -> PodMetric.newBuilder()
-                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
-                   .setClusterId(watchTaskParams.getClusterId())
-                   .setKubeSystemUid(kubeSystemUid)
-                   .setNamespace(podMetric.getMetadata().getNamespace())
-                   .setName(podMetric.getMetadata().getName())
-                   .setTimestamp(HTimestamps.parse(podMetric.getTimestamp()))
-                   .setWindow(HDurations.parse(podMetric.getWindow()))
-                   .addAllContainers(podMetric.getContainers()
-                                         .stream()
-                                         .map(container
-                                             -> PodMetric.Container.newBuilder()
-                                                    .setName(container.getName())
-                                                    .setUsage(Usage.newBuilder()
-                                                                  .setCpuNano(K8sResourceStandardizer.getCpuNano(
-                                                                      container.getUsage().getCpu()))
-                                                                  .setMemoryByte(K8sResourceStandardizer.getMemoryByte(
-                                                                      container.getUsage().getMemory()))
-                                                                  .build())
-                                                    .build())
-                                         .collect(toList()))
-                   .build())
-        .forEach(podMetric
-            -> eventPublisher.publishMessage(podMetric, HTimestamps.fromInstant(heartbeatTime),
-                ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId())));
   }
 
   @Override
