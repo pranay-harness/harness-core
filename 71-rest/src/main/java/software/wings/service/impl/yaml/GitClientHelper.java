@@ -157,7 +157,8 @@ public class GitClientHelper {
     }
   }
 
-  public void checkIfTransportException(Exception ex) {
+  public void checkIfGitConnectivityIssue(Exception ex) {
+    // These are the common error we find while delegate runs git command
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
     if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException
