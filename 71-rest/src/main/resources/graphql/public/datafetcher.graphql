@@ -101,4 +101,6 @@ enum DataFetcherEnum {
   getSecret
   startExecution
   executionInputs
+  workflowVariableConnection
+  pipelineVariableConnection
 }

@@ -8,4 +8,6 @@ import lombok.Value;
 public class QLPipelineQueryParameters {
   private String pipelineId;
   private String executionId;
+  private String pipelineName;
+  private String applicationId;
 }

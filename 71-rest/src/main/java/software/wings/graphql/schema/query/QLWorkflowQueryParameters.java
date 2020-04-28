@@ -8,4 +8,6 @@ import lombok.Value;
 public class QLWorkflowQueryParameters {
   private String workflowId;
   private String executionId;
+  private String workflowName;
+  private String applicationId;
 }

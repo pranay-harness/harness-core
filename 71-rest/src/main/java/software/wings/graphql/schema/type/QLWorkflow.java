@@ -12,6 +12,7 @@ import software.wings.security.annotations.Scope;
 @Scope(ResourceType.APPLICATION)
 public class QLWorkflow implements QLObject {
   private String id;
+  private String applicationId;
   private String name;
   private String description;
   private Long createdAt;

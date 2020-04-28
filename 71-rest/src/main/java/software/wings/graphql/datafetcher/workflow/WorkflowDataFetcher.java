@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -32,6 +33,11 @@ public class WorkflowDataFetcher extends AbstractObjectDataFetcher<QLWorkflow, Q
 
     if (qlQuery.getWorkflowId() != null) {
       workflow = persistence.get(Workflow.class, qlQuery.getWorkflowId());
+    } else if (qlQuery.getWorkflowName() != null) {
+      workflow = persistence.createQuery(Workflow.class)
+                     .filter(WorkflowKeys.name, qlQuery.getWorkflowName())
+                     .filter(WorkflowKeys.appId, qlQuery.getApplicationId())
+                     .get();
     } else if (qlQuery.getExecutionId() != null) {
       // TODO: add this to in memory cache
       final String workflowId = persistence.createQuery(WorkflowExecution.class)

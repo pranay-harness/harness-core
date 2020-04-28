@@ -1,4 +1,4 @@
-package io.harness.functional.graphQLAPIs.executions;
+package io.harness.functional.graphQLAPIs.workflow;
 
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForEnv;
 import static io.harness.functional.WorkflowUtils.getTemplateExpressionsForInfraDefinition;
