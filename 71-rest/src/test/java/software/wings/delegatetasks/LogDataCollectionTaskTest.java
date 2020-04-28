@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -9,28 +10,35 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import retrofit2.Call;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.logs.LogResponseParserTest;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,10 +55,11 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
   @Mock private DelegateLogService delegateLogService;
   @Mock private ScheduledFuture future;
+  @Mock private EncryptionService encryptionService;
+  @Mock private RequestExecutor requestExecutor;
   private LogDataCollectionTask dataCollectionTask;
 
-  public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts)
-      throws IllegalAccessException {
+  public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts) throws Exception {
     String delegateId = UUID.randomUUID().toString();
     String appId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -74,12 +83,17 @@ public class LogDataCollectionTaskTest extends CategoryTest {
                             .infrastructureMappingId(infrastructureMappingId)
                             .build();
     dataCollectionTask = new LogDataCollectionTask(delegateId, task, null, null);
+
     MockitoAnnotations.initMocks(this);
 
     when(future.cancel(anyBoolean())).thenReturn(true);
     FieldUtils.writeField(dataCollectionTask, "future", future, true);
     FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(dataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService, true);
+    FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);
+    FieldUtils.writeField(dataCollectionTask, "requestExecutor", requestExecutor, true);
+
+    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedApiKey".toCharArray());
   }
 
   private CustomLogDataCollectionInfo getDataCollectionInfo(
@@ -90,7 +104,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
         .startTime(12312321123L)
         .collectionFrequency(1)
         .hosts(hosts)
-        .encryptedDataDetails(new ArrayList<>())
+        .encryptedDataDetails(Arrays.asList(EncryptedDataDetail.builder().fieldName("apiKey").build()))
         .startMinute(0)
         .responseDefinition(logDefinition)
         .headers(header)
@@ -102,10 +116,10 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("Ignored until this test is moved to not use ELK server")
-  public void testFetchElkLogs() throws IOException, IllegalAccessException {
+  public void testFetchElkLogs() throws Exception {
     // setup
-
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
     String searchUrl = "_search?pretty=true&q=*&size=5";
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     responseMappers.put("timestamp",
@@ -131,13 +145,25 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
-
+    when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(textLoad);
     // execute
     DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     Runnable r = dataCollectionTask.getDataCollector(taskResult);
     r.run();
 
     // verify
+    // verify
+    ArgumentCaptor<Map> maskPatternsCaptor = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
+
+    verify(requestExecutor, times(3))
+        .executeRequest(any(ThirdPartyApiCallLog.class), requestCaptor.capture(), maskPatternsCaptor.capture());
+    List<Map> maskPatterns = maskPatternsCaptor.getAllValues();
+    List<Call> callsList = requestCaptor.getAllValues();
+    maskPatterns.forEach(
+        maskPatternsMap -> assertThat(((Map<String, String>) maskPatternsMap).containsKey("decryptedApiKey")).isTrue());
+    callsList.forEach(call -> assertThat(call.request().url().toString().contains("apiKey=decryptedApiKey")));
+
     verify(logAnalysisStoreService, times(1))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
             anyString(), anyString(), any(List.class));
@@ -146,11 +172,14 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("Ignored until this test is moved to not use ELK server")
-  public void testFetchElkLogsRetry() throws IOException, IllegalAccessException {
+  //@Ignore("Ignored until this test is moved to not use ELK server")
+  public void testFetchElkLogsRetry() throws Exception {
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+
     // setup
 
-    String searchUrl = "_search?pretty=true&q=*&size=5";
+    String searchUrl = "_search?pretty=true&q=*&size=5&apiKey=${apiKey}";
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     responseMappers.put("timestamp",
         CustomLogVerificationState.ResponseMapper.builder()
@@ -176,13 +205,24 @@ public class LogDataCollectionTaskTest extends CategoryTest {
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenThrow(new IOException("This is bad"))
         .thenReturn(true);
-
+    when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(textLoad);
     // execute
     DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     Runnable r = dataCollectionTask.getDataCollector(taskResult);
     r.run();
 
     // verify
+    ArgumentCaptor<Map> maskPatternsCaptor = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
+
+    verify(requestExecutor, times(6))
+        .executeRequest(any(ThirdPartyApiCallLog.class), requestCaptor.capture(), maskPatternsCaptor.capture());
+    List<Map> maskPatterns = maskPatternsCaptor.getAllValues();
+    List<Call> callsList = requestCaptor.getAllValues();
+    maskPatterns.forEach(
+        maskPatternsMap -> assertThat(((Map<String, String>) maskPatternsMap).containsKey("decryptedApiKey")).isTrue());
+    callsList.forEach(call -> assertThat(call.request().url().toString().contains("apiKey=decryptedApiKey")));
+
     verify(logAnalysisStoreService, times(2))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
             anyString(), anyString(), any(List.class));
