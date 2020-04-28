@@ -16,6 +16,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.Yaml;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -35,6 +36,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
+  private static final String APP_PREFIX = "App/";
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject YamlHelper yamlHelper;
@@ -134,6 +136,12 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       if (bean.getTemplateVersion() != null) {
         templateUri = templateUri + ":" + bean.getTemplateVersion();
       }
+      Template template = templateService.get(templateUuid);
+      if (template != null) {
+        if (!template.getAppId().equals(GLOBAL_APP_ID)) {
+          templateUri = APP_PREFIX + templateUri;
+        }
+      }
     }
     yaml.setTemplateUri(templateUri);
     yaml.setTemplateVariables(TemplateHelper.convertToTemplateVariables(bean.getTemplateVariables()));
@@ -197,9 +205,15 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     }
 
     String templateUri = yaml.getTemplateUri();
+    String templateUuid;
     if (isNotEmpty(templateUri)) {
-      bean.setTemplateUuid(
-          templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), templateUri));
+      if (templateUri.startsWith(APP_PREFIX)) {
+        templateUri = templateUri.substring(APP_PREFIX.length());
+        templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
+      } else {
+        templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
+      }
+      bean.setTemplateUuid(templateUuid);
       bean.setTemplateVersion(obtainTemplateVersion(templateUri));
     }
     bean.setTemplateVariables(TemplateHelper.convertToEntityVariables(yaml.getTemplateVariables()));
