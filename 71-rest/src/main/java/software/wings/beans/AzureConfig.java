@@ -19,6 +19,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -44,6 +45,8 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
+  private AzureEnvironmentType azureEnvironmentType = AzureEnvironmentType.AZURE;
+
   /**
    * Instantiates a new Azure config.
    */
@@ -51,8 +54,8 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
     super(SettingVariableTypes.AZURE.name());
   }
 
-  public AzureConfig(
-      String clientId, String tenantId, char[] key, String accountId, CCMConfig ccmConfig, String encryptedKey) {
+  public AzureConfig(String clientId, String tenantId, char[] key, String accountId, CCMConfig ccmConfig,
+      String encryptedKey, AzureEnvironmentType azureEnvironmentType) {
     this();
     this.clientId = clientId;
     this.tenantId = tenantId;
@@ -60,6 +63,7 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
     this.accountId = accountId;
     this.ccmConfig = ccmConfig;
     this.encryptedKey = encryptedKey;
+    this.azureEnvironmentType = azureEnvironmentType;
   }
 
   @Override
@@ -79,14 +83,16 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
     private String clientId;
     private String tenantId;
     private String key;
+    private AzureEnvironmentType azureEnvironmentType;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, AzureEnvironmentType azureEnvironmentType) {
       super(type, harnessApiVersion, usageRestrictions);
       this.clientId = clientId;
       this.tenantId = tenantId;
       this.key = key;
+      this.azureEnvironmentType = azureEnvironmentType;
     }
   }
 }
