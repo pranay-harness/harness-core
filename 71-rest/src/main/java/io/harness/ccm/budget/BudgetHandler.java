@@ -27,6 +27,7 @@ import software.wings.service.intfc.UserGroupService;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class BudgetHandler implements Handler<Budget> {
@@ -61,7 +62,7 @@ public class BudgetHandler implements Handler<Budget> {
     Preconditions.checkNotNull(budget.getAlertThresholds());
     Preconditions.checkNotNull(budget.getAccountId());
 
-    List<String> userGroupIds = Arrays.asList(budget.getUserGroupIds());
+    List<String> userGroupIds = Arrays.asList(Optional.ofNullable(budget.getUserGroupIds()).orElse(new String[0]));
     if (CollectionUtils.isEmpty(userGroupIds)) {
       logger.warn("The budget with id={} has no associated UserGroup.", budget.getUuid());
       return;
