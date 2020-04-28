@@ -23,6 +23,7 @@ import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureVirtualMachineScaleSet;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.security.EncryptionService;
@@ -221,7 +222,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   private AzureConfig getAzureConfig() {
     CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(false).build();
-    return new AzureConfig(clientId, tenantId, key.toCharArray(), "", ccmConfig, "");
+    return new AzureConfig(clientId, tenantId, key.toCharArray(), "", ccmConfig, "", AzureEnvironmentType.AZURE);
   }
 
   private Map<String, String> listSubscriptions(AzureConfig config) {

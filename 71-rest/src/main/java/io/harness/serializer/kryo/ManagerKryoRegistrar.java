@@ -248,6 +248,7 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.PodParams;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -1588,5 +1589,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PhaseLevel.class, 7362);
     kryo.register(SectionLevel.class, 7363);
     kryo.register(StepLevel.class, 7364);
+    kryo.register(AzureEnvironmentType.class, 7365);
   }
 }

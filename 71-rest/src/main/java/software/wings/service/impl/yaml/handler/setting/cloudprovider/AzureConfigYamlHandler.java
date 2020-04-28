@@ -21,6 +21,7 @@ public class AzureConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Azure
                     .clientId(azureConfig.getClientId())
                     .tenantId(azureConfig.getTenantId())
                     .key(getEncryptedValue(azureConfig, "key", false))
+                    .azureEnvironmentType(azureConfig.getAzureEnvironmentType())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -38,6 +39,7 @@ public class AzureConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Azure
                                   .clientId(yaml.getClientId())
                                   .tenantId(yaml.getTenantId())
                                   .encryptedKey(yaml.getKey())
+                                  .azureEnvironmentType(yaml.getAzureEnvironmentType())
                                   .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, azureConfig);
   }

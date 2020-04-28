@@ -18,6 +18,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -65,6 +66,7 @@ import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
@@ -95,14 +97,30 @@ public class AzureHelperService {
     return (AzureConfig) computeProviderSetting.getValue();
   }
 
+  private AzureEnvironment getAzureEnvironment(AzureEnvironmentType azureEnvironmentType) {
+    if (azureEnvironmentType == null) {
+      return AzureEnvironment.AZURE;
+    }
+
+    switch (azureEnvironmentType) {
+      case AZURE_US_GOVERNMENT:
+        return AzureEnvironment.AZURE_US_GOVERNMENT;
+
+      case AZURE:
+      default:
+        return AzureEnvironment.AZURE;
+    }
+  }
+
   public void validateAzureAccountCredential(AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       if (isNotEmpty(encryptedDataDetails)) {
         encryptionService.decrypt(azureConfig, encryptedDataDetails);
       }
 
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials =
+          new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
+              new String(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
 
       Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
 
@@ -226,7 +244,12 @@ public class AzureHelperService {
 
     // Filter VMs by OS type
     if (osType != null && (OSType.WINDOWS.equals(osType) || OSType.LINUX.equals(osType))) {
-      listVms = listVms.stream().filter(vm -> osType.equals(getVmOSType(vm))).collect(Collectors.toList());
+      listVms = listVms.stream()
+                    .filter(vm -> {
+                      OSType vmOSType = getVmOSType(vm);
+                      return vmOSType != null && vmOSType.equals(osType);
+                    })
+                    .collect(Collectors.toList());
     }
 
     // Filter by tags if present, tags are optional.
@@ -331,8 +354,9 @@ public class AzureHelperService {
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
     encryptionService.decrypt(azureConfig, encryptionDetails);
     try {
-      Response<AzureListTagsResponse> response =
-          getAzureManagementRestClient().listTags(getAzureBearerAuthToken(azureConfig), subscriptionId).execute();
+      Response<AzureListTagsResponse> response = getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
+                                                     .listTags(getAzureBearerAuthToken(azureConfig), subscriptionId)
+                                                     .execute();
 
       if (response.isSuccessful()) {
         return response.body()
@@ -359,8 +383,9 @@ public class AzureHelperService {
       String subscriptionId, AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(azureConfig, encryptionDetails);
     try {
-      Response<AzureListTagsResponse> response =
-          getAzureManagementRestClient().listTags(getAzureBearerAuthToken(azureConfig), subscriptionId).execute();
+      Response<AzureListTagsResponse> response = getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
+                                                     .listTags(getAzureBearerAuthToken(azureConfig), subscriptionId)
+                                                     .execute();
 
       if (response.isSuccessful()) {
         return response.body().getValue().stream().map(TagDetails::getTagName).collect(toSet());
@@ -555,7 +580,7 @@ public class AzureHelperService {
     encryptionService.decrypt(azureConfig, encryptionDetails);
     try {
       Response<AksGetCredentialsResponse> response =
-          getAzureManagementRestClient()
+          getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
               .getAdminCredentials(getAzureBearerAuthToken(azureConfig), subscriptionId, resourceGroup, clusterName)
               .execute();
 
@@ -603,11 +628,14 @@ public class AzureHelperService {
     }
   }
 
-  private String getAzureBearerAuthToken(AzureConfig azureConfig) {
+  @VisibleForTesting
+  String getAzureBearerAuthToken(AzureConfig azureConfig) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
-      String token = credentials.getToken("https://management.core.windows.net/");
+      AzureEnvironment azureEnvironment = getAzureEnvironment(azureConfig.getAzureEnvironmentType());
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
+          azureConfig.getClientId(), azureConfig.getTenantId(), new String(azureConfig.getKey()), azureEnvironment);
+
+      String token = credentials.getToken(azureEnvironment.managementEndpoint());
       return "Bearer " + token;
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
@@ -615,10 +643,12 @@ public class AzureHelperService {
     return null;
   }
 
-  private Azure getAzureClient(AzureConfig azureConfig) {
+  @VisibleForTesting
+  Azure getAzureClient(AzureConfig azureConfig) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials =
+          new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
+              new String(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
     } catch (Exception e) {
@@ -627,10 +657,12 @@ public class AzureHelperService {
     return null;
   }
 
-  private Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
+  @VisibleForTesting
+  Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials =
+          new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
+              new String(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withSubscription(subscriptionId);
     } catch (Exception e) {
@@ -655,8 +687,9 @@ public class AzureHelperService {
     return retrofit.create(AcrRestClient.class);
   }
 
-  private AzureManagementRestClient getAzureManagementRestClient() {
-    String url = getUrl("management.azure.com");
+  @VisibleForTesting
+  AzureManagementRestClient getAzureManagementRestClient(AzureEnvironmentType azureEnvironmentType) {
+    String url = getAzureEnvironment(azureEnvironmentType).resourceManagerEndpoint();
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                                     .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
