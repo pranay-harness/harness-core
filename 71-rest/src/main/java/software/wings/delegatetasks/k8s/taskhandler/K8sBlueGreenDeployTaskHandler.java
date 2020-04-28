@@ -247,7 +247,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nMore than one workloads found in the Manifests. Blue/Green deploy supports only one workload. Others should be marked with annotation "
+              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }

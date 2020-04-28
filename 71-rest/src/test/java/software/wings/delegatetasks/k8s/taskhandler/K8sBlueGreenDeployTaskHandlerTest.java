@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -209,6 +210,28 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
             "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+            LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testOnlyOneWorkloadSupportedInBgWorkflow() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+
+    on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
+
+    boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
+        K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
+    assertThat(result).isFalse();
+
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog(
+            "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with harness.io/direct-apply: true",
             LogLevel.ERROR, CommandExecutionStatus.FAILURE);
   }
 
