@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static java.util.Collections.emptyMap;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -259,14 +260,14 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   EnrichedCommandVersionDTO downloadAndGetCommandVersionDTO(
       String commandStoreName, String commandName, String version) {
     return CommandLibraryServiceClientUtils
-        .executeHttpRequest(serviceHttpClient.getVersionDetails(commandStoreName, commandName, version))
+        .executeHttpRequest(serviceHttpClient.getVersionDetails(commandStoreName, commandName, version, emptyMap()))
         .getResource();
   }
 
   @VisibleForTesting
   CommandDTO downloadAndGetCommandDTO(String commandStoreName, String commandName) {
     return CommandLibraryServiceClientUtils
-        .executeHttpRequest(serviceHttpClient.getCommandDetails(commandStoreName, commandName))
+        .executeHttpRequest(serviceHttpClient.getCommandDetails(commandStoreName, commandName, emptyMap()))
         .getResource();
   }
 

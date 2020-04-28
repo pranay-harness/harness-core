@@ -2,14 +2,19 @@ package io.harness.commandlibrary.client;
 
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import com.google.common.collect.ImmutableList;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.commandlibrary.api.dto.CommandStoreDTO;
 import io.harness.commandlibrary.common.service.CommandLibraryService;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonUtils;
@@ -25,7 +30,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.Collections;
+import java.util.List;
 
 public class CommandLibraryServiceHttpClientFactoryTest extends CategoryTest {
   private MockWebServer mockWebServer;
@@ -54,15 +59,18 @@ public class CommandLibraryServiceHttpClientFactoryTest extends CategoryTest {
 
     mockWebServer.enqueue(new MockResponse()
                               .setResponseCode(HttpURLConnection.HTTP_OK)
-                              .setBody(JsonUtils.asJson(aRestResponse()
-                                                            .withResource(Collections.singletonList(
-                                                                CommandStoreDTO.builder().name("harness").build()))
-                                                            .build())));
+                              .setBody(JsonUtils.asJson(
+                                  aRestResponse()
+                                      .withResource(ImmutableList.of(CommandStoreDTO.builder().name("harness").build()))
+                                      .build())));
 
     doReturn("secret").when(commandLibraryService).getSecretForClient(anyString());
     final CommandLibraryServiceHttpClient serviceHttpClient = factory.get();
 
-    assertThat(serviceHttpClient.getCommandStores().execute().body().getResource().get(0).getName())
-        .isEqualTo("harness");
+    final Object body1 = serviceHttpClient.getCommandStores(emptyMap()).execute().body();
+    final RestResponse<List<CommandStoreDTO>> body =
+        factory.getObjectMapper().convertValue(body1, new TypeReference<RestResponse<List<CommandStoreDTO>>>() {});
+
+    assertThat(body.getResource().get(0).getName()).isEqualTo("harness");
   }
 }

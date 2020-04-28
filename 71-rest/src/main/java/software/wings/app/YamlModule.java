@@ -39,30 +39,11 @@ import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.beans.command.CommandUnitType.AWS_LAMBDA;
-import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
-import static software.wings.beans.command.CommandUnitType.COMMAND;
-import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
-import static software.wings.beans.command.CommandUnitType.DOCKER_START;
-import static software.wings.beans.command.CommandUnitType.DOCKER_STOP;
-import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
-import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
-import static software.wings.beans.command.CommandUnitType.EXEC;
-import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
-import static software.wings.beans.command.CommandUnitType.PORT_CHECK_CLEARED;
-import static software.wings.beans.command.CommandUnitType.PORT_CHECK_LISTENING;
-import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
-import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED;
-import static software.wings.beans.command.CommandUnitType.RESIZE;
-import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
-import static software.wings.beans.command.CommandUnitType.SCP;
-import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import software.wings.api.DeploymentType;
@@ -110,26 +91,6 @@ import software.wings.service.impl.yaml.handler.artifactstream.JenkinsArtifactSt
 import software.wings.service.impl.yaml.handler.artifactstream.NexusArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.SftpArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.SmbArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.command.AmiCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.AwsLambdaCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.CodeDeployCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.CommandRefCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.CopyConfigCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.DockerStartCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.DockerStopCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.DownloadArtifactCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.EcsSetupCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.ExecCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.KubernetesResizeCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.KubernetesSetupCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.PortCheckClearedCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.PortCheckListeningCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.ProcessCheckRunningCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.ProcessCheckStoppedCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.ResizeCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandler;
-import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsServiceSpecificationYamlHandler;
@@ -196,7 +157,6 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Spl
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ArtifactSourceTemplateYamlHandler;
-import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateRefYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.PcfCommandTemplateYamlHandler;
@@ -267,12 +227,17 @@ import software.wings.yaml.trigger.WebhookTriggerConditionHandler;
  *
  * @author rktummala on 10/17/17
  */
-public class YamlModule extends AbstractModule {
+public class YamlModule extends CommandLibrarySharedModule {
+  public YamlModule() {
+    super(true);
+  }
+
   /* (non-Javadoc)
    * @see com.google.inject.AbstractModule#configure()
    */
   @Override
   protected void configure() {
+    super.configure();
     bind(YamlHistoryService.class).to(YamlHistoryServiceImpl.class);
     bind(YamlDirectoryService.class).to(YamlDirectoryServiceImpl.class);
     bind(YamlResourceService.class).to(YamlResourceServiceImpl.class);
@@ -510,36 +475,6 @@ public class YamlModule extends AbstractModule {
         .to(TriggerArtifactFromSourcePipelineYamlHandler.class);
     triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.WEBHOOK_VARIABLE.name())
         .to(TriggerArtifactWebhookYamlHandler.class);
-
-    MapBinder<String, CommandUnitYamlHandler> commandUnitYamlHandlerMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, CommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(EXEC.name()).to(ExecCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(SCP.name()).to(ScpCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(COPY_CONFIGS.name()).to(CopyConfigCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(COMMAND.name()).to(CommandRefCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(SETUP_ENV.name()).to(SetupEnvCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(DOCKER_START.name()).to(DockerStartCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(DOCKER_STOP.name()).to(DockerStopCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(PROCESS_CHECK_RUNNING.name())
-        .to(ProcessCheckRunningCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(PROCESS_CHECK_STOPPED.name())
-        .to(ProcessCheckStoppedCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(PORT_CHECK_CLEARED.name())
-        .to(PortCheckClearedCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(PORT_CHECK_LISTENING.name())
-        .to(PortCheckListeningCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(CODE_DEPLOY.name()).to(CodeDeployCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(AWS_LAMBDA.name()).to(AwsLambdaCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(AWS_AMI.name()).to(AmiCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(RESIZE.name()).to(ResizeCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(RESIZE_KUBERNETES.name())
-        .to(KubernetesResizeCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(ECS_SETUP.name()).to(EcsSetupCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(KUBERNETES_SETUP.name()).to(KubernetesSetupCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(DOWNLOAD_ARTIFACT.name())
-        .to(DownloadArtifactCommandUnitYamlHandler.class);
-    commandUnitYamlHandlerMapBinder.addBinding(TemplateConstants.TEMPLATE_REF_COMMAND)
-        .to(CommandTemplateRefYamlHandler.class);
 
     MapBinder<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvisionerYamlHandler.class);

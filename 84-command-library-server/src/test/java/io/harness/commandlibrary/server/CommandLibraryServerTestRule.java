@@ -9,6 +9,7 @@ import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.app.CommandLibraryServerModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.MongoConfig;
+import software.wings.app.CommandLibrarySharedModule;
 import software.wings.rules.WingsRule;
 
 import java.lang.annotation.Annotation;
@@ -30,6 +31,7 @@ public class CommandLibraryServerTestRule extends WingsRule {
       Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
     final ArrayList<Module> modules = new ArrayList<>(new TestMongoModule(datastore).cumulativeDependencies());
     modules.add(new CommandLibraryServerModule((CommandLibraryServerConfig) configuration));
+    modules.add(new CommandLibrarySharedModule(false));
     return modules;
   }
 

@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 import io.harness.commandlibrary.common.service.CommandLibraryService;
@@ -13,6 +14,8 @@ import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandStoreServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandVersionServiceImpl;
+import io.harness.commandlibrary.server.service.impl.ServiceCommandArchiveHandler;
+import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
@@ -63,6 +66,7 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);
     bind(VerificationService.class).to(VerificationServiceImpl.class);
+    bindCommandArchiveHandlers();
 
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
@@ -100,5 +104,11 @@ public class CommandLibraryServerModule extends AbstractModule {
     } catch (IOException e) {
       throw new UnexpectedException("Could not load versionInfo.yaml", e);
     }
+  }
+
+  private void bindCommandArchiveHandlers() {
+    final Multibinder<CommandArchiveHandler> commandArchiveHandlerBinder =
+        Multibinder.newSetBinder(binder(), CommandArchiveHandler.class);
+    commandArchiveHandlerBinder.addBinding().to(ServiceCommandArchiveHandler.class);
   }
 }

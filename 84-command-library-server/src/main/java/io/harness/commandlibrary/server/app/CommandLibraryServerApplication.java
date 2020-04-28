@@ -43,6 +43,7 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
+import software.wings.app.CommandLibrarySharedModule;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -133,6 +134,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.addAll(new MongoModule().cumulativeDependencies());
 
     modules.add(new CommandLibraryServerModule(configuration));
+    modules.add(new CommandLibrarySharedModule(false));
     modules.add(new MetricRegistryModule(metricRegistry));
 
     Injector injector = Guice.createInjector(modules);
