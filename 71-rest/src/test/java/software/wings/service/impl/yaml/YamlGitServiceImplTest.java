@@ -202,7 +202,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
                                                                         .headCommitId("commitId")
                                                                         .build();
     final YamlChangeSet yamlChangeSet =
-        YamlChangeSet.builder().gitWebhookRequestAttributes(gitWebhookRequestAttributes).build();
+        YamlChangeSet.builder().accountId(ACCOUNT_ID).gitWebhookRequestAttributes(gitWebhookRequestAttributes).build();
     yamlChangeSet.setUuid("changesetId");
 
     SettingAttribute settingAttribute =

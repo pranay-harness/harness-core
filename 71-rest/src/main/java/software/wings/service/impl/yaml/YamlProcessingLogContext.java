@@ -13,6 +13,7 @@ public class YamlProcessingLogContext extends AutoLogContext {
   public static final String CHANGESET_ID = "changeSetId";
   public static final String REPO_NAME = "repoName";
   public static final String COMMIT_ID = "commitId";
+  public static final String CHANGESET_QUEUE_KEY = "changeSetQueueKey";
   public YamlProcessingLogContext(ImmutableMap<String, String> context, OverrideBehavior behavior) {
     super(context, behavior);
   }
@@ -52,6 +53,11 @@ public class YamlProcessingLogContext extends AutoLogContext {
       nullSafeBuilder.putIfNotNull(COMMIT_ID, commitId);
       return this;
     }
+    public Builder changeSetQueueKey(String changeSetQueueKey) {
+      nullSafeBuilder.putIfNotNull(CHANGESET_QUEUE_KEY, changeSetQueueKey);
+      return this;
+    }
+
     public YamlProcessingLogContext build(OverrideBehavior behavior) {
       return new YamlProcessingLogContext(nullSafeBuilder.build(), behavior);
     }

@@ -6,6 +6,7 @@ import lombok.experimental.UtilityClass;
 import migrations.all.RefactorTheFieldsInGitSyncError;
 import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.TemplateLibraryYamlOnPrimaryManagerMigration;
+import migrations.gitsync.SetQueueKeyYamChangeSetMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class OnPrimaryManagerMigrationList {
         .add(Pair.of(1, SyncNewFolderForConfigFiles.class))
         .add(Pair.of(2, TemplateLibraryYamlOnPrimaryManagerMigration.class))
         .add(Pair.of(3, RefactorTheFieldsInGitSyncError.class))
+        .add(Pair.of(4, SetQueueKeyYamChangeSetMigration.class))
         .build();
   }
 }

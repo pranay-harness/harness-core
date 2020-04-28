@@ -705,6 +705,7 @@ workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
 yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
+yamlChangeSet {"name": "accountId_queuekey_status_createdAt_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}
 yamlChangeSet {"name": "appId_1", "background": true} {"appId": 1}
 yamlChangeSet {"name": "createdAt_1", "background": true} {"createdAt": 1}

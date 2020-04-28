@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -558,6 +560,12 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  public YamlGitConfig getYamlGitConfigForHarnessToGitChangeSet(YamlChangeSet harnessToGitChangeSet) {
+    return yamlDirectoryService.weNeedToPushChanges(
+        harnessToGitChangeSet.getAccountId(), harnessToGitChangeSet.getAppId());
+  }
+
+  @Override
   public void handleHarnessChangeSet(YamlChangeSet yamlChangeSet, String accountId) {
     final Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -570,7 +578,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git changeset");
 
       List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
-      YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
+      YamlGitConfig yamlGitConfig = getYamlGitConfigForHarnessToGitChangeSet(yamlChangeSet);
       GitConfig gitConfig = yamlGitConfig != null ? getGitConfig(yamlGitConfig) : null;
 
       if (yamlGitConfig == null || gitConfig == null) {
@@ -762,6 +770,24 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  public List<YamlGitConfig> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet) {
+    final String accountId = gitToHarnessChangeSet.getAccountId();
+    checkNotNull(gitToHarnessChangeSet.getGitWebhookRequestAttributes(),
+        "GitWebhookRequestAttributes not available in changeset = [%s]", gitToHarnessChangeSet.getUuid());
+
+    final String gitConnectorId = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getGitConnectorId();
+    final String branchName = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getBranchName();
+    checkState(isNotEmpty(gitConnectorId), "gitConnectorId should not be empty");
+    checkState(isNotEmpty(branchName), "branchName should not be empty");
+
+    return wingsPersistence.createQuery(YamlGitConfig.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
+        .filter(BRANCH_NAME_KEY, branchName)
+        .asList();
+  }
+
+  @Override
   public void handleGitChangeSet(YamlChangeSet yamlChangeSet, String accountId) {
     final Stopwatch stopwatch = Stopwatch.createStarted();
     GitWebhookRequestAttributes gitWebhookRequestAttributes = yamlChangeSet.getGitWebhookRequestAttributes();
@@ -781,11 +807,8 @@ public class YamlGitServiceImpl implements YamlGitService {
         return;
       }
 
-      List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
-                                               .filter(ACCOUNT_ID_KEY, accountId)
-                                               .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
-                                               .filter(BRANCH_NAME_KEY, branchName)
-                                               .asList();
+      final List<YamlGitConfig> yamlGitConfigs = getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
+
       if (isEmpty(yamlGitConfigs)) {
         logger.info(GIT_YAML_LOG_PREFIX + "Git sync configuration not found");
         throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
