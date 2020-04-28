@@ -76,4 +76,16 @@ public interface TemplateConstants {
    */
 
   String CUSTOM = "CUSTOM";
+
+  /**
+   * Template Metadata
+   */
+
+  String COPIED_TEMPLATE_METADATA = "COPIED_TEMPLATE_METADATA";
+
+  /**
+   * Imported Template Details
+   */
+
+  String HARNESS_COMMAND_LIBRARY_GALLERY = "HARNESS_COMMAND_LIBRARY_GALLERY";
 }

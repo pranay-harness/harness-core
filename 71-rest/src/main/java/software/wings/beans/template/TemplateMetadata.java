@@ -1,4 +1,4 @@
-package software.wings.beans.template.dto;
+package software.wings.beans.template;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 
@@ -7,4 +7,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = PROPERTY)
-public interface ImportedTemplateDetails {}
+public interface TemplateMetadata {}

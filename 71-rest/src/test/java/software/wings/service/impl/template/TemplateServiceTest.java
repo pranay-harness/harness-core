@@ -66,6 +66,7 @@ import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -1087,6 +1088,134 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
         asList(commandName, commandName_1), commandStoreName, GLOBAL_ACCOUNT_ID);
     assertThat(importedTemplateLatestVersions.get(0).getHighestVersion()).isEqualTo("3.1");
     assertThat(importedTemplateLatestVersions.get(1).getHighestVersion()).isEqualTo("2.1");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testCopyOfImportedTemplate() {
+    final String commandName = "COMMAND_ID";
+    final String commandStoreName = "COMMAND_STORE_ID";
+    final String version = "1.2";
+    final String copiedTemplateName = "copied";
+
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                        .parentTemplateId(template.getUuid())
+                                                        .parentTemplateVersion(template.getVersion())
+                                                        .parentCommandVersion(version)
+                                                        .parentCommandName(commandName)
+                                                        .parentCommandStoreName(commandStoreName)
+                                                        .build();
+    Template copiedTemplate = Template.builder()
+                                  .appId(template.getAppId())
+                                  .templateMetadata(copiedTemplateMetadata)
+                                  .name(copiedTemplateName)
+                                  .accountId(template.getAccountId())
+                                  .templateObject(template.getTemplateObject())
+                                  .build();
+    copiedTemplate = templateService.save(copiedTemplate);
+
+    assertThat(copiedTemplate).isNotNull();
+    assertThat(copiedTemplate.getName()).isEqualTo(copiedTemplateName);
+    assertThat(copiedTemplate.getTemplateObject()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void nonImportedTemplateConnotBeCopied() {
+    final String version = "1.2";
+    final String copiedTemplateName = "copied";
+    final String commandName = "COMMAND_NAME";
+    final String commandStoreName = "COMMAND_STORE_NAME";
+
+    Template template = saveTemplate();
+    CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                        .parentTemplateId(template.getUuid())
+                                                        .parentTemplateVersion(1L)
+                                                        .parentCommandVersion(version)
+                                                        .parentCommandName(commandName)
+                                                        .parentCommandStoreName(commandStoreName)
+                                                        .build();
+    Template copiedTemplate = Template.builder()
+                                  .appId(GLOBAL_APP_ID)
+                                  .templateMetadata(copiedTemplateMetadata)
+                                  .name(copiedTemplateName)
+                                  .accountId(GLOBAL_ACCOUNT_ID)
+                                  .templateObject(template.getTemplateObject())
+                                  .build();
+
+    assertThatThrownBy(() -> templateService.save(copiedTemplate));
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void copiedMetadataOfTemplateCannotBeUpdated() {
+    final String commandName = "COMMAND_NAME";
+    final String commandStoreName = "COMMAND_STORE_NAME";
+    final String version = "1.2";
+    final String copiedTemplateName = "copied";
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                        .parentTemplateId(template.getUuid())
+                                                        .parentTemplateVersion(template.getVersion())
+                                                        .parentCommandVersion(version)
+                                                        .parentCommandName(commandName)
+                                                        .parentCommandStoreName(commandStoreName)
+                                                        .build();
+    Template copiedTemplate = Template.builder()
+                                  .appId(template.getAppId())
+                                  .templateMetadata(copiedTemplateMetadata)
+                                  .name(copiedTemplateName)
+                                  .accountId(template.getAccountId())
+                                  .templateObject(template.getTemplateObject())
+                                  .build();
+    copiedTemplate = templateService.save(copiedTemplate);
+
+    CopiedTemplateMetadata newCopiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                           .parentTemplateId("random")
+                                                           .parentTemplateVersion(template.getVersion())
+                                                           .parentCommandVersion(version)
+                                                           .build();
+    copiedTemplate.setTemplateMetadata(newCopiedTemplateMetadata);
+    copiedTemplate = templateService.update(copiedTemplate);
+
+    assertThat(copiedTemplate.getTemplateMetadata()).isEqualTo(copiedTemplateMetadata);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void getCopiedTemplate() {
+    final String commandName = "COMMAND_NAME";
+    final String commandStoreName = "COMMAND_STORE_NAME";
+    final String version = "1.2";
+    final String copiedTemplateName = "copied";
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
+                                                        .parentTemplateId(template.getUuid())
+                                                        .parentTemplateVersion(template.getVersion())
+                                                        .parentCommandVersion(version)
+                                                        .parentCommandName(commandName)
+                                                        .parentCommandStoreName(commandStoreName)
+                                                        .build();
+    Template copiedTemplate = Template.builder()
+                                  .appId(template.getAppId())
+                                  .templateMetadata(copiedTemplateMetadata)
+                                  .name(copiedTemplateName)
+                                  .accountId(template.getAccountId())
+                                  .templateObject(template.getTemplateObject())
+                                  .build();
+    copiedTemplate = templateService.save(copiedTemplate);
+
+    Template returnedTemplate = templateService.get(copiedTemplate.getUuid());
+
+    assertThat(returnedTemplate).isNotNull();
+    assertThat(returnedTemplate.getTemplateMetadata()).isEqualTo(copiedTemplateMetadata);
+    assertThat(returnedTemplate.getName()).isEqualTo(copiedTemplateName);
+    assertThat(returnedTemplate.getTemplateObject()).isEqualTo(copiedTemplate.getTemplateObject());
   }
 
   @Test

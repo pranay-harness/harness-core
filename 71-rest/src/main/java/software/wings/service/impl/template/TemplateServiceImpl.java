@@ -60,6 +60,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
+import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
@@ -68,6 +69,7 @@ import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.template.TemplateMetadata;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
@@ -252,6 +254,9 @@ public class TemplateServiceImpl implements TemplateService {
   @ValidationGroups(Create.class)
   public Template save(Template template) {
     validateTemplateVariables(template.getVariables());
+    if (template.getTemplateMetadata() != null) {
+      processTemplateMetadata(template, false);
+    }
     saveOrUpdate(template);
     // create initial version
     processTemplate(template);
@@ -319,6 +324,9 @@ public class TemplateServiceImpl implements TemplateService {
     if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
       throw new InvalidRequestException("Imported template cannot be updated.", USER);
     }
+    if (template.getTemplateMetadata() != null) {
+      processTemplateMetadata(template, true);
+    }
     saveOrUpdate(template);
     processTemplate(template);
     Template oldTemplate;
@@ -383,6 +391,44 @@ public class TemplateServiceImpl implements TemplateService {
         }
       }
     }
+  }
+
+  private void processTemplateMetadata(Template template, boolean isUpdate) {
+    if (template.getTemplateMetadata() instanceof CopiedTemplateMetadata) {
+      processCopiedTemplate(template, isUpdate);
+    } else {
+      throw new InvalidRequestException("Template Metadata handler not specified");
+    }
+  }
+
+  private void processCopiedTemplate(Template template, boolean isUpdate) {
+    if (isUpdate) {
+      template.setTemplateMetadata(getTemplateMetadata(template.getUuid()));
+    } else {
+      CopiedTemplateMetadata copiedTemplateMetadata = (CopiedTemplateMetadata) template.getTemplateMetadata();
+      validateCopiedFromImportedTemplate(copiedTemplateMetadata, template.getAccountId());
+      TemplateGallery templateGallery =
+          templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
+      TemplateFolder templateFolder =
+          templateFolderService.getRootLevelFolder(template.getAccountId(), templateGallery.getUuid());
+      template.setFolderId(templateFolder.getUuid());
+      template.setGalleryId(templateGallery.getUuid());
+    }
+  }
+
+  private void validateCopiedFromImportedTemplate(CopiedTemplateMetadata copiedTemplateMetadata, String accountId) {
+    if (!importedTemplateService.isImported(copiedTemplateMetadata.getParentTemplateId(), accountId)) {
+      throw new InvalidRequestException("Source template is not downloaded", USER);
+    }
+    Template template = get(copiedTemplateMetadata.getParentTemplateId());
+    if (template.getVersion() < copiedTemplateMetadata.getParentTemplateVersion()) {
+      throw new InvalidRequestException("Source template version is not downloaded", USER);
+    }
+  }
+
+  private TemplateMetadata getTemplateMetadata(String templateId) {
+    Template template = wingsPersistence.get(Template.class, templateId);
+    return template.getTemplateMetadata();
   }
 
   private void validateScope(Template template, Template oldTemplate) {
