@@ -67,6 +67,8 @@ public interface ArtifactStreamService extends OwnedByService {
 
   boolean updateCollectionStatus(String accountId, String artifactStreamId, String collectionStatus);
 
+  List<ArtifactStream> listAllBySettingId(String settingId);
+
   List<ArtifactStream> listBySettingId(String settingId);
 
   List<ArtifactStream> listByIds(Collection<String> artifactStreamIds);
@@ -81,7 +83,7 @@ public interface ArtifactStreamService extends OwnedByService {
 
   List<ArtifactStream> listByAppId(String appId);
 
-  boolean pruneArtifactStream(String appId, String artifactStreamId);
+  boolean pruneArtifactStream(ArtifactStream artifactStream);
 
-  boolean attachPerpetualTaskId(ArtifactStream artifactStream, String watcherTaskId);
+  boolean attachPerpetualTaskId(ArtifactStream artifactStream, String perpetualTaskId);
 }

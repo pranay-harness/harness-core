@@ -866,12 +866,14 @@ public class ArtifactCollectionUtils {
         return true;
       }
     }
-    if (isCollection && isNotEmpty(artifactStream.getPerpetualTaskIds())) {
-      logger.info(
-          "Perpetual task enabled for the artifactStream {}, Skipping the artifact collection through iterator.",
-          artifactStream.getUuid());
+
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())
+        && isNotEmpty(artifactStream.getPerpetualTaskId())) {
+      logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
+          artifactStream.getUuid(), action);
       return true;
     }
+
     return false;
   }
 

@@ -3545,8 +3545,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     ArtifactStream savedArtifactStream = artifactStreamService.get(dockerArtifactStream.getUuid());
     assertThat(artifactStreamService.attachPerpetualTaskId(savedArtifactStream, "PERPETUAL_TASK_ID")).isTrue();
-    assertThat(artifactStreamService.get(dockerArtifactStream.getUuid()).getPerpetualTaskIds())
-        .contains("PERPETUAL_TASK_ID");
+    assertThat(artifactStreamService.get(dockerArtifactStream.getUuid()).getPerpetualTaskId())
+        .isEqualTo("PERPETUAL_TASK_ID");
   }
 
   @Test

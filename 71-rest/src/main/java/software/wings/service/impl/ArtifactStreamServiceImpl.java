@@ -457,11 +457,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build(), true, true);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, accountId)) {
-      createPerpetualTask(artifactStream);
-    }
-
-    return get(id);
+    ArtifactStream newArtifactStream = get(id);
+    createPerpetualTask(newArtifactStream);
+    return newArtifactStream;
   }
 
   private void setServiceId(ArtifactStream artifactStream) {
@@ -473,8 +471,36 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void createPerpetualTask(ArtifactStream artifactStream) {
+    if (artifactStream == null) {
+      return;
+    }
+
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
+    }
+  }
+
+  private void resetPerpetualTask(ArtifactStream artifactStream) {
+    if (artifactStream == null) {
+      return;
+    }
+
+    try {
+      subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onUpdated, artifactStream);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
+    }
+  }
+
+  private void deletePerpetualTask(ArtifactStream artifactStream) {
+    if (artifactStream == null) {
+      return;
+    }
+
+    try {
+      subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onDeleted, artifactStream);
     } catch (Exception e) {
       logger.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
@@ -600,6 +626,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       executorService.submit(() -> triggerService.updateByArtifactStream(artifactStream.getUuid()));
     }
 
+    if (isEmpty(artifactStream.getName())) {
+      throw new InvalidRequestException("Please provide valid artifact name", USER);
+    }
+
+    boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
+    yamlPushService.pushYamlChangeSet(artifactStream.getAccountId(), existingArtifactStream, finalArtifactStream,
+        Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
+
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)) {
       // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
       // do a fresh artifact collection.
@@ -609,16 +643,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
 
       // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
-      executorService.submit(() -> artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream));
+      executorService.submit(() -> {
+        artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream);
+        // Perpetual task should only be reset after the artifacts are deleted. Otherwise, cache will become invalid.
+        resetPerpetualTask(finalArtifactStream);
+      });
+    } else {
+      resetPerpetualTask(finalArtifactStream);
     }
-
-    if (isEmpty(artifactStream.getName())) {
-      throw new InvalidRequestException("Please provide valid artifact name", USER);
-    }
-
-    boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
-    yamlPushService.pushYamlChangeSet(artifactStream.getAccountId(), existingArtifactStream, finalArtifactStream,
-        Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
     return finalArtifactStream;
   }
@@ -887,7 +919,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
 
-    boolean retVal = pruneArtifactStream(artifactStream.fetchAppId(), artifactStreamId);
+    boolean retVal = pruneArtifactStream(artifactStream);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
     return retVal;
   }
@@ -920,13 +952,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(appId, artifactStreamId, accountId);
     }
 
-    boolean retVal = pruneArtifactStream(appId, artifactStreamId);
+    boolean retVal = pruneArtifactStream(artifactStream);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
     return retVal;
   }
 
   @Override
-  public boolean pruneArtifactStream(String appId, String artifactStreamId) {
+  public boolean pruneArtifactStream(ArtifactStream artifactStream) {
+    boolean retVal = pruneArtifactStream(artifactStream.fetchAppId(), artifactStream.getUuid());
+    deletePerpetualTask(artifactStream);
+    return retVal;
+  }
+
+  private boolean pruneArtifactStream(String appId, String artifactStreamId) {
     alertService.deleteByArtifactStream(appId, artifactStreamId);
     pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId));
     boolean retVal = wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
@@ -935,13 +973,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public boolean attachPerpetualTaskId(ArtifactStream artifactStream, String watcherTaskId) {
+  public boolean attachPerpetualTaskId(ArtifactStream artifactStream, String perpetualTaskId) {
+    // NOTE: Before using this method, ensure that perpetualTaskId does not exist for artifact stream, otherwise we'll
+    // have an extra perpetual task running for this.
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .filter(ArtifactStreamKeys.accountId, artifactStream.getAccountId())
-                                      .filter(ArtifactStreamKeys.uuid, artifactStream.getUuid());
-    UpdateOperations<ArtifactStream> updateOperations =
-        wingsPersistence.createUpdateOperations(ArtifactStream.class)
-            .addToSet(ArtifactStreamKeys.perpetualTaskIds, watcherTaskId);
+                                      .filter(ArtifactStreamKeys.uuid, artifactStream.getUuid())
+                                      .field(ArtifactStreamKeys.perpetualTaskId)
+                                      .doesNotExist();
+    UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
+                                                            .set(ArtifactStreamKeys.perpetualTaskId, perpetualTaskId);
     UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
 
     return updateResults.getUpdatedCount() == 1;
@@ -1065,7 +1106,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .filter(ArtifactStreamKeys.serviceId, serviceId)
         .asList()
         .forEach(artifactStream -> {
-          pruneArtifactStream(appId, artifactStream.getUuid());
+          pruneArtifactStream(artifactStream);
           auditServiceHelper.reportDeleteForAuditing(appId, artifactStream);
         });
   }
@@ -1106,6 +1147,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     setUnset(updateOperations, ArtifactStreamKeys.collectionStatus, collectionStatus);
     UpdateResults update = wingsPersistence.update(query, updateOperations);
     return update.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public List<ArtifactStream> listAllBySettingId(String settingId) {
+    return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+        .filter(ArtifactStreamKeys.settingId, settingId)
+        .asList();
   }
 
   @Override

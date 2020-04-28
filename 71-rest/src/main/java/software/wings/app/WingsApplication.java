@@ -166,7 +166,8 @@ import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.impl.artifact.ArtifactStreamPerpetualTaskManager;
+import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
+import software.wings.service.impl.artifact.ArtifactStreamSettingAttributePTaskManager;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
@@ -655,6 +656,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
     settingsService.getSubject().register(clusterRecordHandler);
+    settingsService.getArtifactStreamSubject().register(
+        injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
+
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));
     infrastructureDefinitionService.getSubject().register(clusterRecordHandler);
@@ -670,8 +674,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     ArtifactStreamServiceImpl artifactStreamService =
         (ArtifactStreamServiceImpl) injector.getInstance(Key.get(ArtifactStreamService.class));
-    artifactStreamService.getSubject().register(
-        injector.getInstance(Key.get(ArtifactStreamPerpetualTaskManager.class)));
+    artifactStreamService.getSubject().register(injector.getInstance(Key.get(ArtifactStreamPTaskManager.class)));
 
     AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
     accountService.getAccountCrudSubject().register(
