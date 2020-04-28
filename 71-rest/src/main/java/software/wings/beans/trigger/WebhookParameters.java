@@ -32,6 +32,7 @@ public class WebhookParameters {
   public static final String BIT_BUCKET_PULL_BRANCH_REF = "${pullrequest.source.branch.name}";
   public static final String BIT_BUCKET_ON_PREM_PULL_BRANCH_REF = "${pullRequest.fromRef.displayId}";
   public static final String BIT_BUCKET_COMMIT_ID = "${push.changes[0].'new'.target.hash}";
+  public static final String BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID = "${changes[0].toHash}";
   public static final String BIT_BUCKET_REFS_CHANGED_REF = "${changes[0].refId.split('refs/heads/')[1]}";
 
   // Git Hub Pull request suggestions
