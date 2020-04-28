@@ -37,22 +37,16 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
     FacilitatorParameters parameters = Type1FacilitatorParameters.builder().name("paramName").build();
     FacilitatorObtainment obtainment =
         FacilitatorObtainment.builder().type(facilitatorType).parameters(parameters).build();
-    facilitatorRegistry.register(facilitatorType, new Type1FacilitatorProducer());
-    Facilitator facilitator = facilitatorRegistry.obtain(obtainment);
+    facilitatorRegistry.register(facilitatorType, new Type1Facilitator());
+    Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
     assertThat(facilitator.getType()).isEqualTo(facilitatorType);
     Type1Facilitator type1Adviser = (Type1Facilitator) facilitator;
-    assertThat(type1Adviser.getParameters()).isEqualTo(parameters);
-    assertThat(type1Adviser.getParameters().getName()).isEqualTo("paramName");
 
-    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1FacilitatorProducer()))
+    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1Facilitator()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(
-        ()
-            -> facilitatorRegistry.obtain(FacilitatorObtainment.builder()
-                                              .type(FacilitatorType.builder().type(FacilitatorType.SKIP).build())
-                                              .build()))
+    assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type(FacilitatorType.SKIP).build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
@@ -61,18 +55,6 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestGetType() {
     assertThat(facilitatorRegistry.getType()).isEqualTo(RegistryType.FACILITATOR);
-  }
-
-  private static class Type1FacilitatorProducer implements FacilitatorProducer {
-    @Override
-    public Type1Facilitator produce(FacilitatorParameters adviserParameters) {
-      return Type1Facilitator.builder().parameters((Type1FacilitatorParameters) adviserParameters).build();
-    }
-
-    @Override
-    public FacilitatorType getType() {
-      return FacilitatorType.builder().type("Type1").build();
-    }
   }
 
   @Value
@@ -84,15 +66,14 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Value
   @Builder
   private static class Type1Facilitator implements Facilitator {
-    Type1FacilitatorParameters parameters;
-
     @Override
     public FacilitatorType getType() {
       return FacilitatorType.builder().type("Type1").build();
     }
 
     @Override
-    public FacilitatorResponse facilitate(Ambiance ambiance, List<StateTransput> inputs) {
+    public FacilitatorResponse facilitate(
+        Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
       return null;
     }
   }

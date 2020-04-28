@@ -35,7 +35,7 @@ public class SectionStateTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetStateType() {
-    assertThat(sectionState.getStateType()).isEqualTo(STATE_TYPE);
+    assertThat(sectionState.getType()).isEqualTo(STATE_TYPE);
   }
 
   @Test

@@ -1,6 +1,7 @@
 package io.harness.state.core.fork;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitate.modes.children.ChildrenExecutable;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Redesign
+@Produces(State.class)
 public class ForkState implements State, ChildrenExecutable {
   public static final String STATE_TYPE = "FORK";
 
@@ -48,7 +50,7 @@ public class ForkState implements State, ChildrenExecutable {
   }
 
   @Override
-  public StateType getStateType() {
+  public StateType getType() {
     return StateType.builder().type(STATE_TYPE).build();
   }
 }

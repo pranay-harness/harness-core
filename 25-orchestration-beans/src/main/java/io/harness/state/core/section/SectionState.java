@@ -1,6 +1,7 @@
 package io.harness.state.core.section;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.Produces;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitate.modes.child.ChildExecutable;
 import io.harness.facilitate.modes.child.ChildExecutableResponse;
@@ -14,7 +15,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
-
+@Produces(State.class)
 public class SectionState implements State, ChildExecutable {
   public static final String STATE_TYPE = "SECTION";
 
@@ -36,7 +37,7 @@ public class SectionState implements State, ChildExecutable {
   }
 
   @Override
-  public StateType getStateType() {
+  public StateType getType() {
     return StateType.builder().type(STATE_TYPE).build();
   }
 }

@@ -38,7 +38,7 @@ public class ForkStateTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetStateType() {
-    assertThat(forkState.getStateType()).isEqualTo(STATE_TYPE);
+    assertThat(forkState.getType()).isEqualTo(STATE_TYPE);
   }
 
   @Test

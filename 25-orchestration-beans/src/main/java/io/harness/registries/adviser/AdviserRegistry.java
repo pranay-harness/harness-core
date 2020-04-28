@@ -3,7 +3,6 @@ package io.harness.registries.adviser;
 import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.annotations.Redesign;
 import io.harness.registries.Registry;
@@ -19,22 +18,20 @@ import javax.validation.Valid;
 @Redesign
 @Singleton
 public class AdviserRegistry implements Registry {
-  private Map<AdviserType, AdviserProducer> registry = new ConcurrentHashMap<>();
+  private Map<AdviserType, Adviser> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull AdviserType adviserType, @NonNull AdviserProducer producer) {
+  public void register(@NonNull AdviserType adviserType, @NonNull Adviser adviser) {
     if (registry.containsKey(adviserType)) {
       throw new DuplicateRegistryException(getType(), "Adviser Already Registered with this type: " + adviserType);
     }
-    registry.put(adviserType, producer);
+    registry.put(adviserType, adviser);
   }
 
-  public Adviser obtain(@Valid AdviserObtainment adviserObtainment) {
-    if (registry.containsKey(adviserObtainment.getType())) {
-      AdviserProducer producer = registry.get(adviserObtainment.getType());
-      return producer.produce(adviserObtainment.getParameters());
+  public Adviser obtain(@Valid AdviserType adviserType) {
+    if (registry.containsKey(adviserType)) {
+      return registry.get(adviserType);
     }
-    throw new UnregisteredKeyAccessException(
-        getType(), "No Adviser registered for type: " + adviserObtainment.getType());
+    throw new UnregisteredKeyAccessException(getType(), "No Adviser registered for type: " + adviserType);
   }
 
   @Override

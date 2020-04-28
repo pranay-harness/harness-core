@@ -7,10 +7,6 @@ import io.harness.adviser.Adviser;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Produces;
 import io.harness.facilitate.Facilitator;
-import io.harness.registries.adviser.AdviserProducer;
-import io.harness.registries.facilitator.FacilitatorProducer;
-import io.harness.registries.resolver.ResolverProducer;
-import io.harness.registries.state.StateProducer;
 import io.harness.resolvers.Resolver;
 import io.harness.state.State;
 
@@ -32,10 +28,10 @@ import javax.tools.Diagnostic;
 public class ProducesAnnotationProcessor extends AbstractProcessor {
   private static final Map<String, String> producerClassMap =
       ImmutableMap.<String, String>builder()
-          .put(Adviser.class.getCanonicalName(), AdviserProducer.class.getCanonicalName())
-          .put(Facilitator.class.getCanonicalName(), FacilitatorProducer.class.getCanonicalName())
-          .put(Resolver.class.getCanonicalName(), ResolverProducer.class.getCanonicalName())
-          .put(State.class.getCanonicalName(), StateProducer.class.getCanonicalName())
+          .put(Adviser.class.getCanonicalName(), Adviser.class.getCanonicalName())
+          .put(Facilitator.class.getCanonicalName(), Facilitator.class.getCanonicalName())
+          .put(Resolver.class.getCanonicalName(), Resolver.class.getCanonicalName())
+          .put(State.class.getCanonicalName(), State.class.getCanonicalName())
           .put(Level.class.getCanonicalName(), Level.class.getCanonicalName())
           .build();
 
