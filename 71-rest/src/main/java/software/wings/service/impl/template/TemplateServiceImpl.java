@@ -71,6 +71,7 @@ import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateMetadata;

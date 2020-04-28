@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,9 +72,18 @@ public class BudgetHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testHandle() {
+  public void shouldHandle() {
     budgetHandler.handle(budget);
     verify(budgetService).incAlertCount(any(Budget.class), anyInt());
     verify(userGroupBasedDispatcher).dispatch(anyList(), isA(UserGroup.class));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotHandleWithoutUserGroups() {
+    budget.setUserGroupIds(null);
+    budgetHandler.handle(budget);
+    verify(userGroupBasedDispatcher, times(0)).dispatch(anyList(), isA(UserGroup.class));
   }
 }
