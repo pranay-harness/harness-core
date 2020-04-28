@@ -419,8 +419,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
 
         URIBuilder uriBuilder =
-            new URIBuilder(delegateConfiguration.getManagerUrl())
-                .setPath("/stream/delegate/" + accountId)
+            new URIBuilder(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
                 .addParameter("delegateId", delegateId)
                 .addParameter("delegateConnectionId", delegateConnectionId)
                 .addParameter("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
