@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
-import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static java.lang.String.format;
@@ -25,7 +24,6 @@ import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -42,15 +40,19 @@ import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -65,6 +67,11 @@ public class HelmTaskHelper {
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
   private static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
   private static final String VALUES_YAML = "values.yaml";
+  private static final String CHARTS_YAML_KEY = "Chart.yaml";
+  private static final String VERSION_KEY = "version:";
+  private static final String NAME_KEY = "name:";
+  private static final String ADD_COMMAND_FOR_REPOSITORY = "helm repo add command for repository ";
+  private static final String REPO_NAME = "${REPO_NAME}";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private EncryptionService encryptionService;
@@ -107,6 +114,17 @@ public class HelmTaskHelper {
 
     try {
       fetchChartFiles(helmChartConfigParams, workingDirectory);
+
+      // Fetch chart version in case it is not specified in service to display in execution logs
+      if (isBlank(helmChartConfigParams.getChartVersion())) {
+        try {
+          helmChartConfigParams.setChartVersion(getHelmChartInfoFromChartsYamlFile(
+              Paths.get(workingDirectory, helmChartConfigParams.getChartName(), CHARTS_YAML_KEY).toString())
+                                                    .getVersion());
+        } catch (Exception e) {
+          logger.info("Unable to fetch chart version", e);
+        }
+      }
 
       return new String(
           Files.readAllBytes(Paths.get(workingDirectory, helmChartConfigParams.getChartName(), VALUES_YAML)),
@@ -180,10 +198,10 @@ public class HelmTaskHelper {
       String repoName, String repoDisplayName, int port, String chartDirectory, HelmVersion helmVersion) {
     String repoAddCommand = getChartMuseumRepoAddCommand(repoName, port, chartDirectory, helmVersion);
     logger.info(repoAddCommand);
-    logger.info("helm repo add command for repository " + repoDisplayName);
+    logger.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
     ProcessResult processResult =
-        executeCommand(repoAddCommand, chartDirectory, "helm repo add command for repository " + repoDisplayName);
+        executeCommand(repoAddCommand, chartDirectory, ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
     if (processResult.getExitValue() != 0) {
       throw new HelmClientException(
           "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
@@ -228,9 +246,9 @@ public class HelmTaskHelper {
             .replace("${CHART_VERSION}", getChartVersion(chartVersion));
 
     if (isNotBlank(repoName)) {
-      helmFetchCommand = helmFetchCommand.replace("${REPO_NAME}", repoName);
+      helmFetchCommand = helmFetchCommand.replace(REPO_NAME, repoName);
     } else {
-      helmFetchCommand = helmFetchCommand.replace("${REPO_NAME}/", "");
+      helmFetchCommand = helmFetchCommand.replace(REPO_NAME + "/", "");
     }
 
     return applyHelmHomePath(helmFetchCommand, workingDirectory);
@@ -243,7 +261,7 @@ public class HelmTaskHelper {
     String repoAddCommand =
         HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_ADD_CHART_MEUSEUM, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath(helmVersion)))
-            .replace("${REPO_NAME}", repoName)
+            .replace(REPO_NAME, repoName)
             .replace("${REPO_URL}", repoUrl);
 
     return applyHelmHomePath(repoAddCommand, workingDirectory);
@@ -297,17 +315,6 @@ public class HelmTaskHelper {
 
   private String getChartVersion(String chartVersion) {
     return isBlank(chartVersion) ? StringUtils.EMPTY : "--version " + chartVersion;
-  }
-
-  private List<FileData> getFiles(String chartDirectory, String chartName) {
-    Path chartPath = Paths.get(chartDirectory, chartName);
-
-    try {
-      return getFilesUnderPath(chartPath.toString());
-    } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
-      throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
-    }
   }
 
   public List<FileData> getFilteredFiles(List<FileData> files, List<String> filesToBeFetched) {
@@ -397,7 +404,7 @@ public class HelmTaskHelper {
     String repoAddCommandForLogging =
         getHttpRepoAddCommandForLogging(repoName, chartRepoUrl, username, password, chartDirectory, helmVersion);
     logger.info(repoAddCommandForLogging);
-    logger.info("helm repo add command for repository " + repoDisplayName);
+    logger.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
     ProcessResult processResult =
         executeCommand(repoAddCommand, chartDirectory, "add helm repo. Executed command" + repoAddCommandForLogging);
@@ -431,7 +438,7 @@ public class HelmTaskHelper {
     String command =
         HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_ADD_HTTP, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath(helmVersion)))
-            .replace("${REPO_NAME}", repoName)
+            .replace(REPO_NAME, repoName)
             .replace("${REPO_URL}", chartRepoUrl)
             .replace("${USERNAME}", getUsername(username));
 
@@ -460,7 +467,7 @@ public class HelmTaskHelper {
     String repoRemoveCommand =
         HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_REMOVE, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath(helmVersion)))
-            .replace("${REPO_NAME}", repoName);
+            .replace(REPO_NAME, repoName);
 
     return applyHelmHomePath(repoRemoveCommand, workingDirectory);
   }
@@ -506,5 +513,45 @@ public class HelmTaskHelper {
         removeRepo(helmChartConfigParams.getRepoName(), chartDirectory, helmChartConfigParams.getHelmVersion());
       }
     }
+  }
+
+  /**
+   * Method to extract Helm Chart info like Chart version and Chart name from the downloaded Chart files.
+   * @param chartYamlPath - Path of the Chart.yaml file
+   * @return HelmChartInfo - This contains details about the Helm chart
+   * @throws IOException
+   */
+  public HelmChartInfo getHelmChartInfoFromChartsYamlFile(String chartYamlPath) throws IOException {
+    String chartVersion = null;
+    String chartName = null;
+    boolean versionFound = false;
+    boolean nameFound = false;
+
+    try (BufferedReader br =
+             new BufferedReader(new InputStreamReader(new FileInputStream(chartYamlPath), StandardCharsets.UTF_8))) {
+      String line;
+
+      while ((line = br.readLine()) != null) {
+        if (!versionFound && line.startsWith(VERSION_KEY)) {
+          chartVersion = line.substring(VERSION_KEY.length() + 1);
+          versionFound = true;
+        }
+
+        if (!nameFound && line.startsWith(NAME_KEY)) {
+          chartName = line.substring(NAME_KEY.length() + 1);
+          nameFound = true;
+        }
+
+        if (versionFound && nameFound) {
+          break;
+        }
+      }
+    }
+
+    return HelmChartInfo.builder().version(chartVersion).name(chartName).build();
+  }
+
+  public HelmChartInfo getHelmChartInfoFromChartsYamlFile(HelmInstallCommandRequest request) throws IOException {
+    return getHelmChartInfoFromChartsYamlFile(Paths.get(request.getWorkingDir(), CHARTS_YAML_KEY).toString());
   }
 }
