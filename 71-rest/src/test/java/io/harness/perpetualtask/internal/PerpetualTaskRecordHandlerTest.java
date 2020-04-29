@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.HashMap;
@@ -36,14 +38,13 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord record;
   @Mock private DelegateTask delegateTask;
-  private DelegateTaskNotifyResponseData response;
 
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
   @Mock PerpetualTaskService perpetualTaskService;
   @InjectMocks PerpetualTaskRecordHandler perpetualTaskRecordHandler;
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
   public void setUp() throws InterruptedException {
@@ -55,19 +56,30 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     when(clientRegistry.getClient(isA(PerpetualTaskType.class))).thenReturn(k8sWatchPerpetualTaskServiceClient);
     when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))
         .thenReturn(delegateTask);
-    response = AssignmentTaskResponse.builder()
-                   .delegateId(delegateId)
-                   .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
-                   .build();
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
+
     doNothing().when(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testHandle() {
+  public void testHandle() throws InterruptedException {
+    DelegateTaskNotifyResponseData response = AssignmentTaskResponse.builder()
+                                                  .delegateId(delegateId)
+                                                  .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
+                                                  .build();
+    when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);
     verify(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotHandler() throws InterruptedException {
+    RemoteMethodReturnValueData response = RemoteMethodReturnValueData.builder().build();
+    when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
+    perpetualTaskRecordHandler.handle(record);
+    verify(perpetualTaskService, times(0)).setDelegateId(anyString(), eq(delegateId));
   }
 }
