@@ -43,6 +43,8 @@ import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.TimeSeriesCustomThresholdType;
+import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -122,15 +124,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
 
     for (String successfulExecution : successfulExecutions) {
-      PageRequest<NewRelicMetricDataRecord> pageRequest =
+      PageRequest<TimeSeriesDataRecord> pageRequest =
           aPageRequest()
               .withLimit(UNLIMITED)
-              .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, successfulExecution)
+              .addFilter(TimeSeriesMetricRecordKeys.workflowExecutionId, Operator.EQ, successfulExecution)
               .build();
 
-      final PageResponse<NewRelicMetricDataRecord> results =
-          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-      List<NewRelicMetricDataRecord> rv =
+      final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      List<TimeSeriesDataRecord> rv =
           results.stream()
               .filter(dataRecord
                   -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
