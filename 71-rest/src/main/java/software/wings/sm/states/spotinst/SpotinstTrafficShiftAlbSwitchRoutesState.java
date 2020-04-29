@@ -1,6 +1,8 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.context.ContextElementType.SPOTINST_SERVICE_SETUP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -44,6 +46,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +80,14 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
 
     ContextElement contextElement = context.getContextElement(SPOTINST_SERVICE_SETUP);
     if (!(contextElement instanceof SpotinstTrafficShiftAlbSetupElement)) {
-      throw new InvalidRequestException("Did not find Setup element of class SpotinstTrafficShiftAlbSetupElement");
+      if (rollback) {
+        return ExecutionResponse.builder()
+            .executionStatus(SKIPPED)
+            .errorMessage("No Spotinst service setup element found. Skipping rollback.")
+            .build();
+      } else {
+        throw new InvalidRequestException("Did not find Setup element of class SpotinstTrafficShiftAlbSetupElement");
+      }
     }
     SpotinstTrafficShiftAlbSetupElement setupElement = (SpotinstTrafficShiftAlbSetupElement) contextElement;
     SpotinstTrafficShiftDataBag dataBag = spotinstStateHelper.getDataBag(context);
@@ -194,5 +204,14 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(newElastigroupWeightExpr)) {
+      invalidFields.put("newElastigroupWeightExpr", "New Elastigroup weight is needed");
+    }
+    return invalidFields;
   }
 }

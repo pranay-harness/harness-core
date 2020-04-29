@@ -206,12 +206,15 @@ public class WorkflowServiceHelper {
   public static final String PCF_SETUP = "App Setup";
   public static final String PCF_PLUGIN = "CF Command";
   public static final String SPOTINST_SETUP = "Elastigroup Setup";
-  public static final String SPOTINST_ALB_SHIFT_SETUP = "Elastigroup Alb Shift Setup";
+  public static final String SPOTINST_ALB_SHIFT_SETUP = "Elastigroup ALB Shift Setup";
   public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
+  public static final String SPOTINST_ALB_SHIFT_DEPLOY = "Elastigroup ALB Shift Deploy";
   public static final String SPOTINST_ROLLBACK = "Elastigroup Rollback";
   public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Route Update Rollback";
+  public static final String SPOTINST_ALB_SHIFT_LISTENER_UPDATE_ROLLBACK = "Shift Traffic Weight Rollback";
   public static final String SPOTINST_SWAP_ROLLBACK = "Swap Production with Stage";
   public static final String SPOTINST_LISTENER_UPDATE = "Route Update";
+  public static final String SPOTINST_ALB_SHIFT_LISTENER_UPDATE = "Shift Traffic Weight";
   public static final String SPOTINST_SWAP = "Swap Production with Stage";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
@@ -631,23 +634,34 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_ALB_SHIFT_SETUP)
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_SETUP)
                        .addStep(GraphNode.builder()
                                     .type(StateType.SPOTINST_ALB_SHIFT_SETUP.name())
                                     .name(SPOTINST_ALB_SHIFT_SETUP)
                                     .build())
                        .build());
-    phaseSteps.add(
-        aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
-            .addStep(GraphNode.builder().type(StateType.SPOTINST_ALB_SHIFT_DEPLOY.name()).name(SPOTINST_DEPLOY).build())
-            .build());
+    Map<String, Object> deployStateMap = new HashMap<>();
+    deployStateMap.put("instanceUnitType", "PERCENTAGE");
+    deployStateMap.put("instanceCount", 100);
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .type(StateType.SPOTINST_ALB_SHIFT_DEPLOY.name())
+                                    .properties(deployStateMap)
+                                    .name(SPOTINST_ALB_SHIFT_DEPLOY)
+                                    .build())
+                       .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
-    phaseSteps.add(
-        aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
-            .addStep(GraphNode.builder().type(StateType.SPOTINST_LISTENER_ALB_SHIFT.name()).name(SPOTINST_SWAP).build())
-            .build());
+    Map<String, Object> shiftStateMap = new HashMap<>();
+    shiftStateMap.put("downsizeOldElastigroup", true);
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
+                       .addStep(GraphNode.builder()
+                                    .type(StateType.SPOTINST_LISTENER_ALB_SHIFT.name())
+                                    .name(SPOTINST_ALB_SHIFT_LISTENER_UPDATE)
+                                    .properties(shiftStateMap)
+                                    .build())
+                       .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
@@ -1542,7 +1556,7 @@ public class WorkflowServiceHelper {
             asList(aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK, SPOTINST_LISTENER_UPDATE_ROLLBACK)
                        .addStep(GraphNode.builder()
                                     .type(StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name())
-                                    .name(SPOTINST_SWAP_ROLLBACK)
+                                    .name(SPOTINST_ALB_SHIFT_LISTENER_UPDATE_ROLLBACK)
                                     .rollback(true)
                                     .build())
                        .withPhaseStepNameForRollback(DEPLOY_SERVICE)

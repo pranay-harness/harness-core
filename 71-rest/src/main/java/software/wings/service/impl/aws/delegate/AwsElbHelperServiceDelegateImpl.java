@@ -881,7 +881,7 @@ public class AwsElbHelperServiceDelegateImpl
 
   @VisibleForTesting
   List<TargetGroupTuple> validateActionAndGetTuples(Action forwardingAction, ExecutionLogCallback logCallback) {
-    if (!ActionTypeEnum.Forward.name().equals(forwardingAction.getType())) {
+    if (!ActionTypeEnum.Forward.toString().equals(forwardingAction.getType())) {
       String errorMessage = "Action type is not forward";
       logCallback.saveExecutionLog(errorMessage, ERROR);
       throw new InvalidRequestException(errorMessage);
@@ -918,89 +918,103 @@ public class AwsElbHelperServiceDelegateImpl
   public LbDetailsForAlbTrafficShift loadTrafficShiftTargetGroupData(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, LbDetailsForAlbTrafficShift originalLbDetails,
       ExecutionLogCallback logCallback) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    logCallback.saveExecutionLog(
-        format("Loading Target group data for Listener: [%s] at port: [%s] of Load Balancer: [%s]",
-            originalLbDetails.getListenerArn(), originalLbDetails.getListenerPort(),
-            originalLbDetails.getLoadBalancerArn()));
-    if (originalLbDetails.isUseSpecificRule()) {
-      logCallback.saveExecutionLog(format("Rule Arn: [%s]", originalLbDetails.getRuleArn()));
-    } else {
-      logCallback.saveExecutionLog("Using default rules.");
-    }
-    Action forwardingAction =
-        getFinalAction(client, originalLbDetails, logCallback, awsConfig, encryptionDetails, region);
-    List<TargetGroupTuple> targetGroups = validateActionAndGetTuples(forwardingAction, logCallback);
-    TargetGroupTuple targetGroupTuple0 = targetGroups.get(0);
-    TargetGroupTuple targetGroupTuple1 = targetGroups.get(1);
-    String prodTargetGroupArn;
-    String stageTargetGroupArn;
-    if (MAX_TRAFFIC_SHIFT_WEIGHT == targetGroupTuple0.getWeight()) {
-      logCallback.saveExecutionLog(format("Target group: [%s] is Prod, and [%s] is Stage",
-          targetGroupTuple0.getTargetGroupArn(), targetGroupTuple1.getTargetGroupArn()));
-      prodTargetGroupArn = targetGroupTuple0.getTargetGroupArn();
-      stageTargetGroupArn = targetGroupTuple1.getTargetGroupArn();
-    } else if (MAX_TRAFFIC_SHIFT_WEIGHT == targetGroupTuple1.getWeight()) {
-      logCallback.saveExecutionLog(format("Target group: [%s] is Prod, and [%s] is Stage",
-          targetGroupTuple1.getTargetGroupArn(), targetGroupTuple0.getTargetGroupArn()));
-      prodTargetGroupArn = targetGroupTuple1.getTargetGroupArn();
-      stageTargetGroupArn = targetGroupTuple0.getTargetGroupArn();
-    } else {
-      String errorMessage =
-          format("Did not find any Target group tuple getting: [%d] traffic", MAX_TRAFFIC_SHIFT_WEIGHT);
-      logCallback.saveExecutionLog(errorMessage, ERROR);
-      throw new InvalidRequestException(errorMessage);
-    }
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+      logCallback.saveExecutionLog(
+          format("Loading Target group data for Listener: [%s] at port: [%s] of Load Balancer: [%s]",
+              originalLbDetails.getListenerArn(), originalLbDetails.getListenerPort(),
+              originalLbDetails.getLoadBalancerArn()));
+      if (originalLbDetails.isUseSpecificRule()) {
+        logCallback.saveExecutionLog(format("Rule Arn: [%s]", originalLbDetails.getRuleArn()));
+      } else {
+        logCallback.saveExecutionLog("Using default rules.");
+      }
+      Action forwardingAction =
+          getFinalAction(client, originalLbDetails, logCallback, awsConfig, encryptionDetails, region);
+      List<TargetGroupTuple> targetGroups = validateActionAndGetTuples(forwardingAction, logCallback);
+      TargetGroupTuple targetGroupTuple0 = targetGroups.get(0);
+      TargetGroupTuple targetGroupTuple1 = targetGroups.get(1);
+      String prodTargetGroupArn;
+      String stageTargetGroupArn;
+      if (MAX_TRAFFIC_SHIFT_WEIGHT == targetGroupTuple0.getWeight()) {
+        logCallback.saveExecutionLog(format("Target group: [%s] is Prod, and [%s] is Stage",
+            targetGroupTuple0.getTargetGroupArn(), targetGroupTuple1.getTargetGroupArn()));
+        prodTargetGroupArn = targetGroupTuple0.getTargetGroupArn();
+        stageTargetGroupArn = targetGroupTuple1.getTargetGroupArn();
+      } else if (MAX_TRAFFIC_SHIFT_WEIGHT == targetGroupTuple1.getWeight()) {
+        logCallback.saveExecutionLog(format("Target group: [%s] is Prod, and [%s] is Stage",
+            targetGroupTuple1.getTargetGroupArn(), targetGroupTuple0.getTargetGroupArn()));
+        prodTargetGroupArn = targetGroupTuple1.getTargetGroupArn();
+        stageTargetGroupArn = targetGroupTuple0.getTargetGroupArn();
+      } else {
+        String errorMessage =
+            format("Did not find any Target group tuple getting: [%d] traffic", MAX_TRAFFIC_SHIFT_WEIGHT);
+        logCallback.saveExecutionLog(errorMessage, ERROR);
+        throw new InvalidRequestException(errorMessage);
+      }
 
-    return LbDetailsForAlbTrafficShift.builder()
-        .loadBalancerName(originalLbDetails.getLoadBalancerName())
-        .loadBalancerArn(originalLbDetails.getLoadBalancerArn())
-        .listenerPort(originalLbDetails.getListenerPort())
-        .listenerArn(originalLbDetails.getListenerArn())
-        .useSpecificRule(originalLbDetails.isUseSpecificRule())
-        .ruleArn(originalLbDetails.getRuleArn())
-        .prodTargetGroupArn(prodTargetGroupArn)
-        .prodTargetGroupName(fetchRequiredTargetGroup(awsConfig, emptyList(), region, prodTargetGroupArn, logCallback)
-                                 .getTargetGroupName())
-        .stageTargetGroupArn(stageTargetGroupArn)
-        .stageTargetGroupName(fetchRequiredTargetGroup(awsConfig, emptyList(), region, prodTargetGroupArn, logCallback)
-                                  .getTargetGroupName())
-        .build();
+      return LbDetailsForAlbTrafficShift.builder()
+          .loadBalancerName(originalLbDetails.getLoadBalancerName())
+          .loadBalancerArn(originalLbDetails.getLoadBalancerArn())
+          .listenerPort(originalLbDetails.getListenerPort())
+          .listenerArn(originalLbDetails.getListenerArn())
+          .useSpecificRule(originalLbDetails.isUseSpecificRule())
+          .ruleArn(originalLbDetails.getRuleArn())
+          .prodTargetGroupArn(prodTargetGroupArn)
+          .prodTargetGroupName(fetchRequiredTargetGroup(awsConfig, emptyList(), region, prodTargetGroupArn, logCallback)
+                                   .getTargetGroupName())
+          .stageTargetGroupArn(stageTargetGroupArn)
+          .stageTargetGroupName(
+              fetchRequiredTargetGroup(awsConfig, emptyList(), region, stageTargetGroupArn, logCallback)
+                  .getTargetGroupName())
+          .build();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
   }
 
   @Override
   public void updateRulesForAlbTrafficShift(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, List<LbDetailsForAlbTrafficShift> details,
       ExecutionLogCallback logCallback, int newServiceTrafficWeight) {
-    encryptionService.decrypt(awsConfig, encryptionDetails);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    if (newServiceTrafficWeight < MIN_TRAFFIC_SHIFT_WEIGHT) {
-      newServiceTrafficWeight = MIN_TRAFFIC_SHIFT_WEIGHT;
-    } else if (newServiceTrafficWeight > MAX_TRAFFIC_SHIFT_WEIGHT) {
-      newServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT;
-    }
-    int oldServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT - newServiceTrafficWeight;
-    logCallback.saveExecutionLog(format("New Elastigroup service will get: [%d] weight.", newServiceTrafficWeight));
-    logCallback.saveExecutionLog(format("Old Elastigroup service will get: [%d] weight.", oldServiceTrafficWeight));
-    TargetGroupTuple newTuple = new TargetGroupTuple().withWeight(newServiceTrafficWeight);
-    TargetGroupTuple oldTuple = new TargetGroupTuple().withWeight(oldServiceTrafficWeight);
-    Action forwardAction = new Action().withType(Forward).withForwardConfig(
-        new ForwardActionConfig().withTargetGroups(newTuple, oldTuple));
-    ModifyRuleRequest modifyRuleRequest = new ModifyRuleRequest().withActions(forwardAction);
-    ModifyListenerRequest modifyListenerRequest = new ModifyListenerRequest().withDefaultActions(forwardAction);
-    for (LbDetailsForAlbTrafficShift detail : details) {
-      oldTuple.setTargetGroupArn(detail.getProdTargetGroupArn());
-      newTuple.setTargetGroupArn(detail.getStageTargetGroupArn());
-      if (detail.isUseSpecificRule()) {
-        logCallback.saveExecutionLog(format("Editing rule: [%s]", detail.getRuleArn()));
-        modifyRuleRequest.setRuleArn(detail.getRuleArn());
-        client.modifyRule(modifyRuleRequest);
-      } else {
-        logCallback.saveExecutionLog(format("Editing listener: [%s]", detail.getListenerArn()));
-        modifyListenerRequest.setListenerArn(detail.getListenerArn());
-        client.modifyListener(modifyListenerRequest);
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+      if (newServiceTrafficWeight < MIN_TRAFFIC_SHIFT_WEIGHT) {
+        newServiceTrafficWeight = MIN_TRAFFIC_SHIFT_WEIGHT;
+      } else if (newServiceTrafficWeight > MAX_TRAFFIC_SHIFT_WEIGHT) {
+        newServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT;
       }
+      int oldServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT - newServiceTrafficWeight;
+      logCallback.saveExecutionLog(format("New Elastigroup service will get: [%d] weight.", newServiceTrafficWeight));
+      logCallback.saveExecutionLog(format("Old Elastigroup service will get: [%d] weight.", oldServiceTrafficWeight));
+      TargetGroupTuple newTuple = new TargetGroupTuple().withWeight(newServiceTrafficWeight);
+      TargetGroupTuple oldTuple = new TargetGroupTuple().withWeight(oldServiceTrafficWeight);
+      Action forwardAction = new Action().withType(Forward).withForwardConfig(
+          new ForwardActionConfig().withTargetGroups(newTuple, oldTuple));
+      ModifyRuleRequest modifyRuleRequest = new ModifyRuleRequest().withActions(forwardAction);
+      ModifyListenerRequest modifyListenerRequest = new ModifyListenerRequest().withDefaultActions(forwardAction);
+      for (LbDetailsForAlbTrafficShift detail : details) {
+        oldTuple.setTargetGroupArn(detail.getProdTargetGroupArn());
+        newTuple.setTargetGroupArn(detail.getStageTargetGroupArn());
+        if (detail.isUseSpecificRule()) {
+          logCallback.saveExecutionLog(format("Editing rule: [%s]", detail.getRuleArn()));
+          modifyRuleRequest.setRuleArn(detail.getRuleArn());
+          client.modifyRule(modifyRuleRequest);
+        } else {
+          logCallback.saveExecutionLog(format("Editing listener: [%s]", detail.getListenerArn()));
+          modifyListenerRequest.setListenerArn(detail.getListenerArn());
+          client.modifyListener(modifyListenerRequest);
+        }
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 }

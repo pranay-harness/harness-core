@@ -39,6 +39,9 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType;
+import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbDeployParameters;
+import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSetupParameters;
+import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSwapRoutesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstGetElastigroupJsonResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
@@ -46,6 +49,8 @@ import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupNamesRe
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
+import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
 import io.harness.serializer.KryoRegistrar;
 
 public class DelegateTasksKryoRegister implements KryoRegistrar {
@@ -97,5 +102,10 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(LbDetailsForAlbTrafficShift.class, 19037);
     kryo.register(ChartMuseumCapability.class, 19038);
+    kryo.register(SpotinstTrafficShiftAlbSetupParameters.class, 19039);
+    kryo.register(SpotinstTrafficShiftAlbSetupResponse.class, 19040);
+    kryo.register(SpotinstTrafficShiftAlbDeployParameters.class, 19041);
+    kryo.register(SpotinstTrafficShiftAlbDeployResponse.class, 19042);
+    kryo.register(SpotinstTrafficShiftAlbSwapRoutesParameters.class, 19043);
   }
 }

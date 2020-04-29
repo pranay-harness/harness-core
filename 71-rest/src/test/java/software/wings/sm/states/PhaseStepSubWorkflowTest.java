@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -30,7 +33,10 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
 public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   private static final String INFRA_DEFINITION_ID = "INFRA_DEFINITION_ID";
@@ -160,5 +166,18 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
     verify(infrastructureDefinitionService, never())
         .renderAndSaveInfraMapping(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID, executionContext);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetSpotinstNotifiedContextElement() {
+    PhaseStepSubWorkflow workflow = spy(new PhaseStepSubWorkflow("RANDOM_LOCAL"));
+    ElementNotifyResponseData data =
+        ElementNotifyResponseData.builder()
+            .contextElements(singletonList(SpotinstTrafficShiftAlbSetupElement.builder().build()))
+            .build();
+    ContextElement element = workflow.getSpotinstNotifiedContextElement(data);
+    assertThat(element instanceof SpotinstTrafficShiftAlbSetupElement).isTrue();
   }
 }

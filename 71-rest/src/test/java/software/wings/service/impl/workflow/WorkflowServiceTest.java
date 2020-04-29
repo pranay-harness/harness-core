@@ -14,6 +14,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -25,12 +26,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.assertj.core.util.Lists.newArrayList;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
@@ -166,10 +170,6 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SCALYR;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
-import static software.wings.sm.StateType.SPOTINST_ALB_SHIFT_DEPLOY;
-import static software.wings.sm.StateType.SPOTINST_ALB_SHIFT_SETUP;
-import static software.wings.sm.StateType.SPOTINST_LISTENER_ALB_SHIFT;
-import static software.wings.sm.StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.StateType.WAIT;
@@ -193,6 +193,8 @@ import static software.wings.sm.StepType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 import static software.wings.sm.StepType.NEW_RELIC_DEPLOYMENT_MARKER;
 import static software.wings.sm.StepType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StepType.SERVICENOW_CREATE_UPDATE;
+import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_SETUP;
+import static software.wings.sm.StepType.SPOTINST_SETUP;
 import static software.wings.sm.StepType.TERRAFORM_APPLY;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_KEY_EXPRESSION;
@@ -370,6 +372,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -4555,13 +4558,26 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testFilterSpotinstStepsForTrafficShift() {
+    WorkflowServiceImpl service = spy(WorkflowServiceImpl.class);
+    FeatureFlagService mockFF = mock(FeatureFlagService.class);
+    on(service).set("featureFlagService", mockFF);
+    doReturn(false).when(mockFF).isEnabled(any(), anyString());
+    List<StepType> initialSteps = Arrays.asList(SPOTINST_SETUP, SPOTINST_ALB_SHIFT_SETUP);
+    List<StepType> finalSteps = service.filterSpotinstStepsForTrafficShift(initialSteps, ACCOUNT_ID);
+    assertThat(finalSteps).isNotNull();
+    assertThat(finalSteps.size()).isEqualTo(1);
+    assertThat(finalSteps.get(0)).isEqualTo(SPOTINST_SETUP);
+  }
+
+  @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testAllStateTypesDefinedInStepTypes() {
-    List<StateType> excludedStateTypes =
-        asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP, AWS_LAMBDA_VERIFICATION,
-            STAGING_ORIGINAL_EXECUTION, SCALYR, ENV_RESUME_STATE, APPROVAL_RESUME, SPOTINST_ALB_SHIFT_SETUP,
-            SPOTINST_ALB_SHIFT_DEPLOY, SPOTINST_LISTENER_ALB_SHIFT, SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK);
+    List<StateType> excludedStateTypes = asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP,
+        AWS_LAMBDA_VERIFICATION, STAGING_ORIGINAL_EXECUTION, SCALYR, ENV_RESUME_STATE, APPROVAL_RESUME);
 
     Set<String> stateTypes = new HashSet<>();
     for (StateType stateType : StateType.values()) {
