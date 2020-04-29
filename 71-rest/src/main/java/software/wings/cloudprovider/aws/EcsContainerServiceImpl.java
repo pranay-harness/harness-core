@@ -102,6 +102,7 @@ import java.util.concurrent.TimeUnit;
 public class EcsContainerServiceImpl implements EcsContainerService {
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   @Inject private TimeLimiter timeLimiter;
+  @Inject private AwsMetadataApiHelper awsMetadataApiHelper;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -1237,6 +1238,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                           .get(0);
 
         String ipAddress = ec2Instance.getPrivateIpAddress();
+        if (dockerId == null) {
+          // Try metadata api to get dockerId
+          dockerId = awsMetadataApiHelper.tryMetadataApiForDockerIdIfAccessble(
+              ec2Instance, taskForContainerInstance, mainContainer.getName(), executionLogCallback);
+          if (isNotEmpty(dockerId)) {
+            ecsContainerDetailsBuilder.completeDockerId(dockerId);
+            dockerId = StringUtils.substring(dockerId, 0, 12);
+            ecsContainerDetailsBuilder.dockerId(dockerId);
+          }
+        }
 
         // Instance will always have privateIp, but if is null for any reason, this is safeguard not to have NPE
         if (ipAddress == null) {
