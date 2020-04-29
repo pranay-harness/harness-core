@@ -1,5 +1,7 @@
 package migrations.gitsync;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -33,7 +35,7 @@ public class SetQueueKeyYamChangeSetMigration implements OnPrimaryManagerMigrati
   }
 
   private void populateQueueKeyAndMetadata() {
-    Query<YamlChangeSet> query = wingsPersistence.createQuery(YamlChangeSet.class)
+    Query<YamlChangeSet> query = wingsPersistence.createQuery(YamlChangeSet.class, excludeAuthority)
                                      .field(YamlChangeSetKeys.status)
                                      .in(ImmutableList.of(Status.QUEUED, Status.RUNNING));
 

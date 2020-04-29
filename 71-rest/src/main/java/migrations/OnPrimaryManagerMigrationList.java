@@ -18,7 +18,8 @@ public class OnPrimaryManagerMigrationList {
         .add(Pair.of(1, SyncNewFolderForConfigFiles.class))
         .add(Pair.of(2, TemplateLibraryYamlOnPrimaryManagerMigration.class))
         .add(Pair.of(3, RefactorTheFieldsInGitSyncError.class))
-        .add(Pair.of(4, SetQueueKeyYamChangeSetMigration.class))
+        .add(Pair.of(4, BaseMigration.class))
+        .add(Pair.of(5, SetQueueKeyYamChangeSetMigration.class))
         .build();
   }
 }
