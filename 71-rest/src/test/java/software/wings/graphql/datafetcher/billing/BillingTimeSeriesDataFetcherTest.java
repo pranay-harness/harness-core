@@ -654,6 +654,25 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherGroupByNoneQuery() {
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeDailyTimeAggregationGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, Collections.emptyList(), groupBy, sortCriteria, LIMIT, OFFSET);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey()).isEqualTo(null);
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(17.0);
+  }
+
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
