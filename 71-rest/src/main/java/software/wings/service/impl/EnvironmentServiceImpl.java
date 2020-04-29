@@ -71,6 +71,7 @@ import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.HarnessTagType;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -337,6 +338,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .entityType(EntityType.ENVIRONMENT)
             .entityName(environment.getName())
             .accountId(environment.getAccountId())
+            .tagType(HarnessTagType.HARNESS)
             .build();
     harnessTagService.attachTag(tagLink);
   }

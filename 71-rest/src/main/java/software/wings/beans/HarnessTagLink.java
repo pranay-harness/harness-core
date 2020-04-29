@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.HarnessTagType.USER;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -54,6 +56,7 @@ public class HarnessTagLink
   private String value;
   @NotNull private EntityType entityType;
   @NotEmpty private String entityId;
+  @Builder.Default private HarnessTagType tagType = USER;
 
   private transient String appName;
   private transient String entityName;
