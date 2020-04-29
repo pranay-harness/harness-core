@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
-public class S3SyncReader implements ItemReader<SettingAttribute> {
+public class SettingAttributeReader implements ItemReader<SettingAttribute> {
   private AtomicBoolean runOnlyOnce;
 
   @BeforeStep

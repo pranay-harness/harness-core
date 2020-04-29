@@ -83,11 +83,11 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     calendar = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     Condition condition1 =
         BinaryCondition.greaterThanOrEq(PreAggregatedTableSchema.startTime, Timestamp.of(calendar.getTime()));
-    Condition condition2 = BinaryCondition.equalTo(PreAggregatedTableSchema.serviceCode, "serviceCode");
+    Condition condition2 = BinaryCondition.equalTo(PreAggregatedTableSchema.awsServiceCode, "serviceCode");
     conditions.add(condition1);
     conditions.add(condition2);
 
-    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(PreAggregatedTableSchema.blendedCost);
+    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(PreAggregatedTableSchema.awsBlendedCost);
     aggregates.add(aggregateFunction);
 
     when(row.get(entityConstantRegion)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantRegion));
@@ -107,8 +107,9 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getQuery() {
-    List<Object> groupBy = Arrays.asList(PreAggregatedTableSchema.usageAccountId, PreAggregatedTableSchema.serviceCode,
-        PreAggregatedTableSchema.usageType, PreAggregatedTableSchema.instanceType, PreAggregatedTableSchema.region);
+    List<Object> groupBy = Arrays.asList(PreAggregatedTableSchema.awsUsageAccountId,
+        PreAggregatedTableSchema.awsServiceCode, PreAggregatedTableSchema.awsUsageType,
+        PreAggregatedTableSchema.awsInstanceType, PreAggregatedTableSchema.region);
     String query = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList(), true);
     assertThat(query.contains(entityConstantRegion)).isTrue();
     assertThat(query.contains(entityConstantAwsLinkedAccount)).isTrue();

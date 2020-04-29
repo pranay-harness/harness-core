@@ -14,4 +14,5 @@ public class BatchMainConfig {
   @JsonProperty("harness-mongo") private MongoConfig harnessMongo;
   @JsonProperty("events-mongo") private MongoConfig eventsMongo;
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
+  @JsonProperty("awsDataPipelineConfig") private AwsDataPipelineConfig awsDataPipelineConfig;
 }

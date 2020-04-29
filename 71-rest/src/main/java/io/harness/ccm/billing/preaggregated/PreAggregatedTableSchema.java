@@ -14,6 +14,7 @@ public class PreAggregatedTableSchema {
   public static final DbSpec spec;
   public static final DbSchema schema;
   public static final DbTable table;
+
   public static final DbColumn gcpBillingAccountId;
   public static final DbColumn gcpProject;
   public static final DbColumn gcpProjectId;
@@ -26,15 +27,15 @@ public class PreAggregatedTableSchema {
   public static final DbColumn zone;
   public static final DbColumn cloudProvider;
   public static final DbColumn region;
-  public static final DbColumn blendedRate;
-  public static final DbColumn blendedCost;
-  public static final DbColumn unBlendedRate;
-  public static final DbColumn unBlendedCost;
-  public static final DbColumn serviceCode;
-  public static final DbColumn availabilityZone;
-  public static final DbColumn usageAccountId;
-  public static final DbColumn instanceType;
-  public static final DbColumn usageType;
+  public static final DbColumn awsBlendedRate;
+  public static final DbColumn awsBlendedCost;
+  public static final DbColumn awsUnBlendedRate;
+  public static final DbColumn awsUnBlendedCost;
+  public static final DbColumn awsServiceCode;
+  public static final DbColumn awsAvailabilityZone;
+  public static final DbColumn awsUsageAccountId;
+  public static final DbColumn awsInstanceType;
+  public static final DbColumn awsUsageType;
   public static final DbColumn startTime;
   public static final DbColumn endTime;
 
@@ -47,18 +48,19 @@ public class PreAggregatedTableSchema {
     cost = table.addColumn("cost");
     discount = table.addColumn("discount");
     cloudProvider = table.addColumn("cloudProvider");
-    blendedRate = table.addColumn("blendedRate");
-    blendedCost = table.addColumn("blendedCost");
-    unBlendedRate = table.addColumn("unblendedRate");
-    unBlendedCost = table.addColumn("unblendedCost");
-    serviceCode = table.addColumn("servicecode");
     region = table.addColumn("region");
-    availabilityZone = table.addColumn("availabilityzone");
-    usageAccountId = table.addColumn("usageaccountid");
-    instanceType = table.addColumn("instancetype");
-    usageType = table.addColumn("usagetype");
     startTime = table.addColumn("startTime");
     endTime = table.addColumn("endTime");
+
+    awsBlendedRate = table.addColumn("awsBlendedRate");
+    awsBlendedCost = table.addColumn("awsBlendedCost");
+    awsUnBlendedRate = table.addColumn("awsUnblendedRate");
+    awsUnBlendedCost = table.addColumn("awsUnblendedCost");
+    awsServiceCode = table.addColumn("awsServicecode");
+    awsAvailabilityZone = table.addColumn("awsAvailabilityzone");
+    awsUsageAccountId = table.addColumn("awsUsageaccountid");
+    awsInstanceType = table.addColumn("awsInstancetype");
+    awsUsageType = table.addColumn("awsUsagetype");
 
     gcpBillingAccountId = table.addColumn("gcpBillingAccountId");
     gcpProject = table.addColumn("gcpProject");

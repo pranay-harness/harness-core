@@ -57,10 +57,10 @@ public class CloudBillingAggregate {
         functionCall.addColumnParams(PreAggregatedTableSchema.discount);
         break;
       case AWS_UN_BLENDED_COST:
-        functionCall.addColumnParams(PreAggregatedTableSchema.unBlendedCost);
+        functionCall.addColumnParams(PreAggregatedTableSchema.awsUnBlendedCost);
         break;
       case AWS_BLENDED_COST:
-        functionCall.addColumnParams(PreAggregatedTableSchema.blendedCost);
+        functionCall.addColumnParams(PreAggregatedTableSchema.awsBlendedCost);
         break;
       case PRE_AGG_START_TIME:
         functionCall.addColumnParams(PreAggregatedTableSchema.startTime);

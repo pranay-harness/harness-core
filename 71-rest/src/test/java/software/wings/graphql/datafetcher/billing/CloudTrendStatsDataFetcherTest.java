@@ -35,7 +35,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @InjectMocks CloudTrendStatsDataFetcher cloudTrendStatsDataFetcher;
 
   private static final String UN_BLENDED_COST = "unblendedCost";
-  private static final String BLENDED_COST = "blendedCost";
+  private static final String BLENDED_COST = "awsBlendedCost";
   private static final String START_TIME = "startTime";
   private static final String CLOUD_PROVIDER = "AWS";
   private static final String STATS_LABEL = "statsLabel";

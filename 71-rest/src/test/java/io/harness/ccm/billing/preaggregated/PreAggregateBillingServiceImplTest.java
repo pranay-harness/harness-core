@@ -120,7 +120,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
         .thenReturn(PreAggregateFilterValuesDTO.builder()
                         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder().region(awsRegionSet).build()))
                         .build());
-    groupByObjects.add(PreAggregatedTableSchema.usageAccountId);
+    groupByObjects.add(PreAggregatedTableSchema.awsUsageAccountId);
   }
 
   @Test

@@ -120,6 +120,23 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
+  public String getAccountNameFromId(String accountId) {
+    String accountName = "DefaultAccountName";
+    try (HIterator<Account> query = new HIterator<>(persistence.createQuery(Account.class, excludeAuthority)
+                                                        .filter(AccountKeys.cloudCostEnabled, Boolean.TRUE)
+                                                        .field(AccountKeys.uuid)
+                                                        .equal(accountId)
+                                                        .fetch())) {
+      for (Account account : query) {
+        if (account.getUuid().equals(accountId)) {
+          return account.getUuid();
+        }
+      }
+    }
+    return accountName;
+  }
+
+  @Override
   public List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds) {
     return persistence.createQuery(ResourceLookup.class)
         .filter(ResourceLookupKeys.accountId, accountId)
@@ -142,6 +159,27 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                  .filter(SettingAttributeKeys.accountId, accountId)
                                  .filter(SettingAttributeKeys.category, category)
                                  .filter(SettingAttributeKeys.valueType, valueType)
+                                 .fetch())) {
+      for (SettingAttribute settingAttribute : query) {
+        settingAttributes.add(settingAttribute);
+      }
+    }
+    return settingAttributes;
+  }
+
+  @Override
+  public List<SettingAttribute> getSettingAttributes(
+      String accountId, String category, String valueType, long startTime, long endTime) {
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+    try (HIterator<SettingAttribute> query =
+             new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)
+                                 .filter(SettingAttributeKeys.accountId, accountId)
+                                 .filter(SettingAttributeKeys.category, category)
+                                 .filter(SettingAttributeKeys.valueType, valueType)
+                                 .field(SettingAttributeKeys.createdAt)
+                                 .greaterThan(startTime)
+                                 .field(SettingAttributeKeys.createdAt)
+                                 .lessThan(endTime)
                                  .fetch())) {
       for (SettingAttribute settingAttribute : query) {
         settingAttributes.add(settingAttribute);
