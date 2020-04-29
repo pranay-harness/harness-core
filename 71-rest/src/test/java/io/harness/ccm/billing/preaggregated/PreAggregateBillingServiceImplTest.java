@@ -17,9 +17,9 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
-import io.harness.ccm.billing.graphql.BillingIdFilter;
-import io.harness.ccm.billing.graphql.BillingTimeFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -88,6 +88,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
         .thenReturn(PreAggregatedTableSchema.defaultTableName);
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
+
     when(dataHelper.convertToPreAggregatesEntityData(tableResult))
         .thenReturn(
             PreAggregateBillingEntityStatsDTO.builder()
@@ -116,10 +117,9 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     awsRegionSet.add(entityData);
 
     when(dataHelper.convertToPreAggregatesFilterValue(tableResult))
-        .thenReturn(
-            PreAggregateFilterValuesDTO.builder()
-                .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder().awsRegion(awsRegionSet).build()))
-                .build());
+        .thenReturn(PreAggregateFilterValuesDTO.builder()
+                        .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder().region(awsRegionSet).build()))
+                        .build());
     groupByObjects.add(PreAggregatedTableSchema.usageAccountId);
   }
 
@@ -192,7 +192,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     PreAggregateFilterValuesDTO stats =
         preAggregateBillingService.getPreAggregateFilterValueStats(groupByObjects, null, TABLE_NAME);
     assertThat(stats.getData().get(0)).isNotNull();
-    assertThat(stats.getData().get(0).getAwsRegion().size()).isEqualTo(1);
+    assertThat(stats.getData().get(0).getRegion().size()).isEqualTo(1);
   }
 
   @Test
@@ -208,21 +208,21 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
-        BillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getPreAggStartTimeFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setPreAggregatedTableStartTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getPreAggEndTimeFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setPreAggregatedTableEndTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
     return cloudBillingFilter;
   }
 }

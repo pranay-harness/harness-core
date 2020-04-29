@@ -4,7 +4,7 @@ extend type Query {
     offset: Int
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [CloudGroupBy]
+    groupBy: [CloudBillingGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudTimeSeriesStats @dataFetcher(name: cloudTimeSeriesStats)
 
@@ -13,21 +13,21 @@ extend type Query {
     offset: Int
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [CloudGroupBy]
+    groupBy: [CloudBillingGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudEntityStats @dataFetcher(name: cloudEntityStats)
 
   cloudTrendStats(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [CloudGroupBy]
+    groupBy: [CloudBillingGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
 
   cloudFilterValues(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [CloudGroupBy]
+    groupBy: [CloudBillingGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudFilterData @dataFetcher(name: cloudFilterValues)
 }
@@ -42,17 +42,29 @@ type CloudEntityStats {
 
 type CloudEntityData {
   id: String
-  awsRegion: String
+  region: String
   awsLinkedAccount: String
   awsUsageType: String
   awsInstanceType: String
   awsService: String
-  costTrend: Number
-  awsBlendedCost: Number
-  awsUnblendedCost: Number
+  awsBlendedCost: CostData
+  awsUnblendedCost: CostData
+
+  gcpProjectId: String
+  gcpProduct: String
+  gcpSkuDescription: String
+  gcpSkuId: String
+  gcpTotalCost: CostData
+  gcpDiscounts: CostData
+}
+
+type CostData {
+  cost: Number
+  trend: Number
 }
 
 type CloudTrendStats {
+  cost: BillingStatsInfo
   unBlendedCost: BillingStatsInfo
   blendedCost: BillingStatsInfo
 }
@@ -62,12 +74,15 @@ type CloudFilterData {
 }
 
 type CloudFilterDataPoint {
-  awsRegion: [EntityData]
+  region: [EntityData]
   awsLinkedAccount: [EntityData]
   awsUsageType: [EntityData]
   awsService: [EntityData]
   awsInstanceType: [EntityData]
-  cloudProvider: [EntityData]
+  gcpProjectId: [EntityData]
+  gcpProduct: [EntityData]
+  gcpSku: [EntityData]
+  gcpBillingAccount: [EntityData]
 }
 
 input CloudBillingFilter {
@@ -76,10 +91,10 @@ input CloudBillingFilter {
   preAggregatedTableStartTime: TimeFilter
   preAggregatedTableEndTime: TimeFilter
   billingAccountId: IdFilter
-  project: IdFilter
+  projectId: IdFilter
   product: IdFilter
   sku: IdFilter
-  awsRegion: IdFilter
+  region: IdFilter
   awsLinkedAccount: IdFilter
   awsUsageType: IdFilter
   awsInstanceType: IdFilter
@@ -87,14 +102,13 @@ input CloudBillingFilter {
   cloudProvider: IdFilter
 }
 
-input CloudGroupBy {
+input CloudBillingGroupBy {
   entityGroupBy: CloudEntityGroupBy
   timeTruncGroupby: CETimeTruncGroupby
 }
 
 enum CloudEntityGroupBy {
   billingAccountId
-  project
   projectId
   projectNumber
   product
@@ -103,7 +117,6 @@ enum CloudEntityGroupBy {
   region
   usageAmount
   usageUnit
-  awsRegion
   awsLikedAccount
   awsUsageType
   awsInstanceType

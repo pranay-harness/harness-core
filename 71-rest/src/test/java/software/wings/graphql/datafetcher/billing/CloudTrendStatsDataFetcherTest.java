@@ -6,14 +6,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.graphql.BillingAggregate;
-import io.harness.ccm.billing.graphql.BillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
-import io.harness.ccm.billing.graphql.CloudSortCriteria;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingTrendStatsDTO;
 import io.harness.rule.Owner;
@@ -33,7 +31,8 @@ import java.util.List;
 
 public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
-  @InjectMocks @Inject CloudTrendStatsDataFetcher cloudTrendStatsDataFetcher;
+  @Mock CloudBillingHelper cloudBillingHelper;
+  @InjectMocks CloudTrendStatsDataFetcher cloudTrendStatsDataFetcher;
 
   private static final String UN_BLENDED_COST = "unblendedCost";
   private static final String BLENDED_COST = "blendedCost";
@@ -43,17 +42,17 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
 
-  private List<BillingAggregate> billingAggregates = new ArrayList<>();
+  private List<CloudBillingAggregate> cloudBillingAggregates = new ArrayList<>();
   private List<CloudBillingFilter> filters = new ArrayList<>();
-  private List<CloudGroupBy> groupBy = new ArrayList<>();
-  private List<CloudSortCriteria> sort = new ArrayList<>();
+  private List<CloudBillingGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingSortCriteria> sort = new ArrayList<>();
 
   @Before
   public void setup() {
-    billingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, BLENDED_COST));
-    billingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, UN_BLENDED_COST));
-    billingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MIN, START_TIME));
-    billingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MAX, START_TIME));
+    cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, BLENDED_COST));
+    cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, UN_BLENDED_COST));
+    cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MIN, START_TIME));
+    cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MAX, START_TIME));
     filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})));
 
     when(preAggregateBillingService.getPreAggregateBillingTrendStats(anyList(), anyList(), any(), anyList()))
@@ -64,6 +63,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
                                          .statsDescription(STATS_DESCRIPTION)
                                          .build())
                         .build());
+    when(cloudBillingHelper.getCloudProviderTableName(anyList())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test
@@ -71,7 +71,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testFetch() {
     PreAggregateBillingTrendStatsDTO stats = (PreAggregateBillingTrendStatsDTO) cloudTrendStatsDataFetcher.fetch(
-        ACCOUNT1_ID, billingAggregates, filters, groupBy, sort);
+        ACCOUNT1_ID, cloudBillingAggregates, filters, groupBy, sort);
     assertThat(stats).isNotNull();
     assertThat(stats.getBlendedCost().getStatsValue()).isEqualTo(STATS_VALUE);
     assertThat(stats.getBlendedCost().getStatsLabel()).isEqualTo(STATS_LABEL);
@@ -82,7 +82,8 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testPostFetch() {
-    QLData postFetchData = cloudTrendStatsDataFetcher.postFetch(ACCOUNT1_ID, groupBy, billingAggregates, sort, null);
+    QLData postFetchData =
+        cloudTrendStatsDataFetcher.postFetch(ACCOUNT1_ID, groupBy, cloudBillingAggregates, sort, null);
     assertThat(postFetchData).isNull();
   }
 
@@ -97,11 +98,11 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
-        BillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
     return cloudBillingFilter;
   }
 
-  private BillingAggregate getBillingAggregate(QLCCMAggregateOperation operation, String columnName) {
-    return BillingAggregate.builder().operationType(operation).columnName(columnName).build();
+  private CloudBillingAggregate getBillingAggregate(QLCCMAggregateOperation operation, String columnName) {
+    return CloudBillingAggregate.builder().operationType(operation).columnName(columnName).build();
   }
 }

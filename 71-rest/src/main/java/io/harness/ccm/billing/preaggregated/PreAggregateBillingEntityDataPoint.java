@@ -7,7 +7,7 @@ import lombok.Value;
 @Builder
 public class PreAggregateBillingEntityDataPoint {
   String id;
-  String awsRegion;
+  String region;
   String awsLinkedAccount;
   String awsUsageType;
   String awsInstanceType;
@@ -15,4 +15,10 @@ public class PreAggregateBillingEntityDataPoint {
   double costTrend;
   double awsBlendedCost;
   double awsUnblendedCost;
+
+  String gcpProjectId;
+  String gcpProduct;
+  String gcpSkuDescription;
+  String gcpSkuId;
+  double gcpTotalCost;
 }

@@ -10,12 +10,12 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpBillingEntityStatsDTO;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
-import io.harness.ccm.billing.graphql.BillingAggregate;
-import io.harness.ccm.billing.graphql.BillingIdFilter;
-import io.harness.ccm.billing.graphql.BillingTimeFilter;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,20 +43,20 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
   private static final String SKU = "sku";
   private static final String BILLING_ACCOUNT_ID = "billingAccountId";
 
-  private List<BillingAggregate> billingAggregates = new ArrayList<>();
+  private List<CloudBillingAggregate> cloudBillingAggregates = new ArrayList<>();
   private List<CloudBillingFilter> filters = new ArrayList<>();
-  private List<CloudGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingGroupBy> groupBy = new ArrayList<>();
 
   @Before
   public void setup() {
-    billingAggregates.add(getBillingAggregate(COST));
-    billingAggregates.add(getBillingAggregate(DISCOUNT));
+    cloudBillingAggregates.add(getBillingAggregate(COST));
+    cloudBillingAggregates.add(getBillingAggregate(DISCOUNT));
     filters.addAll(Arrays.asList(getStartTimeGcpBillingFilter(0L), getEndTimeGcpBillingFilter(0L),
         getProductGcpBillingFilter(new String[] {PRODUCT}), getProjectGcpBillingFilter(new String[] {PROJECT}),
         getSkuGcpBillingFilter(new String[] {SKU}),
         getBillingAccountIdGcpBillingFilter(new String[] {BILLING_ACCOUNT_ID})));
-    groupBy.addAll(Arrays.asList(getProductGroupBy(), getProjectGroupBy(), getProjectIdGroupBy(),
-        getProjectNumberGroupBy(), getSkuGroupBy(), getSkuIdGroupBy(), getUsageAmountGroupBy(), getUsageUnitGroupBy()));
+    groupBy.addAll(Arrays.asList(
+        getProductGroupBy(), getProjectIdGroupBy(), getProjectNumberGroupBy(), getSkuGroupBy(), getSkuIdGroupBy()));
 
     when(gcpBillingServiceImpl.getGcpBillingEntityStats(anyList(), anyList(), anyList()))
         .thenReturn(GcpBillingEntityStatsDTO.builder().build());
@@ -67,7 +67,7 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
   @Category(UnitTests.class)
   public void fetchTest() {
     QLData qlData =
-        entityStatsDataFetcher.fetch(ACCOUNT1_ID, billingAggregates, filters, groupBy, Collections.emptyList());
+        entityStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates, filters, groupBy, Collections.emptyList());
     assertThat(qlData instanceof GcpBillingEntityStatsDTO).isTrue();
   }
 
@@ -88,94 +88,76 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
     assertThat(postFetchData).isNull();
   }
 
-  private BillingAggregate getBillingAggregate(String columnName) {
-    return BillingAggregate.builder().operationType(QLCCMAggregateOperation.SUM).columnName(columnName).build();
+  private CloudBillingAggregate getBillingAggregate(String columnName) {
+    return CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.SUM).columnName(columnName).build();
   }
 
   private CloudBillingFilter getStartTimeGcpBillingFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setStartTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getEndTimeGcpBillingFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setEndTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getProductGcpBillingFilter(String[] product) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
-    cloudBillingFilter.setProduct(BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
+    cloudBillingFilter.setProduct(CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(product).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getProjectGcpBillingFilter(String[] project) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
-    cloudBillingFilter.setProject(BillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
+    cloudBillingFilter.setProjectId(CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(project).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getSkuGcpBillingFilter(String[] sku) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
-    cloudBillingFilter.setSku(BillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
+    cloudBillingFilter.setSku(CloudBillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(sku).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getBillingAccountIdGcpBillingFilter(String[] billingAccountId) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setBillingAccountId(
-        BillingIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(billingAccountId).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(billingAccountId).build());
     return cloudBillingFilter;
   }
 
-  private CloudGroupBy getProductGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.product);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getProductGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.product);
+    return cloudBillingGroupBy;
   }
 
-  private CloudGroupBy getProjectGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.project);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getProjectIdGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectId);
+    return cloudBillingGroupBy;
   }
 
-  private CloudGroupBy getProjectIdGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectId);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getProjectNumberGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectNumber);
+    return cloudBillingGroupBy;
   }
 
-  private CloudGroupBy getProjectNumberGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectNumber);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getSkuGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.sku);
+    return cloudBillingGroupBy;
   }
 
-  private CloudGroupBy getSkuGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.sku);
-    return cloudGroupBy;
-  }
-
-  private CloudGroupBy getSkuIdGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.skuId);
-    return cloudGroupBy;
-  }
-
-  private CloudGroupBy getUsageAmountGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.usageAmount);
-    return cloudGroupBy;
-  }
-
-  private CloudGroupBy getUsageUnitGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.usageUnit);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getSkuIdGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.skuId);
+    return cloudBillingGroupBy;
   }
 }

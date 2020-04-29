@@ -17,30 +17,31 @@ public class CloudBillingFilter {
   public static final String BILLING_GCP_PRODUCT = "billing/gcp/product";
   public static final String BILLING_GCP_SKU = "billing/gcp/sku";
   public static final String BILLING_GCP_BILLING_ACCOUNT_ID = "billing/gcp/billingaccountid";
-  public static final String BILLING_AWS_REGION = "billing/aws/region";
+  public static final String BILLING_REGION = "billing/region";
   public static final String BILLING_AWS_LINKED_ACCOUNT = "billing/aws/linkedAccount";
   public static final String BILLING_AWS_USAGE_TYPE = "billing/aws/usageType";
   public static final String BILLING_AWS_INSTANCE_TYPE = "billing/aws/instanceType";
   public static final String BILLING_AWS_SERVICE = "billing/aws/service";
   public static final String GCP_TIME_FILTER_ERROR = "Invalid GCP billing time filter.";
   public static final String AWS_TIME_FILTER_ERROR = "Invalid GCP billing time filter.";
+  public static final String CLOUD_PROVIDER = "cloudProvider";
 
-  BillingTimeFilter startTime;
-  BillingTimeFilter endTime;
-  BillingTimeFilter preAggregatedTableStartTime;
-  BillingTimeFilter preAggregatedTableEndTime;
-  BillingIdFilter project;
-  BillingIdFilter product;
-  BillingIdFilter sku;
-  BillingIdFilter billingAccountId;
-  BillingIdFilter awsRegion;
-  BillingIdFilter awsLinkedAccount;
-  BillingIdFilter awsUsageType;
-  BillingIdFilter awsInstanceType;
-  BillingIdFilter awsService;
-  BillingIdFilter cloudProvider;
+  CloudBillingTimeFilter startTime;
+  CloudBillingTimeFilter endTime;
+  CloudBillingTimeFilter preAggregatedTableStartTime;
+  CloudBillingTimeFilter preAggregatedTableEndTime;
+  CloudBillingIdFilter projectId;
+  CloudBillingIdFilter product;
+  CloudBillingIdFilter sku;
+  CloudBillingIdFilter billingAccountId;
+  CloudBillingIdFilter region;
+  CloudBillingIdFilter awsLinkedAccount;
+  CloudBillingIdFilter awsUsageType;
+  CloudBillingIdFilter awsInstanceType;
+  CloudBillingIdFilter awsService;
+  CloudBillingIdFilter cloudProvider;
 
-  public BillingTimeFilter getStartTime() {
+  public CloudBillingTimeFilter getStartTime() {
     if (startTime == null) {
       return null;
     }
@@ -50,7 +51,7 @@ public class CloudBillingFilter {
     return startTime;
   }
 
-  public BillingTimeFilter getEndTime() {
+  public CloudBillingTimeFilter getEndTime() {
     if (endTime == null) {
       return null;
     }
@@ -60,7 +61,7 @@ public class CloudBillingFilter {
     return endTime;
   }
 
-  public BillingTimeFilter getPreAggregatedStartTime() {
+  public CloudBillingTimeFilter getPreAggregatedStartTime() {
     if (preAggregatedTableStartTime == null) {
       return null;
     }
@@ -70,7 +71,7 @@ public class CloudBillingFilter {
     return preAggregatedTableStartTime;
   }
 
-  public BillingTimeFilter getPreAggregatedEndTime() {
+  public CloudBillingTimeFilter getPreAggregatedEndTime() {
     if (preAggregatedTableEndTime == null) {
       return null;
     }
@@ -80,47 +81,52 @@ public class CloudBillingFilter {
     return preAggregatedTableEndTime;
   }
 
-  public BillingIdFilter getProject() {
-    project.setVariable(BILLING_GCP_PROJECT);
-    return project;
+  public CloudBillingIdFilter getCloudProvider() {
+    cloudProvider.setVariable(CLOUD_PROVIDER);
+    return cloudProvider;
   }
 
-  public BillingIdFilter getProduct() {
+  public CloudBillingIdFilter getProject() {
+    projectId.setVariable(BILLING_GCP_PROJECT);
+    return projectId;
+  }
+
+  public CloudBillingIdFilter getProduct() {
     product.setVariable(BILLING_GCP_PRODUCT);
     return product;
   }
 
-  public BillingIdFilter getSku() {
+  public CloudBillingIdFilter getSku() {
     sku.setVariable(BILLING_GCP_SKU);
     return sku;
   }
 
-  public BillingIdFilter getBillingAccountId() {
+  public CloudBillingIdFilter getBillingAccountId() {
     billingAccountId.setVariable(BILLING_GCP_BILLING_ACCOUNT_ID);
     return billingAccountId;
   }
 
-  public BillingIdFilter getAwsRegion() {
-    awsRegion.setVariable(BILLING_AWS_REGION);
-    return awsRegion;
+  public CloudBillingIdFilter getRegion() {
+    region.setVariable(BILLING_REGION);
+    return region;
   }
 
-  public BillingIdFilter getService() {
+  public CloudBillingIdFilter getService() {
     awsService.setVariable(BILLING_AWS_SERVICE);
     return awsService;
   }
 
-  public BillingIdFilter getUsageType() {
+  public CloudBillingIdFilter getUsageType() {
     awsUsageType.setVariable(BILLING_AWS_USAGE_TYPE);
     return awsUsageType;
   }
 
-  public BillingIdFilter getInstanceType() {
+  public CloudBillingIdFilter getInstanceType() {
     awsInstanceType.setVariable(BILLING_AWS_INSTANCE_TYPE);
     return awsInstanceType;
   }
 
-  public BillingIdFilter getLinkedAccount() {
+  public CloudBillingIdFilter getLinkedAccount() {
     awsLinkedAccount.setVariable(BILLING_AWS_LINKED_ACCOUNT);
     return awsLinkedAccount;
   }
@@ -132,7 +138,7 @@ public class CloudBillingFilter {
     if (endTime != null) {
       return getEndTime().toCondition();
     }
-    if (project != null) {
+    if (projectId != null) {
       return getProject().toCondition();
     }
     if (product != null) {
@@ -144,8 +150,8 @@ public class CloudBillingFilter {
     if (billingAccountId != null) {
       return getBillingAccountId().toCondition();
     }
-    if (awsRegion != null) {
-      return getAwsRegion().toCondition();
+    if (region != null) {
+      return getRegion().toCondition();
     }
     if (awsService != null) {
       return getService().toCondition();
@@ -162,8 +168,11 @@ public class CloudBillingFilter {
     if (preAggregatedTableStartTime != null) {
       return getPreAggregatedStartTime().toCondition();
     }
-    if (getPreAggregatedTableEndTime() != null) {
+    if (preAggregatedTableEndTime != null) {
       return getPreAggregatedEndTime().toCondition();
+    }
+    if (cloudProvider != null) {
+      return getCloudProvider().toCondition();
     }
     return null;
   }

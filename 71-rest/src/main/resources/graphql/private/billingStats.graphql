@@ -41,7 +41,7 @@ extend type Query {
   gcpBillingEntityData(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
-    groupBy: [CloudGroupBy]
+    groupBy: [CloudBillingGroupBy]
   ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
 
   billingStatsFilterValues(

@@ -6,14 +6,12 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.graphql.BillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
-import io.harness.ccm.billing.graphql.CloudSortCriteria;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.billing.preaggregated.PreAggregateFilterValuesDTO;
@@ -35,12 +33,13 @@ import java.util.List;
 import java.util.Set;
 
 public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
+  @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
-  @InjectMocks @Inject CloudFilterValuesDataFetcher cloudFilterValuesDataFetcher;
+  @InjectMocks CloudFilterValuesDataFetcher cloudFilterValuesDataFetcher;
 
   private List<CloudBillingFilter> filters = new ArrayList<>();
-  private List<CloudGroupBy> groupBy = new ArrayList<>();
-  private List<CloudSortCriteria> sort = new ArrayList<>();
+  private List<CloudBillingGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingSortCriteria> sort = new ArrayList<>();
   private static QLEntityData entityData;
   private static final String INSTANCE_TYPE = "instanceType";
   private static final String CLOUD_PROVIDER = "AWS";
@@ -51,7 +50,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Before
   public void setup() {
     filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER}),
-        getRegionAwsFilter(new String[] {PreAggregateConstants.nullStringValueConstant}),
+        getAwsFilter(new String[] {PreAggregateConstants.nullStringValueConstant}),
         getInstanceTypeAwsFilter(new String[] {INSTANCE_TYPE, PreAggregateConstants.nullStringValueConstant})));
 
     groupBy.addAll(Arrays.asList(getServiceGroupBy()));
@@ -63,13 +62,14 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     when(preAggregateBillingService.getPreAggregateFilterValueStats(anyList(), anyList(), anyString()))
         .thenReturn(PreAggregateFilterValuesDTO.builder()
                         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder()
-                                                .awsRegion(awsRegionSet)
+                                                .region(awsRegionSet)
                                                 .awsInstanceType(null)
                                                 .awsService(null)
                                                 .awsUsageType(null)
                                                 .awsLinkedAccount(null)
                                                 .build()))
                         .build());
+    when(cloudBillingHelper.getCloudProviderTableName(anyList())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test
@@ -79,7 +79,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     PreAggregateFilterValuesDTO data =
         (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID, null, filters, groupBy, sort);
     assertThat(data.getData()).isNotNull();
-    assertThat(data.getData().get(0).getAwsRegion()).contains(entityData);
+    assertThat(data.getData().get(0).getRegion()).contains(entityData);
   }
 
   @Test
@@ -98,29 +98,29 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(entityType).isNull();
   }
 
-  private CloudGroupBy getServiceGroupBy() {
-    CloudGroupBy cloudGroupBy = new CloudGroupBy();
-    cloudGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsService);
-    return cloudGroupBy;
+  private CloudBillingGroupBy getServiceGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsService);
+    return cloudBillingGroupBy;
   }
 
-  private CloudBillingFilter getRegionAwsFilter(String[] region) {
+  private CloudBillingFilter getAwsFilter(String[] region) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
-    cloudBillingFilter.setAwsRegion(BillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(region).build());
+    cloudBillingFilter.setRegion(CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(region).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getInstanceTypeAwsFilter(String[] instanceType) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setAwsInstanceType(
-        BillingIdFilter.builder().operator(QLIdOperator.IN).values(instanceType).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(instanceType).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
-        BillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
     return cloudBillingFilter;
   }
 }

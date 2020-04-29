@@ -1,10 +1,10 @@
 package io.harness.ccm.billing.graphql;
 
-import io.harness.ccm.billing.GcpBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Data;
 
 @Data
-public class CloudGroupBy {
+public class CloudBillingGroupBy {
   private CloudEntityGroupBy entityGroupBy;
   private TimeTruncGroupby timeTruncGroupby;
 
@@ -14,7 +14,7 @@ public class CloudGroupBy {
       return entityGroupBy.getDbObject();
     }
     if (timeTruncGroupby != null) {
-      timeTruncGroupby.setEntity(GcpBillingTableSchema.usageStartTime);
+      timeTruncGroupby.setEntity(PreAggregatedTableSchema.startTime);
       timeTruncGroupby.setAlias("start_time_trunc"); // the default value would be different for different context
       return timeTruncGroupby.toGroupbyObject();
     }

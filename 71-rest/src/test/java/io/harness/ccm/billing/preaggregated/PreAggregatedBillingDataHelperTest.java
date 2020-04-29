@@ -4,10 +4,11 @@ import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsLinkedAccount;
-import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
@@ -30,9 +31,9 @@ import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.graphql.BillingIdFilter;
-import io.harness.ccm.billing.graphql.BillingTimeFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -44,7 +45,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
-import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
@@ -55,9 +55,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Mock FieldValueList row;
@@ -78,6 +76,7 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   private static final Double COST = 1.4433;
   private static final Double UNBLENDED_COST = 2.0;
   private static final Double BLENDED_COST = 1.0;
+  private static final Double GCP_COST = 3.0;
 
   @Before
   public void setup() {
@@ -91,15 +90,17 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(PreAggregatedTableSchema.blendedCost);
     aggregates.add(aggregateFunction);
 
-    when(row.get(entityConstantAwsRegion)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsRegion));
+    when(row.get(entityConstantRegion)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantRegion));
     when(row.get(entityConstantAwsLinkedAccount)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsLinkedAccount));
     when(row.get(entityConstantAwsService)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsService));
     when(row.get(entityConstantAwsUsageType)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsUsageType));
     when(row.get(entityConstantAwsInstanceType)).thenReturn(FieldValue.of(PRIMITIVE, null));
+
     when(row.get(minPreAggStartTimeConstant)).thenReturn(FieldValue.of(PRIMITIVE, "0"));
     when(row.get(maxPreAggStartTimeConstant)).thenReturn(FieldValue.of(PRIMITIVE, "1586895998"));
     when(row.get(entityConstantAwsBlendedCost)).thenReturn(FieldValue.of(PRIMITIVE, "1.0"));
     when(row.get(entityConstantAwsUnBlendedCost)).thenReturn(FieldValue.of(PRIMITIVE, "2.0"));
+    when(row.get(entityConstantGcpCost)).thenReturn(FieldValue.of(PRIMITIVE, "3.0"));
   }
 
   @Test
@@ -109,15 +110,15 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     List<Object> groupBy = Arrays.asList(PreAggregatedTableSchema.usageAccountId, PreAggregatedTableSchema.serviceCode,
         PreAggregatedTableSchema.usageType, PreAggregatedTableSchema.instanceType, PreAggregatedTableSchema.region);
     String query = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList(), true);
-    assertThat(query.contains(entityConstantAwsRegion)).isTrue();
+    assertThat(query.contains(entityConstantRegion)).isTrue();
     assertThat(query.contains(entityConstantAwsLinkedAccount)).isTrue();
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void ProcessDataPointAndAppendToListTest() {
-    FieldList fieldList = FieldList.of(Field.newBuilder(entityConstantAwsRegion, StandardSQLTypeName.STRING).build(),
+  public void shouldProcessDataPointAndAppendToList() {
+    FieldList fieldList = FieldList.of(Field.newBuilder(entityConstantRegion, StandardSQLTypeName.STRING).build(),
         Field.newBuilder(entityConstantAwsLinkedAccount, StandardSQLTypeName.STRING).build(),
         Field.newBuilder(entityConstantAwsService, StandardSQLTypeName.STRING).build(),
         Field.newBuilder(entityConstantAwsUsageType, StandardSQLTypeName.STRING).build(),
@@ -127,11 +128,12 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
 
     when(billingDataHelper.getRoundedDoubleValue(UNBLENDED_COST)).thenReturn(UNBLENDED_COST);
     when(billingDataHelper.getRoundedDoubleValue(BLENDED_COST)).thenReturn(BLENDED_COST);
+    when(billingDataHelper.getRoundedDoubleValue(GCP_COST)).thenReturn(GCP_COST);
 
     List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
-    dataHelper.ProcessDataPointAndAppendToList(fieldList, row, dataPointList);
+    dataHelper.processDataPointAndAppendToList(fieldList, row, dataPointList);
     assertThat(dataPointList.size()).isEqualTo(1);
-    assertThat(dataPointList.get(0).getAwsRegion()).isEqualTo(entityConstantAwsRegion);
+    assertThat(dataPointList.get(0).getRegion()).isEqualTo(entityConstantRegion);
     assertThat(dataPointList.get(0).getAwsInstanceType()).isEqualTo(nullStringValueConstant);
     assertThat(dataPointList.get(0).getAwsLinkedAccount()).isEqualTo(entityConstantAwsLinkedAccount);
     assertThat(dataPointList.get(0).getAwsUsageType()).isEqualTo(entityConstantAwsUsageType);
@@ -143,57 +145,29 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void processTrendDataAndAppendToListTest() {
+  public void shouldProcessTrendDataAndAppendToList() {
     FieldList trendFieldList =
         FieldList.of(Field.newBuilder(maxPreAggStartTimeConstant, StandardSQLTypeName.STRING).build(),
             Field.newBuilder(minPreAggStartTimeConstant, StandardSQLTypeName.STRING).build(),
             Field.newBuilder(entityConstantAwsBlendedCost, StandardSQLTypeName.FLOAT64).build(),
-            Field.newBuilder(entityConstantAwsUnBlendedCost, StandardSQLTypeName.FLOAT64).build());
+            Field.newBuilder(entityConstantAwsUnBlendedCost, StandardSQLTypeName.FLOAT64).build(),
+            Field.newBuilder(entityConstantGcpCost, StandardSQLTypeName.FLOAT64).build());
 
     PreAggregatedCostDataBuilder unBlendedCostDataBuilder = PreAggregatedCostData.builder();
     PreAggregatedCostDataBuilder blendedCostDataBuilder = PreAggregatedCostData.builder();
+    PreAggregatedCostDataBuilder costDataBuilder = PreAggregatedCostData.builder();
 
-    dataHelper.processTrendDataAndAppendToList(trendFieldList, row, blendedCostDataBuilder, unBlendedCostDataBuilder);
+    dataHelper.processTrendDataAndAppendToList(
+        trendFieldList, row, blendedCostDataBuilder, unBlendedCostDataBuilder, costDataBuilder);
     PreAggregatedCostData blendedCost = blendedCostDataBuilder.build();
     PreAggregatedCostData unBlendedCost = unBlendedCostDataBuilder.build();
+    PreAggregatedCostData costData = costDataBuilder.build();
 
     assertThat(blendedCost.getCost()).isEqualTo(BLENDED_COST);
     assertThat(unBlendedCost.getCost()).isEqualTo(UNBLENDED_COST);
+    assertThat(costData.getCost()).isEqualTo(GCP_COST);
     assertThat(blendedCost.getMinStartTime()).isEqualTo(0L);
     assertThat(unBlendedCost.getMaxStartTime()).isEqualTo(1586895998000000L);
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void processAndGetFilterValuesDataPointTest() {
-    FieldList trendFieldList =
-        FieldList.of(Field.newBuilder(entityConstantAwsRegion, StandardSQLTypeName.STRING).build(),
-            Field.newBuilder(entityConstantAwsLinkedAccount, StandardSQLTypeName.STRING).build(),
-            Field.newBuilder(entityConstantAwsService, StandardSQLTypeName.FLOAT64).build(),
-            Field.newBuilder(entityConstantAwsUsageType, StandardSQLTypeName.FLOAT64).build(),
-            Field.newBuilder(entityConstantAwsInstanceType, StandardSQLTypeName.FLOAT64).build());
-
-    Set<QLEntityData> awsRegion = new HashSet<>();
-    Set<QLEntityData> awsService = new HashSet<>();
-    Set<QLEntityData> awsUsageType = new HashSet<>();
-    Set<QLEntityData> awsInstanceType = new HashSet<>();
-    Set<QLEntityData> awsLinkedAccount = new HashSet<>();
-
-    dataHelper.processAndGetFilterValuesDataPoint(
-        trendFieldList, row, awsRegion, awsService, awsUsageType, awsInstanceType, awsLinkedAccount);
-
-    assertThat(awsRegion).containsOnly(QLEntityData.builder()
-                                           .id(entityConstantAwsRegion)
-                                           .name(entityConstantAwsRegion)
-                                           .type(entityConstantAwsRegion)
-                                           .build());
-    assertThat(awsInstanceType)
-        .containsOnly(QLEntityData.builder()
-                          .id(nullStringValueConstant)
-                          .name(nullStringValueConstant)
-                          .type(entityConstantAwsInstanceType)
-                          .build());
   }
 
   @Test
@@ -238,21 +212,21 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
-        BillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getPreAggStartTimeFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setPreAggregatedTableStartTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build());
     return cloudBillingFilter;
   }
 
   private CloudBillingFilter getPreAggEndTimeFilter(Long filterTime) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setPreAggregatedTableEndTime(
-        BillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(filterTime).build());
     return cloudBillingFilter;
   }
 }

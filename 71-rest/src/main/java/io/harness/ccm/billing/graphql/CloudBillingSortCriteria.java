@@ -10,7 +10,7 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 
 @Data
 @Builder
-public class CloudSortCriteria {
+public class CloudBillingSortCriteria {
   private CloudSortType sortType;
   private QLSortOrder sortOrder;
 
@@ -24,6 +24,9 @@ public class CloudSortCriteria {
     switch (sortType) {
       case Time:
         orderIdentifier = PreAggregateConstants.startTimeTruncatedConstant;
+        break;
+      case gcpCost:
+        orderIdentifier = PreAggregateConstants.entityConstantGcpCost;
         break;
       case awsBlendedCost:
         orderIdentifier = PreAggregateConstants.entityConstantAwsBlendedCost;
