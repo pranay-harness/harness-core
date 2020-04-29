@@ -10,6 +10,7 @@ import io.harness.batch.processing.ccm.EnrichedEvent;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.data.CostEventData.CostEventDataBuilder;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -119,7 +120,8 @@ public class K8sWatchEventConfig {
   }
 
   @Bean
-  public ItemWriter<EnrichedEvent<K8sWatchEvent>> writer(K8sYamlDao k8sYamlDao, CostEventService costEventService) {
+  public ItemWriter<EnrichedEvent<K8sWatchEvent>> writer(
+      K8sYamlDao k8sYamlDao, CostEventService costEventService, WatchEventCostEstimator watchEventCostEstimator) {
     return enrichedK8sEvents
         -> costEventService.create(
             enrichedK8sEvents.stream()
@@ -159,6 +161,7 @@ public class K8sWatchEventConfig {
                           .clusterId(k8sWatchEvent.getClusterId())
                           .startTimestamp(enrichedK8sEvent.getOccurredAt())
                           .eventDescription(k8sWatchEvent.getDescription())
+                          .billingAmount(watchEventCostEstimator.estimateCost(enrichedK8sEvent))
                           .oldYamlRef(oldYamlRef)
                           .newYamlRef(newYamlRef);
                   if (enrichedK8sEvent.getHarnessServiceInfo() != null) {
