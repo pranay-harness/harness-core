@@ -1,6 +1,7 @@
 package io.harness.adviser;
 
 import io.harness.annotations.Redesign;
+import io.harness.registries.RegistryKey;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -8,7 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class AdviserType {
+public class AdviserType implements RegistryKey {
   // Provided From the orchestration layer system advisers
 
   // SUCCESS

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Redesign
 @Singleton
-public class StateRegistry implements Registry {
+public class StateRegistry implements Registry<StateType, State> {
   Map<StateType, State> registry = new ConcurrentHashMap<>();
 
   public void register(@NonNull StateType stateType, @NonNull State state) {
@@ -31,6 +31,11 @@ public class StateRegistry implements Registry {
       return registry.get(stateType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
+  }
+
+  @Override
+  public Class<State> getRegistrableEntityClass() {
+    return State.class;
   }
 
   @Override

@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.LevelType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.execution.status.NodeExecutionStatus;
@@ -16,6 +17,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(Ambiance.class, 2503);
     kryo.register(LevelExecution.class, 2504);
+    kryo.register(LevelType.class, 2505);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

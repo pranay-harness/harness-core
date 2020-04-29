@@ -28,18 +28,19 @@ public class LevelRegistryTest extends OrchestrationBeansTest {
   public void shouldTestRegistry() {
     Level phaseLevel = PhaseTestLevel.builder().build();
     Level sectionLevel = SectionTestLevel.builder().build();
-    levelRegistry.register(phaseLevel);
-    levelRegistry.register(sectionLevel);
+    levelRegistry.register(PhaseTestLevel.LEVEL_TYPE, phaseLevel);
+    levelRegistry.register(SectionTestLevel.LEVEL_TYPE, sectionLevel);
 
-    Level registeredPhaseLevel = levelRegistry.obtain(PhaseTestLevel.LEVEL_NAME);
+    Level registeredPhaseLevel = levelRegistry.obtain(PhaseTestLevel.LEVEL_TYPE);
     assertThat(registeredPhaseLevel).isNotNull();
 
-    Level registeredSectionLevel = levelRegistry.obtain(SectionTestLevel.LEVEL_NAME);
+    Level registeredSectionLevel = levelRegistry.obtain(SectionTestLevel.LEVEL_TYPE);
     assertThat(registeredSectionLevel).isNotNull();
 
-    assertThatThrownBy(() -> levelRegistry.register(phaseLevel)).isInstanceOf(DuplicateRegistryException.class);
+    assertThatThrownBy(() -> levelRegistry.register(phaseLevel.getType(), phaseLevel))
+        .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> levelRegistry.obtain(StepTestLevel.LEVEL_NAME))
+    assertThatThrownBy(() -> levelRegistry.obtain(StepTestLevel.LEVEL_TYPE))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

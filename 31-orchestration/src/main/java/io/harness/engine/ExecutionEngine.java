@@ -117,7 +117,7 @@ public class ExecutionEngine implements Engine {
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
     Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null
         ? ambiance
-        : ambiance.cloneForFinish(levelRegistry.obtain(node.getLevelName()));
+        : ambiance.cloneForFinish(levelRegistry.obtain(node.getLevelType()));
     String uuid = generateUuid();
     ExecutionNodeInstance previousInstance = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
@@ -127,7 +127,7 @@ public class ExecutionEngine implements Engine {
     cloned.addLevelExecution(LevelExecution.builder()
                                  .setupId(node.getUuid())
                                  .runtimeId(uuid)
-                                 .level(levelRegistry.obtain(node.getLevelName()))
+                                 .level(levelRegistry.obtain(node.getLevelType()))
                                  .build());
 
     ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
