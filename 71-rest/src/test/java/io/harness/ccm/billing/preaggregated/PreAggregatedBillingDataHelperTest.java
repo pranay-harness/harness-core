@@ -13,6 +13,7 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreA
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.Timestamp;
@@ -206,8 +207,9 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
         getPreAggEndTimeFilter(currentMillis)));
 
     when(billingDataHelper.getRoundedDoubleValue(COST)).thenReturn(1.44);
-    when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(0L))).thenReturn("01 January, 1970");
-    when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(MAX_START_TIME / 1000)))
+    when(billingDataHelper.isYearRequired(any(), any())).thenReturn(true);
+    when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(0L), true)).thenReturn("01 January, 1970");
+    when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(MAX_START_TIME / 1000), true))
         .thenReturn("01 January, 2020");
     QLBillingStatsInfo stats = dataHelper.getCostBillingStats(blendedCostData, filters, BLENDED_COST_LABEL);
     assertThat(stats.getStatsDescription()).isEqualTo("of 01 January, 1970 - 01 January, 2020");
