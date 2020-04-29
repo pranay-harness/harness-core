@@ -7,6 +7,10 @@ import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -40,7 +44,9 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -64,7 +70,6 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -152,7 +157,7 @@ public class PcfDeployState extends State {
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
-    Activity activity = createActivity(context);
+    Activity activity = createActivity(context, setupSweepingOutputPcf);
     if (isRollback() && pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf)) {
       return pcfStateHelper.handleRollbackSkipped(
           context.getAppId(), activity.getUuid(), PCF_RESIZE_COMMAND, NO_PREV_DEPLOYMENT_MSG);
@@ -407,7 +412,7 @@ public class PcfDeployState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  private Activity createActivity(ExecutionContext executionContext) {
+  private Activity createActivity(ExecutionContext executionContext, SetupSweepingOutputPcf setupSweepingOutputPcf) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
@@ -415,17 +420,18 @@ public class PcfDeployState extends State {
       throw new InvalidRequestException("Application was null in Context");
     }
 
-    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
-                                                                            .appId(app.getUuid())
-                                                                            .appName(app.getName())
-                                                                            .commandName(PCF_RESIZE_COMMAND)
-                                                                            .type(Type.Command)
-                                                                            .executionContext(executionContext)
-                                                                            .commandType(getStateType())
-                                                                            .commandUnitType(CommandUnitType.PCF_RESIZE)
-                                                                            .environment(env)
-                                                                            .commandUnits(Collections.emptyList())
-                                                                            .build());
+    ActivityBuilder activityBuilder =
+        pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
+                                              .appId(app.getUuid())
+                                              .appName(app.getName())
+                                              .commandName(PCF_RESIZE_COMMAND)
+                                              .type(Type.Command)
+                                              .executionContext(executionContext)
+                                              .commandType(getStateType())
+                                              .commandUnitType(CommandUnitType.PCF_RESIZE)
+                                              .environment(env)
+                                              .commandUnits(getCommandUnitList(setupSweepingOutputPcf))
+                                              .build());
 
     return activityService.save(activityBuilder.build());
   }
@@ -437,5 +443,20 @@ public class PcfDeployState extends State {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;
+  }
+
+  @VisibleForTesting
+  List<CommandUnit> getCommandUnitList(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    List<CommandUnit> canaryCommandUnits = new ArrayList<>();
+    if (isRollback() || RESIZE_NEW_FIRST == setupSweepingOutputPcf.getResizeStrategy()) {
+      canaryCommandUnits.add(new PcfDummyCommandUnit(Upsize));
+      canaryCommandUnits.add(new PcfDummyCommandUnit(Downsize));
+    } else {
+      canaryCommandUnits.add(new PcfDummyCommandUnit(Downsize));
+      canaryCommandUnits.add(new PcfDummyCommandUnit(Upsize));
+    }
+
+    canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));
+    return canaryCommandUnits;
   }
 }

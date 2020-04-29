@@ -140,6 +140,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
+    requestConfigData.setDownsizeOldApplication(downsizeOldApps);
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
             .pcfConfig(pcfConfig)

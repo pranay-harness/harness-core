@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -25,6 +26,9 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.states.pcf.PcfStateTestHelper.PHASE_NAME;
@@ -77,10 +81,12 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
@@ -113,6 +119,7 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PcfDeployStateTest extends WingsBaseTest {
@@ -384,5 +391,22 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertThat(pcfInstanceElement.getApplicationId()).isEqualTo("1");
     assertThat(pcfInstanceElement.isNewInstance()).isTrue();
     assertThat(pcfInstanceElement.getInstanceIndex()).isEqualTo("4");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetCommandUnitList() {
+    List<CommandUnit> commandUnits = pcfDeployState.getCommandUnitList(
+        SetupSweepingOutputPcf.builder().resizeStrategy(ResizeStrategy.RESIZE_NEW_FIRST).build());
+    List<String> commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+    assertThat(commandUnits).isNotNull();
+    assertThat(commandUnits.size()).isEqualTo(3);
+    assertThat(commandUnitNames).containsExactly(Upsize, Downsize, Wrapup);
+
+    commandUnits = pcfDeployState.getCommandUnitList(
+        SetupSweepingOutputPcf.builder().resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST).build());
+    commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+    assertThat(commandUnitNames).containsExactly(Downsize, Upsize, Wrapup);
   }
 }

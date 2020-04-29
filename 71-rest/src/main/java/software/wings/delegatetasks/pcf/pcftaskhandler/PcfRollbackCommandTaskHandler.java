@@ -1,11 +1,18 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
+import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -52,6 +59,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRollbackRequest"));
     }
+
+    executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+        pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Upsize);
     executionLogCallback.saveExecutionLog(color("--------- Starting Rollback deployment", White, Bold));
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =
@@ -90,7 +100,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
           PcfAppAutoscalarRequestData.builder()
               .pcfRequestConfig(pcfRequestConfig)
               .configPathVar(workingDirectory.getAbsolutePath())
-              .timeoutInMins(commandRollbackRequest.getTimeoutIntervalInMin())
+              .timeoutInMins(commandRollbackRequest.getTimeoutIntervalInMin() != null
+                      ? commandRollbackRequest.getTimeoutIntervalInMin()
+                      : 10)
               .build();
 
       // get Upsize Instance data
@@ -114,7 +126,10 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       restoreRoutesForOldApplication(commandRollbackRequest, pcfRequestConfig, executionLogCallback);
       // Enable autoscalar for older app, if it was disabled during deploy
       enableAutoscalarIfNeeded(upsizeList, autoscalarRequestData, executionLogCallback);
+      executionLogCallback.saveExecutionLog("#---------- Upsize Application Successfully Completed", INFO, SUCCESS);
 
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Downsize);
       pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataUpdated, pcfRequestConfig,
           downSizeList, commandRollbackRequest, autoscalarRequestData);
       unmapRoutesFromNewAppAfterDownsize(executionLogCallback, commandRollbackRequest, pcfRequestConfig);
@@ -123,15 +138,21 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
       pcfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElements);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully");
+      executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully", INFO, SUCCESS);
     } catch (IOException | PivotalClientApiException e) {
       exception = e;
+      logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
     } catch (Exception ex) {
       exception = ex;
+      logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
     } finally {
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Wrapup);
+      executionLogCallback.saveExecutionLog("#------- Deleting Temporary Files");
       if (workingDirectory != null) {
         try {
           FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
+          executionLogCallback.saveExecutionLog("Temporary Files Successfully deleted", INFO, SUCCESS);
         } catch (IOException e) {
           logger.warn("Failed to delete temp cf home folder", e);
         }
@@ -139,11 +160,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     if (exception != null) {
-      logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
-          commandRollbackRequest, exception);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback failed to complete successfully");
-      Misc.logAllMessages(exception, executionLogCallback);
-      pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      pcfDeployCommandResponse.setCommandExecutionStatus(FAILURE);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
       pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(exception));
     }
@@ -153,6 +170,14 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
+  }
+
+  private void logExceptionMessage(ExecutionLogCallback executionLogCallback,
+      PcfCommandRollbackRequest commandRollbackRequest, Exception exception) {
+    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
+        commandRollbackRequest, exception);
+    executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback failed to complete successfully", ERROR, FAILURE);
+    Misc.logAllMessages(exception, executionLogCallback);
   }
 
   @VisibleForTesting
