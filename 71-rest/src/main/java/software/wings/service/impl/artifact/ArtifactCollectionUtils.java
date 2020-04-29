@@ -874,13 +874,6 @@ public class ArtifactCollectionUtils {
       return true;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
-        && artifactStream.isArtifactStreamParameterized()) {
-      logger.info(
-          format("Skipping artifact collection through iterator for artifact stream [%s] since it is parameterized",
-              artifactStream.getUuid()));
-      return true;
-    }
     return false;
   }
 
