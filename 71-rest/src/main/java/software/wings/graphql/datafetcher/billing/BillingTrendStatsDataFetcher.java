@@ -103,8 +103,9 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     String forecastCostValue = EMPTY_VALUE;
     long timeDiff = billingAmountData.getMaxStartTime() - startInstant.toEpochMilli();
     if (forecastCost != null && timeDiff > 4 * ONE_DAY_MILLIS) {
-      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
-      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
+      boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
+      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
       forecastCostDescription = String.format(FORECAST_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
       forecastCostValue = String.format(FORECAST_COST_VALUE, getRoundedDoubleValue(forecastCost));
     }
@@ -119,10 +120,12 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       QLBillingAmountData billingAmountData, List<QLBillingDataFilter> filters) {
     Instant startInstant = Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingAmountData.getMaxStartTime());
-    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
-    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
+    boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
+    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
-    String totalCostValue = String.format(TOTAL_COST_VALUE, getRoundedDoubleValue(billingAmountData.getCost()));
+    String totalCostValue = String.format(
+        TOTAL_COST_VALUE, billingDataHelper.formatNumber(getRoundedDoubleValue(billingAmountData.getCost())));
     return QLBillingStatsInfo.builder()
         .statsLabel(TOTAL_COST_LABEL)
         .statsDescription(totalCostDescription)
@@ -134,7 +137,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     String idleCostDescription = EMPTY_VALUE;
     String idleCostValue = EMPTY_VALUE;
     if (idleCostData != null) {
-      idleCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(idleCostData.getCost()));
+      idleCostValue = String.format(
+          COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(idleCostData.getCost())));
       if (totalCostData != null) {
         double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(idleCostData.getCost().doubleValue() / totalCostData.getCost().doubleValue()));
@@ -153,7 +157,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     String unallocatedCostDescription = EMPTY_VALUE;
     String unallocatedCostValue = EMPTY_VALUE;
     if (unallocatedCost != null) {
-      unallocatedCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(unallocatedCost));
+      unallocatedCostValue = String.format(
+          COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(unallocatedCost)));
       if (totalCostData != null) {
         double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(unallocatedCost.doubleValue() / totalCostData.getCost().doubleValue()));
@@ -177,7 +182,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       if (unallocatedCostData != null) {
         utilizedCost -= unallocatedCostData.getCost().doubleValue();
       }
-      utilizedCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(utilizedCost));
+      utilizedCostValue = String.format(
+          COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(utilizedCost)));
       double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
           BigDecimal.valueOf(utilizedCost / totalCostData.getCost().doubleValue()));
       utilizedCostDescription = String.format(UTILIZED_COST_DESCRIPTION, percentageOfTotalCost + "%",
@@ -199,15 +205,18 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     Instant filterStartTime =
         Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(trendFilters).getValue().longValue());
-    String trendCostDescription = String.format(TREND_COST_DESCRIPTION, getRoundedDoubleValue(totalBillingAmount),
-        billingDataHelper.getTotalCostFormattedDate(filterStartTime),
-        billingDataHelper.getTotalCostFormattedDate(endInstant));
+    boolean isYearRequired = billingDataHelper.isYearRequired(filterStartTime, endInstant);
+    String trendCostDescription =
+        String.format(TREND_COST_DESCRIPTION, billingDataHelper.formatNumber(getRoundedDoubleValue(totalBillingAmount)),
+            billingDataHelper.getTotalCostFormattedDate(filterStartTime, isYearRequired),
+            billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired));
     String trendCostValue = NA_VALUE;
     if (prevBillingAmountData != null && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal prevTotalBillingAmount = prevBillingAmountData.getCost();
       Instant startInstant = Instant.ofEpochMilli(prevBillingAmountData.getMinStartTime());
-      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
-      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
+      isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
+      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
       BigDecimal amountDifference = totalBillingAmount.subtract(prevTotalBillingAmount);
       if (null != forecastCost) {
         amountDifference = forecastCost.subtract(prevTotalBillingAmount);

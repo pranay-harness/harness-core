@@ -22,13 +22,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -39,7 +44,8 @@ public class BillingDataHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
-  private static final String TOTAL_COST_DATE_PATTERN = "dd MMMM, yyyy";
+  private static final String TOTAL_COST_DATE_PATTERN = "MMM dd, yyyy";
+  private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
 
@@ -88,8 +94,12 @@ public class BillingDataHelper {
     }
   }
 
-  public String getTotalCostFormattedDate(Instant instant) {
-    return getFormattedDate(instant, TOTAL_COST_DATE_PATTERN);
+  public String getTotalCostFormattedDate(Instant instant, boolean isYearRequired) {
+    if (isYearRequired) {
+      return getFormattedDate(instant, TOTAL_COST_DATE_PATTERN);
+    } else {
+      return getFormattedDate(instant, TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR);
+    }
   }
 
   protected List<QLBillingDataFilter> getTrendFilter(
@@ -272,5 +282,17 @@ public class BillingDataHelper {
       }
     }
     return listOfFields;
+  }
+
+  public boolean isYearRequired(Instant startInstant, Instant endInstant) {
+    LocalDate startDate = LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC).toLocalDate();
+    LocalDate endDate = LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC).toLocalDate();
+    return startDate.getYear() - endDate.getYear() != 0;
+  }
+
+  // To insert commas in given number
+  protected String formatNumber(Double number) {
+    NumberFormat formatter = NumberFormat.getInstance(Locale.US);
+    return formatter.format(number);
   }
 }

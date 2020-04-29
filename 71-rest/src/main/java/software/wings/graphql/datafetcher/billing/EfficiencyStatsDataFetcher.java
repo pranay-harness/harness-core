@@ -177,10 +177,11 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
   private QLContextInfo getContextInfo(
       QLStatsBreakdownInfo costStats, List<QLBillingDataFilter> filters, String accountId) {
-    String startTime = billingDataHelper.getTotalCostFormattedDate(
-        Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue()));
-    String endTime = billingDataHelper.getTotalCostFormattedDate(
-        Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(filters).getValue().longValue()));
+    Instant startInstant = Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
+    Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(filters).getValue().longValue());
+    boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
+    String startTime = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+    String endTime = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
 
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startTime, endTime);
 

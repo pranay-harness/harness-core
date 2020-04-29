@@ -301,8 +301,9 @@ public class PreAggregatedBillingDataHelper {
       PreAggregatedCostData costData, List<CloudBillingFilter> filters, String label) {
     Instant startInstant = Instant.ofEpochMilli(getStartTimeFilter(filters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
-    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant);
-    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant);
+    boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
+    String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+    String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
     String totalCostDescription = String.format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
     String totalCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(costData.getCost()));
     return QLBillingStatsInfo.builder()
