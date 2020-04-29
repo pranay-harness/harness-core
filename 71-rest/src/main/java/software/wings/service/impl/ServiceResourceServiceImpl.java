@@ -110,6 +110,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.HarnessTagType;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -496,6 +497,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                  .entityType(EntityType.SERVICE)
                                  .entityName(service.getName())
                                  .accountId(service.getAccountId())
+                                 .tagType(HarnessTagType.HARNESS)
                                  .build();
     harnessTagService.attachTag(tagLink);
   }
@@ -510,6 +512,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                  .entityType(EntityType.SERVICE)
                                  .entityName(service.getName())
                                  .accountId(service.getAccountId())
+                                 .tagType(HarnessTagType.HARNESS)
                                  .build();
     harnessTagService.attachTag(tagLink);
   }

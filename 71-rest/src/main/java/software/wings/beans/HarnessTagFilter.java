@@ -18,6 +18,7 @@ public class HarnessTagFilter {
   @Builder
   public static class TagFilterCondition {
     private String name;
+    private HarnessTagType tagType;
     private List<String> values;
     Operator operator;
   }

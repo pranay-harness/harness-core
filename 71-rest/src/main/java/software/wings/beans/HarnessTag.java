@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.HarnessTagType.USER;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -49,6 +51,7 @@ public class HarnessTag
   @Id private String uuid;
   @NotEmpty private String accountId;
   private String key;
+  @Builder.Default private HarnessTagType tagType = USER;
   private Set<String> allowedValues;
   private transient Set<String> inUseValues;
 
