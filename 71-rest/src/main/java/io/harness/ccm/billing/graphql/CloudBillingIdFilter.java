@@ -2,13 +2,14 @@ package io.harness.ccm.billing.graphql;
 
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_INSTANCE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
-import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_REGION;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_SERVICE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_USAGE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PRODUCT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PROJECT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_SKU;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_REGION;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.CLOUD_PROVIDER;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -17,7 +18,6 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.harness.ccm.billing.GcpBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 @Data
 @Builder
-public class BillingIdFilter implements Filter {
+public class CloudBillingIdFilter implements Filter {
   private QLIdOperator operator;
   private String variable;
   private String[] values;
@@ -50,19 +50,22 @@ public class BillingIdFilter implements Filter {
 
     DbColumn dbColumn = null;
     switch (variable) {
+      case CLOUD_PROVIDER:
+        dbColumn = PreAggregatedTableSchema.cloudProvider;
+        break;
       case BILLING_GCP_PROJECT:
-        dbColumn = GcpBillingTableSchema.projectName;
+        dbColumn = PreAggregatedTableSchema.gcpProjectId;
         break;
       case BILLING_GCP_PRODUCT:
-        dbColumn = GcpBillingTableSchema.serviceDescription;
+        dbColumn = PreAggregatedTableSchema.gcpProduct;
         break;
       case BILLING_GCP_SKU:
-        dbColumn = GcpBillingTableSchema.skuId;
+        dbColumn = PreAggregatedTableSchema.gcpSkuDescription;
         break;
       case BILLING_GCP_BILLING_ACCOUNT_ID:
-        dbColumn = GcpBillingTableSchema.billingAccountId;
+        dbColumn = PreAggregatedTableSchema.gcpBillingAccountId;
         break;
-      case BILLING_AWS_REGION:
+      case BILLING_REGION:
         dbColumn = PreAggregatedTableSchema.region;
         break;
       case BILLING_AWS_SERVICE:

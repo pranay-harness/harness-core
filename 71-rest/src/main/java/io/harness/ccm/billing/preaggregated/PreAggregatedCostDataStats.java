@@ -8,4 +8,5 @@ import lombok.Value;
 public class PreAggregatedCostDataStats {
   PreAggregatedCostData unBlendedCost;
   PreAggregatedCostData blendedCost;
+  PreAggregatedCostData cost;
 }

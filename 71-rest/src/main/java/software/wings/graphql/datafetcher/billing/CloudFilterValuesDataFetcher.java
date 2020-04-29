@@ -2,10 +2,10 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
-import io.harness.ccm.billing.graphql.BillingAggregate;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
-import io.harness.ccm.billing.graphql.CloudSortCriteria;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -18,22 +18,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CloudFilterValuesDataFetcher
-    extends AbstractStatsDataFetcher<BillingAggregate, CloudBillingFilter, CloudGroupBy, CloudSortCriteria> {
+public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
+    CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;
-  @Inject CloudHelper cloudHelper;
+  @Inject CloudBillingHelper cloudBillingHelper;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, BillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
-      List<CloudGroupBy> groupByList, List<CloudSortCriteria> sort) {
-    String queryTableName = cloudHelper.getCloudProviderTableName(filters);
-    filters.removeIf(filter -> filter.getCloudProvider() != null);
+  protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
+      List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName(filters);
 
     return preAggregateBillingService.getPreAggregateFilterValueStats(Optional.ofNullable(groupByList)
                                                                           .map(Collection::stream)
                                                                           .orElseGet(Stream::empty)
-                                                                          .map(CloudGroupBy::toGroupbyObject)
+                                                                          .map(CloudBillingGroupBy::toGroupbyObject)
                                                                           .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
@@ -44,7 +43,7 @@ public class CloudFilterValuesDataFetcher
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<CloudGroupBy> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList, QLData qlData) {
     return null;
   }
 

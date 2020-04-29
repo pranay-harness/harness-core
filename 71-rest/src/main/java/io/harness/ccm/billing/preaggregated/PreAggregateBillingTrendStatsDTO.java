@@ -13,4 +13,5 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 public class PreAggregateBillingTrendStatsDTO implements QLData {
   QLBillingStatsInfo unBlendedCost;
   QLBillingStatsInfo blendedCost;
+  QLBillingStatsInfo cost;
 }

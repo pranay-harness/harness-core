@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import com.hazelcast.util.Preconditions;
 import io.harness.ccm.billing.GcpBillingService;
-import io.harness.ccm.billing.graphql.BillingAggregate;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class GcpBillingTrendStatsDataFetcher
-    extends AbstractStatsDataFetcher<BillingAggregate, CloudBillingFilter, CloudGroupBy, QLBillingSortCriteria> {
+public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
+    CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
 
   private static final String BILLING_GCP_TOTAL_COST_LABEL = "Total Cost";
@@ -37,8 +37,8 @@ public class GcpBillingTrendStatsDataFetcher
   private static final String BILLING_GCP_FORECAST_COST_DESCRIPTION = "of %s - %s";
 
   @Override
-  protected QLData fetch(String accountId, BillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
-      List<CloudGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+  protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
+      List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
     // find the start date from the conditions
     Optional<CloudBillingFilter> startTimeFilter = filters.stream().filter(f -> f.getStartTime() != null).findFirst();
@@ -90,7 +90,7 @@ public class GcpBillingTrendStatsDataFetcher
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<CloudGroupBy> groupByList, QLData qlData) {
+  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList, QLData qlData) {
     return null;
   }
 

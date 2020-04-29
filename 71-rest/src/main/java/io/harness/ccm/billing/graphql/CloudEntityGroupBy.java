@@ -1,21 +1,18 @@
 package io.harness.ccm.billing.graphql;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.harness.ccm.billing.GcpBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
 public enum CloudEntityGroupBy {
-  project(GcpBillingTableSchema.projectName),
-  projectId(GcpBillingTableSchema.projectId),
-  projectNumber(GcpBillingTableSchema.projectAncestryNumbers),
-  product(GcpBillingTableSchema.serviceDescription),
-  sku(GcpBillingTableSchema.skuDescription),
-  skuId(GcpBillingTableSchema.skuId),
-  region(GcpBillingTableSchema.locationRegion),
-  billingAccountId(GcpBillingTableSchema.billingAccountId),
-  usageAmount(GcpBillingTableSchema.usageAmountInPricingUnits),
-  usageUnit(GcpBillingTableSchema.usagePricingUnit),
-  awsRegion(PreAggregatedTableSchema.region),
+  projectId(PreAggregatedTableSchema.gcpProjectId),
+  billingAccountId(PreAggregatedTableSchema.gcpBillingAccountId),
+  skuId(PreAggregatedTableSchema.gcpSkuId),
+  product(PreAggregatedTableSchema.gcpProduct),
+  sku(PreAggregatedTableSchema.gcpSkuDescription),
+
+  projectNumber(PreAggregatedTableSchema.gcpProjectNumbers),
+
+  region(PreAggregatedTableSchema.region),
   awsLikedAccount(PreAggregatedTableSchema.usageAccountId),
   awsUsageType(PreAggregatedTableSchema.usageType),
   awsInstanceType(PreAggregatedTableSchema.instanceType),

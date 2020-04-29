@@ -81,6 +81,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
               dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(), filters, TOTAL_COST_LABEL))
           .unBlendedCost(
               dataHelper.getCostBillingStats(preAggregatedCostDataStats.getUnBlendedCost(), filters, TOTAL_COST_LABEL))
+          .cost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getCost(), filters, TOTAL_COST_LABEL))
           .build();
     } else {
       return PreAggregateBillingTrendStatsDTO.builder().build();

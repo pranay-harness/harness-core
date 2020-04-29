@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpBillingService;
-import io.harness.ccm.billing.graphql.BillingAggregate;
-import io.harness.ccm.billing.graphql.BillingTimeFilter;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +31,9 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
   @InjectMocks private GcpBillingTrendStatsDataFetcher trendStatsDataFetcher;
 
   private String accountId = "ACCOUNT_ID";
-  private BillingAggregate aggregate = BillingAggregate.builder().build();
+  private CloudBillingAggregate aggregate = CloudBillingAggregate.builder().build();
   private List<CloudBillingFilter> filters = new ArrayList<>();
-  private List<CloudGroupBy> groupBy = new ArrayList<>();
+  private List<CloudBillingGroupBy> groupBy = new ArrayList<>();
 
   private static Calendar calendar1;
   private static Calendar calendar2;
@@ -45,12 +45,12 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
 
     CloudBillingFilter startTimeFilter = new CloudBillingFilter();
     startTimeFilter.setStartTime(
-        BillingTimeFilter.builder().value(calendar1.getTime().getTime()).operator(QLTimeOperator.AFTER).build());
+        CloudBillingTimeFilter.builder().value(calendar1.getTime().getTime()).operator(QLTimeOperator.AFTER).build());
     filters.add(startTimeFilter);
 
     CloudBillingFilter endTimeFilter = new CloudBillingFilter();
     endTimeFilter.setEndTime(
-        BillingTimeFilter.builder().value(calendar2.getTime().getTime()).operator(QLTimeOperator.BEFORE).build());
+        CloudBillingTimeFilter.builder().value(calendar2.getTime().getTime()).operator(QLTimeOperator.BEFORE).build());
     filters.add(endTimeFilter);
   }
 
