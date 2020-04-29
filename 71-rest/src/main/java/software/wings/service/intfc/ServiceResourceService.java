@@ -12,6 +12,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -503,12 +504,16 @@ public interface ServiceResourceService extends OwnedByApplication {
   void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
 
   ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile);
+  ManifestFile createManifestFile(
+      String appId, String serviceId, ManifestFile manifestFile, AppManifestKind appManifestKind);
 
-  ManifestFile getValuesYaml(String appId, String serviceId, String manifestFileId);
+  ManifestFile getManifestFile(String appId, String serviceId, String manifestFileId);
 
   ManifestFile updateValuesYaml(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile);
+  ManifestFile updateManifestFile(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile,
+      AppManifestKind appManifestKind);
 
-  void deleteValuesYaml(String appId, String serviceId, String manifestFileId);
+  void deleteManifestFile(String appId, String serviceId, String manifestFileId);
 
   ApplicationManifest createValuesAppManifest(String appId, String serviceId, ApplicationManifest applicationManifest);
 

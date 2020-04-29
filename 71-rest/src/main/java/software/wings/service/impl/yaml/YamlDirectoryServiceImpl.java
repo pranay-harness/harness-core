@@ -15,6 +15,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
@@ -1074,6 +1075,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           serviceFolder.addChild(valuesFolder);
         }
         // ------------------- END VALUES YAML OVERRIDE SECTION -----------------------
+
+        // ------------------- OC PARAMS OVERRIDE SECTION -----------------------
+
+        FolderNode ocParamsFolder = generateOcParamsFolder(accountId, service, servicePath);
+        if (ocParamsFolder != null) {
+          serviceFolder.addChild(ocParamsFolder);
+        }
+        // ------------------- END OC PARAMS OVERRIDE SECTION -----------------------
       }
     }
 
@@ -1081,29 +1090,46 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateValuesFolder(String accountId, Service service, DirectoryPath servicePath) {
+    return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.VALUES);
+  }
+
+  private FolderNode generateOcParamsFolder(String accountId, Service service, DirectoryPath servicePath) {
+    // Hiding OC Params Folder when not OPEN_SHIFT_TEMPLATES
     ApplicationManifest appManifest =
-        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), AppManifestKind.VALUES);
+        applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), K8S_MANIFEST);
     if (appManifest == null) {
       return null;
     }
-    DirectoryPath valuesFolderPath = servicePath.clone().add(VALUES_FOLDER);
-    FolderNode valuesFolder = new FolderNode(
-        accountId, VALUES_FOLDER, ApplicationManifest.class, valuesFolderPath, service.getAppId(), yamlGitSyncService);
-    valuesFolder.addChild(new ServiceLevelYamlNode(accountId, appManifest.getUuid(), service.getAppId(),
-        service.getUuid(), INDEX_YAML, ApplicationManifest.class, valuesFolderPath.clone().add(INDEX_YAML),
-        yamlGitSyncService, Type.APPLICATION_MANIFEST));
+    if (appManifest.getStoreType() != StoreType.OC_TEMPLATES) {
+      return null;
+    }
+    return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.OC_PARAMS);
+  }
+
+  private FolderNode generateKindBasedFolder(
+      String accountId, Service service, DirectoryPath servicePath, AppManifestKind appManifestKind) {
+    ApplicationManifest appManifest =
+        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), appManifestKind);
+    if (appManifest == null) {
+      return null;
+    }
+    DirectoryPath folderPath = servicePath.clone().add(appManifestKind.getYamlFolderName());
+    FolderNode folder = new FolderNode(accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class,
+        folderPath, service.getAppId(), yamlGitSyncService);
+    folder.addChild(new ServiceLevelYamlNode(accountId, appManifest.getUuid(), service.getAppId(), service.getUuid(),
+        INDEX_YAML, ApplicationManifest.class, folderPath.clone().add(INDEX_YAML), yamlGitSyncService,
+        Type.APPLICATION_MANIFEST));
     if (appManifest.getStoreType() == StoreType.Local) {
       List<ManifestFile> manifestFiles =
           applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), appManifest.getUuid());
       if (isNotEmpty(manifestFiles)) {
         ManifestFile valuesFile = manifestFiles.get(0);
-        valuesFolder.addChild(
-            new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(), service.getUuid(),
-                valuesFile.getFileName(), ManifestFile.class, valuesFolderPath.clone().add(valuesFile.getFileName()),
-                yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+        folder.addChild(new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(), service.getUuid(),
+            valuesFile.getFileName(), ManifestFile.class, folderPath.clone().add(valuesFile.getFileName()),
+            yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
       }
     }
-    return valuesFolder;
+    return folder;
   }
 
   private FolderNode generateApplicationManifestNodeForService(
@@ -1422,7 +1448,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         // ------------------- END CONFIG FILES SECTION -----------------------
 
         // ------------------- VALUES FILES SECTION -----------------------
-        FolderNode valuesFolder = generateEnvValuesFolder(accountId, environment, envPath);
+        FolderNode valuesFolder = generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.VALUES);
         if (valuesFolder != null) {
           envFolder.addChild(valuesFolder);
         }
@@ -1441,29 +1467,38 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           envFolder.addChild(helmServiceOverridesFolder);
         }
         // ------------------- END HELM OVERRIDE SECTION -----------------------
+
+        // ------------------- OC PARAMS FILES SECTION -----------------------
+        FolderNode ocParamsFolder = generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.OC_PARAMS);
+        if (ocParamsFolder != null) {
+          envFolder.addChild(ocParamsFolder);
+        }
+        // ------------------- END OC PARAMS FILES SECTION -----------------------
       }
     }
 
     return environmentsFolder;
   }
 
-  private FolderNode generateEnvValuesFolder(String accountId, Environment env, DirectoryPath envPath) {
+  private FolderNode generateEnvValuesFolder(
+      String accountId, Environment env, DirectoryPath envPath, AppManifestKind appManifestKind) {
     List<ApplicationManifest> applicationManifests =
-        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), appManifestKind);
 
     if (isEmpty(applicationManifests)) {
       return null;
     }
 
-    DirectoryPath valuesPath = envPath.clone().add(VALUES_FOLDER);
-    FolderNode valuesFolder = new FolderNode(
-        accountId, VALUES_FOLDER, ApplicationManifest.class, valuesPath, env.getAppId(), yamlGitSyncService);
+    DirectoryPath valuesPath = envPath.clone().add(appManifestKind.getYamlFolderName());
+    FolderNode valuesFolder = new FolderNode(accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class,
+        valuesPath, env.getAppId(), yamlGitSyncService);
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
+        applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), appManifestKind);
     addValuesFolderFiles(accountId, env, valuesPath, valuesFolder, applicationManifest);
 
     // Fetch service specific environment value overrides
-    FolderNode serviceSpecificValuesFolder = generateEnvServiceSpecificValuesFolder(accountId, env, valuesPath);
+    FolderNode serviceSpecificValuesFolder =
+        generateEnvServiceSpecificValuesFolder(accountId, env, valuesPath, appManifestKind);
     if (serviceSpecificValuesFolder != null) {
       valuesFolder.addChild(serviceSpecificValuesFolder);
     }
@@ -1541,9 +1576,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateEnvServiceSpecificValuesFolder(
-      String accountId, Environment env, DirectoryPath valuesPath) {
+      String accountId, Environment env, DirectoryPath valuesPath, AppManifestKind appManifestKind) {
     List<ApplicationManifest> applicationManifests =
-        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), appManifestKind);
 
     if (isEmpty(applicationManifests)) {
       return null;

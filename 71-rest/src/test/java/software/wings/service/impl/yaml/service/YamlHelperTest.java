@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,6 +32,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.yaml.YamlType;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateService;
 
@@ -104,5 +107,22 @@ public class YamlHelperTest extends WingsBaseTest {
             + newFolderName + "/test.yaml",
         GLOBAL_APP_ID, "random");
     assertThat(returnTemplateFolderCase2.getName()).isEqualTo(newFolderName);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestBasedYamlTypeForFilePath() {
+    YamlType yamlType = yamlHelper.getApplicationManifestBasedYamlTypeForFilePath(
+        "Setup/Applications/App1/Environments/env1/PCF Overrides/Index.yaml");
+    assertThat(yamlType).isEqualTo(YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE);
+
+    yamlType = yamlHelper.getApplicationManifestBasedYamlTypeForFilePath(
+        "Setup/Applications/App1/Environments/env1/OC Params/Index.yaml");
+    assertThat(yamlType).isEqualTo(YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE);
+
+    assertThatThrownBy(() -> yamlHelper.getApplicationManifestBasedYamlTypeForFilePath("random path"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Could not find Yaml Type for file path : [random path]");
   }
 }

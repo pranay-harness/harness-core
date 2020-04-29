@@ -20,7 +20,6 @@ import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
@@ -32,6 +31,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -63,6 +63,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private transient OpenShiftManagerService openShiftManagerService;
 
   public static final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
@@ -103,8 +104,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     K8sTaskParameters k8sTaskParameters =

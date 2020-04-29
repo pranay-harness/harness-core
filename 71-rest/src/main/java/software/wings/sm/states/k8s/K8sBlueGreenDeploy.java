@@ -16,7 +16,6 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
@@ -93,8 +92,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     K8sTaskParameters k8sTaskParameters =

@@ -475,6 +475,16 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (service.isK8sV2()) {
       serviceTemplate.setHelmChartOverride(applicationManifestService.getAppManifest(
           serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), HELM_CHART_OVERRIDE));
+
+      ApplicationManifest ocParamsOverrideAppManifest =
+          applicationManifestService.getAppManifest(serviceTemplate.getAppId(), serviceTemplate.getEnvId(),
+              serviceTemplate.getServiceId(), AppManifestKind.OC_PARAMS);
+      serviceTemplate.setOcParamsOverrideAppManifest(ocParamsOverrideAppManifest);
+
+      if (ocParamsOverrideAppManifest != null) {
+        serviceTemplate.setOcParamsOverrideFile(applicationManifestService.getManifestFileByFileName(
+            ocParamsOverrideAppManifest.getUuid(), AppManifestKind.OC_PARAMS.getDefaultFileName()));
+      }
     }
   }
 

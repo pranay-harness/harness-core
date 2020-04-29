@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -97,6 +98,7 @@ import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
+import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -161,6 +163,7 @@ public class K8sStateHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private KustomizeHelper kustomizeHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private OpenShiftManagerService openShiftManagerService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
@@ -210,6 +213,7 @@ public class K8sStateHelper {
         manifestConfigBuilder.kustomizeConfig(kustomizeConfig);
         prepareRemoteDelegateManifestConfig(context, appManifest, manifestConfigBuilder);
         break;
+      case OC_TEMPLATES:
       case Remote:
       case HelmSourceRepo:
         prepareRemoteDelegateManifestConfig(context, appManifest, manifestConfigBuilder);
@@ -244,7 +248,11 @@ public class K8sStateHelper {
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
 
-    gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
+    if (appManifest.getStoreType() != StoreType.OC_TEMPLATES) {
+      // Normalization is done for folders only. This should ideally be done at Delegate side where we know folder/file.
+      // Also appending `/` is already taken care by Paths library and we need not do it
+      gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
+    }
     manifestConfigBuilder.gitFileConfig(gitFileConfig);
     manifestConfigBuilder.gitConfig(gitConfig);
     manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
@@ -460,6 +468,11 @@ public class K8sStateHelper {
           context, K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
     }
 
+    // OpenShift takes in reverse order
+    if (openShiftManagerService.isOpenShiftManifestConfig(context)) {
+      Collections.reverse(result);
+    }
+
     return result;
   }
 
@@ -588,20 +601,36 @@ public class K8sStateHelper {
   public ExecutionResponse executeWrapperWithManifest(K8sStateExecutor k8sStateExecutor, ExecutionContext context) {
     try {
       k8sStateExecutor.validateParameters(context);
+      boolean valuesInGit = false;
+      boolean valuesInHelmChartRepo = false;
+      boolean kustomizeSource = false;
+      boolean remoteParams = false;
+      boolean ocTemplateSource = false;
 
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-          applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+      Activity activity;
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap;
 
-      boolean valuesInGit = isValuesInGit(appManifestMap);
-      boolean valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
-      boolean kustomizeSource = applicationManifestUtils.isKustomizeSource(context);
+      if (openShiftManagerService.isOpenShiftManifestConfig(context)) {
+        ocTemplateSource = true;
+        appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.OC_PARAMS);
+        if (isNotEmpty(appManifestMap) && isValuesInGit(appManifestMap)) {
+          remoteParams = true;
+        }
+      } else {
+        appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
 
-      Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
-          activityService, k8sStateExecutor.commandUnitList(valuesInGit || valuesInHelmChartRepo || kustomizeSource));
+        valuesInGit = isValuesInGit(appManifestMap);
+        valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
+        kustomizeSource = applicationManifestUtils.isKustomizeSource(context);
+      }
+      activity =
+          createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(), activityService,
+              k8sStateExecutor.commandUnitList(
+                  valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource));
 
       if (valuesInHelmChartRepo) {
         return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName());
-      } else if (valuesInGit) {
+      } else if (valuesInGit || remoteParams) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else {
         return k8sStateExecutor.executeK8sTask(context, activity.getUuid());
@@ -1000,5 +1029,11 @@ public class K8sStateHelper {
                                               .instanceDetails(instanceDetails)
                                               .build())
                                    .build());
+  }
+
+  public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(ExecutionContext context) {
+    boolean isOpenShiftManifestConfig = openShiftManagerService.isOpenShiftManifestConfig(context);
+    AppManifestKind appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
+    return applicationManifestUtils.getApplicationManifests(context, appManifestKind);
   }
 }

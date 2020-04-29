@@ -801,7 +801,11 @@ public class GitClientImpl implements GitClient {
 
         for (String filePath : gitRequest.getFilePaths()) {
           File sourceDir = new File(Paths.get(repoPath + "/" + filePath).toString());
-          FileUtils.copyDirectory(sourceDir, destinationDir);
+          if (sourceDir.isFile()) {
+            FileUtils.copyFile(sourceDir, Paths.get(destinationDirectory, filePath).toFile());
+          } else {
+            FileUtils.copyDirectory(sourceDir, destinationDir);
+          }
         }
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
@@ -816,7 +820,7 @@ public class GitClientImpl implements GitClient {
                 .append(", FilePaths: ")
                 .append(gitRequest.getFilePaths())
                 .toString(),
-            USER);
+            e, USER);
       }
     }
   }

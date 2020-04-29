@@ -27,6 +27,8 @@ import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MULTIPLE_ANY;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
+import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PCF_YAML_EXPRESSION;
@@ -96,6 +98,11 @@ import software.wings.yaml.trigger.TriggerArtifactVariableYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 import software.wings.yaml.trigger.TriggerVariableYaml;
 import software.wings.yaml.trigger.WebhookEventYaml;
+
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author rktummala on 10/17/17
@@ -206,6 +213,48 @@ public enum YamlType {
           VALUES_FOLDER, SERVICES_FOLDER, ANY, VALUES_YAML_KEY),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, SERVICES_FOLDER, ANY),
+      ManifestFile.class),
+
+  // PARAMS_INDEX_FILE
+  APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE(YamlConstants.OC_PARAMS_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          OC_PARAMS_FOLDER, INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, OC_PARAMS_FOLDER),
+      ApplicationManifest.class),
+
+  APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE(YamlConstants.OC_PARAMS_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, OC_PARAMS_FOLDER),
+      ApplicationManifest.class),
+
+  APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE(YamlConstants.OC_PARAMS_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, SERVICES_FOLDER, ANY),
+      ApplicationManifest.class),
+
+  // PARAMS_FILE
+  MANIFEST_FILE_OC_PARAMS_SERVICE_OVERRIDE(YamlConstants.OC_PARAMS_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          OC_PARAMS_FOLDER, OC_PARAMS_FILE),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, OC_PARAMS_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_OC_PARAMS_ENV_OVERRIDE(YamlConstants.OC_PARAMS_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, OC_PARAMS_FILE),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, OC_PARAMS_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_OC_PARAMS_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, SERVICES_FOLDER, ANY, OC_PARAMS_FILE),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          OC_PARAMS_FOLDER, SERVICES_FOLDER, ANY),
       ManifestFile.class),
 
   // This defines prefix and path expression for PCF Override yml files
@@ -409,5 +458,22 @@ public enum YamlType {
 
   public Class getBeanClass() {
     return beanClass;
+  }
+
+  public static List<YamlType> getYamlTypes(Class beanClass) {
+    List<YamlType> yamlTypes = new ArrayList<>();
+    for (YamlType yamlType : YamlType.values()) {
+      if (yamlType.getBeanClass() == beanClass) {
+        yamlTypes.add(yamlType);
+      }
+    }
+    return yamlTypes;
+  }
+
+  private static EnumMap<YamlType, Pattern> yamlTypeCompiledPatternMap = new EnumMap<>(YamlType.class);
+
+  public static Pattern getCompiledPatternForYamlTypePathExpression(YamlType yamlType) {
+    return yamlTypeCompiledPatternMap.computeIfAbsent(
+        yamlType, yamlType1 -> Pattern.compile(yamlType1.getPathExpression()));
   }
 }

@@ -5,7 +5,6 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
@@ -13,6 +12,8 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
@@ -23,7 +24,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.persistence.UuidAccess;
@@ -46,7 +46,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
-import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -105,6 +104,7 @@ import software.wings.yaml.trigger.DeploymentTriggerYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
 import java.util.List;
+import javax.annotation.Nonnull;
 
 @Singleton
 @Slf4j
@@ -771,7 +771,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   @Override
-  public YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
+  @Nonnull
+  public YamlType getYamlTypeFromAppManifest(@Nonnull ApplicationManifest applicationManifest) {
     AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
 
     switch (appManifestSource) {
@@ -788,34 +789,38 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   private YamlType getYamlTypeForEnvServiceOverride(ApplicationManifest applicationManifest) {
-    notNullCheck("ApplicationManifest can not be null", applicationManifest);
-    YamlType yamlType;
-    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
-    } else if (HELM_CHART_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
-    } else {
-      throw new UnknownEnumTypeException("ApplicationManifestKind",
-          applicationManifest.getKind() == null ? "null" : applicationManifest.getKind().name());
+    notNullCheck("ApplicationManifest Kind can not be null", applicationManifest.getKind());
+
+    switch (applicationManifest.getKind()) {
+      case VALUES:
+        return APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+      case PCF_OVERRIDE:
+        return APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+      case HELM_CHART_OVERRIDE:
+        return APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
+      case OC_PARAMS:
+        return APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
+      default:
+        throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
     }
-    return yamlType;
   }
 
   private YamlType getYamlTypeForEnvOverrideAllServices(ApplicationManifest applicationManifest) {
     notNullCheck("ApplicationManifest can not be null", applicationManifest);
-    YamlType yamlType;
-    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
-    } else if (AppManifestKind.HELM_CHART_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
-    } else {
-      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
+    notNullCheck("ApplicationManifest Kind can not be null", applicationManifest.getKind());
+
+    switch (applicationManifest.getKind()) {
+      case VALUES:
+        return APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
+      case PCF_OVERRIDE:
+        return APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
+      case HELM_CHART_OVERRIDE:
+        return APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
+      case OC_PARAMS:
+        return APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
+      default:
+        throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
     }
-    return yamlType;
   }
 
   @Override

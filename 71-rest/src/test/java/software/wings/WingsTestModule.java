@@ -43,6 +43,8 @@ import software.wings.helpers.ext.kustomize.KustomizeClient;
 import software.wings.helpers.ext.kustomize.KustomizeClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
+import software.wings.helpers.ext.openshift.OpenShiftClient;
+import software.wings.helpers.ext.openshift.OpenShiftClientImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
@@ -163,6 +165,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
     bind(GitService.class).to(GitServiceImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
+    bind(OpenShiftClient.class).to(OpenShiftClientImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SearchDao.class).to(ElasticsearchDao.class);
     bind(PcfClient.class).to(PcfClientImpl.class);

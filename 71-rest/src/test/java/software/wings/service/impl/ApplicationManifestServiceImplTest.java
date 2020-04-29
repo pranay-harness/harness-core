@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -16,6 +18,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 
 import com.google.inject.Inject;
@@ -361,5 +364,37 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     } catch (Exception e) {
       assertThat(e instanceof InvalidRequestException).isTrue();
     }
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testValidateOpenShiftSourceRepoAppManifest() {
+    // success validation
+    GitFileConfig gitFileConfig =
+        GitFileConfig.builder().branch("master").useBranch(true).connectorId("id").filePath("filepath").build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(OC_TEMPLATES).gitFileConfig(gitFileConfig).build();
+
+    applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest);
+
+    // missing params
+    applicationManifest.setGitFileConfig(null);
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Git File Config is mandatory for OpenShift Source Repository Type");
+    applicationManifest.setGitFileConfig(gitFileConfig);
+
+    gitFileConfig.setBranch("");
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Branch cannot be empty if useBranch is selected.");
+    gitFileConfig.setBranch("master");
+
+    gitFileConfig.setFilePath("");
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Template File Path can't be empty");
+    gitFileConfig.setFilePath("filepath");
   }
 }

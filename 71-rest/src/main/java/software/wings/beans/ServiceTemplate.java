@@ -59,6 +59,8 @@ public class ServiceTemplate extends Base {
   @Getter @Setter private transient ApplicationManifest valuesOverrideAppManifest;
   @Getter @Setter private transient ApplicationManifest helmChartOverride;
   @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
+  @Getter @Setter private transient ApplicationManifest ocParamsOverrideAppManifest;
+  @Getter @Setter private transient ManifestFile ocParamsOverrideFile;
 
   private boolean defaultServiceTemplate;
 
@@ -279,7 +281,9 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.valuesOverrideAppManifest, other.valuesOverrideAppManifest)
         && Objects.equals(this.valuesOverrideManifestFile, other.valuesOverrideManifestFile)
         && Objects.equals(this.helmChartOverride, other.helmChartOverride)
-        && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
+        && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate)
+        && Objects.equals(this.ocParamsOverrideAppManifest, other.ocParamsOverrideAppManifest)
+        && Objects.equals(this.ocParamsOverrideFile, other.ocParamsOverrideFile);
   }
 
   @Override
@@ -297,6 +301,8 @@ public class ServiceTemplate extends Base {
         .add("valuesOverrideManifestFile", valuesOverrideManifestFile)
         .add("helmChartOverride", helmChartOverride)
         .add("defaultServiceTemplate", defaultServiceTemplate)
+        .add("ocParamsOverrideAppManifest", ocParamsOverrideAppManifest)
+        .add("ocParamsOverrideFile", ocParamsOverrideFile)
         .toString();
   }
 

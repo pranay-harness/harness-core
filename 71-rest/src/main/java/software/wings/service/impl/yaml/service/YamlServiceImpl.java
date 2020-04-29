@@ -14,6 +14,7 @@ import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER_PATH;
 import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
@@ -23,6 +24,9 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
@@ -198,13 +202,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         SERVICE, PROVISIONER, ARTIFACT_STREAM, ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE,
         CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
         APPLICATION_MANIFEST, MANIFEST_FILE, APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE,
-        MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING, CV_CONFIGURATION, INFRA_DEFINITION,
-        CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE,
-        APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE, APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE,
-        APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE, APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE,
-        APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_ENV_OVERRIDE,
-        MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE,
-        MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, DEPLOYMENT_TRIGGER);
+        APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT,
+        INFRA_MAPPING, CV_CONFIGURATION, INFRA_DEFINITION, CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE,
+        APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE,
+        APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE, APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE,
+        APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE, APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE,
+        APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE, APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE,
+        MANIFEST_FILE_VALUES_ENV_OVERRIDE, MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE,
+        MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE,
+        TRIGGER, DEPLOYMENT_TRIGGER);
   }
 
   @Override
@@ -440,6 +446,24 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         && yamlFilePath.contains(VALUES_YAML_KEY)) {
       changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE)
           .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(YamlConstants.OC_PARAMS_FOLDER + YamlConstants.PATH_DELIMITER + OC_PARAMS_FILE)
+        && !yamlFilePath.contains(ENVIRONMENTS_FOLDER)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_OC_PARAMS_SERVICE_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_OC_PARAMS_SERVICE_OVERRIDE));
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(YamlConstants.OC_PARAMS_FOLDER + YamlConstants.PATH_DELIMITER + OC_PARAMS_FILE)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_OC_PARAMS_ENV_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_OC_PARAMS_ENV_OVERRIDE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(
+                   YamlConstants.OC_PARAMS_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.SERVICES_FOLDER)
+        && yamlFilePath.contains(OC_PARAMS_FILE)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_OC_PARAMS_ENV_SERVICE_OVERRIDE)
+          .withYamlSyncHandler(
+              yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_OC_PARAMS_ENV_SERVICE_OVERRIDE));
 
       return changeContextBuilder.build();
     } else if (yamlFilePath.contains(
@@ -780,7 +804,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private boolean doesEntityUsesActualFile(String filePath) {
-    return Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches();
+    return Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()
+        || filePath.contains(OC_PARAMS_FILE);
   }
 
   private void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList)

@@ -7,6 +7,8 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.yaml.YamlType;
 import software.wings.yaml.YamlPayload;
 
+import javax.annotation.Nonnull;
+
 /**
  * Yaml Resource Service.
  *
@@ -130,7 +132,7 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getCVConfiguration(String appId, String cvConfigId);
 
-  YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest);
+  @Nonnull YamlType getYamlTypeFromAppManifest(@Nonnull ApplicationManifest applicationManifest);
 
   RestResponse<YamlPayload> getHarnessTags(String accountId);
 }

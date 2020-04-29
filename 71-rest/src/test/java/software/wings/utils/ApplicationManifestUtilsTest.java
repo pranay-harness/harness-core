@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -136,7 +137,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testPopulateValuesFilesFromAppManifest() {
-    ApplicationManifest appManifest1 = ApplicationManifest.builder().storeType(Local).build();
+    ApplicationManifest appManifest1 = ApplicationManifest.builder().storeType(Local).kind(VALUES).build();
     appManifest1.setUuid("appManifest1");
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
@@ -149,7 +150,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.size()).isEqualTo(0);
 
-    ApplicationManifest appManifest2 = ApplicationManifest.builder().storeType(Local).build();
+    ApplicationManifest appManifest2 = ApplicationManifest.builder().storeType(Local).kind(VALUES).build();
     appManifest2.setUuid("appManifest2");
     appManifestMap.put(K8sValuesLocation.Environment, appManifest2);
     when(applicationManifestService.getManifestFileByFileName("appManifest2", values_filename))

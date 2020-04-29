@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
@@ -70,6 +72,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -209,9 +212,12 @@ public class YamlHelper {
   }
 
   public Service getServiceOverrideFromAppManifestPath(String appId, String yamlFilePath) {
-    String prefixExpression = null;
+    String prefixExpression;
+
     if (yamlFilePath.contains(HELM_CHART_OVERRIDE_FOLDER)) {
       prefixExpression = YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+    } else if (yamlFilePath.contains(OC_PARAMS_FOLDER)) {
+      prefixExpression = YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE.getPrefixExpression();
     } else {
       prefixExpression = yamlFilePath.contains(PCF_OVERRIDES_FOLDER)
           ? APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression()
@@ -233,6 +239,14 @@ public class YamlHelper {
         YamlType.APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.VALUES;
+    }
+
+    kind = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    kind2 = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind) || isNotBlank(kind2)) {
+      return AppManifestKind.OC_PARAMS;
     }
 
     kind = extractParentEntityName(
@@ -796,5 +810,19 @@ public class YamlHelper {
     } else {
       return encryptedValue.substring(pos + 1);
     }
+  }
+
+  // Throws Exception if not one of below types
+  public YamlType getApplicationManifestBasedYamlTypeForFilePath(String yamlFilePath) {
+    List<YamlType> manifestBasedYamlTypes = YamlType.getYamlTypes(ApplicationManifest.class);
+    manifestBasedYamlTypes.addAll(YamlType.getYamlTypes(ManifestFile.class));
+
+    for (YamlType yamlType : manifestBasedYamlTypes) {
+      if (YamlType.getCompiledPatternForYamlTypePathExpression(yamlType).matcher(yamlFilePath).matches()) {
+        return yamlType;
+      }
+    }
+    throw new InvalidRequestException(
+        String.format("Could not find Yaml Type for file path : [%s]", yamlFilePath), USER);
   }
 }
