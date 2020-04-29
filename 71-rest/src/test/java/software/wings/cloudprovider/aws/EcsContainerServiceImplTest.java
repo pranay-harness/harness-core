@@ -15,6 +15,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -58,6 +59,7 @@ import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -83,7 +85,6 @@ import java.util.Map;
  */
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
-
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
@@ -234,6 +235,44 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertThat(ret).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testAwsMetadataApiHelper() throws Exception {
+    String json =
+        "{\"Tasks\":[{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/f0c1d86cfa154d36b4c67b8ec72fda6d\",\"DesiredStatus\":\"STOPPED\",\"KnownStatus\":\"STOPPED\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"26\",\"Containers\":[{\"DockerId\":\"b8013be505613d216cbeaa911f8c4ac013d5522cfc012e427379b617196f8a42\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-26-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-f4c4fbe8fff4e8f7e701\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\"}]},{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/bc26c8dffd0446009fb6f41ee4298298\",\"DesiredStatus\":\"RUNNING\",\"KnownStatus\":\"RUNNING\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"28\",\"Containers\":[{\"DockerId\":\"f40291c50dd71caa7b39e13f3471059906e92a52b5078e76718dadfb0f5009d3\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-28-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-aebadbbd98f9bf954700\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\"}]},{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/e0a96879647145bc81dd3d5ca482dd2a\",\"DesiredStatus\":\"STOPPED\",\"KnownStatus\":\"STOPPED\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"25\",\"Containers\":[{\"DockerId\":\"e7871c6f03f0c4bec48e18182ac33f134ebcbef0c89fcc3ff82da769b2be6fa8\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-25-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-a4edd0fdad9afcff1f00\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\",\"Networks\":[{\"NetworkMode\":\"awsvpc\",\"IPv4Addresses\":[\"172.31.21.197\"]}]}]}]}";
+
+    TaskMetadata metadata = JsonUtils.asObject(json, TaskMetadata.class);
+    TaskMetadata.Task task =
+        metadata.getTasks()
+            .stream()
+            .filter(task1
+                -> task1.getArn().equals(
+                    "arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/e0a96879647145bc81dd3d5ca482dd2a"))
+            .findFirst()
+            .get();
+
+    assertThat(task).isNotNull();
+    assertThat(task.getContainers()).isNotNull();
+    assertThat(task.getContainers().get(0).getNetworks()).isNotNull();
+
+    TaskMetadata.Network network = task.getContainers().get(0).getNetworks().get(0);
+    assertThat(network.getIPv4Addresses()).isNotNull();
+    assertThat(network.getIPv4Addresses().get(0)).isEqualTo("172.31.21.197");
+
+    AwsMetadataApiHelper awsMetadataApiHelper = spy(AwsMetadataApiHelper.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any());
+    doReturn(json).when(awsMetadataApiHelper).getResponseStringFromUrl(anyString());
+    doReturn(false).doReturn(true).when(awsMetadataApiHelper).checkConnectivity(anyString());
+    com.amazonaws.services.ec2.model.Instance ec2Instance =
+        new com.amazonaws.services.ec2.model.Instance().withPrivateIpAddress("2.0.0.0");
+    String dockerId = awsMetadataApiHelper.getDockerIdUsingEc2MetadataEndpointApi(ec2Instance,
+        new Task().withTaskArn("arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/bc26c8dffd0446009fb6f41ee4298298"),
+        "448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest", logCallback);
+    assertThat(dockerId).isEqualTo("f40291c50dd71caa7b39e13f3471059906e92a52b5078e76718dadfb0f5009d3");
   }
 
   @Test
