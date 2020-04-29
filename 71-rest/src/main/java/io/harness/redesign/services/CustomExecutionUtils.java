@@ -11,7 +11,7 @@ import io.harness.annotations.Redesign;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.plan.ExecutionNode;
-import io.harness.plan.ExecutionPlan;
+import io.harness.plan.Plan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.levels.SectionLevel;
 import io.harness.redesign.levels.StepLevel;
@@ -30,7 +30,7 @@ public class CustomExecutionUtils {
   private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
   private static final StateType BASIC_HTTP_STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
-  public static ExecutionPlan provideHttpSwitchPlan() {
+  public static Plan provideHttpSwitchPlan() {
     String planId = generateUuid();
     String httpNodeId = generateUuid();
     String dummyNode1Id = generateUuid();
@@ -40,7 +40,7 @@ public class CustomExecutionUtils {
 
     BasicHttpStateParameters basicHttpStateParameters =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
-    return ExecutionPlan.builder()
+    return Plan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
@@ -119,7 +119,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static ExecutionPlan provideHttpForkPlan() {
+  public static Plan provideHttpForkPlan() {
     String planId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
@@ -131,7 +131,7 @@ public class CustomExecutionUtils {
 
     BasicHttpStateParameters basicHttpStateParameters2 =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
-    return ExecutionPlan.builder()
+    return Plan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http")
@@ -186,7 +186,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static ExecutionPlan provideHttpSectionPlan() {
+  public static Plan provideHttpSectionPlan() {
     String planId = generateUuid();
     String sectionNodeId = generateUuid();
     String httpNodeId1 = generateUuid();
@@ -198,7 +198,7 @@ public class CustomExecutionUtils {
 
     BasicHttpStateParameters basicHttpStateParameters2 =
         BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
-    return ExecutionPlan.builder()
+    return Plan.builder()
         .node(
             ExecutionNode.builder()
                 .uuid(httpNodeId1)

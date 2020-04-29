@@ -30,15 +30,15 @@ import io.harness.facilitate.FacilitatorResponse;
 import io.harness.facilitate.modes.ExecutionMode;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
-import io.harness.plan.ExecutionPlan;
+import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
-import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
@@ -88,25 +88,25 @@ public class ExecutionEngine implements Engine {
   // Obtain appropriate advise Handler
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
 
-  public ExecutionInstance startExecution(@Valid ExecutionPlan executionPlan, EmbeddedUser createdBy) {
-    ExecutionInstance instance = ExecutionInstance.builder()
-                                     .uuid(generateUuid())
-                                     .executionPlan(executionPlan)
-                                     .status(ExecutionInstanceStatus.RUNNING)
-                                     .createdBy(createdBy)
-                                     .startTs(System.currentTimeMillis())
-                                     .build();
+  public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
+    PlanExecution instance = PlanExecution.builder()
+                                 .uuid(generateUuid())
+                                 .plan(plan)
+                                 .status(ExecutionInstanceStatus.RUNNING)
+                                 .createdBy(createdBy)
+                                 .startTs(System.currentTimeMillis())
+                                 .build();
     hPersistence.save(instance);
-    ExecutionNode executionNode = executionPlan.fetchStartingNode();
+    ExecutionNode executionNode = plan.fetchStartingNode();
     if (executionNode == null) {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
     Ambiance ambiance = Ambiance.builder()
-                            .setupAbstractions(executionPlan.getSetupAbstractions())
+                            .setupAbstractions(plan.getSetupAbstractions())
                             .executionInstanceId(instance.getUuid())
                             .build();
-    triggerExecution(ambiance, executionPlan.fetchStartingNode());
+    triggerExecution(ambiance, plan.fetchStartingNode());
     return instance;
   }
 

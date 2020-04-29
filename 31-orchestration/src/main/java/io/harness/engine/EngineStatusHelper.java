@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.persistence.HPersistence;
-import io.harness.state.execution.ExecutionInstance;
-import io.harness.state.execution.ExecutionInstance.ExecutionInstanceKeys;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.PlanExecution;
+import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
@@ -29,11 +29,11 @@ public class EngineStatusHelper {
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
   }
 
-  public ExecutionInstance updateExecutionInstanceStatus(String instanceId, ExecutionInstanceStatus status) {
-    Query<ExecutionInstance> findQuery =
-        hPersistence.createQuery(ExecutionInstance.class).filter(ExecutionNodeInstanceKeys.uuid, instanceId);
-    UpdateOperations<ExecutionInstance> operations =
-        hPersistence.createUpdateOperations(ExecutionInstance.class).set(ExecutionInstanceKeys.status, status);
+  public PlanExecution updateExecutionInstanceStatus(String instanceId, ExecutionInstanceStatus status) {
+    Query<PlanExecution> findQuery =
+        hPersistence.createQuery(PlanExecution.class).filter(ExecutionNodeInstanceKeys.uuid, instanceId);
+    UpdateOperations<PlanExecution> operations =
+        hPersistence.createUpdateOperations(PlanExecution.class).set(PlanExecutionKeys.status, status);
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
   }
 }
