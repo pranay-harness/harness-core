@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
@@ -35,8 +36,10 @@ import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -151,10 +154,8 @@ import software.wings.utils.ApplicationManifestUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -494,18 +495,16 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetCommandUnitList() {
     List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true);
+    List<String> commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
     assertThat(commandUnits).isNotNull();
-    assertThat(commandUnits.size()).isEqualTo(2);
+    assertThat(commandUnits.size()).isEqualTo(4);
+    assertThat(commandUnitNames).containsExactly(FetchFiles, CheckExistingApps, PcfSetup, Wrapup);
 
-    Set<String> commandUnitsList = new HashSet<>();
-    commandUnitsList.add(FetchFiles);
-    commandUnitsList.add(PcfSetup);
-
-    assertCommandUnits(commandUnits, commandUnitsList);
-
-    commandUnitsList.add(PcfSetup);
     commandUnits = pcfSetupState.getCommandUnitList(false);
-    assertCommandUnits(commandUnits, commandUnitsList);
+    commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+    assertThat(commandUnits).isNotNull();
+    assertThat(commandUnits.size()).isEqualTo(3);
+    assertThat(commandUnitNames).containsExactly(CheckExistingApps, PcfSetup, Wrapup);
   }
 
   @Test
@@ -755,13 +754,5 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfSetupState.fetchRouteMaps(
                    context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
         .isEmpty();
-  }
-
-  private void assertCommandUnits(List<CommandUnit> commandUnits, Set<String> commandUnitsList) {
-    commandUnits.forEach(commandUnit -> {
-      assertThat(commandUnitsList.contains(commandUnit.getName()));
-      commandUnitsList.remove(commandUnit.getName());
-    });
-    assertThat(commandUnitsList.size()).isEqualTo(0);
   }
 }

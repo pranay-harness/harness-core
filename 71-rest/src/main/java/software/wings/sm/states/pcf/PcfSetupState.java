@@ -12,8 +12,10 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
+import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -201,7 +203,6 @@ public class PcfSetupState extends State {
       ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
     notNullCheck("Env can not be null", env);
@@ -788,7 +789,9 @@ public class PcfSetupState extends State {
       canaryCommandUnits.add(new PcfDummyCommandUnit(FetchFiles));
     }
 
+    canaryCommandUnits.add(new PcfDummyCommandUnit(CheckExistingApps));
     canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
+    canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));
     return canaryCommandUnits;
   }
 }

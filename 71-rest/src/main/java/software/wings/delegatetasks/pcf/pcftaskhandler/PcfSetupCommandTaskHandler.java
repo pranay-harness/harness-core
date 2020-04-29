@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogColor.White;
@@ -9,6 +10,9 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
+import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
+import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -68,7 +72,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandSetupRequest"));
     }
-    executionLogCallback.saveExecutionLog(color("---------- Starting PCF App Setup Command", White, Bold));
     PcfManifestFileData pcfManifestFileData = PcfManifestFileData.builder().varFiles(new ArrayList<>()).build();
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
     encryptionService.decrypt(pcfConfig, encryptedDataDetails);
@@ -77,6 +80,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     File workingDirectory = null;
 
     try {
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), CheckExistingApps);
+
       workingDirectory = generateWorkingDirectoryOnDelegate(pcfCommandSetupRequest);
 
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
@@ -116,8 +122,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       // Delete any older application excpet most recent 1.
       deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, pcfAppAutoscalarRequestData,
           activeApplication, executionLogCallback);
+      executionLogCallback.saveExecutionLog("Completed Checking Existing Application", INFO, SUCCESS);
 
       // Fetch apps again, as apps may have been deleted/downsized
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), PcfSetup);
+      executionLogCallback.saveExecutionLog(color("---------- Starting PCF App Setup Command", White, Bold));
       previousReleases =
           pcfDeploymentManager.getPreviousReleases(pcfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
 
@@ -181,8 +191,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .downsizeDetails(downsizeAppDetails)
               .build();
 
-      executionLogCallback.saveExecutionLog(
-          "\n ----------  PCF Setup process completed successfully", INFO, CommandExecutionStatus.SUCCESS);
+      executionLogCallback.saveExecutionLog("\n ----------  PCF Setup process completed successfully", INFO, SUCCESS);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(pcfSetupCommandResponse.getCommandExecutionStatus())
           .errorMessage(pcfSetupCommandResponse.getOutput())
@@ -200,9 +209,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .errorMessage(ExceptionUtils.getMessage(e))
           .build();
     } finally {
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Wrapup);
       // Delete downloaded artifact and generated manifest.yaml file
       removeTempFilesCreated((PcfCommandSetupRequest) pcfCommandRequest, executionLogCallback, artifactFile,
           workingDirectory, pcfManifestFileData);
+      executionLogCallback.saveExecutionLog("#----------  Cleaning up temporary files completed", INFO, SUCCESS);
     }
   }
 

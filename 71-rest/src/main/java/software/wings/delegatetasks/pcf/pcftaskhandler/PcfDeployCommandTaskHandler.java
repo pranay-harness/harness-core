@@ -1,11 +1,19 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
+import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
+import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
+import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -23,7 +31,6 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
@@ -66,6 +73,10 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     Exception exception = null;
     PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = PcfAppAutoscalarRequestData.builder().build();
     try {
+      boolean downSize = DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy();
+      String commandUnitType = downSize ? Downsize : Upsize;
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), commandUnitType);
       executionLogCallback.saveExecutionLog(color("\n---------- Starting PCF Resize Command\n", White, Bold));
 
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
@@ -103,40 +114,54 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
       // downsize previous apps with non zero instances by same count new app was upsized
       List<PcfInstanceElement> pcfInstanceElementsForVerification = new ArrayList<>();
-      if (ResizeStrategy.DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy()) {
+      if (DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy()) {
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        executionLogCallback.saveExecutionLog("Downsize Application Successfully Completed", INFO, SUCCESS);
+
+        executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+            pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Upsize);
         performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, pcfRequestConfig, details,
             pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
+        executionLogCallback.saveExecutionLog("Upsize Application Successfully Completed", INFO, SUCCESS);
       } else {
         performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, pcfRequestConfig, details,
             pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
+        executionLogCallback.saveExecutionLog("Upsize Application Successfully Completed", INFO, SUCCESS);
 
+        executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+            pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Downsize);
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        executionLogCallback.saveExecutionLog("Downsize Application Successfully Completed", INFO, SUCCESS);
       }
 
       // This data will be used by verification phase for analysis
+      executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
+          pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Wrapup);
       generatePcfInstancesElementsForExistingApp(
           pcfInstanceElementsForVerification, pcfRequestConfig, pcfCommandDeployRequest, executionLogCallback);
 
       // generate response to be sent back to Manager
-      pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+      pcfDeployCommandResponse.setCommandExecutionStatus(SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
       pcfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElementsForVerification);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize completed successfully");
+
     } catch (PivotalClientApiException | IOException e) {
       exceptionOccured = true;
       exception = e;
+      logException(executionLogCallback, pcfCommandDeployRequest, exception);
     } catch (Exception ex) {
       exceptionOccured = true;
       exception = ex;
+      logException(executionLogCallback, pcfCommandDeployRequest, exception);
     } finally {
       try {
         if (workingDirectory != null) {
+          executionLogCallback.saveExecutionLog("#--------- Removing any temporary files created");
           FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
         }
       } catch (IOException e) {
@@ -145,13 +170,11 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     if (exceptionOccured) {
-      logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",
-          pcfCommandDeployRequest, exception);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize failed to complete successfully");
-      Misc.logAllMessages(exception, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(exception));
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
+    } else {
+      executionLogCallback.saveExecutionLog("#------- PCF Resize State Successfully Completed", INFO, SUCCESS);
     }
 
     return PcfCommandExecutionResponse.builder()
@@ -159,6 +182,15 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
+  }
+
+  private void logException(
+      ExecutionLogCallback executionLogCallback, PcfCommandDeployRequest pcfCommandDeployRequest, Exception exception) {
+    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",
+        pcfCommandDeployRequest, exception);
+
+    executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize failed to complete successfully", ERROR, FAILURE);
+    Misc.logAllMessages(exception, executionLogCallback);
   }
 
   @VisibleForTesting

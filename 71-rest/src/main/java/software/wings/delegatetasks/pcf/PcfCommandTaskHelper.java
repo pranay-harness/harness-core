@@ -80,6 +80,7 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
@@ -150,6 +151,11 @@ public class PcfCommandTaskHelper {
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
       PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
+    if (isEmpty(upsizeList)) {
+      executionLogCallback.saveExecutionLog("No application To Upsize");
+      return;
+    }
+
     for (PcfServiceData pcfServiceData : upsizeList) {
       executionLogCallback.saveExecutionLog(color("# Upsizing application:", White, Bold));
       executionLogCallback.saveExecutionLog(new StringBuilder()
@@ -802,5 +808,10 @@ public class PcfCommandTaskHelper {
     }
 
     return activeApplication;
+  }
+
+  public ExecutionLogCallback getLogCallBack(
+      DelegateLogService delegateLogService, String accountId, String appId, String activityId, String commandUnit) {
+    return new ExecutionLogCallback(delegateLogService, accountId, appId, activityId, commandUnit);
   }
 }
