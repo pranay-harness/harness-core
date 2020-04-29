@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -12,10 +14,14 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.service.TimeSeriesAnalysisServiceImpl;
+import io.harness.service.intfc.LearningEngineService;
+import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
@@ -27,6 +33,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
@@ -38,8 +45,10 @@ import java.util.List;
  *
  */
 public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
+  @Mock LearningEngineService learningEngineService;
   @Inject WingsPersistence wingsPersistence;
   @Inject MetricDataAnalysisService metricDataAnalysisService;
+  @Inject DataStoreService dataStoreService;
 
   private String appId;
   private String workflowId;
@@ -49,6 +58,7 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
   private String cvConfigId;
   private String stateExecutionId;
   private String accountId;
+  private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -61,6 +71,10 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
     cvConfigId = generateUuid();
     stateExecutionId = generateUuid();
     FieldUtils.writeField(metricDataAnalysisService, "wingsPersistence", wingsPersistence, true);
+    when(learningEngineService.isStateValid(anyString(), anyString())).thenReturn(true);
+    timeSeriesAnalysisService = new TimeSeriesAnalysisServiceImpl();
+    FieldUtils.writeField(timeSeriesAnalysisService, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(timeSeriesAnalysisService, "learningEngineService", learningEngineService, true);
   }
 
   @Test
@@ -80,14 +94,14 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.save(execution);
 
-    NewRelicMetricDataRecord record = NewRelicMetricDataRecord.builder()
-                                          .stateType(StateType.NEW_RELIC)
-                                          .appId(appId)
-                                          .workflowId(workflowId)
-                                          .workflowExecutionId(execId)
-                                          .serviceId(serviceId)
-                                          .build();
-    wingsPersistence.save(record);
+    timeSeriesAnalysisService.saveMetricData(accountId, appId, stateExecutionId, generateUuid(),
+        Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                               .stateType(StateType.NEW_RELIC)
+                               .appId(appId)
+                               .workflowId(workflowId)
+                               .workflowExecutionId(execId)
+                               .serviceId(serviceId)
+                               .build()));
 
     String lastId = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
         StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
@@ -114,14 +128,14 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.save(execution);
 
-    NewRelicMetricDataRecord record = NewRelicMetricDataRecord.builder()
-                                          .stateType(StateType.NEW_RELIC)
-                                          .appId(appId)
-                                          .workflowId(workflowId)
-                                          .workflowExecutionId(execId)
-                                          .serviceId(serviceId)
-                                          .build();
-    wingsPersistence.save(record);
+    timeSeriesAnalysisService.saveMetricData(accountId, appId, stateExecutionId, generateUuid(),
+        Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                               .stateType(StateType.NEW_RELIC)
+                               .appId(appId)
+                               .workflowId(workflowId)
+                               .workflowExecutionId(execId)
+                               .serviceId(serviceId)
+                               .build()));
 
     String lastId = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
         StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
