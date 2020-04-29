@@ -3425,6 +3425,182 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task.getPriority()).isEqualTo(1);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_timeSeries() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    DatadogCVServiceConfiguration cvConfig = getNRConfig();
+    cvConfig.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfig);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .uuid("timeseriesUuid")
+                              .createdAt(currentTime - TimeUnit.MINUTES.toMillis(6))
+                              .cvConfigId(cvConfigId)
+                              .stateType(StateType.APP_DYNAMICS)
+                              .level(ClusterLevel.H0)
+                              .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                              .build());
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_timeSeriesMoreThan30MinOutsideBuffer() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    DatadogCVServiceConfiguration cvConfig = getNRConfig();
+    cvConfig.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfig);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .uuid("timeseriesUuid")
+                              .createdAt(currentTime - TimeUnit.MINUTES.toMillis(35))
+                              .cvConfigId(cvConfigId)
+                              .stateType(StateType.APP_DYNAMICS)
+                              .level(ClusterLevel.H0)
+                              .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                              .build());
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService, times(0)).queueTask(any());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_timeSeriesMoreThan30MinWithinBuffer() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    DatadogCVServiceConfiguration cvConfig = getNRConfig();
+    cvConfig.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfig);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+
+    wingsPersistence.save(TimeSeriesDataRecord.builder()
+                              .uuid("timeseriesUuid")
+                              .createdAt(currentTime - TimeUnit.MINUTES.toMillis(41))
+                              .cvConfigId(cvConfigId)
+                              .stateType(StateType.APP_DYNAMICS)
+                              .level(ClusterLevel.H0)
+                              .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                              .build());
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService, times(1)).queueTask(taskCaptor.capture());
+    APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_logsFirstCollection() {
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_logsLessThan30MinSinceLastCollection() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    LogDataRecord record = LogDataRecord.builder()
+                               .cvConfigId(cvConfigId)
+                               .clusterLevel(ClusterLevel.H1)
+                               .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                               .build();
+    record.setCreatedAt(currentTime - TimeUnit.MINUTES.toMillis(23));
+    wingsPersistence.save(record);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(0)).queueTask(taskCaptor.capture());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_logsLessThan30MinSinceLastCollectionWithinBuffer() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    LogDataRecord record = LogDataRecord.builder()
+                               .cvConfigId(cvConfigId)
+                               .clusterLevel(ClusterLevel.H1)
+                               .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                               .build();
+    record.setCreatedAt(currentTime - TimeUnit.MINUTES.toMillis(25));
+    wingsPersistence.save(record);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_logsMoreThan60MinSinceLastCollectionWithinBuffer() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    LogDataRecord record = LogDataRecord.builder()
+                               .cvConfigId(cvConfigId)
+                               .clusterLevel(ClusterLevel.H1)
+                               .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                               .build();
+    record.setCreatedAt(currentTime - TimeUnit.MINUTES.toMillis(75));
+    wingsPersistence.save(record);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_logsMoreThan60MinSinceLastCollectionOutsideBuffer() {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    LogDataRecord record = LogDataRecord.builder()
+                               .cvConfigId(cvConfigId)
+                               .clusterLevel(ClusterLevel.H1)
+                               .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 20)
+                               .build();
+    record.setCreatedAt(currentTime - TimeUnit.MINUTES.toMillis(70));
+    wingsPersistence.save(record);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(0)).queueTask(taskCaptor.capture());
+  }
+
   private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
     int tryCount = 0;
     long numOfAlerts;

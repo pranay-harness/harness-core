@@ -14,9 +14,11 @@ import software.wings.service.impl.analysis.Version;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -106,4 +108,6 @@ public interface TimeSeriesAnalysisService {
   Set<String> getKeyTransactions(String cvConfigId);
 
   long getLastDataCollectedMinute(String appId, String stateExecutionId, StateType stateType);
+
+  Optional<Long> getCreatedTimeOfLastCollection(CVConfiguration cvConfiguration);
 }

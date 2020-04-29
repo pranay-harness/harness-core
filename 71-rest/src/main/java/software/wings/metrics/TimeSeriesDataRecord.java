@@ -2,6 +2,7 @@ package software.wings.metrics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.System.currentTimeMillis;
 import static software.wings.common.VerificationConstants.CONNECTOR;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
@@ -26,6 +27,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,6 +44,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.common.VerificationConstants;
@@ -87,7 +90,8 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, CreatedAtAware, AccountAccess {
+public class TimeSeriesDataRecord
+    implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
   private StateType stateType; // could be null for older values
@@ -123,6 +127,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
   private transient TreeBasedTable<String, String, String> deeplinkUrl;
 
   private long createdAt;
+
+  private long lastUpdatedAt;
 
   @Indexed private String accountId;
 
@@ -182,8 +188,18 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
     }
   }
 
+  @PrePersist
+  public void onSave() {
+    final long currentTime = currentTimeMillis();
+    if (createdAt == 0) {
+      createdAt = currentTime;
+    }
+    lastUpdatedAt = currentTime;
+  }
+
   @Override
   public com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore) {
+    onSave();
     Key taskKey = datastore.newKeyFactory()
                       .setKind(this.getClass().getAnnotation(Entity.class).value())
                       .newKey(generateUniqueKey());
@@ -201,6 +217,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.tag, tag, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.groupName, groupName, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.accountId, accountId, false);
+    addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.createdAt, createdAt, true);
+    addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.lastUpdatedAt, lastUpdatedAt, true);
 
     if (isNotEmpty(valuesBytes)) {
       addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.valuesBytes, Blob.copyFrom(valuesBytes), true);
@@ -230,6 +248,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
             .tag(readString(entity, TimeSeriesMetricRecordKeys.tag))
             .groupName(readString(entity, TimeSeriesMetricRecordKeys.groupName))
             .valuesBytes(readBlob(entity, TimeSeriesMetricRecordKeys.valuesBytes))
+            .createdAt(readLong(entity, TimeSeriesMetricRecordKeys.createdAt))
+            .lastUpdatedAt(readLong(entity, TimeSeriesMetricRecordKeys.lastUpdatedAt))
             .build();
 
     final String level = readString(entity, TimeSeriesMetricRecordKeys.level);
@@ -282,6 +302,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                                                       .host(metric.getHost())
                                                       .level(metric.getLevel())
                                                       .tag(metric.getTag())
+                                                      .createdAt(metric.getCreatedAt())
+                                                      .lastUpdatedAt(metric.getLastUpdatedAt())
                                                       .build();
 
       TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
@@ -327,6 +349,8 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                                                                 .host(metric.getHost())
                                                                 .level(metric.getLevel())
                                                                 .tag(metric.getTag())
+                                                                .createdAt(metric.getCreatedAt())
+                                                                .lastUpdatedAt(metric.getLastUpdatedAt())
                                                                 .build();
         newRelicRecords.add(newRelicMetricDataRecord);
       } else {

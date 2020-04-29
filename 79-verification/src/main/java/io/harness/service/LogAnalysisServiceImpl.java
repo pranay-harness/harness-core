@@ -77,6 +77,7 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.security.SecureRandom;
@@ -1195,5 +1196,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     } else {
       return Sets.newHashSet(context.getTestNodes().keySet());
     }
+  }
+
+  public Optional<Long> getCreatedTimeOfLastCollection(CVConfiguration cvConfiguration) {
+    LogDataRecord record = wingsPersistence.createQuery(LogDataRecord.class)
+                               .filter(LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid())
+                               .field(LogDataRecordKeys.clusterLevel)
+                               .in(ClusterLevel.getAllHeartbeatLevels())
+                               .order(Sort.descending(LogDataRecord.BaseKeys.createdAt))
+                               .get();
+    return record == null ? Optional.empty() : Optional.of(record.getCreatedAt());
   }
 }
