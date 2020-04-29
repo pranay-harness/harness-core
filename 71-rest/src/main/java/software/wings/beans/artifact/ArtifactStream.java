@@ -89,7 +89,10 @@ public abstract class ArtifactStream
   @Transient private long artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
   private boolean sample;
-  String perpetualTaskId; // reference to the perpertual task
+
+  // perpetualTaskId is the reference to the perpetual task. If no task has yet been created for this artifact stream,
+  // this field will not exist.
+  @Indexed String perpetualTaskId;
 
   // Collection status denotes whether the first-time collection of the artifact stream is completed. If it's completed
   // we mark the status as STABLE, otherwise it is by default UNSTABLE when the stream is created or the artifact source
