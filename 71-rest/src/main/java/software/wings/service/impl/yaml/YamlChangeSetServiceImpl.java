@@ -74,11 +74,15 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public void populateGitSyncMetadata(YamlChangeSet yamlChangeSet) {
     if (StringUtils.isBlank(yamlChangeSet.getQueueKey()) || yamlChangeSet.getGitSyncMetadata() == null) {
-      final YamlGitConfig yamlGitConfig = getYamlGitConfig(yamlChangeSet);
+      try {
+        final YamlGitConfig yamlGitConfig = getYamlGitConfig(yamlChangeSet);
 
-      yamlChangeSet.setGitSyncMetadata(buildGitSyncMetadata(yamlGitConfig));
+        yamlChangeSet.setGitSyncMetadata(buildGitSyncMetadata(yamlGitConfig));
 
-      yamlChangeSet.setQueueKey(buildQueueKey(yamlGitConfig));
+        yamlChangeSet.setQueueKey(buildQueueKey(yamlGitConfig));
+      } catch (Exception e) {
+        logger.warn("unable to populate git sync metadata. ignoring these fields", e);
+      }
     }
   }
 
@@ -106,7 +110,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     final YamlGitConfig yamlGitConfig = yamlGitService.getYamlGitConfigForHarnessToGitChangeSet(yamlChangeSet);
     if (yamlGitConfig == null) {
       throw NoResultFoundException.newBuilder()
-          .message(format("Unable to find yamlGitConfig for harness to git changeset for account =[%s], appId=[%s]",
+          .message(format(
+              "Unable to find yamlGitConfig for harness to git changeset for account =[%s], appId=[%s]. Git Sync might not have been configured",
               yamlChangeSet.getAccountId(), yamlChangeSet.getAppId()))
           .build();
     }
@@ -119,7 +124,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     if (isEmpty(yamlGitConfigs)) {
       throw NoResultFoundException.newBuilder()
           .message(format(
-              "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]",
+              "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
               yamlChangeSet.getAccountId(), yamlChangeSet.getGitWebhookRequestAttributes().getGitConnectorId(),
               yamlChangeSet.getGitWebhookRequestAttributes().getBranchName()))
           .build();
