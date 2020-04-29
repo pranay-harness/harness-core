@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.annotations.Redesign;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
-import io.harness.state.execution.ExecutionInstance;
+import io.harness.state.execution.PlanExecution;
 import software.wings.security.annotations.AuthRule;
 
 import javax.ws.rs.GET;
@@ -24,21 +24,21 @@ public class CustomExecutionResource {
   @GET
   @Path("/http-switch")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<ExecutionInstance> executeHttpSwitch() {
+  public RestResponse<PlanExecution> executeHttpSwitch() {
     return new RestResponse<>(customExecutionService.executeHttpSwitch());
   }
 
   @GET
   @Path("/http-fork")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<ExecutionInstance> executeHttpFork() {
+  public RestResponse<PlanExecution> executeHttpFork() {
     return new RestResponse<>(customExecutionService.executeHttpFork());
   }
 
   @GET
   @Path("/http-section")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<ExecutionInstance> executeSectionPlan() {
+  public RestResponse<PlanExecution> executeSectionPlan() {
     return new RestResponse<>(customExecutionService.executeSectionPlan());
   }
 }

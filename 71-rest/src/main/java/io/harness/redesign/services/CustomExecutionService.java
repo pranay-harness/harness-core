@@ -1,13 +1,13 @@
 package io.harness.redesign.services;
 
 import io.harness.annotations.Redesign;
-import io.harness.state.execution.ExecutionInstance;
+import io.harness.state.execution.PlanExecution;
 
 @Redesign
 public interface CustomExecutionService {
-  ExecutionInstance executeHttpSwitch();
+  PlanExecution executeHttpSwitch();
 
-  ExecutionInstance executeHttpFork();
+  PlanExecution executeHttpFork();
 
-  ExecutionInstance executeSectionPlan();
+  PlanExecution executeSectionPlan();
 }

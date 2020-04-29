@@ -54,7 +54,7 @@ io.harness.facilitator.sync.SyncFacilitator
 io.harness.interrupts.Interrupt
 io.harness.interrupts.InterruptEffect
 io.harness.plan.ExecutionNode
-io.harness.plan.ExecutionPlan
+io.harness.plan.Plan
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters
 io.harness.redesign.levels.PhaseLevel
@@ -85,8 +85,8 @@ io.harness.state.core.fork.ForkState
 io.harness.state.core.fork.ForkStateParameters
 io.harness.state.core.section.SectionState
 io.harness.state.core.section.SectionStateParameters
-io.harness.state.execution.ExecutionInstance
 io.harness.state.execution.ExecutionNodeInstance
+io.harness.state.execution.PlanExecution
 io.harness.state.execution.status.ExecutionInstanceStatus
 io.harness.state.execution.status.NodeExecutionStatus
 io.harness.state.io.StateExecutionPackage

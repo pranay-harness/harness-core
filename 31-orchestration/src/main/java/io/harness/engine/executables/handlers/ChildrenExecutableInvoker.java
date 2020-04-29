@@ -23,11 +23,11 @@ import io.harness.facilitate.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitate.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
-import io.harness.plan.ExecutionPlan;
+import io.harness.plan.Plan;
 import io.harness.registries.level.LevelRegistry;
-import io.harness.state.execution.ExecutionInstance;
 import io.harness.state.execution.ExecutionNodeInstance;
 import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -56,9 +56,9 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
-    ExecutionInstance executionInstance = Preconditions.checkNotNull(ambianceHelper.obtainExecutionInstance(ambiance));
+    PlanExecution planExecution = Preconditions.checkNotNull(ambianceHelper.obtainExecutionInstance(ambiance));
     ExecutionNodeInstance nodeInstance = Preconditions.checkNotNull(ambianceHelper.obtainNodeInstance(ambiance));
-    ExecutionPlan plan = executionInstance.getExecutionPlan();
+    Plan plan = planExecution.getPlan();
     List<String> callbackIds = new ArrayList<>();
     for (Child child : response.getChildren()) {
       String uuid = generateUuid();

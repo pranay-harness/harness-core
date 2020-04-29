@@ -9,7 +9,6 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.util.Collections;
@@ -34,9 +33,8 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder(buildMethodName = "internalBuild")
 @Redesign
-@Entity(value = "executionPlan", noClassnameStored = true)
-@FieldNameConstants(innerTypeName = "ExecutionPlanKeys")
-public class ExecutionPlan implements PersistentEntity {
+@FieldNameConstants(innerTypeName = "PlanKeys")
+public class Plan implements PersistentEntity {
   @Id @NonNull String uuid;
 
   @Singular List<ExecutionNode> nodes;
@@ -62,8 +60,8 @@ public class ExecutionPlan implements PersistentEntity {
     return nodes.get(nodeIndex);
   }
 
-  public static class ExecutionPlanBuilder {
-    public ExecutionPlan build() {
+  public static class PlanBuilder {
+    public Plan build() {
       if (EmptyPredicate.isEmpty(nodes)) {
         return internalBuild();
       }
