@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogKeys;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
@@ -24,22 +23,31 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.Log.LogKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -55,7 +63,17 @@ import javax.validation.constraints.NotNull;
     @Field(value = LogKeys.appId), @Field(value = LogKeys.activityId)
   })
 })
-public class Log extends Base implements GoogleDataStoreAware {
+public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                            UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+  public static final String ID_KEY = "_id";
+
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
   @NotEmpty private String activityId;
   private String hostName;
   @NotEmpty private String commandUnitName;
@@ -68,14 +86,6 @@ public class Log extends Base implements GoogleDataStoreAware {
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
-
-  @Override
-  @JsonIgnore
-  public Map<String, Object> getShardKeys() {
-    Map<String, Object> shardKeys = super.getShardKeys();
-    shardKeys.put("activityId", activityId);
-    return shardKeys;
-  }
 
   @Override
   public com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore) {
