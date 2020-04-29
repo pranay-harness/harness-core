@@ -26,3 +26,8 @@ awsS3SyncConfig:
   awsSecretKey: awsS3SyncSecretKeyPlaceHolder
   region: awsS3SyncRegionPlaceHolder
 
+awsDataPipelineConfig:
+  gcpServiceAccount: "billing-data-pipeline@ce-qa-274307.iam.gserviceaccount.com"
+  gcpProjectId : "ce-qa-274307"
+  gcsBasePath: "gs://parquetdatabuckettestconfig"
+

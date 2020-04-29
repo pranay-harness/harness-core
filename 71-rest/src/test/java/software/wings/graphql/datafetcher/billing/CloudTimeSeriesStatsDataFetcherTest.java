@@ -36,7 +36,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   @InjectMocks CloudTimeSeriesStatsDataFetcher cloudTimeSeriesStatsDataFetcher;
 
   private static final String COST = "unblendedCost";
-  private static final String DISCOUNT = "blendedCost";
+  private static final String DISCOUNT = "awsBlendedCost";
   private static final String SERVICE = "service";
   private static final String LINKED_ACCOUNT = "linkedAccount";
   private static final String USAGE_TYPE = "usageType";

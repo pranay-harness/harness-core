@@ -569,6 +569,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-bigquerydatatransfer</artifactId>
+                <version>0.126.0-beta</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-core-grpc</artifactId>
                 <version>1.79.0</version>
             </dependency>

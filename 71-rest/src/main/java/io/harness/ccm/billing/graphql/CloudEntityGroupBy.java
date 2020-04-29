@@ -9,14 +9,13 @@ public enum CloudEntityGroupBy {
   skuId(PreAggregatedTableSchema.gcpSkuId),
   product(PreAggregatedTableSchema.gcpProduct),
   sku(PreAggregatedTableSchema.gcpSkuDescription),
-
   projectNumber(PreAggregatedTableSchema.gcpProjectNumbers),
 
   region(PreAggregatedTableSchema.region),
-  awsLikedAccount(PreAggregatedTableSchema.usageAccountId),
-  awsUsageType(PreAggregatedTableSchema.usageType),
-  awsInstanceType(PreAggregatedTableSchema.instanceType),
-  awsService(PreAggregatedTableSchema.serviceCode);
+  awsLikedAccount(PreAggregatedTableSchema.awsUsageAccountId),
+  awsUsageType(PreAggregatedTableSchema.awsUsageType),
+  awsInstanceType(PreAggregatedTableSchema.awsInstanceType),
+  awsService(PreAggregatedTableSchema.awsServiceCode);
 
   private DbColumn dbColumn;
   CloudEntityGroupBy(DbColumn dbColumn) {

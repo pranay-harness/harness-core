@@ -17,8 +17,8 @@ import software.wings.beans.SettingAttribute;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class S3SyncReaderTest {
-  @Inject @InjectMocks private S3SyncReader s3SyncReader;
+public class SettingAttributeReaderTest {
+  @Inject @InjectMocks private SettingAttributeReader settingAttributeReader;
   @Mock AtomicBoolean runOnlyOnce;
 
   @Before
@@ -31,9 +31,9 @@ public class S3SyncReaderTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testS3SyncRead() {
-    SettingAttribute settingAttribute = s3SyncReader.read();
+    SettingAttribute settingAttribute = settingAttributeReader.read();
     assertThat(settingAttribute).isNotNull();
-    SettingAttribute secondReadOutput = s3SyncReader.read();
+    SettingAttribute secondReadOutput = settingAttributeReader.read();
     assertThat(secondReadOutput).isNull();
   }
 }

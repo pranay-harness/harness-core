@@ -69,16 +69,16 @@ public class CloudBillingIdFilter implements Filter {
         dbColumn = PreAggregatedTableSchema.region;
         break;
       case BILLING_AWS_SERVICE:
-        dbColumn = PreAggregatedTableSchema.serviceCode;
+        dbColumn = PreAggregatedTableSchema.awsServiceCode;
         break;
       case BILLING_AWS_USAGE_TYPE:
-        dbColumn = PreAggregatedTableSchema.usageType;
+        dbColumn = PreAggregatedTableSchema.awsUsageType;
         break;
       case BILLING_AWS_INSTANCE_TYPE:
-        dbColumn = PreAggregatedTableSchema.instanceType;
+        dbColumn = PreAggregatedTableSchema.awsInstanceType;
         break;
       case BILLING_AWS_LINKED_ACCOUNT:
-        dbColumn = PreAggregatedTableSchema.usageAccountId;
+        dbColumn = PreAggregatedTableSchema.awsUsageAccountId;
         break;
       default:
         return null;

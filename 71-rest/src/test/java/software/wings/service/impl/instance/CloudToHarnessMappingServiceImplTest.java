@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +16,14 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.settings.SettingValue;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
@@ -28,6 +34,8 @@ public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   private final String ECS_SERVICE_NAME = "ecs_service_name";
   private final String ECS_CLUSTER_NAME = "ecs_cluster_name";
   private final String INFRA_MAPPING_ID = "infra_mapping_id";
+  private final String accountName = "DefaultAccountName";
+  private final Instant instant = Instant.now();
 
   @Test
   @Owner(developers = HITESH)
@@ -38,6 +46,24 @@ public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
     Optional<HarnessServiceInfo> harnessServiceInfo =
         cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
     assertThat(harnessServiceInfo).isNotPresent();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetAccountNameFromId() {
+    String accountNameFromId = cloudToHarnessMappingService.getAccountNameFromId(ACCOUNT_ID);
+    assertThat(accountNameFromId).isEqualTo(accountName);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetSettingAttributes() {
+    List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.getSettingAttributes(ACCOUNT_ID,
+        SettingAttribute.SettingCategory.CE_CONNECTOR.toString(), SettingValue.SettingVariableTypes.CE_AWS.toString(),
+        instant.toEpochMilli(), instant.plus(1, ChronoUnit.DAYS).toEpochMilli());
+    assertThat(settingAttributes.size()).isEqualTo(0);
   }
 
   public DeploymentSummary ecsDeploymentSummary() {

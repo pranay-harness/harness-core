@@ -5,6 +5,7 @@ import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
+import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
@@ -1018,6 +1019,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TimeSeriesKeyTransactions.class);
     set.add(K8sWorkload.class);
     set.add(LastReceivedPublishedMessage.class);
+    set.add(BillingDataPipelineRecord.class);
     set.add(BatchJobInterval.class);
     set.add(CECloudAccount.class);
     set.add(CECluster.class);
