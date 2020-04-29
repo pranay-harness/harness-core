@@ -1,7 +1,6 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.mongo.ClassRefactoringManager.updateMovedClasses;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.common.collect.ImmutableSet;
@@ -89,7 +88,7 @@ public class MongoModule extends DependencyProviderModule {
 
     IndexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
 
-    updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
+    ClassRefactoringManager.updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
 
     objectFactory.setDatastore(primaryDatastore);
 

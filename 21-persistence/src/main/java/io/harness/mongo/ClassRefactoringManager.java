@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import com.mongodb.MongoCommandException;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
@@ -33,13 +34,21 @@ public class ClassRefactoringManager {
 
   public static void updateMovedClasses(
       AdvancedDatastore primaryDatastore, Map<String, Class> morphiaInterfaceImplementers) {
-    Map<String, String> movements = movements(morphiaInterfaceImplementers);
-
-    movements.forEach((source, target) -> {
-      Query<MorphiaMove> query = primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
-      UpdateOperations<MorphiaMove> updateOperations =
-          primaryDatastore.createUpdateOperations(MorphiaMove.class).addToSet(MorphiaMoveKeys.sources, source);
-      primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    });
+    try {
+      Map<String, String> movements = movements(morphiaInterfaceImplementers);
+      movements.forEach((source, target) -> {
+        Query<MorphiaMove> query =
+            primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
+        UpdateOperations<MorphiaMove> updateOperations =
+            primaryDatastore.createUpdateOperations(MorphiaMove.class).addToSet(MorphiaMoveKeys.sources, source);
+        primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+      });
+    } catch (MongoCommandException exception) {
+      if (exception.getErrorCode() == 13) {
+        logger.warn("The user has read only access.");
+        return;
+      }
+      throw exception;
+    }
   }
 }
