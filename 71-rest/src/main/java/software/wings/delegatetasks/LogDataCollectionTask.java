@@ -74,6 +74,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
+  protected int getInitialDelayMinutes() {
+    return dataCollectionInfo.getDelayMinutes();
+  }
+
+  @Override
   protected boolean is24X7Task() {
     return getTaskType().equals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA.name());
   }
