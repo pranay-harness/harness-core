@@ -85,7 +85,7 @@ public class BillingDataHelperTest extends AbstractDataFetcherTest {
             ACCOUNT1_ID, aggregationFunction, filters, groupBy, null, null);
     assertThat(entityIdToPrevBillingAmountData).isNotNull();
     assertThat(entityIdToPrevBillingAmountData.containsKey(CLUSTER1_ID)).isTrue();
-    assertThat(entityIdToPrevBillingAmountData.get(CLUSTER1_ID).getCost()).isEqualTo(BigDecimal.valueOf(14.0));
+    assertThat(entityIdToPrevBillingAmountData.get(CLUSTER1_ID).getCost()).isEqualTo(BigDecimal.valueOf(19.0));
     assertThat(entityIdToPrevBillingAmountData.get(CLUSTER1_ID).getMinStartTime())
         .isEqualTo(currentTime - ONE_DAY_MILLIS);
     assertThat(entityIdToPrevBillingAmountData.get(CLUSTER1_ID).getMaxStartTime()).isEqualTo(currentTime);
