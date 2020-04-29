@@ -85,6 +85,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -1133,5 +1134,21 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .order(Sort.descending(NewRelicMetricDataRecordKeys.dataCollectionMinute))
             .get();
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
+
+  @Override
+  public Optional<Long> getCreatedTimeOfLastCollection(CVConfiguration cvConfiguration) {
+    PageRequest<TimeSeriesDataRecord> pageRequest =
+        aPageRequest()
+            .withLimit("1")
+            .addFilter(TimeSeriesMetricRecordKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+            .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
+            .build();
+
+    final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    if (isEmpty(results)) {
+      return Optional.empty();
+    }
+    return Optional.of(results.get(0).getCreatedAt());
   }
 }

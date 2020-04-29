@@ -17,6 +17,7 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 import java.util.Map;
@@ -116,4 +117,5 @@ public interface LogAnalysisService {
   boolean createAndUpdateFeedbackAnalysis(String fieldName, String fieldValue, long analysisMinute);
   int getEndTimeForLogAnalysis(AnalysisContext context);
   Set<String> getCollectedNodes(AnalysisContext context, ClusterLevel level);
+  Optional<Long> getCreatedTimeOfLastCollection(CVConfiguration cvConfiguration);
 }

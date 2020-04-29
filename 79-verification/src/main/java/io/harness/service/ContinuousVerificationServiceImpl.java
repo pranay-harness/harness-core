@@ -111,6 +111,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Slf4j
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
+  private static final int ITERATOR_INTERVAL_WITH_BUFFER_SECONDS = 150;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
@@ -137,6 +138,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
+          if (!shouldCollectData(
+                  cvConfiguration, timeSeriesAnalysisService.getCreatedTimeOfLastCollection(cvConfiguration))) {
+            return;
+          }
           long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)) {
@@ -155,6 +160,68 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return true;
   }
 
+  /**
+   * If lastDataCollectionTime < 10mins - no backoff
+   * if lastDataCollection time between 10-30mins - collect every 5mins
+   * if lastDataCollection time between 30-60mins - collect every 10mins
+   * if lastDataCollection time  >60mins - collect every 15mins
+   * @param lastDataCollectionTime
+   * @return
+   */
+  private boolean shouldCollectData(CVConfiguration cvConfiguration, Optional<Long> lastDataCollectionTime) {
+    if (!lastDataCollectionTime.isPresent() || lastDataCollectionTime.get() <= 0) {
+      logger.info(
+          "For {}, this is the first collection, so we will go ahead and collect data.", cvConfiguration.getUuid());
+      return true;
+    }
+    boolean shouldCollectData = false;
+    long currentTime = Timestamp.currentMinuteBoundary();
+    long timeSinceLastCollection = currentTime - lastDataCollectionTime.get();
+    Optional<Long> allowedDataCollectionTime = Optional.empty();
+    long interval = 0;
+    if (timeSinceLastCollection <= TimeUnit.MINUTES.toMillis(10)) {
+      logger.info("For {}, the last collected time is less than 10mins ago. We will go ahead and collect data.",
+          cvConfiguration.getUuid());
+      shouldCollectData = true;
+    } else if (timeSinceLastCollection < TimeUnit.MINUTES.toMillis(30)) {
+      interval = 5;
+      logger.info(
+          "For {}, the lastCollectionTime was more than 10mins and less than 30mins ago. Current Time: {}, lastCollectionTime {}, interval: {}",
+          cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
+    } else if (timeSinceLastCollection < TimeUnit.MINUTES.toMillis(60)) {
+      interval = 10;
+      logger.info(
+          "For {}, the lastCollectionTime was more than 30mins and less than 60mins ago. Current Time: {}, lastCollectionTime {}, interval: {}",
+          cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
+    } else {
+      interval = 15;
+      logger.info(
+          "For {}, the lastCollectionTime was more than 60 ago. Current Time: {}, lastCollectionTime {}, interval: {}",
+          cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
+    }
+    if (!shouldCollectData) {
+      allowedDataCollectionTime = getNextAllowedTime(currentTime, lastDataCollectionTime.get(), interval);
+    }
+    if (allowedDataCollectionTime.isPresent() || shouldCollectData) {
+      logger.info("For {}, we can now collect data based on the backoff value. Current Time: {}, lastCollectionTime {}",
+          cvConfiguration.getUuid(), currentTime, lastDataCollectionTime);
+      return true;
+    }
+    logger.info("For {}, we cannot collect data due to the backoff value. Current Time: {}, lastCollectionTime {}",
+        cvConfiguration.getUuid(), currentTime, lastDataCollectionTime);
+    return false;
+  }
+
+  private Optional<Long> getNextAllowedTime(long currentTime, long lastDataCollectionTime, long intervalTime) {
+    long allowedDataCollectionTime = lastDataCollectionTime;
+    while (allowedDataCollectionTime <= currentTime) {
+      if (allowedDataCollectionTime + TimeUnit.SECONDS.toMillis(ITERATOR_INTERVAL_WITH_BUFFER_SECONDS) > currentTime) {
+        return Optional.of(allowedDataCollectionTime);
+      }
+      allowedDataCollectionTime += TimeUnit.MINUTES.toMillis(intervalTime);
+    }
+    return Optional.empty();
+  }
   private long getDataCollectionStartMinForAPM(CVConfiguration cvConfiguration, long endMinute) {
     long maxCVCollectionMinute = timeSeriesAnalysisService.getMaxCVCollectionMinute(
         cvConfiguration.getAppId(), cvConfiguration.getUuid(), cvConfiguration.getAccountId());
@@ -674,6 +741,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
           try {
+            if (!shouldCollectData(
+                    cvConfiguration, logAnalysisService.getCreatedTimeOfLastCollection(cvConfiguration))) {
+              logger.info("Not collecting data for {} due to backoff.", cvConfiguration.getUuid());
+              return;
+            }
             LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
             if (logsCVConfiguration.getBaselineStartMinute() < 0 || logsCVConfiguration.getBaselineEndMinute() < 0) {
               logger.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());

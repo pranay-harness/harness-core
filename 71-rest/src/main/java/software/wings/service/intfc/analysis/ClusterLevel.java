@@ -1,6 +1,8 @@
 package software.wings.service.intfc.analysis;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,6 +60,10 @@ public enum ClusterLevel {
 
   public static ClusterLevel getFinal() {
     return HF;
+  }
+
+  public static List<ClusterLevel> getAllHeartbeatLevels() {
+    return Arrays.asList(ClusterLevel.H0, ClusterLevel.H1, ClusterLevel.H2, ClusterLevel.HF);
   }
 
   public ClusterLevel next() {
