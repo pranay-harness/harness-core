@@ -14,6 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.cli.CliResponse;
 
 import java.io.IOException;
 import java.util.Collections;

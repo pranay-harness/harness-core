@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
@@ -524,6 +525,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @VisibleForTesting
   void validateAppManifestForEnvironment(ApplicationManifest appManifest) {
     if (isNotBlank(appManifest.getEnvId())) {
+      if (K8S_MANIFEST == appManifest.getKind()) {
+        throw new InvalidRequestException("Environment override not supported for K8s Manifest", USER);
+      }
       if (HELM_CHART_OVERRIDE == appManifest.getKind()) {
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
@@ -724,8 +728,23 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateHelmChartRepoAppManifest(applicationManifest);
         break;
 
+      case OC_TEMPLATES:
+        validateOpenShiftSourceRepoAppManifest(applicationManifest);
+        break;
+
       default:
         unhandled(applicationManifest.getStoreType());
+    }
+  }
+
+  void validateOpenShiftSourceRepoAppManifest(@Nonnull ApplicationManifest applicationManifest) {
+    if (applicationManifest.getGitFileConfig() == null) {
+      throw new InvalidRequestException("Git File Config is mandatory for OpenShift Source Repository Type", USER);
+    }
+    validateGitFileConfigForRemoteManifest(applicationManifest.getGitFileConfig());
+
+    if (isEmpty(applicationManifest.getGitFileConfig().getFilePath())) {
+      throw new InvalidRequestException("Template File Path can't be empty", USER);
     }
   }
 

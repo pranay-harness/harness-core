@@ -8,7 +8,6 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -1105,7 +1104,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(getLocalOverrideManifestFileName(kind));
+    manifestFile.setFileName(kind.getDefaultFileName());
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
 
@@ -1130,24 +1129,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(getLocalOverrideManifestFileName(kind));
+    manifestFile.setFileName(kind.getDefaultFileName());
     manifestFile.setApplicationManifestId(appManifest.getUuid());
     manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);
 
     return manifestFile;
-  }
-
-  private String getLocalOverrideManifestFileName(AppManifestKind kind) {
-    switch (kind) {
-      case PCF_OVERRIDE:
-        return VARS_YML;
-
-      case VALUES:
-        return VALUES_YAML_KEY;
-
-      default:
-        throw new InvalidRequestException("Unhandled application manifest kind " + kind, USER);
-    }
   }
 
   private void validateEnvAndServiceExists(String appId, String envId, String serviceId) {

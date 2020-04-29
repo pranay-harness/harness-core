@@ -2,23 +2,14 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.ManifestFile.Yaml;
 import software.wings.beans.yaml.Change;
@@ -122,8 +113,9 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(appId, yamlFilePath);
     notNullCheck("Application Manifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
-    return applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(),
-        getActualFileName(yamlFilePath, getManifestFileYamlTypeFromAppManifest(applicationManifest)));
+    YamlType yamlType = yamlHelper.getApplicationManifestBasedYamlTypeForFilePath(yamlFilePath);
+    return applicationManifestService.getManifestFileByFileName(
+        applicationManifest.getUuid(), getActualFileName(yamlFilePath, yamlType));
   }
 
   @Override
@@ -136,52 +128,5 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
       manifestFile.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       applicationManifestService.deleteManifestFile(appId, manifestFile);
     }
-  }
-
-  @VisibleForTesting
-  YamlType getManifestFileYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
-    AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
-
-    switch (appManifestSource) {
-      case SERVICE:
-        if (applicationManifest.getKind() == AppManifestKind.VALUES) {
-          return YamlType.MANIFEST_FILE_VALUES_SERVICE_OVERRIDE;
-        } else {
-          return YamlType.MANIFEST_FILE;
-        }
-      case ENV:
-        return getYamlTypeForEnvOverrideAllServices(applicationManifest);
-      case ENV_SERVICE:
-        return getYamlTypeForEnvServiceOverride(applicationManifest);
-      default:
-        unhandled(appManifestSource);
-        throw new WingsException("Unhandled app manifest type");
-    }
-  }
-
-  private YamlType getYamlTypeForEnvOverrideAllServices(ApplicationManifest applicationManifest) {
-    notNullCheck("ApplicationManifest can not be null", applicationManifest);
-    YamlType yamlType;
-    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
-      yamlType = MANIFEST_FILE_VALUES_ENV_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE;
-    } else {
-      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
-    }
-    return yamlType;
-  }
-
-  private YamlType getYamlTypeForEnvServiceOverride(ApplicationManifest applicationManifest) {
-    notNullCheck("ApplicationManifest can not be null", applicationManifest);
-    YamlType yamlType;
-    if (AppManifestKind.VALUES == applicationManifest.getKind()) {
-      yamlType = MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
-    } else if (AppManifestKind.PCF_OVERRIDE == applicationManifest.getKind()) {
-      yamlType = MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE;
-    } else {
-      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
-    }
-    return yamlType;
   }
 }

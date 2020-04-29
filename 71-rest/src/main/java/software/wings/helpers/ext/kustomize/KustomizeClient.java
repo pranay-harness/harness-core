@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.kustomize;
 
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.cli.CliResponse;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;

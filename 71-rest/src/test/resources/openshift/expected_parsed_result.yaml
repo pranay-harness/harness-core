@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    redis: test
+  name: redis-master
+spec:
+  containers:
+  - env:
+    - name: REDIS_PASSWORD
+      value: dev-pass
+    - name: REDIS_PASSWORD_2
+      value: stage-pass-2
+    image: dockerfile/redis
+    name: master
+    ports:
+    - containerPort: 6379
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    redis: test
+  name: redis-master
+spec:
+  containers:
+  - env:
+    - name: REDIS_PASSWORD
+      value: dev-pass
+    - name: REDIS_PASSWORD_2
+      value: stage-pass-2
+    image: dockerfile/redis
+    name: master
+    ports:
+    - containerPort: 6379
+      protocol: TCP

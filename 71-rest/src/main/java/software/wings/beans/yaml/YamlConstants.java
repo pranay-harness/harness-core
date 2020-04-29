@@ -111,4 +111,9 @@ public interface YamlConstants {
   String TAGS_YAML = "Tags.yaml";
 
   List<String> ALLOWED_BOOLEAN_VALUES = Lists.newArrayList("true", "false");
+
+  // OC PARAMS
+  String OC_PARAMS_ENTITY = "OC_PARAMS";
+  String OC_PARAMS_FOLDER = "OC Params";
+  String OC_PARAMS_FILE = "params";
 }

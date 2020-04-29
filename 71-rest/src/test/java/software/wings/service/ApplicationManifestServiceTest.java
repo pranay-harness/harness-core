@@ -1060,7 +1060,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateDuplicateAppManifest() {
     ApplicationManifest applicationManifest =
-        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).envId(ENV_ID).build();
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).serviceId(SERVICE_ID).envId(ENV_ID).build();
 
     applicationManifestService.create(applicationManifest);
     try {
@@ -1069,8 +1069,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     } catch (Exception ex) {
       assertThat(ex instanceof InvalidRequestException).isTrue();
       assertThat(ex.getMessage())
-          .isEqualTo(
-              "App Manifest already exists for app null with kind K8S_MANIFEST, serviceId SERVICE_ID, envId ENV_ID");
+          .isEqualTo("App Manifest already exists for app null with kind VALUES, serviceId SERVICE_ID, envId ENV_ID");
     }
   }
 }

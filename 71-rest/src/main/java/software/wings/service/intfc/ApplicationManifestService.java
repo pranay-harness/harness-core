@@ -13,6 +13,7 @@ import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 public interface ApplicationManifestService extends OwnedByService, OwnedByEnvironment {
   ApplicationManifest create(ApplicationManifest applicationManifest);
@@ -52,7 +53,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ApplicationManifest getAppManifest(String appId, String envId, String serviceId, AppManifestKind kind);
 
-  AppManifestSource getAppManifestType(ApplicationManifest applicationManifest);
+  @Nonnull AppManifestSource getAppManifestType(@Nonnull ApplicationManifest applicationManifest);
 
   List<ApplicationManifest> getAllByEnvId(String appId, String envId);
 

@@ -131,6 +131,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
+import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -166,6 +167,7 @@ public class K8sTaskHelper {
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private OpenShiftDelegateService openShiftDelegateService;
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
@@ -923,6 +925,9 @@ public class K8sTaskHelper {
       case KustomizeSourceRepo:
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
             k8sDelegateManifestConfig.getKustomizeConfig(), executionLogCallback);
+      case OC_TEMPLATES:
+        return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
+            k8sDelegateManifestConfig.getGitFileConfig().getFilePath(), executionLogCallback, valuesFiles);
 
       default:
         unhandled(storeType);
@@ -1141,6 +1146,7 @@ public class K8sTaskHelper {
         return writeManifestFilesToDirectory(
             delegateManifestConfig.getManifestFiles(), manifestFilesDirectory, executionLogCallback);
 
+      case OC_TEMPLATES:
       case Remote:
       case HelmSourceRepo:
       case KustomizeSourceRepo:

@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.cli.CliResponse;
 
 import java.io.IOException;
 import java.util.Arrays;

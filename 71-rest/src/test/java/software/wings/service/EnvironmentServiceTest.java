@@ -910,7 +910,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
       environmentService.createValues(APP_ID, ENV_ID, null, manifestFile, AppManifestKind.K8S_MANIFEST);
       fail("Should not reach here.");
     } catch (InvalidRequestException e) {
-      assertThat(e.getMessage()).isEqualTo("Unhandled application manifest kind K8S_MANIFEST");
+      assertThat(e.getMessage()).isEqualTo("Environment override not supported for K8s Manifest");
     }
   }
 

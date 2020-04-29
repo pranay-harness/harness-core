@@ -281,8 +281,8 @@ public class ApplicationManifestUtils {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
       if (Local == applicationManifest.getStoreType()) {
-        ManifestFile manifestFile =
-            applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
+        ManifestFile manifestFile = applicationManifestService.getManifestFileByFileName(
+            applicationManifest.getUuid(), applicationManifest.getKind().getDefaultFileName());
         if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
           valuesFiles.put(k8sValuesLocation, manifestFile.getFileContent());
         }

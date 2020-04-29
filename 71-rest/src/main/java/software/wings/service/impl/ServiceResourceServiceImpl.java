@@ -2784,33 +2784,42 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile) {
+    return createManifestFile(appId, serviceId, manifestFile, AppManifestKind.VALUES);
+  }
+
+  @Override
+  public ManifestFile createManifestFile(
+      String appId, String serviceId, ManifestFile manifestFile, AppManifestKind appManifestKind) {
     ApplicationManifest appManifest =
-        applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
+        applicationManifestService.getAppManifest(appId, null, serviceId, appManifestKind);
     if (appManifest == null) {
-      appManifest = ApplicationManifest.builder()
-                        .storeType(StoreType.Local)
-                        .serviceId(serviceId)
-                        .kind(AppManifestKind.VALUES)
-                        .build();
+      appManifest =
+          ApplicationManifest.builder().storeType(StoreType.Local).serviceId(serviceId).kind(appManifestKind).build();
       appManifest.setAppId(appId);
       appManifest = applicationManifestService.create(appManifest);
     }
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setFileName(appManifestKind.getDefaultFileName());
     manifestFile.setApplicationManifestId(appManifest.getUuid());
     return applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
   }
 
   @Override
-  public ManifestFile getValuesYaml(String appId, String serviceId, String manifestFileId) {
+  public ManifestFile getManifestFile(String appId, String serviceId, String manifestFileId) {
     return applicationManifestService.getManifestFileById(appId, manifestFileId);
   }
 
   @Override
   public ManifestFile updateValuesYaml(
       String appId, String serviceId, String manifestFileId, ManifestFile manifestFile) {
+    return updateManifestFile(appId, serviceId, manifestFileId, manifestFile, AppManifestKind.VALUES);
+  }
+
+  @Override
+  public ManifestFile updateManifestFile(String appId, String serviceId, String manifestFileId,
+      ManifestFile manifestFile, AppManifestKind appManifestKind) {
     ApplicationManifest appManifest =
-        applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
+        applicationManifestService.getAppManifest(appId, null, serviceId, appManifestKind);
     if (appManifest == null) {
       throw new InvalidRequestException("Application Manifest not found", USER);
     }
@@ -2820,13 +2829,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     manifestFile.setUuid(manifestFileId);
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setFileName(appManifestKind.getDefaultFileName());
     manifestFile.setApplicationManifestId(appManifest.getUuid());
     return applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);
   }
 
   @Override
-  public void deleteValuesYaml(String appId, String serviceId, String manifestFileId) {
+  public void deleteManifestFile(String appId, String serviceId, String manifestFileId) {
     applicationManifestService.deleteManifestFileById(appId, manifestFileId);
   }
 

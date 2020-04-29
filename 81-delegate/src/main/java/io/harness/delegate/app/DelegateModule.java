@@ -131,6 +131,8 @@ import software.wings.helpers.ext.kustomize.KustomizeClient;
 import software.wings.helpers.ext.kustomize.KustomizeClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
+import software.wings.helpers.ext.openshift.OpenShiftClient;
+import software.wings.helpers.ext.openshift.OpenShiftClientImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
@@ -487,6 +489,7 @@ public class DelegateModule extends DependencyModule {
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
+    bind(OpenShiftClient.class).to(OpenShiftClientImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceImpl.class);
     bind(ContainerDeploymentDelegateHelper.class);
     bind(MessageService.class)
