@@ -43,7 +43,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
     if (records.get(0) instanceof Log) {
       Log log = (Log) records.get(0);
       long count = wingsPersistence.createQuery(Log.class)
-                       .filter("appId", log.getAppId())
+                       .filter(LogKeys.appId, log.getAppId())
                        .filter(LogKeys.activityId, log.getActivityId())
                        .count();
       if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {

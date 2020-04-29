@@ -48,6 +48,7 @@ import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteServiceGuardAlertMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
+import migrations.all.DropAppIdIndexOnCommandLogs;
 import migrations.all.DropDelegateScopeCollectionMigration;
 import migrations.all.DropExistingIndexForGitFileActivityMigration;
 import migrations.all.DropMongoGcsFileIdMappingCollectionMigration;
@@ -331,6 +332,7 @@ public class MigrationList {
         .add(Pair.of(307, AddHarnessCommandLibraryToAccount.class))
         .add(Pair.of(308, AddScopedToAccountAttributeToEncryptedData.class))
         .add(Pair.of(309, BaseMigration.class))
+        .add(Pair.of(310, DropAppIdIndexOnCommandLogs.class))
         .build();
   }
 }
