@@ -38,6 +38,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.CreatePrimiryProfileForAllAccounts;
 import migrations.all.DelegatesWithoutProfileMigration;
+import migrations.all.DeleteInvalidServiceGuardConfigs;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
@@ -213,6 +214,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(123, AddAccountIdToTimeSeriesKeyTransaction.class))
         .add(Pair.of(124, CreatePrimiryProfileForAllAccounts.class))
         .add(Pair.of(125, DisableServiceGuardsWithDeletedConnectorsMigration.class))
+        .add(Pair.of(126, DeleteInvalidServiceGuardConfigs.class))
         .build();
   }
 }
