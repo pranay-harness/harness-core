@@ -51,9 +51,10 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
       executionLogCallback.saveExecutionLog(color("\nFetching values.yaml from helm chart for Service", White, Bold));
 
       HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
-      helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
       String valuesFileContent = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams);
+      helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
+
       if (null == valuesFileContent) {
         executionLogCallback.saveExecutionLog("No values.yaml found", WARN, SUCCESS);
       } else {

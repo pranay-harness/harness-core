@@ -53,7 +53,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
-import software.wings.helpers.ext.helm.response.HelmChartInfo.HelmChartInfoBuilder;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
@@ -68,10 +67,7 @@ import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,9 +97,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
-  private static final String CHARTS_YAML_KEY = "Chart.yaml";
-  private static final String VERSION_KEY = "version:";
-  private static final String NAME_KEY = "name:";
+  public static final String FROM = " from ";
+  public static final String TIMED_OUT_IN_STEADY_STATE = "Timed out waiting for controller to reach in steady state";
 
   @Override
   public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) throws IOException {
@@ -156,10 +151,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
-      String msg = "Timed out waiting for controller to reach in steady state";
+      String msg = TIMED_OUT_IN_STEADY_STATE;
       logger.error(msg, e);
-      executionLogCallback.saveExecutionLog(
-          "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return HelmInstallCommandResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .output(ExceptionUtils.getMessage(e))
@@ -301,10 +295,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
-      String msg = "Timed out waiting for controller to reach in steady state";
+      String msg = TIMED_OUT_IN_STEADY_STATE;
       logger.error(msg, e);
-      executionLogCallback.saveExecutionLog(
-          "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } catch (WingsException e) {
       throw e;
@@ -579,7 +572,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
               if (isNotBlank(helmDeployChartSpec.getName())) {
                 String chartNameMsg = isNotBlank(helmChartSpecification.getChartName())
-                    ? " from " + helmChartSpecification.getChartName()
+                    ? FROM + helmChartSpecification.getChartName()
                     : "";
 
                 executionLogCallback.saveExecutionLog(
@@ -588,9 +581,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
                 valueOverrriden = true;
               }
               if (isNotBlank(helmDeployChartSpec.getUrl())) {
-                String chartUrlMsg = isNotBlank(helmChartSpecification.getChartUrl())
-                    ? " from " + helmChartSpecification.getChartUrl()
-                    : "";
+                String chartUrlMsg =
+                    isNotBlank(helmChartSpecification.getChartUrl()) ? FROM + helmChartSpecification.getChartUrl() : "";
 
                 executionLogCallback.saveExecutionLog(
                     "Overriding chart url" + chartUrlMsg + " to " + helmDeployChartSpec.getUrl());
@@ -599,7 +591,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
               }
               if (isNotBlank(helmDeployChartSpec.getVersion())) {
                 String chartVersionMsg = isNotBlank(helmChartSpecification.getChartVersion())
-                    ? " from " + helmChartSpecification.getChartVersion()
+                    ? FROM + helmChartSpecification.getChartVersion()
                     : "";
 
                 executionLogCallback.saveExecutionLog(
@@ -694,12 +686,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       } else {
         switch (repoConfig.getManifestStoreTypes()) {
           case HelmSourceRepo:
-            helmChartInfo = getHelmChartInfoFromChartsYamlFile(request);
+            helmChartInfo = helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request);
             helmChartInfo.setRepoUrl(request.getRepoConfig().getGitConfig().getRepoUrl());
             break;
 
           case HelmChartRepo:
-            helmChartInfo = getHelmChartInfoFromChartsYamlFile(request);
+            helmChartInfo = helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request);
             helmChartInfo.setRepoUrl(
                 helmHelper.getRepoUrlForHelmRepoConfig(request.getRepoConfig().getHelmChartConfigParams()));
             break;
@@ -713,38 +705,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     return helmChartInfo;
-  }
-
-  private HelmChartInfo getHelmChartInfoFromChartsYamlFile(HelmInstallCommandRequest request) throws IOException {
-    String chartYamlPath = Paths.get(request.getWorkingDir(), CHARTS_YAML_KEY).toString();
-
-    String chartVersion = null;
-    String chartName = null;
-    boolean versionFound = false;
-    boolean nameFound = false;
-
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(chartYamlPath), "UTF-8"))) {
-      String line;
-
-      while ((line = br.readLine()) != null) {
-        if (!versionFound && line.startsWith(VERSION_KEY)) {
-          chartVersion = line.substring(VERSION_KEY.length() + 1);
-          versionFound = true;
-        }
-
-        if (!nameFound && line.startsWith(NAME_KEY)) {
-          chartName = line.substring(NAME_KEY.length() + 1);
-          nameFound = true;
-        }
-
-        if (versionFound && nameFound) {
-          break;
-        }
-      }
-    }
-
-    HelmChartInfoBuilder helmChartInfoBuilder = HelmChartInfo.builder().version(chartVersion).name(chartName);
-    return helmChartInfoBuilder.build();
   }
 
   private String getChartInfoForSpecWithRepoUrl(HelmInstallCommandRequest request) throws Exception {
