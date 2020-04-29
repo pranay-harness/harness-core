@@ -3,6 +3,7 @@ package io.harness.batch.processing.config;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import io.harness.batch.processing.ccm.CostEventType;
 import io.harness.batch.processing.ccm.EnrichedEvent;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.category.element.UnitTests;
@@ -34,6 +36,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +53,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
   private WorkloadRepository workloadRepository;
   private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
   private CostEventService costEventService;
+  private WatchEventCostEstimator watchEventCostEstimator;
 
   @Before
   public void setUp() throws Exception {
@@ -59,6 +63,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     k8sWatchEventConfig = new K8sWatchEventConfig(null, null);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
     costEventService = mock(CostEventService.class);
+    watchEventCostEstimator = mock(WatchEventCostEstimator.class);
   }
 
   @Test
@@ -202,7 +207,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     when(costEventService.create(captor.capture())).thenReturn(true);
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "added-yaml"))
         .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
-    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
+    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
+    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
+        k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
                               .setType(K8sWatchEvent.Type.TYPE_ADDED)
@@ -234,6 +241,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
+                         .billingAmount(BigDecimal.valueOf(12.34))
                          .build());
     });
   }
@@ -248,7 +256,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
         .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "new-yaml"))
         .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
-    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
+    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
+    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
+        k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
                               .setType(K8sWatchEvent.Type.TYPE_UPDATED)
@@ -282,6 +292,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .appId("app-id")
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
+                         .billingAmount(BigDecimal.valueOf(12.34))
                          .envId("env-id")
                          .build());
     });
@@ -295,7 +306,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     when(costEventService.create(captor.capture())).thenReturn(true);
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12334", "deleted-yaml"))
         .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
-    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer = k8sWatchEventConfig.writer(k8sYamlDao, costEventService);
+    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
+    ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
+        k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
     K8sWatchEvent event = K8sWatchEvent.newBuilder()
                               .setType(K8sWatchEvent.Type.TYPE_DELETED)
@@ -327,6 +340,7 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
+                         .billingAmount(BigDecimal.valueOf(12.34))
                          .build());
     });
   }
