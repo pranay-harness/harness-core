@@ -3,7 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
 import io.harness.state.core.fork.ForkStateParameters;
-import io.harness.state.execution.ExecutionNodeInstance;
+import io.harness.state.execution.NodeExecution;
 import io.harness.state.execution.PlanExecution;
 
 import java.util.Map;
@@ -13,7 +13,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Plan.class);
-    set.add(ExecutionNodeInstance.class);
+    set.add(NodeExecution.class);
     set.add(PlanExecution.class);
   }
 
