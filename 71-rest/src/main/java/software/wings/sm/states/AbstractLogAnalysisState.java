@@ -504,31 +504,34 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;
         DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
-        return CustomLogDataCollectionInfo.builder()
-            .baseUrl(datadogConfig.getUrl())
-            .validationUrl(DatadogConfig.validationUrl)
-            .dataUrl(DatadogConfig.LOG_API_PATH_SUFFIX)
-            .headers(new HashMap<>())
-            .options(datadogConfig.fetchLogOptionsMap())
-            .body(DatadogLogState.resolveHostnameField(
-                datadogConfig.fetchLogBodyMap(false), analysisContext.getHostNameField()))
-            .query(getRenderedQuery())
-            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .stateType(StateType.DATA_DOG_LOG)
-            .applicationId(analysisContext.getAppId())
-            .stateExecutionId(analysisContext.getStateExecutionId())
-            .workflowId(analysisContext.getWorkflowId())
-            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
-            .serviceId(analysisContext.getServiceId())
-            .hostnameSeparator(DatadogLogState.HOST_NAME_SEPARATOR)
-            .hostnameField(analysisContext.getHostNameField())
-            .responseDefinition(
-                datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField(), false))
-            .shouldDoHostBasedFiltering(shouldInspectHostsForLogAnalysis())
-            .collectionFrequency(1)
-            .collectionTime(Integer.parseInt(getTimeDuration()))
-            .accountId(analysisContext.getAccountId())
-            .build();
+        CustomLogDataCollectionInfo datadogCustomLogDataCollectionInfo =
+            CustomLogDataCollectionInfo.builder()
+                .baseUrl(datadogConfig.getUrl())
+                .validationUrl(DatadogConfig.validationUrl)
+                .dataUrl(DatadogConfig.LOG_API_PATH_SUFFIX)
+                .headers(new HashMap<>())
+                .options(datadogConfig.fetchLogOptionsMap())
+                .body(DatadogLogState.resolveHostnameField(
+                    datadogConfig.fetchLogBodyMap(false), analysisContext.getHostNameField()))
+                .query(getRenderedQuery())
+                .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                .stateType(StateType.DATA_DOG_LOG)
+                .applicationId(analysisContext.getAppId())
+                .stateExecutionId(analysisContext.getStateExecutionId())
+                .workflowId(analysisContext.getWorkflowId())
+                .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+                .serviceId(analysisContext.getServiceId())
+                .hostnameSeparator(DatadogLogState.HOST_NAME_SEPARATOR)
+                .hostnameField(analysisContext.getHostNameField())
+                .responseDefinition(
+                    datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField(), false))
+                .shouldDoHostBasedFiltering(shouldInspectHostsForLogAnalysis())
+                .collectionFrequency(1)
+                .collectionTime(Integer.parseInt(getTimeDuration()))
+                .accountId(analysisContext.getAccountId())
+                .build();
+        datadogCustomLogDataCollectionInfo.setDelayMinutes(0);
+        return datadogCustomLogDataCollectionInfo;
       case STACK_DRIVER_LOG:
         StackDriverLogState stackDriverLogState = (StackDriverLogState) this;
         GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
