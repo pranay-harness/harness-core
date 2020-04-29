@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -8,6 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -18,6 +21,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
 
 @Slf4j
@@ -56,14 +60,21 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
     PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
     DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
     try {
-      DelegateTaskNotifyResponseData response = delegateService.executeTask(validationTask);
-      String delegateId = response.getDelegateMetaInfo().getId();
-      logger.info(
-          "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
-      perpetualTaskService.setDelegateId(taskId, delegateId);
+      ResponseData response = delegateService.executeTask(validationTask);
+
+      if (response instanceof DelegateTaskNotifyResponseData) {
+        String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
+        logger.info(
+            "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
+        perpetualTaskService.setDelegateId(taskId, delegateId);
+      } else if ((response instanceof RemoteMethodReturnValueData)
+          && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
+        throw(InvalidRequestException)((RemoteMethodReturnValueData) response).getException();
+      } else {
+        throw new InvalidRequestException(format(
+            "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
+      }
     } catch (Exception e) {
-      // TODO: add more granular exception handling
-      // TODO: add exponential backoff retries
       logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
     }
   }
