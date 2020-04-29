@@ -158,21 +158,25 @@ public class BillingDataHelper {
     while (resultSet != null && resultSet.next()) {
       StringJoiner entityIdAppender = new StringJoiner(":");
       for (BillingDataMetaDataFields field : listOfFields) {
-        entityIdAppender.add(resultSet.getString(field.getFieldName()));
+        if (resultSet.getString(field.getFieldName()) != null) {
+          entityIdAppender.add(resultSet.getString(field.getFieldName()));
+        }
       }
       String entityId = entityIdAppender.toString();
-      QLBillingAmountData billingAmountData =
-          QLBillingAmountData.builder()
-              .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
-              .minStartTime(
-                  resultSet
-                      .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(), utils.getDefaultCalendar())
-                      .getTime())
-              .maxStartTime(
-                  resultSet
-                      .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar())
-                      .getTime())
-              .build();
+      QLBillingAmountData billingAmountData = null;
+      if (resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
+        billingAmountData = QLBillingAmountData.builder()
+                                .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
+                                .minStartTime(resultSet
+                                                  .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                      utils.getDefaultCalendar())
+                                                  .getTime())
+                                .maxStartTime(resultSet
+                                                  .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                      utils.getDefaultCalendar())
+                                                  .getTime())
+                                .build();
+      }
       entityIdToBillingAmountData.put(entityId, billingAmountData);
     }
     return entityIdToBillingAmountData;
