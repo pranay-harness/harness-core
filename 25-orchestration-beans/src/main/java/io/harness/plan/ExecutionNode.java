@@ -1,6 +1,7 @@
 package io.harness.plan;
 
 import io.harness.adviser.AdviserObtainment;
+import io.harness.ambiance.LevelType;
 import io.harness.annotations.Redesign;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.references.RefObject;
@@ -30,5 +31,5 @@ public class ExecutionNode {
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
-  @NotNull String levelName;
+  @NotNull LevelType levelType;
 }

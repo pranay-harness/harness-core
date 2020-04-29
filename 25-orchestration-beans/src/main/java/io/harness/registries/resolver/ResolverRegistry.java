@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Redesign
 @Singleton
-public class ResolverRegistry implements Registry {
+public class ResolverRegistry implements Registry<RefType, Resolver> {
   private Map<RefType, Resolver> registry = new ConcurrentHashMap<>();
 
   public void register(RefType refType, Resolver producer) {
@@ -35,5 +35,10 @@ public class ResolverRegistry implements Registry {
   @Override
   public RegistryType getType() {
     return RegistryType.RESOLVER;
+  }
+
+  @Override
+  public Class<Resolver> getRegistrableEntityClass() {
+    return Resolver.class;
   }
 }

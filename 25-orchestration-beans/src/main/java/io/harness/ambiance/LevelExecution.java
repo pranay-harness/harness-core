@@ -19,8 +19,8 @@ public class LevelExecution {
   String runtimeId;
   @NonNull Level level;
 
-  public String getLevelName() {
-    return level.getName();
+  public LevelType getLevelName() {
+    return level.getType();
   }
 
   public int getLevelPriority() {

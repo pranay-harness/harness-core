@@ -17,7 +17,7 @@ import javax.validation.Valid;
 
 @Redesign
 @Singleton
-public class AdviserRegistry implements Registry {
+public class AdviserRegistry implements Registry<AdviserType, Adviser> {
   private Map<AdviserType, Adviser> registry = new ConcurrentHashMap<>();
 
   public void register(@NonNull AdviserType adviserType, @NonNull Adviser adviser) {
@@ -32,6 +32,11 @@ public class AdviserRegistry implements Registry {
       return registry.get(adviserType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Adviser registered for type: " + adviserType);
+  }
+
+  @Override
+  public Class<Adviser> getRegistrableEntityClass() {
+    return Adviser.class;
   }
 
   @Override

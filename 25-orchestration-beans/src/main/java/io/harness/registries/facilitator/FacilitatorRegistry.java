@@ -16,7 +16,7 @@ import javax.validation.Valid;
 
 @Redesign
 @Singleton
-public class FacilitatorRegistry implements Registry {
+public class FacilitatorRegistry implements Registry<FacilitatorType, Facilitator> {
   private Map<FacilitatorType, Facilitator> registry = new ConcurrentHashMap<>();
 
   public void register(FacilitatorType facilitatorType, Facilitator facilitator) {
@@ -31,6 +31,11 @@ public class FacilitatorRegistry implements Registry {
       return registry.get(facilitatorType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Facilitator registered for type: " + facilitatorType);
+  }
+
+  @Override
+  public Class<Facilitator> getRegistrableEntityClass() {
+    return Facilitator.class;
   }
 
   @Override
