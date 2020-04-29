@@ -54,6 +54,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
   @Test
@@ -216,5 +217,15 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getMinimum()).isEqualTo(0);
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getMaximum()).isEqualTo(1);
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getTarget()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    SpotinstTrafficShiftAlbSetupState state = spy(SpotinstTrafficShiftAlbSetupState.class);
+    Map<String, String> fieldsMap = state.validateFields();
+    assertThat(fieldsMap).isNotNull();
+    assertThat(fieldsMap.size()).isEqualTo(2);
   }
 }

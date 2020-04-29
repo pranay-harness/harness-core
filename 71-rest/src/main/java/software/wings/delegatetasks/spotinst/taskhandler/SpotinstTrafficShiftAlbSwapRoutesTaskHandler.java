@@ -63,14 +63,14 @@ public class SpotinstTrafficShiftAlbSwapRoutesTaskHandler extends SpotInstTaskHa
     ElastiGroup newElastigroup = parameters.getNewElastigroup();
     ExecutionLogCallback logCallback = getLogCallBack(parameters, SWAP_ROUTES_COMMAND_UNIT);
 
-    if (newElastigroup != null) {
+    if (newElastigroup != null && parameters.getNewElastigroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT) {
       logCallback.saveExecutionLog(
           format("Renaming Elastigroup with id: [%s] to [%s]", newElastigroup.getId(), prodElastigroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotinstToken, spotinstAccountId, newElastigroup.getId(),
           ElastiGroupRenameRequest.builder().name(prodElastigroupName).build());
     }
 
-    if (oldElastigroup != null) {
+    if (oldElastigroup != null && parameters.getNewElastigroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT) {
       logCallback.saveExecutionLog(
           format("Renaming Elastigroup with id: [%s] to [%s]", oldElastigroup.getId(), stageElastigroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotinstToken, spotinstAccountId, oldElastigroup.getId(),
@@ -83,7 +83,6 @@ public class SpotinstTrafficShiftAlbSwapRoutesTaskHandler extends SpotInstTaskHa
 
     if (oldElastigroup != null && parameters.getNewElastigroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT
         && parameters.isDownsizeOldElastigroup()) {
-      logCallback.saveExecutionLog(format("Downsizing old Elastigroup with id: [%s]", oldElastigroup.getId()));
       ElastiGroup request = ElastiGroup.builder()
                                 .id(oldElastigroup.getId())
                                 .name(stageElastigroupName)

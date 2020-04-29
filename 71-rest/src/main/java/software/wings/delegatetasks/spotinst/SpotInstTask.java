@@ -18,6 +18,9 @@ import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandle
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSwapRoutesTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSyncTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotinstTrafficShiftAlbDeployTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotinstTrafficShiftAlbSetupTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotinstTrafficShiftAlbSwapRoutesTaskHandler;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -31,6 +34,9 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
   @Inject private SpotInstSetupTaskHandler setupTaskHandler;
   @Inject private SpotInstDeployTaskHandler deployTaskHandler;
   @Inject private SpotInstSwapRoutesTaskHandler swapRoutesTaskHandler;
+  @Inject private SpotinstTrafficShiftAlbSetupTaskHandler shiftAlbSetupTaskHandler;
+  @Inject private SpotinstTrafficShiftAlbDeployTaskHandler shiftAlbDeployTaskHandler;
+  @Inject private SpotinstTrafficShiftAlbSwapRoutesTaskHandler shiftAlbSwapRoutesTaskHandler;
 
   public SpotInstTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
@@ -79,6 +85,15 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
           handler = swapRoutesTaskHandler;
           break;
         }
+        case SPOT_INST_ALB_SHIFT_SETUP:
+          handler = shiftAlbSetupTaskHandler;
+          break;
+        case SPOT_INST_ALB_SHIFT_DEPLOY:
+          handler = shiftAlbDeployTaskHandler;
+          break;
+        case SPOT_INST_ALB_SHIFT_SWAP_ROUTES:
+          handler = shiftAlbSwapRoutesTaskHandler;
+          break;
         default: {
           String message =
               format("Unrecognized task params type running spot inst task: [%s]. Workflow execution: [%s]",

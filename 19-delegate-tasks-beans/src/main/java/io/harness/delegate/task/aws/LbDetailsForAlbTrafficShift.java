@@ -1,10 +1,14 @@
 package io.harness.delegate.task.aws;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LbDetailsForAlbTrafficShift {
   private String loadBalancerName;
   private String loadBalancerArn;

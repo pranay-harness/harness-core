@@ -206,6 +206,10 @@ import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
 import software.wings.sm.states.spotinst.SpotInstRollbackState;
 import software.wings.sm.states.spotinst.SpotInstServiceSetup;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbDeployState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbRollbackSwitchRoutesState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
 import software.wings.stencils.WorkflowStepType;
 
 import java.util.ArrayList;
@@ -325,17 +329,31 @@ public enum StepType {
   SPOTINST_SETUP(SpotInstServiceSetup.class, WorkflowServiceHelper.SPOTINST_SETUP, asList(WorkflowStepType.SPOTINST),
       asList(PhaseStepType.SPOTINST_SETUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK),
       asList(BASIC, CANARY, BLUE_GREEN)),
+  SPOTINST_ALB_SHIFT_SETUP(SpotinstTrafficShiftAlbSetupState.class, WorkflowServiceHelper.SPOTINST_ALB_SHIFT_SETUP,
+      asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_SETUP), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
   SPOTINST_DEPLOY(SpotInstDeployState.class, WorkflowServiceHelper.SPOTINST_DEPLOY, asList(WorkflowStepType.SPOTINST),
       asList(PhaseStepType.SPOTINST_DEPLOY), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK),
       asList(BASIC, CANARY, BLUE_GREEN)),
+  SPOTINST_ALB_SHIFT_DEPLOY(SpotinstTrafficShiftAlbDeployState.class, WorkflowServiceHelper.SPOTINST_ALB_SHIFT_DEPLOY,
+      asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
   SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
       asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
       Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
+  SPOTINST_LISTENER_ALB_SHIFT(SpotinstTrafficShiftAlbSwitchRoutesState.class,
+      WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE, asList(WorkflowStepType.SPOTINST),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
   SPOTINST_ROLLBACK(SpotInstRollbackState.class, WorkflowServiceHelper.SPOTINST_ROLLBACK,
       asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_ROLLBACK),
       Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
   SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class,
       WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(WorkflowStepType.SPOTINST),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.ROLLBACK), asList(BLUE_GREEN)),
+  SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK(SpotinstTrafficShiftAlbRollbackSwitchRoutesState.class,
+      WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE_ROLLBACK, asList(WorkflowStepType.SPOTINST),
       asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), Lists.newArrayList(DeploymentType.AMI),
       asList(PhaseType.ROLLBACK), asList(BLUE_GREEN)),
 

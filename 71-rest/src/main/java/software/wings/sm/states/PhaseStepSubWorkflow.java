@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -81,6 +82,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
+import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -598,9 +600,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       addProvisionerElements(elementNotifyResponseData, contextElements);
       addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.SPOTINST_SETUP) {
-      SpotInstSetupContextElement setupContextElement = (SpotInstSetupContextElement) notifiedElement(
-          elementNotifyResponseData, SpotInstSetupContextElement.class, "Missing SpotInstSetupContextElement");
-      contextElements.add(setupContextElement);
+      /**
+       * Spotinst implementation has multiple setup states for BG and Traffic shift strategies.
+       * We use the same Phase Step Type (Like CONTAINER_SETUP), but we need different context elements.
+       */
+      ContextElement spotinstNotifiedContextElement = getSpotinstNotifiedContextElement(elementNotifyResponseData);
+      contextElements.add(spotinstNotifiedContextElement);
       addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.SPOTINST_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
@@ -614,6 +619,23 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         executionResponseBuilder.notifyElements(contextElements);
       }
     }
+  }
+
+  @VisibleForTesting
+  ContextElement getSpotinstNotifiedContextElement(ElementNotifyResponseData elementNotifyResponseData) {
+    List<ContextElement> elements = elementNotifyResponseData.getContextElements();
+    if (isEmpty(elements)) {
+      return null;
+    }
+    Optional<ContextElement> elementOptional = elements.stream()
+                                                   .filter(element
+                                                       -> element instanceof SpotInstSetupContextElement
+                                                           || element instanceof SpotinstTrafficShiftAlbSetupElement)
+                                                   .findFirst();
+    if (!elementOptional.isPresent()) {
+      throw new InvalidRequestException("Did not find Spotinst setup element.");
+    }
+    return elementOptional.get();
   }
 
   private void addProvisionerElements(

@@ -41,6 +41,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
 
+import java.util.Map;
+
 public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
@@ -106,5 +108,15 @@ public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest 
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    SpotinstTrafficShiftAlbSwitchRoutesState state = spy(SpotinstTrafficShiftAlbSwitchRoutesState.class);
+    Map<String, String> fieldsMap = state.validateFields();
+    assertThat(fieldsMap).isNotNull();
+    assertThat(fieldsMap.size()).isEqualTo(1);
   }
 }

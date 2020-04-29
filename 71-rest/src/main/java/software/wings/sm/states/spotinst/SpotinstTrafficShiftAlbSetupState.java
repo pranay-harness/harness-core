@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
@@ -54,6 +55,7 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -121,12 +123,14 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
       List<ElastiGroup> groupsToBeDownsized = spotinstTrafficShiftAlbSetupResponse.getElastiGroupsToBeDownsized();
       if (isNotEmpty(groupsToBeDownsized)) {
         ElastiGroup elastigroupToBeDownsized = groupsToBeDownsized.get(0);
-        if (useCurrentRunningCount && elastigroupToBeDownsized != null) {
+        if (elastigroupToBeDownsized != null) {
+          if (useCurrentRunningCount) {
+            elastigroupOriginalConfig.getCapacity().setMinimum(elastigroupToBeDownsized.getCapacity().getMinimum());
+            elastigroupOriginalConfig.getCapacity().setMaximum(elastigroupToBeDownsized.getCapacity().getMaximum());
+            elastigroupOriginalConfig.getCapacity().setTarget(elastigroupToBeDownsized.getCapacity().getTarget());
+          }
           stateExecutionData.setOldElastigroupId(elastigroupToBeDownsized.getId());
           stateExecutionData.setOldElastigroupName(elastigroupToBeDownsized.getName());
-          elastigroupOriginalConfig.getCapacity().setMinimum(elastigroupToBeDownsized.getCapacity().getMinimum());
-          elastigroupOriginalConfig.getCapacity().setMaximum(elastigroupToBeDownsized.getCapacity().getMaximum());
-          elastigroupOriginalConfig.getCapacity().setTarget(elastigroupToBeDownsized.getCapacity().getTarget());
           builder.oldElastiGroupOriginalConfig(elastigroupToBeDownsized);
         }
       }
@@ -270,5 +274,17 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // Do nothing on abort
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(elastigroupNamePrefix)) {
+      invalidFields.put("elastigroupNamePrefix", "Elastigroup Name is needed");
+    }
+    if (isEmpty(lbDetails)) {
+      invalidFields.put("lbDetails", "Load balancers are required");
+    }
+    return invalidFields;
   }
 }

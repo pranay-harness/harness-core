@@ -45,6 +45,7 @@ import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVI
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.beans.FeatureName.AWS_TRAFFIC_SHIFT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
@@ -71,10 +72,15 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
+import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_DEPLOY;
+import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_SETUP;
+import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
+import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -277,7 +283,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
 
   private static final List<String> amiArtifactNeededStateTypes = Arrays.asList(AWS_AMI_SERVICE_SETUP.name(),
-      AWS_AMI_SERVICE_DEPLOY.name(), StateType.SPOTINST_SETUP.name(), StateType.SPOTINST_DEPLOY.name());
+      AWS_AMI_SERVICE_DEPLOY.name(), StateType.SPOTINST_SETUP.name(), StateType.SPOTINST_DEPLOY.name(),
+      StateType.SPOTINST_ALB_SHIFT_SETUP.name(), StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
 
   private static final List<String> codeDeployArtifactNeededStateTypes = Arrays.asList(AWS_CODEDEPLOY_STATE.name());
 
@@ -3494,9 +3501,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
+    filteredStepTypes = filterSpotinstStepsForTrafficShift(filteredStepTypes, workflow.getAccountId());
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId(),
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+  }
+
+  @VisibleForTesting
+  List<StepType> filterSpotinstStepsForTrafficShift(List<StepType> steps, String accountId) {
+    if (featureFlagService.isEnabled(AWS_TRAFFIC_SHIFT, accountId)) {
+      return steps;
+    }
+    Set<StepType> spotinstTrafficShiftTypes = new HashSet<>(Arrays.asList(SPOTINST_ALB_SHIFT_SETUP,
+        SPOTINST_ALB_SHIFT_DEPLOY, SPOTINST_LISTENER_ALB_SHIFT, SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK));
+    return steps.stream()
+        .filter(stepType -> !spotinstTrafficShiftTypes.contains(stepType))
+        .collect(Collectors.toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
