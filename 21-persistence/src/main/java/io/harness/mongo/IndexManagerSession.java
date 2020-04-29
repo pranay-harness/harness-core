@@ -24,6 +24,7 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.IndexManager.IndexCreator;
+import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -248,7 +249,19 @@ public class IndexManagerSession {
     switch (mode) {
       case AUTO:
         logger.warn("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
-        indexCreator.getCollection().createIndex(indexCreator.getKeys(), indexCreator.getOptions());
+        for (int i = 0; i < 10; i++) {
+          try {
+            indexCreator.getCollection().createIndex(indexCreator.getKeys(), indexCreator.getOptions());
+            break;
+          } catch (MongoCommandException exception) {
+            // Creating too many indexes at the same time might overwhelm mongo. Give it some time to catch up.
+            if (exception.getErrorCode() == 24) {
+              Morpheus.sleep(Duration.ofSeconds(1));
+            } else {
+              throw exception;
+            }
+          }
+        }
         break;
       case MANUAL:
         logger.info(
@@ -417,6 +430,11 @@ public class IndexManagerSession {
         if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
           createCollectionSession(collection).checkForUnusedIndexes(accesses);
         }
+      } catch (MongoCommandException exception) {
+        if (exception.getErrorCode() == 13) {
+          throw new IndexManagerReadOnlyException();
+        }
+        logger.error("", exception);
       } catch (RuntimeException exception) {
         logger.error("", exception);
       }

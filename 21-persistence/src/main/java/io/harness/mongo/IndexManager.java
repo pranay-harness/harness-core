@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.mongo.IndexManager.Mode.INSPECT;
 import static io.harness.mongo.IndexManager.Mode.MANUAL;
 
@@ -40,10 +41,7 @@ public class IndexManager {
           return false;
         }
       }
-      if (iterator2.hasNext()) {
-        return false;
-      }
-      return true;
+      return !iterator2.hasNext();
     }
 
     public boolean sameKeys(BasicDBObject keys) {
@@ -56,9 +54,14 @@ public class IndexManager {
   }
 
   public void ensureIndexes(Mode mode, AdvancedDatastore datastore, Morphia morphia) {
-    IndexManagerSession session = new IndexManagerSession(mode == null ? MANUAL : mode);
-    if (session.ensureIndexes(datastore, morphia) && mode == INSPECT) {
-      throw new IndexManagerInspectException();
+    try {
+      IndexManagerSession session = new IndexManagerSession(mode == null ? MANUAL : mode);
+      if (session.ensureIndexes(datastore, morphia) && mode == INSPECT) {
+        throw new IndexManagerInspectException();
+      }
+    } catch (IndexManagerReadOnlyException exception) {
+      ignoredOnPurpose(exception);
+      logger.warn("The user has read only access.");
     }
   }
 
