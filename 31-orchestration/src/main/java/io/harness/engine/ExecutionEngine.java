@@ -36,8 +36,8 @@ import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.State;
-import io.harness.state.execution.ExecutionNodeInstance;
-import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.NodeExecution;
+import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
 import io.harness.state.execution.status.NodeExecutionStatus;
@@ -119,10 +119,10 @@ public class ExecutionEngine implements Engine {
         ? ambiance
         : ambiance.cloneForFinish(levelRegistry.obtain(node.getLevelType()));
     String uuid = generateUuid();
-    ExecutionNodeInstance previousInstance = null;
+    NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
-      previousInstance = engineStatusHelper.updateNodeInstance(
-          ambiance.obtainCurrentRuntimeId(), ops -> ops.set(ExecutionNodeInstanceKeys.nextId, uuid));
+      previousNodeExecution = engineStatusHelper.updateNodeInstance(
+          ambiance.obtainCurrentRuntimeId(), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
     cloned.addLevelExecution(LevelExecution.builder()
                                  .setupId(node.getUuid())
@@ -130,31 +130,30 @@ public class ExecutionEngine implements Engine {
                                  .level(levelRegistry.obtain(node.getLevelType()))
                                  .build());
 
-    ExecutionNodeInstance nodeInstance = ExecutionNodeInstance.builder()
-                                             .uuid(uuid)
-                                             .ambiance(cloned)
-                                             .node(node)
-                                             .startTs(System.currentTimeMillis())
-                                             .status(NodeExecutionStatus.QUEUED)
-                                             .notifyId(previousInstance == null ? null : previousInstance.getNotifyId())
-                                             .parentId(previousInstance == null ? null : previousInstance.getParentId())
-                                             .previousId(previousInstance == null ? null : previousInstance.getUuid())
-                                             .build();
-    hPersistence.save(nodeInstance);
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(uuid)
+            .ambiance(cloned)
+            .node(node)
+            .startTs(System.currentTimeMillis())
+            .status(NodeExecutionStatus.QUEUED)
+            .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
+            .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
+            .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
+            .build();
+    hPersistence.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
   }
 
-  public void startNodeInstance(Ambiance ambiance, @NotNull String nodeInstanceId) {
+  public void startNodeInstance(Ambiance ambiance, @NotNull String nodeExecutionId) {
     // Update to Running Status
-    ExecutionNodeInstance nodeInstance =
-        Preconditions.checkNotNull(hPersistence.createQuery(ExecutionNodeInstance.class)
-                                       .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
-                                       .get());
+    NodeExecution nodeExecution = Preconditions.checkNotNull(
+        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId).get());
 
-    ExecutionNode node = nodeInstance.getNode();
+    ExecutionNode node = nodeExecution.getNode();
     // Audit and execute
     List<StateTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
@@ -167,23 +166,20 @@ public class ExecutionEngine implements Engine {
         "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
     ExecutionMode mode = facilitatorResponse.getExecutionMode();
 
-    ExecutionNodeInstance updatedNodeInstance =
-        Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(nodeInstanceId,
-            ops
-            -> ops.set(ExecutionNodeInstanceKeys.mode, mode)
-                   .set(ExecutionNodeInstanceKeys.status, NodeExecutionStatus.RUNNING)));
+    NodeExecution updatedNodeExecution =
+        Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(nodeExecutionId,
+            ops -> ops.set(NodeExecutionKeys.mode, mode).set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
 
-    invokeState(ambiance, facilitatorResponse, updatedNodeInstance);
+    invokeState(ambiance, facilitatorResponse, updatedNodeExecution);
   }
 
-  private void invokeState(
-      Ambiance ambiance, FacilitatorResponse facilitatorResponse, ExecutionNodeInstance nodeInstance) {
-    ExecutionNode node = nodeInstance.getNode();
+  private void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, NodeExecution nodeExecution) {
+    ExecutionNode node = nodeExecution.getNode();
     State currentState = Preconditions.checkNotNull(
         stateRegistry.obtain(node.getStateType()), "Cannot find state for state type: " + node.getStateType());
     injector.injectMembers(currentState);
     List<StateTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeInstance.getAdditionalInputs());
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .state(currentState)
@@ -194,16 +190,16 @@ public class ExecutionEngine implements Engine {
                                  .build());
   }
 
-  public void handleStateResponse(@NotNull String nodeInstanceId, StateResponse stateResponse) {
-    ExecutionNodeInstance nodeInstance = engineStatusHelper.updateNodeInstance(nodeInstanceId,
+  public void handleStateResponse(@NotNull String nodeExecutionId, StateResponse stateResponse) {
+    NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
         ops
-        -> ops.set(ExecutionNodeInstanceKeys.status, stateResponse.getStatus())
-               .set(ExecutionNodeInstanceKeys.endTs, System.currentTimeMillis()));
+        -> ops.set(NodeExecutionKeys.status, stateResponse.getStatus())
+               .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
 
     // TODO handle Failure
-    ExecutionNode node = nodeInstance.getNode();
+    ExecutionNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
-      endTransition(nodeInstance);
+      endTransition(nodeExecution);
       return;
     }
     Advise advise = null;
@@ -216,13 +212,13 @@ public class ExecutionEngine implements Engine {
       }
     }
     if (advise == null) {
-      endTransition(nodeInstance);
+      endTransition(nodeExecution);
       return;
     }
-    handleAdvise(nodeInstance, advise);
+    handleAdvise(nodeExecution, advise);
   }
 
-  private void endTransition(ExecutionNodeInstance nodeInstance) {
+  private void endTransition(NodeExecution nodeInstance) {
     if (isNotEmpty(nodeInstance.getNotifyId())) {
       StatusNotifyResponseData responseData =
           StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build();
@@ -234,26 +230,26 @@ public class ExecutionEngine implements Engine {
     }
   }
 
-  private void handleAdvise(@NotNull ExecutionNodeInstance nodeInstance, @NotNull Advise advise) {
-    Ambiance ambiance = nodeInstance.getAmbiance();
+  private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull Advise advise) {
+    Ambiance ambiance = nodeExecution.getAmbiance();
     AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
     adviseHandler.handleAdvise(ambiance, advise);
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
-    ExecutionNodeInstance nodeInstance = engineStatusHelper.updateNodeInstance(
-        nodeInstanceId, ops -> ops.set(ExecutionNodeInstanceKeys.status, NodeExecutionStatus.RUNNING));
+    NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(
+        nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING));
 
-    ExecutionNode node = nodeInstance.getNode();
+    ExecutionNode node = nodeExecution.getNode();
     State currentState = stateRegistry.obtain(node.getStateType());
     injector.injectMembers(currentState);
-    if (nodeInstance.getStatus() != NodeExecutionStatus.RUNNING) {
-      logger.warn(
-          "nodeInstance: {} status {} is no longer in RUNNING state", nodeInstance.getUuid(), nodeInstance.getStatus());
+    if (nodeExecution.getStatus() != NodeExecutionStatus.RUNNING) {
+      logger.warn("nodeInstance: {} status {} is no longer in RUNNING state", nodeExecution.getUuid(),
+          nodeExecution.getStatus());
       return;
     }
     executorService.execute(EngineResumeExecutor.builder()
-                                .executionNodeInstance(nodeInstance)
+                                .nodeExecution(nodeExecution)
                                 .response(response)
                                 .asyncError(asyncError)
                                 .executionEngine(this)

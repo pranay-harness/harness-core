@@ -18,8 +18,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.facilitate.modes.async.AsyncExecutable;
 import io.harness.facilitate.modes.async.AsyncExecutableResponse;
 import io.harness.plan.ExecutionNode;
-import io.harness.state.execution.ExecutionNodeInstance;
-import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.NodeExecution;
+import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -41,18 +41,18 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
-    ExecutionNodeInstance nodeInstance = Preconditions.checkNotNull(ambianceHelper.obtainNodeInstance(ambiance));
-    ExecutionNode nodeDefinition = nodeInstance.getNode();
+    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
+    ExecutionNode nodeDefinition = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
-      logger.error("executionResponse is null, but no correlationId - currentState : " + nodeDefinition.getName()
-          + ", stateExecutionInstanceId: " + nodeInstance.getUuid());
+      logger.error("StateResponse has no callbackIds - currentState : " + nodeDefinition.getName()
+          + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
-    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeInstance.getUuid()).build();
+    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, response.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
     engineStatusHelper.updateNodeInstance(
-        nodeInstance.getUuid(), ops -> ops.set(ExecutionNodeInstanceKeys.status, TASK_WAITING));
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, TASK_WAITING));
   }
 }

@@ -23,8 +23,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.registries.level.LevelRegistry;
-import io.harness.state.execution.ExecutionNodeInstance;
-import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.NodeExecution;
+import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.waiter.NotifyCallback;
@@ -54,7 +54,7 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
   private void handleResponse(Ambiance ambiance, ChildExecutableResponse response) {
     String childInstanceId = generateUuid();
     PlanExecution planExecution = ambianceHelper.obtainExecutionInstance(ambiance);
-    ExecutionNodeInstance nodeInstance = ambianceHelper.obtainNodeInstance(ambiance);
+    NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
     Plan plan = planExecution.getPlan();
     ExecutionNode node = plan.fetchNode(response.getChildNodeId());
     Ambiance clonedAmbiance = ambiance.cloneForChild(levelRegistry.obtain(node.getLevelType()));
@@ -63,21 +63,21 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
                                          .runtimeId(childInstanceId)
                                          .level(levelRegistry.obtain(node.getLevelType()))
                                          .build());
-    ExecutionNodeInstance childInstance = ExecutionNodeInstance.builder()
-                                              .uuid(childInstanceId)
-                                              .node(node)
-                                              .ambiance(clonedAmbiance)
-                                              .status(NodeExecutionStatus.QUEUED)
-                                              .notifyId(childInstanceId)
-                                              .parentId(nodeInstance.getUuid())
-                                              .additionalInputs(response.getAdditionalInputs())
-                                              .build();
-    hPersistence.save(childInstance);
+    NodeExecution childNodeExecution = NodeExecution.builder()
+                                           .uuid(childInstanceId)
+                                           .node(node)
+                                           .ambiance(clonedAmbiance)
+                                           .status(NodeExecutionStatus.QUEUED)
+                                           .notifyId(childInstanceId)
+                                           .parentId(nodeExecution.getUuid())
+                                           .additionalInputs(response.getAdditionalInputs())
+                                           .build();
+    hPersistence.save(childNodeExecution);
     executorService.submit(
         ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).executionEngine(engine).build());
-    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeInstance.getUuid()).build();
+    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, childInstanceId);
     engineStatusHelper.updateNodeInstance(
-        nodeInstance.getUuid(), ops -> ops.set(ExecutionNodeInstanceKeys.status, CHILD_WAITING));
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, CHILD_WAITING));
   }
 }

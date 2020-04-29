@@ -24,9 +24,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Redesign
-@FieldNameConstants(innerTypeName = "ExecutionNodeInstanceKeys")
-@Entity(value = "executionNodeInstances", noClassnameStored = true)
-public class ExecutionNodeInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+@FieldNameConstants(innerTypeName = "NodeExecutionKeys")
+@Entity(value = "nodeExecutions", noClassnameStored = true)
+public class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
   @Id String uuid;
   @NotNull Ambiance ambiance;

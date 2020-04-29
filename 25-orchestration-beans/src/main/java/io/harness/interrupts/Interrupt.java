@@ -21,7 +21,7 @@ public class Interrupt implements PersistentEntity, UuidAccess, CreatedAtAccess,
   @Id @NotNull String uuid;
   @NotNull ExecutionInterruptType type;
   @NotNull String executionInstanceId;
-  String executionNodeInstanceId;
+  String nodeExecutionId;
   EmbeddedUser createdBy;
   long lastUpdatedAt;
   long createdAt;

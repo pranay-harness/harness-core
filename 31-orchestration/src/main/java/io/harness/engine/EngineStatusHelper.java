@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.persistence.HPersistence;
-import io.harness.state.execution.ExecutionNodeInstance;
-import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.NodeExecution;
+import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.state.execution.status.ExecutionInstanceStatus;
@@ -19,19 +19,18 @@ import java.util.function.Consumer;
 public class EngineStatusHelper {
   @Inject HPersistence hPersistence;
 
-  public ExecutionNodeInstance updateNodeInstance(
-      String nodeInstanceId, @NonNull Consumer<UpdateOperations<ExecutionNodeInstance>> ops) {
-    Query<ExecutionNodeInstance> findQuery =
-        hPersistence.createQuery(ExecutionNodeInstance.class).filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId);
-    UpdateOperations<ExecutionNodeInstance> operations =
-        hPersistence.createUpdateOperations(ExecutionNodeInstance.class);
+  public NodeExecution updateNodeInstance(
+      String nodeInstanceId, @NonNull Consumer<UpdateOperations<NodeExecution>> ops) {
+    Query<NodeExecution> findQuery =
+        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId);
+    UpdateOperations<NodeExecution> operations = hPersistence.createUpdateOperations(NodeExecution.class);
     ops.accept(operations);
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
   }
 
   public PlanExecution updateExecutionInstanceStatus(String instanceId, ExecutionInstanceStatus status) {
     Query<PlanExecution> findQuery =
-        hPersistence.createQuery(PlanExecution.class).filter(ExecutionNodeInstanceKeys.uuid, instanceId);
+        hPersistence.createQuery(PlanExecution.class).filter(NodeExecutionKeys.uuid, instanceId);
     UpdateOperations<PlanExecution> operations =
         hPersistence.createUpdateOperations(PlanExecution.class).set(PlanExecutionKeys.status, status);
     return hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);

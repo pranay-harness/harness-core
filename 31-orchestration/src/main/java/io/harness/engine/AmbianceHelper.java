@@ -5,8 +5,8 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.persistence.HPersistence;
-import io.harness.state.execution.ExecutionNodeInstance;
-import io.harness.state.execution.ExecutionNodeInstance.ExecutionNodeInstanceKeys;
+import io.harness.state.execution.NodeExecution;
+import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.state.execution.PlanExecution;
 import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
 
@@ -14,14 +14,12 @@ import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
 public class AmbianceHelper {
   @Inject private HPersistence hPersistence;
 
-  public ExecutionNodeInstance obtainNodeInstance(Ambiance ambiance) {
+  public NodeExecution obtainNodeExecution(Ambiance ambiance) {
     String nodeInstanceId = ambiance.obtainCurrentRuntimeId();
     if (nodeInstanceId == null) {
       return null;
     }
-    return hPersistence.createQuery(ExecutionNodeInstance.class)
-        .filter(ExecutionNodeInstanceKeys.uuid, nodeInstanceId)
-        .get();
+    return hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
   }
 
   public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
