@@ -517,6 +517,35 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(60.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingEntitySeriesDataFetcherForGroupByNone() {
+    Long filterTime = 0L;
+
+    List<QLCCMAggregationFunction> aggregationFunction =
+        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeTimeFilter(filterTime));
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, new ArrayList<>(), Collections.emptyList(), LIMIT, OFFSET);
+
+    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(filters.get(0).getStartTime().getOperator()).isEqualTo(QLTimeOperator.AFTER);
+    assertThat(filters.get(0).getStartTime().getValue()).isEqualTo(filterTime);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getId()).isEqualTo(BillingStatsDefaultKeys.ENTITYID);
+    assertThat(data.getData().get(0).getName()).isEqualTo(BillingStatsDefaultKeys.NAME);
+    assertThat(data.getData().get(0).getType()).isEqualTo(BillingStatsDefaultKeys.TYPE);
+    assertThat(data.getData().get(0).getCostTrend()).isEqualTo(BillingStatsDefaultKeys.COSTTREND);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getClusterType()).isEqualTo(BillingStatsDefaultKeys.CLUSTERTYPE);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
