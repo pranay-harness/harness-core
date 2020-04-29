@@ -32,7 +32,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
-import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
@@ -95,7 +94,6 @@ import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -3567,143 +3565,5 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
     assertThat(savedArtifactStream).isNotNull();
     verify(subject).fireInform(any(), any());
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldAddSmbArtifactStreamWithParameters() {
-    SmbArtifactStream smbArtifactStream = SmbArtifactStream.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .appId(APP_ID)
-                                              .settingId(SETTING_ID)
-                                              .autoPopulate(false)
-                                              .name("testSMB")
-                                              .serviceId(SERVICE_ID)
-                                              .artifactPaths(asList("${path}"))
-                                              .build();
-    ArtifactStream savedArtifactSteam = createSmbArtifactStream(smbArtifactStream, APP_ID);
-    SmbArtifactStream savedSmbArtifactStream = (SmbArtifactStream) savedArtifactSteam;
-    assertThat(savedSmbArtifactStream.getArtifactPaths()).contains("${path}");
-
-    verify(appService).getAccountIdByAppId(APP_ID);
-  }
-
-  private ArtifactStream createSmbArtifactStream(SmbArtifactStream smbArtifactStream, String appId) {
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-    ArtifactStream savedArtifactSteam = createArtifactStream(smbArtifactStream);
-    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
-    assertThat(savedArtifactSteam.getName()).isNotEmpty();
-    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(SMB.name());
-    assertThat(savedArtifactSteam.getAppId()).isEqualTo(appId);
-    assertThat(savedArtifactSteam.fetchArtifactDisplayName("")).isNotEmpty();
-    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("${path}");
-    assertThat(savedArtifactSteam).isInstanceOf(SmbArtifactStream.class);
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(SMB.name());
-    assertThat(savedArtifactSteam.isArtifactStreamParameterized()).isEqualTo(true);
-    return savedArtifactSteam;
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotAddSmbArtifactStreamWithParametersWithFFOff() {
-    SmbArtifactStream smbArtifactStream = SmbArtifactStream.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .appId(APP_ID)
-                                              .settingId(SETTING_ID)
-                                              .autoPopulate(false)
-                                              .name("testSMB")
-                                              .serviceId(SERVICE_ID)
-                                              .artifactPaths(asList("${path}"))
-                                              .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-    createArtifactStream(smbArtifactStream);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldUpdateSmbArtifactStreamParameterized() {
-    SmbArtifactStream smbArtifactStream = SmbArtifactStream.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .appId(APP_ID)
-                                              .settingId(SETTING_ID)
-                                              .autoPopulate(false)
-                                              .name("testSMB")
-                                              .serviceId(SERVICE_ID)
-                                              .artifactPaths(asList("${path}"))
-                                              .build();
-    ArtifactStream savedArtifactSteam = createSmbArtifactStream(smbArtifactStream, APP_ID);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-
-    updateAndValidateSmbArtifactStream((SmbArtifactStream) savedArtifactSteam, APP_ID);
-
-    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlPushService, times(2))
-        .pushYamlChangeSet(
-            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(smbArtifactStream);
-    verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
-  }
-
-  private void updateAndValidateSmbArtifactStream(SmbArtifactStream savedArtifactSteam, String appId) {
-    assertThat(savedArtifactSteam.getArtifactPaths()).contains("${path}");
-    savedArtifactSteam.setName("Smb_Changed");
-    savedArtifactSteam.setArtifactPaths(asList("${folder}/${path}"));
-
-    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
-
-    assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
-    assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("Smb_Changed");
-    assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(SMB.name());
-    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
-
-    assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty();
-    assertThat(updatedArtifactStream.getSourceName()).isEqualTo("${folder}/${path}");
-    assertThat(updatedArtifactStream).isInstanceOf(SmbArtifactStream.class);
-    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(SMB.name());
-    assertThat(savedArtifactSteam.getCollectionStatus()).isEqualTo(UNSTABLE.name());
-    SmbArtifactStream updatedSmbArtifactStream = savedArtifactSteam;
-    assertThat(updatedSmbArtifactStream.getArtifactPaths()).contains("${folder}/${path}");
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotUpdateSmbArtifactStreamParameterizedWithFFOff() {
-    SmbArtifactStream smbArtifactStream = SmbArtifactStream.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .appId(APP_ID)
-                                              .settingId(SETTING_ID)
-                                              .autoPopulate(false)
-                                              .name("testSMB")
-                                              .serviceId(SERVICE_ID)
-                                              .artifactPaths(asList("${path}"))
-                                              .build();
-    ArtifactStream savedArtifactSteam = createSmbArtifactStream(smbArtifactStream, APP_ID);
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-
-    SmbArtifactStream savedSmbArtifactStream = (SmbArtifactStream) savedArtifactSteam;
-    savedSmbArtifactStream.setArtifactPaths(asList("${folder}/${path}"));
-    artifactStreamService.update(savedSmbArtifactStream);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotAddSmbArtifactStreamWithInvalidParameters() {
-    SmbArtifactStream smbArtifactStream = SmbArtifactStream.builder()
-                                              .accountId(ACCOUNT_ID)
-                                              .appId(APP_ID)
-                                              .settingId(SETTING_ID)
-                                              .autoPopulate(false)
-                                              .name("testSMB")
-                                              .serviceId(SERVICE_ID)
-                                              .artifactPaths(asList("${artifact.path}"))
-                                              .build();
-    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-    createArtifactStream(smbArtifactStream);
   }
 }

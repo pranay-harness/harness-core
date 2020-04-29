@@ -447,16 +447,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     // Set collection status initially to UNSTABLE.
     artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
-    // check if artifact stream is parameterized
-    boolean isArtifactStreamParameterized = artifactStream.checkIfStreamParameterized();
-    if (isArtifactStreamParameterized) {
-      if (!featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
-        throw new InvalidRequestException("Artifact stream does not support parameterized fields");
-      } else {
-        artifactStream.setArtifactStreamParameterized(true);
-      }
-    }
-
     String id = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
@@ -625,15 +615,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
-
-    // check if artifact stream is parameterized
-    boolean isArtifactStreamParameterized = artifactStream.checkIfStreamParameterized();
-    if (isArtifactStreamParameterized) {
-      if (!featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
-        throw new InvalidRequestException("Artifact stream does not support parameterized fields");
-      }
-    }
-    artifactStream.setArtifactStreamParameterized(isArtifactStreamParameterized);
 
     ArtifactStream finalArtifactStream = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream), "name", artifactStream.getName());
