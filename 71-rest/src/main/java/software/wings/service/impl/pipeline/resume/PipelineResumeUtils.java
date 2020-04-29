@@ -235,8 +235,6 @@ public class PipelineResumeUtils {
       PipelineStage pipelineStage = pipelineStages.get(i);
 
       PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
-      // Check for compatibility.
-      checkStageAndStageExecution(pipelineStage, stageExecution);
 
       if (foundFailedStage) {
         if (!pipelineStage.isParallel()) {
@@ -245,6 +243,9 @@ public class PipelineResumeUtils {
           break;
         }
       }
+
+      // Check for compatibility.
+      checkStageAndStageExecution(pipelineStage, stageExecution);
 
       List<String> newPipelineStageElementNames = pipelineStage.getPipelineStageElements() == null
           ? Collections.emptyList()
