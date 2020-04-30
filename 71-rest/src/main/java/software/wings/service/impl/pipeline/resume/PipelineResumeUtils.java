@@ -1,7 +1,8 @@
 package software.wings.service.impl.pipeline.resume;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.isNegativeStatus;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
@@ -154,6 +155,7 @@ public class PipelineResumeUtils {
           List<String> workflowExecutionIds;
           if (isEmpty(workflowExecutions) || workflowExecutionIndex < 0
               || workflowExecutions.size() <= workflowExecutionIndex) {
+            // This might happen in case a pipeline stage is skipped.
             workflowExecutionIds = new ArrayList<>();
           } else {
             workflowExecutionIds = Collections.singletonList(workflowExecutions.get(workflowExecutionIndex).getUuid());
@@ -273,9 +275,9 @@ public class PipelineResumeUtils {
         groupedInfoBuilders.add(builder);
       }
 
-      if (stageExecution.getStatus() != SUCCESS) {
-        // Found a successful stage. We will now continue only till we find a stages which are parallel with the current
-        // one.
+      if (isNegativeStatus(stageExecution.getStatus())) {
+        // Found a non-successful stage in a FAILED pipeline. We will now continue only till we find a stages which are
+        // parallel with the current one.
         foundFailedStage = true;
       }
     }
@@ -358,6 +360,11 @@ public class PipelineResumeUtils {
    */
   @VisibleForTesting
   public void checkStageAndStageExecution(PipelineStage stage, PipelineStageExecution stageExecution) {
+    if (stageExecution.getStatus() == SKIPPED) {
+      // Don't check for skipped stage executions as they have no workflow executions attached to them.
+      return;
+    }
+
     List<PipelineStageElement> stageElements = emptyIfNull(stage.getPipelineStageElements())
                                                    .stream()
                                                    .filter(pse -> ENV_STATE.name().equals(pse.getType()))

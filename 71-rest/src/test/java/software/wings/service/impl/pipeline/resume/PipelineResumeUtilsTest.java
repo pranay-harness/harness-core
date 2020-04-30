@@ -381,6 +381,66 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     assertThat(groupedInfo2.getParallelIndex()).isEqualTo(2);
   }
 
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetResumeStagesWithSkippedStage() {
+    PipelineStage stage1 =
+        PipelineStage.builder()
+            .name("ps1")
+            .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(1, 1)))
+            .build();
+    PipelineStage stage2 =
+        PipelineStage.builder()
+            .name("ps2")
+            .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(2, 2)))
+            .build();
+    PipelineStage stage3 =
+        PipelineStage.builder()
+            .name("ps3")
+            .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(3, 3)))
+            .build();
+    PipelineStage stage4 =
+        PipelineStage.builder()
+            .name("ps3")
+            .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(4, 4)))
+            .build();
+    Pipeline pipeline = Pipeline.builder().pipelineStages(asList(stage1, stage2, stage3)).build();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
+    PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SKIPPED).build();
+    PipelineStageExecution stageExecution2 =
+        PipelineStageExecution.builder()
+            .status(ExecutionStatus.SUCCESS)
+            .workflowExecutions(Collections.singletonList(WorkflowExecution.builder().workflowId("wf2").build()))
+            .build();
+    PipelineStageExecution stageExecution3 =
+        PipelineStageExecution.builder()
+            .status(ExecutionStatus.FAILED)
+            .workflowExecutions(Collections.singletonList(WorkflowExecution.builder().workflowId("wf3").build()))
+            .build();
+    PipelineStageExecution stageExecution4 = PipelineStageExecution.builder().build();
+    workflowExecution.setPipelineExecution(
+        aPipelineExecution()
+            .withPipelineStageExecutions(asList(stageExecution1, stageExecution2, stageExecution3, stageExecution4))
+            .build());
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
+    List<PipelineStageGroupedInfo> groupedInfoList = pipelineResumeUtils.getResumeStages(APP_ID, workflowExecution);
+    assertThat(groupedInfoList).isNotNull();
+    assertThat(groupedInfoList.size()).isEqualTo(3);
+    PipelineStageGroupedInfo groupedInfo1 = groupedInfoList.get(0);
+    assertThat(groupedInfo1.getName()).isEqualTo("ps1");
+    assertThat(groupedInfo1.getPipelineStageElementNames()).containsExactly("pse1_1");
+    assertThat(groupedInfo1.getParallelIndex()).isEqualTo(1);
+    PipelineStageGroupedInfo groupedInfo2 = groupedInfoList.get(1);
+    assertThat(groupedInfo2.getName()).isEqualTo("ps2");
+    assertThat(groupedInfo2.getPipelineStageElementNames()).containsExactly("pse2_2");
+    assertThat(groupedInfo2.getParallelIndex()).isEqualTo(2);
+    PipelineStageGroupedInfo groupedInfo3 = groupedInfoList.get(2);
+    assertThat(groupedInfo3.getName()).isEqualTo("ps3");
+    assertThat(groupedInfo3.getPipelineStageElementNames()).containsExactly("pse3_3");
+    assertThat(groupedInfo3.getParallelIndex()).isEqualTo(3);
+  }
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
@@ -719,9 +779,15 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   }
 
   private PipelineStageElement prepareEnvStatePipelineStageElement(int workflowIdx) {
+    return prepareEnvStatePipelineStageElement(workflowIdx, 0);
+  }
+
+  private PipelineStageElement prepareEnvStatePipelineStageElement(int workflowIdx, int parallelIdx) {
     return PipelineStageElement.builder()
         .type(ENV_STATE.name())
+        .name("pse" + workflowIdx + "_" + parallelIdx)
         .properties(Collections.singletonMap(EnvStateKeys.workflowId, "wf" + workflowIdx))
+        .parallelIndex(parallelIdx)
         .build();
   }
 
