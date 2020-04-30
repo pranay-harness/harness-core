@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
@@ -63,6 +64,7 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
                                                           .messageField(this.getMessageField())
                                                           .timestampField(this.getTimestampField())
                                                           .timestampFieldFormat(this.getTimestampFormat())
+                                                          .queryType(ElkQueryType.TERM)
                                                           .build();
     fillDataCollectionInfoWithCommonFields(elkDataCollectionInfoV2);
     return elkDataCollectionInfoV2;
