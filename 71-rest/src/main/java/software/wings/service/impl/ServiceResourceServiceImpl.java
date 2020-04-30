@@ -638,6 +638,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (ArtifactType.DOCKER == originalService.getArtifactType()) {
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
       cloneContainerTasks(appId, clonedServiceId, originalServiceId);
+    } else if (ArtifactType.AWS_LAMBDA == originalService.getArtifactType()) {
+      cloneLambdaFunctionSpecification(appId, clonedServiceId, originalServiceId);
     }
 
     cloneAppManifests(appId, clonedServiceId, originalServiceId);
@@ -651,6 +653,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         newContainerTask.setServiceId(clonedServiceId);
         createContainerTask(newContainerTask, false);
       });
+    }
+  }
+
+  private void cloneLambdaFunctionSpecification(String appId, String clonedServiceId, String originalServiceId) {
+    LambdaSpecification lambdaSpecification = getLambdaSpecification(appId, originalServiceId);
+    if (lambdaSpecification != null) {
+      LambdaSpecification lambdaSpecificationNew = lambdaSpecification.cloneInternal();
+      lambdaSpecificationNew.setServiceId(clonedServiceId);
+      createLambdaSpecification(lambdaSpecificationNew);
     }
   }
 

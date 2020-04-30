@@ -77,6 +77,7 @@ import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.stencils.StencilCategory.CONTAINERS;
+import static software.wings.utils.ArtifactType.AWS_LAMBDA;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
@@ -737,6 +738,28 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).save(any(ConfigFile.class), new BoundedInputStream(any(InputStream.class)));
     verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE);
     verify(serviceVariableService).save(any(ServiceVariable.class));
+
+    originalService =
+        serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
+    originalService.setArtifactType(AWS_LAMBDA);
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+    doReturn(savedClonedService)
+        .when(spyServiceResourceService)
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(false));
+    LambdaSpecification lambdaSpec = createLambdaSpecification();
+    Query<LambdaSpecification> lambdaQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(LambdaSpecification.class)).thenReturn(lambdaQuery);
+    when(lambdaQuery.filter(anyString(), anyObject())).thenReturn(lambdaQuery);
+    when(lambdaQuery.get()).thenReturn(lambdaSpec);
+    when(mockWingsPersistence.saveAndGet(eq(LambdaSpecification.class), any(LambdaSpecification.class)))
+        .thenReturn(lambdaSpec);
+    spyServiceResourceService.clone(
+        APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
+
+    ArgumentCaptor<LambdaSpecification> lambdaArgumentCaptor = ArgumentCaptor.forClass(LambdaSpecification.class);
+    verify(mockWingsPersistence, times(1)).saveAndGet(eq(LambdaSpecification.class), lambdaArgumentCaptor.capture());
+    LambdaSpecification lambdaSpecification = lambdaArgumentCaptor.getValue();
+    assertThat(lambdaSpecification.getDefaults().getRuntime()).isEqualTo("default-runtTime");
   }
 
   private Graph getGraph() {
@@ -2724,5 +2747,41 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(resultDefault).isNotEqualTo(org);
     assertThat(resultDefault.getServiceId()).isEqualTo(SERVICE_ID);
     assertThat(resultDefault.getAppId()).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testCloneLambdaSpecification() {
+    LambdaSpecification lambdaSpecification = createLambdaSpecification();
+    LambdaSpecification clonedSpec = lambdaSpecification.cloneInternal();
+    assertThat(clonedSpec.getDefaults().getRuntime()).isEqualTo("default-runtTime");
+    assertThat(clonedSpec.getFunctions().get(0).getHandler()).isEqualTo("handler");
+
+    lambdaSpecification.setDefaults(null);
+    clonedSpec = lambdaSpecification.cloneInternal();
+    assertThat(clonedSpec.getDefaults()).isNull();
+
+    lambdaSpecification.setFunctions(null);
+    clonedSpec = lambdaSpecification.cloneInternal();
+    assertThat(clonedSpec.getFunctions()).isEmpty();
+  }
+
+  private LambdaSpecification createLambdaSpecification() {
+    return LambdaSpecification.builder()
+        .serviceId(SERVICE_ID)
+        .defaults(LambdaSpecification.DefaultSpecification.builder()
+                      .timeout(1)
+                      .memorySize(123)
+                      .runtime("default-runtTime")
+                      .build())
+        .functions(asList(FunctionSpecification.builder()
+                              .handler("handler")
+                              .functionName("functionName")
+                              .memorySize(122)
+                              .timeout(12)
+                              .runtime("runTime")
+                              .build()))
+        .build();
   }
 }
