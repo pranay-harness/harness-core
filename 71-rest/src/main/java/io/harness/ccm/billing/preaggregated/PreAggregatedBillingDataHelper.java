@@ -291,6 +291,7 @@ public class PreAggregatedBillingDataHelper {
           break;
       }
     }
+    dataPointBuilder.costTrend(2.44);
     dataPointList.add(dataPointBuilder.build());
   }
 
