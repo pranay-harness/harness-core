@@ -27,6 +27,7 @@ import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
@@ -76,7 +77,7 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
         .hosts(hosts)
         .startTime(dataCollectionInfo.getStartTime().toEpochMilli())
         .endTime(dataCollectionInfo.getEndTime().toEpochMilli())
-        .queryType(dataCollectionInfo.getQueryType())
+        .queryType(dataCollectionInfo.getQueryType() == null ? ElkQueryType.TERM : dataCollectionInfo.getQueryType())
         .build();
   }
   @Override
