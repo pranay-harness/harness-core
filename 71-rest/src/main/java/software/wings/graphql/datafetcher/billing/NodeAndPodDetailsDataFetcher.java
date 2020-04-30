@@ -75,15 +75,28 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
 
     logger.info("NodeAndPodDetailsDataFetcher query!! {}", queryData.getQuery());
-
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      costData = generateCostData(queryData, resultSet);
-    } catch (SQLException e) {
-      logger.error("NodeAndPodDetailsDataFetcher Error exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        costData = generateCostData(queryData, resultSet);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in NodeAndPodDetailsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in NodeAndPodDetailsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
 
     if (costData != null && !costData.getData().isEmpty()) {
@@ -172,7 +185,8 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
       List<String> instanceIds) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
     instanceIds.forEach(instanceId -> {
-      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)) {
+      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)
+          || instanceIdToInstanceData.get(instanceId).getUsageStartTime() == null) {
         return;
       }
       InstanceData entry = instanceIdToInstanceData.get(instanceId);
@@ -202,7 +216,8 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
       List<String> instanceIds) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
     instanceIds.forEach(instanceId -> {
-      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)) {
+      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)
+          || instanceIdToInstanceData.get(instanceId).getUsageStartTime() == null) {
         return;
       }
       InstanceData entry = instanceIdToInstanceData.get(instanceId);

@@ -76,6 +76,7 @@ public class BillingDataTableSchema {
   DbColumn cpuActualIdleCost;
   DbColumn memoryActualIdleCost;
   DbColumn unallocatedCost;
+  DbColumn systemCost;
 
   private static String varcharType = "varchar(40)";
   private static String doubleType = "double";
@@ -123,5 +124,6 @@ public class BillingDataTableSchema {
     cpuActualIdleCost = billingDataTable.addColumn("cpuactualidlecost", doubleType, null);
     memoryActualIdleCost = billingDataTable.addColumn("memoryactualidlecost", doubleType, null);
     unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
+    systemCost = billingDataTable.addColumn("systemcost", doubleType, null);
   }
 }

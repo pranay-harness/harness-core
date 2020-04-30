@@ -334,6 +334,11 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryBillingAmount()),
                 BillingDataMetaDataFields.MEMORYBILLINGAMOUNT.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MEMORYBILLINGAMOUNT);
+      } else if (aggregationFunction.getColumnName().equals(schema.getSystemCost().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getSystemCost()),
+                BillingDataMetaDataFields.SYSTEMCOST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.SYSTEMCOST);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
       if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {

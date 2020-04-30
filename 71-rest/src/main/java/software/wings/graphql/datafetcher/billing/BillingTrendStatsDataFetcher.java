@@ -246,14 +246,28 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     String query = queryData.getQuery();
     logger.info("Billing data query {}", query);
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(query);
-      return fetchBillingAmount(queryData, resultSet);
-    } catch (SQLException e) {
-      logger.error("BillingStatsTimeSeriesDataFetcher Error exception", e);
-    } finally {
-      DBUtils.close(resultSet);
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        return fetchBillingAmount(queryData, resultSet);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingTrendStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingTrendStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return null;
   }
