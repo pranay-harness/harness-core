@@ -12,7 +12,7 @@ public enum CloudEntityGroupBy {
   projectNumber(PreAggregatedTableSchema.gcpProjectNumbers),
 
   region(PreAggregatedTableSchema.region),
-  awsLikedAccount(PreAggregatedTableSchema.awsUsageAccountId),
+  awsLinkedAccount(PreAggregatedTableSchema.awsUsageAccountId),
   awsUsageType(PreAggregatedTableSchema.awsUsageType),
   awsInstanceType(PreAggregatedTableSchema.awsInstanceType),
   awsService(PreAggregatedTableSchema.awsServiceCode);

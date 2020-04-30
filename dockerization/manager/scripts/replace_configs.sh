@@ -277,6 +277,10 @@ if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.awsAccountId "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_GCP_PROJECT_ID" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.gcpProjectId "$CE_SETUP_CONFIG_GCP_PROJECT_ID"
+fi
+
 if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCESS_KEY" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.awsAccessKey "$CE_SETUP_CONFIG_AWS_ACCESS_KEY"
 fi

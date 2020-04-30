@@ -134,7 +134,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
 
   private CloudBillingGroupBy getLinkedAccountsGroupBy() {
     CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
-    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsLikedAccount);
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsLinkedAccount);
     return cloudBillingGroupBy;
   }
 

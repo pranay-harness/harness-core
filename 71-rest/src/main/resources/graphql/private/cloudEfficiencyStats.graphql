@@ -47,20 +47,15 @@ type CloudEntityData {
   awsUsageType: String
   awsInstanceType: String
   awsService: String
-  awsBlendedCost: CostData
-  awsUnblendedCost: CostData
+  awsBlendedCost: Number
+  awsUnblendedCost: Number
 
   gcpProjectId: String
   gcpProduct: String
   gcpSkuDescription: String
   gcpSkuId: String
-  gcpTotalCost: CostData
-  gcpDiscounts: CostData
-}
-
-type CostData {
-  cost: Number
-  trend: Number
+  gcpTotalCost: Number
+  costTrend: Number
 }
 
 type CloudTrendStats {
@@ -117,7 +112,7 @@ enum CloudEntityGroupBy {
   region
   usageAmount
   usageUnit
-  awsLikedAccount
+  awsLinkedAccount
   awsUsageType
   awsInstanceType
   awsService
