@@ -1,4 +1,8 @@
 metrics:
+  - workflow_running_count:
+      check_interval:   10      # seconds
+      query:            "db.workflowExecutions.find({status:'RUNNING', workflowType: {$ne : 'PIPELINE'}}).count()"
+
   - workflow_executions_count:
       check_interval:   10      # seconds
       query:            "db.workflowExecutions.find({}).count()"
