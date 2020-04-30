@@ -1,5 +1,6 @@
 package io.harness.batch.processing.schedule;
 
+import static io.harness.batch.processing.ccm.BatchJobType.BILLING_DATA_PIPELINE;
 import static io.harness.batch.processing.ccm.BatchJobType.DEPLOYMENT_EVENT;
 import static io.harness.batch.processing.ccm.BatchJobType.K8S_WATCH_EVENT;
 import static io.harness.batch.processing.ccm.BatchJobType.SYNC_BILLING_REPORT_S3;
@@ -55,7 +56,7 @@ public class EventJobScheduler {
 
   private void runJob(String accountId, Job job) {
     try {
-      if (ImmutableSet.of(DEPLOYMENT_EVENT, K8S_WATCH_EVENT, SYNC_BILLING_REPORT_S3)
+      if (ImmutableSet.of(BILLING_DATA_PIPELINE, DEPLOYMENT_EVENT, K8S_WATCH_EVENT, SYNC_BILLING_REPORT_S3)
               .contains(BatchJobType.fromJob(job))) {
         return;
       }
