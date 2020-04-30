@@ -40,6 +40,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
+  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '14 days', 'kubernetes_utilization_data')";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     boolean successfulInsert = false;
@@ -69,6 +70,26 @@ public class K8sUtilizationGranularDataServiceImpl {
       logger.warn("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
     }
     return successfulInsert;
+  }
+
+  public boolean purgeOldKubernetesUtilData() {
+    boolean purgedK8sUtilData = false;
+    logger.info("Purging old k8s util data !!");
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+
+      while (retryCount < MAX_RETRY_COUNT && !purgedK8sUtilData) {
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             Statement statement = connection.createStatement()) {
+          statement.execute(PURGE_DATA_QUERY);
+          purgedK8sUtilData = true;
+        } catch (SQLException e) {
+          logger.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
+          retryCount++;
+        }
+      }
+    }
+    return purgedK8sUtilData;
   }
 
   private void updateInsertStatement(PreparedStatement statement, K8sGranularUtilizationData k8sGranularUtilizationData)

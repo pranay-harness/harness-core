@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.instance.HarnessServiceInfo;
@@ -52,8 +53,6 @@ import java.util.Map;
           }),
       @Index(options = @IndexOptions(name = "accountId_usageStartTime", background = true), fields = {
         @Field(InstanceDataKeys.accountId), @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC)
-      }), @Index(options = @IndexOptions(name = "instanceId", background = true), fields = {
-        @Field(InstanceDataKeys.instanceId)
       })
 })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
@@ -63,7 +62,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   @Id String uuid;
   String accountId;
   String settingId;
-  String instanceId;
+  @Indexed String instanceId;
   String instanceName;
   String clusterName;
   String clusterId;
