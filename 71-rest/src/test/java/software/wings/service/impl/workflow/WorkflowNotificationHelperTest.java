@@ -190,8 +190,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldSendApplicationURL() {
-    assertThat(workflowNotificationHelper.calculateApplicationURL(
-                   ACCOUNT_ID, APP_ID, anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build()))
+    assertThat(workflowNotificationHelper
+                   .calculateApplicationDetails(
+                       ACCOUNT_ID, APP_ID, anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build())
+                   .getMessage())
         .isEqualTo(EXPECTED_APP_URL);
   }
 
@@ -249,6 +251,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
             .put("SERVICE", EXPECTED_SERVICE_URL)
+            .put("SERVICE_NAME", "Service One,Service Two")
+            .put("SERVICE_URL",
+                "https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-1/details,https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-2/details")
+            .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
+            .put("ARTIFACTS_URL", "")
+            .put("TRIGGER_NAME", USER_NAME)
+            .put("PIPELINE_URL", "")
+            .put("PIPELINE_NAME", "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -289,6 +299,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("PIPELINE", " in pipeline <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>>")
             .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("PIPELINE_URL", EXPECTED_PIPELINE_URL)
+            .put("PIPELINE_NAME", "Pipeline Name")
+            .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
+            .put("ARTIFACTS_URL", "")
+            .put("TRIGGER_NAME", USER_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -324,6 +339,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("ARTIFACTS_NAME", "Service Two: artifact-2 (build# build-2)")
+            .put("ARTIFACTS_URL", "")
+            .put("TRIGGER_NAME", USER_NAME)
+            .put("PIPELINE_URL", "")
+            .put("PIPELINE_NAME", "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -356,6 +376,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("PIPELINE_URL", "")
+            .put("PIPELINE_NAME", "")
+            .put("ARTIFACTS_URL", "")
+            .put("ARTIFACTS_NAME", "Service One: no artifact, Service Two: no artifact")
+            .put("TRIGGER_NAME", USER_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -393,6 +418,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("PIPELINE_URL", "")
+            .put("PIPELINE_NAME", "")
+            .put("TRIGGER_NAME", USER_NAME)
+            .put("ARTIFACTS_URL", "")
+            .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -427,6 +457,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("PIPELINE", "")
                                                     .put("ENV_NAME", ENV_NAME)
                                                     .put("APP_NAME", APP_NAME)
+                                                    .put("TRIGGER_NAME", USER_NAME)
+                                                    .put("PIPELINE_NAME", "")
+                                                    .put("PIPELINE_URL", "")
+                                                    .put("ARTIFACTS_NAME", "no artifacts")
+                                                    .put("ARTIFACTS_URL", "")
+                                                    .put("SERVICE_NAME", "no service")
+                                                    .put("SERVICE_URL", "")
                                                     .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -466,6 +503,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("PIPELINE", "")
             .put("ENV_NAME", "no environment")
             .put("APP_NAME", APP_NAME)
+            .put("TRIGGER_NAME", USER_NAME)
+            .put("PIPELINE_NAME", "")
+            .put("PIPELINE_URL", "")
+            .put("ARTIFACTS_NAME", "no artifacts")
+            .put("ARTIFACTS_URL", "")
+            .put("SERVICE_NAME", "no service")
+            .put("SERVICE_URL", "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }

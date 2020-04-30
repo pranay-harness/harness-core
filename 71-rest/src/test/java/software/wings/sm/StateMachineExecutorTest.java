@@ -56,6 +56,7 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -930,7 +931,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
-    when(workflowNotificationHelper.getArtifactsMessage(any(), any(), any(), any())).thenReturn("");
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
 
     injectStateMachineExecutor.sendManualInterventionNeededNotification(context);
     verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
