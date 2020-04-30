@@ -49,6 +49,7 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails.WorkflowNotificationDetailsBuilder;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -86,6 +87,14 @@ import javax.annotation.Nullable;
 @Singleton
 @Slf4j
 public class WorkflowNotificationHelper {
+  private static final String APPLICATION = "APPLICATION";
+  private static final String TRIGGER = "TRIGGER";
+  private static final String PIPELINE = "PIPELINE";
+  private static final String ENVIRONMENT = "ENVIRONMENT";
+  private static final String ARTIFACTS = "ARTIFACTS";
+  private static final String SERVICE = "SERVICE";
+  private static final String NAME = "_NAME";
+  private static final String URL = "_URL";
   @Inject private WorkflowService workflowService;
   @Inject private NotificationService notificationService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -361,10 +370,13 @@ public class WorkflowNotificationHelper {
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
     String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
 
-    String appURL = calculateApplicationURL(app.getAccountId(), app.getAppId(), app);
-    String triggerURL = calculateTriggerURL(app.getAccountId(), app.getAppId(), workflowExecution);
-    String pipelineURL = calculatePipelineMessage(app, workflowExecution, context);
-    String environmentURL = calculateEnvironmentUrl(app.getAccountId(), app.getAppId(), env);
+    final WorkflowNotificationDetails applicationDetails =
+        calculateApplicationDetails(app.getAccountId(), app.getAppId(), app);
+    final WorkflowNotificationDetails triggerDetails =
+        calculateTriggerDetails(app.getAccountId(), app.getAppId(), workflowExecution);
+    final WorkflowNotificationDetails pipelineDetails = calculatePipelineDetails(app, workflowExecution, context);
+    final WorkflowNotificationDetails environmentDetails =
+        calculateEnvironmentDetails(app.getAccountId(), app.getAppId(), env);
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
@@ -376,10 +388,16 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
     placeHolderValues.put("START_DATE", startTime);
     placeHolderValues.put("END_DATE", endTime);
-    placeHolderValues.put("APPLICATION", appURL);
-    placeHolderValues.put("TRIGGER", triggerURL);
-    placeHolderValues.put("PIPELINE", pipelineURL);
-    placeHolderValues.put("ENVIRONMENT", environmentURL);
+    placeHolderValues.put(APPLICATION, applicationDetails.getMessage());
+    placeHolderValues.put(APPLICATION + URL, applicationDetails.getUrl());
+    placeHolderValues.put(TRIGGER, triggerDetails.getMessage());
+    placeHolderValues.put(TRIGGER + NAME, triggerDetails.getName());
+    placeHolderValues.put(TRIGGER + URL, triggerDetails.getUrl());
+    placeHolderValues.put(PIPELINE, pipelineDetails.getMessage());
+    placeHolderValues.put(PIPELINE + NAME, pipelineDetails.getName());
+    placeHolderValues.put(PIPELINE + URL, pipelineDetails.getUrl());
+    placeHolderValues.put(ENVIRONMENT, environmentDetails.getMessage());
+    placeHolderValues.put(ENVIRONMENT + URL, environmentDetails.getUrl());
     placeHolderValues.put("FAILED_PHASE", "");
     placeHolderValues.put("MORE_ERRORS", "");
     placeHolderValues.put("ERROR_URL", "");
@@ -388,20 +406,25 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
     placeHolderValues.put(
         "ENV_NAME", BUILD == context.getOrchestrationWorkflowType() ? "no environment" : env.getName());
+    WorkflowNotificationDetails artifactsDetails;
+    WorkflowNotificationDetails serviceDetails;
     if (phaseSubWorkflow != null) {
       placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName() + " of ");
-      placeHolderValues.put(
-          "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
-      String serviceURL = calculateServiceUrlForAllServices(
+      artifactsDetails = getArtifactsDetails(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow);
+      serviceDetails = calculateServiceDetailsForAllServices(
           app.getAccountId(), app.getAppId(), context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow);
-      placeHolderValues.put("SERVICE", serviceURL);
     } else {
       placeHolderValues.put("PHASE_NAME", "");
-      placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
-      String serviceURL = calculateServiceUrlForAllServices(
+      artifactsDetails = getArtifactsDetails(context, workflowExecution, WORKFLOW, null);
+      serviceDetails = calculateServiceDetailsForAllServices(
           app.getAccountId(), app.getAppId(), context, workflowExecution, WORKFLOW, null);
-      placeHolderValues.put("SERVICE", serviceURL);
     }
+    placeHolderValues.put(ARTIFACTS, artifactsDetails.getMessage());
+    placeHolderValues.put(ARTIFACTS + NAME, artifactsDetails.getName());
+    placeHolderValues.put(ARTIFACTS + URL, artifactsDetails.getUrl());
+    placeHolderValues.put(SERVICE, serviceDetails.getMessage());
+    placeHolderValues.put(SERVICE + NAME, serviceDetails.getName());
+    placeHolderValues.put(SERVICE + URL, serviceDetails.getUrl());
     return placeHolderValues;
   }
 
@@ -414,8 +437,9 @@ public class WorkflowNotificationHelper {
         baseUrl);
   }
 
-  public String calculatePipelineMessage(
+  public WorkflowNotificationDetails calculatePipelineDetails(
       Application app, WorkflowExecution workflowExecution, ExecutionContext context) {
+    WorkflowNotificationDetailsBuilder pipelineDetails = WorkflowNotificationDetails.builder();
     String pipelineMsg = "";
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
@@ -426,14 +450,19 @@ public class WorkflowNotificationHelper {
                 app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()),
             baseUrl);
         pipelineMsg = format(" in pipeline <<<%s|-|%s>>>", pipelineUrl, pipelineName);
+        pipelineDetails.name(pipelineName);
+        pipelineDetails.url(pipelineUrl);
       }
     }
 
-    return pipelineMsg;
+    pipelineDetails.message(pipelineMsg);
+    return pipelineDetails.build();
   }
 
-  public String calculateServiceUrlForAllServices(String accountId, String appId, ExecutionContext context,
-      WorkflowExecution workflowExecution, ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
+  public WorkflowNotificationDetails calculateServiceDetailsForAllServices(String accountId, String appId,
+      ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,
+      PhaseSubWorkflow phaseSubWorkflow) {
+    WorkflowNotificationDetailsBuilder serviceDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
     if (scope == WORKFLOW_PHASE) {
       serviceIds.add(phaseSubWorkflow.getServiceId());
@@ -442,24 +471,34 @@ public class WorkflowNotificationHelper {
     }
 
     StringBuilder serviceMsg = new StringBuilder();
+    StringBuilder serviceDetailsName = new StringBuilder();
+    StringBuilder serviceDetailsUrl = new StringBuilder();
 
     boolean firstService = true;
     for (String serviceId : serviceIds) {
       Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
       if (!firstService) {
         serviceMsg.append(", ");
+        serviceDetailsName.append(',');
+        serviceDetailsUrl.append(',');
       }
       notNullCheck("Service might have been deleted", service, USER);
       String serviceUrl = calculateServiceUrl(accountId, appId, serviceId);
       serviceMsg.append(format("<<<%s|-|%s>>>", serviceUrl, service.getName()));
+      serviceDetailsName.append(service.getName());
+      serviceDetailsUrl.append(serviceUrl);
       firstService = false;
     }
 
     if (serviceIds.isEmpty()) {
       serviceMsg.append("no service");
+      serviceDetailsName.append("no service");
     }
 
-    return format("*Services:* %s", serviceMsg.toString());
+    serviceDetails.name(serviceDetailsName.toString());
+    serviceDetails.url(serviceDetailsUrl.toString());
+    serviceDetails.message(format("*Services:* %s", serviceMsg));
+    return serviceDetails.build();
   }
 
   public String calculateServiceUrl(String accountId, String appId, String serviceId) {
@@ -468,7 +507,8 @@ public class WorkflowNotificationHelper {
         configuration, format("/account/%s/app/%s/services/%s/details", accountId, appId, serviceId), baseUrl);
   }
 
-  public String calculateEnvironmentUrl(String accountId, String appId, Environment env) {
+  public WorkflowNotificationDetails calculateEnvironmentDetails(String accountId, String appId, Environment env) {
+    WorkflowNotificationDetailsBuilder environmentDetails = WorkflowNotificationDetails.builder();
     String envMsg = "";
     if (env != null) {
       String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
@@ -476,12 +516,16 @@ public class WorkflowNotificationHelper {
           format("/account/%s/app/%s/environments/%s/details", accountId, appId, env.getUuid()), baseUrl);
 
       envMsg = format("*Environment:* <<<%s|-|%s>>>", envURL, env.getName());
+      environmentDetails.name(env.getName());
+      environmentDetails.url(envURL);
     }
 
-    return envMsg;
+    environmentDetails.message(envMsg);
+    return environmentDetails.build();
   }
 
-  public String calculateApplicationURL(String accountId, String appId, Application app) {
+  public WorkflowNotificationDetails calculateApplicationDetails(String accountId, String appId, Application app) {
+    WorkflowNotificationDetailsBuilder applicationDetails = WorkflowNotificationDetails.builder();
     String appMsg = "";
 
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
@@ -489,11 +533,16 @@ public class WorkflowNotificationHelper {
       String appURL = NotificationMessageResolver.buildAbsoluteUrl(
           configuration, format("/account/%s/app/%s/details", accountId, appId), baseUrl);
       appMsg = format("*Application:* <<<%s|-|%s>>>", appURL, app.getName());
+      applicationDetails.name(app.getName());
+      applicationDetails.url(appURL);
     }
-    return appMsg;
+    applicationDetails.message(appMsg);
+    return applicationDetails.build();
   }
 
-  public String calculateTriggerURL(String accountId, String appId, WorkflowExecution workflowExecution) {
+  public WorkflowNotificationDetails calculateTriggerDetails(
+      String accountId, String appId, WorkflowExecution workflowExecution) {
+    WorkflowNotificationDetailsBuilder triggerDetails = WorkflowNotificationDetails.builder();
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
 
@@ -502,14 +551,18 @@ public class WorkflowNotificationHelper {
       String triggerURL = NotificationMessageResolver.buildAbsoluteUrl(
           configuration, format("/account/%s/app/%s/triggers", accountId, appId), baseUrl);
       triggerMsg = format("*TriggeredBy:* <<<%s|-|%s>>>", triggerURL, triggeredBy);
+      triggerDetails.url(triggerURL);
     } else {
       triggerMsg = format("*TriggeredBy:* %s", triggeredBy);
     }
-    return triggerMsg;
+    triggerDetails.name(triggeredBy);
+    triggerDetails.message(triggerMsg);
+    return triggerDetails.build();
   }
 
-  public String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,
-      PhaseSubWorkflow phaseSubWorkflow) {
+  public WorkflowNotificationDetails getArtifactsDetails(ExecutionContext context, WorkflowExecution workflowExecution,
+      ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
+    WorkflowNotificationDetailsBuilder artifactsDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
     if (scope == WORKFLOW_PHASE) {
       serviceIds.add(phaseSubWorkflow.getServiceId());
@@ -560,6 +613,8 @@ public class WorkflowNotificationHelper {
       artifactsMsg = join(", ", serviceMsgs);
     }
 
-    return format("*Artifacts:* %s", artifactsMsg);
+    artifactsDetails.name(artifactsMsg);
+    artifactsDetails.message(format("*Artifacts:* %s", artifactsMsg));
+    return artifactsDetails.build();
   }
 }

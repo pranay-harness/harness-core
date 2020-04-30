@@ -775,7 +775,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
         context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
     String artifactsMessage =
-        workflowNotificationHelper.getArtifactsMessage(context, workflowExecution, WORKFLOW, null);
+        workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, WORKFLOW, null).getMessage();
 
     return notificationMessageResolver.getPlaceholderValues(context, workflowExecution.getTriggeredBy().getName(),
         workflowExecution.getStartTs(), System.currentTimeMillis(), "", "", artifactsMessage, ExecutionStatus.PAUSED,
