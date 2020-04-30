@@ -3,6 +3,7 @@ package software.wings.resources;
 import com.google.inject.Inject;
 
 import io.harness.datahandler.models.AccountSummary;
+import io.harness.datahandler.models.FeatureFlagBO;
 import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminUserService;
 import io.harness.limits.ActionType;
@@ -130,5 +131,13 @@ public class AdminAccountResource {
   @Path("{accountId}")
   public RestResponse<Boolean> deleteAccount(@PathParam("accountId") String accountId) {
     return new RestResponse<>(adminAccountService.delete(accountId));
+  }
+
+  @PUT
+  @Path("{accountId}/feature-flags")
+  public RestResponse<FeatureFlagBO> updateFeatureFlagForAccount(@PathParam("accountId") String accountId,
+      @QueryParam("featureName") String featureName, @QueryParam("enable") boolean enable) {
+    return new RestResponse<>(
+        FeatureFlagBO.fromFeatureFlag(adminAccountService.updateFeatureFlagForAccount(accountId, featureName, enable)));
   }
 }
