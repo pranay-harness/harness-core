@@ -416,11 +416,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public long getCountOfAccounts() {
-    return wingsPersistence.createQuery(Account.class).count();
-  }
-
-  @Override
   public String getAccountStatus(String accountId) {
     Account account = getFromCacheWithFallback(accountId);
     if (account == null) {

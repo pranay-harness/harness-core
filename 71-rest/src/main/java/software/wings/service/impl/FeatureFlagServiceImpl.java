@@ -10,10 +10,12 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.configuration.DeployMode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +76,34 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       cache.put(featureName, featureFlag);
     }
     logger.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
+  }
+
+  @Override
+  public FeatureFlag updateFeatureFlagForAccount(String featureName, String accountId, boolean enabled) {
+    Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(FeatureName.valueOf(featureName));
+    FeatureFlag featureFlag =
+        featureFlagOptional.orElseThrow(() -> new InvalidRequestException("Invalid feature flag name: " + featureName));
+    if (Objects.isNull(featureFlag.getAccountIds())) {
+      featureFlag.setAccountIds(Sets.newHashSet());
+    }
+
+    // cannot update if it is globally enabled
+    if (featureFlag.isEnabled()) {
+      logger.info("Feature flag is enabled globally, disable it first to enable or disable for account.");
+      throw new InvalidRequestException(
+          "Feature flag is enabled globally, cannot enable/disable for account " + accountId);
+    }
+
+    if (enabled) {
+      featureFlag.getAccountIds().add(accountId);
+    } else {
+      featureFlag.getAccountIds().remove(accountId);
+    }
+    wingsPersistence.save(featureFlag);
+    synchronized (cache) {
+      cache.put(FeatureName.valueOf(featureName), featureFlag);
+    }
+    return featureFlag;
   }
 
   @Override
@@ -211,5 +242,33 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                 .set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
+  }
+
+  /**
+   * Used to return list of feature flags to admin tool
+   * @return List of all feature flags defined
+   */
+  @Override
+  public List<FeatureFlag> getAllFeatureFlags() {
+    return wingsPersistence.createQuery(FeatureFlag.class).asList();
+  }
+
+  /**
+   * used by admin tool to batch add/remove accounts in feature flag and enable/disable feature flag globally
+   * @param featureFlagName name
+   * @param featureFlag feature flag
+   * @return updated feature flag
+   */
+  @Override
+  public Optional<FeatureFlag> updateFeatureFlag(String featureFlagName, FeatureFlag featureFlag) {
+    Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(FeatureName.valueOf(featureFlagName));
+    if (!featureFlagOptional.isPresent()) {
+      return Optional.empty();
+    }
+    wingsPersistence.save(featureFlag);
+    synchronized (cache) {
+      cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
+    }
+    return Optional.of(featureFlag);
   }
 }

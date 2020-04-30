@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Set;
 
@@ -22,7 +23,7 @@ import java.util.Set;
 public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
   @Id private String uuid;
 
-  private String name;
+  @Indexed private String name;
   public enum Scope {
     GLOBAL,
     PER_ACCOUNT,

@@ -16,11 +16,13 @@ import io.harness.limits.lib.Limit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Account;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
@@ -36,6 +38,7 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   @Inject private LicenseService licenseService;
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private AccountSummaryHelper accountSummaryHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public LicenseInfo updateLicense(String accountId, LicenseUpdateInfo licenseUpdateInfo) {
@@ -120,5 +123,10 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   @Override
   public boolean delete(String accountId) {
     return accountService.delete(accountId);
+  }
+
+  @Override
+  public FeatureFlag updateFeatureFlagForAccount(String accountId, String featureName, boolean enabled) {
+    return featureFlagService.updateFeatureFlagForAccount(featureName, accountId, enabled);
   }
 }

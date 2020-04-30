@@ -40,8 +40,6 @@ public interface AccountService {
 
   Account getFromCache(String accountId);
 
-  long getCountOfAccounts();
-
   String getAccountStatus(String accountId);
 
   Account getFromCacheWithFallback(String accountId);

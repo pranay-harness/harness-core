@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +12,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -131,5 +133,41 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
     assertThat(featureFlagOptional.isPresent()).isTrue();
     assertThat(featureFlagOptional.get().isEnabled()).isTrue();
     assertThat(featureFlagOptional.get().getName()).isEqualTo(featureFlag.getName());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateFeatureFlagForAccount_FeatureFlagNotFound() {
+    featureFlagService.updateFeatureFlagForAccount(CV_DEMO.name(), "abcde", false);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateFeatureFlagForAccount_EnableFeatureFlag() {
+    FeatureName featureName = CV_DEMO;
+    FeatureFlag featureFlag = FeatureFlag.builder().name(featureName.name()).enabled(false).obsolete(false).build();
+    wingsPersistence.save(featureFlag);
+    FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", true);
+    assertThat(updatedFeatureFlag).isNotNull();
+    assertThat(updatedFeatureFlag.getAccountIds()).contains("abcde");
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateFeatureFlagForAccount_DisableFeatureFlag() {
+    FeatureName featureName = CV_DEMO;
+    FeatureFlag featureFlag = FeatureFlag.builder()
+                                  .name(featureName.name())
+                                  .enabled(false)
+                                  .accountIds(Sets.newHashSet("abcde"))
+                                  .obsolete(false)
+                                  .build();
+    wingsPersistence.save(featureFlag);
+    FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", false);
+    assertThat(updatedFeatureFlag).isNotNull();
+    assertThat(updatedFeatureFlag.getAccountIds()).isEmpty();
   }
 }
