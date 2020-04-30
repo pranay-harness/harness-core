@@ -5,6 +5,7 @@
  *
  * Type Harness. and select a function. Most take no arguments.
  * Ones like NDays take a number of days.
+ * Results best viewed in table view.
  *
  * Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.
  *
@@ -85,6 +86,8 @@ var Harness = function() {
                 }},
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
+                    _id: 0,
+                    accountId: "$_id",
                     accountName: "$account_docs.accountName",
                     connections: 1
                 }},
@@ -109,6 +112,8 @@ var Harness = function() {
                 }},
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
+                    _id: 0,
+                    accountId: "$_id",
                     accountName: "$account_docs.accountName",
                     connectedDelegates: {$size: "$distinctDelegateIds"}
                 }},
@@ -141,6 +146,8 @@ var Harness = function() {
                 }},
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
+                    _id: 0,
+                    accountId: "$_id",
                     accountName: "$account_docs.accountName",
                     delegates: 1,
                     connectedDelegates: {$size: "$distinctConnections"}
@@ -175,6 +182,8 @@ var Harness = function() {
                 }},
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
+                    _id: 0,
+                    accountId: "$_id",
                     accountName: "$account_docs.accountName",
                     connectedDelegates: {$size: "$distinctDelegateIds"},
                     distinctVersions:{$reduce:{
@@ -232,6 +241,7 @@ var Harness = function() {
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
                     _id: 0,
+                    delegateId: "$_id",
                     accountName: "$account_docs.accountName",
                     hostName: 1,
                     distinctVersions:{$reduce:{
@@ -281,6 +291,7 @@ var Harness = function() {
                 {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
                 {$project:{
                     _id: 0,
+                    delegateId: "$_id",
                     accountName: "$account_docs.accountName",
                     hostName: 1,
                     version:{ $arrayElemAt: [ "$distinctVersions", 0 ] }
@@ -309,6 +320,12 @@ var Harness = function() {
                     _id:"$account_docs._id",
                     accountName:{$first:"$account_docs.accountName"},
                     running:{$sum:NumberInt(1)}
+                }},
+                {$project:{
+                    _id: 0,
+                    accountId: "$_id",
+                    accountName: 1,
+                    running: 1
                 }},
                 {$sort:{running:-1, accountName:1}}
             ]);
@@ -342,6 +359,13 @@ var Harness = function() {
                     accountName:{$first:"$account_docs.accountName"},
                     appName:{$first:"$app_docs.name"},
                     running:{$sum:NumberInt(1)}
+                }},
+                {$project:{
+                    _id: 0,
+                    appId: "$_id",
+                    accountName: 1,
+                    appName: 1,
+                    running: 1
                 }},
                 {$sort:{running:-1, accountName:1, appName:1}}
             ]);
@@ -391,6 +415,16 @@ var Harness = function() {
                     failed: {$first:"$failed"},
                     aborted: {$first:"$aborted"},
                     expired: {$first:"$expired"}
+                }},
+                {$project:{
+                    _id: 0,
+                    accountId: "$_id",
+                    accountName: 1,
+                    totalExecuted: 1,
+                    succeeded: 1,
+                    failed: 1,
+                    aborted: 1,
+                    expired: 1
                 }},
                 {$sort:{totalExecuted:-1, succeeded:-1}}
             ]);
@@ -442,6 +476,16 @@ var Harness = function() {
                     aborted: {$first:"$aborted"},
                     expired: {$first:"$expired"}
                 }},
+                {$project:{
+                    _id: 0,
+                    accountId: "$_id",
+                    accountName: 1,
+                    totalExecuted: 1,
+                    succeeded: 1,
+                    failed: 1,
+                    aborted: 1,
+                    expired: 1
+                }},
                 {$sort:{totalExecuted:-1, succeeded:-1}}
             ]);
 
@@ -470,7 +514,7 @@ var Harness = function() {
                     executed:1
                 }},
                 {$sort:{"year":1, "week":1}}
-              ]);
+            ]);
 
         }
 
