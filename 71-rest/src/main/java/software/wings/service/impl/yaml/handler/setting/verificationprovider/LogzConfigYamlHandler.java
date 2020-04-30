@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.LogzConfig.Yaml;
@@ -30,8 +29,8 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
