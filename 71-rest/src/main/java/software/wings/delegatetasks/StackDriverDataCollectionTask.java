@@ -159,7 +159,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             taskResult.setErrorMessage("Cannot save new stack driver metric records to Harness. Server returned error");
             throw new RuntimeException("Cannot save new stack driver metric records to Harness. Server returned error");
           }
-          logger.info("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
+          logger.debug("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
               dataCollectionCurrentMinute);
 
           dataCollectionCurrentMinute++;
@@ -440,11 +440,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         });
       }
 
-      logger.info("fetching stackdriver metrics for {} strategy {} for min {}",
+      logger.debug("fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionCurrentMinute);
       List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
-      logger.info("done fetching stackdriver metrics for {} strategy {} for min {}",
+      logger.debug("done fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionCurrentMinute);
       results.forEach(result -> {

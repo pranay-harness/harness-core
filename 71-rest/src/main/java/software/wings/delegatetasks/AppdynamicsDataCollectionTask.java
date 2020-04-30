@@ -311,7 +311,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.info("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
+          logger.debug(
+              "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
           AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig,
               dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(),
               dataCollectionInfo.getEncryptedDataDetails(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
@@ -349,7 +350,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           } else {
-            logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
+            logger.debug("Sent {} appdynamics metric records to the server for minute {} for state {}",
                 recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           }
           dataCollectionMinute++;
@@ -410,7 +411,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
         Map<String, String> finalHosts = new HashMap<>();
         dataCollectionInfo.getHosts().forEach((hostName, groupName) -> finalHosts.put(hosts.get(hostName), groupName));
-        logger.info("for state {} final hosts are {}", dataCollectionInfo.getStateExecutionId(), finalHosts);
+        logger.debug("for state {} final hosts are {}", dataCollectionInfo.getStateExecutionId(), finalHosts);
         dataCollectionInfo.setHosts(finalHosts);
         dataCollectionInfo.setNodeIdsMapped(true);
       }

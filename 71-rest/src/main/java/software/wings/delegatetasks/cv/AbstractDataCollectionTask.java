@@ -115,8 +115,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
         dataCollectionExecutionContext = createDataCollectionExecutionContext();
         logger.info("Starting init");
         dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
-        logger.info("Finished init");
-        logger.info("Starting collectAndSaveData");
+        logger.info("Finished init and starting collectAndSaveData");
         collectAndSaveData((T) dataCollectionInfo);
         logger.info("Finished collectAndSaveData");
       });

@@ -60,7 +60,6 @@ public class RequestExecutor {
         return executeRequest(thirdPartyApiCallLog, retryCount, request, patternsToMask);
       } catch (RateLimitExceededException e) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
-        logger.info("Encountered Rate limiting. Sleeping {} seconds", RETRY_SLEEP_DURATION.getSeconds() + randomNum);
         sleep(RETRY_SLEEP_DURATION.plus(Duration.ofSeconds(randomNum)));
         if (retryCount == MAX_RETRIES) {
           logger.error("Request did not succeed after " + MAX_RETRIES + "  retries ");
