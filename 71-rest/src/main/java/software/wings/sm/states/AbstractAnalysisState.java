@@ -40,6 +40,8 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.slf4j.Logger;
 import software.wings.api.AmiServiceSetupElement;
@@ -1202,37 +1204,56 @@ public abstract class AbstractAnalysisState extends State {
     return settingAttribute;
   }
 
+  protected NodePair getControlAndTestNodes(ExecutionContext context) {
+    Set<String> controlNodes, testNodes;
+    String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
+
+    if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
+      testNodes = new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+      controlNodes = new HashSet<>();
+    } else {
+      Set<String> allNodes =
+          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false));
+      Set<String> newNodes = includePreviousPhaseNodes
+          ? new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true))
+          : new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+      testNodes = newNodes;
+      controlNodes = Sets.difference(allNodes, newNodes);
+    }
+    return NodePair.builder().controlNodes(controlNodes).testNodes(testNodes).build();
+  }
+
   protected void campareAndLogNodesUsingNewInstanceAPI(
       ExecutionContext context, Set<String> testNodes, Set<String> controlNodes) {
     try {
-      Set<String> newControlNodes, newTestNodes;
-      String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
-
-      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-        newTestNodes = new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
-        newControlNodes = new HashSet<>();
-      } else {
-        Set<String> allNodes =
-            new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false));
-        Set<String> newNodes = includePreviousPhaseNodes
-            ? new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true))
-            : new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
-        newTestNodes = newNodes;
-        newControlNodes = Sets.difference(allNodes, newNodes);
-      }
+      long startTime = System.currentTimeMillis();
+      NodePair nodePair = getControlAndTestNodes(context);
+      getLogger().info(
+          "[NewInstanceAPI] Time taken to get control and test nodes: {} ms", System.currentTimeMillis() - startTime);
+      Set<String> newControlNodes = nodePair.getControlNodes(), newTestNodes = nodePair.getTestNodes();
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+      String deploymentType = phaseElement.getDeploymentType();
       if (testNodes.equals(newTestNodes) && controlNodes.equals(newControlNodes)) {
         getLogger().info(
-            "[NewInstanceAPI] New nodes and old nodes are equal. ComparisionStrategy: {} testNodes: {}, controlNodes {}",
-            getComparisonStrategy(), testNodes, controlNodes);
+            "[NewInstanceAPI] New nodes and old nodes are equal. deploymentType: {} ComparisionStrategy: {} testNodes: {}, controlNodes {}",
+            deploymentType, getComparisonStrategy(), testNodes, controlNodes);
       } else {
         getLogger().info(
-            "[NewInstanceAPI] New nodes and old nodes are not equal. ComparisionStrategy: {}, includePreviousPhaseNodes: {} testNodes: {}, controlNodes {}, newTestNodes {}, newControlNodes {}",
-            getComparisonStrategy(), includePreviousPhaseNodes, testNodes, controlNodes, newTestNodes, newControlNodes);
+            "[NewInstanceAPI][Error] New nodes and old nodes are not equal. deploymentType: {} ComparisionStrategy: {}, "
+                + "includePreviousPhaseNodes: {} testNodes: {}, controlNodes {}, newTestNodes {}, newControlNodes {}",
+            deploymentType, getComparisonStrategy(), includePreviousPhaseNodes, testNodes, controlNodes, newTestNodes,
+            newControlNodes);
       }
     } catch (Exception e) {
       // this is the new api supposed to replace the old code. Ignoring any exception so that the existing code is not
       // impacted. this code is printing the comparision
-      getLogger().error("[NewInstanceAPI] Exception while calling new instance API", e);
+      getLogger().error("[NewInstanceAPI][Error] Exception while calling new instance API", e);
     }
+  }
+  @Value
+  @Builder
+  protected static class NodePair {
+    private Set<String> controlNodes;
+    private Set<String> testNodes;
   }
 }

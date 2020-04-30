@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.container.LogConfiguration;
@@ -76,7 +75,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }
