@@ -98,7 +98,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                           .build(),
             HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
       } catch (Exception ex) {
-        logger.error("Failed to publish failure from {} to the Event Server.", taskId);
+        logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
       }
     } catch (Exception e) {
       logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);

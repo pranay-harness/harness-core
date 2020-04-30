@@ -38,7 +38,6 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
     PcfInstanceSyncPerpetualTaskParams instanceSyncParams =
         AnyUtils.unpack(params.getCustomizedParams(), PcfInstanceSyncPerpetualTaskParams.class);
     String applicationName = instanceSyncParams.getApplicationName();
-    String infraMappingId = instanceSyncParams.getInfraMappingId();
     String orgName = instanceSyncParams.getOrgName();
     String space = instanceSyncParams.getSpace();
 

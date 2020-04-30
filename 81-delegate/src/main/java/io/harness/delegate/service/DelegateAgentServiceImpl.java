@@ -653,7 +653,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         FibonacciBackOff.executeForEver(() -> socket.open(requestBuilder.build()));
       } catch (IOException ex) {
-        logger.error("Unable to open socket", e);
+        logger.error("Unable to open socket", ex);
       }
     } else if (e instanceof ConnectException) {
       logger.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
@@ -843,7 +843,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           applyProfile(response.getResource());
         }
       } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out checking for profile");
+        logger.warn("Timed out checking for profile", ex);
       } catch (Exception e) {
         logger.error("Error checking for profile", e);
       }
@@ -914,7 +914,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         } catch (TimeoutException e) {
           logger.info("Timed out", e);
         } catch (UncheckedTimeoutException ex) {
-          logger.error("Timed out sending profile result");
+          logger.error("Timed out sending profile result", ex);
         } catch (Exception e) {
           logger.error("Error applying profile", e);
         } finally {
@@ -1041,7 +1041,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             logger.info("Delegate up to date");
           }
         } catch (UncheckedTimeoutException tex) {
-          logger.warn("Timed out checking for upgrade");
+          logger.warn("Timed out checking for upgrade", tex);
         } catch (Exception e) {
           upgradePending.set(false);
           upgradeNeeded.set(false);
@@ -1079,9 +1079,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           }
         }
       } catch (UncheckedTimeoutException tex) {
-        logger.warn("Timed out fetching delegate task events");
+        logger.warn("Timed out fetching delegate task events", tex);
       } catch (InterruptedException ie) {
-        logger.warn("Delegate service is being shut down, this task is being interrupted.");
+        logger.warn("Delegate service is being shut down, this task is being interrupted.", ie);
       } catch (Exception e) {
         logger.error("Exception while decoding task", e);
       }
@@ -1298,7 +1298,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out sending heartbeat");
+        logger.warn("Timed out sending heartbeat", ex);
       } catch (Exception e) {
         logger.error("Error sending heartbeat", e);
       }
@@ -1318,7 +1318,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           return socket.fire(JsonUtils.asJson(delegate));
         }, 15L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out sending keep alive packet");
+        logger.warn("Timed out sending keep alive packet", ex);
       } catch (Exception e) {
         logger.error("Error sending heartbeat", e);
       }
@@ -1368,7 +1368,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       lastHeartbeatSentAt.set(clock.millis());
 
     } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out sending heartbeat");
+      logger.warn("Timed out sending heartbeat", ex);
     } catch (Exception e) {
       logger.error("Error sending heartbeat", e);
     }
@@ -1390,7 +1390,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       delegate.setPolllingModeEnabled(true);
       execute(managerClient.registerDelegate(accountId, delegate));
     } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out sending Keep Alive Request");
+      logger.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
       logger.error("Error sending Keep Alive Request", e);
     }
@@ -1815,7 +1815,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           return resp;
         }, 30L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out sending response to manager");
+        logger.warn("Timed out sending response to manager", ex);
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {
@@ -1837,12 +1837,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void enforceDelegateTaskTimeout(String taskId, TaskData taskData) {
-    long startTime = clock.millis();
+    long startingTime = clock.millis();
     boolean stillRunning = true;
     long timeout = taskData.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     Future taskFuture = null;
-    while (stillRunning && clock.millis() - startTime < timeout) {
-      logger.info("Task time remaining for {}: {} ms", taskId, startTime + timeout - clock.millis());
+    while (stillRunning && clock.millis() - startingTime < timeout) {
+      logger.info("Task time remaining for {}: {} ms", taskId, startingTime + timeout - clock.millis());
       sleep(ofSeconds(5));
       taskFuture = currentlyExecutingFutures.get(taskId);
       if (taskFuture != null) {
@@ -1858,9 +1858,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException e) {
-        logger.error("Timed out getting task future");
+        logger.error("Timed out getting task future", e);
       } catch (CancellationException e) {
-        logger.error("Task {} was cancelled", taskId);
+        logger.error("Task {} was cancelled", taskId, e);
       } catch (Exception e) {
         logger.error("Error from task future {}", taskId, e);
       }
@@ -1955,7 +1955,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             TOKEN + token + SEQ + sequenceNum, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
         logger.info("Token Received From Manager : {}, SeqNum Received From Manager: {}", token, sequenceNum);
       } catch (Exception e) {
-        logger.error("Failed to write registration response into delegate_sequence file");
+        logger.error("Failed to write registration response into delegate_sequence file", e);
       }
     }
   }
@@ -1979,7 +1979,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       builder.delegateRandomToken(getRandomTokenForEcsDelegate());
       builder.sequenceNum(getSequenceNumForEcsDelegate());
     } catch (Exception e) {
-      logger.warn("Failed while reading seqNum and delegateToken from disk file");
+      logger.warn("Failed while reading seqNum and delegateToken from disk file", e);
     }
   }
 
@@ -2048,7 +2048,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           TOKEN + delegateResponse.getDelegateRandomToken() + SEQ + delegateResponse.getSequenceNum(),
           DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (Exception e) {
-      logger.error("Failed to write registration response into delegate_sequence file");
+      logger.error("Failed to write registration response into delegate_sequence file", e);
     }
   }
 
@@ -2063,7 +2063,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       FileIo.writeWithExclusiveLockAcrossProcesses(
           TOKEN + randomToken + SEQ, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
-      logger.warn("Failed to create DelegateSequenceConfigFile");
+      logger.warn("Failed to create DelegateSequenceConfigFile", e);
     }
   }
 

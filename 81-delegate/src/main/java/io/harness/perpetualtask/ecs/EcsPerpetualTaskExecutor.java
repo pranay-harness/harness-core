@@ -111,7 +111,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
           (List<EncryptedDataDetail>) KryoUtils.asObject(ecsPerpetualTaskParams.getEncryptionDetail().toByteArray());
       Instant now = Instant.now(clock);
 
-      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterId, heartbeatTime);
+      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterId);
       List<ContainerInstance> containerInstances =
           listContainerInstances(clusterName, region, awsConfig, encryptionDetails);
       Set<String> instanceIds = fetchEc2InstanceIds(clusterId, containerInstances);
@@ -520,7 +520,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     }
   }
 
-  private Instant fetchLastProcessedTimestamp(String clusterId, Instant heartbeatTime) {
+  private Instant fetchLastProcessedTimestamp(String clusterId) {
     EcsActiveInstancesCache ecsActiveInstancesCache = cache.getIfPresent(clusterId);
     if (null != ecsActiveInstancesCache && null != ecsActiveInstancesCache.getLastProcessedTimestamp()) {
       return ecsActiveInstancesCache.getLastProcessedTimestamp();
