@@ -66,7 +66,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
         return response.getResource();
       }
     } catch (UncheckedTimeoutException ex) {
-      logger.warn("Timed out getting logging token");
+      logger.warn("Timed out getting logging token", ex);
     } catch (Exception e) {
       logger.error("Error getting logging token", e);
     }
