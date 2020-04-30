@@ -1,5 +1,6 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -61,6 +62,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
         .thenReturn(statement);
     when(mockConnection.prepareStatement(k8sUtilizationGranularDataService.SELECT_DISTINCT_INSTANCEID))
         .thenReturn(statement);
+    when(mockConnection.prepareStatement(k8sUtilizationGranularDataService.PURGE_DATA_QUERY)).thenReturn(statement);
     when(mockConnection.createStatement()).thenReturn(statement);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
   }
@@ -114,6 +116,15 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
     boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
+    assertThat(insert).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testPurgeK8sGranularUtilizationData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    boolean insert = k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
     assertThat(insert).isTrue();
   }
 
