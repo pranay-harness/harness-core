@@ -1,5 +1,5 @@
 $releaseId="${workflow.ReleaseNo}"
-$serviceName="${service.Name}"
+$serviceName="${serviceName}"
 $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
 
 Write-Host "Starting Deployment [id:" $releaseId "]"

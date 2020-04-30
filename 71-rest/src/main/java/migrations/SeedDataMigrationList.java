@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
 import migrations.seedata.IISInstallCommandMigration;
-import migrations.seedata.IISInstallCommandV4Migration;
+import migrations.seedata.IISInstallCommandV5Migration;
 import migrations.seedata.ReImportTemplatesMigration;
 import migrations.seedata.TemplateGalleryDefaultTemplatesMigration;
 import migrations.seedata.TomcatInstallCommandMigration;
@@ -23,12 +23,13 @@ public class SeedDataMigrationList {
         .add(Pair.of(5, BaseSeedDataMigration.class))
         .add(Pair.of(6, BaseSeedDataMigration.class))
         .add(Pair.of(7, BaseSeedDataMigration.class))
-        .add(Pair.of(8, IISInstallCommandV4Migration.class))
+        .add(Pair.of(8, BaseSeedDataMigration.class))
         .add(Pair.of(9, BaseSeedDataMigration.class))
         .add(Pair.of(10, BaseSeedDataMigration.class))
         .add(Pair.of(11, TomcatInstallCommandMigration.class))
         .add(Pair.of(12, BaseSeedDataMigration.class))
         .add(Pair.of(13, ReImportTemplatesMigration.class))
+        .add(Pair.of(14, IISInstallCommandV5Migration.class))
         .build();
   }
 }
