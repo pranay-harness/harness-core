@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotation.HarnessEntity;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.yaml.BaseYaml;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 
@@ -27,6 +29,30 @@ public class LambdaSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
+
+  public LambdaSpecification cloneInternal() {
+    List<FunctionSpecification> clonedFunctions = new ArrayList<>();
+    if (isNotEmpty(this.getFunctions())) {
+      for (FunctionSpecification functionSpecification : this.getFunctions()) {
+        clonedFunctions.add(functionSpecification.cloneInternal());
+      }
+    }
+
+    DefaultSpecification clonedDefaults = null;
+    if (this.getDefaults() != null) {
+      clonedDefaults = this.getDefaults().cloneInternal();
+    }
+
+    LambdaSpecification specification = LambdaSpecification.builder()
+                                            .functions(clonedFunctions)
+                                            .defaults(clonedDefaults)
+                                            .serviceId(this.serviceId)
+                                            .build();
+    specification.setAccountId(this.getAccountId());
+    specification.setAppId(this.getAppId());
+
+    return specification;
+  }
 
   @Data
   @NoArgsConstructor
@@ -52,6 +78,14 @@ public class LambdaSpecification extends DeploymentSpecification {
     private Integer timeout = 3;
     public String getRuntime() {
       return trim(runtime);
+    }
+
+    public DefaultSpecification cloneInternal() {
+      return DefaultSpecification.builder()
+          .runtime(this.getRuntime())
+          .memorySize(this.getMemorySize())
+          .timeout(this.getTimeout())
+          .build();
     }
 
     @Data
@@ -88,6 +122,16 @@ public class LambdaSpecification extends DeploymentSpecification {
     }
     public String getHandler() {
       return trim(handler);
+    }
+
+    public FunctionSpecification cloneInternal() {
+      return FunctionSpecification.builder()
+          .runtime(this.getRuntime())
+          .memorySize(this.getMemorySize())
+          .timeout(this.getTimeout())
+          .functionName(this.getFunctionName())
+          .handler(this.getHandler())
+          .build();
     }
 
     @Data
