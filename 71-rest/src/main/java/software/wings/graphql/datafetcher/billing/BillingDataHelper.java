@@ -48,6 +48,7 @@ public class BillingDataHelper {
   private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final int MAX_RETRY = 3;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
@@ -230,14 +231,28 @@ public class BillingDataHelper {
     String query = queryData.getQuery();
     logger.info("Billing data query for cost trend {}", query);
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(query);
-      return getEntityIdToBillingAmountData(resultSet, entity);
-    } catch (SQLException e) {
-      logger.error("BillingDataHelper cost trend query Error exception", e);
-    } finally {
-      DBUtils.close(resultSet);
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        return getEntityIdToBillingAmountData(resultSet, entity);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingDataHelper for cost trend, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingDataHelper for cost trend, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return null;
   }

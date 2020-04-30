@@ -73,6 +73,8 @@ public class BillingStatsFilterValuesDataFetcher
       @NotNull String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupByList) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLCCMEntityGroupBy> groupByNodeAndPodList = new ArrayList<>();
     List<QLCCMEntityGroupBy> groupByEntityListExcludingNodeAndPod = new ArrayList<>();
@@ -95,14 +97,26 @@ public class BillingStatsFilterValuesDataFetcher
     queryData = billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByEntityListExcludingNodeAndPod);
     logger.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
 
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      return generateFilterValuesData(queryData, resultSet, instanceIds, accountId);
-    } catch (SQLException e) {
-      logger.error("BillingStatsFilterValuesDataFetcher Error exception", e);
-    } finally {
-      DBUtils.close(resultSet);
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return null;
   }
@@ -110,29 +124,43 @@ public class BillingStatsFilterValuesDataFetcher
   private Set<String> getInstanceIdValues(
       String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupByNodeAndPodList) {
     ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByNodeAndPodList);
     logger.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
     Set<String> instanceIds = new HashSet<>();
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      while (resultSet != null && resultSet.next()) {
-        for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-          switch (field) {
-            case INSTANCEID:
-              instanceIds.add(resultSet.getString(field.getFieldName()));
-              break;
-            default:
-              break;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        while (resultSet != null && resultSet.next()) {
+          for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+            switch (field) {
+              case INSTANCEID:
+                instanceIds.add(resultSet.getString(field.getFieldName()));
+                break;
+              default:
+                break;
+            }
           }
         }
+        return instanceIds;
+      } catch (SQLException e) {
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher to get InstanceIds, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher to get InstanceIds, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+        retryCount++;
+      } finally {
+        DBUtils.close(resultSet);
       }
-      return instanceIds;
-    } catch (SQLException e) {
-      logger.error("BillingStatsFilterValuesDataFetcher Error exception", e);
-    } finally {
-      DBUtils.close(resultSet);
     }
     return instanceIds;
   }

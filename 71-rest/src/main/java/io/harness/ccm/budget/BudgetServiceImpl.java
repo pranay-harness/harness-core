@@ -69,6 +69,7 @@ public class BudgetServiceImpl implements BudgetService {
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
 
   private static final long CACHE_SIZE = 10000;
+  private static final int MAX_RETRY = 3;
 
   private LoadingCache<Budget, Double> budgetToCostCache = Caffeine.newBuilder()
                                                                .maximumSize(CACHE_SIZE)
@@ -187,15 +188,29 @@ public class BudgetServiceImpl implements BudgetService {
     logger.info("BudgetDataFetcher query: {}", queryData.getQuery());
 
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      Double budgetedAmount = budget.getBudgetAmount();
-      return generateBudgetData(resultSet, queryData, budgetedAmount);
-    } catch (SQLException e) {
-      logger.error("Exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        Double budgetedAmount = budget.getBudgetAmount();
+        return generateBudgetData(resultSet, queryData, budgetedAmount);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute getBudgetData query in BudgetService, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), budget.getAccountId(), e);
+        } else {
+          logger.warn(
+              "Failed to execute getBudgetData query in BudgetService, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), budget.getAccountId(), retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return null;
   }

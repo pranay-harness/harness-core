@@ -79,6 +79,8 @@ public class BillingStatsTimeSeriesDataFetcher
       List<QLBillingSortCriteria> sortCriteria) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
     List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
@@ -100,15 +102,26 @@ public class BillingStatsTimeSeriesDataFetcher
     logger.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-
-      return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters));
-    } catch (SQLException e) {
-      logger.error("BillingStatsTimeSeriesDataFetcher Error exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters));
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingStatsTimeSeriesDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingStatsTimeSeriesDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return null;
   }

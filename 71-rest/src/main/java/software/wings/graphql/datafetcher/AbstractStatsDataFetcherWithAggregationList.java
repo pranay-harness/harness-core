@@ -48,6 +48,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
 
   @Inject protected DataFetcherUtils utils;
   @Inject protected WingsPersistence wingsPersistence;
+  public static final int MAX_RETRY = 3;
 
   protected abstract QLData fetch(
       String accountId, List<A> aggregateFunction, List<F> filters, List<G> groupBy, List<S> sort);
