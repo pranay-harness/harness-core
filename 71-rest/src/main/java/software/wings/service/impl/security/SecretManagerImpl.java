@@ -75,6 +75,7 @@ import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.Query;
@@ -749,9 +750,11 @@ public class SecretManagerImpl implements SecretManager {
 
   private String getVaultSecretRefUrl(EncryptedData encryptedData) {
     VaultConfig vaultConfig = vaultService.getVaultConfig(encryptedData.getAccountId(), encryptedData.getKmsId());
-    String basePath = vaultConfig.getBasePath() == null ? DEFAULT_BASE_PATH : vaultConfig.getBasePath();
+    String basePath = vaultConfig.getBasePath() == null
+        ? DEFAULT_BASE_PATH
+        : PATH_SEPARATOR.concat(StringUtils.strip(vaultConfig.getBasePath(), PATH_SEPARATOR));
     String vaultPath = isEmpty(encryptedData.getPath())
-        ? basePath + "/" + encryptedData.getEncryptionKey() + KEY_SPEARATOR + DEFAULT_KEY_NAME
+        ? basePath + PATH_SEPARATOR + encryptedData.getEncryptionKey() + KEY_SPEARATOR + DEFAULT_KEY_NAME
         : encryptedData.getPath();
     return URL_ROOT_PREFIX + vaultConfig.getName() + vaultPath;
   }
@@ -870,8 +873,9 @@ public class SecretManagerImpl implements SecretManager {
         throw new SecretManagementException(
             ENCRYPT_DECRYPT_ERROR, "Vault secret manager '" + secretManagerName + "' doesn't exist", USER);
       }
-
-      String basePath = vaultConfig.getBasePath() == null ? DEFAULT_BASE_PATH : vaultConfig.getBasePath();
+      String basePath = vaultConfig.getBasePath() == null
+          ? DEFAULT_BASE_PATH
+          : PATH_SEPARATOR.concat(StringUtils.strip(vaultConfig.getBasePath(), PATH_SEPARATOR));
       index = fullPath.indexOf(KEY_SPEARATOR);
       String keyName = fullPath.substring(index + 1);
 
