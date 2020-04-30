@@ -20,11 +20,15 @@
 var Harness = function() {
 
     return {
+
+        // Print usage
         toString: function() {
+
             return "Usage:\n\n"
                 + "Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.\n\n"
                 + "You can nest these like:\n\n"
                 + "Harness.toCSV(Harness.connectedDelegateMachines())\n";
+
         },
 
         // Produce CSV output from any cursor
