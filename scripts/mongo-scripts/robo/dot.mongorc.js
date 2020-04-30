@@ -1,21 +1,31 @@
 /**
  * This is a set of shortcuts to mongo queries for use in Robo 3T.
- * Store it in your home directory as .mongorc.js and select "Load .mongorc.js"
- * from the Options menu in Robo, then restart.
  *
- * Type Harness. and select a function. Most take no arguments.
- * Ones like NDays take a number of days.
- * Results best viewed in table view.
+ * Link it to your home directory:
+ *
+ * ln -s ~/github/portal/scripts/mongo-scripts/robo/dot.mongorc.js .mongorc.js
+ *
+ * Select "Load .mongorc.js" from the Options menu in Robo, then restart.
+ *
+ * Type "Harness." in a shell and select a function.
+ * Most take no arguments. Ones like NDays take a number of days.
+ * Results are best viewed in table view.
  *
  * Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.
  *
- * You can nest these like:
+ * You can nest it like:
  *
  * Harness.toCSV(Harness.connectedDelegateMachines())
  */
 var Harness = function() {
 
     return {
+        toString: function() {
+            return "Usage:\n\n"
+                + "Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.\n\n"
+                + "You can nest these like:\n\n"
+                + "Harness.toCSV(Harness.connectedDelegateMachines())\n";
+        },
 
         // Produce CSV output from any cursor
         toCSV: function(cursor) {
@@ -522,3 +532,10 @@ var Harness = function() {
 
 }();
 
+// Hide the object defaults
+Harness.bsonsize = undefined;
+Harness.constructor = undefined;
+Harness.hasOwnProperty = undefined;
+Harness.propertyIsEnumerable = undefined;
+Harness.toLocaleString = undefined;
+Harness.valueOf = undefined;
