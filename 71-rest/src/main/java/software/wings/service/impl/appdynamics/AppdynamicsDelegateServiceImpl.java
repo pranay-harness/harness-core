@@ -197,7 +197,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|"
         + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
-    logger.info("fetching metrics for path {} ", metricPath);
+    logger.debug("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,

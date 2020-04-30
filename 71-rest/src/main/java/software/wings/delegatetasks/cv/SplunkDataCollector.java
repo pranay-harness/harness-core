@@ -81,10 +81,6 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
     ThirdPartyApiCallLog apiCallLog = dataCollectionExecutionContext.createApiCallLog();
     addThirdPartyAPILogRequestFields(apiCallLog, splunkDataCollectionInfo.getSplunkConfig().getSplunkUrl(), splunkQuery,
         splunkDataCollectionInfo.getStartTime(), splunkDataCollectionInfo.getEndTime());
-    logger.info("triggering splunk query startTime: " + splunkDataCollectionInfo.getStartTime()
-        + " endTime: " + splunkDataCollectionInfo.getEndTime() + " query: " + splunkQuery
-        + " url: " + splunkDataCollectionInfo.getSplunkConfig());
-
     try {
       Job job = createSearchJob(
           splunkService, splunkQuery, splunkDataCollectionInfo.getStartTime(), splunkDataCollectionInfo.getEndTime());

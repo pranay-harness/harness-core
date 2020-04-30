@@ -356,20 +356,20 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private Set<NewRelicMetric> getTxnsToCollect(boolean checkNotAllowedStrings) throws IOException {
-      logger.info("Collecting txn names for {}", dataCollectionInfo);
-      logger.info("all txns so far {} for {}", allTxns.size(), dataCollectionInfo.getStateExecutionId());
+      logger.debug("Collecting txn names for {}", dataCollectionInfo);
+      logger.debug("all txns so far {} for {}", allTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
           createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       newTxns.removeAll(allTxns);
-      logger.info("new txns {} for {}", newTxns.size(), dataCollectionInfo.getStateExecutionId());
+      logger.debug("new txns {} for {}", newTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> txnsWithData =
           newRelicDelegateService.getTxnsWithDataInLastHour(allTxns, dataCollectionInfo.getNewRelicConfig(),
               dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
               checkNotAllowedStrings, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-      logger.info("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
+      logger.debug("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       txnsWithData.addAll(newTxns);
-      logger.info("txns to collect {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
+      logger.debug("txns to collect {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       return txnsWithData;
     }
 
@@ -414,7 +414,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           } else {
             for (NewRelicApplicationInstance node : instances) {
               if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
-                logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
+                logger.debug("Skipping host {} for stateExecutionId {} ", node.getHost(),
                     dataCollectionInfo.getStateExecutionId());
                 continue;
               }
