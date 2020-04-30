@@ -99,12 +99,10 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -228,7 +226,6 @@ public class WatcherServiceImpl implements WatcherService {
 
       checkAccountStatus();
       startUpgradeCheck();
-      startCommandCheck();
       startWatching();
 
       synchronized (waiter) {
@@ -281,19 +278,6 @@ public class WatcherServiceImpl implements WatcherService {
       if (!working.get()) {
         checkForWatcherUpgrade();
       }
-    }
-  }
-
-  private void startCommandCheck() {
-    commandCheckExecutor.scheduleWithFixedDelay(
-        new Schedulable("Error while checking for account status and commands", this ::syncCommandCheck), 0, 3,
-        TimeUnit.MINUTES);
-  }
-
-  private void syncCommandCheck() {
-    synchronized (this) {
-      checkAccountStatus();
-      checkForCommands();
     }
   }
 
@@ -914,41 +898,6 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       working.set(false);
       logger.error("Exception while checking for upgrade", e);
-      logConfigWatcherYml();
-    }
-  }
-
-  private void checkForCommands() {
-    try {
-      String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
-      String watcherCommandsUrl =
-          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/commands/" + env;
-      String watcherCommands = Http.getResponseStringFromUrl(watcherCommandsUrl, 10, 10);
-      if (isNotBlank(watcherCommands)) {
-        BufferedReader reader = new BufferedReader(new StringReader(watcherCommands));
-        String line;
-        while ((line = reader.readLine()) != null) {
-          String cmd = substringBefore(line, " ").trim();
-          String param = substringAfter(line, " ").trim();
-
-          if ("minVersion".equals(cmd)) {
-            int minVersion = Integer.parseInt(param);
-            if (minMinorVersion.getAndSet(minVersion) != minVersion) {
-              logger.info("Setting minimum delegate version: {}", minVersion);
-            }
-          }
-          if ("illegalVersion".equals(cmd)) {
-            int illegalVersion = Integer.parseInt(param);
-            if (!illegalVersions.contains(illegalVersion)) {
-              illegalVersions.add(illegalVersion);
-              logger.info("Setting illegal delegate version: {}", illegalVersion);
-            }
-          }
-        }
-      }
-    } catch (IOException | RuntimeException e) {
-      logger.info("No commands found. config-watcher.yml:");
       logConfigWatcherYml();
     }
   }
