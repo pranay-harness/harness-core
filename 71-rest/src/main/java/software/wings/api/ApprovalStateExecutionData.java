@@ -138,7 +138,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       putNotNull(executionDetails, "approvalCriteria",
           ExecutionDataValue.builder()
               .displayName("Approval Criteria")
-              .value(StringUtils.capitalize(approvalField) + " : " + StringUtils.capitalize(approvalValue))
+              .value(
+                  StringUtils.capitalize(approvalField) + " should be '" + StringUtils.capitalize(approvalValue) + "'")
               .build());
     }
 
@@ -146,7 +147,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       putNotNull(executionDetails, "currentStatus",
           ExecutionDataValue.builder()
               .displayName("Current value")
-              .value(StringUtils.capitalize(approvalField) + " : " + StringUtils.capitalize(currentStatus))
+              .value(StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus)
+                  + "'")
               .build());
     }
 
@@ -154,7 +156,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       putNotNull(executionDetails, "rejectionCriteria",
           ExecutionDataValue.builder()
               .displayName("Rejection Criteria")
-              .value(StringUtils.capitalize(rejectionField) + " : " + StringUtils.capitalize(rejectionValue))
+              .value(StringUtils.capitalize(rejectionField) + " should be '" + StringUtils.capitalize(rejectionValue)
+                  + "'")
               .build());
     }
 

@@ -148,7 +148,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list some by name.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
