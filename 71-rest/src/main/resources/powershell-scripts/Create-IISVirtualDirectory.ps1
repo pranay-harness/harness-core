@@ -2,7 +2,7 @@ Import-Module WebAdministration
 
 $siteName="Default Web Site"
 $releaseId="${workflow.ReleaseNo}"
-$virtualDirectoryName="${service.Name}"
+$virtualDirectoryName="${serviceName}"
 $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $virtualDirectoryName + "\release-" + $releaseId
 
 Write-Host "Creating Virtual Directory" $virtualDirectoryName ".."

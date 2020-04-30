@@ -31,14 +31,17 @@ public interface TemplateConstants {
   String POWER_SHELL_IIS_V3_INSTALL_PATH = COMMAND_PATH + "powershell/Install-V3.yaml";
   String POWER_SHELL_IIS_V4_INSTALL_PATH = COMMAND_PATH + "powershell/Install-V4.yaml";
   String POWER_SHELL_IIS_V5_INSTALL_PATH = COMMAND_PATH + "powershell/Install-V5.yaml";
+  String POWER_SHELL_IIS_V6_INSTALL_PATH = COMMAND_PATH + "powershell/Install-V6.yaml";
   String POWER_SHELL_IIS_WEBSITE_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISWebsite.yaml";
   String POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISWebsite-V2.yaml";
   String POWER_SHELL_IIS_WEBSITE_V3_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISWebsite-V3.yaml";
   String POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISWebsite-V4.yaml";
+  String POWER_SHELL_IIS_WEBSITE_V5_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISWebsite-V5.yaml";
   String POWER_SHELL_IIS_APP_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISApp.yaml";
   String POWER_SHELL_IIS_APP_V2_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISApp-V2.yaml";
   String POWER_SHELL_IIS_APP_V3_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISApp-V3.yaml";
   String POWER_SHELL_IIS_APP_V4_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISApp-V4.yaml";
+  String POWER_SHELL_IIS_APP_V5_INSTALL_PATH = COMMAND_PATH + "powershell/Install-IISApp-V5.yaml";
   String GENERIC_JSON_PATH = COMMAND_PATH + "generic/ExportJsonToEnvVariables.yaml";
 
   String HTTP_PATH = "templategalleries/harness/http/";

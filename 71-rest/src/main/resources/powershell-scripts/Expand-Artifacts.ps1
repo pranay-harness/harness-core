@@ -1,4 +1,4 @@
-$serviceName="${service.Name}"
+$serviceName="${serviceName}"
 $releaseId="${workflow.ReleaseNo}"
 #$artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
 $artifactFilename = "${DownloadDirectory}" + "\" + "${artifact.fileName}"

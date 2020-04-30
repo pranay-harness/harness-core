@@ -2,7 +2,7 @@ Import-Module WebAdministration
 
 $siteName="Default Web Site"
 $releaseId="${workflow.ReleaseNo}"
-$appName="${service.Name}"
+$appName="${serviceName}"
 $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $appName + "\release-" + $releaseId
 
 Write-Host "Creating Application" $appName ".."

@@ -1,7 +1,7 @@
 Import-Module WebAdministration
 
 $releaseId="${workflow.ReleaseNo}"
-$SiteName = "${service.Name}"
+$SiteName = "${serviceName}"
 $SiteProtocol = "http"
 $SitePort=80
 $SiteHostName = "*"
