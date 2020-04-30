@@ -316,29 +316,28 @@ var Harness = function() {
         },
 
         // Count the running executions per account
-        runningExecutionsAccount: function() {
+        runningExecutionsByAccount: function() {
 
             return db.workflowExecutions.aggregate([
                 {$match:{
                     status:"RUNNING",
                     workflowType: {$ne : "PIPELINE"}
                 }},
-                {$lookup:{
+                {$group:{
+                    _id:"$accountId",
+                    running:{$sum:NumberInt(1)}
+                }},
+                 {$lookup:{
                     from:"accounts",
-                    localField:"accountId",
+                    localField:"_id",
                     foreignField:"_id",
                     as:"account_docs"
                 }},
                 {$unwind: "$account_docs"},
-                {$group:{
-                    _id:"$account_docs._id",
-                    accountName:{$first:"$account_docs.accountName"},
-                    running:{$sum:NumberInt(1)}
-                }},
                 {$project:{
                     _id: 0,
                     accountId: "$_id",
-                    accountName: 1,
+                    accountName:"$account_docs.accountName",
                     running: 1
                 }},
                 {$sort:{running:-1, accountName:1}}
@@ -347,41 +346,75 @@ var Harness = function() {
         },
 
         // Count running executions per application
-        runningExecutionsApplication: function() {
+        runningExecutionsByApplication: function() {
 
             return db.workflowExecutions.aggregate([
                 {$match:{
                     status:"RUNNING",
                     workflowType: {$ne : "PIPELINE"}
                 }},
-                {$lookup:{
-                    from:"applications",
-                    localField:"appId",
-                    foreignField:"_id",
-                    as:"app_docs"
+                {$group:{
+                    _id: {appId:"$appId", accountId:"$accountId"},
+                    running:{$sum:NumberInt(1)}
                 }},
-                {$unwind: "$app_docs"},
                 {$lookup:{
                     from:"accounts",
-                    localField:"app_docs.accountId",
+                    localField:"_id.accountId",
                     foreignField:"_id",
                     as:"account_docs"
                 }},
                 {$unwind: "$account_docs"},
-                {$group:{
-                    _id:"$appId",
-                    accountName:{$first:"$account_docs.accountName"},
-                    appName:{$first:"$app_docs.name"},
-                    running:{$sum:NumberInt(1)}
+                {$lookup:{
+                    from:"applications",
+                    localField:"_id.appId",
+                    foreignField:"_id",
+                    as:"app_docs"
                 }},
+                {$unwind: "$app_docs"},
                 {$project:{
                     _id: 0,
-                    appId: "$_id",
-                    accountName: 1,
-                    appName: 1,
+                    accountid: "$_id.accountId",
+                    appId: "$_id.appId",
+                    accountName:"$account_docs.accountName",
+                    appName:"$app_docs.name",
                     running: 1
                 }},
                 {$sort:{running:-1, accountName:1, appName:1}}
+            ]);
+
+        },
+
+        runningExecutionsByAccountWithStartWeek: function() {
+
+            return db.workflowExecutions.aggregate([
+                {$match:{
+                    status:"RUNNING",
+                    workflowType: {$ne : "PIPELINE"}
+                }},
+                {$project:{
+                    _id: 0,
+                    accountId: "$accountId",
+                    createdAt: {$add:[new Date(0), "$createdAt"]}
+                }},
+                {$group:{
+                    _id:{year: { $isoWeekYear: "$createdAt" }, week: { $isoWeek: "$createdAt" }, accountId: "$accountId"},
+                    runningCountStartedOn:{$sum:NumberInt(1)}
+                }},
+                {$lookup:{
+                    from:"accounts",
+                    localField:"_id.accountId",
+                    foreignField:"_id",
+                    as:"account_docs"
+                }},
+                {$unwind: "$account_docs"},
+                {$project:{
+                    _id:0,
+                    year:"$_id.year",
+                    week:"$_id.week",
+                    accountName: "$account_docs.accountName",
+                    runningCountStartedOn:1
+                }},
+                {$sort:{year:1, week:1, accountName:1}}
             ]);
 
         },
@@ -527,7 +560,7 @@ var Harness = function() {
                     week:"$_id.week",
                     executed:1
                 }},
-                {$sort:{"year":1, "week":1}}
+                {$sort:{year:1, week:1}}
             ]);
 
         }
