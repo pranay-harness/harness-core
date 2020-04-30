@@ -35,7 +35,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusCategory;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
@@ -242,7 +241,7 @@ public class GraphRenderer {
 
       if (parentIdElementsMap.get(instance.getUuid()) != null) {
         if (instances.size() > 1) {
-          throw new WingsException("You need to start supporting aggregation of aggregations");
+          throw new InvalidRequestException("You need to start supporting aggregation of aggregations");
         }
 
         GraphGroup group = new GraphGroup();

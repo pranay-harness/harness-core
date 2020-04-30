@@ -1,6 +1,7 @@
 package io.harness.functional.winrm;
 
 import static io.harness.rule.OwnerRule.PRABU;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
@@ -13,7 +14,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -89,13 +89,10 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
             .ensurePredefined(
                 seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.PHYSICAL_WINRM_TEST)
             .getInfrastructure();
-    if (winrmHost != null) {
-      WorkflowExecution workflowExecution = executeWorkflow(workflow, service, Collections.emptyList(),
-          ImmutableMap.of("WinRM_ConnectionAttribute", winrmHost.getWinRmConnectionAttributes()));
-      workflowUtils.checkForWorkflowSuccess(workflowExecution);
-    } else {
-      throw new WingsException("Not able to connect to WinRM host for functional test");
-    }
+    assertThat(winrmHost).isNotNull();
+    WorkflowExecution workflowExecution = executeWorkflow(workflow, service, Collections.emptyList(),
+        ImmutableMap.of("WinRM_ConnectionAttribute", winrmHost.getWinRmConnectionAttributes()));
+    workflowUtils.checkForWorkflowSuccess(workflowExecution);
   }
 
   @Test
@@ -126,9 +123,7 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
                 seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.PHYSICAL_WINRM_TEST)
             .getInfrastructure();
 
-    if (winrmHost == null) {
-      throw new WingsException("Not able to connect to WinRM host for functional test");
-    }
+    assertThat(winrmHost).isNotNull();
 
     steps.add(GraphNode.builder()
                   .name("shell-script-winrm-" + System.currentTimeMillis())
