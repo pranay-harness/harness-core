@@ -140,6 +140,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
+    // update value as for rollback, we need to readt it from SweepingOutput
     requestConfigData.setDownsizeOldApplication(downsizeOldApps);
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
