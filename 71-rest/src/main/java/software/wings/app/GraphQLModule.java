@@ -38,8 +38,10 @@ import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncCo
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
-import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceConnectionDataFetcher;
+import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceDataFetcher;
 import software.wings.graphql.datafetcher.artifactSource.ServiceArtifactSourceConnectionDataFetcher;
+import software.wings.graphql.datafetcher.artifactSource.batch.ArtifactSourceBatchDataFetcher;
+import software.wings.graphql.datafetcher.artifactSource.batch.ArtifactSourceBatchDataLoader;
 import software.wings.graphql.datafetcher.audit.ChangeContentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeSetConnectionDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsEntityDataFetcher;
@@ -188,6 +190,7 @@ public class GraphQLModule extends AbstractModule {
     bindBatchedDataLoaderWithAnnotation(ApplicationBatchDataLoader.class);
     bindBatchedDataLoaderWithAnnotation(ServiceBatchDataLoader.class);
     bindBatchedDataLoaderWithAnnotation(EnvironmentBatchDataLoader.class);
+    bindBatchedDataLoaderWithAnnotation(ArtifactSourceBatchDataLoader.class);
   }
 
   private void bindInstanceInfoControllers() {
@@ -210,7 +213,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
-    bindDataFetcherWithAnnotation(ArtifactSourceConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactSourceDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactSourceBatchDataFetcher.class);
 
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);

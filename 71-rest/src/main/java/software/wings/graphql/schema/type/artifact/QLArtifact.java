@@ -15,4 +15,5 @@ public class QLArtifact implements QLObject {
   private String id;
   private String buildNo;
   private Long collectedAt;
+  private String artifactSourceId;
 }

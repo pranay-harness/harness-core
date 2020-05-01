@@ -6,5 +6,5 @@ import lombok.Value;
 public class QLArtifactSourceQueryParam {
   private String serviceId;
   private String applicationId;
-  private String artifactId;
+  private String artifactSourceId;
 }
