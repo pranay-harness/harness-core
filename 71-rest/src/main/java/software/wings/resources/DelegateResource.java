@@ -485,13 +485,15 @@ public class DelegateResource {
   @Path("docker")
   @Timed
   @ExceptionMetered
+  @Deprecated
   public Response downloadDocker(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
+      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadDocker(
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadDocker(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)

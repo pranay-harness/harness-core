@@ -60,7 +60,8 @@ public interface DelegateService extends OwnedByAccount {
   String getLatestDelegateVersion(String accountId);
 
   File downloadScripts(String managerHost, String verificationServiceUrl, String accountId) throws IOException;
-  File downloadDocker(String managerHost, String verificationServiceUrl, String accountId) throws IOException;
+  File downloadDocker(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException;
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
       String delegateProfile) throws IOException;
   File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
