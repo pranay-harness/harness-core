@@ -26,10 +26,8 @@ public class LevelRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    Level phaseLevel = PhaseTestLevel.builder().build();
-    Level sectionLevel = SectionTestLevel.builder().build();
-    levelRegistry.register(PhaseTestLevel.LEVEL_TYPE, phaseLevel);
-    levelRegistry.register(SectionTestLevel.LEVEL_TYPE, sectionLevel);
+    levelRegistry.register(PhaseTestLevel.LEVEL_TYPE, PhaseTestLevel.class);
+    levelRegistry.register(SectionTestLevel.LEVEL_TYPE, SectionTestLevel.class);
 
     Level registeredPhaseLevel = levelRegistry.obtain(PhaseTestLevel.LEVEL_TYPE);
     assertThat(registeredPhaseLevel).isNotNull();
@@ -37,7 +35,7 @@ public class LevelRegistryTest extends OrchestrationBeansTest {
     Level registeredSectionLevel = levelRegistry.obtain(SectionTestLevel.LEVEL_TYPE);
     assertThat(registeredSectionLevel).isNotNull();
 
-    assertThatThrownBy(() -> levelRegistry.register(phaseLevel.getType(), phaseLevel))
+    assertThatThrownBy(() -> levelRegistry.register(PhaseTestLevel.LEVEL_TYPE, PhaseTestLevel.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> levelRegistry.obtain(StepTestLevel.LEVEL_TYPE))

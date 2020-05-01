@@ -2,6 +2,8 @@ package io.harness.reflection;
 
 import static java.lang.String.format;
 
+import com.google.common.base.Preconditions;
+
 import lombok.experimental.UtilityClass;
 
 import java.net.URL;
@@ -43,12 +45,12 @@ public class CodeUtils {
     return false;
   }
 
-  public static void checkHarnessClassBelongToModule(String location, Set<Class> classes) {
+  public static void checkHarnessClassBelongToModule(String location, Set<? extends Class> classes) {
     for (Class clazz : classes) {
       if (!CodeUtils.isHarnessClass(clazz)) {
         continue;
       }
-      final String clazzLocation = CodeUtils.location(clazz);
+      final String clazzLocation = Preconditions.checkNotNull(CodeUtils.location(clazz));
       if (clazzLocation.equals(location)) {
         continue;
       }

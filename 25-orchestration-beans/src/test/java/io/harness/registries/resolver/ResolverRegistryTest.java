@@ -30,11 +30,11 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     RefType refType = RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
-    resolverRegistry.register(refType, new SweepingOutputResolver());
+    resolverRegistry.register(refType, SweepingOutputResolver.class);
     Resolver resolver = resolverRegistry.obtain(refType);
     assertThat(resolver).isNotNull();
 
-    assertThatThrownBy(() -> resolverRegistry.register(refType, new SweepingOutputResolver()))
+    assertThatThrownBy(() -> resolverRegistry.register(refType, SweepingOutputResolver.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> resolverRegistry.obtain(RefType.builder().type("RANDOM").build()))

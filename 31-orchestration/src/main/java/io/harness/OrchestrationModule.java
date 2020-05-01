@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 
 import io.harness.engine.EngineObtainmentHelper;
@@ -48,9 +47,6 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
         .annotatedWith(Names.named("EngineExecutorService"))
         .toInstance(ThreadPool.create(
             1, 5, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("EngineExecutorService-%d").build()));
-
-    // Registry Listener loads the default entities into registries based on appropriate annotation
-    bindListener(Matchers.any(), new RegistryListener());
   }
 
   @Override

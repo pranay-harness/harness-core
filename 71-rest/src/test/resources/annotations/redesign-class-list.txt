@@ -1,4 +1,3 @@
-io.harness.RegistryListener
 io.harness.adviser.Advise
 io.harness.adviser.Adviser
 io.harness.adviser.AdviserObtainment
