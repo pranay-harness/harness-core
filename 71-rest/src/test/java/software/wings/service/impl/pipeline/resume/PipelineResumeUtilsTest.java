@@ -151,14 +151,14 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     PipelineStageExecution stageExecution2 =
         PipelineStageExecution.builder()
             .status(ExecutionStatus.SUCCESS)
-            .workflowExecutions(
-                Collections.singletonList(WorkflowExecution.builder().uuid(wfExecutionId2).workflowId(wfId2).build()))
+            .workflowExecutions(Collections.singletonList(
+                WorkflowExecution.builder().uuid(wfExecutionId2).name(wfExecutionId2).workflowId(wfId2).build()))
             .build();
     PipelineStageExecution stageExecution3 =
         PipelineStageExecution.builder()
             .status(ExecutionStatus.FAILED)
-            .workflowExecutions(
-                Collections.singletonList(WorkflowExecution.builder().uuid(wfExecutionId3).workflowId(wfId3).build()))
+            .workflowExecutions(Collections.singletonList(
+                WorkflowExecution.builder().uuid(wfExecutionId3).name(wfExecutionId3).workflowId(wfId3).build()))
             .build();
     PipelineStageExecution stageExecution4 = PipelineStageExecution.builder().build();
     workflowExecution.setPipelineExecution(
@@ -801,6 +801,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .workflowType(WorkflowType.ORCHESTRATION)
         .workflowId("wf" + workflowIdx)
+        .name("wfn" + workflowIdx)
         .status(ExecutionStatus.SUCCESS)
         .executionArgs(new ExecutionArgs())
         .build();

@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -375,33 +376,28 @@ public class PipelineResumeUtils {
                                      .map(pse -> (String) pse.getProperties().get(EnvStateKeys.workflowId))
                                      .filter(Objects::nonNull)
                                      .collect(Collectors.toSet());
-    Set<String> oldWorkflowIds = workflowExecutions.stream()
-                                     .map(WorkflowExecution::getWorkflowId)
-                                     .filter(Objects::nonNull)
-                                     .collect(Collectors.toSet());
+    Map<String, WorkflowExecution> oldWorkflowIdMap =
+        workflowExecutions.stream()
+            .filter(execution -> execution != null && execution.getWorkflowId() != null)
+            .collect(Collectors.toMap(WorkflowExecution::getWorkflowId, Function.identity()));
 
-    Set<String> diff = new HashSet<>(newWorkflowIds);
-    diff.removeAll(oldWorkflowIds);
+    Set<String> diff = new HashSet<>(oldWorkflowIdMap.keySet());
+    diff.removeAll(newWorkflowIds);
     if (isNotEmpty(diff)) {
-      throwWorkflowAddedException(stage.getName(), diff.iterator().next());
+      String workflowId = diff.iterator().next();
+      String workflowName = oldWorkflowIdMap.get(workflowId).getName();
+      throw new InvalidRequestException(format(
+          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
+          stage.getName(), isEmpty(workflowName) ? workflowId : workflowName));
     }
 
-    oldWorkflowIds.removeAll(newWorkflowIds);
-    if (isNotEmpty(oldWorkflowIds)) {
-      throwWorkflowRemovedException(stage.getName(), oldWorkflowIds.iterator().next());
+    diff = new HashSet<>(newWorkflowIds);
+    diff.removeAll(oldWorkflowIdMap.keySet());
+    if (isNotEmpty(diff)) {
+      throw new InvalidRequestException(format(
+          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
+          stage.getName(), diff.iterator().next()));
     }
-  }
-
-  private void throwWorkflowRemovedException(String stageName, String workflowId) {
-    throw new InvalidRequestException(format(
-        "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
-        stageName, workflowId));
-  }
-
-  private void throwWorkflowAddedException(String stageName, String workflowId) {
-    throw new InvalidRequestException(format(
-        "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
-        stageName, workflowId));
   }
 
   public void addLatestPipelineResumeFilter(String accountId, PageRequest<WorkflowExecution> pageRequest) {
