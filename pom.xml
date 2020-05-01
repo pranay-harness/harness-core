@@ -21,7 +21,8 @@
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>65-delegate-beans</module>
-        <module>71-delegate-agent</module>
+        <module>70-delegate-service</module>
+        <module>70-delegate-agent</module>
         <module>71-rest</module>
         <module>72-ci-beans</module>
         <module>72-event-server</module>
