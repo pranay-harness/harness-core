@@ -13,6 +13,8 @@ import lombok.ToString;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -264,6 +266,19 @@ public class StateExecutionData implements StateTransput {
     putNotNull(
         executionDetails, "startTs", ExecutionDataValue.builder().displayName("Started At").value(startTs).build());
     putNotNull(executionDetails, "endTs", ExecutionDataValue.builder().displayName("Ended At").value(endTs).build());
+
+    if (startTs != null && endTs != null) {
+      StringBuilder durationString = new StringBuilder();
+      Duration duration = Duration.between(Instant.ofEpochMilli(startTs), Instant.ofEpochMilli(endTs));
+      durationString.append(duration.toDays() > 0 ? String.format("%dd", duration.toDays()) : "")
+          .append(duration.toHours() % 24 > 0 ? String.format(" %dh", duration.toHours() % 24) : "")
+          .append(duration.toMinutes() % 60 > 0 ? String.format(" %dm", duration.toMinutes() % 60) : "")
+          .append(duration.getSeconds() % 60 > 0 ? String.format(" %ds", duration.getSeconds() % 60) : "");
+      if (durationString.length() > 0) {
+        putNotNull(executionDetails, "duration",
+            ExecutionDataValue.builder().displayName("Duration").value(durationString.toString()).build());
+      }
+    }
 
     if (getDelegateMetaInfo() != null) {
       putNotNull(executionDetails, "delegateName",
