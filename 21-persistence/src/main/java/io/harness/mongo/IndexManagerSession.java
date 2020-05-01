@@ -227,18 +227,31 @@ public class IndexManagerSession {
 
         IndexCreator newCreator = IndexCreator.builder().collection(collection).keys(keys).options(options).build();
 
-        for (IndexCreator creator : creators.values()) {
-          if (creator.sameKeySet(newCreator)) {
-            logger.error("Index {} and {} have the same set of keys", newCreator.getOptions().toString(),
-                creator.getOptions().toString());
-          }
-        }
+        checkWithTheOthers(creators, newCreator);
 
         creators.put(indexName, newCreator);
       });
     }
 
     return creators;
+  }
+
+  private static void checkWithTheOthers(Map<String, IndexCreator> creators, IndexCreator newCreator) {
+    for (IndexCreator creator : creators.values()) {
+      if (creator.sameKeySet(newCreator)) {
+        logger.error("Index {} and {} have the same set of keys", newCreator.getOptions().toString(),
+            creator.getOptions().toString());
+      }
+
+      if (creator.isSubsequence(newCreator)) {
+        logger.error("Index {} is a subsequence of index {}", newCreator.getOptions().toString(),
+            creator.getOptions().toString());
+      }
+      if (newCreator.isSubsequence(creator)) {
+        logger.error("Index {} is a subsequence of index {}", creator.getOptions().toString(),
+            newCreator.getOptions().toString());
+      }
+    }
   }
 
   IndexManagerSession(IndexManager.Mode mode) {

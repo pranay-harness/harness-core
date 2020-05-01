@@ -30,6 +30,28 @@ public class IndexManager {
     private BasicDBObject keys;
     private BasicDBObject options;
 
+    public static boolean subsequenceKeys(BasicDBObject base, BasicDBObject subsequence) {
+      if (base.size() <= subsequence.size()) {
+        return false;
+      }
+
+      Iterator<Entry<String, Object>> iteratorBase = base.entrySet().iterator();
+      Iterator<Entry<String, Object>> iteratorSubsequence = subsequence.entrySet().iterator();
+      while (iteratorSubsequence.hasNext()) {
+        Entry<String, Object> entryBase = iteratorBase.next();
+        Entry<String, Object> entrySubsequence = iteratorSubsequence.next();
+
+        if (!entryBase.getKey().equals(entrySubsequence.getKey())) {
+          return false;
+        }
+        if (!entryBase.getValue().equals(entrySubsequence.getValue())) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     public static boolean compareKeys(BasicDBObject keys1, BasicDBObject keys2) {
       Iterator<Entry<String, Object>> iterator1 = keys1.entrySet().iterator();
       Iterator<Entry<String, Object>> iterator2 = keys2.entrySet().iterator();
@@ -50,6 +72,10 @@ public class IndexManager {
 
     public boolean sameKeySet(IndexCreator other) {
       return getKeys().toMap().keySet().equals(other.getKeys().toMap().keySet());
+    }
+
+    public boolean isSubsequence(IndexCreator other) {
+      return subsequenceKeys(getKeys(), other.getKeys());
     }
   }
 
