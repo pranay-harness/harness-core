@@ -942,7 +942,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadScripts(String managerHost, String verificationUrl, String accountId) throws IOException {
+  public File downloadScripts(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException {
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
@@ -957,11 +958,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
+      if (isBlank(delegateProfile) || delegateProfileService.get(accountId, delegateProfile) == null) {
+        delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
+      }
+
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                                                                      .accountId(accountId)
                                                                                      .version(version)
                                                                                      .managerHost(managerHost)
                                                                                      .verificationHost(verificationUrl)
+                                                                                     .delegateName(delegateName)
+                                                                                     .delegateProfile(delegateProfile)
                                                                                      .build());
 
       if (isEmpty(scriptParams)) {

@@ -386,12 +386,13 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   public Response downloadScripts(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
+      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadScripts(
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), accountId);
+      File delegateFile = delegateService.downloadScripts(subdomainUrlHelper.getManagerUrl(request, accountId),
+          getVerificationUrl(request), accountId, delegateName, delegateProfileId);
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)

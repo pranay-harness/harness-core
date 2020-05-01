@@ -1,4 +1,57 @@
-<#include "common.sh.ftl">
+#!/bin/bash -ex
+
+(
+mkdir -p logs
+echo
+echo "` date +%d/%m/%Y%t%H:%M:%S `    ###########################"
+
+if [ ! -e start.sh ]; then
+  echo
+  echo "Delegate must not be run from a different directory"
+  echo
+  exit 1
+fi
+
+JRE_DIR=jre1.8.0_191
+JRE_BINARY=$JRE_DIR/bin/java
+case "$OSTYPE" in
+  solaris*)
+    OS=solaris
+    ;;
+  darwin*)
+    OS=macosx
+    JRE_DIR=jre1.8.0_191.jre
+    JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
+    ;;
+  linux*)
+    OS=linux
+    ;;
+  bsd*)
+    echo "freebsd not supported."
+    exit 1;
+    ;;
+  msys*)
+    echo "For windows execute run.bat"
+    exit 1;
+    ;;
+  cygwin*)
+    echo "For windows execute run.bat"
+    exit 1;
+    ;;
+  *)
+    echo "unknown: $OSTYPE"
+    ;;
+esac
+
+JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-${OS}-x64.tar.gz
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 if [ -z "$1" ]; then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
@@ -34,7 +87,7 @@ else
   fi
 fi
 
-export MANAGER_HOST_AND_PORT=${managerHostAndPort}
+export MANAGER_HOST_AND_PORT=https://localhost:9090
 if [ -e proxy.config ]; then
   source proxy.config
   if [[ $PROXY_HOST != "" ]]; then
@@ -42,7 +95,7 @@ if [ -e proxy.config ]; then
     if [[ $PROXY_USER != "" ]]; then
       export PROXY_USER
       if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
-        export PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
+        export PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K 4143434f554e)
       fi
       export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
     else
@@ -56,11 +109,9 @@ if [ -e proxy.config ]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-<#noparse>
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
     MANAGER_HOST="${MANAGER_HOST:2}"
-</#noparse>
     echo "No proxy for Harness manager at $MANAGER_HOST"
     if [[ $NO_PROXY == "" ]]; then
       NO_PROXY=$MANAGER_HOST
@@ -87,12 +138,12 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   rm -f $JVM_TAR_FILENAME
 fi
 
-export DEPLOY_MODE=${deployMode}
+export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=${delegateStorageUrl}
-  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/${delegateCheckLocation})
+  DELEGATE_STORAGE_URL=http://localhost:8888
+  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
@@ -111,20 +162,20 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
 fi
 
 if [ ! -e config-delegate.yml ]; then
-  echo "accountId: ${accountId}" > config-delegate.yml
-  echo "accountSecret: ${accountSecret}" >> config-delegate.yml
+  echo "accountId: ACCOUNT_ID" > config-delegate.yml
+  echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
 fi
 test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
-  echo "managerUrl: ${managerHostAndPort}/api/" >> config-delegate.yml
+  echo "managerUrl: https://localhost:9090/api/" >> config-delegate.yml
 fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
-  echo "verificationServiceUrl: ${managerHostAndPort}/verification/" >> config-delegate.yml
+  echo "verificationServiceUrl: https://localhost:9090/verification/" >> config-delegate.yml
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
-  echo "watcherCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-delegate.yml
+  echo "watcherCheckLocation: http://localhost:8888/watcherci.txt" >> config-delegate.yml
 else
-  sed -i.bak "s|^watcherCheckLocation:.*$|watcherCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}|" config-delegate.yml
+  sed -i.bak "s|^watcherCheckLocation:.*$|watcherCheckLocation: http://localhost:8888/watcherci.txt|" config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
@@ -150,26 +201,21 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
 fi
 
 if ! `grep useCdn config-delegate.yml > /dev/null`; then
-  echo "useCdn: ${useCdn}" >> config-delegate.yml
+  echo "useCdn: false" >> config-delegate.yml
 else
-  sed -i.bak "s|^useCdn:.*$|useCdn: ${useCdn}|" config-delegate.yml
+  sed -i.bak "s|^useCdn:.*$|useCdn: false|" config-delegate.yml
 fi
 if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
-  echo "cdnUrl: ${cdnUrl}" >> config-delegate.yml
+  echo "cdnUrl: http://localhost:9500" >> config-delegate.yml
 else
-  sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
+  sed -i.bak "s|^cdnUrl:.*$|cdnUrl: http://localhost:9500|" config-delegate.yml
 fi
 
 rm -f -- *.bak
 
-export KUBECTL_VERSION=${kubectlVersion}
+export KUBECTL_VERSION=v1.12.2
 
-<#if delegateName??>
-export DELEGATE_NAME=${delegateName}
-</#if>
-<#if delegateProfile??>
-export DELEGATE_PROFILE=${delegateProfile}
-</#if>
+export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

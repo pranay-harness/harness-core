@@ -1,4 +1,57 @@
-<#include "common.sh.ftl">
+#!/bin/bash -ex
+
+(
+mkdir -p logs
+echo
+echo "` date +%d/%m/%Y%t%H:%M:%S `    ###########################"
+
+if [ ! -e start.sh ]; then
+  echo
+  echo "Delegate must not be run from a different directory"
+  echo
+  exit 1
+fi
+
+JRE_DIR=jre1.8.0_191
+JRE_BINARY=$JRE_DIR/bin/java
+case "$OSTYPE" in
+  solaris*)
+    OS=solaris
+    ;;
+  darwin*)
+    OS=macosx
+    JRE_DIR=jre1.8.0_191.jre
+    JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
+    ;;
+  linux*)
+    OS=linux
+    ;;
+  bsd*)
+    echo "freebsd not supported."
+    exit 1;
+    ;;
+  msys*)
+    echo "For windows execute run.bat"
+    exit 1;
+    ;;
+  cygwin*)
+    echo "For windows execute run.bat"
+    exit 1;
+    ;;
+  *)
+    echo "unknown: $OSTYPE"
+    ;;
+esac
+
+JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-${OS}-x64.tar.gz
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 ULIM=$(ulimit -n)
 if [[ "$ULIM" == "unlimited" || $ULIM -lt 10000 ]]; then
@@ -39,7 +92,7 @@ else
   fi
 fi
 
-export MANAGER_HOST_AND_PORT=${managerHostAndPort}
+export MANAGER_HOST_AND_PORT=https://localhost:9090
 if [[ -e proxy.config ]]; then
   source proxy.config
   if [[ $PROXY_HOST != "" ]]; then
@@ -47,7 +100,7 @@ if [[ -e proxy.config ]]; then
     if [[ $PROXY_USER != "" ]]; then
       export PROXY_USER
       if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
-        export PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
+        export PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K 4143434f554e)
       fi
       export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
     else
@@ -61,11 +114,9 @@ if [[ -e proxy.config ]]; then
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
     export MANAGER_PROXY_CURL=$PROXY_CURL
   else
-<#noparse>
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
     MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
     MANAGER_HOST="${MANAGER_HOST:2}"
-</#noparse>
     echo "No proxy for Harness manager at $MANAGER_HOST"
     if [[ $NO_PROXY == "" ]]; then
       NO_PROXY=$MANAGER_HOST
@@ -92,7 +143,7 @@ if [[ "$OSTYPE" == linux* ]]; then
   fi
 fi
 
-ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks ${managerHostAndPort}/api/account/${accountId}/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+ACCOUNT_STATUS=$(curl $MANAGER_PROXY_CURL -ks https://localhost:9090/api/account/ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   rm README.txt delegate.sh proxy.config start.sh stop.sh
   touch __deleted__
@@ -114,15 +165,15 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
-USE_CDN=${useCdn}
+USE_CDN=false
 
 echo "Checking Watcher latest version..."
-WATCHER_STORAGE_URL=${watcherStorageUrl}
-REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/${watcherCheckLocation})
+WATCHER_STORAGE_URL=http://localhost:8888
+REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/watcherci.txt)
 if [ "$USE_CDN" = false ]; then
     REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
-    REMOTE_WATCHER_URL=${remoteWatcherUrlCdn}/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+    REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
@@ -139,12 +190,12 @@ else
   fi
 fi
 
-export DEPLOY_MODE=${deployMode}
+export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=${delegateStorageUrl}
-  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/${delegateCheckLocation})
+  DELEGATE_STORAGE_URL=http://localhost:8888
+  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
@@ -163,42 +214,37 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
 fi
 
 if [ ! -e config-watcher.yml ]; then
-  echo "accountId: ${accountId}" > config-watcher.yml
+  echo "accountId: ACCOUNT_ID" > config-watcher.yml
 fi
 test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
 set +x
 if ! `grep accountSecret config-watcher.yml > /dev/null`; then
-  echo "accountSecret: ${accountSecret}" >> config-watcher.yml
+  echo "accountSecret: ACCOUNT_KEY" >> config-watcher.yml
 fi
 set -x
 if ! `grep managerUrl config-watcher.yml > /dev/null`; then
-  echo "managerUrl: ${managerHostAndPort}/api/" >> config-watcher.yml
+  echo "managerUrl: https://localhost:9090/api/" >> config-watcher.yml
 fi
 if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
 fi
 if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-watcher.yml
+  echo "upgradeCheckLocation: http://localhost:8888/watcherci.txt" >> config-watcher.yml
 else
-  sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}|" config-watcher.yml
+  sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: http://localhost:8888/watcherci.txt|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
-  echo "delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}" >> config-watcher.yml
+  echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml
 else
-  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}|" config-watcher.yml
+  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:8888/delegateci.txt|" config-watcher.yml
 fi
 
 rm -f -- *.bak
 
-<#if delegateName??>
-export DELEGATE_NAME=${delegateName}
-</#if>
-<#if delegateProfile??>
-export DELEGATE_PROFILE=${delegateProfile}
-</#if>
+export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

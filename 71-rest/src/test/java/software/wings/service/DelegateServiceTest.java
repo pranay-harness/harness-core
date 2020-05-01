@@ -715,11 +715,55 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldDownloadScripts() throws IOException, TemplateException {
+  public void shouldDownloadScripts() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+    File gzipFile = delegateService.downloadScripts(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
     when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
+    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDownloadScriptsWithPrimaryProfile() throws IOException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
+    File gzipFile = delegateService.downloadScripts(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
+    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
+    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+
+    when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
+    gzipFile = delegateService.downloadScripts(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
+    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDownloadScriptsWithoutDelegateName() throws IOException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+    File gzipFile = delegateService.downloadScripts(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID);
+    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
+    verifyDownloadScriptsResult(
+        gzipFile, "/expectedStartWithoutDelegateName.sh", "/expectedDelegateWithoutDelegateName.sh");
+  }
+
+  private void verifyDownloadScriptsResult(File gzipFile, String expectedStartFilepath, String expectedDelegateFilepath)
+      throws IOException {
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -732,7 +776,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStart.sh"))));
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
@@ -742,7 +787,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegate.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
@@ -772,8 +817,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadScriptsForOpenJdk() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(true);
-    File gzipFile = delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
+    File gzipFile = delegateService.downloadScripts(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
