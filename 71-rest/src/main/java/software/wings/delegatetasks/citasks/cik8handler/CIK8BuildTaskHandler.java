@@ -61,7 +61,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     String namespace = kubernetesConfig.getNamespace();
 
     K8sTaskExecutionResponse result;
-    try (AutoLogContext ignore1 = new CIK8LogContext(podParams.getName(), OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
         KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
         createGitSecret(kubernetesClient, kubernetesConfig, gitFetchFilesConfig);

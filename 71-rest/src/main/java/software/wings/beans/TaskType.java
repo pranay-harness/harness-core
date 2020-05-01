@@ -54,6 +54,7 @@ import software.wings.delegatetasks.aws.AwsRoute53Task;
 import software.wings.delegatetasks.aws.AwsS3Task;
 import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
 import software.wings.delegatetasks.citasks.CIBuildCommandTask;
+import software.wings.delegatetasks.citasks.ExecuteCommandTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -403,6 +404,7 @@ public enum TaskType {
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK, HelmValuesFetchTask.class, HelmRepoConfigValidation.class),
   SLACK(TaskGroup.SLACK, ServiceImplDelegateTask.class, SlackValidation.class),
   CI_BUILD(TaskGroup.CI, CIBuildCommandTask.class, AlwaysTrueValidation.class),
+  EXECUTE_COMMAND(TaskGroup.CI, ExecuteCommandTask.class, AlwaysTrueValidation.class),
   AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class);
 
   private final TaskGroup taskGroup;
