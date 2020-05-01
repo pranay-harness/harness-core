@@ -1053,7 +1053,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadDocker(String managerHost, String verificationUrl, String accountId) throws IOException {
+  public File downloadDocker(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException {
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
@@ -1068,19 +1069,32 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = EMPTY_VERSION;
       }
 
+      if (isBlank(delegateProfile) || delegateProfileService.get(accountId, delegateProfile) == null) {
+        delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
+      }
+
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                                                                      .accountId(accountId)
                                                                                      .version(version)
                                                                                      .managerHost(managerHost)
                                                                                      .verificationHost(verificationUrl)
+                                                                                     .delegateName(delegateName)
+                                                                                     .delegateProfile(delegateProfile)
                                                                                      .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
       }
 
+      String templateName;
+      if (isBlank(delegateName)) {
+        templateName = "launch-" + HARNESS_DELEGATE + "-without-name.sh.ftl";
+      } else {
+        templateName = "launch-" + HARNESS_DELEGATE + ".sh.ftl";
+      }
+
       File launch = File.createTempFile("launch-" + HARNESS_DELEGATE, ".sh");
-      saveProcessedTemplate(scriptParams, launch, "launch-" + HARNESS_DELEGATE + ".sh.ftl");
+      saveProcessedTemplate(scriptParams, launch, templateName);
       launch = new File(launch.getAbsolutePath());
       TarArchiveEntry launchTarArchiveEntry =
           new TarArchiveEntry(launch, DOCKER_DELEGATE + "/launch-" + HARNESS_DELEGATE + ".sh");

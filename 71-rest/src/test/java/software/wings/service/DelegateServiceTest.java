@@ -166,6 +166,8 @@ import java.util.zip.GZIPInputStream;
 
 public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
+  private static final String DELEGATE_NAME = "harness-delegate";
+  private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
   private static final DelegateBuilder BUILDER = Delegate.builder()
                                                      .accountId(ACCOUNT_ID)
                                                      .ip("127.0.0.1")
@@ -826,7 +828,51 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadDocker() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadDocker("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+    File gzipFile = delegateService.downloadDocker(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
+    verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
+  }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void shouldDownloadDockerWithoutDelegateName() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+    File gzipFile = delegateService.downloadDocker(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, null, DELEGATE_PROFILE_ID);
+    verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegateWithoutName.sh");
+
+    gzipFile = delegateService.downloadDocker(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID);
+    verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegateWithoutName.sh");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDownloadDockerWithPrimaryProfile() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
+    File gzipFile = delegateService.downloadDocker(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
+    verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
+
+    when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
+    gzipFile = delegateService.downloadDocker(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
+    verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
+  }
+
+  private void verifyDownloadDockerResult(File gzipFile, String expectedLaunchDelegateFilepath) throws IOException {
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -840,7 +886,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchHarnessDelegate.sh"))));
+              new InputStreamReader(getClass().getResourceAsStream(expectedLaunchDelegateFilepath))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(DOCKER_DELEGATE + "/README.txt");

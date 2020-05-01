@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -309,6 +310,57 @@ public class DelegateResourceTest extends CategoryTest {
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.DELEGATE_DIR + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDownloadDocker() throws Exception {
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+    when(DELEGATE_SERVICE.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/delegates/docker?accountId=" + ACCOUNT_ID
+                                    + "&token=token&delegateName=delegateName&delegateProfileId=delegateProfileId")
+                                .request()
+                                .get(new GenericType<Response>() {});
+
+    verify(DELEGATE_SERVICE, atLeastOnce())
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
+    verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.DOCKER_DELEGATE + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDownloadDockerWithoutNameAndProfile() throws Exception {
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+    when(DELEGATE_SERVICE.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/delegates/docker?accountId=" + ACCOUNT_ID + "&token=token")
+                                .request()
+                                .get(new GenericType<Response>() {});
+
+    verify(DELEGATE_SERVICE, atLeastOnce())
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
+    verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.DOCKER_DELEGATE + ".tar.gz");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
         .isEqualTo("Test");
   }

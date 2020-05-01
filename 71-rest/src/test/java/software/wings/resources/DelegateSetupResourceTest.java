@@ -399,13 +399,41 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadDocker(anyString(), anyString(), anyString())).thenReturn(file);
+    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/docker?accountId=" + ACCOUNT_ID
+                                    + "&token=token&delegateName=delegateName&delegateProfileId=delegateProfileId")
+                                .request()
+                                .get(new GenericType<Response>() {});
+
+    verify(delegateService, atLeastOnce())
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
+    verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.DOCKER_DELEGATE + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldDownloadDockerWithoutNameAndProfile() throws Exception {
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/docker?accountId=" + ACCOUNT_ID + "&token=token")
                                 .request()
                                 .get(new GenericType<Response>() {});
 
-    verify(delegateService, atLeastOnce()).downloadDocker(anyString(), anyString(), anyString());
+    verify(delegateService, atLeastOnce())
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
