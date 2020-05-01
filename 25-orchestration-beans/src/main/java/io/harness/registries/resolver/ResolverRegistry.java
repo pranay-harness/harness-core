@@ -38,9 +38,4 @@ public class ResolverRegistry implements Registry<RefType, Class<? extends Resol
   public RegistryType getType() {
     return RegistryType.RESOLVER;
   }
-
-  @Override
-  public Class<Resolver> getRegistrableEntityClass() {
-    return Resolver.class;
-  }
 }

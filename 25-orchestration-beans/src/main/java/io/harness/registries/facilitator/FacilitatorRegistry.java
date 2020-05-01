@@ -36,11 +36,6 @@ public class FacilitatorRegistry implements Registry<FacilitatorType, Class<? ex
   }
 
   @Override
-  public Class<Facilitator> getRegistrableEntityClass() {
-    return Facilitator.class;
-  }
-
-  @Override
   public RegistryType getType() {
     return RegistryType.FACILITATOR;
   }

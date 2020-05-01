@@ -40,9 +40,4 @@ public class LevelRegistry implements Registry<LevelType, Class<? extends Level>
   public RegistryType getType() {
     return RegistryType.LEVEL;
   }
-
-  @Override
-  public Class<Level> getRegistrableEntityClass() {
-    return Level.class;
-  }
 }

@@ -36,11 +36,6 @@ public class StateRegistry implements Registry<StateType, Class<State>> {
   }
 
   @Override
-  public Class<State> getRegistrableEntityClass() {
-    return State.class;
-  }
-
-  @Override
   public RegistryType getType() {
     return RegistryType.STATE;
   }
