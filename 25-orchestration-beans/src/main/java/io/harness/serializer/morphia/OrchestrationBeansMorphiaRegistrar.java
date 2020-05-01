@@ -1,6 +1,5 @@
 package io.harness.serializer.morphia;
 
-import io.harness.data.OutcomeInstance;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
 import io.harness.state.core.fork.ForkStateParameters;
@@ -16,7 +15,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Plan.class);
     set.add(NodeExecution.class);
     set.add(PlanExecution.class);
-    set.add(OutcomeInstance.class);
   }
 
   @Override

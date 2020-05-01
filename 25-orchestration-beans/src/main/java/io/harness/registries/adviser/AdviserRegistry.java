@@ -37,11 +37,6 @@ public class AdviserRegistry implements Registry<AdviserType, Class<? extends Ad
   }
 
   @Override
-  public Class<Adviser> getRegistrableEntityClass() {
-    return Adviser.class;
-  }
-
-  @Override
   public RegistryType getType() {
     return RegistryType.ADVISER;
   }

@@ -9,6 +9,4 @@ public interface Registry<K extends RegistryKey, V extends Class<? extends Regis
   RegistrableEntity<K> obtain(K k);
 
   RegistryType getType();
-
-  V getRegistrableEntityClass();
 }
