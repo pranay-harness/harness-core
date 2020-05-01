@@ -75,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>71-delegate-agent</artifactId>
+            <artifactId>70-delegate-agent</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
