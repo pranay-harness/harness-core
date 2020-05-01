@@ -63,6 +63,6 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
     List<String> keys = executionDetails.keySet().stream().collect(Collectors.toList());
     assertThat(keys).isNotNull().containsExactlyInAnyOrder("startTs", "endTs", "authorizationStatus",
         "isUserAuthorized", "approvalId", "status", "timeoutMins", "approvalCriteria", "currentStatus",
-        "rejectionCriteria", "approvedBy", "variables", "comments");
+        "rejectionCriteria", "approvedBy", "variables", "comments", "duration");
   }
 }
