@@ -62,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 
 public class EcsSteadyStateCheck extends State {
-  public static final String ECS_STEADY_STATE_CHECK_COMMAND_NAME = "Ecs Steady State Check";
+  public static final String ECS_STEADY_STATE_CHECK_COMMAND_NAME = "ECS Steady State Check";
 
   @Inject private transient AppService appService;
   @Inject private transient SecretManager secretManager;
