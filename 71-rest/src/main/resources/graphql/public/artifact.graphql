@@ -14,5 +14,9 @@ type Artifact {
   collectedAt: DateTime
 
   artifactSource: ArtifactSource
-    @dataFetcher(name: artifactSourceConnection, contextFieldArgsMap: "{ \"artifactId\": \"id\"}")
+    @dataFetcher(
+      name: artifactSource
+      useBatch: true
+      contextFieldArgsMap: "{ \"artifactSourceId\": \"artifactSourceId\"}"
+    )
 }

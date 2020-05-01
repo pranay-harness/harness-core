@@ -28,6 +28,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.datafetcher.artifact.ArtifactController;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
@@ -48,6 +49,7 @@ import software.wings.graphql.schema.type.QLWorkflowExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionBuilder;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.graphql.schema.type.artifact.QLArtifact;
+import software.wings.graphql.schema.type.artifact.QLArtifact.QLArtifactBuilder;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.AppLogContext;
@@ -126,12 +128,11 @@ public class WorkflowExecutionController {
     if (isNotEmpty(workflowExecution.getArtifacts())) {
       artifacts = workflowExecution.getArtifacts()
                       .stream()
-                      .map(artifact
-                          -> QLArtifact.builder()
-                                 .id(artifact.getUuid())
-                                 .buildNo(artifact.getBuildNo())
-                                 .collectedAt(artifact.getCreatedAt())
-                                 .build())
+                      .map(artifact -> {
+                        QLArtifactBuilder qlArtifactBuilder = QLArtifact.builder();
+                        ArtifactController.populateArtifact(artifact, qlArtifactBuilder);
+                        return qlArtifactBuilder.build();
+                      })
                       .collect(Collectors.toList());
     }
 

@@ -7,6 +7,9 @@ import software.wings.graphql.schema.type.artifact.QLArtifact.QLArtifactBuilder;
 @UtilityClass
 public class ArtifactController {
   public static void populateArtifact(Artifact artifact, QLArtifactBuilder qlArtifactBuilder) {
-    qlArtifactBuilder.id(artifact.getUuid()).buildNo(artifact.getBuildNo()).collectedAt(artifact.getCreatedAt());
+    qlArtifactBuilder.id(artifact.getUuid())
+        .buildNo(artifact.getBuildNo())
+        .collectedAt(artifact.getCreatedAt())
+        .artifactSourceId(artifact.getArtifactStreamId());
   }
 }

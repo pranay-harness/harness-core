@@ -104,5 +104,5 @@ enum DataFetcherEnum {
   workflowVariableConnection
   pipelineVariableConnection
   serviceArtifactSourceConnection
-  artifactSourceConnection
+  artifactSource
 }
