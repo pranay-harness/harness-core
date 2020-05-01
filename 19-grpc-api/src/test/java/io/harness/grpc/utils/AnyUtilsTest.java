@@ -9,9 +9,9 @@ import com.google.protobuf.Any;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.DataFormatException;
-import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,7 +38,7 @@ public class AnyUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldThrowDataFormatExceptionIfUnpackingInvalidProto() throws Exception {
     assertThatExceptionOfType(DataFormatException.class)
-        .isThrownBy(() -> AnyUtils.unpack(Any.pack(Lifecycle.newBuilder().build()), SamplePerpetualTaskParams.class));
+        .isThrownBy(() -> AnyUtils.unpack(Any.pack(Lifecycle.newBuilder().build()), AggregatedUsage.class));
   }
 
   @Test
