@@ -244,6 +244,9 @@ fi
 
 rm -f -- *.bak
 
+export DELEGATE_NAME=harness-delegate
+export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
+
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
