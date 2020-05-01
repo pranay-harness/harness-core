@@ -15,7 +15,7 @@ public interface Constants {
    */
   String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
 
-  String ECS_STEADY_STATE_CHECK = "Ecs Steady State Check";
+  String ECS_STEADY_STATE_CHECK = "ECS Steady State Check";
   /**
    * The constant KUBERNETES_SWAP_SERVICE_SELECTORS.
    */

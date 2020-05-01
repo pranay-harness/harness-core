@@ -122,7 +122,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof EcsSteadyStateCheckParams).isTrue();
     EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) delegateTask.getData().getParameters()[0];
-    assertThat("Ecs Steady State Check").isEqualTo(params.getCommandName());
+    assertThat("ECS Steady State Check").isEqualTo(params.getCommandName());
     assertThat(APP_ID).isEqualTo(params.getAppId());
     assertThat(ACCOUNT_ID).isEqualTo(params.getAccountId());
     assertThat(ACTIVITY_ID).isEqualTo(params.getActivityId());
