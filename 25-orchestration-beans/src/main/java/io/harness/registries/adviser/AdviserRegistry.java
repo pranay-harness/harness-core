@@ -1,5 +1,7 @@
 package io.harness.registries.adviser;
 
+import static org.joor.Reflect.on;
+
 import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
@@ -17,19 +19,19 @@ import javax.validation.Valid;
 
 @Redesign
 @Singleton
-public class AdviserRegistry implements Registry<AdviserType, Adviser> {
-  private Map<AdviserType, Adviser> registry = new ConcurrentHashMap<>();
+public class AdviserRegistry implements Registry<AdviserType, Class<? extends Adviser>> {
+  private Map<AdviserType, Class<? extends Adviser>> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull AdviserType adviserType, @NonNull Adviser adviser) {
+  public void register(@NonNull AdviserType adviserType, @NonNull Class<? extends Adviser> adviserClass) {
     if (registry.containsKey(adviserType)) {
       throw new DuplicateRegistryException(getType(), "Adviser Already Registered with this type: " + adviserType);
     }
-    registry.put(adviserType, adviser);
+    registry.put(adviserType, adviserClass);
   }
 
   public Adviser obtain(@Valid AdviserType adviserType) {
     if (registry.containsKey(adviserType)) {
-      return registry.get(adviserType);
+      return on(registry.get(adviserType)).create().get();
     }
     throw new UnregisteredKeyAccessException(getType(), "No Adviser registered for type: " + adviserType);
   }

@@ -33,13 +33,13 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     AdviserType adviserType = AdviserType.builder().type("Type1").build();
     AdviserParameters parameters = Type1AdviserParameters.builder().name("paramName").build();
     AdviserObtainment obtainment = AdviserObtainment.builder().type(adviserType).parameters(parameters).build();
-    adviserRegistry.register(adviserType, new Type1Adviser());
+    adviserRegistry.register(adviserType, Type1Adviser.class);
     Adviser adviser = adviserRegistry.obtain(adviserType);
     assertThat(adviser).isNotNull();
     assertThat(adviser.getType()).isEqualTo(adviserType);
     Type1Adviser type1Adviser = (Type1Adviser) adviser;
 
-    assertThatThrownBy(() -> adviserRegistry.register(adviserType, new Type1Adviser()))
+    assertThatThrownBy(() -> adviserRegistry.register(adviserType, Type1Adviser.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> adviserRegistry.obtain(AdviserType.builder().type(AdviserType.IGNORE).build()))

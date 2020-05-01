@@ -37,13 +37,13 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
     FacilitatorParameters parameters = Type1FacilitatorParameters.builder().name("paramName").build();
     FacilitatorObtainment obtainment =
         FacilitatorObtainment.builder().type(facilitatorType).parameters(parameters).build();
-    facilitatorRegistry.register(facilitatorType, new Type1Facilitator());
+    facilitatorRegistry.register(facilitatorType, Type1Facilitator.class);
     Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
     assertThat(facilitator.getType()).isEqualTo(facilitatorType);
     Type1Facilitator type1Adviser = (Type1Facilitator) facilitator;
 
-    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1Facilitator()))
+    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, Type1Facilitator.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type(FacilitatorType.SKIP).build()))
