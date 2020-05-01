@@ -150,10 +150,6 @@ public class KubernetesHelperService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, apiVersion);
 
-    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
-      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
-    }
-
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
       namespace = config.getNamespace();
@@ -169,10 +165,6 @@ public class KubernetesHelperService {
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
 
-    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
-      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
-    }
-
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
       namespace = config.getNamespace();
@@ -184,7 +176,7 @@ public class KubernetesHelperService {
     }
   }
 
-  private Config getConfig(
+  public Config getConfig(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     if (!kubernetesConfig.isDecrypted()) {
       encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
@@ -226,15 +218,16 @@ public class KubernetesHelperService {
       configBuilder.withApiVersion(apiVersion);
     }
 
-    return configBuilder.build();
+    Config config = configBuilder.build();
+    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
+      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
+    }
+
+    return config;
   }
 
   public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
-
-    if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
-      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
-    }
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
@@ -272,7 +265,7 @@ public class KubernetesHelperService {
    * super(createHttpClient(config), config)
    */
   @VisibleForTesting
-  OkHttpClient createHttpClientWithProxySetting(final Config config) {
+  public OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
       httpClientBuilder.proxy(Http.checkAndGetNonProxyIfApplicable(config.getMasterUrl()));

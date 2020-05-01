@@ -5,21 +5,25 @@ package software.wings.delegatetasks.citasks.cik8handler;
  */
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GitConfig;
 import software.wings.beans.container.ImageDetails;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class CIK8CtlHandler {
   @Inject private SecretSpecBuilder secretSpecBuilder;
+  @Inject Provider<ExecCommandListener> execListenerProvider;
 
   public void createRegistrySecret(KubernetesClient kubernetesClient, String namespace, ImageDetails imageDetails) {
     Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetails, namespace);
@@ -38,5 +42,21 @@ public class CIK8CtlHandler {
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
     }
+  }
+
+  /**
+   * Executes a command or a list of commands on a container in a pod.
+   */
+  public boolean executeCommand(KubernetesClient kubernetesClient, String podName, String containerName,
+      String namespace, String[] commands, Integer timeoutSecs) throws InterruptedException, TimeoutException {
+    ExecCommandListener execListener = execListenerProvider.get();
+    ExecWatch watch = kubernetesClient.pods()
+                          .inNamespace(namespace)
+                          .withName(podName)
+                          .inContainer(containerName)
+                          .redirectingInput()
+                          .usingListener(execListener)
+                          .exec(commands);
+    return execListener.getReturnStatus(watch, timeoutSecs);
   }
 }

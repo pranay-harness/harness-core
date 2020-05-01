@@ -242,6 +242,10 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.beans.ci.CIClusterType;
 import software.wings.beans.ci.CIK8BuildTaskParams;
+import software.wings.beans.ci.ExecuteCommandTaskParams;
+import software.wings.beans.ci.K8ExecCommandParams;
+import software.wings.beans.ci.K8ExecuteCommandTaskParams;
+import software.wings.beans.ci.ShellScriptType;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
@@ -379,6 +383,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.citasks.CIBuildTaskHandler;
+import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.jira.JiraAction;
@@ -1590,5 +1595,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SectionLevel.class, 7363);
     kryo.register(StepLevel.class, 7364);
     kryo.register(AzureEnvironmentType.class, 7365);
+    kryo.register(ExecuteCommandTaskParams.class, 7366);
+    kryo.register(K8ExecuteCommandTaskParams.class, 7367);
+    kryo.register(K8ExecCommandParams.class, 7368);
+    kryo.register(ExecuteCommandTaskParams.Type.class, 7369);
+    kryo.register(ExecuteCommandTaskHandler.Type.class, 7370);
+    kryo.register(ShellScriptType.class, 7371);
   }
 }
