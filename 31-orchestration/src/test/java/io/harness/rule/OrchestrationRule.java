@@ -50,7 +50,6 @@ import java.util.List;
 @Slf4j
 public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
-  private AdvancedDatastore datastore;
 
   public OrchestrationRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
@@ -65,7 +64,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
+
+    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
     List<Module> modules = new ArrayList();

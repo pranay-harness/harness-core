@@ -33,7 +33,6 @@ import java.util.List;
 @Slf4j
 public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
-  private AdvancedDatastore datastore;
 
   public MigratorRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
@@ -48,7 +47,7 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
+    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
     List<Module> modules = new ArrayList();

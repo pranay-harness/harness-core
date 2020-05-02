@@ -63,7 +63,6 @@ import javax.validation.ValidatorFactory;
 @Slf4j
 public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
-  @Getter private AdvancedDatastore datastore;
   @Getter private GraphQL graphQL;
 
   public GraphQLRule(ClosingFactory closingFactory) {
@@ -115,7 +114,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
+    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
     List<Module> modules = new ArrayList();

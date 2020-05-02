@@ -55,6 +55,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -131,6 +132,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String PACKAGE_NAME_NUGET = "PACKAGE_NAME";
   private static final String SCRIPT_STRING = "echo Hello World!! and echo ${secrets.getValue(My Secret)}";
   private static final String SCRIPT_STRING_UPDATED = "echo updated script";
+
+  @Inject HPersistence persistence;
 
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private YamlPushService yamlPushService;
@@ -3490,7 +3493,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                            .withCreatedAt(System.currentTimeMillis())
                                            .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
-    wingsRule.getDatastore().save(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, name)).but().build());
+    persistence.save(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, name)).but().build());
   }
 
   @Test
