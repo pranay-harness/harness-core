@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.cache.CacheEntity;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
@@ -166,7 +167,6 @@ import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.BlueGreenOrchestrationWorkflow;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.BuildWorkflow;
-import software.wings.beans.CacheEntity;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;

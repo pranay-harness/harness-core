@@ -1,7 +1,5 @@
-package software.wings.beans;
+package io.harness.cache;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -32,5 +30,5 @@ public class CacheEntity {
 
   private byte[] entity;
 
-  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 }
