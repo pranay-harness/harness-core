@@ -6,6 +6,8 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.delay.DelayEvent;
+import io.harness.delay.DelayEventNotifyData;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
@@ -28,6 +30,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SweepingOutput.class);
     set.add(SweepingOutputInstance.class);
     set.add(WaitInstance.class);
+    set.add(DelayEvent.class);
   }
 
   @Override
@@ -43,9 +46,12 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     // Engine Callback
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
 
-    // System Adviser Parameters
+    // Adviser Related Classes
     h.put("adviser.impl.ignore.IgnoreAdviserParameters", IgnoreAdviserParameters.class);
     h.put("adviser.impl.retry.RetryAdviserParameters", RetryAdviserParameters.class);
     h.put("adviser.impl.success.OnSuccessAdviserParameters", OnSuccessAdviserParameters.class);
+
+    // Facilitator related classes
+    h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
   }
 }

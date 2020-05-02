@@ -506,8 +506,6 @@ import software.wings.security.WorkflowFilter;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
-import software.wings.service.impl.DelayEvent;
-import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -817,7 +815,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CVFeedbackRecord.class);
     set.add(DashboardSettings.class);
     set.add(DatadogCVServiceConfiguration.class);
-    set.add(DelayEvent.class);
     set.add(Delegate.class);
     set.add(DelegateConnection.class);
     set.add(DelegateConnectionResult.class);
@@ -1348,7 +1345,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("security.EnvFilter", EnvFilter.class);
     w.put("security.GenericEntityFilter", GenericEntityFilter.class);
     w.put("security.WorkflowFilter", WorkflowFilter.class);
-    w.put("service.impl.DelayEventNotifyData", DelayEventNotifyData.class);
     w.put("service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     w.put("service.impl.analysis.CustomLogDataCollectionInfo", CustomLogDataCollectionInfo.class);
     w.put("service.impl.analysis.DataCollectionCallback", DataCollectionCallback.class);

@@ -8,6 +8,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.delay.DelayEventNotifyData;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.StringNotifyResponseData;
@@ -25,5 +26,8 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTask.class, 5003);
     kryo.register(SweepingOutput.class, 3101);
     kryo.register(ExecutionStatusResponseData.class, 3102);
+
+    // Put promoted classes here and do not change the id
+    kryo.register(DelayEventNotifyData.class, 7273);
   }
 }

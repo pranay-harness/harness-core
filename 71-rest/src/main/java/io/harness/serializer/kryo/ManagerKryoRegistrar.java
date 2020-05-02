@@ -508,7 +508,6 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -1497,7 +1496,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EnvExecutionResponseData.class, 7270);
     kryo.register(BambooExecutionData.class, 7271);
     kryo.register(AwsCloudWatchMetricDataResponse.class, 7272);
-    kryo.register(DelayEventNotifyData.class, 7273);
     kryo.register(ContainerCommandExecutionResponse.class, 7274);
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);

@@ -51,7 +51,8 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(WaiterModule.getInstance(), OrchestrationBeansModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(
+        WaiterModule.getInstance(), OrchestrationBeansModule.getInstance(), OrchestrationQueueModule.getInstance());
   }
 
   @Override
