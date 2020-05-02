@@ -21,7 +21,7 @@ import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;

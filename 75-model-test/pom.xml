@@ -95,8 +95,9 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-persistence-test</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

@@ -1,6 +1,6 @@
 package io.harness.serializer.morphia;
 
-import static io.harness.mongo.ClassRefactoringManager.movements;
+import static io.harness.mongo.ClassRefactoringManager.movementsToMyModule;
 import static io.harness.mongo.HObjectFactory.checkRegisteredClasses;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,15 +110,11 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerKnownMovements() {
-    ImmutableMap<Object, Object> known =
-        ImmutableMap.builder()
-            .put("io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters",
-                "io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters")
-            .put("io.harness.waiter.ErrorNotifyResponseData", "io.harness.delegate.beans.ErrorNotifyResponseData")
-            .put("software.wings.api.JiraExecutionData", "software.wings.api.jira.JiraExecutionData")
-            .put("software.wings.security.encryption.SimpleEncryption", "io.harness.security.SimpleEncryption")
-            .build();
+    ImmutableMap<Object, Object> known = ImmutableMap.builder().build();
 
-    assertThat(movements(objectFactory.getMorphiaInterfaceImplementers())).isEqualTo(known);
+    Map<String, String> myModuleMovements =
+        movementsToMyModule(this.getClass(), objectFactory.getMorphiaInterfaceImplementers());
+
+    assertThat(myModuleMovements).isEqualTo(known);
   }
 }

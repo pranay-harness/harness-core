@@ -13,8 +13,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan.PlanKeys;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
 import io.harness.state.StateType;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

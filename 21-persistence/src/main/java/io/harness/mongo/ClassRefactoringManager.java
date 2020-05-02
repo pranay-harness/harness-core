@@ -4,6 +4,7 @@ import com.mongodb.MongoCommandException;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.CodeUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -30,6 +31,20 @@ public class ClassRefactoringManager {
       movements.put(entry.getKey(), target);
     }
     return movements;
+  }
+
+  public static Map<String, String> movementsToMyModule(
+      Class location, Map<String, Class> morphiaInterfaceImplementers) {
+    Map<String, String> myModuleMovements = movements(morphiaInterfaceImplementers);
+    myModuleMovements.entrySet().removeIf(e -> {
+      try {
+        return !CodeUtils.thirdPartyOrBelongsToModule(CodeUtils.location(location), Class.forName(e.getValue()));
+      } catch (ClassNotFoundException exception) {
+        logger.error("", exception);
+      }
+      return false;
+    });
+    return myModuleMovements;
   }
 
   public static void updateMovedClasses(

@@ -45,18 +45,23 @@ public class CodeUtils {
     return false;
   }
 
-  public static void checkHarnessClassBelongToModule(String location, Set<? extends Class> classes) {
+  public static void checkHarnessClassesBelongToModule(String location, Set<? extends Class> classes) {
     for (Class clazz : classes) {
-      if (!CodeUtils.isHarnessClass(clazz)) {
-        continue;
+      if (!thirdPartyOrBelongsToModule(location, clazz)) {
+        throw new RuntimeException(
+            format("%s class should be registered in module %s", clazz.getCanonicalName(), location));
       }
-      final String clazzLocation = Preconditions.checkNotNull(CodeUtils.location(clazz));
-      if (clazzLocation.equals(location)) {
-        continue;
-      }
-
-      throw new RuntimeException(
-          format("%s class should be registered in module %s", clazz.getCanonicalName(), clazzLocation));
     }
+  }
+
+  public static boolean thirdPartyOrBelongsToModule(String location, Class clazz) {
+    if (!CodeUtils.isHarnessClass(clazz)) {
+      return true;
+    }
+    final String clazzLocation = Preconditions.checkNotNull(CodeUtils.location(clazz));
+    if (clazzLocation.equals(location)) {
+      return true;
+    }
+    return false;
   }
 }

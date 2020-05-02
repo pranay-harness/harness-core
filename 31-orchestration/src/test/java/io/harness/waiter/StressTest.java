@@ -11,7 +11,7 @@ import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
 import lombok.extern.slf4j.Slf4j;

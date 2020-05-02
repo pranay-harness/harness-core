@@ -13,7 +13,6 @@
         <module>19-delegate-tasks-beans</module>
         <module>19-grpc-api</module>
         <module>20-delegate-tasks</module>
-        <module>20-persistence-test</module>
         <module>21-persistence</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
@@ -821,24 +820,9 @@
                 <version>1.6</version>
             </dependency>
             <dependency>
-                <groupId>de.bwaldvogel</groupId>
-                <artifactId>mongo-java-server-core</artifactId>
-                <version>1.16.0</version>
-            </dependency>
-            <dependency>
-                <groupId>de.bwaldvogel</groupId>
-                <artifactId>mongo-java-server-memory-backend</artifactId>
-                <version>1.16.0</version>
-            </dependency>
-            <dependency>
                 <groupId>de.danielbechler</groupId>
                 <artifactId>java-object-diff</artifactId>
                 <version>0.94</version>
-            </dependency>
-            <dependency>
-                <groupId>de.flapdoodle.embed</groupId>
-                <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                <version>2.0.3</version>
             </dependency>
             <dependency>
                 <groupId>de.javakaffee</groupId>
@@ -1466,6 +1450,24 @@
                         <artifactId>netty-transport</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>de.bwaldvogel</groupId>
+                <artifactId>mongo-java-server-core</artifactId>
+                <version>1.16.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.bwaldvogel</groupId>
+                <artifactId>mongo-java-server-memory-backend</artifactId>
+                <version>1.16.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>2.0.3</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard</groupId>

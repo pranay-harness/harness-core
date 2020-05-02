@@ -12,6 +12,6 @@ public interface EngineRegistrar<T extends RegistrableEntity> {
   default void testClassesModule() {
     final Set<Class<? extends T>> classes = new HashSet<>();
     register(classes);
-    CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(this.getClass()), classes);
+    CodeUtils.checkHarnessClassesBelongToModule(CodeUtils.location(this.getClass()), classes);
   }
 }

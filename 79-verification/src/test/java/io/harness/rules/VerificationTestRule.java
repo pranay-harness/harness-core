@@ -11,8 +11,8 @@ import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
 import io.harness.app.VerificationServiceSchedulerModule;
-import io.harness.module.TestMongoModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.testlib.module.TestMongoModule;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
 
