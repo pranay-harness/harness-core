@@ -129,7 +129,7 @@ public class IndexManagerSessionTest extends PersistenceTest {
 
     MappedClass mappedClass = mappedClasses.iterator().next();
 
-    DBCollection collection = getDatastore().getCollection(mappedClass.getClazz());
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
 
     Map<String, IndexCreator> creators = IndexManager.indexCreators(mappedClass, collection);
 
