@@ -101,6 +101,10 @@ import javax.validation.Valid;
         @Field("accountId"), @Field("value.type")
       }), @Index(options = @IndexOptions(name = "value.type_1_nextIteration_1"), fields = {
         @Field("value.type"), @Field("nextIteration")
+      }), @Index(options = @IndexOptions(name = "secretsMigrationIdx"), fields = {
+        @Field("value.type"), @Field("nextSecretMigrationIteration")
+      }), @Index(options = @IndexOptions(name = "secretsMigrationPerAccountIdx"), fields = {
+        @Field("value.type"), @Field("secretsMigrated"), @Field("accountId")
       })
 })
 @Data
@@ -128,7 +132,7 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
 
   @Indexed private Long nextIteration;
   @Indexed private Long nextSecretMigrationIteration;
-  @Indexed private boolean secretsMigrated;
+  private boolean secretsMigrated;
   private String connectivityError;
 
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;

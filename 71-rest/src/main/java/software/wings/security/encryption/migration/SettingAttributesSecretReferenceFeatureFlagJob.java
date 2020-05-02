@@ -18,7 +18,6 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -36,7 +35,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
   @Override
   public void start() {
     settingAttributeFeatureFlagCheckerFuture =
-        executorService.scheduleWithFixedDelay(this ::run, 0, 5, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this ::run, 0, 10, TimeUnit.MINUTES);
   }
 
   @Override
@@ -62,7 +61,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
     if (isMigrationGloballyEnabled) {
       Query<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
                                           .field(SettingAttributeKeys.secretsMigrated)
-                                          .notIn(Collections.singleton(Boolean.TRUE))
+                                          .notEqual(Boolean.TRUE)
                                           .field(VALUE_TYPE_KEY)
                                           .in(ATTRIBUTES_USING_REFERENCES);
 
@@ -79,7 +78,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
       if (!isConnectorReferenceEnabledForAccount) {
         Query<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
                                             .field(SettingAttributeKeys.secretsMigrated)
-                                            .notIn(Collections.singleton(Boolean.TRUE))
+                                            .notEqual(Boolean.TRUE)
                                             .field(VALUE_TYPE_KEY)
                                             .in(ATTRIBUTES_USING_REFERENCES)
                                             .field(ACCOUNT_ID_KEY)

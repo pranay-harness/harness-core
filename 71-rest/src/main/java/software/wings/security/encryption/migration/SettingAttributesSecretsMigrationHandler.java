@@ -42,7 +42,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,13 +62,13 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("SettingAttributesSecretsMigrationHandler")
             .poolSize(3)
-            .interval(ofSeconds(20))
+            .interval(ofSeconds(30))
             .build(),
         SettingAttribute.class,
         MongoPersistenceIterator.<SettingAttribute>builder()
             .clazz(SettingAttribute.class)
             .fieldName(SettingAttributeKeys.nextSecretMigrationIteration)
-            .targetInterval(ofMinutes(20))
+            .targetInterval(ofMinutes(30))
             .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
             .filterExpander(this ::createQuery)
@@ -79,17 +78,16 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
 
   @VisibleForTesting
   public void createQuery(@NonNull Query<SettingAttribute> query) {
-    query.field(SettingAttributeKeys.secretsMigrated)
-        .notIn(Collections.singleton(Boolean.TRUE))
-        .field(VALUE_TYPE_KEY)
-        .in(ATTRIBUTES_USING_REFERENCES);
+    query.field(VALUE_TYPE_KEY).in(ATTRIBUTES_USING_REFERENCES);
   }
 
   public void handle(@NonNull SettingAttribute settingAttribute) {
     try {
-      if (!featureFlagService.isEnabled(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId())) {
+      if (!featureFlagService.isEnabled(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId())
+          || settingAttribute.isSecretsMigrated()) {
         return;
       }
+
       boolean isMigrationSuccess;
       if (settingAttribute.getValue().getSettingType() == APM_VERIFICATION) {
         isMigrationSuccess = migrateApmConnector(settingAttribute);
