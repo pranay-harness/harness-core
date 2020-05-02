@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
+import io.harness.cache.CacheEntity;
+import io.harness.cache.CacheEntity.CacheEntityKeys;
 import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import io.harness.cache.Nominal;
@@ -20,8 +22,6 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.CacheEntity;
-import software.wings.beans.CacheEntity.CacheEntityKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
