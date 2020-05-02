@@ -14,7 +14,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;

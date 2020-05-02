@@ -27,7 +27,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -19,7 +19,7 @@ import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManagerSession.Accesses;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;

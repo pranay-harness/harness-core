@@ -4,11 +4,11 @@ import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.factory.ClosingFactory;
-import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
+import io.harness.testlib.rule.MongoRuleMixin;
 import lombok.val;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;

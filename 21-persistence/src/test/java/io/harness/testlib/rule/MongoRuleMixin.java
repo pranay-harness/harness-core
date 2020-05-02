@@ -1,4 +1,6 @@
-package io.harness.rule;
+package io.harness.testlib.rule;
+
+import static java.time.Duration.ofMillis;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -19,6 +21,8 @@ import de.flapdoodle.embed.mongo.distribution.Version.Main;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.harness.factory.ClosingFactory;
+import io.harness.testlib.RealMongo;
+import io.harness.threading.Morpheus;
 import lombok.Builder;
 import lombok.Value;
 import org.slf4j.LoggerFactory;
@@ -113,7 +117,7 @@ public interface MongoRuleMixin {
         return mongoClient;
       } catch (Exception e) {
         // Note this handles race int the port, but also in the starter prepare
-        Thread.sleep(250);
+        Morpheus.sleep(ofMillis(250));
         persistent = e;
       }
     }

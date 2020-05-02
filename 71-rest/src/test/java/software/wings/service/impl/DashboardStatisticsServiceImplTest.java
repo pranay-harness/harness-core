@@ -97,7 +97,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

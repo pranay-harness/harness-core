@@ -21,7 +21,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

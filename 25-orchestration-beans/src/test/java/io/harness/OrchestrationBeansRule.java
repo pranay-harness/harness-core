@@ -6,14 +6,14 @@ import com.google.inject.Module;
 
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
-import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.rule.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
+import io.harness.testlib.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import org.junit.rules.MethodRule;

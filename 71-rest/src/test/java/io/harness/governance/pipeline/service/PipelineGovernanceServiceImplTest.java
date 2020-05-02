@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

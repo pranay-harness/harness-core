@@ -1,3 +1,7 @@
+!!!testNoTopicQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+!!!testNoTopicQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+!!!testTopicQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+!!!testTopicQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}
 accounts {"name": "appId_1", "background": true} {"appId": 1}
 accounts {"name": "createdAt_1", "background": true} {"createdAt": 1}

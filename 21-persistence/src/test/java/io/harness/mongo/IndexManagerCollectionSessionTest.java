@@ -17,7 +17,7 @@ import io.harness.mongo.IndexManager.IndexCreator;
 import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.RealMongo;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

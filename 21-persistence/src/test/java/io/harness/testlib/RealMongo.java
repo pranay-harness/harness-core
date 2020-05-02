@@ -1,4 +1,4 @@
-package io.harness.rule;
+package io.harness.testlib;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
