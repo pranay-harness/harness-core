@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.delay;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;

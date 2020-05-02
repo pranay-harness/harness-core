@@ -27,8 +27,6 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
-import software.wings.service.impl.DelayEvent;
-import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
@@ -120,22 +118,6 @@ public class ManagerQueueModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueuePublisher<DelayEvent> delayQueuePublisher(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(
-        injector, DelayEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
-  }
-
-  @Provides
-  @Singleton
-  QueueConsumer<DelayEvent> delayQueueConsumer(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, DelayEvent.class, ofSeconds(5),
-        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
-  }
-
-  @Provides
-  @Singleton
   QueuePublisher<GenericEvent> genericQueuePublisher(
       Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
     return QueueFactory.createQueuePublisher(
@@ -190,7 +172,6 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<QueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<QueueListener<DeploymentEvent>>() {}).to(DeploymentEventListener.class);
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
-    bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
     bind(new TypeLiteral<QueueListener<GenericEvent>>() {}).to(GenericEventListener.class);
     bind(new TypeLiteral<QueueListener<InstanceEvent>>() {}).to(InstanceEventListener.class);
     bind(new TypeLiteral<QueueListener<DeploymentTimeSeriesEvent>>() {}).to(DeploymentTimeSeriesEventListener.class);

@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.delay;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
