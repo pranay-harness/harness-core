@@ -14,6 +14,7 @@ import io.harness.govern.ServersModule;
 import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.module.TestMongoDatabaseName;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
@@ -89,6 +90,11 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     String databaseName = databaseName();
+
+    List<Module> modules = new ArrayList();
+
+    modules.add(new TestMongoDatabaseName(databaseName));
+
     MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 
     final HObjectFactory objectFactory = new HObjectFactory();
@@ -105,7 +111,6 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     objectFactory.setDatastore(datastore);
 
-    List<Module> modules = new ArrayList();
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
@@ -142,7 +147,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     });
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient(), databaseName).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient()).cumulativeDependencies());
 
     return modules;
   }

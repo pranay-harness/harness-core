@@ -20,6 +20,7 @@ import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
 import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.module.TestMongoDatabaseName;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -128,6 +129,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
                                             .buildValidatorFactory();
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new TestMongoDatabaseName(locksDatabase));
 
     modules.add(new AbstractModule() {
       @Override
@@ -140,7 +142,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
     });
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule(datastore, locksMongoClient, locksDatabase).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, locksMongoClient).cumulativeDependencies());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
