@@ -34,7 +34,6 @@ import io.harness.queue.TestTopicQueuableObjectListener;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -51,7 +50,6 @@ import java.util.List;
 @Slf4j
 public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
-  @Getter private AdvancedDatastore datastore;
 
   public PersistenceRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
@@ -106,7 +104,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     morphia.map(TestIrregularIterableEntity.class);
     morphia.map(TestIndexEntity.class);
 
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
+    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
     objectFactory.setDatastore(datastore);

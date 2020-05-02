@@ -141,7 +141,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.updateHeartbeat(message);
 
-    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = persistence.get(TestTopicQueuableObject.class, message.getId());
 
     assertThat(actual.getEarliestGet()).isEqualTo(message.getEarliestGet());
   }
@@ -156,7 +156,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.updateHeartbeat(message);
 
-    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = persistence.get(TestTopicQueuableObject.class, message.getId());
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -180,7 +180,7 @@ public class MongoQueueTest extends PersistenceTest {
     queue.setHeartbeat(ofSeconds(20));
     queue.updateHeartbeat(message);
 
-    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = persistence.get(TestTopicQueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getEarliestGet());
 
     assertThat(actual.getEarliestGet()).isAfter(messageEarliestGet);
@@ -218,14 +218,15 @@ public class MongoQueueTest extends PersistenceTest {
 
     TestTopicQueuableObject result = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
-    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(2);
+    persistence.getDatastore(TestTopicQueuableObject.class);
 
-    getDatastore()
-        .getCollection(TestTopicQueuableObject.class)
-        .find()
+    assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(2);
+
+    persistence.createQuery(TestTopicQueuableObject.class)
+        .fetch()
         .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
-    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
+    assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(1);
   }
 
   @Test
@@ -249,9 +250,9 @@ public class MongoQueueTest extends PersistenceTest {
     Date timeBeforeRequeue = new Date();
     queue.requeue(resultOne.getId(), 0, expectedEarliestGet);
 
-    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
+    assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(1);
 
-    TestTopicQueuableObject actual = getDatastore().find(TestTopicQueuableObject.class).get();
+    TestTopicQueuableObject actual = persistence.createQuery(TestTopicQueuableObject.class).get();
 
     TestTopicQueuableObject expected = new TestTopicQueuableObject(0);
     expected.setTopic("topic");
@@ -285,9 +286,9 @@ public class MongoQueueTest extends PersistenceTest {
     message.setEarliestGet(expectedEarliestGet);
     topicProducer.send(message);
 
-    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
+    assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(1);
 
-    TestTopicQueuableObject actual = getDatastore().find(TestTopicQueuableObject.class).get();
+    TestTopicQueuableObject actual = persistence.createQuery(TestTopicQueuableObject.class).get();
 
     TestTopicQueuableObject expected = new TestTopicQueuableObject(1);
     expected.setTopic("topic");
@@ -309,13 +310,13 @@ public class MongoQueueTest extends PersistenceTest {
     on(entityConsumer).set("persistence", persistence);
 
     TestInternalEntity testEntity = TestInternalEntity.builder().id("1").build();
-    getDatastore().save(testEntity);
+    persistence.save(testEntity);
 
     TestQueuableWithEntity message = new TestQueuableWithEntity(testEntity);
 
     entityProducer.send(message);
 
-    assertThat(getDatastore().getCount(TestQueuableWithEntity.class)).isEqualTo(1);
+    assertThat(persistence.createQuery(TestQueuableWithEntity.class).count()).isEqualTo(1);
 
     TestQueuableWithEntity actual = entityConsumer.get(DEFAULT_WAIT, DEFAULT_POLL);
 
