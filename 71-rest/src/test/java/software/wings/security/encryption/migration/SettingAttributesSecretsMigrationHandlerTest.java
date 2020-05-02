@@ -49,7 +49,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
@@ -62,7 +61,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @RunWith(PowerMockRunner.class)
@@ -111,15 +109,12 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     Query<SettingAttribute> query = mock(Query.class);
     FieldEnd fieldEnd = mock(FieldEnd.class);
 
-    when(query.field(SettingAttributeKeys.secretsMigrated)).thenReturn(fieldEnd);
-    when(fieldEnd.notIn(Collections.singleton(Boolean.TRUE))).thenReturn(query);
     when(query.field(VALUE_TYPE_KEY)).thenReturn(fieldEnd);
     when(fieldEnd.in(ATTRIBUTES_USING_REFERENCES)).thenReturn(query);
 
     settingAttributesSecretsMigrationHandler.createQuery(query);
 
-    verify(query, times(2)).field(any());
-    verify(fieldEnd, times(1)).notIn(any());
+    verify(query, times(1)).field(any());
     verify(fieldEnd, times(1)).in(any());
   }
 
