@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +45,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                                   .artifactPaths(asList("dist/svr-*.war"))
                                                                   .build();
 
+  @Inject HPersistence persistence;
+
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -55,8 +58,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
-    wingsRule.getDatastore().save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
   }
 
   /**

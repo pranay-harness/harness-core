@@ -137,15 +137,6 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
   }
 
   /**
-   * Gets datastore.
-   *
-   * @return the datastore
-   */
-  public AdvancedDatastore getDatastore() {
-    return datastore;
-  }
-
-  /**
    * Before.
    *
    * @param annotations                   the annotations

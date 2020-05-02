@@ -145,8 +145,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(
-        Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
+    wingsPersistence.save(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
     when(appQuery.filter(anyString(), anyObject())).thenReturn(appQuery);
 
     when(appService.exist(APP_ID)).thenReturn(true);
@@ -368,10 +367,10 @@ public class ArtifactServiceTest extends WingsBaseTest {
       Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
       ArtifactFile artifactFile =
           anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
-      wingsRule.getDatastore().save(artifactFile);
+      wingsPersistence.save(artifactFile);
       savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
       savedArtifact.setStatus(READY);
-      wingsRule.getDatastore().save(savedArtifact);
+      wingsPersistence.save(savedArtifact);
       when(fileService.download(anyString(), any(File.class), any(FileBucket.class))).thenAnswer(invocation -> {
         File inputFile = invocation.getArgumentAt(1, File.class);
         Files.write("Dummy".getBytes(), inputFile);
@@ -946,7 +945,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
-    String dockerArtifactStreamId = wingsRule.getDatastore().save(dockerArtifactStream).getId().toString();
+    String dockerArtifactStreamId = wingsPersistence.save(dockerArtifactStream);
 
     JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
                                                       .sourceName("todolistwar")
@@ -959,7 +958,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                       .artifactPaths(asList("target/todolist.war"))
                                                       .build();
 
-    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    String jenkinsArtifactStreamId = wingsPersistence.save(jenkinsArtifactStream);
 
     Artifact dockerArtifact = constructArtifact(dockerArtifactStreamId);
 
@@ -998,7 +997,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                       .serviceId(SERVICE_ID)
                                                       .artifactPaths(asList("target/todolist.war"))
                                                       .build();
-    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    String jenkinsArtifactStreamId = wingsPersistence.save(jenkinsArtifactStream);
     Artifact jenkinsArtifact = anArtifact()
                                    .withAppId(APP_ID)
                                    .withArtifactStreamId(jenkinsArtifactStreamId)
@@ -1012,7 +1011,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
     Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
 
-    wingsRule.getDatastore().save(savedArtifact);
+    wingsPersistence.save(savedArtifact);
     artifactService.deleteArtifacts(0);
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(1);
   }
@@ -1066,7 +1065,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                       .serviceId(SERVICE_ID)
                                                       .artifactPaths(asList("target/todolist.war"))
                                                       .build();
-    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    String jenkinsArtifactStreamId = wingsPersistence.save(jenkinsArtifactStream);
     Artifact jenkinsArtifact = anArtifact()
                                    .withAppId(APP_ID)
                                    .withArtifactStreamId(jenkinsArtifactStreamId)
@@ -1099,7 +1098,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                       .serviceId(SERVICE_ID)
                                                       .artifactPaths(asList("target/todolist.war"))
                                                       .build();
-    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    String jenkinsArtifactStreamId = wingsPersistence.save(jenkinsArtifactStream);
     Artifact jenkinsArtifact = anArtifact()
                                    .withAppId(APP_ID)
                                    .withArtifactStreamId(jenkinsArtifactStreamId)
@@ -1117,11 +1116,11 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                     .withUuid("5942bffe1e204f7f3004f455")
                                     .withFileUuid("5942bffe1e204f7f3004f455")
                                     .build();
-    wingsRule.getDatastore().save(artifactFile);
+    wingsPersistence.save(artifactFile);
     savedArtifact.setArtifactFiles(asList(artifactFile));
     savedArtifact.setContentStatus(contentStatus);
 
-    wingsRule.getDatastore().save(savedArtifact);
+    wingsPersistence.save(savedArtifact);
   }
 
   @Test
