@@ -18,6 +18,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
 import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.module.TestMongoDatabaseName;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -118,9 +119,11 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     datastore.setQueryFactory(new QueryFactory());
 
     List<Module> modules = new ArrayList();
+    modules.add(new TestMongoDatabaseName(databaseName));
+
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient(), databaseName).cumulativeDependencies());
+    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient()).cumulativeDependencies());
 
     MainConfiguration configuration = getConfiguration("graphQL");
 

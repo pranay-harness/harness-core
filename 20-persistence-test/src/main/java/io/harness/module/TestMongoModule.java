@@ -18,12 +18,10 @@ import java.util.Set;
 public class TestMongoModule extends DependencyProviderModule {
   private AdvancedDatastore primaryDatastore;
   private MongoClient locksMongoClient;
-  private String locksDB;
 
-  public TestMongoModule(AdvancedDatastore primaryDatastore, MongoClient locksMongoClient, String locksDB) {
+  public TestMongoModule(AdvancedDatastore primaryDatastore, MongoClient locksMongoClient) {
     this.primaryDatastore = primaryDatastore;
     this.locksMongoClient = locksMongoClient;
-    this.locksDB = locksDB;
   }
 
   public TestMongoModule(AdvancedDatastore primaryDatastore) {
@@ -42,13 +40,6 @@ public class TestMongoModule extends DependencyProviderModule {
   @Singleton
   public MongoClient getLocksMongoClient() {
     return locksMongoClient;
-  }
-
-  @Provides
-  @Named("locksDatabase")
-  @Singleton
-  public String getLocksDB() {
-    return locksDB;
   }
 
   @Override
