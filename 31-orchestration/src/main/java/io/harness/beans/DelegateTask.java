@@ -49,7 +49,10 @@ import javax.validation.constraints.NotNull;
       fields = { @Field(DelegateTaskKeys.status)
                  , @Field(DelegateTaskKeys.expiry) })
   ,
-      @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
+      @Index(options = @IndexOptions(name = "pulling"), fields = {
+        @Field(DelegateTaskKeys.accountId)
+        , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
+      }), @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
@@ -60,7 +63,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   @Id private String uuid;
   @NotEmpty private String accountId;
-  @Indexed protected String appId;
+  protected String appId;
   private String envId;
   private String infrastructureMappingId;
   private String serviceTemplateId;
