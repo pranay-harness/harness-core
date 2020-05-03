@@ -76,7 +76,6 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.perpetualtask.internal.DisconnectedDelegateHandler;
@@ -87,7 +86,6 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.state.inspection.StateInspectionService;
@@ -282,20 +280,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
-
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      MongoConfig mongoConfig() {
-        return configuration.getMongoConnectionFactory();
-      }
-
-      @Provides
-      @Singleton
-      RedisConfig redisConfig() {
-        return configuration.getRedisConfig();
-      }
-    });
 
     modules.addAll(new MongoModule().cumulativeDependencies());
 

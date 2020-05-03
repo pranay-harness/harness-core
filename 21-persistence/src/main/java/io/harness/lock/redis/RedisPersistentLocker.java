@@ -36,7 +36,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
   private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
-  RedisPersistentLocker(RedisConfig redisConfig) {
+  public RedisPersistentLocker(RedisConfig redisConfig) {
     Config config = new Config();
     if (!redisConfig.isSentinel()) {
       config.useSingleServer().setAddress(redisConfig.getRedisUrl());
