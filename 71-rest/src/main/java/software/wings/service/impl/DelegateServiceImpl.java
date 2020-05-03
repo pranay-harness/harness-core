@@ -688,12 +688,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                   .filter(DelegateTaskKeys.accountId, delegate.getAccountId())
+                                                  .field(DelegateTaskKeys.uuid)
+                                                  .in(delegate.getCurrentlyExecutingDelegateTasks())
                                                   .filter(DelegateTaskKeys.delegateId, delegate.getUuid())
                                                   .filter(DelegateTaskKeys.status, DelegateTask.Status.STARTED)
                                                   .field(DelegateTaskKeys.lastUpdatedAt)
-                                                  .lessThan(currentTimeMillis())
-                                                  .field(ID_KEY)
-                                                  .in(delegate.getCurrentlyExecutingDelegateTasks());
+                                                  .lessThan(currentTimeMillis());
       wingsPersistence.update(delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class));
     }
   }
@@ -1726,7 +1726,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         syncTaskWaitMap.remove(task.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                                    .filter(ID_KEY, task.getUuid()));
+                                    .filter(DelegateTaskKeys.uuid, task.getUuid()));
       }
 
       if (completedTask == null) {
@@ -1915,10 +1915,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .addToSet(DelegateTaskKeys.validationCompleteDelegateIds, delegateId);
       Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                             .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                            .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                             .filter(DelegateTaskKeys.status, QUEUED)
                                             .field(DelegateTaskKeys.delegateId)
-                                            .doesNotExist()
-                                            .filter(ID_KEY, delegateTask.getUuid());
+                                            .doesNotExist();
       wingsPersistence.update(updateQuery, updateOperations);
 
       if (results.stream().allMatch(DelegateConnectionResult::isValidated)) {
@@ -2064,10 +2064,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                          .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                           .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
-                                          .doesNotExist()
-                                          .filter(ID_KEY, delegateTask.getUuid());
+                                          .doesNotExist();
     wingsPersistence.update(updateQuery, updateOperations);
 
     wingsPersistence.update(updateQuery.field(DelegateTaskKeys.validationStartedAt).doesNotExist(),
@@ -2097,10 +2097,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .unset(DelegateTaskKeys.validationCompleteDelegateIds);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                          .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                           .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
-                                          .doesNotExist()
-                                          .filter(ID_KEY, delegateTask.getUuid());
+                                          .doesNotExist();
     wingsPersistence.update(updateQuery, updateOperations);
   }
 
@@ -2108,7 +2108,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, accountId)
-                                    .filter(ID_KEY, taskId)
+                                    .filter(DelegateTaskKeys.uuid, taskId)
                                     .get();
     if (delegateTask != null) {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
@@ -2172,7 +2172,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                          .filter(ID_KEY, delegateTask.getUuid());
+                                          .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
       DelegateTaskResponse response =
           DelegateTaskResponse.builder()
               .response(ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build())
@@ -2205,7 +2205,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                          .filter(ID_KEY, delegateTask.getUuid());
+                                          .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
       DelegateTaskResponse response =
           DelegateTaskResponse.builder()
               .response(ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build())
@@ -2243,10 +2243,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                    .filter(DelegateTaskKeys.uuid, taskId)
                                     .filter(DelegateTaskKeys.status, QUEUED)
                                     .field(DelegateTaskKeys.delegateId)
                                     .doesNotExist()
-                                    .filter(ID_KEY, taskId)
                                     .project(DelegateTaskKeys.data_parameters, false);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .set(DelegateTaskKeys.delegateId, delegateId)
@@ -2265,9 +2265,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+               .filter(DelegateTaskKeys.uuid, taskId)
                .filter(DelegateTaskKeys.status, STARTED)
                .filter(DelegateTaskKeys.delegateId, delegateId)
-               .filter(ID_KEY, taskId)
                .project(DelegateTaskKeys.data_parameters, false)
                .get();
     if (task == null) {
@@ -2296,7 +2296,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())
-                                        .filter(ID_KEY, taskId);
+                                        .filter(DelegateTaskKeys.uuid, taskId);
 
     DelegateTask delegateTask = taskQuery.get();
 
@@ -2354,9 +2354,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent) {
     return wingsPersistence.createQuery(DelegateTask.class)
-               .filter(ID_KEY, taskAbortEvent.getDelegateTaskId())
-               .filter(DelegateTaskKeys.delegateId, delegateId)
                .filter(DelegateTaskKeys.accountId, taskAbortEvent.getAccountId())
+               .filter(DelegateTaskKeys.uuid, taskAbortEvent.getDelegateTaskId())
+               .filter(DelegateTaskKeys.delegateId, delegateId)
                .getKey()
         != null;
   }
@@ -2416,7 +2416,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private Query<DelegateTask> getRunningTaskQuery(String accountId, String delegateTaskId) {
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                                .filter(ID_KEY, delegateTaskId)
+                                                .filter(DelegateTaskKeys.uuid, delegateTaskId)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
                                                 .filter(DelegateTaskKeys.data_async, true);
     delegateTaskQuery.or(delegateTaskQuery.criteria(DelegateTaskKeys.status).equal(QUEUED),
@@ -2446,7 +2446,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.data_async, !sync)
             .field(DelegateTaskKeys.delegateId)
-            .doesNotExist();
+            .doesNotExist()
+            .field(DelegateTaskKeys.expiry)
+            .lessThan(currentTimeMillis());
 
     return delegateTaskQuery.asKeyList()
         .stream()
@@ -2461,9 +2463,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
     Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                           .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.status, ABORTED)
                                            .filter(DelegateTaskKeys.data_async, true)
-                                           .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.delegateId, delegateId);
 
     // Send abort event only once by clearing delegateId

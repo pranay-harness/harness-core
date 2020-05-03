@@ -31,7 +31,6 @@ import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -126,7 +125,7 @@ public class DelegateQueueTask implements Runnable {
     Map<String, String> taskWaitIds = new HashMap<>();
     try {
       List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                     .field(ID_KEY)
+                                     .field(DelegateTaskKeys.uuid)
                                      .in(taskIds)
                                      .project(ID_KEY, true)
                                      .project(DelegateTaskKeys.delegateId, true)
@@ -145,8 +144,8 @@ public class DelegateQueueTask implements Runnable {
       for (String taskId : taskIds) {
         try {
           DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                  .filter(ID_KEY, taskId)
-                                  .project(ID_KEY, true)
+                                  .filter(DelegateTaskKeys.uuid, taskId)
+                                  .project(DelegateTaskKeys.uuid, true)
                                   .project(DelegateTaskKeys.delegateId, true)
                                   .project(DelegateTaskKeys.waitId, true)
                                   .project(DelegateTaskKeys.tags, true)
@@ -162,7 +161,7 @@ public class DelegateQueueTask implements Runnable {
           logger.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
           try {
             String waitId = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                .filter(ID_KEY, taskId)
+                                .filter(DelegateTaskKeys.uuid, taskId)
                                 .project(DelegateTaskKeys.waitId, true)
                                 .get()
                                 .getWaitId();
@@ -179,7 +178,7 @@ public class DelegateQueueTask implements Runnable {
     }
 
     boolean deleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(Mapper.ID_KEY).in(taskIds));
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(DelegateTaskKeys.uuid).in(taskIds));
 
     if (deleted) {
       taskIds.forEach(taskId -> {
