@@ -84,7 +84,6 @@ public class GraphQLResourceTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldExecuteExternalWithoutExceptions() {
-    when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL, ACCOUNT_ID)).thenReturn(true);
     when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL_DEV, ACCOUNT_ID)).thenReturn(true);
     when(PREMIUM_FEATURE.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
     // Media type: Plain text
@@ -107,7 +106,6 @@ public class GraphQLResourceTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldExecuteInternalWithoutExceptions() {
-    when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL, ACCOUNT_ID)).thenReturn(true);
     when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL_DEV, ACCOUNT_ID)).thenReturn(true);
     when(PREMIUM_FEATURE.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
     // Media type: Plain text
@@ -130,7 +128,6 @@ public class GraphQLResourceTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldThrowUnauthorizedExceptionForIncorrectQuery() {
-    when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL, ACCOUNT_ID)).thenReturn(true);
     when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.GRAPHQL_DEV, ACCOUNT_ID)).thenReturn(true);
     when(PREMIUM_FEATURE.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
     GraphQLUtils graphQLUtils = new GraphQLUtils();

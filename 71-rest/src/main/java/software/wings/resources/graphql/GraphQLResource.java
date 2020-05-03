@@ -180,8 +180,7 @@ public class GraphQLResource {
       throw graphQLUtils.getInvalidApiKeyException();
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
-        || !restApiFeature.isAvailableForAccount(accountId)) {
+    if (!restApiFeature.isAvailableForAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
       throw graphQLUtils.getFeatureNotEnabledException();
     }

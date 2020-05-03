@@ -32,7 +32,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
@@ -285,11 +284,6 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public boolean updateStatus(String accountId, String changeSetId, Status newStatus) {
-    // replace with acc level batchGit flag
-    if (featureFlagService.isEnabled(FeatureName.GIT_BATCH_SYNC, accountId)) {
-      return updateStatusForYamlChangeSets(accountId, newStatus, Status.RUNNING);
-    }
-
     YamlChangeSet yamlChangeSet = get(accountId, changeSetId);
     if (yamlChangeSet != null) {
       UpdateResults status = wingsPersistence.update(

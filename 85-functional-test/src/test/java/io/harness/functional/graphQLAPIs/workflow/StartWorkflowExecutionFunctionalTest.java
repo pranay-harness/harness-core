@@ -68,9 +68,6 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, application.getAccountId())) {
       featureFlagService.enableAccount(FeatureName.GRAPHQL_DEV, application.getAccountId());
     }
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.GRAPHQL, application.getAccountId());
-    }
 
     assertThat(application).isNotNull();
     service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
