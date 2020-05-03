@@ -1,6 +1,6 @@
 package software.wings.app;
 
-import static io.harness.lock.DistributedLockImplementation.REDIS;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -65,9 +65,10 @@ import io.harness.limits.counter.service.CounterService;
 import io.harness.limits.counter.service.CounterServiceImpl;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.lock.PersistentLocker;
-import io.harness.lock.mongo.MongoPersistentLocker;
-import io.harness.lock.redis.RedisPersistentLocker;
+import io.harness.mongo.MongoConfig;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -77,6 +78,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
+import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
@@ -642,6 +644,25 @@ public class WingsModule extends DependencyModule implements ServersModule {
   }
 
   @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return configuration.getDistributedLockImplementation() == null ? MONGO
+                                                                    : configuration.getDistributedLockImplementation();
+  }
+
+  @Provides
+  @Singleton
+  MongoConfig mongoConfig() {
+    return configuration.getMongoConnectionFactory();
+  }
+
+  @Provides
+  @Singleton
+  RedisConfig redisConfig() {
+    return configuration.getRedisConfig();
+  }
+
+  @Provides
   public CacheManagerConfig cacheManagerConfig() {
     return CacheManagerConfig.builder().disabled(configuration.getDisabledCache()).build();
   }
@@ -671,17 +692,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-
-    if (configuration.getDistributedLockImplementation() == REDIS) {
-      logger.info("Initializing Redis Locker");
-      bind(PersistentLocker.class).to(RedisPersistentLocker.class);
-      logger.info("Initialized Redis Locker");
-    } else {
-      logger.info("Initializing Mongo Locker");
-      bind(PersistentLocker.class).to(MongoPersistentLocker.class);
-      logger.info("Initialized Mongo Locker");
-    }
-
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);
     bind(ApplicationManifestService.class).to(ApplicationManifestServiceImpl.class);
@@ -1234,8 +1244,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(
-        TimeModule.getInstance(), VersionModule.getInstance(), OrchestrationModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance(),
+        OrchestrationModule.getInstance(), PersistentLockModule.getInstance());
   }
 
   @Provides

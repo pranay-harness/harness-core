@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * @author rktummala on 05/08/19
- */
 @Data
 @Builder
 @NoArgsConstructor
