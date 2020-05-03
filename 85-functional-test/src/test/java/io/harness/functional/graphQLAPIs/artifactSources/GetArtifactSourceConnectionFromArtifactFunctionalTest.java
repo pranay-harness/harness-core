@@ -42,9 +42,6 @@ public class GetArtifactSourceConnectionFromArtifactFunctionalTest extends Abstr
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, service.getAccountId())) {
       featureFlagService.enableAccount(FeatureName.GRAPHQL_DEV, service.getAccountId());
     }
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, service.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.GRAPHQL, service.getAccountId());
-    }
   }
 
   @Test

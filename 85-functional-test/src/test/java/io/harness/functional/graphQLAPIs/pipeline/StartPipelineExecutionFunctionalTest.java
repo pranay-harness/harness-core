@@ -73,9 +73,6 @@ public class StartPipelineExecutionFunctionalTest extends AbstractFunctionalTest
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, application.getAccountId())) {
       featureFlagService.enableAccount(FeatureName.GRAPHQL_DEV, application.getAccountId());
     }
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.GRAPHQL, application.getAccountId());
-    }
 
     service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
