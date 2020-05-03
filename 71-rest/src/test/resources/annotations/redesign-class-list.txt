@@ -30,6 +30,7 @@ io.harness.engine.executables.handlers.ChildrenExecutableInvoker
 io.harness.engine.executables.handlers.SyncExecutableInvoker
 io.harness.engine.resume.EngineResumeCallback
 io.harness.engine.resume.EngineResumeExecutor
+io.harness.facilitate.DefaultFacilitatorParams
 io.harness.facilitate.Facilitator
 io.harness.facilitate.FacilitatorObtainment
 io.harness.facilitate.FacilitatorResponse

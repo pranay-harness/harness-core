@@ -23,6 +23,9 @@ public class ChildrenFacilitator implements Facilitator {
   @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.CHILDREN).build();
+    return FacilitatorResponse.builder()
+        .executionMode(ExecutionMode.CHILDREN)
+        .initialWait(parameters.getWaitDurationSeconds())
+        .build();
   }
 }

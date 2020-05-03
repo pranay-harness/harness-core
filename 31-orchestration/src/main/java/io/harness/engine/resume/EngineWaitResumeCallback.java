@@ -1,0 +1,38 @@
+package io.harness.engine.resume;
+
+import com.google.inject.Inject;
+
+import io.harness.ambiance.Ambiance;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.engine.ExecutionEngine;
+import io.harness.facilitate.FacilitatorResponse;
+import io.harness.persistence.converters.DurationConverter;
+import io.harness.waiter.NotifyCallback;
+import lombok.Builder;
+import org.mongodb.morphia.annotations.Converters;
+
+import java.util.Map;
+
+@Converters({DurationConverter.class})
+public class EngineWaitResumeCallback implements NotifyCallback {
+  @Inject private ExecutionEngine executionEngine;
+
+  Ambiance ambiance;
+  FacilitatorResponse facilitatorResponse;
+
+  @Builder
+  EngineWaitResumeCallback(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+    this.ambiance = ambiance;
+    this.facilitatorResponse = facilitatorResponse;
+  }
+
+  @Override
+  public void notify(Map<String, ResponseData> response) {
+    executionEngine.invokeState(ambiance, facilitatorResponse);
+  }
+
+  @Override
+  public void notifyError(Map<String, ResponseData> response) {
+    // TODO => Handle Error
+  }
+}

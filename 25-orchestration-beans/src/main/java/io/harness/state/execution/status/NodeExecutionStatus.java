@@ -10,6 +10,7 @@ public enum NodeExecutionStatus {
   TASK_WAITING,
   CHILD_WAITING,
   CHILDREN_WAITING,
+  TIMED_WAITING,
 
   // Final Statuses : All the final statuses named with ed in the end
   QUEUED,

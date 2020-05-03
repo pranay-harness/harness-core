@@ -3,6 +3,7 @@ package io.harness.engine;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
+import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
@@ -24,6 +26,7 @@ import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeExecutor;
+import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.facilitate.Facilitator;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorResponse;
@@ -46,10 +49,13 @@ import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -70,8 +76,6 @@ public class ExecutionEngine implements Engine {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
 
-  // Helpers
-
   // For obtaining ambiance related information
   @Inject private AmbianceHelper ambianceHelper;
 
@@ -87,6 +91,8 @@ public class ExecutionEngine implements Engine {
 
   // Obtain appropriate advise Handler
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
+
+  @Inject private DelayEventHelper delayEventHelper;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     PlanExecution instance = PlanExecution.builder()
@@ -111,7 +117,16 @@ public class ExecutionEngine implements Engine {
   }
 
   public void startNodeExecution(Ambiance ambiance) {
-    startNodeInstance(ambiance, ambiance.obtainCurrentRuntimeId());
+    // Update to Running Status
+    NodeExecution nodeExecution =
+        Preconditions.checkNotNull(hPersistence.createQuery(NodeExecution.class)
+                                       .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
+                                       .get());
+    ExecutionNode node = nodeExecution.getNode();
+    // Facilitate and execute
+    List<StateTransput> inputs =
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+    facilitateExecution(ambiance, node, inputs);
   }
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
@@ -145,15 +160,7 @@ public class ExecutionEngine implements Engine {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
   }
 
-  public void startNodeInstance(Ambiance ambiance, @NotNull String nodeExecutionId) {
-    // Update to Running Status
-    NodeExecution nodeExecution = Preconditions.checkNotNull(
-        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId).get());
-
-    ExecutionNode node = nodeExecution.getNode();
-    // Audit and execute
-    List<StateTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+  private void facilitateExecution(Ambiance ambiance, ExecutionNode node, List<StateTransput> inputs) {
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
@@ -165,18 +172,29 @@ public class ExecutionEngine implements Engine {
     Preconditions.checkNotNull(facilitatorResponse,
         "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
     ExecutionMode mode = facilitatorResponse.getExecutionMode();
-
-    NodeExecution updatedNodeExecution =
-        Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(nodeExecutionId,
-            ops -> ops.set(NodeExecutionKeys.mode, mode).set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
-
-    invokeState(ambiance, facilitatorResponse, updatedNodeExecution);
+    Consumer<UpdateOperations<NodeExecution>> ops = op -> op.set(NodeExecutionKeys.mode, mode);
+    if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
+      FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
+      Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(ambiance.obtainCurrentRuntimeId(),
+          ops.andThen(op
+              -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.TIMED_WAITING)
+                     .set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait()))));
+      String resumeId =
+          delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
+      waitNotifyEngine.waitForAllOn(ORCHESTRATION,
+          EngineWaitResumeCallback.builder().ambiance(ambiance).facilitatorResponse(finalFacilitatorResponse).build(),
+          resumeId);
+    } else {
+      Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(ambiance.obtainCurrentRuntimeId(),
+          ops.andThen(op -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING))));
+      invokeState(ambiance, facilitatorResponse);
+    }
   }
 
-  private void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, NodeExecution nodeExecution) {
+  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
-    State currentState = Preconditions.checkNotNull(
-        stateRegistry.obtain(node.getStateType()), "Cannot find state for state type: " + node.getStateType());
+    State currentState = stateRegistry.obtain(node.getStateType());
     injector.injectMembers(currentState);
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
