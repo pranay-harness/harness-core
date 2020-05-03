@@ -12,7 +12,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClientV2;
+import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
@@ -40,13 +40,13 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final long INTERNAL_TIMEOUT_IN_MS = 90L * 1000;
 
   private ArtifactRepositoryServiceImpl artifactRepositoryService;
-  private ManagerClientV2 managerClient;
+  private ManagerClient managerClient;
 
   private Cache<String, ArtifactsPublishedCache> cache = Caffeine.newBuilder().build();
 
   @Inject
   public ArtifactPerpetualTaskExecutor(
-      ArtifactRepositoryServiceImpl artifactRepositoryService, ManagerClientV2 managerClient) {
+      ArtifactRepositoryServiceImpl artifactRepositoryService, ManagerClient managerClient) {
     this.artifactRepositoryService = artifactRepositoryService;
     this.managerClient = managerClient;
   }

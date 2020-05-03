@@ -8,7 +8,7 @@ import com.google.protobuf.ByteString;
 
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClientV2;
+import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.instanceSync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -30,7 +30,7 @@ import java.util.List;
 @Singleton
 public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject PcfDelegateTaskHelper pcfDelegateTaskHelper;
-  @Inject ManagerClientV2 managerClient;
+  @Inject ManagerClient managerClient;
 
   @Override
   public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {

@@ -105,8 +105,8 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.AutoLogContext;
+import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
-import io.harness.managerclient.ManagerClientV2;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.perpetualtask.PerpetualTaskWorker;
@@ -244,7 +244,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static volatile String delegateId;
 
   @Inject private DelegateConfiguration delegateConfiguration;
-  @Inject private ManagerClientV2 managerClient;
+  @Inject private ManagerClient managerClient;
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
@@ -973,7 +973,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
             ManagerClientFactory.setSendVersionHeader(Boolean.valueOf(message.getParams().get(0)));
-            managerClient = injector.getInstance(ManagerClientV2.class);
+            managerClient = injector.getInstance(ManagerClient.class);
           }
         }), 0, 1, TimeUnit.SECONDS);
   }

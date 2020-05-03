@@ -28,7 +28,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.managerclient.ManagerClientV2;
+import io.harness.managerclient.ManagerClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
 import io.harness.verification.VerificationServiceClient;
@@ -60,12 +60,12 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
-  private ManagerClientV2 managerClient;
+  private ManagerClient managerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
   private VerificationServiceClient verificationServiceClient;
 
   @Inject
-  public DelegateLogServiceImpl(ManagerClientV2 managerClient, @Named("asyncExecutor") ExecutorService executorService,
+  public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService,
       VerificationServiceClient verificationServiceClient) {
     this.managerClient = managerClient;
     this.verificationServiceClient = verificationServiceClient;
