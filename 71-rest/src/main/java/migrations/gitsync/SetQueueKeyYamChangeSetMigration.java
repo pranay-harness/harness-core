@@ -1,5 +1,6 @@
 package migrations.gitsync;
 
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.collect.ImmutableList;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.OnPrimaryManagerMigration;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.yaml.gitSync.GitChangeSetRunnableHelper;
@@ -58,9 +60,10 @@ public class SetQueueKeyYamChangeSetMigration implements OnPrimaryManagerMigrati
   }
 
   void updateRequiredFieldsOnly(YamlChangeSet yamlChangeSetWithMetadata) {
-    wingsPersistence.update(yamlChangeSetWithMetadata,
-        wingsPersistence.createUpdateOperations(YamlChangeSet.class)
-            .set(YamlChangeSetKeys.gitSyncMetadata, yamlChangeSetWithMetadata.getGitSyncMetadata())
-            .set(YamlChangeSetKeys.queueKey, yamlChangeSetWithMetadata.getQueueKey()));
+    final UpdateOperations<YamlChangeSet> updateOperations =
+        wingsPersistence.createUpdateOperations(YamlChangeSet.class);
+    setUnset(updateOperations, YamlChangeSetKeys.gitSyncMetadata, yamlChangeSetWithMetadata.getGitSyncMetadata());
+    setUnset(updateOperations, YamlChangeSetKeys.queueKey, yamlChangeSetWithMetadata.getQueueKey());
+    wingsPersistence.update(yamlChangeSetWithMetadata, updateOperations);
   }
 }
