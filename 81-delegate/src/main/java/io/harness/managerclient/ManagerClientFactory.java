@@ -23,11 +23,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-/**
- * Created by peeyushaggarwal on 11/29/16.
- */
-
-@Deprecated
 class ManagerClientX509TrustManager implements X509TrustManager {
   @Override
   public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -41,7 +36,6 @@ class ManagerClientX509TrustManager implements X509TrustManager {
   public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
 }
 
-@Deprecated
 public class ManagerClientFactory implements Provider<ManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());

@@ -22,7 +22,7 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.AccessTokenBean;
-import io.harness.managerclient.ManagerClientV2;
+import io.harness.managerclient.ManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import okhttp3.Protocol;
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private ManagerClientV2 managerClient;
+  @Mock private ManagerClient managerClient;
   @Mock private Call<RestResponse<AccessTokenBean>> callAccessTokenBean;
 
   private DelegateStackdriverLogAppender appender = new DelegateStackdriverLogAppender();

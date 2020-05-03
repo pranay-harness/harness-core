@@ -17,7 +17,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.managerclient.ManagerClientV2;
+import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
@@ -55,7 +55,7 @@ public class ArtifactPerpetualTaskExecutorTest extends CategoryTest {
   private ArtifactPerpetualTaskExecutor artifactPerpetualTaskExecutor;
 
   @Mock private ArtifactRepositoryServiceImpl artifactRepositoryService;
-  @Mock private ManagerClientV2 managerClient;
+  @Mock private ManagerClient managerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   private PerpetualTaskId perpetualTaskId;

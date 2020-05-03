@@ -30,6 +30,5 @@ public class ManagerClientModule extends AbstractModule {
     bind(ManagerClient.class).toProvider(new ManagerClientFactory(managerBaseUrl, tokenGenerator));
     bind(VerificationServiceClient.class)
         .toProvider(new VerificationServiceClientFactory(verificationServiceBaseUrl, tokenGenerator));
-    bind(ManagerClientV2.class).toProvider(new ManagerClientV2Factory(managerBaseUrl, tokenGenerator));
   }
 }
