@@ -23,6 +23,9 @@ public class AsyncFacilitator implements Facilitator {
   @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.ASYNC).build();
+    return FacilitatorResponse.builder()
+        .executionMode(ExecutionMode.ASYNC)
+        .initialWait(parameters.getWaitDurationSeconds())
+        .build();
   }
 }

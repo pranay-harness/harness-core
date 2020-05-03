@@ -9,6 +9,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.engine.resume.EngineResumeCallback;
+import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
@@ -45,6 +46,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
 
     // Engine Callback
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
+    h.put("engine.resume.EngineWaitResumeCallback", EngineWaitResumeCallback.class);
 
     // Adviser Related Classes
     h.put("adviser.impl.ignore.IgnoreAdviserParameters", IgnoreAdviserParameters.class);

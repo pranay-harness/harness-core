@@ -11,5 +11,5 @@ import lombok.Value;
 @Redesign
 public class FacilitatorObtainment {
   @NonNull FacilitatorType type;
-  FacilitatorParameters parameters;
+  @Builder.Default FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
 }

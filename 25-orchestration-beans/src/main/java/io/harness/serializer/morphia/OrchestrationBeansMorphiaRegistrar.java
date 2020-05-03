@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.facilitate.DefaultFacilitatorParams;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
 import io.harness.state.core.fork.ForkStateParameters;
@@ -23,5 +24,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
       map.put(PKG_HARNESS + name, clazz);
     };
     h.put("state.core.fork.ForkStateParameters", ForkStateParameters.class);
+    h.put("facilitate.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
   }
 }

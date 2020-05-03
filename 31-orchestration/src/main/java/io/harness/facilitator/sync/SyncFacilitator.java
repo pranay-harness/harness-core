@@ -23,6 +23,9 @@ public class SyncFacilitator implements Facilitator {
   @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.SYNC).build();
+    return FacilitatorResponse.builder()
+        .executionMode(ExecutionMode.SYNC)
+        .initialWait(parameters.getWaitDurationSeconds())
+        .build();
   }
 }

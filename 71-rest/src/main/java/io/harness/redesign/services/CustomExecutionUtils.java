@@ -8,6 +8,7 @@ import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
+import io.harness.facilitate.DefaultFacilitatorParams;
 import io.harness.facilitate.FacilitatorObtainment;
 import io.harness.facilitate.FacilitatorType;
 import io.harness.plan.ExecutionNode;
@@ -21,6 +22,8 @@ import io.harness.state.StateType;
 import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.core.section.SectionStateParameters;
 import lombok.experimental.UtilityClass;
+
+import java.time.Duration;
 
 @Redesign
 @UtilityClass
@@ -55,9 +58,12 @@ public class CustomExecutionUtils {
                                                          .responseCodeNodeIdMapping(500, dummyNode3Id)
                                                          .build())
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                          .parameters(
+                              DefaultFacilitatorParams.builder().waitDurationSeconds(Duration.ofSeconds(30)).build())
+                          .build())
                   .build())
         .node(
             ExecutionNode.builder()
