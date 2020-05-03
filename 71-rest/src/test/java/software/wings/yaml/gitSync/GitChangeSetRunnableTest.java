@@ -37,6 +37,8 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testShouldPerformStuckJobCheck() throws IllegalAccessException {
+    ((AtomicLong) FieldUtils.readStaticField(GitChangeSetRunnable.class, "lastTimestampForStuckJobCheck", true)).set(0);
+
     assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
 
     ((AtomicLong) FieldUtils.readStaticField(GitChangeSetRunnable.class, "lastTimestampForStuckJobCheck", true))
@@ -46,6 +48,8 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
     ((AtomicLong) FieldUtils.readStaticField(GitChangeSetRunnable.class, "lastTimestampForStuckJobCheck", true))
         .set(System.currentTimeMillis());
     assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isFalse();
+
+    ((AtomicLong) FieldUtils.readStaticField(GitChangeSetRunnable.class, "lastTimestampForStuckJobCheck", true)).set(0);
   }
 
   @Test

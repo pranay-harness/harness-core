@@ -81,8 +81,11 @@ public class GitChangeSetRunnable implements Runnable {
       final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
       if (yamlChangeSets.isEmpty()) {
-        logger.info("No changesets found for processing");
+        logger.info("No changesets found for processing in this run");
       } else {
+        logger.info(
+            "changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
+
         yamlChangeSets.forEach(this ::processChangeSet);
       }
 
@@ -177,9 +180,11 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleStuckChangeSets() {
     if (shouldPerformStuckJobCheck()) {
+      logger.info("handling stuck change sets");
       lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
       gitChangeSetRunnableHelper.handleOldQueuedChangeSets(wingsPersistence);
       handleStuckRunningChangesets();
+      logger.info("Successfully handled stuck change sets");
     }
   }
 
