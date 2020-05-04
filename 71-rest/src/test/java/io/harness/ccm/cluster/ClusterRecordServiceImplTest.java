@@ -13,9 +13,9 @@ import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
-import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.observer.Subject;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -33,6 +33,9 @@ import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ClusterRecordServiceImplTest extends CategoryTest {
   @Mock private Subject<ClusterRecordObserver> subject;
   @Mock private ClusterRecordDao clusterRecordDao;
@@ -46,14 +49,20 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   private String clusterId = "CLUSTER_ID";
   private String clusterName = "CLUSTER_NAME";
   private String computeProviderName = "clusterName";
-  private Cluster k8sCluster;
-  private ClusterRecord clusterRecord;
+  private DirectKubernetesCluster k8sCluster;
+  private ClusterRecord k8sClusterRecord;
   private ClusterRecord clusterRecordWithId;
+
+  private EcsCluster ecsCluster;
+  private ClusterRecord ecsClusterRecord;
 
   @Before
   public void setUp() {
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
-    clusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
+    k8sClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
+
+    ecsCluster = EcsCluster.builder().build();
+    ecsClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(ecsCluster).build();
 
     clusterRecordWithId = ClusterRecord.builder().uuid(clusterId).accountId(accountId).cluster(k8sCluster).build();
     when(clusterRecordDao.upsertCluster(isA(ClusterRecord.class))).thenReturn(clusterRecordWithId);
@@ -64,10 +73,10 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInformUponUpsert() {
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(null);
-    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.upsert(k8sClusterRecord);
     verify(subject, times(1)).fireInform(any(), eq(clusterRecordWithId));
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(ClusterRecord.builder().build());
-    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.upsert(k8sClusterRecord);
     verify(subject, times(2)).fireInform(any(), eq(clusterRecordWithId));
   }
 
@@ -76,7 +85,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotInformUponUpdate() {
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(null);
-    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.upsert(k8sClusterRecord);
     verify(subject, times(1)).fireInform(any(), eq(clusterRecordWithId)); // instead of 2
   }
 
@@ -84,7 +93,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetClusterRecord() {
-    ClusterRecord upsertedClusterRecord = clusterRecordService.upsert(clusterRecord);
+    ClusterRecord upsertedClusterRecord = clusterRecordService.upsert(k8sClusterRecord);
     clusterRecordService.get(upsertedClusterRecord.getUuid());
     verify(clusterRecordDao).get(eq(upsertedClusterRecord.getUuid()));
   }
@@ -93,7 +102,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeleteExistingClusters() {
-    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.upsert(k8sClusterRecord);
     clusterRecordService.delete(accountId, cloudProviderId);
     verify(clusterRecordDao).delete(eq(accountId), eq(cloudProviderId));
   }
@@ -102,7 +111,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeactivateClusters() {
-    clusterRecordService.upsert(clusterRecord);
+    clusterRecordService.upsert(k8sClusterRecord);
     clusterRecordService.deactivate(accountId, cloudProviderId);
     verify(clusterRecordDao).setStatus(eq(accountId), eq(cloudProviderId), eq(true));
   }
@@ -165,5 +174,15 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
                                               .build();
     ClusterRecord actualClusterRecord = clusterRecordService.from(k8sInfraMapping);
     assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldListByClusterType() {
+    when(clusterRecordDao.list(eq(accountId), eq(null), eq(0), eq(0)))
+        .thenReturn(Arrays.asList(k8sClusterRecord, ecsClusterRecord));
+    List<ClusterRecord> clusterRecords = clusterRecordService.list(accountId, DIRECT_KUBERNETES);
+    assertThat(clusterRecords).containsExactly(k8sClusterRecord);
   }
 }

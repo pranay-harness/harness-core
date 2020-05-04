@@ -47,7 +47,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.ccm.CCMPerpetualTaskHandler;
+import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -652,10 +652,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         (InfrastructureMappingServiceImpl) injector.getInstance(Key.get(InfrastructureMappingService.class));
     infrastructureMappingService.getSubject().register(clusterRecordHandler);
 
-    CCMPerpetualTaskHandler ccmPerpetualTaskHandler = injector.getInstance(Key.get(CCMPerpetualTaskHandler.class));
+    CEPerpetualTaskHandler cePerpetualTaskHandler = injector.getInstance(Key.get(CEPerpetualTaskHandler.class));
     ClusterRecordServiceImpl clusterRecordService =
         (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));
-    clusterRecordService.getSubject().register(ccmPerpetualTaskHandler);
+    clusterRecordService.getSubject().register(cePerpetualTaskHandler);
 
     ArtifactStreamServiceImpl artifactStreamService =
         (ArtifactStreamServiceImpl) injector.getInstance(Key.get(ArtifactStreamService.class));
@@ -664,6 +664,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
     accountService.getAccountCrudSubject().register(
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
+    accountService.getAccountCrudSubject().register(injector.getInstance(Key.get(CEPerpetualTaskHandler.class)));
 
     registerSharedObservers(injector);
   }

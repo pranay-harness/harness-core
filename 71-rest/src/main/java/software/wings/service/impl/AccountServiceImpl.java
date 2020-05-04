@@ -763,15 +763,25 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean updateCeK8sEventCollectionEnabled(String accountId, boolean ceK8sEventCollectionEnabled) {
+    Account account = get(accountId);
+    account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
+    update(account);
+    return true;
+  }
+
+  @Override
   public Account update(@Valid Account account) {
     licenseService.decryptLicenseInfo(account, false);
 
-    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
-                                                     .set("companyName", account.getCompanyName())
-                                                     .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
-                                                     .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
-                                                     .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
-                                                     .set("whitelistedDomains", account.getWhitelistedDomains());
+    UpdateOperations<Account> updateOperations =
+        wingsPersistence.createUpdateOperations(Account.class)
+            .set("companyName", account.getCompanyName())
+            .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
+            .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
+            .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
+            .set(AccountKeys.ceAutoCollectK8sEvents, account.isCeAutoCollectK8sEvents())
+            .set("whitelistedDomains", account.getWhitelistedDomains());
 
     if (null != account.getLicenseInfo()) {
       updateOperations.set(AccountKeys.licenseInfo, account.getLicenseInfo());
@@ -787,7 +797,9 @@ public class AccountServiceImpl implements AccountService {
     licenseService.decryptLicenseInfo(updatedAccount, false);
 
     publishAccountChangeEvent(updatedAccount);
-
+    try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
+      accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountUpdated, updatedAccount);
+    }
     return updatedAccount;
   }
 

@@ -4,6 +4,8 @@ import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Objects.isNull;
 
 import com.google.inject.Inject;
@@ -23,6 +25,7 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 
 import java.util.Arrays;
@@ -31,25 +34,39 @@ import java.util.Optional;
 
 @Singleton
 @Slf4j
-public class CCMPerpetualTaskManager {
+public class CEPerpetualTaskManager {
   private ClusterRecordService clusterRecordService;
   private PerpetualTaskService perpetualTaskService;
   private final PerpetualTaskServiceClientRegistry clientRegistry;
 
   @Inject
-  public CCMPerpetualTaskManager(ClusterRecordService clusterRecordService, PerpetualTaskService perpetualTaskService,
+  public CEPerpetualTaskManager(ClusterRecordService clusterRecordService, PerpetualTaskService perpetualTaskService,
       PerpetualTaskServiceClientRegistry clientRegistry) {
     this.clusterRecordService = clusterRecordService;
     this.perpetualTaskService = perpetualTaskService;
     this.clientRegistry = clientRegistry;
   }
 
+  public boolean createPerpetualTasks(Account account, String clusterType) {
+    List<ClusterRecord> clusterRecords = clusterRecordService.list(account.getUuid(), clusterType);
+    clusterRecords.stream()
+        .filter(clusterRecord -> isEmpty(clusterRecord.getPerpetualTaskIds()))
+        .forEach(this ::createPerpetualTasks);
+    return true;
+  }
+
+  public boolean deletePerpetualTasks(Account account, String clusterType) {
+    List<ClusterRecord> clusterRecords = clusterRecordService.list(account.getUuid(), clusterType);
+    clusterRecords.stream()
+        .filter(clusterRecord -> isNotEmpty(clusterRecord.getPerpetualTaskIds()))
+        .forEach(this ::deletePerpetualTasks);
+    return true;
+  }
+
   public boolean createPerpetualTasks(SettingAttribute cloudProvider) {
     List<ClusterRecord> clusterRecords = getClusterRecords(cloudProvider);
     if (!isNull(clusterRecords)) {
-      for (ClusterRecord clusterRecord : clusterRecords) {
-        createPerpetualTasks(clusterRecord);
-      }
+      clusterRecords.forEach(this ::createPerpetualTasks);
     }
     return true;
   }
@@ -57,9 +74,7 @@ public class CCMPerpetualTaskManager {
   public boolean resetPerpetualTasks(SettingAttribute cloudProvider) {
     List<ClusterRecord> clusterRecords = getClusterRecords(cloudProvider);
     if (!isNull(clusterRecords)) {
-      for (ClusterRecord clusterRecord : clusterRecords) {
-        resetPerpetualTasks(clusterRecord);
-      }
+      clusterRecords.forEach(this ::resetPerpetualTasks);
     }
     return true;
   }
@@ -76,7 +91,7 @@ public class CCMPerpetualTaskManager {
 
   // find all the related Clusters
   private List<ClusterRecord> getClusterRecords(SettingAttribute cloudProvider) {
-    return clusterRecordService.list(cloudProvider.getAccountId(), cloudProvider.getUuid());
+    return clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProvider.getUuid());
   }
 
   public boolean createPerpetualTasks(ClusterRecord clusterRecord) {

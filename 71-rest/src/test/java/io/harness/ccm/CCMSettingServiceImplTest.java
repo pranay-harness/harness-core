@@ -40,7 +40,7 @@ public class CCMSettingServiceImplTest extends CategoryTest {
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
 
-  private SettingAttribute settingAttribute;
+  private SettingAttribute cloudProvider;
 
   private Cluster k8sCluster;
   private ClusterRecord clusterRecord;
@@ -52,17 +52,30 @@ public class CCMSettingServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    accountIdWithCCM = "ACCOUNT_WITH_CCM";
-    Account accountWithCCM = anAccount()
-                                 .withCompanyName(COMPANY_NAME)
-                                 .withAccountName(ACCOUNT_NAME)
-                                 .withAccountKey("ACCOUNT_KEY")
-                                 .withCloudCostEnabled(true)
-                                 .build();
+    Account accountWithCCM = getAccount(true, false);
     when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
 
-    String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
-    CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
+    cloudProvider = getCloudProvider(true, false);
+    when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
+
+    k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
+    clusterRecord = ClusterRecord.builder().accountId(accountIdWithCCM).cluster(k8sCluster).build();
+  }
+
+  private Account getAccount(boolean cloudCostEnabled, boolean ceK8sEventCollectionEnabled) {
+    accountIdWithCCM = "ACCOUNT_WITH_CCM";
+    return anAccount()
+        .withCompanyName(COMPANY_NAME)
+        .withAccountName(ACCOUNT_NAME)
+        .withAccountKey("ACCOUNT_KEY")
+        .withCloudCostEnabled(cloudCostEnabled)
+        .withCeK8sEventCollectionEnabled(ceK8sEventCollectionEnabled)
+        .build();
+  }
+
+  private SettingAttribute getCloudProvider(boolean cloudCostEnabled, boolean skipK8sEventCollection) {
+    CCMConfig ccmConfig =
+        CCMConfig.builder().cloudCostEnabled(cloudCostEnabled).skipK8sEventCollection(skipK8sEventCollection).build();
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                           .masterUrl(masterUrl)
                                                           .username(username)
@@ -70,25 +83,109 @@ public class CCMSettingServiceImplTest extends CategoryTest {
                                                           .accountId(accountIdWithCCM)
                                                           .ccmConfig(ccmConfig)
                                                           .build();
-    settingAttribute = aSettingAttribute()
-                           .withCategory(SettingCategory.CLOUD_PROVIDER)
-                           .withAccountId(accountIdWithCCM)
-                           .withName(kubernetesClusterConfigName)
-                           .withValue(kubernetesClusterConfig)
-                           .build();
-
-    when(settingsService.get(eq(cloudProviderId))).thenReturn(settingAttribute);
-
-    k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
-    clusterRecord = ClusterRecord.builder().accountId(accountIdWithCCM).cluster(k8sCluster).build();
+    cloudProvider = aSettingAttribute()
+                        .withCategory(SettingCategory.CLOUD_PROVIDER)
+                        .withAccountId(accountIdWithCCM)
+                        .withName("KubernetesCluster-" + System.currentTimeMillis())
+                        .withValue(kubernetesClusterConfig)
+                        .build();
+    return cloudProvider;
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testIsCloudCostEnabledForCloudProvider() {
-    boolean result = ccmSettingService.isCloudCostEnabled(settingAttribute);
+    boolean result = ccmSettingService.isCloudCostEnabled(cloudProvider);
     assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotCollectK8sEventForCloudProvider1() {
+    Account accountWithCCM = getAccount(true, false);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(false, false);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotCollectK8sEventForCloudProvider2() {
+    Account accountWithCCM = getAccount(true, false);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(false, true);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCollectK8sEventForCloudProvider3() {
+    Account accountWithCCM = getAccount(true, false);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(true, true);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCollectK8sEventForCloudProvider4() {
+    Account accountWithCCM = getAccount(true, false);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(true, false);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCollectK8sEventForCloudProvider5() {
+    Account accountWithCCM = getAccount(true, true);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(false, false);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotCollectK8sEventForCloudProvider6() {
+    Account accountWithCCM = getAccount(true, true);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(false, true);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCollectK8sEventForCloudProvider7() {
+    Account accountWithCCM = getAccount(true, true);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(true, false);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotCollectK8sEventForCloudProvider8() {
+    Account accountWithCCM = getAccount(true, true);
+    when(accountService.get(eq(accountIdWithCCM))).thenReturn(accountWithCCM);
+    SettingAttribute cloudProvider = getCloudProvider(true, true);
+    boolean result = ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider);
+    assertThat(result).isFalse();
   }
 
   @Test
@@ -103,8 +200,8 @@ public class CCMSettingServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldNotMaskCCMConfig() {
-    ccmSettingService.maskCCMConfig(settingAttribute);
-    assertThat(((CloudCostAware) settingAttribute.getValue()).cloudCostEnabled()).isNotNull();
+    ccmSettingService.maskCCMConfig(cloudProvider);
+    assertThat(((CloudCostAware) cloudProvider.getValue()).cloudCostEnabled()).isNotNull();
   }
 
   @Test

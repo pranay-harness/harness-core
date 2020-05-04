@@ -32,9 +32,13 @@ public class CCMSettingServiceImpl implements CCMSettingService {
   }
 
   @Override
+  public boolean isCeK8sEventCollectionEnabled(String accountId) {
+    return accountService.get(accountId).isCeAutoCollectK8sEvents();
+  }
+
+  @Override
   public boolean isCloudCostEnabled(SettingAttribute settingAttribute) {
-    Account account = accountService.get(settingAttribute.getAccountId());
-    if (account.isCloudCostEnabled()) {
+    if (isCloudCostEnabled(settingAttribute.getAccountId())) {
       CloudCostAware value = (CloudCostAware) settingAttribute.getValue();
       CCMConfig ccmConfig = value.getCcmConfig();
       if (null != ccmConfig) {
@@ -45,13 +49,18 @@ public class CCMSettingServiceImpl implements CCMSettingService {
   }
 
   @Override
-  public void maskCCMConfig(SettingAttribute settingAttribute) {
-    Account account = accountService.get(settingAttribute.getAccountId());
-    if (!account.isCloudCostEnabled()) {
+  public boolean isCeK8sEventCollectionEnabled(SettingAttribute settingAttribute) {
+    if (isCeK8sEventCollectionEnabled(settingAttribute.getAccountId())) {
       CloudCostAware value = (CloudCostAware) settingAttribute.getValue();
-      value.setCcmConfig(null);
-      settingAttribute.setValue((SettingValue) value);
+      CCMConfig ccmConfig = value.getCcmConfig();
+      if (null != ccmConfig) {
+        return settingAttribute.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())
+            && !ccmConfig.isSkipK8sEventCollection();
+      }
+    } else {
+      return isCloudCostEnabled(settingAttribute);
     }
+    return false;
   }
 
   @Override
@@ -66,5 +75,30 @@ public class CCMSettingServiceImpl implements CCMSettingService {
       return isCloudCostEnabled(settingAttribute);
     }
     return false;
+  }
+
+  @Override
+  public boolean isCeK8sEventCollectionEnabled(ClusterRecord clusterRecord) {
+    String cloudProviderId = clusterRecord.getCluster().getCloudProviderId();
+    SettingAttribute settingAttribute = settingsService.get(cloudProviderId);
+    if (isNull(settingAttribute)) {
+      logger.error("Failed to find the Cloud Provider associated with the Cluster with id={}", clusterRecord.getUuid());
+      return false;
+    }
+
+    if (settingAttribute.getValue() instanceof CloudCostAware) {
+      return isCeK8sEventCollectionEnabled(settingAttribute);
+    }
+    return false;
+  }
+
+  @Override
+  public void maskCCMConfig(SettingAttribute settingAttribute) {
+    Account account = accountService.get(settingAttribute.getAccountId());
+    if (!account.isCloudCostEnabled()) {
+      CloudCostAware value = (CloudCostAware) settingAttribute.getValue();
+      value.setCcmConfig(null);
+      settingAttribute.setValue((SettingValue) value);
+    }
   }
 }

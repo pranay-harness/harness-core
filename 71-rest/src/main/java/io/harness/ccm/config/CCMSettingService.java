@@ -8,4 +8,7 @@ public interface CCMSettingService {
   boolean isCloudCostEnabled(SettingAttribute settingAttribute);
   void maskCCMConfig(SettingAttribute settingAttribute);
   boolean isCloudCostEnabled(ClusterRecord clusterRecord);
+  boolean isCeK8sEventCollectionEnabled(String accountId);
+  boolean isCeK8sEventCollectionEnabled(SettingAttribute settingAttribute);
+  boolean isCeK8sEventCollectionEnabled(ClusterRecord clusterRecord);
 }

@@ -10,7 +10,8 @@ import java.util.List;
 public interface ClusterRecordService {
   ClusterRecord upsert(ClusterRecord cluster);
   ClusterRecord get(String clusterId);
-  List<ClusterRecord> list(String accountId, String cloudProviderId);
+  List<ClusterRecord> list(String accountId, String clusterType);
+  List<ClusterRecord> list(String accountId, String clusterType, String cloudProviderId);
   List<ClusterRecord> list(String accountId, String cloudProviderId, boolean isDeactivated);
   List<ClusterRecord> list(
       String accountId, String cloudProviderId, boolean isDeactivated, Integer count, Integer startIndex);

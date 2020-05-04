@@ -39,6 +39,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
@@ -74,8 +75,19 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   }
 
   @Override
-  public List<ClusterRecord> list(String accountId, String cloudProviderId) {
-    return list(accountId, cloudProviderId, false);
+  public List<ClusterRecord> list(String accountId, String clusterType) {
+    return list(accountId, clusterType, null);
+  }
+
+  @Override
+  public List<ClusterRecord> list(String accountId, String clusterType, String cloudProviderId) {
+    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
+    if (isNotEmpty(clusterType)) {
+      clusterRecords = clusterRecords.stream()
+                           .filter(clusterRecord -> clusterRecord.getCluster().getClusterType().equals(clusterType))
+                           .collect(Collectors.toList());
+    }
+    return clusterRecords;
   }
 
   @Override

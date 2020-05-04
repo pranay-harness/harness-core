@@ -108,7 +108,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @Indexed private Long licenseExpiryCheckIteration;
   @Indexed private Long gitSyncExpiryCheckIteration;
   @Indexed private Long secretManagerValidationIterator;
-  private boolean cloudCostEnabled;
+  @Getter private boolean cloudCostEnabled;
+  @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
   private transient Map<String, String> defaults = new HashMap<>();
   /**
@@ -436,6 +437,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private long lastLicenseExpiryReminderSentAt;
     private boolean oauthEnabled;
     private boolean cloudCostEnabled;
+    private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
 
     private Builder() {}
@@ -539,6 +541,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withCeK8sEventCollectionEnabled(boolean ceK8sEventCollectionEnabled) {
+      this.ceK8sEventCollectionEnabled = ceK8sEventCollectionEnabled;
+      return this;
+    }
+
     public Builder withSubdomainUrl(String subdomainUrl) {
       this.subdomainUrl = subdomainUrl;
       return this;
@@ -588,6 +595,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
       account.setOauthEnabled(oauthEnabled);
       account.setCloudCostEnabled(cloudCostEnabled);
+      account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
       account.setSubdomainUrl(subdomainUrl);
       return account;
     }

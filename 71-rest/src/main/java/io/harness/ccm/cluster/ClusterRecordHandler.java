@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.CCMPerpetualTaskManager;
+import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.SettingAttributeObserver;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
+import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,19 +29,19 @@ import java.util.stream.Stream;
 @Singleton
 public class ClusterRecordHandler
     implements SettingAttributeObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
-  private CCMSettingService ccmSettingService;
-  private ClusterRecordService clusterRecordService;
-  private CCMPerpetualTaskManager ccmPerpetualTaskManager;
-  private InfrastructureDefinitionDao infrastructureDefinitionDao;
-  private InfrastructureMappingDao infrastructureMappingDao;
+  private final CCMSettingService ccmSettingService;
+  private final ClusterRecordService clusterRecordService;
+  private final CEPerpetualTaskManager cePerpetualTaskManager;
+  private final InfrastructureDefinitionDao infrastructureDefinitionDao;
+  private final InfrastructureMappingDao infrastructureMappingDao;
 
   @Inject
   public ClusterRecordHandler(CCMSettingService ccmSettingService, ClusterRecordService clusterRecordService,
-      CCMPerpetualTaskManager ccmPerpetualTaskManager, InfrastructureDefinitionDao infrastructureDefinitionDao,
+      CEPerpetualTaskManager cePerpetualTaskManager, InfrastructureDefinitionDao infrastructureDefinitionDao,
       InfrastructureMappingDao infrastructureMappingDao) {
     this.ccmSettingService = ccmSettingService;
     this.clusterRecordService = clusterRecordService;
-    this.ccmPerpetualTaskManager = ccmPerpetualTaskManager;
+    this.cePerpetualTaskManager = cePerpetualTaskManager;
     this.infrastructureDefinitionDao = infrastructureDefinitionDao;
     this.infrastructureMappingDao = infrastructureMappingDao;
   }
@@ -53,20 +54,40 @@ public class ClusterRecordHandler
   @Override
   public void onUpdated(SettingAttribute prevCloudProvider, SettingAttribute currCloudProvider) {
     upsertClusterRecord(currCloudProvider);
-    // compare previous and current Cloud Providers
-    boolean prevCCMEnabled = ccmSettingService.isCloudCostEnabled(prevCloudProvider);
-    boolean currCCMEnabled = ccmSettingService.isCloudCostEnabled(currCloudProvider);
-    // if the Cloud Provider has ccm enabled
-    if (!prevCCMEnabled && currCCMEnabled) {
-      ccmPerpetualTaskManager.createPerpetualTasks(currCloudProvider);
-    }
-    // if the Cloud Provider setting changed
-    if (prevCCMEnabled && currCCMEnabled) {
-      ccmPerpetualTaskManager.resetPerpetualTasks(currCloudProvider);
-    }
-    // if the Cloud provider has ccm disabled
-    if (prevCCMEnabled && !currCCMEnabled) {
-      ccmPerpetualTaskManager.deletePerpetualTasks(currCloudProvider);
+
+    if (currCloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())) {
+      // compare previous and current Cloud Providers
+      boolean prevCeK8sEventCollectionEnabled = ccmSettingService.isCeK8sEventCollectionEnabled(prevCloudProvider);
+      boolean currCeK8sEventCollectionEnabled = ccmSettingService.isCeK8sEventCollectionEnabled(currCloudProvider);
+      // if the Cloud Provider has opted in k8s event collection
+      if (!prevCeK8sEventCollectionEnabled && currCeK8sEventCollectionEnabled) {
+        cePerpetualTaskManager.createPerpetualTasks(currCloudProvider);
+      }
+      // if only the Cloud Provider setting changed
+      if (prevCeK8sEventCollectionEnabled && currCeK8sEventCollectionEnabled) {
+        cePerpetualTaskManager.resetPerpetualTasks(currCloudProvider);
+      }
+      // if the Cloud provider has opted out of k8s event collection
+      if (prevCeK8sEventCollectionEnabled && !currCeK8sEventCollectionEnabled) {
+        cePerpetualTaskManager.deletePerpetualTasks(currCloudProvider);
+      }
+
+    } else {
+      // compare previous and current Cloud Providers
+      boolean prevCEEnabled = ccmSettingService.isCloudCostEnabled(prevCloudProvider);
+      boolean currCEEnabled = ccmSettingService.isCloudCostEnabled(currCloudProvider);
+      // if the Cloud Provider has ccm enabled
+      if (!prevCEEnabled && currCEEnabled) {
+        cePerpetualTaskManager.createPerpetualTasks(currCloudProvider);
+      }
+      // if only the Cloud Provider setting changed
+      if (prevCEEnabled && currCEEnabled) {
+        cePerpetualTaskManager.resetPerpetualTasks(currCloudProvider);
+      }
+      // if the Cloud provider has ccm disabled
+      if (prevCEEnabled && !currCEEnabled) {
+        cePerpetualTaskManager.deletePerpetualTasks(currCloudProvider);
+      }
     }
   }
 

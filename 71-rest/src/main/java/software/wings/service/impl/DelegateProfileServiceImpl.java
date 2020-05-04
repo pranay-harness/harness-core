@@ -148,6 +148,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     logger.info("Account is marked as ForImport and creation of Primary Delegate Profile has been skipped.");
   }
 
+  @Override
+  public void onAccountUpdated(Account account) {
+    // Do nothing
+  }
+
   private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
     return DelegateProfile.builder()
         .uuid(generateUuid())

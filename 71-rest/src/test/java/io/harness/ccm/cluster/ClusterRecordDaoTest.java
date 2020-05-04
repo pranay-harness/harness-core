@@ -23,7 +23,8 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
 
   private String k8sCloudProviderId = "K8S_CLOUD_PROVIDER_ID";
   private DirectKubernetesCluster k8sCluster;
-  private ClusterRecord k8sClusterRecord;
+  private ClusterRecord k8sClusterRecord1;
+  private ClusterRecord k8sClusterRecord2;
 
   private String ecsCloudProviderId = "ECS_CLOUD_PROVIDER_ID";
   private String region = "REGION";
@@ -41,7 +42,8 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Before
   public void setUp() {
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(k8sCloudProviderId).build();
-    k8sClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).isDeactivated(true).build();
+    k8sClusterRecord1 = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).isDeactivated(true).build();
+    k8sClusterRecord2 = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).isDeactivated(true).build();
 
     ecsCluster =
         EcsCluster.builder().cloudProviderId(ecsCloudProviderId).region(region).clusterName(clusterName).build();
@@ -55,12 +57,12 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldUpsertK8sCluster() {
-    ClusterRecord actualClusterRecord1 = clusterRecordDao.upsertCluster(k8sClusterRecord);
-    assertThat(actualClusterRecord1.getAccountId()).isEqualTo(k8sClusterRecord.getAccountId());
-    assertThat(actualClusterRecord1.getCluster()).isEqualTo(k8sClusterRecord.getCluster());
+    ClusterRecord actualClusterRecord1 = clusterRecordDao.upsertCluster(k8sClusterRecord1);
+    assertThat(actualClusterRecord1.getAccountId()).isEqualTo(k8sClusterRecord1.getAccountId());
+    assertThat(actualClusterRecord1.getCluster()).isEqualTo(k8sClusterRecord1.getCluster());
 
     // should not create a second record
-    ClusterRecord actualClusterRecord2 = clusterRecordDao.upsertCluster(k8sClusterRecord);
+    ClusterRecord actualClusterRecord2 = clusterRecordDao.upsertCluster(k8sClusterRecord1);
     assertThat(actualClusterRecord2).isEqualToIgnoringGivenFields(actualClusterRecord1, "lastUpdatedAt");
     assertThat(actualClusterRecord2.getLastUpdatedAt()).isNotEqualTo(actualClusterRecord1.getLastUpdatedAt());
   }
@@ -78,8 +80,8 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetClusterByEntity() {
-    ClusterRecord upsertedCluster1 = clusterRecordDao.upsertCluster(k8sClusterRecord);
-    ClusterRecord actualClusterRecord1 = clusterRecordDao.get(k8sClusterRecord);
+    ClusterRecord upsertedCluster1 = clusterRecordDao.upsertCluster(k8sClusterRecord1);
+    ClusterRecord actualClusterRecord1 = clusterRecordDao.get(k8sClusterRecord1);
     assertThat(actualClusterRecord1).isEqualTo(upsertedCluster1);
 
     ClusterRecord upsertedCluster2 = clusterRecordDao.upsertCluster(ecsClusterRecord);
@@ -91,7 +93,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetClusterById() {
-    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord);
+    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord1);
     ClusterRecord actualClusterRecord = clusterRecordDao.get(upsertedCluster.getUuid());
     assertThat(actualClusterRecord.getUuid()).isEqualTo(upsertedCluster.getUuid());
   }
@@ -100,6 +102,16 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldListAllClusters() {
+    clusterRecordDao.upsertCluster(ecsClusterRecord);
+    clusterRecordDao.upsertCluster(ecsClusterRecord2);
+    List<ClusterRecord> clusterRecordList = clusterRecordDao.list(accountId, null, 0, 0);
+    assertThat(clusterRecordList).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldListAllClustersByCloudProviderId() {
     clusterRecordDao.upsertCluster(ecsClusterRecord);
     clusterRecordDao.upsertCluster(ecsClusterRecord2);
     List<ClusterRecord> clusterRecordList = clusterRecordDao.list(accountId, ecsCloudProviderId, 0, 0);
@@ -120,7 +132,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeleteExistingCluster() {
-    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord);
+    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord1);
     Boolean pass = clusterRecordDao.delete(upsertedCluster);
     assertThat(pass).isTrue();
     List<ClusterRecord> clusterRecordList = clusterRecordDao.list(accountId, k8sCloudProviderId, 0, 0);
@@ -130,8 +142,20 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
+  public void shouldDeleteClustersByCloudProviderId() {
+    clusterRecordDao.upsertCluster(k8sClusterRecord1);
+    clusterRecordDao.upsertCluster(k8sClusterRecord2);
+    boolean pass = clusterRecordDao.delete(accountId, k8sCloudProviderId);
+    assertThat(pass).isTrue();
+    List<ClusterRecord> clusterRecordList = clusterRecordDao.list(accountId, k8sCloudProviderId, 0, 0);
+    assertThat(clusterRecordList).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
   public void shouldSetStatusForCluster() {
-    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord);
+    ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord1);
     ClusterRecord deactivatedCluster = clusterRecordDao.setStatus(accountId, k8sCloudProviderId, true);
     assertThat(upsertedCluster.isDeactivated()).isFalse();
     assertThat(deactivatedCluster.isDeactivated()).isTrue();
@@ -154,7 +178,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldFailToDeleteNonExistingCluster() {
-    Boolean pass1 = clusterRecordDao.delete(k8sClusterRecord);
+    Boolean pass1 = clusterRecordDao.delete(k8sClusterRecord1);
     assertThat(pass1).isFalse();
   }
 }

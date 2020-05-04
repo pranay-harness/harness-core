@@ -136,6 +136,8 @@ public interface AccountService {
 
   Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled);
 
+  boolean updateCeK8sEventCollectionEnabled(String accountId, boolean ceK8sEventCollectionEnabled);
+
   AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
 
   Optional<Account> getOnPremAccount();

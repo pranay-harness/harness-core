@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster.dao;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.common.base.Preconditions;
@@ -50,9 +51,10 @@ public class ClusterRecordDao {
   public List<ClusterRecord> list(String accountId, String cloudProviderId, Integer count, Integer startIndex) {
     Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class, excludeValidate)
                                      .field(ClusterRecordKeys.accountId)
-                                     .equal(accountId)
-                                     .field(cloudProviderField)
-                                     .equal(cloudProviderId);
+                                     .equal(accountId);
+    if (!isEmpty(cloudProviderId)) {
+      query.field(cloudProviderField).equal(cloudProviderId);
+    }
     return query.asList(new FindOptions().skip(startIndex).limit(count));
   }
 
