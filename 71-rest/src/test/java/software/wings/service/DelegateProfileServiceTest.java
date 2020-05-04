@@ -65,6 +65,30 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  public void testGetShouldFetchFromDb() {
+    String accountId = generateUuid();
+    String uuid = generateUuid();
+    DelegateProfile delegateProfile = createDelegateProfileBuilder().accountId(accountId).uuid(uuid).build();
+    wingsPersistence.save(delegateProfile);
+
+    DelegateProfile fetchedProfile = delegateProfileService.get(accountId, uuid);
+    assertThat(delegateProfile).isEqualTo(fetchedProfile);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testGetShouldReturnNull() {
+    DelegateProfile fetchedProfile = delegateProfileService.get(generateUuid(), null);
+    assertThat(fetchedProfile).isNull();
+
+    fetchedProfile = delegateProfileService.get(generateUuid(), "");
+    assertThat(fetchedProfile).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
   public void testOnAccountCreatedShouldCreatePrimaryProfile() {
     Account account = anAccount()
                           .withUuid(generateUuid())

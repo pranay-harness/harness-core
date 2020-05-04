@@ -1317,10 +1317,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate savedDelegate;
     String accountId = delegate.getAccountId();
 
-    if (isBlank(delegate.getDelegateProfileId())
-        || delegateProfileService.get(accountId, delegate.getDelegateProfileId()) == null) {
-      DelegateProfile primaryDelegateProfile = delegateProfileService.fetchPrimaryProfile(accountId);
-      delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
+    if (delegateProfile == null) {
+      delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId);
+      delegate.setDelegateProfileId(delegateProfile.getUuid());
+    }
+
+    if (delegateProfile.isApprovalRequired()) {
+      delegate.setStatus(Status.WAITING_FOR_APPROVAL);
     }
 
     int maxUsageAllowed = delegatesFeature.getMaxUsageAllowedForAccount(accountId);
