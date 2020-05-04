@@ -10,6 +10,7 @@ import software.wings.yaml.BaseYaml;
 @Builder
 public class CCMConfig {
   boolean cloudCostEnabled;
+  boolean skipK8sEventCollection;
 
   @Data
   @NoArgsConstructor

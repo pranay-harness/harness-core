@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.DeprecatedIntegrationTests;
@@ -118,14 +119,16 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Owner(developers = RAMA)
   @Category(DeprecatedIntegrationTests.class)
   public void shouldEnableAndDisableCloudCost() {
-    Account account = new Account();
-    account.setLicenseInfo(getLicenseInfo());
     long timeMillis = System.currentTimeMillis();
     String randomString = "" + timeMillis;
-    account.setCompanyName(randomString);
-    account.setAccountName(randomString);
-    account.setAccountKey(randomString);
-    account.setCloudCostEnabled(true);
+
+    Account account = anAccount()
+                          .withCompanyName(randomString)
+                          .withAccountName(randomString)
+                          .withAccountKey(randomString)
+                          .withLicenseInfo(getLicenseInfo())
+                          .withCloudCostEnabled(true)
+                          .build();
 
     WebTarget target = client.target(API_BASE + "/account/cloudcost/enable?accountId=" + accountId);
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));

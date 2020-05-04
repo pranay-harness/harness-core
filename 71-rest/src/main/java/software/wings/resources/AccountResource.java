@@ -128,6 +128,19 @@ public class AccountResource {
   }
 
   @POST
+  @Path("cloudcost/enable")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> enableCloudCost(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
+    if (response == null) {
+      response = new RestResponse<>(accountService.updateCloudCostEnabled(accountId, true));
+    }
+    return response;
+  }
+
+  @POST
   @Path("cloudcost/disable")
   @Timed
   @ExceptionMetered
@@ -141,14 +154,27 @@ public class AccountResource {
   }
 
   @POST
-  @Path("cloudcost/enable")
+  @Path("continuous-efficiency/enableCeK8sEventCollection")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> enableCloudCost(@QueryParam("accountId") String accountId) {
+  public RestResponse<Boolean> enableK8sEventCollection(@QueryParam("accountId") String accountId) {
     RestResponse<Boolean> response =
         accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
     if (response == null) {
-      response = new RestResponse<>(accountService.updateCloudCostEnabled(accountId, true));
+      response = new RestResponse<>(accountService.updateCeK8sEventCollectionEnabled(accountId, true));
+    }
+    return response;
+  }
+
+  @POST
+  @Path("continuous-efficiency/disableCeK8sEventCollection")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> disableK8sEventCollection(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
+    if (response == null) {
+      response = new RestResponse<>(accountService.updateCeK8sEventCollectionEnabled(accountId, false));
     }
     return response;
   }

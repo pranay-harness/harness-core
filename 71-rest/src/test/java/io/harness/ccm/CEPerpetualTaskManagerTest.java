@@ -1,6 +1,7 @@
 package io.harness.ccm;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -11,9 +12,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.beans.PageResponse;
@@ -37,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.Account;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -44,12 +45,16 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class CCMPerpetualTaskManagerTest extends CategoryTest {
+public class CEPerpetualTaskManagerTest extends CategoryTest {
   private String clusterRecordId = "clusterId";
   private String clusterName = "clusterName";
-  private String accountId = "ACCOUNT_ID";
   private String region = "region";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
+
+  private String accountId = "ACCOUNT_ID";
+  private static final String COMPANY_NAME = "Harness";
+  private static final String ACCOUNT_NAME = "Harness";
+  private Account account;
 
   private static final String masterUrl = "dummyMasterUrl";
   public static final String username = "dummyUsername";
@@ -71,11 +76,19 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   @Mock private K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock private EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
 
-  @Inject @InjectMocks CCMPerpetualTaskManager manager;
+  @InjectMocks CEPerpetualTaskManager manager;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
   public void setUp() {
+    account = anAccount()
+                  .withUuid(accountId)
+                  .withCompanyName(COMPANY_NAME)
+                  .withAccountName(ACCOUNT_NAME)
+                  .withAccountKey("ACCOUNT_KEY")
+                  .withCloudCostEnabled(true)
+                  .build();
+
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().accountId(accountId).build();
     cloudProvider = aSettingAttribute()
                         .withCategory(SettingCategory.CLOUD_PROVIDER)
@@ -90,12 +103,32 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
     ecsClusterRecord = ClusterRecord.builder().uuid(clusterRecordId).accountId(accountId).cluster(ecsCluster).build();
 
     response = aPageResponse().withResponse(Arrays.asList(clusterRecord)).build();
-    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(response);
+    when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId))).thenReturn(response);
     when(clusterRecordService.attachPerpetualTaskId(eq(clusterRecord), anyString())).thenReturn(clusterRecord);
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
     when(clientRegistry.getClient(eq(PerpetualTaskType.K8S_WATCH))).thenReturn(k8sWatchPerpetualTaskServiceClient);
     when(clientRegistry.getClient(eq(PerpetualTaskType.ECS_CLUSTER))).thenReturn(ecsPerpetualTaskServiceClient);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCreatePerpetualTasksForAccount() {
+    when(clusterRecordService.list(eq(accountId), eq(DIRECT_KUBERNETES))).thenReturn(Arrays.asList(clusterRecord));
+    manager.createPerpetualTasks(account, DIRECT_KUBERNETES);
+    verify(clusterRecordService, times(1)).attachPerpetualTaskId(eq(clusterRecord), anyString());
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDeletePerpetualTasksForAccount() {
+    String[] tasks = {podTaskId, nodeTaskId};
+    clusterRecord.setPerpetualTaskIds(tasks);
+    when(clusterRecordService.list(eq(accountId), eq(DIRECT_KUBERNETES))).thenReturn(Arrays.asList(clusterRecord));
+    manager.deletePerpetualTasks(account, DIRECT_KUBERNETES);
+    verify(clusterRecordService, times(2)).removePerpetualTaskId(eq(clusterRecord), anyString());
   }
 
   @Test
@@ -113,7 +146,7 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
     manager.createPerpetualTasks(cloudProvider);
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);
-    manager.resetPerpetualTasks(clusterRecord);
+    manager.resetPerpetualTasks(cloudProvider);
     verify(perpetualTaskService, times(2)).getPerpetualTaskType(anyString());
   }
 
@@ -123,7 +156,7 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   public void shouldDeletePerpetualTasksForCloudProvider() {
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);
-    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId)))
+    when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId)))
         .thenReturn(new ArrayList<>(Arrays.asList(clusterRecord)));
     manager.deletePerpetualTasks(cloudProvider);
     verify(clusterRecordService, times(2)).removePerpetualTaskId(isA(ClusterRecord.class), anyString());

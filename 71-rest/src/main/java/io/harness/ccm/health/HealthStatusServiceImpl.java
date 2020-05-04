@@ -50,7 +50,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
         format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
 
-    List<ClusterRecord> clusterRecords = clusterRecordService.list(cloudProvider.getAccountId(), cloudProviderId);
+    List<ClusterRecord> clusterRecords = clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProviderId);
 
     if (clusterRecords.isEmpty()) {
       return CEHealthStatus.builder().isHealthy(true).build();

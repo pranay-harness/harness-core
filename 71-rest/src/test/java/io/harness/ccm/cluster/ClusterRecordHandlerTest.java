@@ -12,7 +12,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.CCMPerpetualTaskManager;
+import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.rule.Owner;
@@ -41,7 +41,7 @@ import java.util.Arrays;
 public class ClusterRecordHandlerTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;
   @Mock ClusterRecordService clusterRecordService;
-  @Mock CCMPerpetualTaskManager ccmPerpetualTaskManager;
+  @Mock CEPerpetualTaskManager cePerpetualTaskManager;
   @Mock InfrastructureDefinitionDao infrastructureDefinitionDao;
   @Mock InfrastructureMappingDao infrastructureMappingDao;
   @InjectMocks @Spy private ClusterRecordHandler handler;
@@ -104,7 +104,7 @@ public class ClusterRecordHandlerTest extends CategoryTest {
     when(clusterRecordService.upsert(isA(ClusterRecord.class))).thenReturn(clusterRecord);
     when(clusterRecordService.delete(anyString(), anyString())).thenReturn(true);
 
-    when(ccmPerpetualTaskManager.resetPerpetualTasks(isA(SettingAttribute.class))).thenReturn(true);
+    when(cePerpetualTaskManager.resetPerpetualTasks(isA(SettingAttribute.class))).thenReturn(true);
   }
 
   @Test

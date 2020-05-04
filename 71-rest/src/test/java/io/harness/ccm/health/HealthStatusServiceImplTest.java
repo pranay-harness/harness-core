@@ -99,7 +99,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
-    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
+    when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId)))
+        .thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(true);
     when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(clusterId)))
