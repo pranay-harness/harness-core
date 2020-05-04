@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
@@ -97,200 +96,105 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
   }
 
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldAssignDelegateWithNoScope() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(emptyList())
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
-
-    verify(delegateSelectionLogsService, never())
-        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldAssignDelegateWithMatchingIncludeScopes() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> includeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(includeScopes)
-                            .excludeScopes(emptyList())
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
-
-    verify(delegateSelectionLogsService, never())
-        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
+  @Value
+  @Builder
+  public static class ScopeTestData {
+    List<DelegateScope> excludeScopes;
+    List<DelegateScope> includeScopes;
+    boolean assignable;
+    int numOfNoIncludeScopeMatchedInvocations;
+    int numOfExcludeScopeMatchedInvocations;
   }
 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldAssignDelegateWithMatchingIncludeScopesAndWithoutMatchingExcludeScope() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> includeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
-    List<DelegateScope> excludeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(includeScopes)
-                            .excludeScopes(excludeScopes)
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
-
-    verify(delegateSelectionLogsService, never())
-        .logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotAssignDelegateWithMatchingIncludeScopesAndWithMatchingExcludeScope() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> includeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
-    List<DelegateScope> excludeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(includeScopes)
-                            .excludeScopes(excludeScopes)
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
-
-    verify(delegateSelectionLogsService).logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotAssignDelegateWithoutMatchingIncludeScopes() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> includeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(includeScopes)
-                            .excludeScopes(emptyList())
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
-
-    verify(delegateSelectionLogsService, never())
-        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
-    verify(delegateSelectionLogsService).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldAssignDelegateWithoutMatchingExcludeScopes() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> excludeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build());
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
-                            .includeScopes(emptyList())
-                            .excludeScopes(excludeScopes)
-                            .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
-
-    verify(delegateSelectionLogsService, never())
-        .logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotAssignDelegateWithMatchingExcludeScopes() {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
-
-    List<DelegateScope> excludeScopes =
-        ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
-    Delegate delegate =
-        Delegate.builder()
-            .accountId(ACCOUNT_ID)
-            .uuid(DELEGATE_ID)
-            .includeScopes(emptyList())
-            .excludeScopes(ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+  public void assignByScopes() {
+    List<ScopeTestData> tests =
+        ImmutableList.<ScopeTestData>builder()
+            .add(ScopeTestData.builder()
+                     .excludeScopes(emptyList())
+                     .includeScopes(emptyList())
+                     .assignable(true)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(0)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(emptyList())
+                     .includeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                     .assignable(true)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(0)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
+                     .includeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                     .assignable(true)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(0)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                     .includeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                     .assignable(false)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(1)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
+                     .includeScopes(emptyList())
+                     .assignable(true)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(1)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                     .includeScopes(emptyList())
+                     .assignable(false)
+                     .numOfNoIncludeScopeMatchedInvocations(0)
+                     .numOfExcludeScopeMatchedInvocations(2)
+                     .build())
+            .add(ScopeTestData.builder()
+                     .excludeScopes(emptyList())
+                     .includeScopes(
+                         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
+                     .assignable(false)
+                     .numOfNoIncludeScopeMatchedInvocations(1)
+                     .numOfExcludeScopeMatchedInvocations(2)
+                     .build())
             .build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
 
-    verify(delegateSelectionLogsService).logExcludeScopeMatched(batch, ACCOUNT_ID, DELEGATE_ID, excludeScopes.get(0));
-    verify(delegateSelectionLogsService, never()).logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .envId(ENV_ID)
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+
+    for (ScopeTestData test : tests) {
+      Delegate delegate =
+          delegateBuilder.includeScopes(test.getIncludeScopes()).excludeScopes(test.getExcludeScopes()).build();
+      when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+      BatchDelegateSelectionLog batch =
+          BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build()))
+          .isEqualTo(test.isAssignable());
+
+      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfNoIncludeScopeMatchedInvocations()))
+          .logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
+      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
+          .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+    }
   }
 
   @Value
