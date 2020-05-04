@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -58,8 +59,8 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
     groupBy.addAll(Arrays.asList(getServiceGroupBy()));
     sort.addAll(Arrays.asList(getAscBlended(), getAscTime(), getDescUnBlended()));
 
-    when(
-        preAggregateBillingService.getPreAggregateBillingEntityStats(anyList(), anyList(), anyList(), anyList(), any()))
+    when(preAggregateBillingService.getPreAggregateBillingEntityStats(
+             anyString(), anyList(), anyList(), anyList(), anyList(), any()))
         .thenReturn(PreAggregateBillingEntityStatsDTO.builder()
                         .stats(Arrays.asList(PreAggregateBillingEntityDataPoint.builder()
                                                  .awsService(SERVICE_NAME)

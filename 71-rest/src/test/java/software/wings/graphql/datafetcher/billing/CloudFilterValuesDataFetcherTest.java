@@ -59,7 +59,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     entityData = QLEntityData.builder().id(ID).name(NAME).type(TYPE).build();
     awsRegionSet.add(entityData);
 
-    when(preAggregateBillingService.getPreAggregateFilterValueStats(anyList(), anyList(), anyString()))
+    when(preAggregateBillingService.getPreAggregateFilterValueStats(anyString(), anyList(), anyList(), anyString()))
         .thenReturn(PreAggregateFilterValuesDTO.builder()
                         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder()
                                                 .region(awsRegionSet)

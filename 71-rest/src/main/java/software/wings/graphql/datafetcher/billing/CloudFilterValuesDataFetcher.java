@@ -29,11 +29,12 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
       List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
     String queryTableName = cloudBillingHelper.getCloudProviderTableName(filters);
 
-    return preAggregateBillingService.getPreAggregateFilterValueStats(Optional.ofNullable(groupByList)
-                                                                          .map(Collection::stream)
-                                                                          .orElseGet(Stream::empty)
-                                                                          .map(CloudBillingGroupBy::toGroupbyObject)
-                                                                          .collect(Collectors.toList()),
+    return preAggregateBillingService.getPreAggregateFilterValueStats(accountId,
+        Optional.ofNullable(groupByList)
+            .map(Collection::stream)
+            .orElseGet(Stream::empty)
+            .map(CloudBillingGroupBy::toGroupbyObject)
+            .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
             .orElseGet(Stream::empty)

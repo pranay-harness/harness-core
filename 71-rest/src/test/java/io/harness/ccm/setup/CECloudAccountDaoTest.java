@@ -1,6 +1,7 @@
 package io.harness.ccm.setup;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -80,5 +81,14 @@ public class CECloudAccountDaoTest extends WingsBaseTest {
         ceCloudAccountDao.getByMasterAccountId(accountId, masterAccountSettingId, infraMasterAccountId);
     CECloudAccount ceCloudAccount = ceCloudAccountList.get(0);
     assertThat(ceCloudAccount.getAccountStatus()).isEqualTo(accountStatus);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldFetchAccountByInfraAccountId() {
+    ceCloudAccountDao.create(getCECloudAccount());
+    List<CECloudAccount> ceCloudAccountsByInfraAccId = ceCloudAccountDao.getByAWSAccountId(accountId);
+    assertThat(ceCloudAccountsByInfraAccId.get(0).getAccountName()).isEqualTo(accountName);
   }
 }
