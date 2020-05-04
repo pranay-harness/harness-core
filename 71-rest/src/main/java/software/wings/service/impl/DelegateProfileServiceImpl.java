@@ -15,6 +15,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -51,6 +52,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile get(String accountId, String delegateProfileId) {
+    if (StringUtils.isBlank(delegateProfileId)) {
+      return null;
+    }
+
     return wingsPersistence.createQuery(DelegateProfile.class)
         .filter(DelegateProfileKeys.uuid, delegateProfileId)
         .filter(DelegateProfileKeys.accountId, accountId)

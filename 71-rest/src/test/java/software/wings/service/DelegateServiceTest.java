@@ -390,12 +390,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldAdd() {
     String accountId = generateUuid();
     Delegate delegate = BUILDER.accountId(accountId).uuid(generateUuid()).build();
-    DelegateProfile primaryDelegateProfile =
-        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).primary(true).build();
 
     DelegateProfile delegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
-    wingsPersistence.save(delegateProfile);
     delegate.setDelegateProfileId(delegateProfile.getUuid());
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
@@ -405,6 +402,33 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate = delegateService.add(delegate);
 
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldAddWithWaitingForApprovalStatus() {
+    String accountId = generateUuid();
+    Delegate delegate = BUILDER.accountId(accountId).uuid(generateUuid()).build();
+
+    DelegateProfile delegateProfile = createDelegateProfileBuilder()
+                                          .accountId(delegate.getAccountId())
+                                          .uuid(generateUuid())
+                                          .approvalRequired(true)
+                                          .build();
+    delegate.setDelegateProfileId(delegateProfile.getUuid());
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+
+    assertThat(delegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.status);
+    assertThat(delegate.getStatus()).isEqualTo(Status.WAITING_FOR_APPROVAL);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
