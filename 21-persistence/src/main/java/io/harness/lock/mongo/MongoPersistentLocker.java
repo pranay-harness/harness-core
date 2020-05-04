@@ -10,16 +10,11 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.GeneralException;
 import io.harness.exception.PersistentLockException;
@@ -31,33 +26,29 @@ import io.harness.lock.mongo.AcquiredDistributedLock.AcquiredDistributedLockBuil
 import io.harness.lock.mongo.AcquiredDistributedLock.CloseAction;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
-@Singleton
 @Slf4j
 public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, Managed {
-  private static final String LOCKS_COLLECTION = "locks";
+  public static final String LOCKS_COLLECTION = "locks";
   public static final Store LOCKS_STORE = Store.builder().name(LOCKS_COLLECTION).build();
+
+  @Getter private HPersistence persistence;
+
   private DistributedLockSvc distributedLockSvc;
-  private HPersistence persistence;
   private TimeLimiter timeLimiter;
 
   @Inject
-  public MongoPersistentLocker(@Named("locksMongoClient") MongoClient mongoClient,
-      @Named("locksDatabase") String locksDB, HPersistence persistence, TimeLimiter timeLimiter) {
-    this.persistence = persistence;
+  public MongoPersistentLocker(
+      HPersistence persistence, DistributedLockSvc distributedLockSvc, TimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
-    DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoClient, locksDB, LOCKS_COLLECTION);
-    distributedLockSvcOptions.setEnableHistory(false);
-    this.distributedLockSvc = new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
-    if (distributedLockSvc != null && !distributedLockSvc.isRunning()) {
-      distributedLockSvc.startup();
-    }
+    this.persistence = persistence;
+    this.distributedLockSvc = distributedLockSvc;
   }
 
   @Override

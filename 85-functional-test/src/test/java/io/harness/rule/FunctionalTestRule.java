@@ -20,7 +20,6 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ServersModule;
-import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.QueryFactory;
@@ -211,10 +210,5 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(statement, frameworkMethod, target);
-  }
-
-  @Override
-  public void destroy(Injector injector, List<Module> modules) throws Exception {
-    injector.getInstance(MongoPersistentLocker.class).stop();
   }
 }
