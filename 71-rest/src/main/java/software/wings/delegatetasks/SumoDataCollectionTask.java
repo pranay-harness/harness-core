@@ -126,7 +126,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               logger.info("Ugh. Search job was cancelled. Retrying ...", e);
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
+                taskResult.setErrorMessage(ExceptionUtils.getMessage(e));
                 completed.set(true);
                 break;
               }
@@ -143,7 +143,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           if (!response) {
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
+              taskResult.setErrorMessage("Cannot save new sumo log elements records to Harness. Server returned error");
               completed.set(true);
               break;
             }
