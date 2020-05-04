@@ -70,18 +70,21 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
   }
 
+  private DelegateBuilder createDelegateBuilder() {
+    return Delegate.builder()
+        .accountId(ACCOUNT_ID)
+        .ip("127.0.0.1")
+        .hostName("localhost")
+        .version(VERSION)
+        .status(Status.ENABLED)
+        .lastHeartBeat(System.currentTimeMillis());
+  }
+
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteTask() {
-    Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .ip("127.0.0.1")
-                            .hostName("localhost")
-                            .version(VERSION)
-                            .status(Status.ENABLED)
-                            .lastHeartBeat(System.currentTimeMillis())
-                            .build();
+    Delegate delegate = createDelegateBuilder().build();
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
     when(assignDelegateService.canAssign(any(BatchDelegateSelectionLog.class), anyString(), any())).thenReturn(true);
@@ -154,9 +157,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldAcquireDelegateTaskWhitelistedDelegateAndFFisOFF() {
+    Delegate delegate = createDelegateBuilder().build();
+    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(false).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
-    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+    doReturn(getDelegateTask())
+        .when(spydelegateService)
+        .getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
 
     doReturn(getDelegateTaskPackage())
         .when(spydelegateService)
@@ -166,7 +173,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
 
-    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
     verify(spydelegateService, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
   }
@@ -175,9 +182,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldstartTaskValidationForWhitelistedDelegateAndFFisOn() {
+    Delegate delegate = createDelegateBuilder().build();
+    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
-    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+    doReturn(getDelegateTask())
+        .when(spydelegateService)
+        .getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
 
     doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
 
@@ -185,7 +196,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
 
-    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
     verify(spydelegateService, times(1)).setValidationStarted(anyString(), any(DelegateTask.class));
   }
@@ -194,9 +205,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldstartTaskValidationNotWhitelistedAndFFisOff() {
+    Delegate delegate = createDelegateBuilder().build();
+    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
-    doReturn(getDelegateTask()).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
+    doReturn(getDelegateTask())
+        .when(spydelegateService)
+        .getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
 
     doNothing().when(spydelegateService).setValidationStarted(anyString(), any(DelegateTask.class));
 
@@ -204,7 +219,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(false);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(true);
 
-    spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ");
+    spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
     verify(spydelegateService, times(1)).setValidationStarted(anyString(), any(DelegateTask.class));
   }
@@ -213,8 +228,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldNotAcquireDelegateTaskIfTaskIsNull() {
-    doReturn(null).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", "ABC");
-    assertThat(spydelegateService.acquireDelegateTask(ACCOUNT_ID, "ABC", "XYZ")).isNull();
+    Delegate delegate = createDelegateBuilder().build();
+    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
+    doReturn(null).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
+    assertThat(spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ")).isNull();
   }
 
   private DelegateTaskPackage getDelegateTaskPackage() {

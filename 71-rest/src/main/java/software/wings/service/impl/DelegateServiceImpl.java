@@ -1932,6 +1932,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try {
+      Delegate delegate = get(accountId, delegateId, false);
+      if (delegate == null || Status.ENABLED != delegate.getStatus()) {
+        logger.warn("Delegate rejected to acquire task, because it was not found to be in {} status.", Status.ENABLED);
+        return null;
+      }
+
       logger.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {

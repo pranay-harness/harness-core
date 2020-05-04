@@ -331,8 +331,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate =
-        BUILDER.uuid(delegateId).accountId(accountId).status(Status.WAITING_FOR_APPROVAL).build();
+    Delegate existingDelegate = BUILDER.build();
+    existingDelegate.setUuid(delegateId);
+    existingDelegate.setAccountId(accountId);
+    existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
     wingsPersistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.ACTIVATE);
@@ -350,8 +352,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate =
-        BUILDER.uuid(delegateId).accountId(accountId).status(Status.WAITING_FOR_APPROVAL).build();
+    Delegate existingDelegate = BUILDER.build();
+    existingDelegate.setUuid(delegateId);
+    existingDelegate.setAccountId(accountId);
+    existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
     wingsPersistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.REJECT);
@@ -1082,6 +1086,39 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID + "1", delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotAcquireTaskIfDelegateStatusNotEnabled() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    Delegate delegate = BUILDER.build();
+    delegate.setAccountId(accountId);
+    delegate.setUuid(delegateId);
+    delegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    wingsPersistence.save(delegate);
+
+    DelegateTaskPackage delegateTaskPackage =
+        delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
+    assertThat(delegateTaskPackage).isNull();
+
+    delegate.setStatus(Status.DELETED);
+    wingsPersistence.save(delegate);
+
+    delegateTaskPackage = delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
+    assertThat(delegateTaskPackage).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotAcquireTaskIfDelegateNotFoundInDb() {
+    DelegateTaskPackage delegateTaskPackage =
+        delegateService.acquireDelegateTask(ACCOUNT_ID, generateUuid(), generateUuid());
+    assertThat(delegateTaskPackage).isNull();
   }
 
   @Test
