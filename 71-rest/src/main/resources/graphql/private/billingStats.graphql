@@ -195,7 +195,7 @@ type GcpBillingEntityData {
 }
 
 type SunburstChartData {
-  data: [SunburstChartDataPoint]
+  totalCost: Number
   gridData: [SunburstGridDataPoint]
 }
 
