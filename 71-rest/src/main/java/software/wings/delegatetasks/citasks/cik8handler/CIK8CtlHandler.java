@@ -36,6 +36,10 @@ public class CIK8CtlHandler {
     return kubernetesClient.pods().create(pod);
   }
 
+  public Boolean deletePod(KubernetesClient kubernetesClient, String podName, String namespace) {
+    return kubernetesClient.pods().inNamespace(namespace).withName(podName).delete();
+  }
+
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, GitConfig gitConfig,
       List<EncryptedDataDetail> gitEncryptedDataDetails) throws UnsupportedEncodingException {
     Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);

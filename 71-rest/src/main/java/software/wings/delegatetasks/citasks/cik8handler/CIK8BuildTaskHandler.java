@@ -58,7 +58,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     GitFetchFilesConfig gitFetchFilesConfig = cik8BuildTaskParams.getGitFetchFilesConfig();
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
-    String namespace = kubernetesConfig.getNamespace();
+    String namespace = podParams.getNamespace();
 
     K8sTaskExecutionResponse result;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {

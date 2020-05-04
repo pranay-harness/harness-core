@@ -242,6 +242,7 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.beans.ci.CIClusterType;
 import software.wings.beans.ci.CIK8BuildTaskParams;
+import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.beans.ci.ExecuteCommandTaskParams;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
@@ -1599,5 +1600,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecuteCommandTaskParams.Type.class, 7369);
     kryo.register(ExecuteCommandTaskHandler.Type.class, 7370);
     kryo.register(ShellScriptType.class, 7371);
+    kryo.register(CIK8CleanupTaskParams.class, 7372);
   }
 }
