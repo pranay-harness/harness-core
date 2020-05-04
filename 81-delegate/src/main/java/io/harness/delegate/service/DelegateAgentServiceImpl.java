@@ -47,6 +47,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
 import static io.harness.filesystem.FileIo.releaseLock;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -1858,9 +1859,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException e) {
-        logger.error("Timed out getting task future", e);
+        ignoredOnPurpose(e);
+        logger.error("Timed out getting task future");
       } catch (CancellationException e) {
-        logger.error("Task {} was cancelled", taskId, e);
+        ignoredOnPurpose(e);
+        logger.error("Task {} was cancelled", taskId);
       } catch (Exception e) {
         logger.error("Error from task future {}", taskId, e);
       }
