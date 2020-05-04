@@ -137,7 +137,7 @@ public class PodWatcherTest extends CategoryTest {
         .editSpec()
         .withNodeName("gke-pr-private-pool-1-49d0f375-12xx")
         .endSpec()
-        .withNewStatus()
+        .editOrNewStatus()
         .withConditions(new PodConditionBuilder()
                             .withLastTransitionTime("2019-09-09T18:21:45.000+05:30")
                             .withType("PodScheduled")
@@ -169,6 +169,7 @@ public class PodWatcherTest extends CategoryTest {
         .withResourceVersion("77330477")
         .endMetadata()
         .withNewStatus()
+        .withQosClass("Guaranteed")
         .endStatus()
         .withNewSpec()
         .withContainers(
@@ -216,6 +217,14 @@ public class PodWatcherTest extends CategoryTest {
                         .putRequests("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
                         .build())
                 .build());
+    assertThat(podInfo.getQosClass()).isEqualTo("Guaranteed");
+    assertThat(podInfo.getTotalResource())
+        .isEqualTo(Resource.newBuilder()
+                       .putLimits("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                       .putLimits("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                       .putRequests("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                       .putRequests("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                       .build());
     assertThat(podInfo.getLabelsMap())
         .isEqualTo(
             ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"));

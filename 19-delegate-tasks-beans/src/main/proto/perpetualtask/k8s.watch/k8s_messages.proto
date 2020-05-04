@@ -43,6 +43,7 @@ message PodInfo {
   string cluster_id = 13;
   string cluster_name = 14;
   string kube_system_uid = 15;
+  string qos_class = 16;
 }
 
 message PodEvent {
