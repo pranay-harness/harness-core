@@ -55,3 +55,6 @@ eventQueue
 **/*.tfstate.backup
 **/tfplan
 **/*.lock.info\
+
+profile
+profile.result

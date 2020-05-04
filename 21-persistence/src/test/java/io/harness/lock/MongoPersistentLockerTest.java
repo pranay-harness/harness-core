@@ -24,6 +24,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.mongo.AcquiredDistributedLock;
 import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.rule.Owner;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
@@ -44,6 +45,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockDoLock() {
     Duration timeout = ofMillis(1000);
 
@@ -68,6 +70,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -90,6 +93,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testTryAcquireLockDoNotThrowException() {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -111,6 +115,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockNonLockedAtRelease() throws IllegalAccessException {
     Duration timeout = ofMillis(1000);
 
@@ -136,6 +141,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockLogging() throws IllegalAccessException {
     DistributedLock distributedLock = mock(DistributedLock.class);
     when(distributedLock.tryLock()).thenReturn(false);
@@ -155,6 +161,7 @@ public class MongoPersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireTimeout() throws InterruptedException {
     assumeThat("We can have timeout logic").isEqualTo("true");
     Duration timeout = ofMillis(1);

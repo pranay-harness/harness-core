@@ -17,8 +17,8 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.lock.mongo.MongoPersistentLocker;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -31,17 +31,17 @@ import java.time.Duration;
  */
 @Slf4j
 public class MongoPersistentLockerDBTest extends PersistenceTest {
-  @Inject private HPersistence persistence;
   @Inject private MongoPersistentLocker mongoPersistentLocker;
 
   private DBObject getDbLock(String uuid) {
-    final DBCollection locks = persistence.getCollection(LOCKS_STORE, "locks");
+    final DBCollection locks = mongoPersistentLocker.getPersistence().getCollection(LOCKS_STORE, "locks");
     return locks.findOne(new BasicDBObject().append("_id", uuid));
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
     try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
@@ -67,6 +67,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
     try (AcquiredLock lock = mongoPersistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
@@ -81,6 +82,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testConcurrentAcquireEphemeralLock() {
     String uuid = generateUuid();
 
@@ -95,6 +97,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireLockAfterDestroy() {
     assertThatCode(() -> {
       String uuid = generateUuid();
@@ -113,6 +116,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testTryToAcquireEphemeralLock() {
     assertThatCode(() -> {
       String uuid = generateUuid();
@@ -126,6 +130,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testTryToAcquireLock() {
     String uuid = generateUuid();
     try (AcquiredLock outer = mongoPersistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
@@ -140,6 +145,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @RealMongo
   public void testAcquireAfterTimeout() throws InterruptedException {
     assumeThat("The underlining code respects lock after timeout.").isEqualTo("true");
     class AnotherLock implements Runnable {

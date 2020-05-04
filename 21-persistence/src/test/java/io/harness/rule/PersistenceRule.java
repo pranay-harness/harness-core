@@ -7,13 +7,16 @@ import static java.util.Arrays.asList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
-import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
@@ -148,20 +151,20 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient()).cumulativeDependencies());
 
+    modules.add(new ProviderModule() {
+      @Provides
+      DistributedLockImplementation DistributedLockImplementation() {
+        return DistributedLockImplementation.MONGO;
+      }
+    });
+
+    modules.add(new PersistentLockModule());
+
     return modules;
   }
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(statement, frameworkMethod, target);
-  }
-
-  @Override
-  public void destroy(Injector injector, List<Module> modules) throws Exception {
-    try {
-      injector.getInstance(MongoPersistentLocker.class).stop();
-    } catch (Exception e) {
-      logger.info("MongoPersistentLocker was not initialized");
-    }
   }
 }

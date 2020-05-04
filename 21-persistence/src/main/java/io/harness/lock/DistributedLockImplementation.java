@@ -1,6 +1,3 @@
 package io.harness.lock;
 
-public enum DistributedLockImplementation {
-  MONGO,
-  REDIS;
-}
+public enum DistributedLockImplementation { MONGO, REDIS }
