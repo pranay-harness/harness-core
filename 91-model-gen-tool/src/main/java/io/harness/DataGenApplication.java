@@ -9,8 +9,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.Application;
@@ -20,10 +18,8 @@ import io.harness.configuration.DeployMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
-import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
-import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
@@ -88,14 +84,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      MongoConfig mongoConfig() {
-        return configuration.getMongoConnectionFactory();
-      }
-    });
-
     modules.addAll(new MongoModule().cumulativeDependencies());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -218,7 +206,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
   }
 
   private void registerStores(Injector injector) {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    HPersistence persistence = injector.getInstance(HPersistence.class);
     persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
