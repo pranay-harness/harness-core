@@ -30,7 +30,6 @@ import software.wings.delegatetasks.KubernetesSwapServiceSelectorsTask;
 import software.wings.delegatetasks.LogDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
-import software.wings.delegatetasks.PrometheusDataCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.StackDriverDataCollectionTask;
@@ -344,11 +343,7 @@ public enum TaskType {
   ECS_COMMAND_TASK(TaskGroup.AWS, EcsCommandTask.class, AwsConnectionValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
-  PROMETHEUS_METRIC_DATA_COLLECTION_TASK(
-      TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
   PROMETHEUS_METRIC_DATA_PER_HOST(TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
-  PROMETHEUS_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.GUARD_24x7, PrometheusDataCollectionTask.class, PrometheusValidation.class),
   CLOUD_WATCH_COLLECT_METRIC_DATA(
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_METRIC_DATA_FOR_NODE(TaskGroup.CLOUD_WATCH, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
