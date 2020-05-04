@@ -39,14 +39,12 @@ import software.wings.service.impl.prometheus.PrometheusMetricDataResponse.Prome
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse.PrometheusMetricDataResult;
 import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.prometheus.PrometheusDelegateService;
 
 import java.util.Arrays;
 
 public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Mock private PrometheusDelegateService prometheusDelegateService;
   @Mock private APMDelegateService apmDelegateService;
   @Mock private MLServiceUtils mlServiceUtils;
   @InjectMocks private PrometheusAnalysisServiceImpl prometheusAnalysisService;
@@ -57,8 +55,6 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   public void setup() {
     settingId = generateUuid();
     MockitoAnnotations.initMocks(this);
-    when(delegateProxyFactory.get(eq(PrometheusDelegateService.class), any(SyncTaskContext.class)))
-        .thenReturn(prometheusDelegateService);
     when(delegateProxyFactory.get(eq(APMDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(apmDelegateService);
     when(mlServiceUtils.getHostName(any())).thenReturn("dummyHostName");
