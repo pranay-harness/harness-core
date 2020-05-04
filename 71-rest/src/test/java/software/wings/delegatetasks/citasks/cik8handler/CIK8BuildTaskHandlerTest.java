@@ -40,7 +40,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
   @Mock private CIK8PodSpecBuilder podSpecBuilder;
   @InjectMocks private CIK8BuildTaskHandler cik8BuildTaskHandler;
 
-  private String namespace = "default";
+  private static final String namespace = "default";
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -129,5 +129,12 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build())).thenReturn(podBuilder.build());
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionResult.CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getType() {
+    assertEquals(CIK8BuildTaskHandler.Type.GCP_K8, cik8BuildTaskHandler.getType());
   }
 }

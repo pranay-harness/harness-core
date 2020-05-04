@@ -56,12 +56,12 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   private NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>>
       mockSecretNonNamespacedOp;
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockKubePod;
+  @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockPodNonNamespacedOp;
+  @Mock private PodResource<Pod, DoneablePod> mockPodNamed;
 
   @InjectMocks private CIK8CtlHandler cik8CtlHandler;
 
   @Mock Provider<ExecCommandListener> execListenerProvider;
-  @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockPodNonNamespacedOp;
-  @Mock private PodResource<Pod, DoneablePod> mockPodNamed;
   @Mock
   private ContainerResource<String, LogWatch, InputStream, PipedOutputStream, OutputStream, PipedInputStream, String,
       ExecWatch> mockContainerNamed;
@@ -124,6 +124,34 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockKubePod.create(mockPod)).thenReturn(mockCreatedPod);
 
     assertEquals(mockCreatedPod, cik8CtlHandler.createPod(mockKubernetesClient, mockPod));
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void deletePodWithSuccess() {
+    Pod mockPod = new PodBuilder().build();
+    Pod mockCreatedPod = new PodBuilder().build();
+    when(mockKubernetesClient.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.delete()).thenReturn(Boolean.TRUE);
+
+    assertTrue(cik8CtlHandler.deletePod(mockKubernetesClient, podName, namespace));
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void deletePodWithFailure() {
+    Pod mockPod = new PodBuilder().build();
+    Pod mockCreatedPod = new PodBuilder().build();
+    when(mockKubernetesClient.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.delete()).thenReturn(Boolean.FALSE);
+
+    assertFalse(cik8CtlHandler.deletePod(mockKubernetesClient, podName, namespace));
   }
 
   @Test
