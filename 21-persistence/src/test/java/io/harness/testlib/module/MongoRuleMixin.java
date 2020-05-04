@@ -1,21 +1,18 @@
 package io.harness.testlib.module;
 
+import static io.harness.testlib.module.FakeMongoCreator.takeFakeMongo;
+import static io.harness.testlib.module.RealMongoCreator.takeRealMongo;
+
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.testlib.RealMongo;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.net.InetSocketAddress;
 import java.util.List;
 
 public interface MongoRuleMixin {
@@ -36,23 +33,14 @@ public interface MongoRuleMixin {
   }
 
   default MongoClient fakeMongoClient(ClosingFactory closingFactory) {
-    final MongoServer mongoServer = new MongoServer(new MemoryBackend());
-    if (closingFactory != null) {
-      closingFactory.addServer(new Closeable() {
-        @Override
-        public void close() throws IOException {
-          mongoServer.shutdownNow();
-        }
-      });
-    }
+    FakeMongoCreator.FakeMongo fakeMongo = takeFakeMongo();
+    closingFactory.addServer(fakeMongo);
+    return fakeMongo.getMongoClient();
+  }
 
-    mongoServer.bind("localhost", 0);
-    InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-    MongoClient client = new MongoClient(new ServerAddress(serverAddress));
-
-    if (closingFactory != null) {
-      closingFactory.addServer(client);
-    }
-    return client;
+  default MongoClient realMongoClient(ClosingFactory closingFactory) {
+    RealMongoCreator.RealMongo realMongo = takeRealMongo();
+    closingFactory.addServer(realMongo);
+    return realMongo.getMongoClient();
   }
 }

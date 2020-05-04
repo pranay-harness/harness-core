@@ -18,6 +18,7 @@ import io.harness.govern.DependencyModule;
 import io.harness.govern.DependencyProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.lock.mongo.MongoPersistentLocker;
+import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +69,9 @@ public class PersistentLockModule extends DependencyProviderModule implements Se
       Provider<RedisPersistentLocker> redisPersistentLockerProvider,
       Provider<MongoPersistentLocker> mongoPersistentLockerProvider) {
     switch (distributedLockImplementation) {
+      case NOOP:
+        logger.info("Initialize Noop Locker");
+        return new PersistentNoopLocker();
       case REDIS:
         logger.info("Initialize Redis Locker");
         return redisPersistentLockerProvider.get();
