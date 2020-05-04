@@ -20,6 +20,7 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.ce.CECloudAccount;
 import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
@@ -42,6 +44,7 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class PreAggregateBillingServiceImplTest extends CategoryTest {
@@ -49,6 +52,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Mock TableResult tableResult;
   @Mock BigQueryService bigQueryService;
   @Mock PreAggregatedBillingDataHelper dataHelper;
+  @Mock CECloudAccountDao ceCloudAccountDao;
   @InjectMocks PreAggregateBillingServiceImpl preAggregateBillingService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -60,6 +64,9 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private static final String STATS_LABEL = "statsLabel";
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
+  private static final String ACCOUNT_ID = "accountId";
+  private static final String AWS_ACCOUNT_NAME = "awsAccountName";
+  private static final String AWS_ACCOUNT_ID = "awsAccountId";
   private static final String ID = "id";
   private static final String NAME = "name";
   private static final String TYPE = "type";
@@ -89,7 +96,12 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
 
-    when(dataHelper.convertToPreAggregatesEntityData(tableResult))
+    when(ceCloudAccountDao.getByAWSAccountId(ACCOUNT_ID))
+        .thenReturn(Collections.singletonList(
+            CECloudAccount.builder().infraAccountId(AWS_ACCOUNT_ID).accountName(AWS_ACCOUNT_NAME).build()));
+    Map<String, String> awsLinkedAccountMap = Collections.singletonMap(AWS_ACCOUNT_ID, AWS_ACCOUNT_NAME);
+
+    when(dataHelper.convertToPreAggregatesEntityData(tableResult, awsLinkedAccountMap))
         .thenReturn(
             PreAggregateBillingEntityStatsDTO.builder()
                 .stats(Arrays.asList(
@@ -116,7 +128,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     QLEntityData entityData = QLEntityData.builder().id(ID).name(NAME).type(TYPE).build();
     awsRegionSet.add(entityData);
 
-    when(dataHelper.convertToPreAggregatesFilterValue(tableResult))
+    when(dataHelper.convertToPreAggregatesFilterValue(tableResult, awsLinkedAccountMap))
         .thenReturn(PreAggregateFilterValuesDTO.builder()
                         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder().region(awsRegionSet).build()))
                         .build());
@@ -137,7 +149,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateEntitySeriesStats() {
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
     assertThat(stats.getStats()).isNotNull();
     assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
@@ -149,7 +161,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateEntitySeriesStatsNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
     assertThat(stats).isNull();
   }
 
@@ -190,7 +202,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateFilterValueStatsTest() {
     PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(groupByObjects, null, TABLE_NAME);
+        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME);
     assertThat(stats.getData().get(0)).isNotNull();
     assertThat(stats.getData().get(0).getRegion().size()).isEqualTo(1);
   }
@@ -201,7 +213,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateFilterValueStatsTestNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(groupByObjects, null, TABLE_NAME);
+        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME);
     assertThat(stats).isNull();
   }
 

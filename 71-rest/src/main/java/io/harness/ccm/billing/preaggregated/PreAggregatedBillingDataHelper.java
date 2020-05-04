@@ -67,6 +67,7 @@ public class PreAggregatedBillingDataHelper {
 
   private static final String COST_DESCRIPTION = "of %s - %s";
   private static final String COST_VALUE = "$%s";
+  private static final String AWS_ACCOUNT_TEMPLATE = "%s (%s)";
 
   public PreAggregateBillingTimeSeriesStatsDTO convertToPreAggregatesTimeSeriesData(TableResult result) {
     preconditionsValidation(result, "PreAggregate billing time series stats");
@@ -200,7 +201,8 @@ public class PreAggregatedBillingDataHelper {
     }
   }
 
-  public PreAggregateBillingEntityStatsDTO convertToPreAggregatesEntityData(TableResult result) {
+  public PreAggregateBillingEntityStatsDTO convertToPreAggregatesEntityData(
+      TableResult result, Map<String, String> awsCloudAccountMap) {
     if (preconditionsValidation(result, "convertToPreAggregatesEntityData")) {
       return null;
     }
@@ -208,7 +210,7 @@ public class PreAggregatedBillingDataHelper {
     FieldList fields = schema.getFields();
     List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
-      processDataPointAndAppendToList(fields, row, dataPointList);
+      processDataPointAndAppendToList(fields, row, dataPointList, awsCloudAccountMap);
     }
     return PreAggregateBillingEntityStatsDTO.builder().stats(dataPointList).build();
   }
@@ -224,8 +226,8 @@ public class PreAggregatedBillingDataHelper {
   }
 
   @VisibleForTesting
-  void processDataPointAndAppendToList(
-      FieldList fields, FieldValueList row, List<PreAggregateBillingEntityDataPoint> dataPointList) {
+  void processDataPointAndAppendToList(FieldList fields, FieldValueList row,
+      List<PreAggregateBillingEntityDataPoint> dataPointList, Map<String, String> awsCloudAccountMap) {
     PreAggregateBillingEntityDataPointBuilder dataPointBuilder = PreAggregateBillingEntityDataPoint.builder();
     for (Field field : fields) {
       String value = null;
@@ -236,9 +238,9 @@ public class PreAggregatedBillingDataHelper {
           dataPointBuilder.region(value);
           break;
         case entityConstantAwsLinkedAccount:
-          value = fetchStringValue(row, field);
-          dataPointBuilder.id(value);
-          dataPointBuilder.awsLinkedAccount(value);
+          String awsAccountId = fetchStringValue(row, field);
+          dataPointBuilder.id(awsAccountId);
+          dataPointBuilder.awsLinkedAccount(getAwsAccountName(awsAccountId, awsCloudAccountMap));
           break;
         case entityConstantAwsService:
           value = fetchStringValue(row, field);
@@ -375,7 +377,8 @@ public class PreAggregatedBillingDataHelper {
     }
   }
 
-  public PreAggregateFilterValuesDTO convertToPreAggregatesFilterValue(TableResult result) {
+  public PreAggregateFilterValuesDTO convertToPreAggregatesFilterValue(
+      TableResult result, Map<String, String> awsCloudAccountMap) {
     if (preconditionsValidation(result, "convertToPreAggregatesFilterValue")) {
       return null;
     }
@@ -400,7 +403,10 @@ public class PreAggregatedBillingDataHelper {
             region.add(getEntityDataPoint(row, field));
             break;
           case entityConstantAwsLinkedAccount:
-            awsLinkedAccount.add(getEntityDataPoint(row, field));
+            String awsAccountId = fetchStringValue(row, field);
+            String awsAccountName = getAwsAccountName(awsAccountId, awsCloudAccountMap);
+            awsLinkedAccount.add(
+                QLEntityData.builder().id(awsAccountId).name(awsAccountName).type(field.getName()).build());
             break;
           case entityConstantAwsService:
             awsService.add(getEntityDataPoint(row, field));
@@ -442,6 +448,13 @@ public class PreAggregatedBillingDataHelper {
                                 .gcpBillingAccount(gcpBillingAccount)
                                 .build()))
         .build();
+  }
+
+  private String getAwsAccountName(String awsAccountId, Map<String, String> awsCloudAccountMap) {
+    if (awsCloudAccountMap.containsKey(awsAccountId)) {
+      return String.format(AWS_ACCOUNT_TEMPLATE, awsCloudAccountMap.get(awsAccountId), awsAccountId);
+    }
+    return awsAccountId;
   }
 
   private QLEntityData getEntityDataPoint(FieldValueList row, Field field) {

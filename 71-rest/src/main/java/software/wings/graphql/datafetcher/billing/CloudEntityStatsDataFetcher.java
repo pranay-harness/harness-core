@@ -31,11 +31,12 @@ public class CloudEntityStatsDataFetcher
       Integer limit, Integer offset) {
     String queryTableName = cloudBillingHelper.getCloudProviderTableName(filters);
 
-    return preAggregateBillingService.getPreAggregateBillingEntityStats(Optional.ofNullable(aggregateFunction)
-                                                                            .map(Collection::stream)
-                                                                            .orElseGet(Stream::empty)
-                                                                            .map(CloudBillingAggregate::toFunctionCall)
-                                                                            .collect(Collectors.toList()),
+    return preAggregateBillingService.getPreAggregateBillingEntityStats(accountId,
+        Optional.ofNullable(aggregateFunction)
+            .map(Collection::stream)
+            .orElseGet(Stream::empty)
+            .map(CloudBillingAggregate::toFunctionCall)
+            .collect(Collectors.toList()),
         Optional.ofNullable(groupByList)
             .map(Collection::stream)
             .orElseGet(Stream::empty)

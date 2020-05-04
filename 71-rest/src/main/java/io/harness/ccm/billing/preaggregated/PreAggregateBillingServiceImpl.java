@@ -10,22 +10,29 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.setup.CECloudAccountDao;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.ce.CECloudAccount;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
 public class PreAggregateBillingServiceImpl implements PreAggregateBillingService {
   private BigQueryService bigQueryService;
   private PreAggregatedBillingDataHelper dataHelper;
+  private CECloudAccountDao ceCloudAccountDao;
 
   private static final String TOTAL_COST_LABEL = "Total Cost";
 
   @Inject
-  PreAggregateBillingServiceImpl(BigQueryService bigQueryService, PreAggregatedBillingDataHelper dataHelper) {
+  PreAggregateBillingServiceImpl(
+      BigQueryService bigQueryService, PreAggregatedBillingDataHelper dataHelper, CECloudAccountDao ceCloudAccountDao) {
     this.bigQueryService = bigQueryService;
     this.dataHelper = dataHelper;
+    this.ceCloudAccountDao = ceCloudAccountDao;
   }
 
   @Override
@@ -50,8 +57,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   @Override
-  public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(List<SqlObject> aggregateFunction,
-      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
+  public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
+      List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
+      String queryTableName) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
     String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
@@ -67,7 +75,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       Thread.currentThread().interrupt();
       return null;
     }
-    return dataHelper.convertToPreAggregatesEntityData(result);
+    return dataHelper.convertToPreAggregatesEntityData(result, linkedAccountsMap(accountId));
   }
 
   @Override
@@ -90,7 +98,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
-      List<Object> groupByObjects, List<Condition> conditions, String queryTableName) {
+      String accountId, List<Object> groupByObjects, List<Condition> conditions, String queryTableName) {
     String filterValueQuery = dataHelper.getQuery(null, groupByObjects, conditions, null, false);
     // Replacing the Default Table with the Table in the context
     filterValueQuery = filterValueQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
@@ -104,7 +112,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       Thread.currentThread().interrupt();
       return null;
     }
-    return dataHelper.convertToPreAggregatesFilterValue(result);
+    return dataHelper.convertToPreAggregatesFilterValue(result, linkedAccountsMap(accountId));
   }
 
   public PreAggregatedCostDataStats getAggregatedCostData(
@@ -123,5 +131,11 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       return null;
     }
     return dataHelper.convertToAggregatedCostData(result);
+  }
+
+  private Map<String, String> linkedAccountsMap(String harnessAccountId) {
+    List<CECloudAccount> awsCloudAccountList = ceCloudAccountDao.getByAWSAccountId(harnessAccountId);
+    return awsCloudAccountList.stream().collect(
+        Collectors.toMap(CECloudAccount::getInfraAccountId, CECloudAccount::getAccountName));
   }
 }

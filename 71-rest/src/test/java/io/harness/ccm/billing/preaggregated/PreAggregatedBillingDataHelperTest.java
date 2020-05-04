@@ -70,6 +70,7 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   private String ENTRY_POINT = "entryPoint";
   private static final String CLOUD_PROVIDER = "AWS";
   private static final String BLENDED_COST_LABEL = "blended Cost";
+  private static final String AWS_ACCOUNT_NAME = "awsAccountName";
   private static final long currentMillis = Instant.now().toEpochMilli();
   private static final long MIN_START_TIME = 0L;
   private static final long MAX_START_TIME = currentMillis;
@@ -132,11 +133,13 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     when(billingDataHelper.getRoundedDoubleValue(GCP_COST)).thenReturn(GCP_COST);
 
     List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
-    dataHelper.processDataPointAndAppendToList(fieldList, row, dataPointList);
+    dataHelper.processDataPointAndAppendToList(
+        fieldList, row, dataPointList, Collections.singletonMap(entityConstantAwsLinkedAccount, AWS_ACCOUNT_NAME));
     assertThat(dataPointList.size()).isEqualTo(1);
     assertThat(dataPointList.get(0).getRegion()).isEqualTo(entityConstantRegion);
     assertThat(dataPointList.get(0).getAwsInstanceType()).isEqualTo(nullStringValueConstant);
-    assertThat(dataPointList.get(0).getAwsLinkedAccount()).isEqualTo(entityConstantAwsLinkedAccount);
+    assertThat(dataPointList.get(0).getAwsLinkedAccount())
+        .isEqualTo(AWS_ACCOUNT_NAME + " (" + entityConstantAwsLinkedAccount + ")");
     assertThat(dataPointList.get(0).getAwsUsageType()).isEqualTo(entityConstantAwsUsageType);
     assertThat(dataPointList.get(0).getAwsService()).isEqualTo(entityConstantAwsService);
     assertThat(dataPointList.get(0).getAwsUnblendedCost()).isEqualTo(UNBLENDED_COST);

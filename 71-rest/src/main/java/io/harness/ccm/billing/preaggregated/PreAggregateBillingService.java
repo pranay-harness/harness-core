@@ -10,12 +10,13 @@ public interface PreAggregateBillingService {
   PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName);
 
-  PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(List<SqlObject> aggregateFunction,
-      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName);
+  PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
+      List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
+      String queryTableName);
 
   PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
       List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters);
 
   PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
-      List<Object> groupByObjects, List<Condition> conditions, String queryTableName);
+      String accountId, List<Object> groupByObjects, List<Condition> conditions, String queryTableName);
 }
