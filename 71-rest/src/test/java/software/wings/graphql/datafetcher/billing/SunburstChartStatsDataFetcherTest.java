@@ -3,7 +3,11 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
@@ -29,10 +35,8 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartData;
-import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartDataPoint;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridDataPoint;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,31 +46,34 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
-  @Mock TimeScaleDBService timeScaleDBService;
   @Inject @InjectMocks SunburstChartStatsDataFetcher sunburstChartStatsDataFetcher;
+  @Mock BillingDataQueryBuilder billingDataQueryBuilder;
+  @Mock TimeScaleDBService timeScaleDBService;
+  @Mock BillingDataHelper billingDataHelper;
   @Mock Statement statement;
   @Mock ResultSet resultSet;
 
-  private final BigDecimal TOTAL_COST = new BigDecimal("100.0");
-  private final BigDecimal IDLE_COST = new BigDecimal("50.0");
-  private final BigDecimal METADATA_VALUE = new BigDecimal("50.0");
-  private final Map<String, QLSunburstGridDataPoint> gridDataPointMap = new HashMap<>();
-  private final String ROOT_PARENT_ID = "ROOT_PARENT_ID";
-  private final String ROOT_PARENT = "";
+  private final Double TOTAL_COST = 100.0;
+  private final Double IDLE_COST = 30.0;
+  private final Double UNALLOCATED_COST = 20.0;
+  private final int EFF_SCORE = 76;
   private long END_TIME = 1571509800000l;
   private long START_TIME = 1570645800000l;
   final int[] count = {0};
+  final int[] iterableCount = {0};
 
   private static String IDLE_COST_COLUMN = "idlecost";
   private static String TOTAL_COST_COLUMN = "billingamount";
+  private static String UNALLOCATED_COST_COLUMN = "unallocatedcost";
+  private static String QUERY = "query";
 
-  private static Integer LIMIT = Integer.MAX_VALUE - 1;
+  private static Integer LIMIT = 1;
   private static Integer OFFSET = 0;
 
   List<QLCCMAggregationFunction> aggregateFunction;
+  List<QLBillingDataFilter> filters;
   List<QLBillingSortCriteria> sort;
 
   @Before
@@ -76,14 +83,12 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
-    when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
+    when(mockStatement.executeQuery(QUERY)).thenReturn(resultSet);
     resetValues();
     mockResultSet();
-    QLSunburstGridDataPoint metadata = QLSunburstGridDataPoint.builder().value(METADATA_VALUE).build();
-    gridDataPointMap.put(APP1_ID_ACCOUNT1, metadata);
-    gridDataPointMap.put(CLUSTER1_ID, metadata);
-
-    aggregateFunction = Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
+    aggregateFunction =
+        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeUnallocatedCostAggregation());
+    filters = Arrays.asList(makeStartTimeFilter(START_TIME), makeEndTimeFilter(END_TIME));
     sort = Arrays.asList(makeDescTotalCostSort());
   }
 
@@ -101,97 +106,55 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testGetSunburstChartDataLandingPage() {
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeStartTimeFilter(START_TIME));
-    filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy(), makeNamespaceEntityGroupBy(),
-        makeWorkloadNameEntityGroupBy(), makeClusterTypeEntityGroupBy());
-
-    List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
-    assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartData.get(1).getId()).isEqualTo(CLUSTER1_ID);
-    assertThat(sunburstChartData.get(1).getValue()).isEqualTo(TOTAL_COST.doubleValue());
+  public void testGetSunburstChartDataForClusterDoughnut() throws SQLException {
+    BillingDataQueryMetadata queryMetadataMock = mock(BillingDataQueryMetadata.class);
+    List<QLCCMGroupBy> groupByList = Collections.singletonList(makeClusterGroupBy());
+    List<QLCCMEntityGroupBy> entityGroupByList = Collections.singletonList(QLCCMEntityGroupBy.Cluster);
+    doReturn(entityGroupByList).when(billingDataQueryBuilder).getGroupByEntity(groupByList);
+    doReturn(null).when(billingDataQueryBuilder).getGroupByTime(groupByList);
+    doReturn(queryMetadataMock)
+        .when(billingDataQueryBuilder)
+        .formQuery(ACCOUNT1_ID, filters, aggregateFunction, entityGroupByList, null, sort, true, true);
+    doReturn(new HashMap<String, QLBillingAmountData>())
+        .when(billingDataHelper)
+        .getBillingAmountDataForEntityCostTrend(
+            ACCOUNT1_ID, aggregateFunction.subList(0, 1), filters, entityGroupByList, null, sort);
+    doReturn(QUERY).when(queryMetadataMock).getQuery();
+    List<BillingDataMetaDataFields> billingDataMetaDataFieldsList = new ArrayList<>();
+    billingDataMetaDataFieldsList.add(BillingDataMetaDataFields.SUM);
+    billingDataMetaDataFieldsList.add(BillingDataMetaDataFields.IDLECOST);
+    billingDataMetaDataFieldsList.add(BillingDataMetaDataFields.UNALLOCATEDCOST);
+    billingDataMetaDataFieldsList.add(BillingDataMetaDataFields.CLUSTERID);
+    doReturn(billingDataMetaDataFieldsList).when(queryMetadataMock).getFieldNames();
+    doCallRealMethod().when(billingDataHelper).roundingDoubleFieldValue(any(), anyObject());
+    QLSunburstChartData data = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
+        ACCOUNT1_ID, aggregateFunction, filters, groupByList, sort, LIMIT, OFFSET);
+    assertThat(data.getTotalCost()).isEqualTo(200.0);
+    assertThat(data.getGridData().get(0).getId()).isEqualTo(CLUSTER1_ID + 0);
+    assertThat(data.getGridData().get(0).getType()).isEqualTo("CLUSTERID");
+    assertThat(data.getGridData().get(0).getEfficiencyScore()).isEqualTo(EFF_SCORE);
+    assertThat(data.getGridData().get(1).getId()).isEqualTo(CLUSTER1_ID + 1);
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testGetSunburstChartDataClusterView() throws SQLException {
-    resetValues();
-    mockResultSet();
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeStartTimeFilter(START_TIME));
-    filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
-    QLSunburstChartData sunburstChartData = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, LIMIT, OFFSET);
-    List<QLSunburstChartDataPoint> sunburstChartDataPoints = sunburstChartData.getData();
-    assertThat(sunburstChartDataPoints.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartDataPoints.get(0).getParent()).isEqualTo(ROOT_PARENT);
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testGetSunburstApplicationLanding() throws SQLException {
-    resetValues();
-    mockResultSet();
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeStartTimeFilter(START_TIME));
-    filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy =
-        Arrays.asList(makeApplicationGroupBy(), makeEnvironmentGroupBy(), makeServiceGroupBy());
-    QLSunburstChartData sunburstChartDataValue = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, LIMIT, OFFSET);
-    List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartDataValue.getData();
-    assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testGetSunburstChartData() throws SQLException {
-    resetValues();
-    mockResultSet();
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeStartTimeFilter(START_TIME));
-    filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy =
-        Arrays.asList(makeApplicationGroupBy(), makeEnvironmentGroupBy(), makeServiceGroupBy());
-
-    List<QLSunburstChartDataPoint> sunburstChartData = sunburstChartStatsDataFetcher.getSunburstChartData(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, true, gridDataPointMap);
-    assertThat(sunburstChartData.get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(sunburstChartData.get(0).getParent()).isEqualTo(ROOT_PARENT);
-    assertThat(sunburstChartData.get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
-
-    QLSunburstChartData postFetchData = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID,
-        Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
-        QLSunburstChartData.builder().data(sunburstChartData).build(), 1, true);
-    assertThat(postFetchData.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-    assertThat(postFetchData.getData().get(1).getId()).isEqualTo(APP1_ID_ACCOUNT1);
-    QLSunburstChartData postFetchDataWithOtherPoints = (QLSunburstChartData) sunburstChartStatsDataFetcher.postFetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
-        QLSunburstChartData.builder().data(sunburstChartData).build(), 0, true);
-    assertThat(postFetchDataWithOtherPoints.getData().get(0).getId()).isEqualTo(ROOT_PARENT_ID);
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testGetSunburstGridData() throws SQLException {
-    resetValues();
-    mockResultSet();
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(makeStartTimeFilter(START_TIME));
-    filters.add(makeEndTimeFilter(END_TIME));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy());
-    List<QLSunburstGridDataPoint> sunburstGridData = sunburstChartStatsDataFetcher.getSunburstGridData(
-        ACCOUNT1_ID, aggregateFunction, filters, groupBy, sort, false);
-    assertThat(sunburstGridData.get(0).getId()).isEqualTo(CLUSTER1_ID);
+  public void testPostFetchMethod() {
+    List<QLSunburstGridDataPoint> gridDataPoints = new ArrayList<>();
+    gridDataPoints.add(
+        QLSunburstGridDataPoint.builder().id(CLUSTER1_ID).value(TOTAL_COST / 2).efficiencyScore(EFF_SCORE).build());
+    gridDataPoints.add(QLSunburstGridDataPoint.builder()
+                           .id(CLUSTER2_ID)
+                           .value(TOTAL_COST / 2)
+                           .efficiencyScore(EFF_SCORE * 2 / 3)
+                           .build());
+    QLSunburstChartData qlData = QLSunburstChartData.builder().totalCost(TOTAL_COST).gridData(gridDataPoints).build();
+    List<QLCCMGroupBy> groupByList = Collections.singletonList(makeClusterGroupBy());
+    QLData postFetchData =
+        sunburstChartStatsDataFetcher.postFetch(ACCOUNT1_ID, groupByList, aggregateFunction, sort, qlData, LIMIT, true);
+    assertThat(postFetchData).isInstanceOf(QLSunburstChartData.class);
+    assertThat(((QLSunburstChartData) postFetchData).getTotalCost()).isEqualTo(TOTAL_COST);
+    assertThat(((QLSunburstChartData) postFetchData).getGridData().size()).isEqualTo(LIMIT);
   }
 
   private QLCCMAggregationFunction makeBillingAmtAggregation() {
@@ -208,49 +171,16 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
         .build();
   }
 
-  private QLCCMGroupBy makeApplicationGroupBy() {
-    QLCCMEntityGroupBy appGroupBy = QLCCMEntityGroupBy.Application;
-    return QLCCMGroupBy.builder().entityGroupBy(appGroupBy).build();
+  private QLCCMAggregationFunction makeUnallocatedCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName(UNALLOCATED_COST_COLUMN)
+        .build();
   }
 
-  private QLCCMGroupBy makeEnvironmentGroupBy() {
-    QLCCMEntityGroupBy enveGroupBy = QLCCMEntityGroupBy.Environment;
-    return QLCCMGroupBy.builder().entityGroupBy(enveGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeServiceGroupBy() {
-    QLCCMEntityGroupBy serviceGroupBy = QLCCMEntityGroupBy.Service;
-    return QLCCMGroupBy.builder().entityGroupBy(serviceGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeNamespaceEntityGroupBy() {
-    QLCCMEntityGroupBy namespaceGroupBy = QLCCMEntityGroupBy.Namespace;
-    return QLCCMGroupBy.builder().entityGroupBy(namespaceGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeClusterEntityGroupBy() {
+  private QLCCMGroupBy makeClusterGroupBy() {
     QLCCMEntityGroupBy clusterGroupBy = QLCCMEntityGroupBy.Cluster;
     return QLCCMGroupBy.builder().entityGroupBy(clusterGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeTaskIdEntityGroupBy() {
-    QLCCMEntityGroupBy taskIdGroupBy = QLCCMEntityGroupBy.TaskId;
-    return QLCCMGroupBy.builder().entityGroupBy(taskIdGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeWorkloadNameEntityGroupBy() {
-    QLCCMEntityGroupBy workloadNameGroupBy = QLCCMEntityGroupBy.WorkloadName;
-    return QLCCMGroupBy.builder().entityGroupBy(workloadNameGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeCloudServiceNameEntityGroupBy() {
-    QLCCMEntityGroupBy cloudServiceNameGroupBy = QLCCMEntityGroupBy.CloudServiceName;
-    return QLCCMGroupBy.builder().entityGroupBy(cloudServiceNameGroupBy).build();
-  }
-
-  private QLCCMGroupBy makeClusterTypeEntityGroupBy() {
-    QLCCMEntityGroupBy clusterTypeGroupBy = QLCCMEntityGroupBy.ClusterType;
-    return QLCCMGroupBy.builder().entityGroupBy(clusterTypeGroupBy).build();
   }
 
   private QLBillingDataFilter makeStartTimeFilter(Long filterTime) {
@@ -275,22 +205,14 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
-    when(resultSet.getBigDecimal("COST")).thenReturn(TOTAL_COST);
-    when(resultSet.getBigDecimal("IDLECOST")).thenReturn(IDLE_COST);
-    when(resultSet.getDouble("COST")).thenReturn(TOTAL_COST.doubleValue());
-    when(resultSet.getDouble("IDLECOST")).thenReturn(IDLE_COST.doubleValue());
-    when(resultSet.getString("CLUSTERID")).thenReturn(CLUSTER1_ID);
-    when(resultSet.getString("CLOUDSERVICENAME")).thenReturn(CLOUD_SERVICE_NAME_ACCOUNT1);
-    when(resultSet.getString("TASKID")).thenReturn("TASK_ID");
-    when(resultSet.getString("NAMESPACE")).thenReturn(NAMESPACE1);
-    when(resultSet.getString("WORKLOADNAME")).thenReturn(WORKLOAD_NAME_ACCOUNT1);
-    when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
-    when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
-    when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
-    when(resultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> INSTANCE_TYPE1);
+    when(resultSet.getDouble("COST")).thenReturn(TOTAL_COST);
+    when(resultSet.getDouble("ACTUALIDLECOST")).thenReturn(IDLE_COST);
+    when(resultSet.getDouble("UNALLOCATEDCOST")).thenReturn(UNALLOCATED_COST);
+    when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID + iterableCount[0]++);
+    when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1 + iterableCount[0]++);
     when(resultSet.next()).thenReturn(true);
 
-    returnResultSet(1);
+    returnResultSet(2);
   }
 
   private void returnResultSet(int limit) throws SQLException {
@@ -305,5 +227,6 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private void resetValues() {
     count[0] = 0;
+    iterableCount[0] = 0;
   }
 }

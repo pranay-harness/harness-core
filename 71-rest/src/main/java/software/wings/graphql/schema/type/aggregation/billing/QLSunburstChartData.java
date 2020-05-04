@@ -15,6 +15,6 @@ import java.util.List;
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLSunburstChartData implements QLData {
-  List<QLSunburstChartDataPoint> data;
+  Double totalCost;
   List<QLSunburstGridDataPoint> gridData;
 }
