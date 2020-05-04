@@ -12,6 +12,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -77,9 +78,9 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.spotinst.SpotInstStateHelper;
 
 import java.util.List;
-import java.util.Map;
 
 public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
@@ -89,6 +90,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private LogService mockLogService;
   @Mock private DelegateService mockDelegateService;
+  @Mock private SpotInstStateHelper mockSpotinstStateHelper;
 
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
@@ -98,9 +100,9 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   public void testExecute() {
     String asgName = "foo";
     state.setAutoScalingGroupName(asgName);
-    state.setMaxInstances(2);
-    state.setDesiredInstances(1);
-    state.setMinInstances(0);
+    state.setMaxInstances("2");
+    state.setDesiredInstances("1");
+    state.setMinInstances("0");
     state.setAutoScalingSteadyStateTimeout(10);
     state.setBlueGreen(false);
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -108,6 +110,13 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
+    doReturn(0)
+        .doReturn(2)
+        .doReturn(1)
+        .doReturn(2)
+        .doReturn(1)
+        .when(mockSpotinstStateHelper)
+        .renderCount(anyString(), any(), anyInt());
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
     doReturn(mockParams).when(mockContext).getContextElement(any());
@@ -194,19 +203,6 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     assertThat(contextElement instanceof AmiServiceSetupElement).isTrue();
     AmiServiceSetupElement amiServiceSetupElement = (AmiServiceSetupElement) contextElement;
     assertThat(amiServiceSetupElement.getNewAutoScalingGroupName()).isEqualTo(newAsgName);
-  }
-
-  @Test
-  @Owner(developers = SATYAM)
-  @Category(UnitTests.class)
-  public void testValidateFields() {
-    AwsAmiServiceSetup localState = new AwsAmiServiceSetup("stateName2");
-    localState.setUseCurrentRunningCount(false);
-    localState.setMinInstances(2);
-    localState.setDesiredInstances(1);
-    localState.setMaxInstances(0);
-    Map<String, String> fieldMap = localState.validateFields();
-    assertThat(fieldMap.size()).isEqualTo(3);
   }
 
   @Test

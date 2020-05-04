@@ -12,6 +12,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.utils.Misc.normalizeExpression;
 
@@ -67,10 +68,10 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.spotinst.SpotInstStateHelper;
 import software.wings.utils.AsgConvention;
 import software.wings.utils.Misc;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,19 +80,20 @@ public class AwsAmiServiceSetup extends State {
   private String autoScalingGroupName;
   private int autoScalingSteadyStateTimeout;
   private boolean useCurrentRunningCount;
-  private int maxInstances;
-  private int minInstances;
-  private int desiredInstances;
+  private String maxInstances;
+  private String minInstances;
+  private String desiredInstances;
   private ResizeStrategy resizeStrategy;
   private boolean blueGreen;
 
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient LogService logService;
-  @Inject private transient DelegateService delegateService;
+  @Inject private SettingsService settingsService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private SecretManager secretManager;
+  @Inject private ActivityService activityService;
+  @Inject private LogService logService;
+  @Inject private DelegateService delegateService;
+  @Inject private SpotInstStateHelper spotinstStateHelper;
 
   private String commandName = AMI_SETUP_COMMAND_NAME;
 
@@ -107,22 +109,6 @@ public class AwsAmiServiceSetup extends State {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
-    }
-  }
-
-  private int getNumMaxInstancesForNewAsg() {
-    if (maxInstances == 0) {
-      return DEFAULT_AMI_ASG_MAX_INSTANCES;
-    } else {
-      return maxInstances;
-    }
-  }
-
-  private int getNumDesiredInstancesForNewAsg() {
-    if (desiredInstances == 0) {
-      return DEFAULT_AMI_ASG_DESIRED_INSTANCES;
-    } else {
-      return desiredInstances;
     }
   }
 
@@ -289,17 +275,24 @@ public class AwsAmiServiceSetup extends State {
           : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
 
       requestBuilder.newAsgNamePrefix(asgNamePrefix);
-      requestBuilder.minInstances(minInstances);
-      requestBuilder.maxInstances(getNumMaxInstancesForNewAsg());
-      requestBuilder.desiredInstances(getNumDesiredInstancesForNewAsg());
+
+      // Evaluate expressions for min, max and desired
+      requestBuilder.minInstances(
+          spotinstStateHelper.renderCount(minInstances, context, DEFAULT_AMI_ASG_MIN_INSTANCES));
+      requestBuilder.maxInstances(
+          spotinstStateHelper.renderCount(maxInstances, context, DEFAULT_AMI_ASG_MAX_INSTANCES));
+      requestBuilder.desiredInstances(
+          spotinstStateHelper.renderCount(desiredInstances, context, DEFAULT_AMI_ASG_DESIRED_INSTANCES));
       requestBuilder.autoScalingSteadyStateTimeout(getTimeOut());
       requestBuilder.useCurrentRunningCount(useCurrentRunningCount);
-      awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
-                                .activityId(activity.getUuid())
-                                .maxInstances(getNumMaxInstancesForNewAsg())
-                                .desiredInstances(getNumDesiredInstancesForNewAsg())
-                                .resizeStrategy(resizeStrategy)
-                                .build();
+      awsAmiExecutionData =
+          AwsAmiSetupExecutionData.builder()
+              .activityId(activity.getUuid())
+              .maxInstances(spotinstStateHelper.renderCount(maxInstances, context, DEFAULT_AMI_ASG_MAX_INSTANCES))
+              .desiredInstances(
+                  spotinstStateHelper.renderCount(desiredInstances, context, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
+              .resizeStrategy(resizeStrategy)
+              .build();
 
       AwsAmiServiceSetupRequest request = requestBuilder.build();
       DelegateTask delegateTask =
@@ -342,26 +335,6 @@ public class AwsAmiServiceSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  @Override
-  public Map<String, String> validateFields() {
-    Map<String, String> invalidFields = new HashMap<>();
-    if (!useCurrentRunningCount) {
-      if (maxInstances <= 0) {
-        invalidFields.put("maxInstances", "Max Instance count must be greater than 0");
-      }
-      if (desiredInstances <= 0) {
-        invalidFields.put("desiredInstances", "Desired Instance count must be greater than 0");
-      }
-      if (desiredInstances > maxInstances) {
-        invalidFields.put("desiredInstances", "Desired Instance count must be <= Max Instance count");
-      }
-      if (minInstances > desiredInstances) {
-        invalidFields.put("minInstances", "Min Instance count must be <= Desired Instance count");
-      }
-    }
-    return invalidFields;
-  }
-
   public ResizeStrategy getResizeStrategy() {
     return resizeStrategy;
   }
@@ -386,19 +359,19 @@ public class AwsAmiServiceSetup extends State {
     this.autoScalingSteadyStateTimeout = autoScalingSteadyStateTimeout;
   }
 
-  public int getMaxInstances() {
+  public String getMaxInstances() {
     return maxInstances;
   }
 
-  public int getMinInstances() {
+  public String getMinInstances() {
     return minInstances;
   }
 
-  public void setMinInstances(int minInstances) {
+  public void setMinInstances(String minInstances) {
     this.minInstances = minInstances;
   }
 
-  public void setMaxInstances(int maxInstances) {
+  public void setMaxInstances(String maxInstances) {
     this.maxInstances = maxInstances;
   }
 
@@ -426,11 +399,11 @@ public class AwsAmiServiceSetup extends State {
     this.useCurrentRunningCount = useCurrentRunningCount;
   }
 
-  public int getDesiredInstances() {
+  public String getDesiredInstances() {
     return desiredInstances;
   }
 
-  public void setDesiredInstances(int desiredInstances) {
+  public void setDesiredInstances(String desiredInstances) {
     this.desiredInstances = desiredInstances;
   }
 }
