@@ -21,7 +21,10 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
@@ -38,6 +41,7 @@ import javax.annotation.Nonnull;
 public class InstanceStatsCollectorJob implements Job {
   private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "INSTANCE_STATS_COLLECT_CRON_GROUP";
+  public static final long TWO_MONTH_IN_MILLIS = 5184000000L;
   public static final String ACCOUNT_ID_KEY = "accountId";
 
   // 10 minutes
@@ -48,6 +52,7 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private StatsCollector statsCollector;
   @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
   @Inject private InstanceStatService instanceStatService;
+  @Inject private AccountService accountService;
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
@@ -85,15 +90,39 @@ public class InstanceStatsCollectorJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
-    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Running instance stats collector job");
-      executorService.submit(() -> {
-        Objects.requireNonNull(accountId, "Account Id must be passed in job context");
-        createStats(accountId);
-        double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
-        instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
-      });
+    if (accountId == null) {
+      logger.debug("Skipping instance stats collector job since the account id is null");
+      return;
     }
+
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      Account account = accountService.get(accountId);
+      if (account == null || account.getLicenseInfo() == null || account.getLicenseInfo().getAccountStatus() == null
+          || shouldSkipStatsCollection(account.getLicenseInfo())) {
+        logger.info("Skipping instance stats since the account is not active / not found");
+      } else {
+        logger.info("Running instance stats collector job");
+        executorService.submit(() -> {
+          Objects.requireNonNull(accountId, "Account Id must be passed in job context");
+          createStats(accountId);
+          double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
+          instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
+        });
+      }
+    }
+  }
+
+  private boolean shouldSkipStatsCollection(LicenseInfo licenseInfo) {
+    if (AccountStatus.ACTIVE.equals(licenseInfo.getAccountStatus())) {
+      return false;
+    } else if (AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())
+        || AccountStatus.INACTIVE.equals(licenseInfo.getAccountStatus())) {
+      return true;
+    } else if (AccountStatus.EXPIRED.equals(licenseInfo.getAccountStatus())
+        && System.currentTimeMillis() > (licenseInfo.getExpiryTime() + TWO_MONTH_IN_MILLIS)) {
+      return true;
+    }
+    return false;
   }
 
   @VisibleForTesting
