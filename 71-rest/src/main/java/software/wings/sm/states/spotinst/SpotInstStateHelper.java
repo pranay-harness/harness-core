@@ -394,7 +394,7 @@ public class SpotInstStateHelper {
     return commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin();
   }
 
-  int renderCount(String expr, ExecutionContext context, int defaultValue) {
+  public int renderCount(String expr, ExecutionContext context, int defaultValue) {
     int retVal = defaultValue;
     if (isNotEmpty(expr)) {
       try {
