@@ -1,9 +1,10 @@
-package io.harness.state.execution;
+package io.harness.execution;
 
 import static java.time.Duration.ofDays;
 
 import io.harness.annotations.Redesign;
 import io.harness.beans.EmbeddedUser;
+import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -12,7 +13,6 @@ import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
-import io.harness.state.execution.status.ExecutionInstanceStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -29,8 +29,8 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
 @Entity(value = "planExecutions", noClassnameStored = true)
-public class PlanExecution implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
-                                      CreatedByAccess, UpdatedAtAware, UuidAccess {
+public final class PlanExecution implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
+                                            CreatedByAccess, UpdatedAtAware, UuidAccess {
   public static final Duration TTL = ofDays(21);
 
   @Id @NotNull private String uuid;

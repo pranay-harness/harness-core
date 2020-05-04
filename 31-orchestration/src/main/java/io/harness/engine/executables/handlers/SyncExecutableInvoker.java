@@ -7,7 +7,7 @@ import io.harness.annotations.Redesign;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
-import io.harness.facilitate.modes.sync.SyncExecutable;
+import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.io.StateResponse;
 import lombok.extern.slf4j.Slf4j;
 

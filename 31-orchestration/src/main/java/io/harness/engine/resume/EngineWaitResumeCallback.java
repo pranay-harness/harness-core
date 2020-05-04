@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
-import io.harness.facilitate.FacilitatorResponse;
+import io.harness.facilitator.FacilitatorResponse;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;

@@ -6,9 +6,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
+import io.harness.execution.PlanExecution;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
-import io.harness.state.execution.PlanExecution;
 import software.wings.security.annotations.AuthRule;
 
 import javax.ws.rs.GET;

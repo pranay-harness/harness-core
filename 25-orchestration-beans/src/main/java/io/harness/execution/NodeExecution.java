@@ -1,15 +1,15 @@
-package io.harness.state.execution;
+package io.harness.execution;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.modes.ExecutionMode;
+import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.ExecutionNode;
-import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateTransput;
 import lombok.Builder;
 import lombok.Data;

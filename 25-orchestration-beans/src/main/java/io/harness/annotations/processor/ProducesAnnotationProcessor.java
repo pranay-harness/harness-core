@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.adviser.Adviser;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Produces;
-import io.harness.facilitate.Facilitator;
+import io.harness.facilitator.Facilitator;
 import io.harness.resolvers.Resolver;
 import io.harness.state.State;
 

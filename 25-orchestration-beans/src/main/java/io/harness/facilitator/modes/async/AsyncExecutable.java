@@ -1,4 +1,4 @@
-package io.harness.facilitate.modes.child;
+package io.harness.facilitator.modes.async;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 @Redesign
-public interface ChildExecutable {
-  ChildExecutableResponse obtainChild(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
+public interface AsyncExecutable {
+  AsyncExecutableResponse executeAsync(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
   StateResponse handleAsyncResponse(
-      Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap);
+      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap);
 }

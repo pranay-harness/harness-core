@@ -3,12 +3,12 @@ package io.harness.engine;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.persistence.HPersistence;
-import io.harness.state.execution.NodeExecution;
-import io.harness.state.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.state.execution.PlanExecution;
-import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.state.execution.status.ExecutionInstanceStatus;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;

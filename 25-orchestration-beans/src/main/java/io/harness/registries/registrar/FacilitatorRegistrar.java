@@ -1,6 +1,6 @@
 package io.harness.registries.registrar;
 
-import io.harness.facilitate.Facilitator;
+import io.harness.facilitator.Facilitator;
 
 import java.util.Set;
 
