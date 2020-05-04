@@ -90,7 +90,7 @@ import java.util.stream.Collectors;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Utils.class, K8sTaskHelper.class})
-@PowerMockIgnore("javax.net.*")
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private KubernetesContainerService mockKubernetesContainerService;

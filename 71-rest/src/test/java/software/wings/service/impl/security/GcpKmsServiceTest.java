@@ -58,7 +58,7 @@ import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Files.class)
-@PowerMockIgnore({"javax.crypto.*", "javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.crypto.*", "javax.net.*"})
 public class GcpKmsServiceTest extends WingsBaseTest {
   @Mock private FileService fileService;
   @Mock private DelegateProxyFactory delegateProxyFactory;

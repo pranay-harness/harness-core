@@ -1,15 +1,20 @@
 package io.harness.rule;
 
+import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.MetricRegistry;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
@@ -18,7 +23,9 @@ import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -29,9 +36,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
-import io.harness.testlib.module.TestMongoDatabaseName;
-import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import lombok.Getter;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -69,9 +74,9 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
 
-public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
+public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private int port;
-  ClosingFactory closingFactory;
+  private ClosingFactory closingFactory;
 
   public FunctionalTestRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
@@ -97,7 +102,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
 
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
+    MongoClientURI clientUri = new MongoClientURI(mongoUri, MongoClientOptions.builder(defaultMongoClientOptions));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
@@ -130,7 +135,61 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     Configuration configuration = getConfiguration(mongoUri, elasticsearchConfig, isSearchEnabled);
 
-    List<Module> modules = getRequiredModules(configuration, mongoClient, dbName);
+    io.harness.threading.ExecutorModule.getInstance().setExecutorService(executorService);
+
+    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
+                                            .configure()
+                                            .parameterNameProvider(new ReflectionParameterNameProvider())
+                                            .buildValidatorFactory();
+
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("locksDatabase")
+      @Singleton
+      String databaseNameProvider() {
+        return dbName;
+      }
+
+      @Provides
+      @Named("locksMongoClient")
+      @Singleton
+      public MongoClient locksMongoClient(ClosingFactory closingFactory) throws Exception {
+        return mongoClient;
+      }
+
+      @Provides
+      @Named("primaryDatastore")
+      @Singleton
+      AdvancedDatastore datastore() {
+        return datastore;
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
+        bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
+        bind(MetricRegistry.class);
+        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
+      }
+    });
+    modules.add(new LicenseModule());
+    modules.add(new ValidationModule(validatorFactory));
+    modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
+    modules.add(new YamlModule());
+    modules.add(new ManagerExecutorModule());
+    modules.add(new TemplateModule());
+    modules.add(new EventsModule((MainConfiguration) configuration));
+    modules.add(new GraphQLModule());
+    modules.add(new SSOModule());
+    modules.add(new SignupModule());
+    modules.add(new SearchModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(new AuthModule());
     modules.add(new ManagerQueueModule());
     return modules;
   }
@@ -148,44 +207,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
         SegmentConfig.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
-  }
-
-  protected List<Module> getRequiredModules(
-      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
-    io.harness.threading.ExecutorModule.getInstance().setExecutorService(executorService);
-
-    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
-                                            .configure()
-                                            .parameterNameProvider(new ReflectionParameterNameProvider())
-                                            .buildValidatorFactory();
-
-    List<Module> modules = new ArrayList();
-    modules.add(new TestMongoDatabaseName(locksDatabase));
-
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
-        bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
-        bind(MetricRegistry.class);
-        bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-      }
-    });
-    modules.add(new LicenseModule());
-    modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule(datastore, locksMongoClient).cumulativeDependencies());
-    modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
-    modules.add(new YamlModule());
-    modules.add(new ManagerExecutorModule());
-    modules.add(new TemplateModule());
-    modules.add(new EventsModule((MainConfiguration) configuration));
-    modules.add(new GraphQLModule());
-    modules.add(new SSOModule());
-    modules.add(new SignupModule());
-    modules.add(new SearchModule());
-    modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new AuthModule());
-    return modules;
   }
 
   @Override

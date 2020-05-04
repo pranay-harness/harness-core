@@ -35,7 +35,7 @@ import software.wings.utils.ResourceConstraintTestConstants;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   @Mock private ResourceConstraintService mockResourceConstraintService;
   @Mock private PersistenceIteratorFactory mockPersistenceIteratorFactory;

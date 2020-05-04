@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({System.class, VerificationServiceImpl.class})
-@PowerMockIgnore({"javax.net.*", "javax.crypto.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.crypto.*"})
 public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   @Inject private VerificationService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;

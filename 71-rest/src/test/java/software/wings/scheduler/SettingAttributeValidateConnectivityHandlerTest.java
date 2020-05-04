@@ -34,7 +34,7 @@ import software.wings.service.intfc.SettingsService;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class SettingAttributeValidateConnectivityHandlerTest extends WingsBaseTest {
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private SettingsService settingsService;

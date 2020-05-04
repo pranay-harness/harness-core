@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @InjectMocks @Inject ArtifactCleanupHandler artifactCleanupHandler;

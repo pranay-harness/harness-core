@@ -4,11 +4,11 @@ import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.factory.ClosingFactory;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import lombok.val;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -24,17 +24,18 @@ import java.util.Map;
 @Profile("test")
 public class TestConfiguration implements MongoRuleMixin {
   @Bean
-  Morphia morphia() {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    return morphia;
+  MorphiaModule morphiaModule() {
+    return MorphiaModule.getInstance();
   }
+
   @Bean
-  TestMongoModule testMongoModule(ClosingFactory closingFactory, Morphia morphia) {
-    AdvancedDatastore primaryDatastore =
-        (AdvancedDatastore) morphia.createDatastore(fakeMongoClient(closingFactory), databaseName());
-    primaryDatastore.setQueryFactory(new QueryFactory());
-    return new TestMongoModule(primaryDatastore);
+  MongoRuleMixin.MongoType mongoType() {
+    return MongoType.FAKE;
+  }
+
+  @Bean
+  TestMongoModule testMongoModule() {
+    return new TestMongoModule();
   }
 
   @Bean

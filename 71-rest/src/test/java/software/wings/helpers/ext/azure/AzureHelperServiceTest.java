@@ -54,7 +54,7 @@ import java.util.Set;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureHelperService.class, Http.class})
-@PowerMockIgnore("javax.net.*")
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AzureHelperServiceTest extends WingsBaseTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;

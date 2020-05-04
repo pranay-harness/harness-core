@@ -1,6 +1,5 @@
 package io.harness.event.app;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -10,29 +9,27 @@ import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.grpc.server.Connector;
-import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 import software.wings.security.ThreadLocalUserProvider;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class EventServiceTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
+public class EventServiceTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
   static final String DEFAULT_DELEGATE_ID = "G0yG0f9gQhKsr1xBErpUFg";
@@ -45,23 +42,26 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
-    datastore.setQueryFactory(new QueryFactory());
-    return ImmutableList.of(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build(),
-                                () -> DEFAULT_DELEGATE_ID),
-        new TailerModule(TailerModule.Config.builder()
-                             .accountId(DEFAULT_ACCOUNT_ID)
-                             .accountSecret(DEFAULT_ACCOUNT_SECRET)
-                             .queueFilePath(QUEUE_FILE_PATH)
-                             .publishTarget("localhost:" + PORT)
-                             .publishAuthority("localhost")
-                             .build()),
-        new EventServiceModule(
-            EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
-        new TestMongoModule(datastore));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
+
+    modules.add(new AppenderModule(
+        AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build(), () -> DEFAULT_DELEGATE_ID));
+
+    modules.add(new TailerModule(TailerModule.Config.builder()
+                                     .accountId(DEFAULT_ACCOUNT_ID)
+                                     .accountSecret(DEFAULT_ACCOUNT_SECRET)
+                                     .queueFilePath(QUEUE_FILE_PATH)
+                                     .publishTarget("localhost:" + PORT)
+                                     .publishAuthority("localhost")
+                                     .build()));
+
+    modules.add(new EventServiceModule(
+        EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()));
+
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    return modules;
   }
 
   @Override

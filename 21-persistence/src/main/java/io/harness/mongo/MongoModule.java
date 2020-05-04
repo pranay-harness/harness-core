@@ -19,6 +19,7 @@ import io.harness.serializer.KryoModule;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.ObjectFactory;
 
 import java.util.Set;
 
@@ -53,24 +54,14 @@ public class MongoModule extends DependencyProviderModule {
 
   @Provides
   @Singleton
-  public HObjectFactory objectFactory() {
+  public ObjectFactory objectFactory() {
     return new HObjectFactory();
-  }
-
-  @Provides
-  @Singleton
-  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes, HObjectFactory objectFactory) {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(objectFactory);
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.map(classes);
-    return morphia;
   }
 
   @Provides
   @Named("primaryDatastore")
   @Singleton
-  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, HObjectFactory objectFactory) {
+  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, ObjectFactory objectFactory) {
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(defaultMongoClientOptions.getRetryWrites())
                                                        .connectTimeout(mongoConfig.getConnectTimeout())
@@ -88,9 +79,10 @@ public class MongoModule extends DependencyProviderModule {
 
     IndexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
 
-    ClassRefactoringManager.updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
+    HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
 
-    objectFactory.setDatastore(primaryDatastore);
+    ClassRefactoringManager.updateMovedClasses(primaryDatastore, hObjectFactory.getMorphiaInterfaceImplementers());
+    hObjectFactory.setDatastore(primaryDatastore);
 
     return primaryDatastore;
   }

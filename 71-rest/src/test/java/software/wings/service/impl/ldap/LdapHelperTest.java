@@ -52,7 +52,7 @@ import java.util.List;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({LdapSearch.class, LdapHelper.class})
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class LdapHelperTest extends WingsBaseTest {
   private LdapSettings ldapSettings;
   private LdapHelper helper;

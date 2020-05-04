@@ -44,7 +44,7 @@ import java.util.function.Consumer;
 @Slf4j
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(ChangeStreamDocument.class)
-@PowerMockIgnore("javax.net.*")
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class ChangeTrackingTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 

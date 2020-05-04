@@ -15,19 +15,18 @@ import com.google.inject.TypeLiteral;
 import io.harness.OrchestrationModule;
 import io.harness.config.PublisherConfiguration;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.QueryFactory;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -40,8 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -60,16 +57,10 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
-    String databaseName = databaseName();
-    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
 
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-
-    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
-    datastore.setQueryFactory(new QueryFactory());
-
-    List<Module> modules = new ArrayList();
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
@@ -106,7 +97,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     });
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore).cumulativeDependencies());
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.addAll(new OrchestrationModule().cumulativeDependencies());
     return modules;
   }

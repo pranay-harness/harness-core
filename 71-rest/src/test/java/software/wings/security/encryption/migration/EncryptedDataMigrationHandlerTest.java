@@ -39,7 +39,7 @@ import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PersistenceIteratorFactory.class})
-@PowerMockIgnore({"javax.crypto.*", "javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.crypto.*", "javax.net.*"})
 public class EncryptedDataMigrationHandlerTest extends WingsBaseTest {
   @Mock private EncryptedDataMigrator encryptedDataMigrator;
   @Mock private AzureToAzureVaultMigrator azureToAzureVaultMigrator;

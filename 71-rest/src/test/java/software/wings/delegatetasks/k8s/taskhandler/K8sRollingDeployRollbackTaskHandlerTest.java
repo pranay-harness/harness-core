@@ -42,7 +42,7 @@ import java.net.URL;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({K8sTaskHelper.class, Utils.class})
-@PowerMockIgnore("javax.net.*")
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private ReleaseHistory releaseHistory;
 

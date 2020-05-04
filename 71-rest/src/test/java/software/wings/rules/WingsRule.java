@@ -23,7 +23,6 @@ import com.google.inject.TypeLiteral;
 import com.codahale.metrics.MetricRegistry;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
@@ -31,23 +30,22 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
-import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.testlib.module.TestMongoDatabaseName;
+import io.harness.rule.InjectorRuleMixin;
+import io.harness.testlib.RealMongo;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -62,8 +60,6 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mockito.internal.util.MockUtil;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -97,14 +93,13 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class WingsRule implements MethodRule, MongoRuleMixin {
+public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   protected ClosingFactory closingFactory = new ClosingFactory();
 
+  protected Configuration configuration;
   protected Injector injector;
-  protected AdvancedDatastore datastore;
   private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
-  protected MongoType mongoType;
 
   private static final String JWT_PASSWORD_SECRET = "123456789";
 
@@ -152,43 +147,11 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     MongoClient mongoClient;
     String dbName = System.getProperty("dbName", "harness");
 
-    if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
-      try {
-        MongoClientURI clientUri = new MongoClientURI(
-            System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName), mongoClientOptions);
-        if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
-          forceMaintenance(true);
-          // Protection against running tests on non-local databases such as prod or qa.
-          // Comment out this throw exception if you're sure.
-          throw new WingsException("\n*** WARNING *** : Attempting to run test on non-local Mongo: "
-              + clientUri.getURI() + "\n*** Exiting *** : Comment out this check in WingsRule.java "
-              + "if you are sure you want to run against a remote Mongo.\n");
-        }
-        dbName = clientUri.getDatabase();
-        mongoClient = new MongoClient(clientUri);
-        closingFactory.addServer(mongoClient);
-      } catch (NumberFormatException ex) {
-        port = 27017;
-        mongoClient = new MongoClient("localhost", port);
-        closingFactory.addServer(mongoClient);
-      }
-    } else {
-      final MongoInfo mongoInfo = testMongo(annotations, closingFactory);
-      mongoClient = mongoInfo.getClient();
-      mongoType = mongoInfo.getType();
-    }
-
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
-    datastore.setQueryFactory(new QueryFactory());
-
-    Configuration configuration = getConfiguration(annotations, dbName);
+    configuration = getConfiguration(annotations, dbName);
 
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    List<Module> modules = getRequiredModules(configuration, mongoClient, dbName);
+    List<Module> modules = modules(annotations);
     addQueueModules(modules);
 
     if (annotations.stream().anyMatch(Cache.class ::isInstance)) {
@@ -262,7 +225,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getBackgroundSchedulerConfig().setAutoStart("true");
       configuration.getServiceSchedulerConfig().setAutoStart("true");
-      if (mongoType == MongoType.FAKE) {
+      if (!annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
         configuration.getBackgroundSchedulerConfig().setJobStoreClass(
             org.quartz.simpl.RAMJobStore.class.getCanonicalName());
         configuration.getServiceSchedulerConfig().setJobStoreClass(
@@ -279,8 +242,8 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     return configuration;
   }
 
-  protected List<Module> getRequiredModules(
-      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
+  @Override
+  public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(executorService);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -288,9 +251,9 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    List<Module> modules = new ArrayList();
-
-    modules.add(new TestMongoDatabaseName(locksDatabase));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
 
     modules.add(new AbstractModule() {
       @Override
@@ -312,7 +275,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule(datastore, locksMongoClient).cumulativeDependencies());
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());

@@ -66,7 +66,7 @@ import java.util.stream.Stream;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PersistenceIteratorFactory.class})
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

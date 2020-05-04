@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(
     {ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class, PersistenceIteratorFactory.class})
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
