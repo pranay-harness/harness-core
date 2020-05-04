@@ -73,7 +73,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PipelineServiceImpl.class)
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock AppService mockAppService;
   @Mock WingsPersistence mockWingsPersistence;

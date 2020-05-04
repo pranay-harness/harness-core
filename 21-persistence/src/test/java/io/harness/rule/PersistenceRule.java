@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -8,19 +9,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.iterator.TestIrregularIterableEntity;
-import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.QueryFactory;
-import io.harness.mongo.TestIndexEntity;
 import io.harness.mongo.queue.MongoQueueConsumer;
 import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
@@ -32,9 +30,8 @@ import io.harness.queue.TestNoTopicQueuableObject;
 import io.harness.queue.TestNoTopicQueuableObjectListener;
 import io.harness.queue.TestTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObjectListener;
-import io.harness.testlib.module.TestMongoDatabaseName;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -42,8 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -91,27 +86,20 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
-    String databaseName = databaseName();
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
 
-    List<Module> modules = new ArrayList();
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
 
-    modules.add(new TestMongoDatabaseName(databaseName));
-
-    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
-
-    final HObjectFactory objectFactory = new HObjectFactory();
-
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(objectFactory);
-    morphia.map(TestTopicQueuableObject.class);
-    morphia.map(TestRegularIterableEntity.class);
-    morphia.map(TestIrregularIterableEntity.class);
-    morphia.map(TestIndexEntity.class);
-
-    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
-    datastore.setQueryFactory(new QueryFactory());
-
-    objectFactory.setDatastore(datastore);
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return MONGO;
+      }
+    });
+    modules.addAll(new PersistentLockModule().cumulativeDependencies());
 
     modules.add(new AbstractModule() {
       @Override
@@ -149,17 +137,6 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     });
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient()).cumulativeDependencies());
-
-    modules.add(new ProviderModule() {
-      @Provides
-      DistributedLockImplementation DistributedLockImplementation() {
-        return DistributedLockImplementation.MONGO;
-      }
-    });
-
-    modules.add(new PersistentLockModule());
-
     return modules;
   }
 

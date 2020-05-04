@@ -43,7 +43,7 @@ import software.wings.sm.StateMachineExecutor;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WorkflowExecutionMonitorHandler.class, PersistenceIteratorFactory.class})
-@PowerMockIgnore({"javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private ExecutionInterruptManager executionInterruptManager;

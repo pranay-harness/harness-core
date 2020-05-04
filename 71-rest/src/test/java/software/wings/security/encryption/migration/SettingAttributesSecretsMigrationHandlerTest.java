@@ -65,7 +65,7 @@ import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PersistenceIteratorFactory.class})
-@PowerMockIgnore({"javax.crypto.*", "javax.net.*"})
+@PowerMockIgnore({"javax.security.*", "javax.crypto.*", "javax.net.*"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

@@ -3,10 +3,10 @@ package io.harness.commandlibrary.server;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import com.mongodb.MongoClient;
 import io.dropwizard.Configuration;
 import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.app.CommandLibraryServerModule;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.testlib.module.TestMongoModule;
 import software.wings.app.CommandLibrarySharedModule;
@@ -27,9 +27,12 @@ public class CommandLibraryServerTestRule extends WingsRule {
   }
 
   @Override
-  protected List<Module> getRequiredModules(
-      Configuration configuration, MongoClient locksMongoClient, String locksDatabase) {
-    final ArrayList<Module> modules = new ArrayList<>(new TestMongoModule(datastore).cumulativeDependencies());
+  public List<Module> modules(List<Annotation> annotations) throws Exception {
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
+
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.add(new CommandLibraryServerModule((CommandLibraryServerConfig) configuration));
     modules.add(new CommandLibrarySharedModule(false));
     return modules;

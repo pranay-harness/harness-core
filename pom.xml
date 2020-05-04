@@ -16,7 +16,6 @@
         <module>21-persistence</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
-        <module>51-migrator</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>65-delegate-beans</module>
@@ -34,9 +33,7 @@
         <module>82-watcher</module>
         <module>84-command-library-server</module>
         <module>85-functional-test</module>
-        <module>89-migration-job</module>
         <module>91-model-gen-tool</module>
-        <module>95-e2e</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

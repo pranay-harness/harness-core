@@ -16,14 +16,12 @@ import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
-import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
-import io.harness.testlib.module.TestMongoDatabaseName;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.testlib.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -35,8 +33,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
@@ -109,20 +105,13 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
-    String databaseName = databaseName();
-    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
-
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
-    datastore.setQueryFactory(new QueryFactory());
-
-    List<Module> modules = new ArrayList();
-    modules.add(new TestMongoDatabaseName(databaseName));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(mongoTypeModule(annotations));
 
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule(datastore, mongoInfo.getClient()).cumulativeDependencies());
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
 
     MainConfiguration configuration = getConfiguration("graphQL");
 

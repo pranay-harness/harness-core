@@ -9,11 +9,13 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MorphiaMove;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.ObjectFactory;
 
 interface MorphiaInterface {}
 
@@ -24,6 +26,7 @@ class HackMorphiaClass implements MorphiaInterface {
 }
 
 public class MorphiaMoveTest extends PersistenceTest {
+  @Inject private ObjectFactory objectFactory;
   @Inject private HPersistence persistence;
 
   @Test
@@ -73,6 +76,8 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReadFutureClass() {
+    ((HObjectFactory) objectFactory).setDatastore(persistence.getDatastore(TestHolderEntity.class));
+
     persistence.save(MorphiaMove.builder()
                          .target("io.harness.persistence.MorphiaFeatureClass")
                          .sources(ImmutableSet.of("io.harness.persistence.MorphiaClass"))

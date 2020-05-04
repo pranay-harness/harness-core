@@ -46,7 +46,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(KeyManagementServiceClient.class)
-@PowerMockIgnore({"org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
+@PowerMockIgnore({"javax.security.*", "org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
 public class GcpKmsEncryptDecryptClientTest extends CategoryTest {
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
   private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));

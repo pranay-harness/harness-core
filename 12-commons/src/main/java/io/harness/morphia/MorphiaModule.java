@@ -10,6 +10,7 @@ import io.harness.govern.DependencyProviderModule;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.reflections.Reflections;
 
@@ -55,6 +56,16 @@ public class MorphiaModule extends DependencyProviderModule {
   @Singleton
   Set<Class> classes() {
     return morphiaClasses;
+  }
+
+  @Provides
+  @Singleton
+  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes, ObjectFactory objectFactory) {
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(objectFactory);
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.map(classes);
+    return morphia;
   }
 
   @Override
