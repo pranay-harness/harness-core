@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
 @Entity(value = "nodeExecutions", noClassnameStored = true)
 @Converters({DurationConverter.class})
-public class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
   @Id String uuid;
   @NotNull Ambiance ambiance;

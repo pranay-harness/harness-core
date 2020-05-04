@@ -1,6 +1,8 @@
 package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.Outcome;
+import io.harness.data.OutcomeType;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.XmlUtils;
@@ -28,7 +30,9 @@ import javax.xml.parsers.ParserConfigurationException;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class HttpStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
+public class HttpStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData, Outcome {
+  public static final OutcomeType OUTCOME_TYPE = OutcomeType.builder().type("HTTP_OUTCOME").build();
+
   private String httpUrl;
   private String httpMethod;
   private int httpResponseCode;
@@ -136,5 +140,10 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(executionDetails, "assertionStatus",
         ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
     return executionDetails;
+  }
+
+  @Override
+  public OutcomeType getOutcomeType() {
+    return OUTCOME_TYPE;
   }
 }

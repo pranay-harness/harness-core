@@ -1,6 +1,7 @@
 package io.harness.state.io;
 
 import io.harness.annotations.Redesign;
+import io.harness.data.Outcome;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.NodeExecutionStatus;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.util.List;
 @Redesign
 public class StateResponse {
   @NonNull NodeExecutionStatus status;
-  @Singular List<StateTransput> outputs;
+  @Singular List<Outcome> outcomes;
   FailureInfo failureInfo;
 
   @Value
