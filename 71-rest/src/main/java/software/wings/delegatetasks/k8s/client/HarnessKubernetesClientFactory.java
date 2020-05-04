@@ -45,19 +45,17 @@ public class HarnessKubernetesClientFactory implements KubernetesClientFactory {
     URL url;
     try {
       url = new URL(masterURL);
+      if (url.getPort() == -1) {
+        int port = getDefaultPort(url.getProtocol());
+        url = new URL(url.getProtocol(), url.getHost(), port, url.getFile());
+      }
     } catch (MalformedURLException e) {
-      throw new InvalidRequestException("URL is incorrect, the method will return the URL as is", e);
+      throw new InvalidRequestException("Master url is invalid", e);
     }
-    if (url.getPort() == -1) {
-      if (masterURL.endsWith("/")) {
-        masterURL = masterURL.substring(0, masterURL.length() - 1);
-      }
-      if (url.getProtocol().equals("https")) {
-        return masterURL.concat(":443");
-      } else {
-        return masterURL.concat(":80");
-      }
-    }
-    return masterURL;
+    return url.toString();
+  }
+
+  private int getDefaultPort(String scheme) {
+    return "https".equals(scheme) ? 443 : 80;
   }
 }
