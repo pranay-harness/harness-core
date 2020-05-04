@@ -3,7 +3,7 @@ package io.harness.plan;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.ambiance.LevelType;
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.FacilitatorObtainment;
+import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.references.RefObject;
 import io.harness.state.StateType;
 import io.harness.state.io.StateParameters;

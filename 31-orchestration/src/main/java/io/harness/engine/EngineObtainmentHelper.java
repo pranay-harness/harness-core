@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.references.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
-import io.harness.state.execution.PlanExecution;
-import io.harness.state.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.state.io.StateTransput;
 
 import java.util.Collections;

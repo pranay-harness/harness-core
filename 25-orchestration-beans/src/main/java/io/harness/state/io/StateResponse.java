@@ -2,7 +2,7 @@ package io.harness.state.io;
 
 import io.harness.annotations.Redesign;
 import io.harness.exception.FailureType;
-import io.harness.state.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.NodeExecutionStatus;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;

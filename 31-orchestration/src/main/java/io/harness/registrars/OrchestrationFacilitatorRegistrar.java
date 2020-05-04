@@ -1,6 +1,6 @@
 package io.harness.registrars;
 
-import io.harness.facilitate.Facilitator;
+import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.async.AsyncFacilitator;
 import io.harness.facilitator.child.ChildFacilitator;
 import io.harness.facilitator.children.ChildrenFacilitator;

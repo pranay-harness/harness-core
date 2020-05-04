@@ -1,9 +1,9 @@
-package io.harness.facilitate.modes.chain;
+package io.harness.facilitator.modes.chain;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.facilitate.modes.async.AsyncExecutableResponse;
+import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;

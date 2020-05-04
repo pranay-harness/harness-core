@@ -4,9 +4,9 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.ambiance.LevelType;
+import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.state.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StatusNotifyResponseData;
 
 public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {

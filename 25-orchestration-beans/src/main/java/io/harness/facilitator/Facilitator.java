@@ -1,8 +1,7 @@
-package io.harness.facilitate;
+package io.harness.facilitator;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.io.FacilitatorParameters;
 import io.harness.registries.RegistrableEntity;
 import io.harness.state.io.StateTransput;
 

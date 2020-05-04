@@ -1,4 +1,4 @@
-package io.harness.facilitate.io;
+package io.harness.facilitator;
 
 import io.harness.annotations.Redesign;
 

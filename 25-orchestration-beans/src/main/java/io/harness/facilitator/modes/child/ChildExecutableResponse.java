@@ -1,4 +1,4 @@
-package io.harness.facilitate.modes.child;
+package io.harness.facilitator.modes.child;
 
 import io.harness.annotations.Redesign;
 import io.harness.state.io.StateTransput;

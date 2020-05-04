@@ -1,7 +1,6 @@
-package io.harness.facilitate;
+package io.harness.facilitator;
 
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.io.FacilitatorParameters;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;

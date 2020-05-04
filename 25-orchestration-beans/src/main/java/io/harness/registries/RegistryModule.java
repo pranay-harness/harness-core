@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
 import io.harness.ambiance.Level;
-import io.harness.facilitate.Facilitator;
+import io.harness.facilitator.Facilitator;
 import io.harness.govern.DependencyModule;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;

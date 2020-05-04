@@ -1,7 +1,7 @@
 package io.harness.redesign.services;
 
 import io.harness.annotations.Redesign;
-import io.harness.state.execution.PlanExecution;
+import io.harness.execution.PlanExecution;
 
 @Redesign
 public interface CustomExecutionService {

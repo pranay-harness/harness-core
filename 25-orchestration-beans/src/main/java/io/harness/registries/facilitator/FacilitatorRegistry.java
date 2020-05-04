@@ -5,8 +5,8 @@ import static org.joor.Reflect.on;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
-import io.harness.facilitate.Facilitator;
-import io.harness.facilitate.FacilitatorType;
+import io.harness.facilitator.Facilitator;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
