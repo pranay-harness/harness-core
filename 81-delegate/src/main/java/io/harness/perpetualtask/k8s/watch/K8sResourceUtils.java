@@ -103,23 +103,33 @@ public class K8sResourceUtils {
     return memLimitBuilder.build();
   }
 
-  static Resource getTotalResourceRequest(PodSpec podSpec) {
-    long cpuNanos = 0;
-    long memBytes = 0;
+  static Resource getEffectiveResources(PodSpec podSpec) {
+    long reqCpuNanos = 0;
+    long reqMemBytes = 0;
+    long limCpuNanos = 0;
+    long limMemBytes = 0;
     for (Container container : podSpec.getContainers()) {
       Map<String, Quantity> resourceRequests = container.getResources().getRequests();
-      cpuNanos += getCpuNanos(resourceRequests);
-      memBytes += getMemBytes(resourceRequests);
+      reqCpuNanos += getCpuNanos(resourceRequests);
+      reqMemBytes += getMemBytes(resourceRequests);
+      Map<String, Quantity> resourceLimits = container.getResources().getLimits();
+      limCpuNanos += getCpuNanos(resourceLimits);
+      limMemBytes += getMemBytes(resourceLimits);
     }
 
     for (Container initContainer : podSpec.getInitContainers()) {
       Map<String, Quantity> resourceRequests = initContainer.getResources().getRequests();
-      cpuNanos = Math.max(cpuNanos, getCpuNanos(resourceRequests));
-      memBytes = Math.max(memBytes, getMemBytes(resourceRequests));
+      reqCpuNanos = Math.max(reqCpuNanos, getCpuNanos(resourceRequests));
+      reqMemBytes = Math.max(reqMemBytes, getMemBytes(resourceRequests));
+      Map<String, Quantity> resourceLimits = initContainer.getResources().getLimits();
+      limCpuNanos = Math.max(limCpuNanos, getCpuNanos(resourceLimits));
+      limMemBytes = Math.max(limMemBytes, getMemBytes(resourceLimits));
     }
     return Resource.newBuilder()
-        .putRequests(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(cpuNanos).setUnit("n").build())
-        .putRequests(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setAmount(memBytes).setUnit("").build())
+        .putRequests(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(reqCpuNanos).setUnit("n").build())
+        .putRequests(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setAmount(reqMemBytes).setUnit("").build())
+        .putLimits(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(limCpuNanos).setUnit("n").build())
+        .putLimits(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setAmount(limMemBytes).setUnit("").build())
         .build();
   }
 

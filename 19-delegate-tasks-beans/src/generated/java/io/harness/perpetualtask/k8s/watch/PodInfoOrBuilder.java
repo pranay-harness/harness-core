@@ -185,4 +185,13 @@ public interface PodInfoOrBuilder extends
    * <code>string kube_system_uid = 15;</code>
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
+
+  /**
+   * <code>string qos_class = 16;</code>
+   */
+  java.lang.String getQosClass();
+  /**
+   * <code>string qos_class = 16;</code>
+   */
+  com.google.protobuf.ByteString getQosClassBytes();
 }

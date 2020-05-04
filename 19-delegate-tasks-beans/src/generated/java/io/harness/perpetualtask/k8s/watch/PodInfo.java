@@ -25,6 +25,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     clusterId_ = "";
     clusterName_ = "";
     kubeSystemUid_ = "";
+    qosClass_ = "";
   }
 
   @java.
@@ -153,6 +154,12 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             java.lang.String s = input.readStringRequireUtf8();
 
             kubeSystemUid_ = s;
+            break;
+          }
+          case 130: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            qosClass_ = s;
             break;
           }
           default: {
@@ -622,6 +629,36 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
 
+  public static final int QOS_CLASS_FIELD_NUMBER = 16;
+  private volatile java.lang.Object qosClass_;
+  /**
+   * <code>string qos_class = 16;</code>
+   */
+  public java.lang.String getQosClass() {
+    java.lang.Object ref = qosClass_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      qosClass_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string qos_class = 16;</code>
+   */
+  public com.google.protobuf.ByteString getQosClassBytes() {
+    java.lang.Object ref = qosClass_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      qosClass_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -674,6 +711,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     if (!getKubeSystemUidBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 15, kubeSystemUid_);
+    }
+    if (!getQosClassBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 16, qosClass_);
     }
     unknownFields.writeTo(output);
   }
@@ -729,6 +769,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     if (!getKubeSystemUidBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, kubeSystemUid_);
     }
+    if (!getQosClassBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, qosClass_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -782,6 +825,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return false;
     if (!getKubeSystemUid().equals(other.getKubeSystemUid()))
       return false;
+    if (!getQosClass().equals(other.getQosClass()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -830,6 +875,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     hash = (53 * hash) + getClusterName().hashCode();
     hash = (37 * hash) + KUBE_SYSTEM_UID_FIELD_NUMBER;
     hash = (53 * hash) + getKubeSystemUid().hashCode();
+    hash = (37 * hash) + QOS_CLASS_FIELD_NUMBER;
+    hash = (53 * hash) + getQosClass().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -1003,6 +1050,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
       kubeSystemUid_ = "";
 
+      qosClass_ = "";
+
       return this;
     }
 
@@ -1069,6 +1118,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
       result.kubeSystemUid_ = kubeSystemUid_;
+      result.qosClass_ = qosClass_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -1177,6 +1227,10 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
       if (!other.getKubeSystemUid().isEmpty()) {
         kubeSystemUid_ = other.kubeSystemUid_;
+        onChanged();
+      }
+      if (!other.getQosClass().isEmpty()) {
+        qosClass_ = other.qosClass_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -2416,6 +2470,68 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       checkByteStringIsUtf8(value);
 
       kubeSystemUid_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object qosClass_ = "";
+    /**
+     * <code>string qos_class = 16;</code>
+     */
+    public java.lang.String getQosClass() {
+      java.lang.Object ref = qosClass_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        qosClass_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string qos_class = 16;</code>
+     */
+    public com.google.protobuf.ByteString getQosClassBytes() {
+      java.lang.Object ref = qosClass_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        qosClass_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string qos_class = 16;</code>
+     */
+    public Builder setQosClass(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      qosClass_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string qos_class = 16;</code>
+     */
+    public Builder clearQosClass() {
+      qosClass_ = getDefaultInstance().getQosClass();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string qos_class = 16;</code>
+     */
+    public Builder setQosClassBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      qosClass_ = value;
       onChanged();
       return this;
     }

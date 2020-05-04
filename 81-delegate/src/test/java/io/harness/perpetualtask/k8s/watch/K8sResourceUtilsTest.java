@@ -46,17 +46,19 @@ public class K8sResourceUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldComputeEffectiveRequest() throws Exception {
+  public void shouldComputeEffectiveResources() throws Exception {
     Pod pod = new PodBuilder()
                   .withNewSpec()
-                  .withContainers(makeContainer("250m", "1Ki"), makeContainer("500m", "1Mi"))
+                  .withContainers(makeContainer("250m", "1Ki", "1", "50Ki"), makeContainer("500m", "1Mi"))
                   .withInitContainers(makeContainer("0.8", "1Ki"), makeContainer("500m", "2Ki"))
                   .endSpec()
                   .build();
-    assertThat(K8sResourceUtils.getTotalResourceRequest(pod.getSpec()))
+    assertThat(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
         .isEqualTo(Resource.newBuilder()
                        .putRequests("cpu", Resource.Quantity.newBuilder().setAmount(800_000_000).setUnit("n").build())
                        .putRequests("memory", Resource.Quantity.newBuilder().setAmount(1049600).setUnit("").build())
+                       .putLimits("cpu", Resource.Quantity.newBuilder().setAmount(1_500_000_000).setUnit("n").build())
+                       .putLimits("memory", Resource.Quantity.newBuilder().setAmount(1099776).setUnit("").build())
                        .build());
   }
 
@@ -78,11 +80,16 @@ public class K8sResourceUtilsTest extends CategoryTest {
             "memory", Resource.Quantity.newBuilder().setAmount(0).build()));
   }
 
-  private Container makeContainer(String cpu, String memory) {
+  private Container makeContainer(String cpuLim, String memLim) {
+    return makeContainer(cpuLim, memLim, cpuLim, memLim);
+  }
+  private Container makeContainer(String cpuReq, String memReq, String cpuLim, String memLim) {
     return new ContainerBuilder()
         .withNewResources()
-        .addToRequests("cpu", new Quantity(cpu))
-        .addToRequests("memory", new Quantity(memory))
+        .addToRequests("cpu", new Quantity(cpuReq))
+        .addToRequests("memory", new Quantity(memReq))
+        .addToLimits("cpu", new Quantity(cpuLim))
+        .addToLimits("memory", new Quantity(memLim))
         .endResources()
         .build();
   }
