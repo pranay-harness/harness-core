@@ -1,3 +1,5 @@
 package io.harness.data;
 
-public interface Outcome {}
+import io.harness.state.io.StateTransput;
+
+public interface Outcome extends StateTransput { OutcomeType getOutcomeType(); }

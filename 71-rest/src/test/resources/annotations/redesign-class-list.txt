@@ -15,6 +15,7 @@ io.harness.adviser.impl.success.OnSuccessAdviserParameters
 io.harness.ambiance.Ambiance
 io.harness.ambiance.Level
 io.harness.ambiance.LevelExecution
+io.harness.data.Outcome
 io.harness.engine.AmbianceHelper
 io.harness.engine.Engine
 io.harness.engine.EngineObtainmentHelper

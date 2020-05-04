@@ -89,7 +89,7 @@ public class BasicHttpState implements State, AsyncExecutable {
                                                  .errorMsg(httpStateExecutionResponse.getErrorMessage())
                                                  .build();
       responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
-      responseBuilder.output(executionData);
+      responseBuilder.outcome(executionData);
     }
     return responseBuilder.build();
   }
