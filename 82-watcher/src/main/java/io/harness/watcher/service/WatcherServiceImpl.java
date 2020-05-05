@@ -594,7 +594,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void upgradeJre(String delegateJreVersion, String migrateToJreVersion) throws Exception {
-    logger.info("Delegate JRE: {} Watcher JRE: {} MigrateTo JRE: {} ", delegateJreVersion, watcherJreVersion,
+    logger.debug("Delegate JRE: {} Watcher JRE: {} MigrateTo JRE: {} ", delegateJreVersion, watcherJreVersion,
         migrateToJreVersion);
     restartDelegateToUpgradeJre(delegateJreVersion, migrateToJreVersion);
     restartWatcherToUpgradeJre(migrateToJreVersion);
