@@ -637,19 +637,21 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             if (mlMetricSummary.getResults() != null) {
               for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry :
                   mlMetricSummary.getResults().entrySet()) {
-                hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
-                                           .testHostName(mlHostSummaryEntry.getKey())
-                                           .controlHostName(mlHostSummaryEntry.getValue().getNn())
-                                           .controlValues(mlHostSummaryEntry.getValue().getControl_data())
-                                           .testValues(mlHostSummaryEntry.getValue().getTest_data())
-                                           .riskLevel(mlMetricSummary.isShould_fail_fast()
-                                                   ? RiskLevel.HIGH
-                                                   : getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
-                                           .testStartIndex(-1)
-                                           .anomalies(mlHostSummaryEntry.getValue().getAnomalies())
-                                           .lowerThresholds(mlHostSummaryEntry.getValue().getLowerThreshold())
-                                           .upperThresholds(mlHostSummaryEntry.getValue().getUpperThreshold())
-                                           .build());
+                hostAnalysisValues.add(
+                    NewRelicMetricHostAnalysisValue.builder()
+                        .testHostName(mlHostSummaryEntry.getKey())
+                        .controlHostName(mlHostSummaryEntry.getValue().getNn())
+                        .controlValues(mlHostSummaryEntry.getValue().getControl_data())
+                        .testValues(mlHostSummaryEntry.getValue().getTest_data())
+                        .riskLevel(mlMetricSummary.isShould_fail_fast()
+                                ? RiskLevel.HIGH
+                                : getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
+                        .testStartIndex(-1)
+                        .anomalies(mlHostSummaryEntry.getValue().getAnomalies())
+                        .lowerThresholds(mlHostSummaryEntry.getValue().getLowerThreshold())
+                        .upperThresholds(mlHostSummaryEntry.getValue().getUpperThreshold())
+                        .failFastCriteriaDescription(mlHostSummaryEntry.getValue().getFailFastCriteriaDescription())
+                        .build());
               }
             }
             metricsList.add(NewRelicMetricAnalysisValue.builder()
