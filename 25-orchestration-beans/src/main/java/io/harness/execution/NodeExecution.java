@@ -2,6 +2,7 @@ package io.harness.execution;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
+import io.harness.data.Outcome;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.persistence.CreatedAtAware;
@@ -56,4 +57,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
 
   // Applicable only for child/children states
   @Singular List<StateTransput> additionalInputs;
+
+  @Singular List<Outcome> outcomes;
 }

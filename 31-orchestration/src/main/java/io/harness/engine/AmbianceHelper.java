@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -11,6 +12,7 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.persistence.HPersistence;
 
 @Redesign
+@ExcludeRedesign
 public class AmbianceHelper {
   @Inject private HPersistence hPersistence;
 

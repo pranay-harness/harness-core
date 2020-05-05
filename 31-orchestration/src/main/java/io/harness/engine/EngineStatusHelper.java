@@ -3,6 +3,7 @@ package io.harness.engine;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -16,6 +17,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.util.function.Consumer;
 
 @Redesign
+@ExcludeRedesign
 public class EngineStatusHelper {
   @Inject HPersistence hPersistence;
 

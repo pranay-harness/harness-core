@@ -17,6 +17,7 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
@@ -61,6 +62,7 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Redesign
+@ExcludeRedesign
 public class ExecutionEngine implements Engine {
   // For database needs
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
@@ -212,6 +214,7 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
         ops
         -> ops.set(NodeExecutionKeys.status, stateResponse.getStatus())
+               .set(NodeExecutionKeys.outcomes, stateResponse.getOutcomes())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
 
     // TODO handle Failure

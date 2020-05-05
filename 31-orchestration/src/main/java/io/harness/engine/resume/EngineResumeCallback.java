@@ -3,6 +3,7 @@ package io.harness.engine.resume;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.waiter.NotifyCallback;
@@ -14,6 +15,7 @@ import java.util.Map;
 @Value
 @Builder
 @Redesign
+@ExcludeRedesign
 public class EngineResumeCallback implements NotifyCallback {
   @Inject ExecutionEngine executionEngine;
 

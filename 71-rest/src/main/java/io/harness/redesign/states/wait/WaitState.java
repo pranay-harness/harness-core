@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
@@ -30,6 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Redesign
+@ExcludeRedesign
 @Produces(State.class)
 public class WaitState implements State, AsyncExecutable {
   public static final String STATE_TYPE = "WAIT";
