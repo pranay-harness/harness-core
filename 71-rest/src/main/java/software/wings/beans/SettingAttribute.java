@@ -131,7 +131,7 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
   private boolean sample;
 
   @Indexed private Long nextIteration;
-  @Indexed private Long nextSecretMigrationIteration;
+  private Long nextSecretMigrationIteration;
   private boolean secretsMigrated;
   private String connectivityError;
 
