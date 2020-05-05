@@ -671,7 +671,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleMessageSubmit(String message) {
-    logger.info("^^MSG: " + message);
+    logger.debug("^^MSG: " + message);
     systemExecutor.submit(() -> handleMessage(message));
   }
 
@@ -728,7 +728,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void updateJreVersion(String targetJreVersion) {
     if (!targetJreVersion.equals(migrateToJreVersion)) {
-      logger.info("JRE version different");
+      logger.info("JRE version different. Migrating to {}", targetJreVersion);
       delegateJreVersionChangedAt = clock.millis();
       migrateToJreVersion = targetJreVersion;
       sendJreInformationToWatcher = false;
@@ -736,7 +736,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       sendJreInformationToWatcher = clock.millis() - delegateJreVersionChangedAt > DELEGATE_JRE_VERSION_TIMEOUT;
     }
 
-    logger.info("Send info to watcher {}", sendJreInformationToWatcher);
+    logger.debug("Send info to watcher {}", sendJreInformationToWatcher);
   }
 
   @Override
@@ -1186,7 +1186,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               switchStorageMsgSent = true;
             }
             if (sendJreInformationToWatcher) {
-              logger.info("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+              logger.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
                   migrateToJreVersion);
               statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
               statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
