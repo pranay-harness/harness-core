@@ -137,7 +137,7 @@ public class ExecutionController {
     executionArgs.setWorkflowVariables(variableValues);
     if (mutationContext.getDataFetchingEnvironment() != null
         && mutationContext.getDataFetchingEnvironment().getContext() != null) {
-      GraphQLContext graphQLContext = (GraphQLContext) mutationContext.getDataFetchingEnvironment().getContext();
+      GraphQLContext graphQLContext = mutationContext.getDataFetchingEnvironment().getContext();
       TriggeredByType triggeredByType = graphQLContext.get("triggeredByType");
       if (triggeredByType == TriggeredByType.USER) {
         executionArgs.setCreatedByType(CreatedByType.USER);

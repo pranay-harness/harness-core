@@ -20,7 +20,6 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class WorkflowVariableConnectionDataFetcher
@@ -42,9 +41,8 @@ public class WorkflowVariableConnectionDataFetcher
         return new ArrayList<>();
       }
       List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-      List<Variable> nonFixedVariables = userVariables.stream().filter(t -> !t.isFixed()).collect(Collectors.toList());
       List<QLVariable> qlVariables = new ArrayList<>();
-      VariableController.populateVariables(nonFixedVariables, qlVariables);
+      VariableController.populateVariables(userVariables, qlVariables);
       return qlVariables;
     }
   }

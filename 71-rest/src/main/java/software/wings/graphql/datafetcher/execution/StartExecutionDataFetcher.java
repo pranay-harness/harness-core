@@ -5,6 +5,7 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import software.wings.graphql.schema.mutation.execution.payload.QLStartExecution
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,13 +26,17 @@ import java.util.List;
 public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExecutionInput, QLStartExecutionPayload> {
   @Inject PipelineExecutionController pipelineExecutionController;
   @Inject WorkflowExecutionController workflowExecutionController;
+  @Inject AppService appService;
+
+  public static final String APPLICATION_DOES_NOT_EXIST_MSG = "Application does not exist";
 
   @Inject
   public StartExecutionDataFetcher(PipelineExecutionController pipelineExecutionController,
-      WorkflowExecutionController workflowExecutionController) {
+      WorkflowExecutionController workflowExecutionController, AppService appService) {
     super(QLStartExecutionInput.class, QLStartExecutionPayload.class);
     this.pipelineExecutionController = pipelineExecutionController;
     this.workflowExecutionController = workflowExecutionController;
+    this.appService = appService;
   }
 
   @Override
@@ -39,12 +45,14 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
       QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     try (AutoLogContext ignore0 =
              new AccountLogContext(mutationContext.getAccountId(), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      validateAppBelongsToAccount(triggerExecutionInput, mutationContext);
+
       PermissionAttribute permissionAttribute =
           new PermissionAttribute(PermissionAttribute.PermissionType.DEPLOYMENT, PermissionAttribute.Action.EXECUTE);
       List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
 
       QLExecutionType executionType = triggerExecutionInput.getExecutionType();
-      QLExecution execution = null;
+      QLExecution execution;
       switch (executionType) {
         case PIPELINE:
           execution = pipelineExecutionController.startPipelineExecution(
@@ -65,6 +73,14 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
           .execution(execution)
           .clientMutationId(triggerExecutionInput.getClientMutationId())
           .build();
+    }
+  }
+
+  private void validateAppBelongsToAccount(
+      QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
+    String accountIdFromApp = appService.getAccountIdByAppId(triggerExecutionInput.getApplicationId());
+    if (!accountIdFromApp.equals(mutationContext.getAccountId())) {
+      throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
   }
 }

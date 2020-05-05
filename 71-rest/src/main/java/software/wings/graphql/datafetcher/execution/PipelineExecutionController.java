@@ -127,15 +127,27 @@ public class PipelineExecutionController {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String pipelineId = triggerExecutionInput.getEntityId();
-      authorizePipelineExecution(triggerExecutionInput, permissionAttributes, appId);
+
+      List<QLVariableInput> variableInputs = triggerExecutionInput.getVariableInputs();
+      if (variableInputs == null) {
+        variableInputs = new ArrayList<>();
+      }
+
+      List<QLServiceInput> serviceInputs = triggerExecutionInput.getServiceInputs();
+      if (serviceInputs == null) {
+        serviceInputs = new ArrayList<>();
+      }
+
+      validateInputs(triggerExecutionInput);
+
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
-      String envId = resolveEnvId(pipeline, triggerExecutionInput.getVariableInputs());
 
-      Map<String, String> variableValues =
-          validateAndResolvePipelineVariables(pipeline, triggerExecutionInput.getVariableInputs(), envId);
-      List<Artifact> artifacts =
-          validateAndGetArtifactsFromServiceInputs(variableValues, triggerExecutionInput.getServiceInputs(), pipeline);
+      authorizePipelineExecution(triggerExecutionInput, permissionAttributes, appId);
+      String envId = resolveEnvId(pipeline, variableInputs);
+
+      Map<String, String> variableValues = validateAndResolvePipelineVariables(pipeline, variableInputs, envId);
+      List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, pipeline);
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.PIPELINE);
       executionArgs.setPipelineId(triggerExecutionInput.getEntityId());
@@ -146,6 +158,14 @@ public class PipelineExecutionController {
       final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
       populatePipelineExecution(workflowExecution, builder);
       return builder.build();
+    }
+  }
+
+  private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
+    if (triggerExecutionInput.isTargetToSpecificHosts() || isNotEmpty(triggerExecutionInput.getSpecificHosts())) {
+      throw new InvalidRequestException(
+          "Hosts can't be overridden for pipeline,Target to specific hosts is only available in a Workflow Execution",
+          USER);
     }
   }
 
@@ -277,8 +297,9 @@ public class PipelineExecutionController {
                                          .collect(Collectors.toList());
     List<String> variablesPresent = variableInputs.stream().map(QLVariableInput::getName).collect(Collectors.toList());
     if (!variablesPresent.containsAll(requiredVariables)) {
-      throw new InvalidRequestException("Value not provided for required variable: ["
-          + StringUtils.join(requiredVariables.removeAll(variablesPresent), ","));
+      requiredVariables.removeAll(variablesPresent);
+      throw new InvalidRequestException(
+          "Value not provided for required variable: [" + StringUtils.join(requiredVariables, ",") + "]");
     }
   }
 
@@ -290,17 +311,25 @@ public class PipelineExecutionController {
         UserThreadLocal.get());
   }
 
-  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters, String accountId) {
+  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String pipelineId = parameters.getEntityId();
+      List<QLVariableInput> variableInputs = parameters.getVariableInputs();
+      if (variableInputs == null) {
+        variableInputs = new ArrayList<>();
+      }
+
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
+      PermissionAttribute permissionAttribute =
+          new PermissionAttribute(PermissionAttribute.PermissionType.PIPELINE, PermissionAttribute.Action.READ);
+      List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
+      authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(pipelineId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-        String envId = resolveEnvId(pipeline, parameters.getVariableInputs());
-        Map<String, String> variableValues =
-            validateAndResolvePipelineVariables(pipeline, parameters.getVariableInputs(), envId);
+        String envId = resolveEnvId(pipeline, variableInputs);
+        Map<String, String> variableValues = validateAndResolvePipelineVariables(pipeline, variableInputs, envId);
         DeploymentMetadata finalDeploymentMetadata =
             pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
         if (finalDeploymentMetadata != null) {
