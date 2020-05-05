@@ -32,7 +32,7 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
       while (iterator.hasNext()) {
         TimeSeriesMLAnalysisRecord mlAnalysisRecord = iterator.next();
         int aggregatedRisk = aggregateRiskOfRecord(mlAnalysisRecord);
-        mlAnalysisRecord.compressTransactions();
+        mlAnalysisRecord.bundleAsJosnAndCompress();
         processed++;
         logger.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
@@ -64,7 +64,7 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
   }
 
   private int aggregateRiskOfRecord(TimeSeriesMLAnalysisRecord mlAnalysisRecord) {
-    mlAnalysisRecord.decompressTransactions();
+    mlAnalysisRecord.decompress();
     int aggregatedRisk = -1;
     if (isEmpty(mlAnalysisRecord.getTransactions())) {
       return aggregatedRisk;

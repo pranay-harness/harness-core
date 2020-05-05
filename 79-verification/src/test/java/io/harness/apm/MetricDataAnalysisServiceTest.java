@@ -191,7 +191,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
       timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
 
-      timeSeriesMLAnalysisRecord.compressTransactions();
+      timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
       wingsPersistence.save(timeSeriesMLAnalysisRecord);
     }
 
@@ -223,7 +223,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         timeSeriesSummary.setTest_avg(0.0);
       });
     }
-    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
     timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
     timeSeriesMLAnalysisRecord.setAppId(appId);
     timeSeriesMLAnalysisRecord.setUuid(null);
@@ -310,7 +310,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
-    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
     timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
     timeSeriesMLAnalysisRecord.setAppId(appId);
     timeSeriesMLAnalysisRecord.setUuid(null);
@@ -342,7 +342,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
       timeSeriesMLAnalysisRecord.setAppId(appId);
       timeSeriesMLAnalysisRecord.setUuid(null);
-      timeSeriesMLAnalysisRecord.compressTransactions();
+      timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
       wingsPersistence.save(timeSeriesMLAnalysisRecord);
     }
 
@@ -385,7 +385,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
       timeSeriesMLAnalysisRecord.setAppId(appId);
       timeSeriesMLAnalysisRecord.setUuid(null);
-      timeSeriesMLAnalysisRecord.compressTransactions();
+      timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
       wingsPersistence.save(timeSeriesMLAnalysisRecord);
     }
 
@@ -421,7 +421,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
       timeSeriesMLAnalysisRecord.setAppId(appId);
       timeSeriesMLAnalysisRecord.setUuid(null);
-      timeSeriesMLAnalysisRecord.compressTransactions();
+      timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
       wingsPersistence.save(timeSeriesMLAnalysisRecord);
     }
 
@@ -451,7 +451,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
-    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
     timeSeriesMLAnalysisRecord.setAppId(appId);
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
@@ -486,7 +486,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
-    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
     timeSeriesMLAnalysisRecord.setAppId(appId);
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
@@ -693,11 +693,44 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
                                                        .filter("stateExecutionId", stateExecutionId)
                                                        .get();
     assertThat(savedRecord.getTransactions()).isNull();
-    assertThat(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson())).isFalse();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getMetricAnalysisValuesCompressed()).isNotEmpty();
     TimeSeriesMLAnalysisRecord readRecord =
         metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute, null);
-    assertThat(isEmpty(readRecord.getTransactions())).isFalse();
+    assertThat(readRecord.getTransactions()).isNotEmpty();
+    assertThat(readRecord.getMetricAnalysisValuesCompressed()).isNull();
     assertThat(readRecord.getTransactionsCompressedJson()).isNull();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCompression_withKeyTxns() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record_key_txn.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+    assertThat(timeSeriesMLAnalysisRecord.getTransactions()).isNotEmpty();
+    assertThat(timeSeriesMLAnalysisRecord.getOverallMetricScores()).isNotEmpty();
+    assertThat(timeSeriesMLAnalysisRecord.getKeyTransactionMetricScores()).isNotEmpty();
+    assertThat(timeSeriesMLAnalysisRecord.getAnomalies()).isNotEmpty();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionMetricSums()).isNotEmpty();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getMetricAnalysisValuesCompressed()).isNull();
+
+    timeSeriesMLAnalysisRecord.bundleAsJosnAndCompress();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactions()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getOverallMetricScores()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getKeyTransactionMetricScores()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getAnomalies()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionMetricSums()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
+    assertThat(timeSeriesMLAnalysisRecord.getMetricAnalysisValuesCompressed()).isNotEmpty();
+
+    TimeSeriesMLAnalysisRecord expectedAfterDecompression =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+    timeSeriesMLAnalysisRecord.decompress();
+
+    assertThat(timeSeriesMLAnalysisRecord).isEqualTo(expectedAfterDecompression);
   }
 
   @Test

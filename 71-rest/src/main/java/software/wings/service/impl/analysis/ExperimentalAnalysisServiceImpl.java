@@ -275,8 +275,8 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
       throw new InvalidRequestException("Experimental analysis not done for this state execution id");
     }
 
-    analysisRecord.decompressTransactions();
-    experimentalAnalysisRecord.decompressTransactions();
+    analysisRecord.decompress();
+    experimentalAnalysisRecord.decompress();
 
     if (isEmpty(analysisRecord.getTransactions())) {
       logger.info("No transactions recorded for actual analysis of state execution id: {}", stateExecutionId);

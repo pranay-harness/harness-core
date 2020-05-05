@@ -317,7 +317,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     riskSummary.compressMaps();
 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
-    mlAnalysisResponse.compressTransactions();
+    mlAnalysisResponse.bundleAsJosnAndCompress();
 
     if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
       ((ExperimentalMetricAnalysisRecord) mlAnalysisResponse).setExperimentStatus(ExperimentStatus.UNDETERMINED);
@@ -1013,7 +1013,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = analysisQuery.get();
     if (timeSeriesMLAnalysisRecord != null) {
-      timeSeriesMLAnalysisRecord.decompressTransactions();
+      timeSeriesMLAnalysisRecord.decompress();
     }
     return timeSeriesMLAnalysisRecord;
   }
@@ -1039,7 +1039,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = analysisQuery.asList();
     if (timeSeriesMLAnalysisRecords != null) {
-      timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompressTransactions);
+      timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompress);
     }
     return timeSeriesMLAnalysisRecords;
   }

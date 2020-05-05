@@ -80,7 +80,7 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
     timeSeriesMLAnalysisRecords.forEach(mlAnalysisResponse -> {
       logger.info("In TimeSeriesRiskSummaryMigration, processing record for config {} and minute {}",
           mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getAnalysisMinute());
-      mlAnalysisResponse.decompressTransactions();
+      mlAnalysisResponse.decompress();
       TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
                                               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
                                               .cvConfigId(mlAnalysisResponse.getCvConfigId())

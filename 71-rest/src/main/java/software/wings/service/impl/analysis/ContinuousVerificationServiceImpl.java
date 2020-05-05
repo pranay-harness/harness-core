@@ -934,7 +934,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         timeSeriesMLAnalysisRecords.add(analysisRecords.next());
       }
     }
-    timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompressTransactions);
+    timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompress);
 
     return timeSeriesMLAnalysisRecords;
   }

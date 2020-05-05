@@ -207,7 +207,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     if (timeSeriesMLAnalysisRecord == null) {
       return null;
     }
-    timeSeriesMLAnalysisRecord.decompressTransactions();
+    timeSeriesMLAnalysisRecord.decompress();
 
     Map<String, String> txnNameToIdMap = new HashMap<>();
 
@@ -621,7 +621,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     List<NewRelicMetricAnalysis> metricAnalyses = new ArrayList<>();
     if (timeSeriesMLAnalysisRecord != null) {
-      timeSeriesMLAnalysisRecord.decompressTransactions();
+      timeSeriesMLAnalysisRecord.decompress();
       if (timeSeriesMLAnalysisRecord.getTransactions() != null) {
         for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
           List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
@@ -758,7 +758,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
     allAnalysisRecords.forEach(analysisRecord -> {
-      analysisRecord.decompressTransactions();
+      analysisRecord.decompress();
       if (!groupVsAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
         groupVsAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
       }
