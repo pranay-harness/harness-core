@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
@@ -58,6 +59,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     cvServiceConfiguration.setQuery(generateUUID());
     cvServiceConfiguration.setBaselineStartMinute(16);
     cvServiceConfiguration.setBaselineEndMinute(30);
+    cvServiceConfiguration.setAlertPriority(FeedbackPriority.P5);
     CustomLogsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
@@ -68,6 +70,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     assertThat(yaml.getLogCollectionInfo().getCollectionUrl()).isEqualTo(buildLogCollectionInfo().getCollectionUrl());
     assertThat(yaml.getLogCollectionInfo().getResponseMapping())
         .isEqualTo(buildLogCollectionInfo().getResponseMapping());
+    assertThat(yaml.getAlertPriority()).isEqualTo(FeedbackPriority.P5.name());
   }
 
   @Test
@@ -94,6 +97,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
                                   .build());
     yaml.setBaselineStartMinute(16);
     yaml.setBaselineEndMinute(30);
+    yaml.setAlertPriority(FeedbackPriority.P5.name());
     yaml.setType(StateType.LOG_VERIFICATION.name());
     changeContext.setYaml(yaml);
     CustomLogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
@@ -105,6 +109,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
     assertThat(bean.getQuery()).isEqualTo("testURL ${start_time} ${end_time}");
     assertThat(bean.getBaselineStartMinute()).isEqualTo(16);
     assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
+    assertThat(bean.getAlertPriority()).isEqualTo(FeedbackPriority.P5);
   }
 
   @Test
@@ -134,6 +139,7 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
                                   .build());
     yaml.setBaselineStartMinute(16);
     yaml.setBaselineEndMinute(30);
+    yaml.setAlertPriority(FeedbackPriority.P5.name());
     yaml.setType(StateType.LOG_VERIFICATION.name());
     changeContext.setYaml(yaml);
     CustomLogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);

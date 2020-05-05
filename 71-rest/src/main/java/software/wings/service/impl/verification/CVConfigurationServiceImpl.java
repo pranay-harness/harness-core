@@ -761,7 +761,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         updateOperations.set("query", logsCVConfiguration.getQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
-            .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
+            .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute())
+            .set("alertPriority", logsCVConfiguration.getAlertPriority());
         resetBaselineIfNecessary(logsCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case DATA_DOG_LOG:
@@ -769,7 +770,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations.set("query", datadogLogCVConfiguration.getQuery())
             .set("baselineStartMinute", datadogLogCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", datadogLogCVConfiguration.getBaselineEndMinute())
-            .set("hostnameField", datadogLogCVConfiguration.getHostnameField());
+            .set("hostnameField", datadogLogCVConfiguration.getHostnameField())
+            .set("alertPriority", datadogLogCVConfiguration.getAlertPriority());
         resetBaselineIfNecessary(datadogLogCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case STACK_DRIVER_LOG:
@@ -779,7 +781,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set(StackdriverCVConfigurationKeys.hostnameField, stackdriverCVConfiguration.getHostnameField())
             .set(StackdriverCVConfigurationKeys.messageField, stackdriverCVConfiguration.getMessageField())
             .set(LogsCVConfigurationKeys.baselineStartMinute, stackdriverCVConfiguration.getBaselineStartMinute())
-            .set(LogsCVConfigurationKeys.baselineEndMinute, stackdriverCVConfiguration.getBaselineEndMinute());
+            .set(LogsCVConfigurationKeys.baselineEndMinute, stackdriverCVConfiguration.getBaselineEndMinute())
+            .set(LogsCVConfigurationKeys.alertPriority, stackdriverCVConfiguration.getAlertPriority());
         resetBaselineIfNecessary(stackdriverCVConfiguration, (StackdriverCVConfiguration) savedConfiguration);
         break;
       case ELK:
@@ -791,7 +794,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("hostnameField", elkCVConfiguration.getHostnameField())
             .set("messageField", elkCVConfiguration.getMessageField())
             .set("timestampField", elkCVConfiguration.getTimestampField())
-            .set("timestampFormat", elkCVConfiguration.getTimestampFormat());
+            .set("timestampFormat", elkCVConfiguration.getTimestampFormat())
+            .set("alertPriority", elkCVConfiguration.getAlertPriority());
 
         resetBaselineIfNecessary(elkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
@@ -801,7 +805,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set(LogsCVConfigurationKeys.baselineStartMinute, splunkCVConfiguration.getBaselineStartMinute())
             .set(LogsCVConfigurationKeys.baselineEndMinute, splunkCVConfiguration.getBaselineEndMinute())
             .set(SplunkCVConfigurationKeys.hostnameField, splunkCVConfiguration.getHostnameField())
-            .set(SplunkCVConfigurationKeys.isAdvancedQuery, splunkCVConfiguration.isAdvancedQuery());
+            .set(SplunkCVConfigurationKeys.isAdvancedQuery, splunkCVConfiguration.isAdvancedQuery())
+            .set(LogsCVConfigurationKeys.alertPriority, splunkCVConfiguration.getAlertPriority());
         resetBaselineIfNecessary(splunkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case BUG_SNAG:
@@ -811,7 +816,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("baselineEndMinute", bugsnagCVConfiguration.getBaselineEndMinute())
             .set("orgId", bugsnagCVConfiguration.getOrgId())
             .set("projectId", bugsnagCVConfiguration.getProjectId())
-            .set("browserApplication", bugsnagCVConfiguration.isBrowserApplication());
+            .set("browserApplication", bugsnagCVConfiguration.isBrowserApplication())
+            .set("alertPriority", bugsnagCVConfiguration.getAlertPriority());
         if (isNotEmpty(bugsnagCVConfiguration.getReleaseStage())) {
           updateOperations.set("releaseStage", bugsnagCVConfiguration.getReleaseStage());
         } else if (isNotEmpty(((BugsnagCVConfiguration) savedConfiguration).getReleaseStage())) {

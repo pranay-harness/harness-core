@@ -1639,7 +1639,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
-        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.empty());
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.of(true));
     verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 
@@ -1767,6 +1767,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(records).isNotNull();
     assertThat(records).hasSize(2);
     assertThat("uuid1").isNotEqualTo(feedbackRecord.getUuid());
+    verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 
   @Test
@@ -2361,5 +2362,96 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     Set<String> nodes = analysisService.getCollectedNodes(context, ClusterLevel.L0);
     assertThat(nodes).isNotNull();
     assertThat(nodes.size()).isEqualTo(11);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void
+  testsave24X7LogAnalysisRecords_checkIfTriggerLogAnalysisAlertIfNecessaryCalledWhenDisableLogmlNeuralNetIsEnabled()
+      throws IOException, IllegalAccessException {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS, accountId))
+        .thenReturn(managerCallFeedbacks);
+
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    logsCVConfiguration.setAccountId(accountId);
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.of(false));
+    verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void
+  testsave24X7LogAnalysisRecords_checkIfTriggerLogAnalysisAlertIfNecessaryCalledWhenFeedbackAnalysisComplete()
+      throws IOException {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
+
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.of(true));
+    verify(continuousVerificationService, times(1)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testsave24X7LogAnalysisRecords_checkIfTriggerLogAnalysisAlertIfNecessaryNotCalledWhenLeAnalysisComplete()
+      throws IOException {
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.clone()).thenReturn(managerCallFeedbacks);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
+
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), logMLAnalysisRecord, Optional.empty(), Optional.of(false));
+    verify(continuousVerificationService, times(0)).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
   }
 }

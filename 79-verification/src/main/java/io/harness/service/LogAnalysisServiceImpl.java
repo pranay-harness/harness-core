@@ -9,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static software.wings.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
 import static software.wings.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
@@ -656,12 +657,18 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       wingsPersistence.save(mlAnalysisResponse);
       mlAnalysisResponse.setUnknown_clusters(unknownClusters);
       mlAnalysisResponse.setLog_analysis_result(logAnalysisResultMap);
-      if (!managerClientHelper
-               .callManagerWithRetry(
-                   managerClient.isFeatureEnabled(DISABLE_SERVICEGUARD_LOG_ALERTS, logsCVConfiguration.getAccountId()))
-               .getResource()) {
-        continuousVerificationService.triggerLogAnalysisAlertIfNecessary(
-            cvConfigId, mlAnalysisResponse, analysisMinute);
+      if (mlAnalysisResponse.getAnalysisStatus() == LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE
+          || managerClientHelper
+                 .callManagerWithRetry(
+                     managerClient.isFeatureEnabled(DISABLE_LOGML_NEURAL_NET, logsCVConfiguration.getAccountId()))
+                 .getResource()) {
+        if (!managerClientHelper
+                 .callManagerWithRetry(managerClient.isFeatureEnabled(
+                     DISABLE_SERVICEGUARD_LOG_ALERTS, logsCVConfiguration.getAccountId()))
+                 .getResource()) {
+          continuousVerificationService.triggerLogAnalysisAlertIfNecessary(
+              cvConfigId, mlAnalysisResponse, analysisMinute);
+        }
       }
     }
 
@@ -1160,6 +1167,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
     existingRecord.setUuid(generateUuid());
     existingRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    existingRecord.decompressLogAnalysisRecord();
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(
+        existingRecord.getCvConfigId(), existingRecord, existingRecord.getLogCollectionMinute());
+    existingRecord.compressLogAnalysisRecord();
 
     try {
       wingsPersistence.save(existingRecord);

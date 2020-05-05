@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
@@ -21,6 +22,7 @@ public class LogsCVConfiguration extends CVConfiguration {
   private long baselineStartMinute = -1;
   private long baselineEndMinute = -1;
   private boolean is247LogsV2;
+  private FeedbackPriority alertPriority = FeedbackPriority.P5;
 
   public void setQuery(String query) {
     this.query = isNotEmpty(query) ? query.trim() : query;
@@ -82,5 +84,6 @@ public class LogsCVConfiguration extends CVConfiguration {
     private String query;
     private long baselineStartMinute;
     private long baselineEndMinute;
+    private String alertPriority;
   }
 }

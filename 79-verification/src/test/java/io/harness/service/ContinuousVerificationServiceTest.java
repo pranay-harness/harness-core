@@ -119,6 +119,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
@@ -3599,6 +3600,117 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogDataCollection(accountId);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(0)).queueTask(taskCaptor.capture());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysisAlertIfNecessary_logv2ClusterPriorityIsNull() throws Exception {
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.set247LogsV2(true);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    final String configId = cvConfiguration.getUuid();
+
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = getUnknownClusters(false);
+
+    LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
+    logMLAnalysisRecord.setUnknown_clusters(unknownClusters);
+    Map<Integer, LogAnalysisResult> logAnalysisResult = new HashMap<>();
+    logAnalysisResult.put(0, LogAnalysisResult.builder().label(0).tag("UNKNOWN").text("msg1").build());
+    logAnalysisResult.put(1, LogAnalysisResult.builder().label(1).tag("UNKNOWN").text("msg2").build());
+
+    logMLAnalysisRecord.setLog_analysis_result(logAnalysisResult);
+
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+
+    waitForAlert(2, Optional.empty());
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+
+    assertThat(alerts).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysisAlertIfNecessary_logv1ClusterPriorityNotNull() throws Exception {
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.setAlertPriority(FeedbackPriority.P3);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    final String configId = cvConfiguration.getUuid();
+
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = getUnknownClusters(true);
+
+    LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
+    logMLAnalysisRecord.setUnknown_clusters(unknownClusters);
+
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+
+    waitForAlert(1, Optional.empty());
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+
+    assertThat(alerts).hasSize(1);
+    assertThat(alerts.get(0).getTitle().contains("Log Message: msg with priority P2")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testTriggerLogAnalysisAlertIfNecessary_logv2ClusterPriorityNotNull() throws Exception {
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.set247LogsV2(true);
+    cvConfiguration.setAlertPriority(FeedbackPriority.P3);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    final String configId = cvConfiguration.getUuid();
+
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = getUnknownClusters(true);
+
+    LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
+    logMLAnalysisRecord.setUnknown_clusters(unknownClusters);
+    Map<Integer, LogAnalysisResult> logAnalysisResult = new HashMap<>();
+    logAnalysisResult.put(0, LogAnalysisResult.builder().label(0).tag("UNKNOWN").text("msg1").build());
+    logAnalysisResult.put(1, LogAnalysisResult.builder().label(1).tag("UNKNOWN").text("msg2").build());
+
+    logMLAnalysisRecord.setLog_analysis_result(logAnalysisResult);
+
+    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
+
+    waitForAlert(1, Optional.empty());
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+
+    assertThat(alerts).hasSize(1);
+    assertThat(alerts.get(0).getTitle().contains("Log Message: msg with priority P2")).isTrue();
+  }
+
+  private Map<String, Map<String, SplunkAnalysisCluster>> getUnknownClusters(boolean setPriority) {
+    SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText("msg with priority P5");
+    if (setPriority) {
+      splunkAnalysisCluster.setPriority(FeedbackPriority.P5);
+    }
+
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    unknownClusters.put("0", new HashMap<>());
+    unknownClusters.get("0").put("host1", splunkAnalysisCluster);
+
+    splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText("msg with priority P2");
+    if (setPriority) {
+      splunkAnalysisCluster.setPriority(FeedbackPriority.P2);
+    }
+
+    unknownClusters.put("1", new HashMap<>());
+    unknownClusters.get("1").put("host1", splunkAnalysisCluster);
+
+    return unknownClusters;
   }
 
   private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {

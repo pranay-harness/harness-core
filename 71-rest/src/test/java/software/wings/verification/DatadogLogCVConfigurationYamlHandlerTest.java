@@ -20,6 +20,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -101,6 +102,7 @@ public class DatadogLogCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setBaselineStartMinute(16);
     yaml.setBaselineEndMinute(30);
     yaml.setHostnameField("hostName1");
+    yaml.setAlertPriority(FeedbackPriority.P5.name());
     return yaml;
   }
 
@@ -115,6 +117,7 @@ public class DatadogLogCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setBaselineStartMinute(16);
     cvServiceConfiguration.setBaselineEndMinute(30);
     cvServiceConfiguration.setHostnameField(generateUUID());
+    cvServiceConfiguration.setAlertPriority(FeedbackPriority.P5);
 
     DatadogLogCVConfigurationYaml yaml =
         (DatadogLogCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
@@ -124,6 +127,7 @@ public class DatadogLogCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
     assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
     assertThat(yaml.getHostnameField()).isEqualTo(cvServiceConfiguration.getHostnameField());
+    assertThat(yaml.getAlertPriority()).isEqualTo(cvServiceConfiguration.getAlertPriority().name());
   }
 
   @Test
@@ -148,6 +152,7 @@ public class DatadogLogCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getBaselineStartMinute()).isEqualTo(16);
     assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
     assertThat(bean.getHostnameField()).isEqualTo("hostName1");
+    assertThat(bean.getAlertPriority()).isEqualTo(FeedbackPriority.P5);
   }
 
   @Test

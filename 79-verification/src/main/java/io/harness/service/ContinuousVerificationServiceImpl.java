@@ -2004,16 +2004,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         if (isNotEmpty(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
-          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
-              cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
-              ContinuousVerificationAlertData.builder()
-                  .mlAnalysisType(MLAnalysisType.LOG_ML)
-                  .logAnomaly(splunkAnalysisCluster.getText())
-                  .tag(logAnalysisResult.get(splunkAnalysisCluster.getCluster_label()).getTag())
-                  .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-                  .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
-                  .riskScore(1.0)
-                  .build()));
+          if (splunkAnalysisCluster.getPriority() == null
+              || splunkAnalysisCluster.getPriority().compareTo(logsCVConfiguration.getAlertPriority()) >= 0) {
+            verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
+                cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
+                ContinuousVerificationAlertData.builder()
+                    .mlAnalysisType(MLAnalysisType.LOG_ML)
+                    .logAnomaly(splunkAnalysisCluster.getText())
+                    .tag(logAnalysisResult.get(splunkAnalysisCluster.getCluster_label()).getTag())
+                    .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                    .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                    .riskScore(1.0)
+                    .build()));
+          }
         }
       });
     } else {
@@ -2021,16 +2024,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         if (isNotEmpty(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
-          verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
-              cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
-              ContinuousVerificationAlertData.builder()
-                  .mlAnalysisType(MLAnalysisType.LOG_ML)
-                  .logAnomaly(splunkAnalysisCluster.getText())
-                  .hosts(analysisClusterMap.keySet())
-                  .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-                  .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
-                  .riskScore(1.0)
-                  .build()));
+          if (splunkAnalysisCluster.getPriority() == null
+              || splunkAnalysisCluster.getPriority().compareTo(logsCVConfiguration.getAlertPriority()) >= 0) {
+            verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
+                cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
+                ContinuousVerificationAlertData.builder()
+                    .mlAnalysisType(MLAnalysisType.LOG_ML)
+                    .logAnomaly(splunkAnalysisCluster.getText())
+                    .hosts(analysisClusterMap.keySet())
+                    .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                    .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                    .riskScore(1.0)
+                    .build()));
+          }
         }
       });
     }

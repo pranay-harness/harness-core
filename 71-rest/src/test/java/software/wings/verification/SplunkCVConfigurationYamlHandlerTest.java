@@ -20,6 +20,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -101,6 +102,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setBaselineEndMinute(30);
     yaml.setAdvancedQuery(true);
     yaml.setHostnameField("hostName1");
+    yaml.setAlertPriority(FeedbackPriority.P5.name());
     return yaml;
   }
 
@@ -116,6 +118,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setBaselineEndMinute(30);
     cvServiceConfiguration.setAdvancedQuery(true);
     cvServiceConfiguration.setHostnameField(generateUUID());
+    cvServiceConfiguration.setAlertPriority(FeedbackPriority.P5);
 
     SplunkCVConfigurationYaml yaml = (SplunkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
@@ -125,6 +128,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
     assertThat(yaml.getHostnameField()).isEqualTo(cvServiceConfiguration.getHostnameField());
     assertThat(yaml.isAdvancedQuery()).isEqualTo(cvServiceConfiguration.isAdvancedQuery());
+    assertThat(yaml.getAlertPriority()).isEqualTo(cvServiceConfiguration.getAlertPriority().name());
   }
 
   @Test
@@ -150,6 +154,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
     assertThat(bean.getHostnameField()).isEqualTo("hostName1");
     assertThat(bean.isAdvancedQuery()).isEqualTo(true);
+    assertThat(bean.getAlertPriority()).isEqualTo(FeedbackPriority.P5);
   }
 
   @Test
