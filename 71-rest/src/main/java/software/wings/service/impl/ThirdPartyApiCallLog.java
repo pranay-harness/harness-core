@@ -80,7 +80,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
   public static final String STATUS_CODE = "Status Code";
 
   @NotEmpty private String stateExecutionId;
-  @NotEmpty private String accountId;
+  @Indexed @NotEmpty private String accountId;
   @NotEmpty private String delegateId;
   @NotEmpty private String delegateTaskId;
   private String title;

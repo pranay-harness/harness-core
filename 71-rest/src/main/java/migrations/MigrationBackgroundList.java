@@ -205,16 +205,18 @@ public class MigrationBackgroundList {
         .add(Pair.of(114, BaseMigration.class))
         .add(Pair.of(115, AddAccountIdToTimeSeriesMetricTemplatesMigration.class))
         .add(Pair.of(116, AddAccountIdToTimeSeriesMetricGroupMigration.class))
-        .add(Pair.of(117, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
+        .add(Pair.of(117, BaseMigration.class))
         .add(Pair.of(118, AddAccountIdToTimeSeriesCumulativeSums.class))
         .add(Pair.of(119, AddAccountIdToTimeSeriesRiskSummary.class))
         .add(Pair.of(120, AddAccountIdToNewRelicMetricAnalysisRecords.class))
-        .add(Pair.of(121, AddAccountidToTimeSeriesMLScores.class))
+        .add(Pair.of(121, BaseMigration.class))
         .add(Pair.of(122, AddAccountIdToWorkflowExecutionBaselines.class))
         .add(Pair.of(123, AddAccountIdToTimeSeriesKeyTransaction.class))
         .add(Pair.of(124, CreatePrimiryProfileForAllAccounts.class))
         .add(Pair.of(125, DisableServiceGuardsWithDeletedConnectorsMigration.class))
         .add(Pair.of(126, DeleteInvalidServiceGuardConfigs.class))
+        .add(Pair.of(127, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
+        .add(Pair.of(128, AddAccountidToTimeSeriesMLScores.class))
         .build();
   }
 }
