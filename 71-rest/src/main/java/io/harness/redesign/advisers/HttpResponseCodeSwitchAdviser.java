@@ -9,6 +9,7 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.impl.success.OnSuccessAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.state.io.StateResponse;
 import software.wings.api.HttpStateExecutionData;
@@ -16,6 +17,7 @@ import software.wings.api.HttpStateExecutionData;
 import java.util.Map;
 
 @Redesign
+@ExcludeRedesign
 @Produces(Adviser.class)
 public class HttpResponseCodeSwitchAdviser implements Adviser {
   @Override

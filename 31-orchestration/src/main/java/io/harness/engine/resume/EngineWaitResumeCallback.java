@@ -3,6 +3,7 @@ package io.harness.engine.resume;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.facilitator.FacilitatorResponse;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Converters;
 import java.util.Map;
 
 @Converters({DurationConverter.class})
+@ExcludeRedesign
 public class EngineWaitResumeCallback implements NotifyCallback {
   @Inject private ExecutionEngine executionEngine;
 

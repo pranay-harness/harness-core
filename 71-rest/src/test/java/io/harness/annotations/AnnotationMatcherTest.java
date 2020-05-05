@@ -3,6 +3,7 @@ package io.harness.annotations;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
@@ -26,8 +27,8 @@ public class AnnotationMatcherTest extends WingsBaseTest {
     Set<Class<? extends Object>> redesignClasses = new HashSet<>();
     Reflections reflectionsHarness = new Reflections("io.harness");
     Reflections reflectionsWings = new Reflections("software.wings");
-    redesignClasses.addAll(reflectionsHarness.getTypesAnnotatedWith(Redesign.class));
-    redesignClasses.addAll(reflectionsWings.getTypesAnnotatedWith(Redesign.class));
+    redesignClasses.addAll(reflectionsHarness.getTypesAnnotatedWith(ExcludeRedesign.class));
+    redesignClasses.addAll(reflectionsWings.getTypesAnnotatedWith(ExcludeRedesign.class));
     List<String> nameList = redesignClasses.stream()
                                 .distinct()
                                 .filter(clazz -> !clazz.isAnonymousClass() && !clazz.isMemberClass())

@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Redesign
+@ExcludeRedesign
 public class EngineObtainmentHelper {
   @Inject private HPersistence hPersistence;
   @Inject private ResolverRegistry resolverRegistry;

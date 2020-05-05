@@ -8,6 +8,7 @@ import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -26,6 +27,7 @@ import lombok.experimental.UtilityClass;
 import java.time.Duration;
 
 @Redesign
+@ExcludeRedesign
 @UtilityClass
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
