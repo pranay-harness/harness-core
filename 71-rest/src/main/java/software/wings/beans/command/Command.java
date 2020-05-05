@@ -27,6 +27,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Variable;
 import software.wings.beans.template.TemplateReference;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
@@ -86,6 +87,8 @@ public class Command extends Base implements CommandUnit {
 
   @JsonIgnore private transient String templateId;
   @JsonIgnore private transient String templateVersion;
+  @JsonIgnore private transient ImportedTemplateDetails importedTemplateDetails;
+
   private List<Variable> variables = Lists.newArrayList();
 
   public Command() {
@@ -311,8 +314,17 @@ public class Command extends Base implements CommandUnit {
     return templateVersion;
   }
 
+  @SchemaIgnore
+  public ImportedTemplateDetails getImportedTemplateDetails() {
+    return importedTemplateDetails;
+  }
+
   public void setTemplateVersion(String templateVersion) {
     this.templateVersion = templateVersion;
+  }
+
+  public void setImportedTemplateDetails(ImportedTemplateDetails importedTemplateDetails) {
+    this.importedTemplateDetails = importedTemplateDetails;
   }
 
   @Override
@@ -462,6 +474,7 @@ public class Command extends Base implements CommandUnit {
     private List<Variable> templateVariables = new ArrayList<>();
     private String templateId;
     private String templateVersion;
+    private ImportedTemplateDetails importedTemplateVersion;
     private TemplateReference templateReference;
     private String referenceUuid;
     private Builder() {}
@@ -586,6 +599,11 @@ public class Command extends Base implements CommandUnit {
       return this;
     }
 
+    public Builder withImportedTemplateVersion(ImportedTemplateDetails importedTemplateVersion) {
+      this.importedTemplateVersion = importedTemplateVersion;
+      return this;
+    }
+
     public Builder withTemplateReference(TemplateReference templateReference) {
       this.templateReference = templateReference;
       return this;
@@ -612,6 +630,7 @@ public class Command extends Base implements CommandUnit {
           .withCommandType(commandType)
           .withTemplateId(templateId)
           .withTemplateVersion(templateVersion)
+          .withImportedTemplateVersion(importedTemplateVersion)
           .withTemplateReference(templateReference)
           .withReferenceUuid(referenceUuid);
     }
@@ -635,6 +654,7 @@ public class Command extends Base implements CommandUnit {
       command.setTemplateId(templateId);
       command.setTemplateReference(templateReference);
       command.setTemplateVersion(templateVersion);
+      command.setImportedTemplateDetails(importedTemplateVersion);
       return command;
     }
   }

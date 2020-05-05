@@ -67,6 +67,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final String VARIABLES = "variables";
   private static final String TEMPLATE_UUID = "templateUuid";
   private static final String TEMPLATE_VERSION = "templateVersion";
+  private static final String IMPORTED_TEMPLATE_DETAILS = "importedTemplateDetails";
   private static final String TEMPLATE_VARIABLES = "templateVariables";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
@@ -298,6 +299,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             .withCommandType(commandTemplate.getCommandType())
             .withTemplateId(template.getUuid())
             .withTemplateVersion(String.valueOf(template.getVersion()))
+            .withImportedTemplateVersion(template.getImportedTemplateDetails())
             .build();
       case WORKFLOW:
         return GraphNode.builder()
@@ -306,6 +308,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             .templateUuid(template.getUuid())
             .templateVersion(String.valueOf(template.getVersion()))
             .templateVariables(template.getVariables())
+            .importedTemplateDetails(template.getImportedTemplateDetails())
             .build();
       default:
         throw new InvalidRequestException("Unsupported Entity Type");
@@ -325,7 +328,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   @Override
   public List<String> fetchTemplateProperties() {
     return asList(COMMAND_UNITS, REFERENCED_TEMPLATE_LIST, COMMAND_TYPE, COMMAND_PATH, VARIABLES, TEMPLATE_UUID,
-        TEMPLATE_VERSION, TEMPLATE_VARIABLES);
+        TEMPLATE_VERSION, TEMPLATE_VARIABLES, IMPORTED_TEMPLATE_DETAILS);
   }
 
   @Override
