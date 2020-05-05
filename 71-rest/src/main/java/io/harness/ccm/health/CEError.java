@@ -9,6 +9,8 @@ public enum CEError {
 
   PERPETUAL_TASK_NOT_ASSIGNED("The task to collect events from the cluster %s has not been assigned to any Delegate."),
 
+  NO_ELIGIBLE_DELEGATE("No eligible delegates can collect events for this cluster %s."),
+
   DELEGATE_NOT_AVAILABLE("The Delegate for collecting events from the cluster %s has been disconnected."),
 
   NO_RECENT_EVENTS_PUBLISHED("The cluster %s has not published events since %s."),

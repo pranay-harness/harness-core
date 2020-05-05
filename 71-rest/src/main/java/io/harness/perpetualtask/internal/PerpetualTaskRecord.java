@@ -36,6 +36,7 @@ public class PerpetualTaskRecord
   long intervalSeconds;
   long timeoutMillis;
   @Indexed String delegateId;
+  String state;
   long lastHeartbeat;
 
   @Indexed Long assignerIteration;

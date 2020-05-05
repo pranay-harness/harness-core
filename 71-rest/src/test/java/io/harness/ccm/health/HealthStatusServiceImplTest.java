@@ -19,6 +19,7 @@ import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.time.FakeClock;
@@ -95,7 +96,10 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .perpetualTaskIds(perpetualTaskIds)
                         .build();
 
-    taskRecord = PerpetualTaskRecord.builder().delegateId(delegateId).build();
+    taskRecord = PerpetualTaskRecord.builder()
+                     .delegateId(delegateId)
+                     .state(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+                     .build();
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);

@@ -23,4 +23,6 @@ public interface PerpetualTaskService {
   boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse);
 
   void setDelegateId(String taskId, String delegateId);
+
+  void setTaskState(String taskId, String state);
 }
