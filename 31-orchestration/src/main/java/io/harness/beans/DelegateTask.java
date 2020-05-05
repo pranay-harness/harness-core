@@ -69,6 +69,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String serviceTemplateId;
   private String artifactStreamId;
   private String workflowExecutionId;
+  private boolean selectionLogsTrackingEnabled;
 
   private String version;
   private List<String> tags;
