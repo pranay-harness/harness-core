@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.VUK;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +19,13 @@ import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
+  private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
+  private static final String DISCONNECTED = "Disconnected";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
 
@@ -229,5 +236,61 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing selector " + selector);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldLogDisconnectedDelegate() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+    String delegate2Id = generateUuid();
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(delegate1Id);
+    disconnectedDelegates.add(delegate2Id);
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegates);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateIds().containsAll(Arrays.asList(delegate1Id, delegate2Id)))
+        .isTrue();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(DISCONNECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage().startsWith("Delegate was disconnected at"))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldLogWaitingForApprovalDelegate() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+    String delegate2Id = generateUuid();
+    Set<String> wapprDelegates = new HashSet<>();
+    wapprDelegates.add(delegate1Id);
+    wapprDelegates.add(delegate2Id);
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegates);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateIds().containsAll(Arrays.asList(delegate1Id, delegate2Id)))
+        .isTrue();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(WAITING_FOR_APPROVAL);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage().startsWith("Delegate was waiting for approval at"))
+        .isTrue();
   }
 }
