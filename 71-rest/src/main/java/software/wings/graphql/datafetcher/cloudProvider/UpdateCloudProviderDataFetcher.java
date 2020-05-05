@@ -86,8 +86,8 @@ public class UpdateCloudProviderDataFetcher
       input.getUserName().getValue().ifPresent(pcfConfig::setUsername);
     }
     pcfConfig.setPassword(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
-    if (input.getPassword().isPresent()) {
-      input.getPassword().getValue().map(String::toCharArray).ifPresent(pcfConfig::setPassword);
+    if (input.getEncryptedPasswordSecretId().isPresent()) {
+      input.getEncryptedPasswordSecretId().getValue().ifPresent(pcfConfig::setEncryptedPassword);
     }
     settingAttribute.setValue(pcfConfig);
 
