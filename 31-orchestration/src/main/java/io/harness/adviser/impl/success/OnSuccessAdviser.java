@@ -16,7 +16,7 @@ public class OnSuccessAdviser implements Adviser {
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     OnSuccessAdviserParameters parameters =
         (OnSuccessAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
-    return OnSuccessAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
+    return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
 
   @Override

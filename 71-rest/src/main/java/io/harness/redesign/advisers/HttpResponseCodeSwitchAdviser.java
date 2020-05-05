@@ -6,7 +6,7 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.adviser.impl.success.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
@@ -40,7 +40,7 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
 
     Map<Integer, String> responseCodeNodeIdMap = parameters.getResponseCodeNodeIdMappings();
     if (responseCodeNodeIdMap.containsKey(httpStateExecutionData.getHttpResponseCode())) {
-      return OnSuccessAdvise.builder()
+      return NextStepAdvise.builder()
           .nextNodeId(responseCodeNodeIdMap.get(httpStateExecutionData.getHttpResponseCode()))
           .build();
     } else {

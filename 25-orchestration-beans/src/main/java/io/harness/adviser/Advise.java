@@ -4,5 +4,5 @@ import io.harness.annotations.Redesign;
 
 @Redesign
 public interface Advise {
-  String getType();
+  AdviseType getType();
 }
