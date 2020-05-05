@@ -574,6 +574,7 @@ terraformConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 terraformConfig {"name": "appId_1", "background": true} {"appId": 1}
 terraformConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 terraformConfig {"name": "entityId_1", "background": true} {"entityId": 1}
+thirdPartyApiCallLog {"name": "accountId_1", "background": true} {"accountId": 1}
 thirdPartyApiCallLog {"name": "queryIdx", "background": true} {"stateExecutionId": 1, "createdAt": -1}
 thirdPartyApiCallLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesAnalysisRecords {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -602,6 +603,7 @@ timeSeriesMetricRecords {"name": "serviceGuardIdx", "background": true} {"dataCo
 timeSeriesMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 timeSeriesMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
+timeSeriesMetricTemplates {"name": "accountId_1", "background": true} {"accountId": 1}
 timeSeriesMetricTemplates {"name": "appId_1", "background": true} {"appId": 1}
 timeSeriesMetricTemplates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeSeriesMetricTemplates {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
@@ -651,6 +653,7 @@ verificationServiceConfigurations {"name": "envId_1", "background": true} {"envI
 verificationServiceConfigurations {"name": "nameUniqueIndex", "unique": true} {"appId": 1, "envId": 1, "name": 1}
 verificationServiceConfigurations {"name": "serviceId_1", "background": true} {"serviceId": 1}
 verificationServiceConfigurations {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+verificationServiceTask {"name": "accountId_1", "background": true} {"accountId": 1}
 verificationServiceTask {"name": "appId_1", "background": true} {"appId": 1}
 verificationServiceTask {"name": "createdAt_1", "background": true} {"createdAt": 1}
 verificationServiceTask {"name": "cvTaskCreationIndex", "background": true} {"cvTasksCreated": 1, "cvTaskCreationIteration": 1}

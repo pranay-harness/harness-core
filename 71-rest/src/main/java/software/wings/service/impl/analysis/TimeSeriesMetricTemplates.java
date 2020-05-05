@@ -45,7 +45,7 @@ public class TimeSeriesMetricTemplates extends Base implements AccountAccess {
 
   @Indexed private String cvConfigId;
 
-  private String accountId;
+  @Indexed private String accountId;
 
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
 

@@ -59,7 +59,7 @@ import java.util.Map;
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class AnalysisContext extends Base implements PersistentRegularIterable, AccountAccess {
-  private String accountId;
+  @Indexed private String accountId;
   private String workflowId;
   private String workflowExecutionId;
   @Indexed private String stateExecutionId;
