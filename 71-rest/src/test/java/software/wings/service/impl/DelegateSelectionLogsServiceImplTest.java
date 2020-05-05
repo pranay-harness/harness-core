@@ -20,6 +20,7 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String REJECTED = "Rejected";
+  private static final String SELECTED = "Selected";
 
   @InjectMocks @Inject DelegateSelectionLogsService delegateSelectionLogsService;
 
@@ -43,6 +44,33 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isEmpty();
     assertEquals(batchDelegateSelectionLog.getTaskId(), taskId);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotLogCanAssign() {
+    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, null))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldLogCanAssign() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logCanAssign(batch, accountId, delegate1Id);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(SELECTED);
   }
 
   @Test
