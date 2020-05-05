@@ -1,49 +1,46 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.APPID;
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID;
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.ENVID;
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.NAMESPACE;
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.SERVICEID;
-import static software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields.WORKLOADNAME;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.schema.type.aggregation.QLData;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilterType;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLContextInfo;
+import software.wings.graphql.schema.type.aggregation.billing.QLEfficiencyScoreInfo;
 import software.wings.graphql.schema.type.aggregation.billing.QLEfficiencyStatsData;
-import software.wings.graphql.schema.type.aggregation.billing.QLResourceStatsInfo;
 import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
+import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo.QLStatsBreakdownInfoBuilder;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.StringJoiner;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
-  @Inject IdleCostTrendStatsDataFetcher idleCostTrendStatsDataFetcher;
+  @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataHelper billingDataHelper;
-  @Inject QLBillingStatsHelper billingStatsHelper;
 
-  private static final String CPU_CONSTANT = "CPU";
-  private static final String MEMORY_CONSTANT = "MEMORY";
   private static final String TOTAL_COST_DESCRIPTION = "Total Cost between %s - %s";
   private static int idleCostBaseline = 30;
   private static int unallocatedCostBaseline = 5;
@@ -54,7 +51,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, aggregateFunction, filters);
+        return getData(accountId, aggregateFunction, filters, groupBy, sort);
       } else {
         throw new InvalidRequestException("Cannot process request");
       }
@@ -64,134 +61,127 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     }
   }
 
-  protected QLEfficiencyStatsData getData(
-      @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
-    boolean isClusterView = checkIfClusterFilterIsPresent(filters);
-    QLIdleCostData costData = idleCostTrendStatsDataFetcher.getIdleCostData(accountId, aggregateFunction, filters);
-    QLUnallocatedCost unallocatedCost =
-        idleCostTrendStatsDataFetcher.getUnallocatedCostData(accountId, aggregateFunction, filters);
-    QLStatsBreakdownInfo costStats =
-        getCostBreakdown(costData, unallocatedCost, checkIfClusterFilterIsPresent(filters));
-    List<QLResourceStatsInfo> resourceStatsInfo = getResourceStats(costData, unallocatedCost, isClusterView);
-    QLContextInfo contextInfo = getContextInfo(costStats, filters, accountId);
+  protected QLEfficiencyStatsData getData(@NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    QLStatsBreakdownInfo costStats = QLStatsBreakdownInfo.builder().build();
+    BillingDataQueryMetadata queryData;
+    ResultSet resultSet = null;
+    List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
+    QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
+
+    queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
+        groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, true, true);
+    logger.info("getSunburstGridData query: {}", queryData.getQuery());
+
+    Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
+        billingDataHelper.getBillingAmountDataForEntityCostTrend(
+            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sort);
+
+    StringJoiner entityIdAppender = new StringJoiner(":");
+    QLBillingAmountData prevBillingAmountData = entityIdToPrevBillingAmountData.get(entityIdAppender.toString());
+
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(queryData.getQuery());
+      costStats =
+          getCostBreakdown(queryData, resultSet, entityIdToPrevBillingAmountData, filters, entityIdAppender.toString());
+    } catch (SQLException e) {
+      logger.error("SunburstChartStatsDataFetcher (getSunburstGridData) Error exception {}", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
 
     return QLEfficiencyStatsData.builder()
-        .context(contextInfo)
         .efficiencyBreakdown(costStats)
-        .resourceBreakdown(resourceStatsInfo)
+        .efficiencyData(getEfficiencyData(costStats, prevBillingAmountData))
+        .context(getContextInfo(costStats, filters))
         .build();
   }
 
-  private boolean checkIfClusterFilterIsPresent(List<QLBillingDataFilter> filters) {
-    boolean isClusterFilter = false;
-    boolean isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter = false;
-    for (QLBillingDataFilter filter : filters) {
-      if (filter.getCluster() != null) {
-        isClusterFilter = true;
+  private QLStatsBreakdownInfo getCostBreakdown(BillingDataQueryMetadata queryData, ResultSet resultSet,
+      Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData, List<QLBillingDataFilter> filters,
+      String entityId) throws SQLException {
+    QLStatsBreakdownInfo breakdownInfo = QLStatsBreakdownInfo.builder().build();
+    while (null != resultSet && resultSet.next()) {
+      QLStatsBreakdownInfoBuilder qlStatsBreakdownInfoBuilder = QLStatsBreakdownInfo.builder();
+      for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        switch (field.getDataType()) {
+          case DOUBLE:
+            switch (field) {
+              case SUM:
+                qlStatsBreakdownInfoBuilder.total(billingDataHelper.roundingDoubleFieldValue(field, resultSet));
+                break;
+              case IDLECOST:
+                qlStatsBreakdownInfoBuilder.idle(billingDataHelper.roundingDoubleFieldValue(field, resultSet));
+                break;
+              case UNALLOCATEDCOST:
+                qlStatsBreakdownInfoBuilder.unallocated(billingDataHelper.roundingDoubleFieldValue(field, resultSet));
+                break;
+              default:
+                throw new InvalidRequestException("unsupported Type" + field.getDataType());
+            }
+            break;
+          default:
+            break;
+        }
       }
-      if (filter.getWorkloadName() != null || filter.getNamespace() != null || filter.getTaskId() != null
-          || filter.getCloudServiceName() != null) {
-        isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter = true;
+
+      if (entityIdToPrevBillingAmountData != null && entityIdToPrevBillingAmountData.containsKey(entityId)) {
+        qlStatsBreakdownInfoBuilder.trend(
+            billingDataHelper.getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityId), filters));
+      }
+      breakdownInfo = qlStatsBreakdownInfoBuilder.build();
+      if (validateBreakDownInfo(breakdownInfo)) {
+        double utilizedCost = billingDataHelper.getRoundedDoubleValue(breakdownInfo.getTotal().doubleValue()
+            - breakdownInfo.getIdle().doubleValue() - breakdownInfo.getUnallocated().doubleValue());
+        breakdownInfo.setUtilized(utilizedCost);
       }
     }
-    return isClusterFilter && !isNamespaceOrWorkloadNameOrTaskIdOrCloudServiceNameFilter;
+    return breakdownInfo;
   }
 
-  private QLStatsBreakdownInfo getCostBreakdown(
-      QLIdleCostData costData, QLUnallocatedCost unallocatedCostData, boolean isClusterView) {
-    double totalCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalCost()));
-    double idleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getIdleCost()));
-    double unallocatedCost = validateUnallocatedCost(unallocatedCostData);
-    if (isClusterView) {
-      idleCost -= unallocatedCost;
+  private boolean validateBreakDownInfo(QLStatsBreakdownInfo breakdownInfo) {
+    if (breakdownInfo.getTotal() == null || breakdownInfo.getIdle() == null || breakdownInfo.getUnallocated() == null) {
+      throw new InvalidRequestException("Invalid Breakdown Costs, Missing Aggregation");
     }
-    double utilizedCost = billingDataHelper.getRoundedDoubleValue(totalCost - idleCost - unallocatedCost);
-    return QLStatsBreakdownInfo.builder()
-        .total(totalCost)
-        .idle(idleCost)
-        .unallocated(unallocatedCost)
-        .utilized(utilizedCost)
-        .build();
+    return true;
   }
 
-  private List<QLResourceStatsInfo> getResourceStats(
-      QLIdleCostData costData, QLUnallocatedCost unallocatedCostData, boolean isClusterView) {
-    double cpuTotal = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalCpuCost()));
-    double cpuIdleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getCpuIdleCost()));
-    double cpuUnallocated = validateCpuUnallocatedCost(unallocatedCostData);
-    if (isClusterView) {
-      cpuIdleCost -= cpuUnallocated;
-    }
-    double cpuUtilizedCost = cpuTotal - cpuIdleCost - cpuUnallocated;
-
-    double memoryTotal = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getTotalMemoryCost()));
-    double memoryIdleCost = billingDataHelper.getRoundedDoubleValue(checkForNullValues(costData.getMemoryIdleCost()));
-    double memoryUnallocated = validateMemoryUnallocatedCost(unallocatedCostData);
-    if (isClusterView) {
-      memoryIdleCost -= memoryUnallocated;
-    }
-    double memoryUtilizedCost = memoryTotal - memoryIdleCost - memoryUnallocated;
-
-    QLStatsBreakdownInfo cpuInfo = QLStatsBreakdownInfo.builder()
-                                       .idle(billingDataHelper.getRoundedDoubleValue(cpuIdleCost / cpuTotal))
-                                       .unallocated(billingDataHelper.getRoundedDoubleValue(cpuUnallocated / cpuTotal))
-                                       .utilized(billingDataHelper.getRoundedDoubleValue(cpuUtilizedCost / cpuTotal))
-                                       .build();
-    QLStatsBreakdownInfo memInfo =
-        QLStatsBreakdownInfo.builder()
-            .idle(billingDataHelper.getRoundedDoubleValue(memoryIdleCost / memoryTotal))
-            .unallocated(billingDataHelper.getRoundedDoubleValue(memoryUnallocated / memoryTotal))
-            .utilized(billingDataHelper.getRoundedDoubleValue(memoryUtilizedCost / memoryTotal))
-            .build();
-
-    List<QLResourceStatsInfo> resourceStatsInfoList = new ArrayList<>();
-    resourceStatsInfoList.add(QLResourceStatsInfo.builder().type(CPU_CONSTANT).info(cpuInfo).build());
-    resourceStatsInfoList.add(QLResourceStatsInfo.builder().type(MEMORY_CONSTANT).info(memInfo).build());
-    return resourceStatsInfoList;
-  }
-
-  private BigDecimal checkForNullValues(BigDecimal value) {
-    return value == null ? BigDecimal.ZERO : value;
-  }
-
-  private double validateUnallocatedCost(QLUnallocatedCost unallocatedCostData) {
-    if (unallocatedCostData.getUnallocatedCost() != null) {
-      return billingDataHelper.getRoundedDoubleValue(unallocatedCostData.getUnallocatedCost());
-    }
-    return 0.0;
-  }
-
-  private double validateCpuUnallocatedCost(QLUnallocatedCost unallocatedCostData) {
-    if (unallocatedCostData.getCpuUnallocatedCost() != null) {
-      return billingDataHelper.getRoundedDoubleValue(unallocatedCostData.getCpuUnallocatedCost());
-    }
-    return 0.0;
-  }
-
-  private double validateMemoryUnallocatedCost(QLUnallocatedCost unallocatedCostData) {
-    if (unallocatedCostData.getMemoryUnallocatedCost() != null) {
-      return billingDataHelper.getRoundedDoubleValue(unallocatedCostData.getMemoryUnallocatedCost());
-    }
-    return 0.0;
-  }
-
-  private QLContextInfo getContextInfo(
-      QLStatsBreakdownInfo costStats, List<QLBillingDataFilter> filters, String accountId) {
+  private QLContextInfo getContextInfo(QLStatsBreakdownInfo costStats, List<QLBillingDataFilter> filters) {
     Instant startInstant = Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(filters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(filters).getValue().longValue());
     boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
     String startTime = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
     String endTime = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
-
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startTime, endTime);
 
-    int efficiencyScore = calculateEfficiencyScore(costStats);
-
     return QLContextInfo.builder()
-        .contextName(getContextNameFromFilter(filters, accountId))
-        .efficiencyScore(efficiencyScore < 100 ? efficiencyScore : 100)
         .totalCost(costStats.getTotal())
+        .costTrend(costStats.getTrend())
         .totalCostDescription(totalCostDescription)
+        .build();
+  }
+
+  private QLEfficiencyScoreInfo getEfficiencyData(
+      QLStatsBreakdownInfo costStats, QLBillingAmountData prevBillingAmountData) {
+    int efficiencyScore = calculateEfficiencyScore(costStats);
+    QLStatsBreakdownInfo prevCostStats = QLStatsBreakdownInfo.builder()
+                                             .total(prevBillingAmountData.getCost())
+                                             .idle(prevBillingAmountData.getIdleCost())
+                                             .unallocated(prevBillingAmountData.getUnallocatedCost())
+                                             .build();
+    double prevUtilizedCost = billingDataHelper.getRoundedDoubleValue(prevCostStats.getTotal().doubleValue()
+        - prevCostStats.getIdle().doubleValue() - prevCostStats.getUnallocated().doubleValue());
+    prevCostStats.setUtilized(prevUtilizedCost);
+    int oldEfficiencyScore = calculateEfficiencyScore(prevCostStats);
+
+    BigDecimal effScoreDiff = BigDecimal.valueOf((long) efficiencyScore - (long) oldEfficiencyScore);
+
+    BigDecimal trendPercentage = effScoreDiff.multiply(BigDecimal.valueOf(100))
+                                     .divide(BigDecimal.valueOf(oldEfficiencyScore), 2, RoundingMode.HALF_UP);
+    return QLEfficiencyScoreInfo.builder()
+        .efficiencyScore(efficiencyScore)
+        .trend(billingDataHelper.getRoundedDoubleValue(trendPercentage))
         .build();
   }
 
@@ -201,42 +191,6 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     double total = costStats.getTotal().doubleValue();
     double utilizedPercentage = utilized / total * 100;
     return (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
-  }
-
-  private String getContextNameFromFilter(List<QLBillingDataFilter> filters, String accountId) {
-    for (QLBillingDataFilter filter : filters) {
-      Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
-      for (QLBillingDataFilterType type : filterTypes) {
-        switch (type) {
-          case Cluster:
-            if (filter.getCluster().getOperator() == QLIdOperator.NOT_NULL) {
-              return getAccountName(accountId);
-            }
-            return billingStatsHelper.getEntityName(CLUSTERID, filter.getCluster().getValues()[0]);
-          case Namespace:
-            return billingStatsHelper.getEntityName(NAMESPACE, filter.getNamespace().getValues()[0]);
-          case WorkloadName:
-            return billingStatsHelper.getEntityName(WORKLOADNAME, filter.getWorkloadName().getValues()[0]);
-          case Application:
-            if (filter.getApplication().getOperator() == QLIdOperator.NOT_NULL) {
-              return getAccountName(accountId);
-            }
-            return billingStatsHelper.getEntityName(APPID, filter.getApplication().getValues()[0]);
-          case Service:
-            return billingStatsHelper.getEntityName(SERVICEID, filter.getService().getValues()[0]);
-          case Environment:
-            return billingStatsHelper.getEntityName(ENVID, filter.getEnvironment().getValues()[0]);
-          default:
-            continue;
-        }
-      }
-    }
-    return null;
-  }
-
-  private String getAccountName(String accountId) {
-    Account account = wingsPersistence.get(Account.class, accountId);
-    return account.getAccountName();
   }
 
   @Override

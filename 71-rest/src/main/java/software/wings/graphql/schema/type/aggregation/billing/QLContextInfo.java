@@ -13,8 +13,7 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLContextInfo implements QLObject {
-  Integer efficiencyScore;
-  String contextName;
   Number totalCost;
+  Number costTrend;
   String totalCostDescription;
 }

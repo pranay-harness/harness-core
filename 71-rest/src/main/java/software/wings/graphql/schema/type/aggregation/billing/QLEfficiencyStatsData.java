@@ -8,8 +8,6 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
-import java.util.List;
-
 @Value
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
@@ -17,5 +15,5 @@ import java.util.List;
 public class QLEfficiencyStatsData implements QLData {
   QLContextInfo context;
   QLStatsBreakdownInfo efficiencyBreakdown;
-  List<QLResourceStatsInfo> resourceBreakdown;
+  QLEfficiencyScoreInfo efficiencyData;
 }
