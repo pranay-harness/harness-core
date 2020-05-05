@@ -59,7 +59,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
     analysisRecord.setGroupName(groupName);
     analysisRecord.setAggregatedRisk(riskValues.get(0));
     analysisRecord.setTransactions(getTransactions(riskValues));
-    analysisRecord.compressTransactions();
+    analysisRecord.bundleAsJosnAndCompress();
     return analysisRecord;
   }
 
@@ -72,7 +72,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
     analysisRecord.setGroupName(groupName);
     analysisRecord.setAggregatedRisk(riskValues.get(0));
     analysisRecord.setTransactions(getTransactions(riskValues));
-    analysisRecord.compressTransactions();
+    analysisRecord.bundleAsJosnAndCompress();
     return analysisRecord;
   }
 

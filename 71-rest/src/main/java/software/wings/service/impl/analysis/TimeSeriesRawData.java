@@ -132,7 +132,7 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, Accou
   public static void populateRawDataFromAnalysisRecords(MetricAnalysisRecord record, String accountId,
       ExecutionStatus executionStatus, Map<String, Map<String, TimeSeriesRawData>> existingRawDataMap,
       String serviceId) {
-    record.decompressTransactions();
+    record.decompress();
 
     Map<String, TimeSeriesMLTxnSummary> transactionSummaryMap = record.getTransactions();
 

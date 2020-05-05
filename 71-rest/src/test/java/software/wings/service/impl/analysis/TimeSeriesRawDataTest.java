@@ -38,7 +38,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
 
   private void addTransaction(MetricAnalysisRecord record, String transactionName, String metricName, String host,
       List<Double> controlData, List<Double> testData) {
-    record.decompressTransactions();
+    record.decompress();
 
     if (record.getTransactions() == null) {
       record.setTransactions(new HashMap<>());
@@ -80,7 +80,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
     summary.getMetrics().put(metricName, metricSummary);
 
     record.getTransactions().put(transactionName, summary);
-    record.compressTransactions();
+    record.bundleAsJosnAndCompress();
   }
 
   private List<TimeSeriesRawData> getRawDataList(Map<String, Map<String, TimeSeriesRawData>> existingRawDataMap) {
