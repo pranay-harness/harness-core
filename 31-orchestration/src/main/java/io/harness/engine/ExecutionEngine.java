@@ -213,8 +213,8 @@ public class ExecutionEngine implements Engine {
   public void handleStateResponse(@NotNull String nodeExecutionId, StateResponse stateResponse) {
     NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
         ops
-        -> ops.set(NodeExecutionKeys.status, stateResponse.getStatus())
-               .set(NodeExecutionKeys.outcomes, stateResponse.getOutcomes())
+        -> ops.set(NodeExecutionKeys.outcomes, stateResponse.getOutcomes())
+               .set(NodeExecutionKeys.status, stateResponse.getStatus())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
 
     // TODO handle Failure

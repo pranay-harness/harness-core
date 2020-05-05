@@ -8,7 +8,7 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.impl.success.OnSuccessAdvise;
+import io.harness.adviser.impl.success.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.state.io.StateResponse;
@@ -26,7 +26,7 @@ public class IgnoreAdviser implements Adviser {
       return null;
     }
     if (!disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes())) {
-      return OnSuccessAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
+      return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
     }
     return null;
   }
