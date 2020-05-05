@@ -50,5 +50,5 @@ input PcfCloudProviderInput {
 
   endpointUrl: String
   userName: String
-  password: String
+  encryptedPasswordSecretId: String
 }
