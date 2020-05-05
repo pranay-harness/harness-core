@@ -520,7 +520,6 @@ settingAttributes {"name": "appId_1", "background": true} {"appId": 1}
 settingAttributes {"name": "createdAt_1", "background": true} {"createdAt": 1}
 settingAttributes {"name": "locate", "unique": true} {"accountId": 1, "appId": 1, "envId": 1, "name": 1, "value.type": 1}
 settingAttributes {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
-settingAttributes {"name": "nextSecretMigrationIteration_1", "background": true} {"nextSecretMigrationIteration": 1}
 settingAttributes {"name": "secretsMigrationIdx", "background": true} {"value.type": 1, "nextSecretMigrationIteration": 1}
 settingAttributes {"name": "secretsMigrationPerAccountIdx", "background": true} {"value.type": 1, "secretsMigrated": 1, "accountId": 1}
 settingAttributes {"name": "value.type_1_nextIteration_1", "background": true} {"value.type": 1, "nextIteration": 1}
