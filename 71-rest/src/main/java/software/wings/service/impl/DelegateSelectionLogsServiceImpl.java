@@ -24,6 +24,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FeatureFlagService featureFlagService;
 
+  private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
+  private static final String DISCONNECTED = "Disconnected";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
 
@@ -130,5 +132,34 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED).message("Missing all selectors").build());
+  }
+
+  @Override
+  public void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds) {
+    if (batch == null) {
+      return;
+    }
+
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(DISCONNECTED)
+                     .message("Delegate was disconnected at " + LocalDateTime.now())
+                     .build());
+  }
+
+  @Override
+  public void logWaitingForApprovalDelegate(
+      BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds) {
+    if (batch == null) {
+      return;
+    }
+
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(WAITING_FOR_APPROVAL)
+                     .message("Delegate was waiting for approval at " + LocalDateTime.now())
+                     .build());
   }
 }
