@@ -595,7 +595,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       } else {
         if (status != PAUSED) {
           status = RUNNING;
-          expiryTs = evaluateExpiryTs(currentState);
+          expiryTs = stateExecutionInstance.getStatus() == status ? stateExecutionInstance.getExpiryTs()
+                                                                  : evaluateExpiryTs(currentState);
         } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
           expiryTs = evaluateExpiryTs(currentState);
         }
