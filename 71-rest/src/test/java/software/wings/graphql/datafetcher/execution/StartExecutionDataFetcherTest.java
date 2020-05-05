@@ -26,15 +26,18 @@ import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionIn
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.service.intfc.AppService;
 
 public class StartExecutionDataFetcherTest extends CategoryTest {
   @InjectMocks @Inject StartExecutionDataFetcher startExecutionDataFetcher;
   @Mock WorkflowExecutionController workflowExecutionController;
   @Mock PipelineExecutionController pipelineExecutionController;
+  @Mock AppService appService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(appService.getAccountIdByAppId("appId")).thenReturn("accountId");
     //        configureAppService();
   }
 

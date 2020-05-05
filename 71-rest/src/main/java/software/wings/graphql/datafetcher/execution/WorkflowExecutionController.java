@@ -153,8 +153,17 @@ public class WorkflowExecutionController {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String workflowId = triggerExecutionInput.getEntityId();
-      authHandler.authorize(permissionAttributes, Collections.singletonList(appId), workflowId);
+      List<QLVariableInput> variableInputs = triggerExecutionInput.getVariableInputs();
+      if (variableInputs == null) {
+        variableInputs = new ArrayList<>();
+      }
 
+      List<QLServiceInput> serviceInputs = triggerExecutionInput.getServiceInputs();
+      if (serviceInputs == null) {
+        serviceInputs = new ArrayList<>();
+      }
+
+      validateInputs(triggerExecutionInput);
       Workflow workflow = workflowService.readWorkflow(appId, workflowId);
       notNullCheck("Workflow " + workflowId + " doesn't exist in the specified application " + appId, workflow, USER);
       notNullCheck(
@@ -162,13 +171,13 @@ public class WorkflowExecutionController {
 
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-        String envId = resolveEnvId(workflow, triggerExecutionInput.getVariableInputs());
+        authHandler.authorize(permissionAttributes, Collections.singletonList(appId), workflowId);
+
+        String envId = resolveEnvId(workflow, variableInputs);
         authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
 
-        Map<String, String> variableValues =
-            validateAndResolveWorkflowVariables(workflow, triggerExecutionInput.getVariableInputs(), envId);
-        List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(
-            variableValues, triggerExecutionInput.getServiceInputs(), workflow);
+        Map<String, String> variableValues = validateAndResolveWorkflowVariables(workflow, variableInputs, envId);
+        List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, workflow);
         ExecutionArgs executionArgs = new ExecutionArgs();
         executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
         executionArgs.setOrchestrationId(triggerExecutionInput.getEntityId());
@@ -181,6 +190,13 @@ public class WorkflowExecutionController {
         populateWorkflowExecution(workflowExecution, builder);
         return builder.build();
       }
+    }
+  }
+
+  private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
+    if (triggerExecutionInput.isTargetToSpecificHosts() && isEmpty(triggerExecutionInput.getSpecificHosts())) {
+      throw new InvalidRequestException(
+          "Host list can't be empty when Target To Specific Hosts option is enabled", USER);
     }
   }
 
@@ -269,8 +285,9 @@ public class WorkflowExecutionController {
                                          .collect(Collectors.toList());
     List<String> variablesPresent = variableInputs.stream().map(QLVariableInput::getName).collect(Collectors.toList());
     if (!variablesPresent.containsAll(requiredVariables)) {
-      throw new InvalidRequestException("Value not provided for required variable: ["
-          + StringUtils.join(requiredVariables.removeAll(variablesPresent), ","));
+      requiredVariables.removeAll(variablesPresent);
+      throw new InvalidRequestException(
+          "Value not provided for required variable: [" + StringUtils.join(requiredVariables, ",") + "]");
     }
   }
 
@@ -307,20 +324,29 @@ public class WorkflowExecutionController {
         "Workflow [" + workflow.getName() + "] has environment parameterized. However, the value not supplied", USER);
   }
 
-  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters, String accountId) {
+  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String workflowId = parameters.getEntityId();
+      List<QLVariableInput> variableInputs = parameters.getVariableInputs();
+      if (variableInputs == null) {
+        variableInputs = new ArrayList<>();
+      }
+
       Workflow workflow = workflowService.readWorkflow(appId, workflowId);
       notNullCheck("Workflow " + workflowId + " doesn't exist in the specified application " + appId, workflow, USER);
       notNullCheck(
           "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-        String envId = resolveEnvId(workflow, parameters.getVariableInputs());
+        PermissionAttribute permissionAttribute =
+            new PermissionAttribute(PermissionAttribute.PermissionType.WORKFLOW, PermissionAttribute.Action.READ);
+        List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
+        authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
 
-        Map<String, String> variableValues =
-            validateAndResolveWorkflowVariables(workflow, parameters.getVariableInputs(), envId);
+        String envId = resolveEnvId(workflow, variableInputs);
+
+        Map<String, String> variableValues = validateAndResolveWorkflowVariables(workflow, variableInputs, envId);
 
         DeploymentMetadata finalDeploymentMetadata =
             workflowService.fetchDeploymentMetadata(appId, workflow, variableValues, null, null, false, null);
