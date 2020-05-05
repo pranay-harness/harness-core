@@ -62,7 +62,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
     when(preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
              anyList(), anyList(), anyList(), anyList(), any()))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
-    when(cloudBillingHelper.getCloudProviderTableName(anyList())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    when(cloudBillingHelper.getCloudProviderTableName()).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test

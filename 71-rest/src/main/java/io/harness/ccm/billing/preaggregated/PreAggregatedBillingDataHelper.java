@@ -1,5 +1,6 @@
 package io.harness.ccm.billing.preaggregated;
 
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsLinkedAccount;
@@ -39,6 +40,7 @@ import io.harness.ccm.billing.bigquery.TruncExpression;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingEntityDataPoint.PreAggregateBillingEntityDataPointBuilder;
+import io.harness.ccm.billing.preaggregated.PreAggregateCloudOverviewDataPoint.PreAggregateCloudOverviewDataPointBuilder;
 import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -460,5 +462,35 @@ public class PreAggregatedBillingDataHelper {
   private QLEntityData getEntityDataPoint(FieldValueList row, Field field) {
     String value = fetchStringValue(row, field);
     return QLEntityData.builder().id(value).name(value).type(field.getName()).build();
+  }
+
+  public PreAggregateCloudOverviewDataDTO convertToPreAggregatesOverview(TableResult result) {
+    if (preconditionsValidation(result, "convertToPreAggregatesOverview")) {
+      return null;
+    }
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+    List<PreAggregateCloudOverviewDataPoint> dataPointList = new ArrayList<>();
+    Double totalCost = Double.valueOf(0);
+    for (FieldValueList row : result.iterateAll()) {
+      PreAggregateCloudOverviewDataPointBuilder dataPointBuilder = PreAggregateCloudOverviewDataPoint.builder();
+      for (Field field : fields) {
+        switch (field.getName()) {
+          case entityCloudProviderConst:
+            dataPointBuilder.name(fetchStringValue(row, field));
+            break;
+          case entityConstantGcpCost:
+            double cost = billingDataHelper.getRoundedDoubleValue(row.get(field.getName()).getDoubleValue());
+            totalCost += cost;
+            dataPointBuilder.cost(cost);
+            dataPointBuilder.trend(2.44);
+            break;
+          default:
+            break;
+        }
+      }
+      dataPointList.add(dataPointBuilder.build());
+    }
+    return PreAggregateCloudOverviewDataDTO.builder().totalCost(totalCost).data(dataPointList).build();
   }
 }

@@ -29,7 +29,7 @@ public class CloudEntityStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName(filters);
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName();
 
     return preAggregateBillingService.getPreAggregateBillingEntityStats(accountId,
         Optional.ofNullable(aggregateFunction)

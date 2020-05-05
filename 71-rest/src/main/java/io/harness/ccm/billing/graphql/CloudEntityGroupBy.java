@@ -15,7 +15,8 @@ public enum CloudEntityGroupBy {
   awsLinkedAccount(PreAggregatedTableSchema.awsUsageAccountId),
   awsUsageType(PreAggregatedTableSchema.awsUsageType),
   awsInstanceType(PreAggregatedTableSchema.awsInstanceType),
-  awsService(PreAggregatedTableSchema.awsServiceCode);
+  awsService(PreAggregatedTableSchema.awsServiceCode),
+  cloudProvider(PreAggregatedTableSchema.cloudProvider);
 
   private DbColumn dbColumn;
   CloudEntityGroupBy(DbColumn dbColumn) {

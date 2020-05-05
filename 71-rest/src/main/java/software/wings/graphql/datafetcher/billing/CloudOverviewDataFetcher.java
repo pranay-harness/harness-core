@@ -7,7 +7,7 @@ import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -18,25 +18,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CloudTimeSeriesStatsDataFetcher
-    extends AbstractStatsDataFetcherWithAggregationListAndLimit<CloudBillingAggregate, CloudBillingFilter,
-        CloudBillingGroupBy, CloudBillingSortCriteria> {
+public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggregationList<CloudBillingAggregate,
+    CloudBillingFilter, CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
-      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
-      Integer limit, Integer offset) {
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
     String queryTableName = cloudBillingHelper.getCloudProviderTableName();
-
-    return preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
-        Optional.ofNullable(aggregateFunction)
-            .map(Collection::stream)
-            .orElseGet(Stream::empty)
-            .map(CloudBillingAggregate::toFunctionCall)
-            .collect(Collectors.toList()),
+    return preAggregateBillingService.getPreAggregateBillingOverview(Optional.ofNullable(aggregateFunction)
+                                                                         .map(Collection::stream)
+                                                                         .orElseGet(Stream::empty)
+                                                                         .map(CloudBillingAggregate::toFunctionCall)
+                                                                         .collect(Collectors.toList()),
         Optional.ofNullable(groupByList)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
@@ -56,14 +52,13 @@ public class CloudTimeSeriesStatsDataFetcher
   }
 
   @Override
-  public String getEntityType() {
+  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList,
+      List<CloudBillingAggregate> aggregations, List<CloudBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
 
   @Override
-  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList,
-      List<CloudBillingAggregate> aggregations, List<CloudBillingSortCriteria> sort, QLData qlData, Integer limit,
-      boolean includeOthers) {
+  public String getEntityType() {
     return null;
   }
 }

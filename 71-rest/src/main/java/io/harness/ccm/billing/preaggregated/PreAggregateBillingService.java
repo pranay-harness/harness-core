@@ -19,4 +19,7 @@ public interface PreAggregateBillingService {
 
   PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
       String accountId, List<Object> groupByObjects, List<Condition> conditions, String queryTableName);
+
+  PreAggregateCloudOverviewDataDTO getPreAggregateBillingOverview(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName);
 }

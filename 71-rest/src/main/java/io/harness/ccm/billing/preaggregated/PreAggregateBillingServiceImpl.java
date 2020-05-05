@@ -14,6 +14,7 @@ import io.harness.ccm.setup.CECloudAccountDao;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ce.CECloudAccount;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,7 +76,8 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       Thread.currentThread().interrupt();
       return null;
     }
-    return dataHelper.convertToPreAggregatesEntityData(result, linkedAccountsMap(accountId));
+    return dataHelper.convertToPreAggregatesEntityData(result,
+        isAWSLinkedAccountGroupByPresent(groupByObjects) ? linkedAccountsMap(accountId) : Collections.emptyMap());
   }
 
   @Override
@@ -133,9 +135,32 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     return dataHelper.convertToAggregatedCostData(result);
   }
 
+  @Override
+  public PreAggregateCloudOverviewDataDTO getPreAggregateBillingOverview(List<SqlObject> aggregateFunction,
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
+    String cloudOverviewQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
+    // Replacing the Default Table with the Table in the context
+    cloudOverviewQuery = cloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    logger.info("getPreAggregateBillingOverview Query {}", cloudOverviewQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(cloudOverviewQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get PreAggregateBillingOverview. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertToPreAggregatesOverview(result);
+  }
+
   private Map<String, String> linkedAccountsMap(String harnessAccountId) {
     List<CECloudAccount> awsCloudAccountList = ceCloudAccountDao.getByAWSAccountId(harnessAccountId);
-    return awsCloudAccountList.stream().collect(
-        Collectors.toMap(CECloudAccount::getInfraAccountId, CECloudAccount::getAccountName));
+    return awsCloudAccountList.stream().collect(Collectors.toMap(CECloudAccount::getInfraAccountId,
+        CECloudAccount::getAccountName, (existingAccountName, newAccountName) -> existingAccountName));
+  }
+
+  private boolean isAWSLinkedAccountGroupByPresent(List<Object> groupByObjects) {
+    return groupByObjects.stream().anyMatch(groupBy -> groupBy == PreAggregatedTableSchema.awsUsageAccountId);
   }
 }
