@@ -351,6 +351,7 @@ import software.wings.beans.sso.LdapUserResponse;
 import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.template.TemplateReference;
+import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.beans.utm.UtmInfo;
 import software.wings.beans.yaml.Change;
@@ -1601,5 +1602,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecuteCommandTaskHandler.Type.class, 7370);
     kryo.register(ShellScriptType.class, 7371);
     kryo.register(CIK8CleanupTaskParams.class, 7372);
+    kryo.register(HarnessImportedTemplateDetails.class, 7373);
   }
 }
