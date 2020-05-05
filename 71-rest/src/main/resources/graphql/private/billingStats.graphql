@@ -347,6 +347,7 @@ input CCMFilter {
   nodeInstanceId: IdFilter
   podInstanceId: IdFilter
   parentInstanceId: IdFilter
+  envType: CEEnvironmentTypeFilter
 }
 
 input BillingDataLabelFilter {
@@ -367,6 +368,16 @@ enum BillingDataTagType {
   APPLICATION
   SERVICE
   ENVIRONMENT
+}
+
+input CEEnvironmentTypeFilter {
+  type: EnvType
+}
+
+enum EnvType {
+  ALL
+  PROD
+  NON_PROD
 }
 
 type NodeAndPodData {

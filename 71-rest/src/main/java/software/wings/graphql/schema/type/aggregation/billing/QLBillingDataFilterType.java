@@ -21,7 +21,8 @@ public enum QLBillingDataFilterType {
   PodInstanceId(BillingDataMetaDataFields.INSTANCEID),
   ParentInstanceId(BillingDataMetaDataFields.PARENTINSTANCEID),
   Tag(null),
-  Label(null);
+  Label(null),
+  EnvironmentType(null);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;

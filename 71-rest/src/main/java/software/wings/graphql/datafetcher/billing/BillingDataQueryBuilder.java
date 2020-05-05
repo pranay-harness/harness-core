@@ -45,9 +45,12 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.billing.QLCEEnvironmentTypeFilter;
+import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -60,8 +63,10 @@ import java.util.stream.Collectors;
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private static final String STANDARD_TIME_ZONE = "GMT";
+  private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
+  @Inject EnvironmentServiceImpl environmentService;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -884,12 +889,36 @@ public class BillingDataQueryBuilder {
                               .build());
             }
           }
+        } else if (type == QLBillingDataFilterType.EnvironmentType) {
+          newList.add(getEnvironmentIdFilter(filters, filter.getEnvType()));
         } else {
           newList.add(filter);
         }
       }
     }
+
     return newList;
+  }
+
+  private QLBillingDataFilter getEnvironmentIdFilter(
+      List<QLBillingDataFilter> filters, QLCEEnvironmentTypeFilter environmentTypeFilter) {
+    String envType = DEFAULT_ENVIRONMENT_TYPE;
+    if (environmentTypeFilter.getValues() != null) {
+      envType = (String) environmentTypeFilter.getValues()[0];
+    }
+    List<String> envIds = environmentService.getEnvIdsByAppsAndType(getAppIdsFromFilter(filters), envType);
+    return QLBillingDataFilter.builder()
+        .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
+        .build();
+  }
+
+  private List<String> getAppIdsFromFilter(List<QLBillingDataFilter> filters) {
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getApplication() != null) {
+        return Arrays.asList(filter.getApplication().getValues());
+      }
+    }
+    return new ArrayList<>();
   }
 
   public EntityType getEntityType(QLBillingDataTagType entityType) {
