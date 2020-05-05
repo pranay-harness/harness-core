@@ -8,6 +8,8 @@ public interface DelegateSelectionLogsService {
 
   BatchDelegateSelectionLog createBatch(String taskId);
 
+  void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
   void logExcludeScopeMatched(
       BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateScope scope);
 

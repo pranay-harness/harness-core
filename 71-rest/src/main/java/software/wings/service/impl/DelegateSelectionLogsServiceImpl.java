@@ -14,6 +14,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Inject private FeatureFlagService featureFlagService;
 
   private static final String REJECTED = "Rejected";
+  private static final String SELECTED = "Selected";
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
@@ -53,6 +55,22 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private DelegateSelectionLogBuilder retrieveDelegateSelectionLogBuilder(
       String accountId, String taskId, Set<String> delegateIds) {
     return DelegateSelectionLog.builder().accountId(accountId).taskId(taskId).delegateIds(delegateIds);
+  }
+
+  @Override
+  public void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId) {
+    if (batch == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(SELECTED)
+                     .message("Successfully matched scopes and selectors at " + LocalDateTime.now())
+                     .build());
   }
 
   @Override

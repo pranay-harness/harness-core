@@ -115,7 +115,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, task.getTags());
+    boolean canAssign = canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, task.getTags());
+    if (canAssign) {
+      delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
+    }
+    return canAssign;
   }
 
   @Override
