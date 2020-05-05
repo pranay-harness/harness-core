@@ -216,5 +216,6 @@ public class NewRelicMetricAnalysisRecord
     private List<Double> lowerThresholds;
     private List<Integer> anomalies;
     int testStartIndex;
+    private String failFastCriteriaDescription;
   }
 }

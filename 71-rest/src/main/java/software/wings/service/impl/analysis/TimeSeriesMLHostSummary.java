@@ -35,4 +35,5 @@ public class TimeSeriesMLHostSummary {
   @JsonProperty("upper_threshold") private List<Double> upperThreshold;
   @JsonProperty("lower_threshold") private List<Double> lowerThreshold;
   @JsonProperty("host_name") private String hostName;
+  @JsonProperty("fail_fast_criteria_description") private String failFastCriteriaDescription;
 }
