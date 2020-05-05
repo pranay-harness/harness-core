@@ -1643,9 +1643,7 @@ public class AuthHandler {
       throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
 
-    if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
-      return;
-    } else {
+    if (!isAuthorized(requiredPermissionAttributes, accountPermissions)) {
       throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }
   }

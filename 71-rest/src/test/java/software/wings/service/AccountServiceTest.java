@@ -13,7 +13,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
@@ -22,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -83,13 +83,18 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.resources.UserResource;
+import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.analysis.CVEnabledService;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -136,6 +141,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private UserResource userResource;
+  @Mock private AuthHandler authHandler;
 
   @Mock private GovernanceConfigService governanceConfigService;
   @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
@@ -158,7 +164,18 @@ public class AccountServiceTest extends WingsBaseTest {
     FieldUtils.writeField(accountService, "licenseService", licenseService, true);
   }
 
-  public Account setUpDataForTestingSetAccountStatusInternal(String accountType) {
+  private Account saveAccount(String companyName) {
+    return accountService.save(anAccount()
+                                   .withCompanyName(companyName)
+                                   .withAccountName("Account Name 1")
+                                   .withAccountKey("ACCOUNT_KEY")
+                                   .withLicenseInfo(getLicenseInfo())
+                                   .withWhitelistedDomains(new HashSet<>())
+                                   .build(),
+        false);
+  }
+
+  private Account setUpDataForTestingSetAccountStatusInternal(String accountType) {
     return accountService.save(anAccount()
                                    .withCompanyName(HARNESS_NAME)
                                    .withAccountName(HARNESS_NAME)
@@ -168,7 +185,7 @@ public class AccountServiceTest extends WingsBaseTest {
         false);
   }
 
-  public GovernanceConfig getGovernanceConfig(String accountId, boolean deploymentFreezeFlag) {
+  private GovernanceConfig getGovernanceConfig(String accountId, boolean deploymentFreezeFlag) {
     GovernanceConfig governanceConfig = GovernanceConfig.builder().deploymentFreeze(deploymentFreezeFlag).build();
     when(governanceConfigService.get(accountId)).thenReturn(governanceConfig);
 
@@ -685,7 +702,7 @@ public class AccountServiceTest extends WingsBaseTest {
    * Tests if function generates unique unique account names after checking for duplicates in db
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testSuggestedAccountName() {
     // Add account
@@ -716,14 +733,9 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_updateWhitelistedDomains_shouldTrimStringsAndIgnoreWhiteSpace() {
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName("Company Name 1")
-                                              .withAccountName("Account Name 1")
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(getLicenseInfo())
-                                              .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+
     accountService.updateWhitelistedDomains(
         account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
     account = accountService.get(account.getUuid());
@@ -731,18 +743,119 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testAuthCheckUpdationOfWhitelistDomainNegative() {
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+
+    UserRequestContext userRequestContext = UserRequestContext.builder().build();
+
+    User user = User.Builder.anUser()
+                    .userRequestContext(userRequestContext)
+                    .uuid(generateUuid())
+                    .accounts(Arrays.asList(account))
+                    .build();
+
+    try {
+      UserThreadLocal.set(user);
+      assertThat(UserThreadLocal.get()).isNotNull();
+      assertThat(UserThreadLocal.get()).isEqualTo(user);
+
+      accountService.updateWhitelistedDomains(
+          account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
+      verify(authHandler, times(0)).authorizeAccountPermission(any(), any());
+    } catch (InvalidRequestException ire) {
+      assertThat(ire).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC1_testAuthCheckUpdationOfWhitelistDomainNegative() {
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder()
+            .accountPermissionSummary(
+                AccountPermissionSummary.builder()
+                    .permissions(Sets.newHashSet(PermissionAttribute.PermissionType.USER_PERMISSION_READ))
+                    .build())
+            .build();
+
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = User.Builder.anUser()
+                    .userRequestContext(userRequestContext)
+                    .uuid(generateUuid())
+                    .accounts(Arrays.asList(account))
+                    .build();
+
+    try {
+      UserThreadLocal.set(user);
+      assertThat(UserThreadLocal.get()).isNotNull();
+      assertThat(UserThreadLocal.get()).isEqualTo(user);
+      accountService.updateWhitelistedDomains(
+          account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
+      verify(authHandler, times(0)).authorizeAccountPermission(any(), any());
+    } catch (InvalidRequestException ire) {
+      assertThat(ire).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthCheckUpdationOfWhitelistDomainPositive() {
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder()
+            .accountPermissionSummary(
+                AccountPermissionSummary.builder()
+                    .permissions(Sets.newHashSet(PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT))
+                    .build())
+            .build();
+
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = User.Builder.anUser()
+                    .userRequestContext(userRequestContext)
+                    .uuid(generateUuid())
+                    .accounts(Arrays.asList(account))
+                    .build();
+
+    try {
+      UserThreadLocal.set(user);
+      assertThat(UserThreadLocal.get()).isNotNull();
+      assertThat(UserThreadLocal.get()).isEqualTo(user);
+
+      accountService.updateWhitelistedDomains(
+          account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
+      account = accountService.get(account.getUuid());
+      assertThat(account).isNotNull();
+      assertThat(account.getWhitelistedDomains()).isNotNull();
+      assertThat(account.getWhitelistedDomains()).isEqualTo(Sets.newHashSet("harness.io"));
+    } catch (InvalidRequestException ire) {
+      assertThat(ire).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void test_updateAccountName() {
     String companyName = "CompanyName 1";
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(companyName)
-                                              .withAccountName("Account Name 1")
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(getLicenseInfo())
-                                              .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+    Account account = saveAccount(companyName);
     String newAccountName = "New Account Name";
     accountService.updateAccountName(account.getUuid(), newAccountName, null);
     account = accountService.get(account.getUuid());
