@@ -442,11 +442,9 @@ public class User extends Base implements Principal {
   }
 
   public String getLastAccountId() {
-    if (isEmpty(lastAccountId)) {
-      if (isNotEmpty(accounts)) {
-        // The first account will be considered as last account if not set. It will be used for encoding AuthToken.
-        lastAccountId = accounts.get(0).getUuid();
-      }
+    if (isEmpty(lastAccountId) && isNotEmpty(accounts)) {
+      // The first account will be considered as last account if not set. It will be used for encoding AuthToken.
+      lastAccountId = accounts.get(0).getUuid();
     }
     return lastAccountId;
   }
@@ -687,6 +685,7 @@ public class User extends Base implements Principal {
     private boolean userLocked;
     private boolean imported;
     private UtmInfo utmInfo;
+    private UserRequestContext userRequestContext;
 
     private Builder() {}
 
@@ -721,6 +720,11 @@ public class User extends Base implements Principal {
 
     public Builder email(String email) {
       this.email = email;
+      return this;
+    }
+
+    public Builder userRequestContext(UserRequestContext userRequestContext) {
+      this.userRequestContext = userRequestContext;
       return this;
     }
 
@@ -935,6 +939,7 @@ public class User extends Base implements Principal {
       user.setUtmInfo(utmInfo);
       user.setGivenName(givenName);
       user.setFamilyName(familyName);
+      user.setUserRequestContext(userRequestContext);
 
       return user;
     }

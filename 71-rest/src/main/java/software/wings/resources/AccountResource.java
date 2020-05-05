@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.utils.Utils.urlDecode;
 
@@ -406,6 +407,7 @@ public class AccountResource {
 
   @PUT
   @Path("{accountId}/whitelisted-domains")
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Account> updateWhitelistedDomains(
       @PathParam("accountId") @NotEmpty String accountId, @Body Set<String> whitelistedDomains) {
     return new RestResponse<>(accountService.updateWhitelistedDomains(accountId, whitelistedDomains));
