@@ -9,6 +9,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.billing.QLBillingAmountData.QLBillingAmountDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -174,21 +175,26 @@ public class BillingDataHelper {
         }
       }
       String entityId = entityIdAppender.toString();
-      QLBillingAmountData billingAmountData = null;
+      QLBillingAmountDataBuilder billingAmountDataBuilder = QLBillingAmountData.builder();
       if (resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
-        billingAmountData = QLBillingAmountData.builder()
-                                .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
-                                .minStartTime(resultSet
-                                                  .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                                      utils.getDefaultCalendar())
-                                                  .getTime())
-                                .maxStartTime(resultSet
-                                                  .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                                      utils.getDefaultCalendar())
-                                                  .getTime())
-                                .build();
+        billingAmountDataBuilder.cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
+            .minStartTime(
+                resultSet
+                    .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(), utils.getDefaultCalendar())
+                    .getTime())
+            .maxStartTime(
+                resultSet
+                    .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar())
+                    .getTime());
       }
-      entityIdToBillingAmountData.put(entityId, billingAmountData);
+      if (resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()) != null) {
+        billingAmountDataBuilder.idleCost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()));
+      }
+      if (resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()) != null) {
+        billingAmountDataBuilder.unallocatedCost(
+            resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()));
+      }
+      entityIdToBillingAmountData.put(entityId, billingAmountDataBuilder.build());
     }
     return entityIdToBillingAmountData;
   }

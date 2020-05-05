@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 @Builder
 public class QLBillingAmountData {
   private BigDecimal cost;
+  private BigDecimal idleCost;
+  private BigDecimal unallocatedCost;
   private long minStartTime;
   private long maxStartTime;
 }

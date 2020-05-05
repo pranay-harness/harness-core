@@ -261,7 +261,7 @@ type BillingStatsData {
 type EfficiencyStatsData {
   context: ContextInfo
   efficiencyBreakdown: StatsBreakdownInfo
-  resourceBreakdown: [ResourceStatsInfo]
+  efficiencyData: EfficiencyInfo
 }
 
 type IdleCostStatsData {
@@ -307,9 +307,8 @@ type BillingStatsInfo {
 }
 
 type ContextInfo {
-  efficiencyScore: Number
-  contextName: String
   totalCost: Number
+  costTrend: Number
   totalCostDescription: String
 }
 
@@ -318,6 +317,11 @@ type StatsBreakdownInfo {
   utilized: Number
   idle: Number
   unallocated: Number
+}
+
+type EfficiencyInfo {
+  efficiencyScore: Number
+  trend: Number
 }
 
 type ResourceStatsInfo {
