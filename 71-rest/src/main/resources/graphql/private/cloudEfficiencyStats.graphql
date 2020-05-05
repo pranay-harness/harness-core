@@ -30,6 +30,13 @@ extend type Query {
     groupBy: [CloudBillingGroupBy]
     sortCriteria: [CloudSortCriteria]
   ): CloudFilterData @dataFetcher(name: cloudFilterValues)
+
+  cloudOverview(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudOverviewData @dataFetcher(name: cloudOverview)
 }
 
 type CloudTimeSeriesStats {
@@ -66,6 +73,17 @@ type CloudTrendStats {
 
 type CloudFilterData {
   data: [CloudFilterDataPoint]
+}
+
+type CloudOverviewData {
+  totalCost: Number
+  data: [CloudOverviewDataPoint]
+}
+
+type CloudOverviewDataPoint {
+  name: String
+  cost: Number
+  trend: Number
 }
 
 type CloudFilterDataPoint {
@@ -116,6 +134,7 @@ enum CloudEntityGroupBy {
   awsUsageType
   awsInstanceType
   awsService
+  cloudProvider
 }
 
 input CloudSortCriteria {
@@ -125,6 +144,7 @@ input CloudSortCriteria {
 
 enum CloudSortType {
   Time
+  gcpCost
   awsBlendedCost
   awsUnblendedCost
 }

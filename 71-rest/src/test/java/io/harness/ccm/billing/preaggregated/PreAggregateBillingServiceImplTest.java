@@ -64,6 +64,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private static final String STATS_LABEL = "statsLabel";
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
+  private static final Double TREND = 2.44;
+  private static final Double TOTAL_COST = 100.0;
   private static final String ACCOUNT_ID = "accountId";
   private static final String AWS_ACCOUNT_NAME = "awsAccountName";
   private static final String AWS_ACCOUNT_ID = "awsAccountId";
@@ -117,6 +119,15 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     when(dataHelper.convertToAggregatedCostData(tableResult))
         .thenReturn(PreAggregatedCostDataStats.builder().blendedCost(blendedCostData).build());
 
+    PreAggregateCloudOverviewDataPoint preAggregateCloudOverviewDataPoint =
+        PreAggregateCloudOverviewDataPoint.builder().name(NAME).cost(TOTAL_COST).trend(TREND).build();
+
+    when(dataHelper.convertToPreAggregatesOverview(tableResult))
+        .thenReturn(PreAggregateCloudOverviewDataDTO.builder()
+                        .totalCost(TOTAL_COST)
+                        .data(Collections.singletonList(preAggregateCloudOverviewDataPoint))
+                        .build());
+
     when(dataHelper.getCostBillingStats(blendedCostData, filters, TOTAL_COST_LABEL))
         .thenReturn(QLBillingStatsInfo.builder()
                         .statsValue(STATS_VALUE)
@@ -153,6 +164,29 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     assertThat(stats.getStats()).isNotNull();
     assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateBillingOverviewTest() {
+    PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+    assertThat(stats.getData()).isNotNull();
+    assertThat(stats.getTotalCost()).isEqualTo(TOTAL_COST);
+    assertThat(stats.getData().get(0).getTrend()).isEqualTo(TREND);
+    assertThat(stats.getData().get(0).getName()).isEqualTo(NAME);
+    assertThat(stats.getData().get(0).getCost()).isEqualTo(TOTAL_COST);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateBillingOverviewNegativeCase() throws InterruptedException {
+    when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
+    PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+    assertThat(stats).isNull();
   }
 
   @Test

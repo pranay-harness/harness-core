@@ -68,7 +68,7 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
                                                  .awsUnblendedCost(UN_BLENDED_COST_VALUE)
                                                  .build()))
                         .build());
-    when(cloudBillingHelper.getCloudProviderTableName(anyList())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    when(cloudBillingHelper.getCloudProviderTableName()).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test

@@ -63,7 +63,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
                                          .statsDescription(STATS_DESCRIPTION)
                                          .build())
                         .build());
-    when(cloudBillingHelper.getCloudProviderTableName(anyList())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    when(cloudBillingHelper.getCloudProviderTableName()).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test

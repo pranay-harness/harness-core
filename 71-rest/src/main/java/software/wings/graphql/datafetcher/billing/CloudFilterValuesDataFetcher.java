@@ -27,7 +27,7 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
       List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName(filters);
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName();
 
     return preAggregateBillingService.getPreAggregateFilterValueStats(accountId,
         Optional.ofNullable(groupByList)

@@ -17,7 +17,7 @@ import java.util.Optional;
 public class CloudBillingHelper {
   @Inject private MainConfiguration mainConfiguration;
 
-  public String getCloudProviderTableName(List<CloudBillingFilter> filters) {
+  public String getCloudProviderTableName() {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
     String datasetId = "BillingReport_830767422336"; // billing
