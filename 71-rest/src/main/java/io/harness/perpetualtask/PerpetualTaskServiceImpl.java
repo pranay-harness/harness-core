@@ -54,6 +54,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                        .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
                                        .intervalSeconds(schedule.getInterval().getSeconds())
                                        .delegateId("")
+                                       .state(PerpetualTaskState.TASK_UNASSIGNED.name())
                                        .build();
       String taskId = perpetualTaskRecordDao.save(record);
       try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
@@ -66,6 +67,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public boolean resetTask(String accountId, String taskId) {
     // TODO(Hitesh) -> make a callback
+    perpetualTaskRecordDao.setTaskState(taskId, PerpetualTaskState.TASK_UNASSIGNED.name());
     return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId);
   }
 
@@ -130,6 +132,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
       return false;
     }
     boolean heartbeatUpdated = perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
+    perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState().name());
     stateChangeCallback(taskId, perpetualTaskResponse);
     return heartbeatUpdated;
   }
@@ -137,6 +140,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public void setDelegateId(String taskId, String delegateId) {
     perpetualTaskRecordDao.setDelegateId(taskId, delegateId);
+  }
+
+  @Override
+  public void setTaskState(String taskId, String state) {
+    perpetualTaskRecordDao.setTaskState(taskId, state);
   }
 
   private void stateChangeCallback(String taskId, PerpetualTaskResponse perpetualTaskResponse) {

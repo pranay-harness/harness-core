@@ -55,7 +55,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   }
 
   private PerpetualTaskResponse perpetualTaskResponse() {
-    return PerpetualTaskResponse.builder().build();
+    return PerpetualTaskResponse.builder().perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED).build();
   }
 
   @Test

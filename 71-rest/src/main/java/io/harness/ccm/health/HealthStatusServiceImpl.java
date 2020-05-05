@@ -3,6 +3,7 @@ package io.harness.ccm.health;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
+import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_NOT_ASSIGNED;
@@ -17,6 +18,7 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
@@ -87,9 +89,14 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
-        errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name())) {
+          errors.add(NO_ELIGIBLE_DELEGATE);
+        } else {
+          errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+        }
         continue;
       }
+
       if (!delegateService.checkDelegateConnected(delegateId)) {
         errors.add(DELEGATE_NOT_AVAILABLE);
         continue;
@@ -116,6 +123,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
     for (CEError error : errors) {
       switch (error) {
+        case NO_ELIGIBLE_DELEGATE:
+          messages.add(format(NO_ELIGIBLE_DELEGATE.getMessage(), clusterName));
+          break;
         case DELEGATE_NOT_AVAILABLE:
           messages.add(String.format(DELEGATE_NOT_AVAILABLE.getMessage(), clusterName));
           break;

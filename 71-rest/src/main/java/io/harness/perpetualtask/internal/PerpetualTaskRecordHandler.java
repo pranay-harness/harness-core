@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
@@ -13,13 +14,16 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
@@ -29,9 +33,9 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject DelegateService delegateService;
-  @Inject PerpetualTaskService perpetualTaskService;
-  @Inject PerpetualTaskServiceClientRegistry clientRegistry;
+  @Inject private DelegateService delegateService;
+  @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -54,28 +58,30 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
 
   @Override
   public void handle(PerpetualTaskRecord taskRecord) {
-    String taskId = taskRecord.getUuid();
-    PerpetualTaskType taskType = taskRecord.getPerpetualTaskType();
-    logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskType, taskId);
-    PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
-    DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
-    try {
-      ResponseData response = delegateService.executeTask(validationTask);
-
-      if (response instanceof DelegateTaskNotifyResponseData) {
-        String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
-        logger.info(
-            "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
-        perpetualTaskService.setDelegateId(taskId, delegateId);
-      } else if ((response instanceof RemoteMethodReturnValueData)
-          && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
-        throw(InvalidRequestException)((RemoteMethodReturnValueData) response).getException();
-      } else {
-        throw new InvalidRequestException(format(
-            "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
+    try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
+      String taskId = taskRecord.getUuid();
+      PerpetualTaskType taskType = taskRecord.getPerpetualTaskType();
+      logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskType, taskId);
+      PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
+      DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
+      try {
+        ResponseData response = delegateService.executeTask(validationTask);
+        if (response instanceof DelegateTaskNotifyResponseData) {
+          String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
+          logger.info(
+              "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
+          perpetualTaskService.setDelegateId(taskId, delegateId);
+        } else if ((response instanceof RemoteMethodReturnValueData)
+            && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
+          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name());
+          throw(InvalidRequestException)((RemoteMethodReturnValueData) response).getException();
+        } else {
+          throw new InvalidRequestException(format(
+              "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
+        }
+      } catch (Exception e) {
+        logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
       }
-    } catch (Exception e) {
-      logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
     }
   }
 }

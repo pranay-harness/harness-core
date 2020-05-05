@@ -28,6 +28,10 @@ public class PerpetualTaskRecordDao {
     persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.delegateId, delegateId);
   }
 
+  public void setTaskState(String taskId, String state) {
+    persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.state, state);
+  }
+
   public boolean resetDelegateIdForTask(String accountId, String taskId) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
