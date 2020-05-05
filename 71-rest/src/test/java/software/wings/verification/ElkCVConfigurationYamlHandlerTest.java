@@ -21,6 +21,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -108,6 +109,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setMessageField("message1");
     yaml.setTimestampField("timestamp1");
     yaml.setTimestampFormat("format1");
+    yaml.setAlertPriority(FeedbackPriority.P5.name());
     return yaml;
   }
 
@@ -126,6 +128,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setMessageField(generateUUID());
     cvServiceConfiguration.setTimestampField(generateUUID());
     cvServiceConfiguration.setTimestampFormat(generateUUID());
+    cvServiceConfiguration.setAlertPriority(FeedbackPriority.P5);
 
     ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
@@ -138,6 +141,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getMessageField()).isEqualTo(cvServiceConfiguration.getMessageField());
     assertThat(yaml.getTimestampField()).isEqualTo(cvServiceConfiguration.getTimestampField());
     assertThat(yaml.getTimestampFormat()).isEqualTo(cvServiceConfiguration.getTimestampFormat());
+    assertThat(yaml.getAlertPriority()).isEqualTo(cvServiceConfiguration.getAlertPriority().name());
   }
 
   @Test
@@ -166,6 +170,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getMessageField()).isEqualTo("message1");
     assertThat(bean.getTimestampField()).isEqualTo("timestamp1");
     assertThat(bean.getTimestampFormat()).isEqualTo("format1");
+    assertThat(bean.getAlertPriority()).isEqualTo(FeedbackPriority.P5);
   }
 
   @Test

@@ -3,6 +3,7 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -52,6 +53,7 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeries;
@@ -535,6 +537,22 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testUpdateConfiguration_checkIfAlertPriorityUpdated() throws Exception {
+    LogsCVConfiguration logsCVConfiguration = createLogsCVConfig(true);
+    logsCVConfiguration.setUuid(generateUuid());
+    cvConfigurationService.saveToDatabase(logsCVConfiguration, true);
+
+    logsCVConfiguration.setAlertPriority(FeedbackPriority.P3);
+    cvConfigurationService.updateConfiguration(logsCVConfiguration, logsCVConfiguration.getAppId());
+
+    LogsCVConfiguration updatedConfig = cvConfigurationService.getConfiguration(logsCVConfiguration.getUuid());
+    assertThat(updatedConfig).isNotNull();
+    assertThat(updatedConfig.getAlertPriority()).isEqualTo(FeedbackPriority.P3);
+  }
+
+  @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testUpdateConfiguration_UpdateMetrics() throws Exception {
@@ -687,6 +705,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     logsCVConfiguration.setAlertThreshold(0.1);
     logsCVConfiguration.setQuery(generateUuid());
     logsCVConfiguration.setStateType(StateType.SUMO);
+    logsCVConfiguration.setAlertPriority(FeedbackPriority.P5);
     return logsCVConfiguration;
   }
 

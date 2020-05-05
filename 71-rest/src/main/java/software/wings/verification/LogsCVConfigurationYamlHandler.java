@@ -4,7 +4,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.simpleframework.xml.transform.InvalidFormatException;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.sm.StateType;
 import software.wings.verification.datadog.DatadogLogCVConfiguration.DatadogLogCVConfigurationYaml;
 import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigurationYaml;
@@ -17,6 +21,7 @@ import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVC
 
 import java.util.List;
 
+@Slf4j
 public class LogsCVConfigurationYamlHandler
     extends CVConfigurationYamlHandler<LogsCVConfigurationYaml, LogsCVConfiguration> {
   @Override
@@ -53,6 +58,7 @@ public class LogsCVConfigurationYamlHandler
     yaml.setBaselineStartMinute(bean.getBaselineStartMinute());
     yaml.setBaselineEndMinute(bean.getBaselineEndMinute());
     yaml.setType(bean.getStateType().name());
+    yaml.setAlertPriority(bean.getAlertPriority().name());
     return yaml;
   }
 
@@ -96,6 +102,7 @@ public class LogsCVConfigurationYamlHandler
     return (LogsCVConfiguration) yamlHelper.getCVConfiguration(accountId, yamlFilePath);
   }
 
+  @SneakyThrows
   protected void toBean(LogsCVConfiguration bean, ChangeContext<LogsCVConfigurationYaml> changeContext, String appId) {
     LogsCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -104,5 +111,11 @@ public class LogsCVConfigurationYamlHandler
     bean.setBaselineStartMinute(yaml.getBaselineStartMinute());
     bean.setBaselineEndMinute(yaml.getBaselineEndMinute());
     bean.setStateType(StateType.valueOf(yaml.getType()));
+    try {
+      bean.setAlertPriority(FeedbackPriority.valueOf(yaml.getAlertPriority()));
+    } catch (IllegalArgumentException exp) {
+      throw new InvalidFormatException(
+          exp, "Please enter valid Alert Priority value. List of valid values: P0, P1, P2, P3, P4, P5");
+    }
   }
 }
