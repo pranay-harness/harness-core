@@ -75,6 +75,7 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.version.VersionInfo;
@@ -1631,7 +1632,6 @@ public class DelegateServiceTest extends WingsBaseTest {
             .waitId(generateUuid())
             .appId(APP_ID)
             .version(VERSION)
-            .status(status)
             .data(TaskData.builder()
                       .async(async)
                       .taskType(TaskType.HTTP.name())
@@ -1641,7 +1641,16 @@ public class DelegateServiceTest extends WingsBaseTest {
             .validatingDelegateIds(validatingTaskIds)
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
-    wingsPersistence.save(delegateTask);
+
+    delegateService.saveDelegateTask(delegateTask);
+
+    if (status != delegateTask.getStatus()) {
+      delegateTask = wingsPersistence.findAndModify(
+          wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
+          wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
+          HPersistence.returnNewOptions);
+    }
+
     return delegateTask;
   }
 }
