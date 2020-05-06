@@ -5,6 +5,7 @@ extend type Query {
   ceConnector(filters: [CESetupFilter]): ceConnectorData @dataFetcher(name: ceConnector)
   infraAccountConnectionDetail(infraType: infraTypesEnum): infraAccountConnectionData
     @dataFetcher(name: infraAccountConnection)
+  overviewPageStats: OverviewStatsData @dataFetcher(name: overviewPageStats)
 }
 
 input CESetupSortCriteria {
@@ -75,6 +76,10 @@ type eksCluster {
   infraMasterAccountId: String
   parentAccountSettingId: String
   cloudProviderId: String
+}
+
+type OverviewStatsData {
+  cloudConnectorsPresent: Boolean
 }
 
 input CESetupFilter {

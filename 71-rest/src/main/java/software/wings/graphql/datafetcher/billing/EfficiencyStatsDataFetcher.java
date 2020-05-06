@@ -190,7 +190,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     double utilized = costStats.getUtilized().doubleValue();
     double total = costStats.getTotal().doubleValue();
     double utilizedPercentage = utilized / total * 100;
-    return (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+    int efficiencyScore = (int) ((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+    return efficiencyScore > 100 ? 100 : efficiencyScore;
   }
 
   @Override
