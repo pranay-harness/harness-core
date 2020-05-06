@@ -1,14 +1,18 @@
 package io.harness.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.repo.RepoConfiguration;
 import io.harness.beans.stages.CIStageInfo;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.AccountAccess;
-import io.harness.persistence.NameAccess;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UuidAccess;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
@@ -24,13 +28,14 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "cipipeline", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-//@StoreIn("harnessci")
-public class CIPipeline implements NameAccess, PersistentEntity, UuidAccess, AccountAccess {
+@StoreIn("harnessci")
+public class CIPipeline implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @NotNull @EntityName private String name;
 
   private EmbeddedUser createdBy;
   private long createdAt;
 
+  private long lastUpdatedAt;
   private String description;
 
   // Todo: Store stage in different collection
@@ -38,7 +43,7 @@ public class CIPipeline implements NameAccess, PersistentEntity, UuidAccess, Acc
 
   @Indexed private String accountId;
 
-  @Id private String uuid;
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
-  @NotNull private RepoConfiguration RepoConfiguration;
+  @NotNull private RepoConfiguration repoConfiguration;
 }

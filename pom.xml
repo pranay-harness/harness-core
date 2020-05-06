@@ -24,7 +24,8 @@
         <module>71-rest</module>
         <module>72-ci-beans</module>
         <module>72-event-server</module>
-        <module>73-ci-manager</module>
+        <module>73-ci-execution</module>
+        <module>74-ci-manager</module>
         <module>75-model-test</module>
         <module>76-graphql-test</module>
         <module>78-batch-processing</module>
