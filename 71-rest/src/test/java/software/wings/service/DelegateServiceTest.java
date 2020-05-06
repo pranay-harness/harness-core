@@ -67,6 +67,8 @@ import io.harness.configuration.DeployMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -176,6 +178,13 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                      .version(VERSION)
                                                      .status(Status.ENABLED)
                                                      .lastHeartBeat(System.currentTimeMillis());
+  private static final DelegateParamsBuilder PARAMS_BUILDER = DelegateParams.builder()
+                                                                  .accountId(ACCOUNT_ID)
+                                                                  .ip("127.0.0.1")
+                                                                  .hostName("localhost")
+                                                                  .version(VERSION)
+                                                                  .status(Status.ENABLED.name())
+                                                                  .lastHeartBeat(System.currentTimeMillis());
   private static final JreConfig ORACLE_JRE_CONFIG = JreConfig.builder()
                                                          .version("1.8.0_191")
                                                          .jreDirectory("jre1.8.0_191")
@@ -516,7 +525,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
-
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(delegate);
@@ -577,17 +585,16 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotRegisterNewDelegateForDeletedAccount() {
-    Delegate delegate = Delegate.builder()
-                            .accountId("DELETED_ACCOUNT")
-                            .ip("127.0.0.1")
-                            .hostName("localhost")
-                            .version(VERSION)
-                            .status(Status.ENABLED)
-                            .lastHeartBeat(System.currentTimeMillis())
-                            .build();
+    DelegateParams delegateParams = DelegateParams.builder()
+                                        .accountId("DELETED_ACCOUNT")
+                                        .ip("127.0.0.1")
+                                        .hostName("localhost")
+                                        .version(VERSION)
+                                        .status(Status.ENABLED.name())
+                                        .lastHeartBeat(System.currentTimeMillis())
+                                        .build();
     when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
-
-    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    DelegateRegisterResponse registerResponse = delegateService.register(delegateParams);
     assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
   }
 

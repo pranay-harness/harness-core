@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -144,12 +145,12 @@ public class DelegateAgentResourceTest {
   @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
     DelegateRegisterResponse registerResponse = DelegateRegisterResponse.builder().delegateId(ID_KEY).build();
-    when(delegateService.register(any(Delegate.class))).thenReturn(registerResponse);
+    when(delegateService.register(any(DelegateParams.class))).thenReturn(registerResponse);
     RestResponse<DelegateRegisterResponse> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/register?accountId=" + ACCOUNT_ID)
             .request()
-            .post(entity(Delegate.builder().uuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
+            .post(entity(DelegateParams.builder().delegateId(ID_KEY).build(), MediaType.APPLICATION_JSON),
                 new GenericType<RestResponse<DelegateRegisterResponse>>() {});
 
     DelegateRegisterResponse resourceResponse = restResponse.getResource();
