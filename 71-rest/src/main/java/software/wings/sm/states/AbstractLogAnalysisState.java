@@ -130,6 +130,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       String correlationId = UUID.randomUUID().toString();
       Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(
           executionContext.getAccountId(), executionContext.getStateExecutionInstanceId());
+      if (executionContext.isRetry()) {
+        activityLogger.info(RETRYING_VERIFICATION_STATE_MSG);
+      }
       String delegateTaskId = null;
       try {
         renderedQuery = executionContext.renderExpression(query);
