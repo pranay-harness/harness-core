@@ -96,4 +96,6 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   String fetchTemplateVersionFromUri(String templateUuid, String templateUri);
 
   String getTemplateFolderPathString(Template template);
+
+  String getYamlOfTemplate(String templateId, Long version);
 }

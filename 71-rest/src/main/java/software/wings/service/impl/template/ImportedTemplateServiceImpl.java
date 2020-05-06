@@ -27,16 +27,11 @@ import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommand.ImportedCommandBuilder;
 import software.wings.beans.template.dto.ImportedCommandVersion;
 import software.wings.beans.template.dto.ImportedCommandVersion.ImportedCommandVersionBuilder;
-import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
-import software.wings.yaml.BaseYaml;
-import software.wings.yaml.YamlHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +47,6 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   @Inject private TemplateService templateService;
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateGalleryService templateGalleryService;
-  @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Inject private CommandLibraryServiceHttpClient serviceHttpClient;
 
@@ -179,12 +173,10 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
     if (template == null) {
       return null;
     }
-    BaseYamlHandler yamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.GLOBAL_TEMPLATE_LIBRARY, template.getType());
     if (templateVersions != null) {
       templateVersions.forEach(templateVersion -> {
-        Template templateWithDetails = templateService.get(template.getUuid());
-        BaseYaml yaml = yamlHandler.toYaml(templateWithDetails, templateWithDetails.getAppId());
+        Template templateWithDetails =
+            templateService.get(template.getUuid(), String.valueOf(templateVersion.getVersion()));
         ImportedCommandVersionBuilder importedCommandVersionBuilder =
             ImportedCommandVersion.builder()
                 .commandName(commandName)
@@ -195,7 +187,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                 .description(templateVersion.getVersionDetails())
                 .templateObject(templateWithDetails.getTemplateObject())
                 .variables(templateWithDetails.getVariables())
-                .yamlContent(YamlHelper.toYamlString(yaml))
+                .yamlContent(templateService.getYamlOfTemplate(template.getUuid(), templateWithDetails.getVersion()))
                 .templateId(templateVersion.getTemplateUuid());
         if (templateVersion.getCreatedBy() != null) {
           importedCommandVersionBuilder.createdBy(templateVersion.getCreatedBy().getName());
