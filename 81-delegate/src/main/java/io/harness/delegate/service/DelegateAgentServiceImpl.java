@@ -671,7 +671,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleMessageSubmit(String message) {
-    logger.debug("^^MSG: " + message);
+    if (logger.isDebugEnabled()) {
+      logger.debug("^^MSG: " + message);
+    }
     systemExecutor.submit(() -> handleMessage(message));
   }
 
