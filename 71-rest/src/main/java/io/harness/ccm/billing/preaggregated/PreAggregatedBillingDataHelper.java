@@ -392,7 +392,7 @@ public class PreAggregatedBillingDataHelper {
     Set<QLEntityData> awsUsageType = new HashSet<>();
     Set<QLEntityData> awsInstanceType = new HashSet<>();
     Set<QLEntityData> awsLinkedAccount = new HashSet<>();
-    Set<QLEntityData> gcpProject = new HashSet<>();
+    Set<QLEntityData> gcpProjectId = new HashSet<>();
     Set<QLEntityData> gcpProduct = new HashSet<>();
     Set<QLEntityData> gcpSku = new HashSet<>();
     Set<QLEntityData> gcpBillingAccount = new HashSet<>();
@@ -426,7 +426,7 @@ public class PreAggregatedBillingDataHelper {
             gcpProduct.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpProjectId:
-            gcpProject.add(getEntityDataPoint(row, field));
+            gcpProjectId.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpBillingAccount:
             gcpBillingAccount.add(getEntityDataPoint(row, field));
@@ -446,7 +446,7 @@ public class PreAggregatedBillingDataHelper {
                                 .awsLinkedAccount(awsLinkedAccount)
                                 .gcpSku(gcpSku)
                                 .gcpProduct(gcpProduct)
-                                .gcpProject(gcpProject)
+                                .gcpProjectId(gcpProjectId)
                                 .gcpBillingAccount(gcpBillingAccount)
                                 .build()))
         .build();

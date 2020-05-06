@@ -193,7 +193,7 @@ public class SunburstChartStatsDataFetcher
       boolean includeOthers) {
     QLSunburstChartData data = (QLSunburstChartData) qlData;
     List<QLSunburstGridDataPoint> gridData = data.getGridData();
-    List<QLSunburstGridDataPoint> topNGridData = gridData.subList(0, limit);
+    List<QLSunburstGridDataPoint> topNGridData = gridData.subList(0, Math.min(gridData.size(), limit));
     return QLSunburstChartData.builder().totalCost(data.getTotalCost()).gridData(topNGridData).build();
   }
   @Override

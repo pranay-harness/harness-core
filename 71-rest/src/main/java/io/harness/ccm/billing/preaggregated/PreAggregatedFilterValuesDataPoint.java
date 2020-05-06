@@ -14,7 +14,7 @@ public class PreAggregatedFilterValuesDataPoint {
   Set<QLEntityData> awsUsageType;
   Set<QLEntityData> awsInstanceType;
   Set<QLEntityData> awsLinkedAccount;
-  Set<QLEntityData> gcpProject;
+  Set<QLEntityData> gcpProjectId;
   Set<QLEntityData> gcpProduct;
   Set<QLEntityData> gcpSku;
   Set<QLEntityData> gcpBillingAccount;

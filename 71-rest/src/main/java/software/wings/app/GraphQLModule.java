@@ -13,6 +13,7 @@ import io.harness.ccm.setup.graphql.CeConnectorDataFetcher;
 import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
 import io.harness.ccm.setup.graphql.LinkedAccountStatsDataFetcher;
+import io.harness.ccm.setup.graphql.OverviewPageStatsDataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
@@ -256,6 +257,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(GcpOrganizationDataFetcher.class);
     bindDataFetcherWithAnnotation(GcpServiceAccountDataFetcher.class);
     bindDataFetcherWithAnnotation(IdleCostTrendStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(OverviewPageStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
