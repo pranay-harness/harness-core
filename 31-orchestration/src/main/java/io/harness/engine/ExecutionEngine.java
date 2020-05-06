@@ -231,8 +231,11 @@ public class ExecutionEngine implements Engine {
     for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       injector.injectMembers(adviser);
-      advise = adviser.onAdviseEvent(
-          AdvisingEvent.builder().stateResponse(stateResponse).adviserParameters(obtainment.getParameters()).build());
+      advise = adviser.onAdviseEvent(AdvisingEvent.builder()
+                                         .ambiance(nodeExecution.getAmbiance())
+                                         .stateResponse(stateResponse)
+                                         .adviserParameters(obtainment.getParameters())
+                                         .build());
       if (advise != null) {
         break;
       }
