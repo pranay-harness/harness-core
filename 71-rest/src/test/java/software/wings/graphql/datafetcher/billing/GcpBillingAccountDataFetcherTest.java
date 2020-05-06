@@ -10,6 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.GcpBillingAccountQueryArguments;
 import io.harness.ccm.config.GcpBillingAccount;
+import io.harness.ccm.config.GcpBillingAccountDTO;
 import io.harness.ccm.config.GcpBillingAccountService;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -30,6 +31,8 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   private String organizationSettingId = "ORGANIZATION_SETTING_ID";
   private GcpBillingAccount gcpBillingAccount;
   private List<GcpBillingAccount> gcpBillingAccounts;
+  private GcpBillingAccountDTO gcpBillingAccountDTO;
+  private List<GcpBillingAccountDTO> gcpBillingAccountDTOs;
 
   @Mock private GraphQLContext graphQLContext;
 
@@ -40,7 +43,9 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   @Before
   public void setUp() {
     gcpBillingAccount = GcpBillingAccount.builder().build();
+    gcpBillingAccountDTO = GcpBillingAccountDTO.builder().build();
     gcpBillingAccounts = Arrays.asList(gcpBillingAccount);
+    gcpBillingAccountDTOs = Arrays.asList(gcpBillingAccountDTO);
     when(graphQLContext.get(eq("accountId"))).thenReturn(accountId);
   }
 
@@ -50,8 +55,8 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   public void shouldGetGcpBillingAccount() throws Exception {
     when(gcpBillingAccountService.get(eq(uuid))).thenReturn(gcpBillingAccount);
     GcpBillingAccountQueryArguments arguments = new GcpBillingAccountQueryArguments(uuid, organizationSettingId);
-    List<GcpBillingAccount> actuals = gcpBillingAccountDataFetcher.fetch(arguments, accountId);
-    assertThat(actuals).contains(gcpBillingAccount);
+    List<GcpBillingAccountDTO> actuals = gcpBillingAccountDataFetcher.fetch(arguments, accountId);
+    assertThat(actuals).contains(gcpBillingAccountDTO);
   }
 
   @Test
@@ -60,7 +65,7 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   public void shouldListGcpBillingAccount() throws Exception {
     when(gcpBillingAccountService.list(eq(accountId), eq(organizationSettingId))).thenReturn(gcpBillingAccounts);
     GcpBillingAccountQueryArguments arguments = new GcpBillingAccountQueryArguments(null, organizationSettingId);
-    List<GcpBillingAccount> actuals = gcpBillingAccountDataFetcher.fetch(arguments, accountId);
-    assertThat(actuals).containsAll(gcpBillingAccounts);
+    List<GcpBillingAccountDTO> actuals = gcpBillingAccountDataFetcher.fetch(arguments, accountId);
+    assertThat(actuals).containsAll(gcpBillingAccountDTOs);
   }
 }

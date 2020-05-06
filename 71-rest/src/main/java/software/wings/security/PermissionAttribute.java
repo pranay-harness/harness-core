@@ -224,6 +224,8 @@ public class PermissionAttribute {
 
     BUDGET(ACCOUNT),
 
+    GCP_RESOURCE(ACCOUNT),
+
     CLUSTERRECORD(ACCOUNT),
 
     K8S_LABEL(ACCOUNT),
