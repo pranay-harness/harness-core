@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.ambiance.dev.DefaultLevel;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -27,5 +28,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     };
     h.put("state.core.fork.ForkStateParameters", ForkStateParameters.class);
     h.put("facilitate.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
+    h.put("ambiance.dev.DefaultLevel", DefaultLevel.class);
   }
 }

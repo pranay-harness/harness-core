@@ -15,7 +15,7 @@ public class ManagerClientFactoryTest extends CIExecutionTest {
   private String BASE_URL = "https://localhost:9090/api/";
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = HARSH, intermittent = true)
   @Category(UnitTests.class)
   public void shouldCreateManagerClientFactory() throws IOException {
     ManagerClientFactory managerClientFactory = new ManagerClientFactory(BASE_URL, null);

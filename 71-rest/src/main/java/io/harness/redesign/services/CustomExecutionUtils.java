@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
+import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
@@ -25,6 +26,7 @@ import io.harness.state.core.section.SectionStateParameters;
 import lombok.experimental.UtilityClass;
 
 import java.time.Duration;
+import java.util.Collections;
 
 @Redesign
 @ExcludeRedesign
@@ -262,6 +264,37 @@ public class CustomExecutionUtils {
                                .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
                                .build())
         .uuid(planId)
+        .build();
+  }
+
+  public static Plan provideHttpRetryPlan() {
+    String httpNodeId = generateUuid();
+    BasicHttpStateParameters basicHttpStateParameters =
+        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(httpNodeId)
+        .node(ExecutionNode.builder()
+                  .uuid(httpNodeId)
+                  .name("Basic Http 1")
+                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .levelType(StepLevel.LEVEL_TYPE)
+                  .stateParameters(basicHttpStateParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .adviserObtainment(AdviserObtainment.builder()
+                                         .type(AdviserType.builder().type(AdviserType.RETRY).build())
+                                         .parameters(RetryAdviserParameters.builder()
+                                                         .retryCount(1)
+                                                         .waitInterval(Collections.singletonList(0))
+                                                         .build())
+                                         .build())
+                  .build())
+        .setupAbstractions(ImmutableMap.<String, String>builder()
+                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
+                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
+                               .build())
         .build();
   }
 }

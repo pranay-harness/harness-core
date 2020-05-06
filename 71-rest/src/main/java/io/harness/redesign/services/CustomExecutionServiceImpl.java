@@ -35,4 +35,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     return engine.startExecution(CustomExecutionUtils.provideHttpSectionPlan(),
         EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
   }
+
+  @Override
+  public PlanExecution executeRetryPlan() {
+    User user = UserThreadLocal.get();
+    return engine.startExecution(CustomExecutionUtils.provideHttpRetryPlan(),
+        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
+  }
 }

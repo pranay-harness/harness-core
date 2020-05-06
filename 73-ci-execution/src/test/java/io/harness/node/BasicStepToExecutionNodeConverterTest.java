@@ -27,7 +27,7 @@ public class BasicStepToExecutionNodeConverterTest extends CIExecutionTest {
   public void setUp() {}
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = HARSH, intermittent = true)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() throws IOException {
     CIStepsGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();

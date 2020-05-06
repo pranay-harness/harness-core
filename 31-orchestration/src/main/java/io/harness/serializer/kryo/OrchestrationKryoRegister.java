@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
@@ -24,8 +25,10 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(WorkflowType.class, 5025);
     kryo.register(DelegateTask.Status.class, 5004);
     kryo.register(DelegateTask.class, 5003);
+
     kryo.register(SweepingOutput.class, 3101);
     kryo.register(ExecutionStatusResponseData.class, 3102);
+    kryo.register(RetryAdviserParameters.class, 3103);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);

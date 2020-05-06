@@ -1,5 +1,6 @@
 package io.harness.engine;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -18,7 +19,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delay.DelayEventHelper;
@@ -65,7 +65,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 @Redesign
 @ExcludeRedesign
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(CDC)
 public class ExecutionEngine implements Engine {
   // For database needs
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
@@ -169,6 +169,7 @@ public class ExecutionEngine implements Engine {
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
+      injector.injectMembers(facilitator);
       facilitatorResponse = facilitator.facilitate(ambiance, obtainment.getParameters(), inputs);
       if (facilitatorResponse != null) {
         break;
@@ -229,6 +230,7 @@ public class ExecutionEngine implements Engine {
     Advise advise = null;
     for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
+      injector.injectMembers(adviser);
       advise = adviser.onAdviseEvent(
           AdvisingEvent.builder().stateResponse(stateResponse).adviserParameters(obtainment.getParameters()).build());
       if (advise != null) {
