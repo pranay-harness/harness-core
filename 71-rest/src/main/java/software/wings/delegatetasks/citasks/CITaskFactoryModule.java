@@ -2,6 +2,8 @@ package software.wings.delegatetasks.citasks;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.threading.Sleeper;
+import io.harness.threading.ThreadSleeper;
 import software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.CIK8CleanupTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.ExecCommandListener;
@@ -15,5 +17,6 @@ public class CITaskFactoryModule extends AbstractModule {
     bind(ExecuteCommandTaskHandler.class).to(K8ExecuteCommandTaskHandler.class);
     bind(ExecCommandListener.class).to(K8ExecCommandListener.class);
     bind(CICleanupTaskHandler.class).to(CIK8CleanupTaskHandler.class);
+    bind(Sleeper.class).to(ThreadSleeper.class);
   }
 }

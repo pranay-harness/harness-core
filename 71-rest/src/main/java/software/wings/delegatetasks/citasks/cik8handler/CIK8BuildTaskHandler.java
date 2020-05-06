@@ -59,6 +59,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
     String namespace = podParams.getNamespace();
+    String podName = podParams.getName();
 
     K8sTaskExecutionResponse result;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
@@ -69,10 +70,17 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         logger.info("Creating pod with spec: {}", pod);
-        kubeCtlHandler.createPod(kubernetesClient, pod);
-        result = K8sTaskExecutionResponse.builder()
-                     .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-                     .build();
+        kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
+        boolean isPodRunning = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
+        if (isPodRunning) {
+          result = K8sTaskExecutionResponse.builder()
+                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .build();
+        } else {
+          result = K8sTaskExecutionResponse.builder()
+                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                       .build();
+        }
       } catch (Exception ex) {
         logger.error("Exception in processing CI K8 build setup task: {}", ciBuildSetupTaskParams, ex);
         result = K8sTaskExecutionResponse.builder()

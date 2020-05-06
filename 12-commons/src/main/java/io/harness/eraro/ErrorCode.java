@@ -412,6 +412,8 @@ public enum ErrorCode {
 
   FAILED_TO_ACQUIRE_PERSISTENT_LOCK,
 
+  POD_NOT_FOUND_ERROR,
+
   ENGINE_REGISTRY_EXCEPTION;
 
   private Status status = BAD_REQUEST;

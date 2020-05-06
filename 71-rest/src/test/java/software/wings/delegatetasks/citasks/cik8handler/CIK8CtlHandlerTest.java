@@ -4,9 +4,14 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
 
 import com.google.inject.Provider;
 
@@ -15,6 +20,7 @@ import io.fabric8.kubernetes.api.model.DoneableSecret;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
@@ -29,8 +35,10 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.TtyExecOutputErrorable;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.PodNotFoundException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.threading.Sleeper;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -59,8 +67,6 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockPodNonNamespacedOp;
   @Mock private PodResource<Pod, DoneablePod> mockPodNamed;
 
-  @InjectMocks private CIK8CtlHandler cik8CtlHandler;
-
   @Mock Provider<ExecCommandListener> execListenerProvider;
   @Mock
   private ContainerResource<String, LogWatch, InputStream, PipedOutputStream, OutputStream, PipedInputStream, String,
@@ -68,6 +74,10 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Mock private TtyExecOutputErrorable<String, OutputStream, PipedInputStream, ExecWatch> mockRedirectedInput;
   @Mock private Execable<String, ExecWatch> mockExecable;
   @Mock private ExecWatch mockExecWatch;
+
+  @Mock private Sleeper sleeper;
+
+  @InjectMocks private CIK8CtlHandler cik8CtlHandler;
 
   private static final String imageName = "IMAGE";
   private static final String tag = "TAG";
@@ -84,6 +94,12 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   private static final String dashShellStr = "sh";
   private static final String dashShellArg = "-c";
   private static final Integer timeoutSecs = 100;
+
+  private Pod getPod(String runningState) {
+    PodStatus podStatus = new PodStatus();
+    podStatus.setPhase(runningState);
+    return new PodBuilder().withStatus(podStatus).build();
+  }
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -121,9 +137,10 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     Pod mockPod = new PodBuilder().build();
     Pod mockCreatedPod = new PodBuilder().build();
     when(mockKubernetesClient.pods()).thenReturn(mockKubePod);
-    when(mockKubePod.create(mockPod)).thenReturn(mockCreatedPod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.create(mockPod)).thenReturn(mockCreatedPod);
 
-    assertEquals(mockCreatedPod, cik8CtlHandler.createPod(mockKubernetesClient, mockPod));
+    assertEquals(mockCreatedPod, cik8CtlHandler.createPod(mockKubernetesClient, mockPod, namespace));
   }
 
   @Test
@@ -276,5 +293,91 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockExecable.exec(commands)).thenReturn(mockExecWatch);
     when(execCommandListener.getReturnStatus(mockExecWatch, timeoutSecs)).thenReturn(true);
     assertTrue(cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs));
+  }
+
+  @Test(expected = PodNotFoundException.class)
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void waitUntilPodIsReadyWithPodNotPresent() throws TimeoutException, InterruptedException {
+    KubernetesClient client = mock(KubernetesClient.class);
+
+    when(client.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.get()).thenReturn(null);
+
+    cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
+  }
+
+  @Test()
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void waitUntilPodIsReadyWithSuccess() throws TimeoutException, InterruptedException {
+    KubernetesClient client = mock(KubernetesClient.class);
+    Pod pod = getPod(POD_RUNNING_PHASE);
+
+    when(client.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.get()).thenReturn(pod);
+
+    assertEquals(true, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+  }
+
+  @Test()
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void waitUntilPodIsReadyWithPodInErrorState() throws TimeoutException, InterruptedException {
+    KubernetesClient client = mock(KubernetesClient.class);
+    Pod pod = getPod("Failed");
+
+    when(client.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.get()).thenReturn(pod);
+
+    assertEquals(false, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+  }
+
+  @Test()
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void waitUntilPodIsReadyWithSuccessAfterOneRetry() throws TimeoutException, InterruptedException {
+    KubernetesClient client = mock(KubernetesClient.class);
+    Pod pod1 = getPod(POD_PENDING_PHASE);
+    Pod pod2 = getPod(POD_RUNNING_PHASE);
+
+    when(client.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.get()).thenReturn(pod1);
+    doNothing().when(sleeper).sleep(POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000);
+
+    when(client.pods()).thenReturn(mockKubePod);
+    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+    when(mockPodNamed.get()).thenReturn(pod2);
+
+    assertEquals(true, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace));
+  }
+
+  @Test(expected = TimeoutException.class)
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void waitUntilPodIsReadyWithTimeoutException() throws TimeoutException, InterruptedException {
+    KubernetesClient client = mock(KubernetesClient.class);
+    Pod pod1 = getPod(POD_PENDING_PHASE);
+    Pod pod2 = getPod(POD_RUNNING_PHASE);
+
+    int numCalls = (int) Math.floor((POD_MAX_WAIT_UNTIL_READY_SECS * 1.0) / (POD_WAIT_UNTIL_READY_SLEEP_SECS * 1.0));
+    for (int i = 0; i < numCalls; i++) {
+      when(client.pods()).thenReturn(mockKubePod);
+      when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
+      when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
+      when(mockPodNamed.get()).thenReturn(pod1);
+      doNothing().when(sleeper).sleep(POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000);
+    }
+
+    cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
   }
 }
