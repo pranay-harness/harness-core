@@ -56,12 +56,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-persistence-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>25-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
