@@ -1,7 +1,10 @@
 package io.harness.batch.processing.config;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
+import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsMongoPersistence;
@@ -22,5 +25,11 @@ public class BatchProcessingModule extends AbstractModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  MongoConfig mongoConfig(BatchMainConfig batchMainConfig) {
+    return batchMainConfig.getHarnessMongo();
   }
 }
