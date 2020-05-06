@@ -144,7 +144,7 @@ public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
   // only use it in the new instance API.
   private static final String DEFAULT_HOSTNAME_TEMPLATE = "${instanceDetails.hostName}";
-
+  public static final String RETRYING_VERIFICATION_STATE_MSG = "Retrying verification state..";
   public static final String START_TIME_PLACE_HOLDER = "$startTime";
   public static final String END_TIME_PLACE_HOLDER = "$endTime";
   public static final String HOST_NAME_PLACE_HOLDER = "$hostName";

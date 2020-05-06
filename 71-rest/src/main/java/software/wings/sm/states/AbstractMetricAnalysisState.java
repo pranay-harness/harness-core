@@ -123,6 +123,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("Executing state {}", context.getStateExecutionInstanceId());
       Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(
           context.getAccountId(), context.getStateExecutionInstanceId());
+      if (context.isRetry()) {
+        activityLogger.info(RETRYING_VERIFICATION_STATE_MSG);
+      }
       String corelationId = UUID.randomUUID().toString();
       String delegateTaskId = null;
       VerificationStateAnalysisExecutionData executionData;
