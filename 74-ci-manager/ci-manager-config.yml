@@ -1,0 +1,36 @@
+managerUrl: https://localhost:9090/api/
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 7070
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 4457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 7071
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders: []
+harness-mongo:
+  uri: mongodb://localhost:27017/harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 50
+cimanager-mongo:
+  uri: mongodb://localhost:27017/harnessci
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300

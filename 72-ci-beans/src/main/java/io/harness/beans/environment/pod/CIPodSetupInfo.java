@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,7 +15,8 @@ import java.util.List;
 public class CIPodSetupInfo {
   private PodSetupParams podSetupParams;
 
+  @Builder
   public static final class PodSetupParams {
-    private List<CIContainerDefinitionInfo> containerInfos = new ArrayList<>();
+    private List<CIContainerDefinitionInfo> containerInfos;
   }
 }
