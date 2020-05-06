@@ -66,6 +66,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
+import software.wings.beans.template.ImportedTemplate.ImportedTemplateKeys;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -86,8 +87,11 @@ import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
+import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateFolderService;
@@ -95,6 +99,8 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.yaml.BaseYaml;
+import software.wings.yaml.YamlHelper;
 
 import java.io.IOException;
 import java.net.URL;
@@ -131,6 +137,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ImportedTemplateService importedTemplateService;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
 
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -227,27 +234,16 @@ public class TemplateServiceImpl implements TemplateService {
     template.setKeywords(trimmedLowercaseSet(generatedKeywords));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
     validateTemplateVariables(newVersionedTemplate.getVariables());
-    boolean templateObjectChanged = checkTemplateDetailsChanged(
-        template, oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
+    TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
+        getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
+    newVersionedTemplate.setVersion(templateVersion.getVersion());
+    newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
+    saveVersionedTemplate(template, newVersionedTemplate);
 
-    boolean templateVariablesChanged =
-        templateHelper.variablesChanged(newVersionedTemplate.getVariables(), oldTemplate.getVariables());
-
-    boolean templateDetailsChanged = false;
-    if (templateObjectChanged || templateVariablesChanged) {
-      TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
-          getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
-      newVersionedTemplate.setVersion(templateVersion.getVersion());
-      newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
-      saveVersionedTemplate(template, newVersionedTemplate);
-      templateDetailsChanged = true;
-    }
     PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
-    if (templateDetailsChanged) {
-      executorService.submit(() -> updateLinkedEntities(savedTemplate));
-    }
+    executorService.submit(() -> updateLinkedEntities(savedTemplate));
 
     auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.UPDATE);
 
@@ -527,7 +523,9 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId) {
-    return importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId);
+    Template template = importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId);
+    notNullCheck(String.format("Old template not found for command %s.", commandId), template);
+    return get(template.getUuid());
   }
 
   @Override
@@ -606,6 +604,9 @@ public class TemplateServiceImpl implements TemplateService {
       wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class)
                                   .filter(TemplateVersion.ACCOUNT_ID_KEY, accountId)
                                   .filter(TEMPLATE_UUID_KEY, templateUuid));
+      wingsPersistence.delete(wingsPersistence.createQuery(ImportedTemplate.class)
+                                  .filter(ImportedTemplateKeys.accountId, accountId)
+                                  .filter(ImportedTemplateKeys.templateId, templateUuid));
     }
 
     if (templateDeleted) {
@@ -1216,5 +1217,19 @@ public class TemplateServiceImpl implements TemplateService {
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateVersion.class).filter(TEMPLATE_UUID_KEY, template.getUuid()));
     wingsPersistence.delete(template);
+  }
+
+  @Override
+  public String getYamlOfTemplate(String templateId, Long version) {
+    Template template = get(templateId, String.valueOf(version));
+    YamlType yamlType;
+    if (GLOBAL_APP_ID.equals(template.getAppId())) {
+      yamlType = YamlType.GLOBAL_TEMPLATE_LIBRARY;
+    } else {
+      yamlType = YamlType.APPLICATION_TEMPLATE_LIBRARY;
+    }
+    BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, template.getType());
+    BaseYaml yaml = yamlHandler.toYaml(template, template.getAppId());
+    return YamlHelper.toYamlString(yaml);
   }
 }

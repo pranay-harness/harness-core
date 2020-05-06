@@ -80,6 +80,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommandVersion;
+import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.WingsTestConstants;
 
@@ -100,6 +101,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateServiceImpl templateServiceImpl;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
+  @Inject private ImportedTemplateService importedTemplateService;
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -412,7 +414,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     // Case 2: Imported - harness gallery.
     Template importedTemplate = saveImportedTemplate(
-        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5");
+        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5", false);
     assertThat(importedTemplate).isNotNull();
     String templateUriImported = templateService.makeNamespacedTemplareUri(importedTemplate.getUuid(), "1");
     assertTemplateUri(
@@ -1053,7 +1055,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     // Case 2: Imported Template.
     Template importedTemplate = saveImportedTemplate(
-        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5");
+        getSshCommandTemplate("Harness/" + MY_START_COMMAND, GLOBAL_APP_ID), MY_START_COMMAND, "Harness", "1.5", false);
     String importedTemplateUri = templateService.makeNamespacedTemplareUri(importedTemplate.getUuid(), "1");
     assertTemplateUri(
         importedTemplateUri, IMPORTED_TEMPLATE_PREFIX + "Harness/" + MY_START_COMMAND + ":1.5", "Harness");
@@ -1074,17 +1076,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   public void shouldListVersionsOfImportedTemplate() {
     final String commandId = "COMMAND_ID";
     final String commandStoreId = "COMMAND_STORE_ID";
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2");
-    TemplateVersion newVersion = TemplateVersion.builder()
-                                     .version(2L)
-                                     .importedTemplateVersion("1.3")
-                                     .accountId(template.getAccountId())
-                                     .changeType(TemplateVersion.ChangeType.IMPORTED.name())
-                                     .galleryId(template.getGalleryId())
-                                     .templateUuid(template.getUuid())
-                                     .templateType(SSH)
-                                     .build();
-    wingsPersistence.save(newVersion);
+    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template = getSshCommandTemplate();
+    template.setTemplateObject(SshCommandTemplate.builder().build());
+    saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
     ImportedCommand templateVersions =
         templateVersionService.listImportedTemplateVersions(commandId, commandStoreId, GLOBAL_ACCOUNT_ID);
     List<String> versions = templateVersions.getImportedCommandVersionList()
@@ -1112,7 +1107,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandName_1 = "COMMAND_NAME_1";
     final String commandStoreName = "COMMAND_STORE_NAME";
 
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, "1");
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, "1", false);
 
     TemplateVersion newVersion = TemplateVersion.builder()
                                      .version(2L)
@@ -1124,7 +1119,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                      .templateType(SSH)
                                      .build();
     wingsPersistence.save(newVersion);
-    saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandName_1, commandStoreName, "2.1");
+    saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandName_1, commandStoreName, "2.1", false);
 
     List<ImportedCommand> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
         asList(commandName, commandName_1), commandStoreName, GLOBAL_ACCOUNT_ID);
@@ -1140,7 +1135,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandStoreName = "COMMAND_STORE_ID";
     final String version = "1.2";
 
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version, false);
     CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
                                                         .parentTemplateId(template.getUuid())
                                                         .parentTemplateVersion(template.getVersion())
@@ -1198,7 +1193,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandStoreName = "COMMAND_STORE_NAME";
     final String version = "1.2";
     final String copiedTemplateName = "copied";
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version, false);
     CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
                                                         .parentTemplateId(template.getUuid())
                                                         .parentTemplateVersion(template.getVersion())
@@ -1234,7 +1229,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandStoreName = "COMMAND_STORE_NAME";
     final String version = "1.2";
     final String copiedTemplateName = "copied";
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version, false);
     CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
                                                         .parentTemplateId(template.getUuid())
                                                         .parentTemplateVersion(template.getVersion())
@@ -1267,7 +1262,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     final String commandStoreName = "COMMAND_STORE_NAME";
     final String version = "1.2";
     final String copiedTemplateName = "copied";
-    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version);
+    Template template = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, version, false);
     CopiedTemplateMetadata copiedTemplateMetadata = CopiedTemplateMetadata.builder()
                                                         .parentTemplateId(template.getUuid())
                                                         .parentTemplateVersion(template.getVersion())
@@ -1301,7 +1296,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   public void testList() {
     final String commandName = "COMMAND_NAME";
     final String commandStoreName = "COMMAND_STORE_NAME";
-    Template importedTemplate = saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, "1");
+    Template importedTemplate =
+        saveImportedTemplate(getSshCommandTemplate(), commandName, commandStoreName, "1", false);
     Template accountTemplate = saveTemplate();
 
     // Case 0: empty input
@@ -1379,7 +1375,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   private Template saveImportedTemplate(
-      Template template, String commandName, String commandStoreName, String version) {
+      Template template, String commandName, String commandStoreName, String version, boolean isUpdate) {
     HarnessImportedTemplateDetails harnessImportedTemplateDetails = HarnessImportedTemplateDetails.builder()
                                                                         .commandName(commandName)
                                                                         .commandStoreName(commandStoreName)
@@ -1390,15 +1386,29 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
         templateGalleryHelper
             .getGalleryByGalleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GLOBAL_ACCOUNT_ID)
             .getUuid());
-    template = templateService.saveReferenceTemplate(template);
-    ImportedTemplate importedTemplate = ImportedTemplate.builder()
-                                            .accountId(GLOBAL_ACCOUNT_ID)
-                                            .appId(GLOBAL_APP_ID)
-                                            .commandName(commandName)
-                                            .commandStoreName(commandStoreName)
-                                            .templateId(template.getUuid())
-                                            .build();
-    wingsPersistence.save(importedTemplate);
+    if (isUpdate) {
+      template = templateService.updateReferenceTemplate(template);
+    } else {
+      template = templateService.saveReferenceTemplate(template);
+      ImportedTemplate importedTemplate = ImportedTemplate.builder()
+                                              .accountId(GLOBAL_ACCOUNT_ID)
+                                              .appId(GLOBAL_APP_ID)
+                                              .commandName(commandName)
+                                              .commandStoreName(commandStoreName)
+                                              .templateId(template.getUuid())
+                                              .build();
+      wingsPersistence.save(importedTemplate);
+    }
+
     return template;
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testGetYamlOfTemplate() {
+    Template template = templateService.save(getSshCommandTemplate());
+    assertThat(templateService.getYamlOfTemplate(template.getUuid(), template.getVersion())).isNotNull();
+    assertThatThrownBy(() -> templateService.getYamlOfTemplate(template.getUuid(), template.getVersion() + 1));
   }
 }

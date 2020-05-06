@@ -155,4 +155,13 @@ public class TemplateResource {
   public RestResponse<PageResponse<TemplateVersion>> list(@BeanParam PageRequest<TemplateVersion> pageRequest) {
     return new RestResponse<>(templateVersionService.listTemplateVersions(pageRequest));
   }
+
+  @GET
+  @Path("{templateId}/versions/{version}/yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getYaml(@QueryParam("accountId") String accountId,
+      @PathParam("templateId") String templateId, @QueryParam("version") Long version) {
+    return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
+  }
 }
