@@ -160,8 +160,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
               createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e).addParam("reason", e.getMessage());
     }
   }
 

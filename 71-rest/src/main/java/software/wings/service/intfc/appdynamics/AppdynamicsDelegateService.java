@@ -13,7 +13,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -23,35 +22,34 @@ import java.util.Set;
 public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_APP_TASK)
   List<NewRelicApplication> getAllApplications(
-      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException;
+      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
   Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
   Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       String tierName, String btName, String hostName, Long startTime, Long endTime,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   @DelegateTaskType(TaskType.APPDYNAMICS_METRIC_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
-      ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException;
+      ThirdPartyApiCallLog apiCallLog);
 }
