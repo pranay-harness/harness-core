@@ -23,6 +23,7 @@ import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.levels.PhaseLevel;
 import io.harness.redesign.levels.SectionLevel;
 import io.harness.redesign.levels.StepLevel;
+import io.harness.redesign.states.http.BasicHttpStateParameters;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
@@ -1603,5 +1604,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptType.class, 7371);
     kryo.register(CIK8CleanupTaskParams.class, 7372);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
+    kryo.register(BasicHttpStateParameters.class, 7374);
   }
 }

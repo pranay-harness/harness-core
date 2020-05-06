@@ -37,7 +37,7 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
   }
 
   @Test
-  @Owner(developers = HARSH)
+  @Owner(developers = HARSH, intermittent = true)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() throws IOException {
     ExecutionNode executionNode = ExecutionNode.builder().uuid(UUID).name(NAME).levelType(StepLevel.LEVEL_TYPE).build();

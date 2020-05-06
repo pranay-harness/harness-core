@@ -10,4 +10,6 @@ public interface CustomExecutionService {
   PlanExecution executeHttpFork();
 
   PlanExecution executeSectionPlan();
+
+  PlanExecution executeRetryPlan();
 }

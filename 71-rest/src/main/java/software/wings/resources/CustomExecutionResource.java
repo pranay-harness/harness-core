@@ -41,4 +41,11 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> executeSectionPlan() {
     return new RestResponse<>(customExecutionService.executeSectionPlan());
   }
+
+  @GET
+  @Path("/http-retry")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeRetryPlan() {
+    return new RestResponse<>(customExecutionService.executeRetryPlan());
+  }
 }

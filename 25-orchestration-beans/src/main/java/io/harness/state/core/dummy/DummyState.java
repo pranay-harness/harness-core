@@ -1,9 +1,8 @@
-package io.harness.redesign.states.dummy;
+package io.harness.state.core.dummy;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -18,7 +17,6 @@ import java.util.List;
 
 @Slf4j
 @Redesign
-@ExcludeRedesign
 @Produces(State.class)
 public class DummyState implements State, SyncExecutable {
   public static final String STATE_TYPE = "DUMMY";

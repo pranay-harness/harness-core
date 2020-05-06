@@ -1,6 +1,5 @@
 package io.harness.registrars;
 
-import io.harness.redesign.states.dummy.DummyState;
 import io.harness.redesign.states.http.BasicHttpState;
 import io.harness.redesign.states.wait.WaitState;
 import io.harness.registries.registrar.StateRegistrar;
@@ -13,6 +12,5 @@ public class WingsStateRegistrar implements StateRegistrar {
   public void register(Set<Class<? extends State>> stateClasses) {
     stateClasses.add(BasicHttpState.class);
     stateClasses.add(WaitState.class);
-    stateClasses.add(DummyState.class);
   }
 }

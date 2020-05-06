@@ -1,5 +1,7 @@
 package io.harness.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.data.Outcome;
@@ -11,6 +13,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.ExecutionNode;
+import io.harness.serializer.KryoUtils;
 import io.harness.state.io.StateTransput;
 import lombok.Builder;
 import lombok.Data;
@@ -59,4 +62,21 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   @Singular List<StateTransput> additionalInputs;
 
   @Singular List<Outcome> outcomes;
+
+  @Singular List<String> retryIds;
+
+  public boolean isRetry() {
+    return isNotEmpty(retryIds);
+  }
+
+  public int retryCount() {
+    if (isRetry()) {
+      return retryIds.size();
+    }
+    return 0;
+  }
+
+  public NodeExecution deepCopy() {
+    return KryoUtils.clone(this);
+  }
 }

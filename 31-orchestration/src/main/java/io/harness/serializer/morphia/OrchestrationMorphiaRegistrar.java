@@ -10,6 +10,7 @@ import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
+import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
@@ -47,11 +48,13 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     // Engine Callback
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
     h.put("engine.resume.EngineWaitResumeCallback", EngineWaitResumeCallback.class);
+    h.put("engine.resume.EngineWaitRetryCallback", EngineWaitRetryCallback.class);
 
     // Adviser Related Classes
     h.put("adviser.impl.ignore.IgnoreAdviserParameters", IgnoreAdviserParameters.class);
     h.put("adviser.impl.retry.RetryAdviserParameters", RetryAdviserParameters.class);
     h.put("adviser.impl.success.OnSuccessAdviserParameters", OnSuccessAdviserParameters.class);
+    h.put("adviser.impl.retry.RetryAdviserParameters", RetryAdviserParameters.class);
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
