@@ -21,6 +21,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -374,11 +375,11 @@ public class DelegateResource {
   @ExceptionMetered
   @Deprecated
   public RestResponse<DelegateRegisterResponse> register(
-      @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      delegate.setAccountId(accountId);
       long startTime = System.currentTimeMillis();
-      DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+      DelegateRegisterResponse registerResponse =
+          delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
       logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
     }
