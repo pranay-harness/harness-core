@@ -26,7 +26,6 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
   @Override
   public String create(GcpBillingAccount billingAccount) {
     checkArgument(isNotEmpty(billingAccount.getOrganizationSettingId()));
-    validateAccessToBillingReport(billingAccount);
     return gcpBillingAccountDao.save(billingAccount);
   }
 

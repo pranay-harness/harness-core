@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.setup.config.CESetUpConfig;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 
@@ -67,8 +68,7 @@ public class GcpServiceAccountService {
       String projectId = ceSetUpConfig.getGcpProjectId();
       serviceAccount = service.projects().serviceAccounts().create("projects/" + projectId, request).execute();
     } catch (GoogleJsonResponseException e) {
-      logger.error("Google was unable to create a service account.", e);
-      return null;
+      throw new InvalidRequestException("Google was unable to create a service account.", e);
     } catch (IOException ioe) {
       logger.error("Unable to create service account.", ioe);
       return null;

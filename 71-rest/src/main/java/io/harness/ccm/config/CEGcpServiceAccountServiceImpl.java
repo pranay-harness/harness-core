@@ -29,7 +29,6 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
     Account account = accountService.get(accountId);
     String serviceAccountId = getServiceAccountId(account);
     String displayName = getServiceAccountDisplayName(account);
-
     ServiceAccount serviceAccount = gcpServiceAccountService.create(serviceAccountId, displayName);
     if (serviceAccount != null) {
       return gcpServiceAccountDao.save(GcpServiceAccount.builder()
@@ -59,16 +58,22 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
   }
 
   private String getServiceAccountId(Account account) {
-    return "harness-ce-" + getCompliedAccountName(account.getAccountName()).substring(0, 12) + "-"
-        + account.getUuid().toLowerCase().substring(0, 5);
+    return "harness-ce-" + getCompliedSubstring(account.getAccountName(), 12) + "-"
+        + getCompliedSubstring(account.getUuid(), 5);
   }
 
   private String getServiceAccountDisplayName(Account account) {
-    return "Harness CE " + account.getAccountName() + " " + account.getAccountName().substring(0, 12) + " "
-        + account.getUuid();
+    return "Harness CE " + account.getAccountName() + " " + account.getUuid();
   }
 
-  private String getCompliedAccountName(String accountName) {
-    return accountName.toLowerCase().replaceAll("[^a-z0-9]", "-");
+  private String getCompliedSubstring(String s, int maxLength) {
+    String substring;
+    String compliedAccountName = s.toLowerCase().replaceAll("[^a-z0-9]", "-");
+    if (compliedAccountName.length() < maxLength) {
+      substring = compliedAccountName;
+    } else {
+      substring = compliedAccountName.substring(0, maxLength);
+    }
+    return substring;
   }
 }
