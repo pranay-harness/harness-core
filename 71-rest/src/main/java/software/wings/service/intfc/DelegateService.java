@@ -93,6 +93,8 @@ public interface DelegateService extends OwnedByAccount {
 
   <T extends ResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
+  void saveDelegateTask(DelegateTask task);
+
   DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
 
   DelegateTaskPackage reportConnectionResults(

@@ -1682,7 +1682,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public String queueTask(DelegateTask task) {
     task.getData().setAsync(true);
-    task.setSelectionLogsTrackingEnabled(false);
     saveDelegateTask(task);
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
@@ -1702,7 +1701,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     ResponseData responseData;
 
     task.getData().setAsync(false);
-    task.setSelectionLogsTrackingEnabled(true);
     saveDelegateTask(task);
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
@@ -1770,7 +1768,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @VisibleForTesting
-  void saveDelegateTask(DelegateTask task) {
+  @Override
+  public void saveDelegateTask(DelegateTask task) {
     task.setStatus(QUEUED);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
@@ -2460,7 +2459,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
-            .lessThan(currentTimeMillis());
+            .greaterThan(currentTimeMillis());
 
     return delegateTaskQuery.asKeyList()
         .stream()
