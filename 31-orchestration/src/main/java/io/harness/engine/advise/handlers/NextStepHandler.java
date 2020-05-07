@@ -17,7 +17,7 @@ public class NextStepHandler implements AdviseHandler<NextStepAdvise> {
   @Override
   public void handleAdvise(Ambiance ambiance, NextStepAdvise advise) {
     ExecutionNode nextNode = Preconditions.checkNotNull(
-        engineObtainmentHelper.fetchExecutionNode(advise.getNextNodeId(), ambiance.getExecutionInstanceId()));
+        engineObtainmentHelper.fetchExecutionNode(advise.getNextNodeId(), ambiance.getPlanExecutionId()));
     engine.triggerExecution(ambiance, nextNode);
   }
 }

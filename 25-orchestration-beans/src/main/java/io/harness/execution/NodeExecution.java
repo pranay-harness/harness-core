@@ -3,6 +3,7 @@ package io.harness.execution;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.data.Outcome;
 import io.harness.execution.status.NodeExecutionStatus;
@@ -19,6 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -78,5 +80,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
 
   public NodeExecution deepCopy() {
     return KryoUtils.clone(this);
+  }
+
+  @UtilityClass
+  public static final class NodeExecutionKeys {
+    public static final String planExecutionId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.planExecutionId;
   }
 }

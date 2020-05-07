@@ -113,10 +113,8 @@ public class ExecutionEngine implements Engine {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
-    Ambiance ambiance = Ambiance.builder()
-                            .setupAbstractions(plan.getSetupAbstractions())
-                            .executionInstanceId(instance.getUuid())
-                            .build();
+    Ambiance ambiance =
+        Ambiance.builder().setupAbstractions(plan.getSetupAbstractions()).planExecutionId(instance.getUuid()).build();
     triggerExecution(ambiance, plan.fetchStartingNode());
     return instance;
   }
@@ -255,7 +253,7 @@ public class ExecutionEngine implements Engine {
     } else {
       logger.info("End Execution");
       engineStatusHelper.updateExecutionInstanceStatus(
-          nodeInstance.getAmbiance().getExecutionInstanceId(), ExecutionInstanceStatus.SUCCEEDED);
+          nodeInstance.getAmbiance().getPlanExecutionId(), ExecutionInstanceStatus.SUCCEEDED);
     }
   }
 
