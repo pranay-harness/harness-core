@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
@@ -102,7 +103,7 @@ public class WorkflowResource {
   /**
    * List.
    *
-   * @param appId                   the app id
+   * @param appIds                   the app id
    * @param pageRequest             the page request
    * @param previousExecutionsCount the previous executions count
    * @param workflowTypes           the workflow types
@@ -112,7 +113,7 @@ public class WorkflowResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
-  public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("workflowType") List<String> workflowTypes,
@@ -125,8 +126,8 @@ public class WorkflowResource {
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
       pageRequest.addFilter("workflowType", EQ, WorkflowType.ORCHESTRATION);
     }
-    if (appId != null) {
-      pageRequest.addFilter("appId", EQ, appId);
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 
     if (!details) {

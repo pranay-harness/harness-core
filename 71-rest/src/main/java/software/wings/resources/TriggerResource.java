@@ -1,6 +1,7 @@
 package software.wings.resources;
 
-import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -24,6 +25,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.TriggerService;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -55,17 +57,19 @@ public class TriggerResource {
   }
 
   /**
-   * @param appId
+   * @param appIds
    * @param pageRequest
    * @return
    */
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Trigger>> list(@QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Trigger>> list(@QueryParam("appId") List<String> appIds,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Trigger> pageRequest) {
-    pageRequest.addFilter("appId", EQ, appId);
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter("appId", IN, appIds.toArray());
+    }
     return new RestResponse<>(triggerService.list(pageRequest, withTags, tagFilter));
   }
 

@@ -4,7 +4,8 @@
 
 package software.wings.resources;
 
-import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -76,13 +77,13 @@ public class PipelineResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Pipeline> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
       @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
-    if (appId != null) {
-      pageRequest.addFilter("appId", EQ, appId);
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 
     return new RestResponse<>(

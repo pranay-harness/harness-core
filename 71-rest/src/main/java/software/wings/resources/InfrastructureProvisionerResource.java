@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.READ;
@@ -70,7 +72,10 @@ public class InfrastructureProvisionerResource {
   @ListAPI(ResourceType.PROVISIONER)
   @AuthRule(permissionType = PROVISIONER, action = READ)
   public RestResponse<PageResponse<InfrastructureProvisioner>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<InfrastructureProvisioner> pageRequest) {
+      @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<InfrastructureProvisioner> pageRequest) {
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter("appId", IN, appIds.toArray());
+    }
     return new RestResponse<>(infrastructureProvisionerService.list(pageRequest));
   }
 

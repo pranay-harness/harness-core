@@ -172,13 +172,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public PageResponse<Environment> listWithSummary(
-      PageRequest<Environment> request, boolean withTags, String tagFilter, String appId) {
+      PageRequest<Environment> request, boolean withTags, String tagFilter, List<String> appIds) {
     PageResponse<Environment> pageResponse = list(request, withTags, tagFilter);
 
     if (pageResponse.getResponse() == null) {
       return pageResponse;
     }
-    addInfraDefDetailToEnv(appId, pageResponse);
+
+    Map<String, List<Environment>> map =
+        pageResponse.getResponse().stream().collect(Collectors.groupingBy(env -> env.getAppId()));
+    map.forEach((appId, envs) -> addInfraDefDetailToEnv(appId, envs));
+
     pageResponse.getResponse().forEach(environment -> {
       try {
         addServiceTemplates(environment);
@@ -190,17 +194,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return pageResponse;
   }
 
-  void addInfraDefDetailToEnv(String appId, @Nonnull PageResponse<Environment> pageResponse) {
+  void addInfraDefDetailToEnv(String appId, @Nonnull List<Environment> environments) {
     if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
       return;
     }
     List<String> envIds = new ArrayList<>();
-    for (Environment environment : pageResponse.getResponse()) {
+    for (Environment environment : environments) {
       envIds.add(environment.getUuid());
     }
     Map<String, Integer> countForEnvironments = infrastructureDefinitionService.getCountForEnvironments(appId, envIds);
-
-    for (Environment environment : pageResponse.getResponse()) {
+    for (Environment environment : environments) {
       environment.setInfrastructureDefinitions(
           infrastructureDefinitionService.getNameAndIdForEnvironment(appId, environment.getUuid(), 5));
       environment.setInfraDefinitionsCount(countForEnvironments.getOrDefault(environment.getUuid(), 0));
@@ -243,10 +246,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                   .filter(EnvironmentKeys.appId, appId)
                                   .filter(EnvironmentKeys.name, environmentName)
                                   .get();
-    if (environment != null) {
-      if (withServiceTemplates) {
-        addServiceTemplates(environment);
-      }
+    if (environment != null && withServiceTemplates) {
+      addServiceTemplates(environment);
     }
     return environment;
   }
@@ -836,20 +837,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         if (!clonedServiceVariable.getEnvId().equals(GLOBAL_ENV_ID)) {
           clonedServiceVariable.setEnvId(clonedEnvironment.getUuid());
         }
-        if (!clonedServiceVariable.getTemplateId().equals(DEFAULT_TEMPLATE_ID)) {
-          if (serviceTemplateId != null) {
-            clonedServiceVariable.setTemplateId(serviceTemplateId);
-          }
+        if (!clonedServiceVariable.getTemplateId().equals(DEFAULT_TEMPLATE_ID) && serviceTemplateId != null) {
+          clonedServiceVariable.setTemplateId(serviceTemplateId);
         }
-        if (clonedServiceVariable.getEntityType() == SERVICE_TEMPLATE) {
-          if (serviceTemplateId != null) {
-            clonedServiceVariable.setEntityId(serviceTemplateId);
-          }
+        if (clonedServiceVariable.getEntityType() == SERVICE_TEMPLATE && serviceTemplateId != null) {
+          clonedServiceVariable.setEntityId(serviceTemplateId);
         }
-        if (clonedServiceVariable.getEntityType() == SERVICE) {
-          if (targetServiceId != null) {
-            clonedServiceVariable.setEntityId(targetServiceId);
-          }
+        if (clonedServiceVariable.getEntityType() == SERVICE && targetServiceId != null) {
+          clonedServiceVariable.setEntityId(targetServiceId);
         }
         if (clonedServiceVariable.getEntityType() == ENVIRONMENT) {
           clonedServiceVariable.setEntityId(clonedEnvironment.getUuid());
@@ -876,10 +871,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         if (clonedConfigFile.getEntityType() == SERVICE_TEMPLATE) {
           clonedConfigFile.setEntityId(clonedServiceTemplate.getUuid());
         }
-        if (clonedConfigFile.getEntityType() == SERVICE) {
-          if (targetServiceId != null) {
-            clonedConfigFile.setEntityId(targetServiceId);
-          }
+        if (clonedConfigFile.getEntityType() == SERVICE && targetServiceId != null) {
+          clonedConfigFile.setEntityId(targetServiceId);
         }
         try {
           File file = configService.download(configFile.getAppId(), configFile.getUuid());

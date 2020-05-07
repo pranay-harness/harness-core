@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -83,7 +85,7 @@ public class ServiceResource {
   /**
    * List.
    *
-   * @param appId       the app id
+   * @param appIds       the app ids
    * @param pageRequest the page request
    * @return the rest response
    */
@@ -91,11 +93,11 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SERVICE)
-  public RestResponse<PageResponse<Service>> list(@QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Service>> list(@QueryParam("appId") List<String> appIds,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
-    if (appId != null) {
-      pageRequest.addFilter("appId", EQ, appId);
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter("appId", IN, appIds.toArray());
     }
     if (!details) {
       return new RestResponse<>(serviceResourceService.list(pageRequest, false, false, withTags, tagFilter));

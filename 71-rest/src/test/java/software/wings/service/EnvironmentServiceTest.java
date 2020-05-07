@@ -129,6 +129,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,8 +218,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(serviceTemplatePageResponse);
 
-    PageResponse<Environment> environments =
-        environmentService.listWithSummary(envPageRequest, false, null, environment.getAppId());
+    PageResponse<Environment> environments = environmentService.listWithSummary(
+        envPageRequest, false, null, Collections.singletonList(environment.getAppId()));
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
