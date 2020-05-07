@@ -17,6 +17,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 import static software.wings.beans.cloudprovider.azure.AzureEnvironmentType.AZURE;
 import static software.wings.beans.cloudprovider.azure.AzureEnvironmentType.AZURE_US_GOVERNMENT;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
@@ -25,6 +26,8 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.compute.VirtualMachines;
 import com.microsoft.azure.management.containerservice.OSType;
+import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.management.resources.ResourceGroups;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
 import io.harness.category.element.UnitTests;
@@ -46,6 +49,7 @@ import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureTagDetails;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -60,6 +64,7 @@ public class AzureHelperServiceTest extends WingsBaseTest {
   @Mock private Azure.Authenticated authenticated;
   @Mock private Azure azure;
   @Mock private EncryptionService encryptionService;
+  @Mock private ResourceGroups resourceGroups;
 
   @InjectMocks private AzureHelperService azureHelperService;
 
@@ -267,5 +272,45 @@ public class AzureHelperServiceTest extends WingsBaseTest {
     List<VirtualMachine> virtualMachines = azureHelperService.listVmsByTagsAndResourceGroup(
         azureConfig, emptyList(), "subscriptionId", "resourceGroup", emptyMap(), OSType.LINUX);
     assertThat(virtualMachines).isEmpty();
+  }
+
+  @Test()
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testListVaults() throws Exception {
+    PowerMockito.mockStatic(Azure.class);
+    when(Azure.configure()).thenReturn(configurable);
+    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
+    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    when(azure.resourceGroups()).thenReturn(resourceGroups);
+    when(resourceGroups.list()).thenReturn(new PagedList<ResourceGroup>() {
+      @Override
+      public Page<ResourceGroup> nextPage(String nextPageLink) throws RestException {
+        return null;
+      }
+    });
+
+    AzureVaultConfig azureVaultConfig =
+        AzureVaultConfig.builder().clientId("clientId").tenantId("tenantId").secretKey("key").build();
+
+    azureHelperService.listVaults(ACCOUNT_ID, azureVaultConfig);
+    ArgumentCaptor<ApplicationTokenCredentials> captor = ArgumentCaptor.forClass(ApplicationTokenCredentials.class);
+    verify(configurable, times(1)).authenticate(captor.capture());
+    ApplicationTokenCredentials tokenCredentials = captor.getValue();
+    assertThat(tokenCredentials.environment().managementEndpoint()).isEqualTo("https://management.core.windows.net/");
+
+    azureVaultConfig.setAzureEnvironmentType(AZURE_US_GOVERNMENT);
+    azureHelperService.listVaults(ACCOUNT_ID, azureVaultConfig);
+    verify(configurable, times(2)).authenticate(captor.capture());
+    tokenCredentials = captor.getValue();
+    assertThat(tokenCredentials.environment().managementEndpoint())
+        .isEqualTo("https://management.core.usgovcloudapi.net/");
+
+    azureVaultConfig.setAzureEnvironmentType(AZURE);
+    azureHelperService.listVaults(ACCOUNT_ID, azureVaultConfig);
+    verify(configurable, times(3)).authenticate(captor.capture());
+    tokenCredentials = captor.getValue();
+    assertThat(tokenCredentials.environment().managementEndpoint()).isEqualTo("https://management.core.windows.net/");
   }
 }

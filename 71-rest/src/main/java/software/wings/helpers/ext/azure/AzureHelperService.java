@@ -736,11 +736,12 @@ public class AzureHelperService {
     }
   }
 
-  public List<Vault> listVaultsInternal(String accountId, AzureVaultConfig azureVaultConfig) throws IOException {
+  private List<Vault> listVaultsInternal(String accountId, AzureVaultConfig azureVaultConfig) throws IOException {
     Azure azure = null;
     List<Vault> vaultList = new ArrayList<>();
-    ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureVaultConfig.getClientId(),
-        azureVaultConfig.getTenantId(), azureVaultConfig.getSecretKey(), AzureEnvironment.AZURE);
+    ApplicationTokenCredentials credentials =
+        new ApplicationTokenCredentials(azureVaultConfig.getClientId(), azureVaultConfig.getTenantId(),
+            azureVaultConfig.getSecretKey(), getAzureEnvironment(azureVaultConfig.getAzureEnvironmentType()));
 
     Authenticated authenticate = Azure.configure().authenticate(credentials);
 
