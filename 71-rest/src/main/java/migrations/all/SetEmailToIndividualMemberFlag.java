@@ -50,10 +50,10 @@ public class SetEmailToIndividualMemberFlag implements Migration {
         NotificationSettings updatedSetting;
 
         if (null == existing) {
-          updatedSetting = new NotificationSettings(true, true, Collections.emptyList(), null, "");
+          updatedSetting = new NotificationSettings(true, true, Collections.emptyList(), null, "", "");
         } else {
-          updatedSetting =
-              new NotificationSettings(true, true, existing.getEmailAddresses(), existing.getSlackConfig(), "");
+          updatedSetting = new NotificationSettings(true, true, existing.getEmailAddresses(), existing.getSlackConfig(),
+              "", existing.getMicrosoftTeamsWebhookUrl());
         }
 
         wingsPersistence.updateField(

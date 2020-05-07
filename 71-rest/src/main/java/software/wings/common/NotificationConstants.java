@@ -21,4 +21,12 @@ public interface NotificationConstants {
    * The constant ABORTED_COLOR.
    */
   String ABORTED_COLOR = "#77787B";
+  /**
+   * The constant WHITE_COLOR.
+   */
+  String WHITE_COLOR = "#FFFFFF";
+  /**
+   * The constant BLUE_COLOR.
+   */
+  String BLUE_COLOR = "0078D7";
 }

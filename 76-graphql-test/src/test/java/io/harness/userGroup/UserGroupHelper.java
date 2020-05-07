@@ -41,7 +41,7 @@ public class UserGroupHelper {
   }
 
   NotificationSettings getNotificationSettings() {
-    return new NotificationSettings(false, true, Arrays.asList("abc@example.com"), null, null);
+    return new NotificationSettings(false, true, Arrays.asList("abc@example.com"), null, null, "");
   }
 
   public UserGroup createUserGroupWithUsers(String accountId, String name, String description, List<String> userIds) {

@@ -62,6 +62,7 @@ public class UserGroupTest extends GraphQLTest {
   private LdapSettings ldapSettings;
   @Inject SSOSettingService ssoSettingService;
   @Inject UserGroupHelper userGroupHelper;
+  private static final String MICROSOFT_TEAMS_WEBHOOK_URL = "https://microsoftTeamsWebhookUrl";
 
   @Before
   public void setup() {
@@ -102,6 +103,7 @@ public class UserGroupTest extends GraphQLTest {
                             slackChannelName
                             slackWebhookURL
                       }
+                      microsoftTeamsWebhookUrl
                   }
                   users(limit:1,offset:0){
                     nodes{
@@ -166,7 +168,8 @@ public class UserGroupTest extends GraphQLTest {
                        slackWebhookURL: "https://abc",
                        slackChannelName: "cool"
                      },
-                 groupEmailAddresses: "abc@gmail.com"
+                 groupEmailAddresses: "abc@gmail.com",
+                 microsoftTeamsWebhookUrl: "https://microsoftTeamsWebhookUrl"
               },
               ssoSetting: {
                 ldapSettings:  {
@@ -232,6 +235,7 @@ public class UserGroupTest extends GraphQLTest {
                             slackChannelName
                             slackWebhookURL
                       }
+                      microsoftTeamsWebhookUrl
                   }
                   users(limit:1,offset:0){
                     nodes{
@@ -304,7 +308,8 @@ public class UserGroupTest extends GraphQLTest {
                        slackWebhookURL: "https://abc",
                        slackChannelName: "cool"
                      },
-                 groupEmailAddresses: "abc@gmail.com"
+                 groupEmailAddresses: "abc@gmail.com",
+                 microsoftTeamsWebhookUrl: "https://microsoftTeamsWebhookUrl"
               },
            clientMutationId: "abc"
          }
@@ -340,6 +345,8 @@ mutation{
       assertThat(updatedUserGroup.getNotificationSettings().isSendMailToNewMembers()).isEqualTo(true);
       assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getOutgoingWebhookUrl())
           .isEqualTo("https://abc");
+      assertThat(updatedUserGroup.getNotificationSettings().getMicrosoftTeamsWebhookUrl())
+          .isEqualTo(MICROSOFT_TEAMS_WEBHOOK_URL);
       assertThat(updatedUserGroup.getNotificationSettings().getSlackConfig().getName()).isEqualTo("cool");
       assertThat(updatedUserGroup.getNotificationSettings().getEmailAddresses().contains("abc@gmail.com")).isTrue();
     }

@@ -18,6 +18,7 @@ public class NotificationSettings {
   @NotNull private List<String> emailAddresses;
   @NotNull private SlackNotificationSetting slackConfig;
   private String pagerDutyIntegrationKey;
+  private String microsoftTeamsWebhookUrl;
 
   @Nonnull
   @JsonIgnore

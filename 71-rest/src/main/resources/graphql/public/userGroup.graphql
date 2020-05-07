@@ -164,6 +164,7 @@ input NotificationSettingsInput {
   groupEmailAddresses: [String]
   slackNotificationSetting: SlackNotificationSettingInput
   pagerDutyIntegrationKey: String
+  microsoftTeamsWebhookUrl: String
 }
 
 input SlackNotificationSettingInput {
@@ -176,6 +177,7 @@ type NotificationSettings {
   sendMailToNewMembers: Boolean
   groupEmailAddresses: [String]
   slackNotificationSetting: SlackNotificationSetting
+  microsoftTeamsWebhookUrl: String
 }
 
 type SlackNotificationSetting {

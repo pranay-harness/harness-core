@@ -193,6 +193,13 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
     return null != notificationSettings ? notificationSettings.getPagerDutyIntegrationKey() : null;
   }
 
+  @Nullable
+  @Override
+  @JsonIgnore
+  public String getMicrosoftTeamsWebhookUrl() {
+    return null != notificationSettings ? notificationSettings.getMicrosoftTeamsWebhookUrl() : null;
+  }
+
   @Override
   @JsonIgnore
   public List<String> getEmailAddresses() {

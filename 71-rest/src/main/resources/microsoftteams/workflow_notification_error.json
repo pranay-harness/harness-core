@@ -1,0 +1,39 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "Workflow [${WORKFLOW_NAME}](${WORKFLOW_URL}) ${PIPELINE} ${VERB}",
+      "activitySubtitle": "*Started ${START_DATE} and ${VERB} at ${END_DATE}*",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    },
+    {
+      "facts": [
+        {
+          "name": "Application",
+          "value": "${APPLICATION}"
+        },
+        {
+          "name": "Services",
+          "value": "${SERVICE}"
+        },
+        {
+          "name": "Environment",
+          "value": "${ENVIRONMENT}"
+        },
+        {
+          "name": "Artifacts",
+          "value": "${ARTIFACTS}"
+        },
+        {
+          "name": "Triggered By",
+          "value": "${USER_NAME}"
+        },
+        {
+          "name": "Error",
+          "value": "${ERRORS}"
+        }]
+    }
+  ]
+}
