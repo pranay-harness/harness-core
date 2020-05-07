@@ -58,6 +58,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
@@ -66,15 +67,19 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats.GitToHarnessErrorCommitStatsKeys;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
+import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.AlertsUtils;
 import software.wings.utils.Utils;
@@ -105,6 +110,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private static final EnumSet<GitFileActivity.Status> TERMINATING_STATUSES =
       EnumSet.of(GitFileActivity.Status.EXPIRED, GitFileActivity.Status.DISCARDED);
+  private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   private WingsPersistence wingsPersistence;
   private YamlGitService yamlGitService;
@@ -114,11 +120,14 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private GitSyncService gitSyncService;
   private AlertsUtils alertsUtils;
   private SettingsService settingsService;
+  private AuthService authService;
+  private YamlGitConfigService yamlGitConfigService;
 
   @Inject
   public GitSyncErrorServiceImpl(WingsPersistence wingsPersistence, YamlGitService yamlGitService,
       YamlHelper yamlHelper, AppService appService, YamlService yamlService, GitSyncService gitSyncService,
-      AlertsUtils alertsUtils, SettingsService settingsService) {
+      AlertsUtils alertsUtils, SettingsService settingsService, AuthService authService,
+      YamlGitConfigService yamlGitConfigService) {
     this.wingsPersistence = wingsPersistence;
     this.yamlGitService = yamlGitService;
     this.yamlHelper = yamlHelper;
@@ -127,6 +136,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     this.gitSyncService = gitSyncService;
     this.alertsUtils = alertsUtils;
     this.settingsService = settingsService;
+    this.authService = authService;
+    this.yamlGitConfigService = yamlGitConfigService;
   }
 
   private Query<GitSyncError> addGitToHarnessErrorFilter(Query<GitSyncError> gitSyncErrorQuery) {
@@ -141,18 +152,67 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   public long getTotalGitErrorsCount(String accountId) {
     List<Alert> alerts = getGitConnectionAlert(accountId);
     long connectivityIssueCount = alerts == null ? 0 : alerts.size();
-    return getGitSyncErrorCount(accountId) + connectivityIssueCount;
+    return getGitSyncErrorCount(accountId, true) + connectivityIssueCount;
   }
 
   @Override
-  public long getGitSyncErrorCount(String accountId) {
-    return wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
+  public long getGitSyncErrorCount(String accountId, boolean followRBAC) {
+    Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId);
+    if (followRBAC) {
+      Boolean userHasAtleastOneGitConfigPerm = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, null, accountId);
+      if (!userHasAtleastOneGitConfigPerm) {
+        return 0;
+      }
+    }
+    return query.count();
+  }
+
+  private Boolean noRepoFilterGiven(String appId) {
+    return isBlank(appId);
+  }
+
+  private Boolean userHasAllAppAccess(String accountId) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      throw new UnexpectedException("No user variable is not set in the thread");
+    }
+    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    return userPermissionInfo.isHasAllAppAccess();
+  }
+
+  private <T> void populateAppFilterForGitSyncErrors(Query<T> query, Set<String> appIds, String accountId) {
+    if (userHasAllAppAccess(accountId)) {
+      return;
+    }
+    query.field(APP_ID_KEY).in(appIds);
+  }
+
+  private <T> Boolean addAppFilterAndReturnTrueIfUserHasAnyAppAccess(Query<T> query, String appId, String accountId) {
+    if (noRepoFilterGiven(appId)) {
+      return addAppsAllowedToUserAndReturnTrueIfUserHasAnyAppAccess(query, accountId);
+    } else {
+      query.filter(APP_ID_KEY, appId);
+    }
+    return true;
+  }
+
+  private <T> Boolean addAppsAllowedToUserAndReturnTrueIfUserHasAnyAppAccess(Query<T> query, String accountId) {
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId);
+    if (isEmpty(yamlGitConfigs)) {
+      // User doesn't has access to any yamlGitConfig
+      return false;
+    } else {
+      Set<String> appIdsAccessibleToUser =
+          yamlGitConfigs.stream().map(YamlGitConfig::getAppId).collect(Collectors.toSet());
+      populateAppFilterForGitSyncErrors(query, appIdsAccessibleToUser, accountId);
+    }
+    return true;
   }
 
   @Override
   public PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName,
-      Integer numberOfErrorsInSummary) {
+      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String appId, Integer numberOfErrorsInSummary) {
     // Creating a page request to get the commits
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
@@ -160,12 +220,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     final Query<GitSyncError> query =
         wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
 
-    if (isNotEmpty(gitConnectorId)) {
-      query.filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId);
-    }
-
-    if (isNotEmpty(branchName)) {
-      query.filter(GitSyncErrorKeys.branchName, branchName);
+    Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
+    if (!userHasAtleastOneGitConfigAccess) {
+      return aPageResponse().withTotal(0).build();
     }
 
     addGitToHarnessErrorFilter(query);
@@ -182,7 +239,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
             grouping(GitToHarnessErrorCommitStatsKeys.commitMessage, first(GitSyncErrorKeys.commitMessage)),
             grouping(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView,
                 grouping("$push", projection(GitSyncErrorKeys.yamlFilePath, GitSyncErrorKeys.yamlFilePath),
-                    projection(GitSyncErrorKeys.failureReason, GitSyncErrorKeys.failureReason))))
+                    projection(GitSyncErrorKeys.failureReason, GitSyncErrorKeys.failureReason),
+                    projection(APP_ID_KEY, APP_ID_KEY))))
         .project(projection("gitCommitId", "_id"), projection("failedCount"),
             projection(GitToHarnessErrorCommitStatsKeys.commitTime), projection(GitSyncErrorKeys.gitConnectorId),
             projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.commitMessage),
@@ -193,11 +251,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .aggregate(GitToHarnessErrorCommitStats.class)
         .forEachRemaining(commitWiseErrorDetails::add);
 
+    List<GitToHarnessErrorCommitStats> gitDetailsAfterRemovingNewAppCommits =
+        removeNewAppCommitsInCaseOfSetupFilter(commitWiseErrorDetails, appId);
     List<GitToHarnessErrorCommitStats> filteredCommitDetails =
-        filterCommitsWithValidConnectorAndPopulateConnectorName(commitWiseErrorDetails, accountId);
-
+        filterCommitsWithValidConnectorAndPopulateConnectorName(gitDetailsAfterRemovingNewAppCommits, accountId);
     removeExtraErrorsFromCommitDetails(filteredCommitDetails, numberOfErrorsInSummary);
-
     return aPageResponse()
         .withTotal(filteredCommitDetails.size())
         .withLimit(String.valueOf(limit))
@@ -206,9 +264,34 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .build();
   }
 
+  private List<GitToHarnessErrorCommitStats> removeNewAppCommitsInCaseOfSetupFilter(
+      List<GitToHarnessErrorCommitStats> gitCommitsDetails, String appId) {
+    if (isEmpty(gitCommitsDetails) || !GLOBAL_APP_ID.equals(appId)) {
+      return new ArrayList<>(gitCommitsDetails);
+    }
+
+    return gitCommitsDetails.stream()
+        .map(commitDetail -> removeNewAppError(commitDetail))
+        .filter(commitDetail -> isNotEmpty(commitDetail.getErrorsForSummaryView()))
+        .collect(toList());
+  }
+
+  private GitToHarnessErrorCommitStats removeNewAppError(GitToHarnessErrorCommitStats commitDetail) {
+    List<GitSyncError> gitSyncErrors = commitDetail.getErrorsForSummaryView();
+    // We will remove the new app Error from here
+    if (isEmpty(gitSyncErrors)) {
+      return commitDetail;
+    }
+    List<GitSyncError> gitSyncErrorsForAccountLevel =
+        gitSyncErrors.stream().filter(error -> !isNewAppError(error)).collect(toList());
+    commitDetail.setErrorsForSummaryView(gitSyncErrorsForAccountLevel);
+    commitDetail.setFailedCount(emptyIfNull(gitSyncErrorsForAccountLevel).size());
+    return commitDetail;
+  }
+
   private void removeExtraErrorsFromCommitDetails(
       List<GitToHarnessErrorCommitStats> commitDetails, Integer numberOfErrorsInSummary) {
-    if (numberOfErrorsInSummary == null) {
+    if (numberOfErrorsInSummary == null || numberOfErrorsInSummary == 0) {
       return;
     }
 
@@ -234,30 +317,29 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String gitConnectorId = commitStats.getGitConnectorId();
       if (connetorIdNameMap.containsKey(gitConnectorId)) {
         commitStats.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
-        filteredCommitDetails.add(commitStats);
+      } else {
+        commitStats.setGitConnectorName(UNKNOWN_GIT_CONNECTOR);
       }
+      filteredCommitDetails.add(commitStats);
     }
     return filteredCommitDetails;
   }
 
-  private PageRequest<GitSyncError> addHarnessToGitErrorFilter(PageRequest<GitSyncError> gitSyncErrorPageRequest) {
-    gitSyncErrorPageRequest.addFilter(GitSyncErrorKeys.gitSyncDirection, EQ, HARNESS_TO_GIT.name());
-    return gitSyncErrorPageRequest;
-  }
-
-  private PageRequest<GitSyncError> addGitToHarnessErrorFilter(PageRequest<GitSyncError> gitSyncErrorPageRequest) {
-    gitSyncErrorPageRequest.addFilter(GitSyncErrorKeys.gitSyncDirection, EQ, GIT_TO_HARNESS.name());
-    return gitSyncErrorPageRequest;
+  private <T> void addAppIdFilterToQuery(Query<T> query, String appId) {
+    if (isBlank(appId)) {
+      return;
+    }
+    query.filter(APP_ID_KEY, appId);
   }
 
   @Override
   public PageResponse<GitSyncError> fetchErrorsInEachCommits(PageRequest<GitSyncError> req, String gitCommitId,
-      String accountId, List<String> includeDataList, String yamlFilePathPattern) {
+      String accountId, String appId, List<String> includeDataList, String yamlFilePathPattern) {
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
 
     Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
-
+    addAppIdFilterToQuery(query, appId);
     addGitToHarnessErrorFilter(query);
     boolean returnPreviousErrors = false;
     if (isNotEmpty(includeDataList)) {
@@ -275,8 +357,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       query.field(GitSyncErrorKeys.yamlFilePath).containsIgnoreCase(yamlFilePathPattern);
     }
     List<GitSyncError> allGitSyncErrors = query.asList(new FindOptions().skip(offset).limit(limit));
-
-    if (isEmpty(allGitSyncErrors)) {
+    List<GitSyncError> filteredErrorsAfterRemovingNewAppsIfNotRequired =
+        removeNewAppErrorsInCaseOfSetupFilter(allGitSyncErrors, appId);
+    if (isEmpty(filteredErrorsAfterRemovingNewAppsIfNotRequired)) {
       // Ideally this case won't happen, but if somehow the number of errors
       // in a commit becomes 0, we will return a empty response
       logger.info("The gitcommitId {} of account {} has zero git sync errors", gitCommitId, accountId);
@@ -287,41 +370,60 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
           .withResponse(Collections.emptyList())
           .build();
     }
-    List<GitSyncError> filteredGitSyncError =
-        allGitSyncErrors.stream().map(error -> getActualErrorForThatCommit(error, gitCommitId)).collect(toList());
-    sortErrorsByFileProcessingOrder(filteredGitSyncError);
+    List<GitSyncError> allErrosGeneratedInThatCommits =
+        filteredErrorsAfterRemovingNewAppsIfNotRequired.stream()
+            .map(error -> getActualErrorForThatCommit(error, gitCommitId))
+            .collect(toList());
+    sortErrorsByFileProcessingOrder(allErrosGeneratedInThatCommits);
 
     return aPageResponse()
-        .withTotal(filteredGitSyncError.size())
+        .withTotal(allErrosGeneratedInThatCommits.size())
         .withLimit(String.valueOf(limit))
         .withOffset(String.valueOf(offset))
-        .withResponse(filteredGitSyncError)
+        .withResponse(allErrosGeneratedInThatCommits)
         .build();
   }
 
   @Override
   public PageResponse<GitSyncError> listAllGitToHarnessErrors(
-      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName) {
-    if (isNotEmpty(gitConnectorId)) {
-      req.addFilter(GitSyncErrorKeys.gitConnectorId, EQ, gitConnectorId);
+      PageRequest<GitSyncError> req, String accountId, String appId, String yamlFilePathPattern) {
+    int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
+    int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
+    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+    Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
+    if (!userHasAtleastOneGitConfigAccess) {
+      return aPageResponse().withTotal(0).build();
     }
-
-    if (isNotEmpty(branchName)) {
-      req.addFilter(GitSyncErrorKeys.branchName, EQ, branchName);
+    addGitToHarnessErrorFilter(query);
+    if (isNotBlank(yamlFilePathPattern)) {
+      query.field(GitSyncErrorKeys.yamlFilePath).containsIgnoreCase(yamlFilePathPattern);
     }
-    addGitToHarnessErrorFilter(req);
-    PageResponse<GitSyncError> allErrorsResponse = fetchErrors(req);
-    List<GitSyncError> errorsReturnedInRequest = allErrorsResponse.getResponse();
+    PageResponse<GitSyncError> allErrorsResponse = aPageResponse()
+                                                       .withLimit(String.valueOf(limit))
+                                                       .withOffset(String.valueOf(offset))
+                                                       .withTotal(query.count())
+                                                       .build();
+    List<GitSyncError> errorsReturnedInRequest = query.asList(new FindOptions().skip(offset).limit(limit));
+    List<GitSyncError> filteredErrorsAfterRemovingNewAppsIfNotRequired =
+        removeNewAppErrorsInCaseOfSetupFilter(errorsReturnedInRequest, appId);
     if (isEmpty(errorsReturnedInRequest)) {
+      allErrorsResponse.setResponse(Collections.emptyList());
       return allErrorsResponse;
     }
-    List<GitSyncError> errorsWithoutPreviousErrorsFields =
-        errorsReturnedInRequest.stream().map(error -> removePreviousErrorField(error)).collect(toList());
+    List<GitSyncError> errorsWithoutPreviousErrorsFields = filteredErrorsAfterRemovingNewAppsIfNotRequired.stream()
+                                                               .map(error -> removePreviousErrorField(error))
+                                                               .collect(toList());
     List<GitSyncError> filteredErrorsWithConnectorName =
         filterErrorsWithValidConnectorAndPopulateConnectorName(errorsWithoutPreviousErrorsFields, accountId);
-
     allErrorsResponse.setResponse(filteredErrorsWithConnectorName);
     return allErrorsResponse;
+  }
+
+  private List<GitSyncError> removeNewAppErrorsInCaseOfSetupFilter(List<GitSyncError> gitSyncErrors, String appId) {
+    if (isEmpty(gitSyncErrors) || !GLOBAL_APP_ID.equals(appId)) {
+      return gitSyncErrors;
+    }
+    return gitSyncErrors.stream().filter(error -> !isNewAppError(error)).collect(Collectors.toList());
   }
 
   private GitSyncError removePreviousErrorField(GitSyncError error) {
@@ -568,25 +670,23 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   @Override
   public PageResponse<GitSyncError> fetchHarnessToGitErrors(
-      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName) {
-    req.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
-    if (isNotEmpty(gitConnectorId)) {
-      req.addFilter(GitSyncErrorKeys.gitConnectorId, EQ, gitConnectorId);
+      PageRequest<GitSyncError> req, String accountId, String appId) {
+    int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
+    int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
+    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+    Boolean userHasAtleastOneGitConfigPerm = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
+    if (!userHasAtleastOneGitConfigPerm) {
+      return aPageResponse().withTotal(0).build();
     }
-
-    if (isNotEmpty(branchName)) {
-      req.addFilter(GitSyncErrorKeys.branchName, EQ, branchName);
-    }
-    addHarnessToGitErrorFilter(req);
-
-    PageResponse<GitSyncError> response = fetchErrors(req);
+    addHarnessToGitErrorFilter(query);
+    List<GitSyncError> allGitSyncErrors = emptyIfNull(query.asList(new FindOptions().skip(offset).limit(limit)));
     List<GitSyncError> filteredErrors =
-        filterErrorsWithValidConnectorAndPopulateConnectorName(response.getResponse(), accountId);
+        filterErrorsWithValidConnectorAndPopulateConnectorName(allGitSyncErrors, accountId);
     return aPageResponse()
-        .withTotal(response.getTotal())
+        .withTotal(filteredErrors.size())
         .withResponse(filteredErrors)
-        .withLimit(response.getLimit())
-        .withOffset(response.getOffset())
+        .withLimit(String.valueOf(limit))
+        .withOffset(String.valueOf(offset))
         .build();
   }
 
@@ -603,8 +703,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String gitConnectorId = error.getGitConnectorId();
       if (connetorIdNameMap.containsKey(gitConnectorId)) {
         error.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
-        filteredErrors.add(error);
+      } else {
+        error.setGitConnectorName(UNKNOWN_GIT_CONNECTOR);
       }
+      filteredErrors.add(error);
     }
     return filteredErrors;
   }
@@ -700,7 +802,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     query.filter(ACCOUNT_ID_KEY, accountId);
     query.field(ID_KEY).in(errorIds);
     wingsPersistence.delete(query);
-    alertsUtils.closeAlertIfApplicable(accountId, false);
+    alertsUtils.closeAlertIfApplicable(accountId);
   }
 
   private GitProcessingError getGitProcessingError(Alert alert) {

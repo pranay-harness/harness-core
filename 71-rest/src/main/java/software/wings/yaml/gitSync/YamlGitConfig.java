@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -64,6 +65,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
 
   @NotEmpty private String entityId;
   @NotNull private EntityType entityType;
+  @Transient private String entityName;
 
   @Override
   public SettingVariableTypes getSettingType() {

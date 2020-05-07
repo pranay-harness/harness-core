@@ -928,8 +928,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       failedYamlFileChangeMap.values().forEach(changeWithErrorMsg
           -> gitSyncErrorService.upsertGitSyncErrors(
               changeWithErrorMsg.getChange(), changeWithErrorMsg.getErrorMsg(), false, gitToHarness));
-      alertService.openAlert(
-          accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
     }
   }
 
@@ -945,6 +944,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (ErrorCode.GIT_CONNECTION_ERROR == gitSyncFailureAlertDetails.getErrorCode()) {
       alertService.openAlert(accountId, appId, AlertType.GitConnectionError,
           getGitConnectionErrorAlert(accountId, gitSyncFailureAlertDetails));
+    } else {
+      // If we got some other error when delegate was trying the git commands then
+      // we don't create alert as this error won't be visible in the UI
+      logger.info("Not Raising Alert: Encountered the error [{}] while performing git operation for account [{}]",
+          gitSyncFailureAlertDetails.getErrorMessage(), accountId);
     }
   }
 
@@ -953,16 +957,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     alertService.closeAlert(accountId, appId, alertType, alertData);
   }
 
-  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId, boolean gitToHarness) {
-    return GitSyncErrorAlert.builder()
-        .accountId(accountId)
-        .message("Unable to process changes from Git")
-        .gitToHarness(gitToHarness)
-        .build();
+  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
+    return GitSyncErrorAlert.builder().accountId(accountId).message("Unable to process changes from Git").build();
   }
 
-  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId, String errorMessage, boolean gitToHarness) {
-    return GitSyncErrorAlert.builder().accountId(accountId).message(errorMessage).gitToHarness(gitToHarness).build();
+  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId, String errorMessage) {
+    return GitSyncErrorAlert.builder().accountId(accountId).message(errorMessage).build();
   }
 
   private GitConnectionErrorAlert getGitConnectionErrorAlert(
@@ -985,7 +985,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter("accountId", accountId);
     query.field(GitSyncErrorKeys.yamlFilePath).in(yamlFilePathList);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, gitToHarness);
+    closeAlertIfApplicable(accountId);
   }
 
   @Override
@@ -1005,7 +1005,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter("accountId", accountId);
     query.filter("_id", errorId);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
@@ -1015,7 +1015,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter("accountId", accountId);
     query.filter(GitSyncErrorKeys.yamlFilePath, yamlFilePath);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
@@ -1025,7 +1025,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter("accountId", accountId);
     query.field(GitSyncErrorKeys.yamlFilePath).in(yamlFilePaths);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
@@ -1034,7 +1034,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
@@ -1045,14 +1045,13 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter(GitSyncErrorKeys.fullSyncPath, true);
     query.filter(APP_ID_KEY, appId);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 
-  private void closeAlertIfApplicable(String accountId, boolean gitToHarness) {
-    if (gitSyncErrorService.getGitSyncErrorCount(accountId) == 0) {
-      alertService.closeAlert(
-          accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
+  private void closeAlertIfApplicable(String accountId) {
+    if (gitSyncErrorService.getGitSyncErrorCount(accountId, false) == 0) {
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
     }
   }
 
@@ -1212,7 +1211,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.filter("accountId", accountId);
     query.field("_id").in(errorIds);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId, false);
+    closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
   }
 }

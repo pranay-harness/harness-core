@@ -64,6 +64,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   String newCommitId = "newCommitId";
   String yamlContent = "yamlContent";
   String newYamlContent = "newYamlContent";
+  String appId = "appId";
 
   YamlGitConfig yamlGitConfig = YamlGitConfig.builder().branchName(branchName).gitConnectorId(gitConnectorId).build();
   YamlGitConfig newYamlGitConfig =
@@ -102,11 +103,12 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                           .failureReason("failureReason")
                                           .additionalErrorDetails(gitSyncErrorDetails)
                                           .build();
+    gitSyncError.setAppId(appId);
     String id = wingsPersistence.save(gitSyncError);
 
     PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitToHarnessErrorCommitStats> errorsList =
-        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, null, null, 2).getResponse();
+        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, appId, 2).getResponse();
     assertThat(errorsList.size()).isEqualTo(1);
     GitToHarnessErrorCommitStats error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(1);
@@ -130,7 +132,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
 
     PageRequest<GitSyncError> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitSyncError> errorsList =
-        gitSyncErrorService.fetchErrorsInEachCommits(req, commitId, accountId, null, null).getResponse();
+        gitSyncErrorService.fetchErrorsInEachCommits(req, commitId, accountId, null, null, null).getResponse();
     assertThat(errorsList.size()).isEqualTo(1);
     GitSyncError error = errorsList.get(0);
     assertThat(error.equals(gitSyncError)).isTrue();

@@ -243,6 +243,7 @@ public class GitClientImpl implements GitClient {
 
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
     return diffResult;

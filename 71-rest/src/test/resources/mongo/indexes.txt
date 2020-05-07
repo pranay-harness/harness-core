@@ -259,9 +259,10 @@ gitSyncError {"name": "account_filepath_direction_idx", "unique": true} {"accoun
 gitSyncError {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncError {"name": "createdAt_1", "background": true} {"createdAt": 1}
 gitSyncError {"name": "gitCommitId_idx", "background": true} {"accountId": 1, "gitSyncDirection": 1, "additionalErrorDetails.gitCommitId": 1}
-gitSyncError {"name": "git_repo_selection_idx", "background": true} {"accountId": 1, "gitConnectorId": 1, "branchName": 1, "gitSyncDirection": 1}
+gitSyncError {"name": "gitCommitId_idx_for_app_filter", "background": true} {"accountId": 1, "appId": 1, "gitSyncDirection": 1, "additionalErrorDetails.gitCommitId": 1}
 gitSyncError {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncError {"name": "previousErrors_idx", "background": true} {"accountId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
+gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {"accountId": 1, "appId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}

@@ -12,14 +12,13 @@ import java.util.List;
 
 public interface GitSyncErrorService {
   PageResponse<GitToHarnessErrorCommitStats> listGitToHarnessErrorsCommits(
-      PageRequest<GitToHarnessErrorCommitStats> req, String accountId, String gitConnectorId, String branchName,
-      Integer numberOfErrorsInSummary);
+      PageRequest<GitToHarnessErrorCommitStats> req, String appId, String branchName, Integer numberOfErrorsInSummary);
 
   PageResponse<GitSyncError> listAllGitToHarnessErrors(
-      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName);
+      PageRequest<GitSyncError> req, String accountId, String appId, String yamlFilePathPattern);
 
   PageResponse<GitSyncError> fetchErrorsInEachCommits(PageRequest<GitSyncError> req, String gitCommitId,
-      String accountId, List<String> includeDataList, String yamlFilePath);
+      String accountId, String appId, List<String> includeDataList, String yamlFilePath);
 
   <T extends Change> void upsertGitSyncErrors(
       T failedChange, String errorMessage, boolean fullSyncPath, boolean gitToHarness);
@@ -27,14 +26,13 @@ public interface GitSyncErrorService {
   List<GitSyncError> getActiveGitToHarnessSyncErrors(
       String accountId, String gitConnectorId, String branchName, long fromTimestamp);
 
-  PageResponse<GitSyncError> fetchHarnessToGitErrors(
-      PageRequest<GitSyncError> req, String accountId, String gitConnectorId, String branchName);
+  PageResponse<GitSyncError> fetchHarnessToGitErrors(PageRequest<GitSyncError> req, String accountId, String appId);
 
   PageResponse<GitSyncError> fetchErrors(PageRequest<GitSyncError> req);
 
   void deleteGitSyncErrorAndLogFileActivity(List<String> errorIds, GitFileActivity.Status status, String accountId);
 
-  long getGitSyncErrorCount(String accountId);
+  long getGitSyncErrorCount(String accountId, boolean followRBAC);
 
   PageResponse<GitProcessingError> fetchGitConnectivityIssues(PageRequest<GitProcessingError> req, String accountId);
 

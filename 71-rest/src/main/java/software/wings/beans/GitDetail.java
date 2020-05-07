@@ -1,11 +1,10 @@
 package software.wings.beans;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Value;
+import lombok.Data;
+import org.mongodb.morphia.annotations.Transient;
 
-@Value
-@Getter
+@Data
 @Builder
 public class GitDetail {
   private String entityName;
@@ -14,4 +13,6 @@ public class GitDetail {
   private String branchName;
   private String yamlGitConfigId;
   private String gitConnectorId;
+  private String appId;
+  @Transient String connectorName;
 }

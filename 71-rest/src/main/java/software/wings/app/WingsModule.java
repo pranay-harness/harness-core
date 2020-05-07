@@ -423,6 +423,7 @@ import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
 import software.wings.service.impl.yaml.service.YamlCloneServiceImpl;
 import software.wings.service.impl.yaml.sync.GitSyncErrorServiceImpl;
+import software.wings.service.impl.yaml.sync.YamlGitConfigServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.ActivityService;
@@ -607,6 +608,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
+import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.signup.SignupServiceImpl;
@@ -857,6 +859,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
+    bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
 
     requestStaticInjection(EncryptedData.class);

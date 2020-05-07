@@ -30,12 +30,15 @@ import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitEr
       options = @IndexOptions(unique = true, background = true, name = "account_filepath_direction_idx"))
   ,
       @Index(fields = {
-        @Field("accountId"), @Field("gitConnectorId"), @Field("branchName"), @Field("gitSyncDirection")
-      }, options = @IndexOptions(background = true, name = "git_repo_selection_idx")), @Index(fields = {
         @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
       }, options = @IndexOptions(background = true, name = "gitCommitId_idx")), @Index(fields = {
+        @Field("accountId"), @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
+      }, options = @IndexOptions(background = true, name = "gitCommitId_idx_for_app_filter")), @Index(fields = {
         @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, options = @IndexOptions(background = true, name = "previousErrors_idx"))
+      }, options = @IndexOptions(background = true, name = "previousErrors_idx")), @Index(fields = {
+        @Field("accountId")
+        , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
+      }, options = @IndexOptions(background = true, name = "previousErrors_idx_for_app_filter"))
 })
 @Data
 @NoArgsConstructor
