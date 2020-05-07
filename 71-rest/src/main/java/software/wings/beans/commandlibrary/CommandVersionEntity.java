@@ -1,12 +1,9 @@
 package software.wings.beans.commandlibrary;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.AccessLevel;
@@ -20,6 +17,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -28,8 +26,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "CommandVersionsKeys")
 @Entity(value = "clCommandVersions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CommandVersionEntity
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class CommandVersionEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) String uuid;
   String commandName;
   String commandStoreName;
@@ -37,10 +34,12 @@ public class CommandVersionEntity
   String version;
   String description;
   String yamlContent;
+  String repoUrl;
+  Set<String> tags;
   BaseTemplate templateObject;
   List<Variable> variables;
-  EmbeddedUser createdBy;
   long createdAt;
-  EmbeddedUser lastUpdatedBy;
+  String lastUpdatedByAccountId;
   long lastUpdatedAt;
+  String createdByAccountId;
 }

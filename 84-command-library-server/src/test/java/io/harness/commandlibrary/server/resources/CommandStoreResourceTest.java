@@ -1,6 +1,7 @@
 package io.harness.commandlibrary.server.resources;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -36,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
   @Inject WingsPersistence wingsPersistence;
@@ -61,8 +63,8 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
   @Owner(developers = OwnerRule.ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getCommandCategories() {
-    final RestResponse<List<String>> commandCategories =
-        commandStoreResource.getCommandCategories("accountid", "harness");
+    final RestResponse<Set<String>> commandCategories =
+        commandStoreResource.getCommandTags("accountid", "harness", true);
     assertThat(commandCategories.getResource()).contains("Azure");
   }
 
@@ -100,7 +102,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
                                              .type("HTTP")
                                              .name("Health Check 123")
                                              .description("This is http template for health check")
-                                             .category("Azure")
+                                             .tags(singleton("Azure"))
                                              .imageUrl("https://app.harness.io/img/harness-logo.png")
                                              .latestVersion("2.5")
                                              .build();
@@ -186,7 +188,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
                                              .type("HTTP")
                                              .name("Health Check")
                                              .description("This is http template for health check")
-                                             .category("Azure")
+                                             .tags(singleton("Azure"))
                                              .imageUrl("https://app.harness.io/img/harness-logo.png")
                                              .latestVersion("1.5")
                                              .build();
@@ -197,7 +199,7 @@ public class CommandStoreResourceTest extends CommandLibraryServerBaseTest {
             .type("SSH")
             .name("Stop")
             .description("This is a command to stop service by invoking scripts over SSH to the individual instances")
-            .category("Azure")
+            .tags(singleton("Azure"))
             .imageUrl("https://app.harness.io/img/harness-logo.png")
             .latestVersion("2.1")
             .build();

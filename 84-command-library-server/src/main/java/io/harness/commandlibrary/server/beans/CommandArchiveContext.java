@@ -10,4 +10,5 @@ public class CommandArchiveContext {
   String commandStoreName;
   CommandManifest commandManifest;
   ArchiveFile archiveFile;
+  String accountId;
 }

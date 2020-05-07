@@ -17,8 +17,8 @@ import java.util.Map;
 public interface CommandLibraryServiceHttpClient {
   @GET("command-stores") Call<Object> getCommandStores(@QueryMap Map<String, Object> pageRequestParams);
 
-  @GET("command-stores/{commandStoreName}/commands/categories")
-  Call<Object> getCommandCategories(
+  @GET("command-stores/{commandStoreName}/commands/tags")
+  Call<Object> getCommandTags(
       @Path("commandStoreName") String commandStoreName, @QueryMap Map<String, Object> pageRequestParams);
 
   @GET("command-stores/{commandStoreName}/commands")

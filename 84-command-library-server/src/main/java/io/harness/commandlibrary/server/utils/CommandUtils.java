@@ -19,12 +19,12 @@ public class CommandUtils {
     if (commandEntity != null) {
       commandDTOBuilder.name(commandEntity.getName())
           .commandStoreName(commandEntity.getCommandStoreName())
-          .displayName(commandEntity.getDisplayName())
           .type(commandEntity.getType())
           .name(commandEntity.getName())
           .description(commandEntity.getDescription())
-          .category(commandEntity.getCategory())
+          .tags(commandEntity.getTags())
           .imageUrl(commandEntity.getImageUrl())
+          .repoUrl(commandEntity.getRepoUrl())
           .latestVersion(latestCommandVersionEntity != null
                   ? populateCommandVersionDTO(EnrichedCommandVersionDTO.builder(), latestCommandVersionEntity).build()
                   : null)

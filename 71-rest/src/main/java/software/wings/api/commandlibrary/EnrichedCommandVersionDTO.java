@@ -11,6 +11,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -24,8 +25,8 @@ public class EnrichedCommandVersionDTO extends CommandVersionDTO {
 
   @Builder
   public EnrichedCommandVersionDTO(String commandName, String commandStoreName, String version, String description,
-      BaseTemplate templateObject, List<Variable> variables, String yamlContent) {
-    super(commandName, commandStoreName, version, description);
+      Set<String> tags, String repoUrl, BaseTemplate templateObject, List<Variable> variables, String yamlContent) {
+    super(commandName, commandStoreName, version, description, tags, repoUrl);
     this.templateObject = templateObject;
     this.variables = variables;
     this.yamlContent = yamlContent;
