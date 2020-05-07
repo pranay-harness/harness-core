@@ -26,7 +26,9 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
@@ -46,8 +48,13 @@ import java.util.Set;
  * @author Rishi
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
-                                                                                  , @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                           , @Field("name") })
+  , @Index(options = @IndexOptions(name = "accountCreatedAtIndex"), fields = {
+    @Field(ServiceKeys.accountId), @Field(value = ServiceKeys.createdAt, type = IndexType.DESC)
+  })
+})
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
