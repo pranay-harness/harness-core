@@ -44,7 +44,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   private static final String ceAWSRegion = "us-east-1";
   private static final String compression = "GZIP";
   private static final String timeGranularity = "HOURLY";
-  private static final String reportVersioning = "CREATE_NEW_REPORT";
+  private static final String reportVersioning = "OVERWRITE_REPORT";
   private static final String curReportKey = "CUR Report";
   private static final String curReportConfigKey = "CUR Report Config";
   private static final String validationFailureKey = "Validation Failed";
@@ -77,7 +77,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     }
     if (!report.getReportVersioning().equals(reportVersioning)) {
       throw new InvalidArgumentsException(
-          ImmutablePair.of(curReportConfigKey, "Report versioning should be CREATE_NEW_REPORT"));
+          ImmutablePair.of(curReportConfigKey, "Report versioning should be OVERWRITE_REPORT"));
     }
     if (!report.isRefreshClosedReports()) {
       throw new InvalidArgumentsException(

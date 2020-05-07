@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 @Singleton
 public class AwsS3SyncConfig {
+  private String awsS3BucketName;
   private String awsAccessKey;
   private String awsSecretKey;
   private String region;

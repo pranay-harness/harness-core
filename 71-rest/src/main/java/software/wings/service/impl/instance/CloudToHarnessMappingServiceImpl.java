@@ -120,8 +120,8 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
-  public String getAccountNameFromId(String accountId) {
-    String accountName = "DefaultAccountName";
+  public Account getAccountInfoFromId(String accountId) {
+    Account defaultAccount = Account.Builder.anAccount().withAccountName(accountId).build();
     try (HIterator<Account> query = new HIterator<>(persistence.createQuery(Account.class, excludeAuthority)
                                                         .filter(AccountKeys.cloudCostEnabled, Boolean.TRUE)
                                                         .field(AccountKeys.uuid)
@@ -129,11 +129,11 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                                         .fetch())) {
       for (Account account : query) {
         if (account.getUuid().equals(accountId)) {
-          return account.getUuid();
+          return account;
         }
       }
     }
-    return accountName;
+    return defaultAccount;
   }
 
   @Override

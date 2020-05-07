@@ -43,6 +43,10 @@ if [[ "" != "$TIMESCALEDB_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE timescaledb.timescaledbPassword "$TIMESCALEDB_PASSWORD"
 fi
 
+if [[ "" != "$S3_SYNC_CONFIG_BUCKET_NAME" ]]; then
+  yq write -i $CONFIG_FILE awsS3SyncConfig.awsS3BucketName "$S3_SYNC_CONFIG_BUCKET_NAME"
+fi
+
 if [[ "" != "$S3_SYNC_CONFIG_ACCESSKEY" ]]; then
   yq write -i $CONFIG_FILE awsS3SyncConfig.awsAccessKey "$S3_SYNC_CONFIG_ACCESSKEY"
 fi
@@ -53,4 +57,16 @@ fi
 
 if [[ "" != "$S3_SYNC_CONFIG_REGION" ]]; then
   yq write -i $CONFIG_FILE awsS3SyncConfig.region "$S3_SYNC_CONFIG_REGION"
+fi
+
+if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT" ]]; then
+  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcpServiceAccount "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT"
+fi
+
+if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID" ]]; then
+  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcpProjectId "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID"
+fi
+
+if [[ "" != "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH" ]]; then
+  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
 fi

@@ -52,7 +52,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
             ((CEAwsConfig) settingAttribute.getValue()).getAwsCrossAccountAttributes();
         CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
         s3SyncRecordBuilder.billingAccountId(ceAwsConfig.getAwsMasterAccountId());
-        s3SyncRecordBuilder.billingBucketPath(ceAwsConfig.getS3BucketDetails().getS3BucketName());
+        s3SyncRecordBuilder.billingBucketPath("s3://" + ceAwsConfig.getS3BucketDetails().getS3BucketName());
         s3SyncRecordBuilder.billingBucketRegion(ceAwsConfig.getS3BucketDetails().getRegion());
         s3SyncRecordBuilder.externalId(awsCrossAccountAttributes.getExternalId());
         s3SyncRecordBuilder.roleArn(awsCrossAccountAttributes.getCrossAccountRoleArn());

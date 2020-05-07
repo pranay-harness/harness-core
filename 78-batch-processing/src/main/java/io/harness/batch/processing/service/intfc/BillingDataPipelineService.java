@@ -8,5 +8,5 @@ public interface BillingDataPipelineService {
       throws IOException;
   HashMap<String, String> createScheduledQueries(String destinationDataSetId, String accountId, String accountName)
       throws IOException;
-  String createDataSet(String harnessAccountId, String accountName);
+  String createDataSet(String harnessAccountId, String accountName, String masterAccountId, String accountType);
 }

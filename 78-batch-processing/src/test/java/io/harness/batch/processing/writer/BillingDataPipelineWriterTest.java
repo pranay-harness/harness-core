@@ -1,5 +1,6 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.batch.processing.ccm.CCMJobConstants.ACCOUNT_ID;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.preAggQueryKey;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -23,8 +24,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 
@@ -33,6 +39,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BillingDataPipelineWriterTest extends CategoryTest {
@@ -40,11 +47,13 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
   @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock BillingDataPipelineServiceImpl billingDataPipelineService;
   @Mock CloudToHarnessMappingService cloudToHarnessMappingService;
-  @Mock JobParameters parameters;
+  @Mock private StepExecution stepExecution;
 
   private static final String settingId = "settingId";
+  private static final String masterAccountId = "masterAccountId";
   private static final String accountId = "accountId";
   private static final String accountName = "accountName";
+  private static final String accountType = "PAID";
   private static final String dataSetId = "datasetId";
   private static final String transferJobName = "transferJobName";
   private static final Instant instant = Instant.now();
@@ -58,16 +67,24 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setUuid(settingId);
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(accountId);
-    when(parameters.getLong(CCMJobConstants.JOB_START_DATE)).thenReturn(startTime);
-    when(parameters.getLong(CCMJobConstants.JOB_END_DATE)).thenReturn(endTime);
+    settingAttribute.setValue(CEAwsConfig.builder().awsMasterAccountId(masterAccountId).build());
+    Map<String, JobParameter> parameters = new HashMap<>();
+    parameters.put(CCMJobConstants.JOB_START_DATE, new JobParameter(String.valueOf(startTime), true));
+    parameters.put(CCMJobConstants.JOB_END_DATE, new JobParameter(String.valueOf(endTime), true));
+    parameters.put(ACCOUNT_ID, new JobParameter(ACCOUNT_ID, true));
+    JobParameters jobParameters = new JobParameters(parameters);
 
-    when(cloudToHarnessMappingService.getAccountNameFromId(accountId)).thenReturn(accountName);
+    when(stepExecution.getJobExecution()).thenReturn(new JobExecution(startTime, jobParameters));
+    billingDataPipelineWriter.beforeStep(stepExecution);
+
+    when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
+        .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
     when(cloudToHarnessMappingService.getSettingAttributes(accountId,
              SettingAttribute.SettingCategory.CE_CONNECTOR.toString(),
              SettingValue.SettingVariableTypes.CE_AWS.toString(), startTime, endTime))
         .thenReturn(Collections.singletonList(settingAttribute));
-    when(billingDataPipelineService.createDataSet(accountId, accountName)).thenReturn(dataSetId);
+    when(billingDataPipelineService.createDataSet(accountId, accountName, masterAccountId, accountType))
+        .thenReturn(dataSetId);
     when(billingDataPipelineService.createDataTransferJob(dataSetId, settingId, accountId, accountName))
         .thenReturn(transferJobName);
     HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();

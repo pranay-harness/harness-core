@@ -30,6 +30,7 @@ public class AwsS3SyncServiceImplTest extends CategoryTest {
   private static final String AWS_ACCESS_KEY = "awsAccessKey";
   private static final String AWS_SECRET_KEY = "awsSecretKey";
   private static final String AWS_REGION = "awsRegion";
+  private static final String AWS_S3_BASE_PATH = "baseS3BucketPath";
   private final String TEST_ACCOUNT_ID = "S3_SYNC_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_SETTING_ID = "S3_SYNC_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String BILLING_ACCOUNT_ID = "S3_SYNC_BILLING_ACCOUNT_ID_" + this.getClass().getSimpleName();
@@ -40,8 +41,12 @@ public class AwsS3SyncServiceImplTest extends CategoryTest {
 
   @Before
   public void setup() {
-    AwsS3SyncConfig s3SyncConfig =
-        AwsS3SyncConfig.builder().awsAccessKey(AWS_ACCESS_KEY).awsSecretKey(AWS_SECRET_KEY).region(AWS_REGION).build();
+    AwsS3SyncConfig s3SyncConfig = AwsS3SyncConfig.builder()
+                                       .awsS3BucketName(AWS_S3_BASE_PATH)
+                                       .awsAccessKey(AWS_ACCESS_KEY)
+                                       .awsSecretKey(AWS_SECRET_KEY)
+                                       .region(AWS_REGION)
+                                       .build();
 
     when(configuration.getAwsS3SyncConfig()).thenReturn(s3SyncConfig);
 
