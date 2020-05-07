@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -34,8 +33,6 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration.NewRelicCVConfigurationYaml;
-
-import java.util.Arrays;
 
 public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock YamlHelper yamlHelper;
@@ -79,8 +76,12 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
 
-    when(newRelicService.getApplications(connectorId, StateType.NEW_RELIC))
-        .thenReturn(Arrays.asList(NewRelicApplication.builder().id(1234).name(appName).build()));
+    long newRelicAppId = 1234;
+    when(newRelicService.resolveApplicationId(connectorId, String.valueOf(newRelicAppId)))
+        .thenReturn(NewRelicApplication.builder().id(newRelicAppId).name(appName).build());
+
+    when(newRelicService.resolveApplicationName(connectorId, appName))
+        .thenReturn(NewRelicApplication.builder().id(newRelicAppId).name(appName).build());
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
@@ -128,6 +129,20 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testToYaml_badApplicationId() {
+    final String appId = "appId";
+    NewRelicCVServiceConfiguration cvServiceConfiguration =
+        NewRelicCVServiceConfiguration.builder().applicationId("12345").build();
+    setBasicInfo(cvServiceConfiguration);
+
+    assertThatThrownBy(() -> yamlHandler.toYaml(cvServiceConfiguration, appId))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Invalid NewRelic ApplicationID when converting to YAML: 12345");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
@@ -146,7 +161,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getUuid()).isNotNull();
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertBadAppName() throws Exception {
@@ -160,7 +175,9 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     NewRelicCVConfigurationYaml yaml = buildYaml();
     yaml.setNewRelicApplicationName("dummyBadName");
     changeContext.setYaml(yaml);
-    NewRelicCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Invalid NewRelic Application name when saving YAML: dummyBadName");
   }
 
   @Test

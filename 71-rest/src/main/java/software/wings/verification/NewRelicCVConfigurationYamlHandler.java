@@ -1,11 +1,10 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -25,17 +24,12 @@ public class NewRelicCVConfigurationYamlHandler
   public NewRelicCVConfigurationYaml toYaml(NewRelicCVServiceConfiguration bean, String appId) {
     NewRelicCVConfigurationYaml yaml = NewRelicCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
-    List<NewRelicApplication> newRelicApplications =
-        newRelicService.getApplications(bean.getConnectorId(), StateType.NEW_RELIC);
-    for (NewRelicApplication newRelicApplication : newRelicApplications) {
-      if (String.valueOf(newRelicApplication.getId()).equals(bean.getApplicationId())) {
-        yaml.setNewRelicApplicationName(newRelicApplication.getName());
-        break;
-      }
-    }
-    if (isEmpty(yaml.getNewRelicApplicationName())) {
-      throw new WingsException("Invalid NewRelic ApplicationID when converting to YAML: " + bean.getApplicationId());
-    }
+    NewRelicApplication newRelicApplication =
+        newRelicService.resolveApplicationId(bean.getConnectorId(), bean.getApplicationId());
+    Preconditions.checkNotNull(
+        newRelicApplication, "Invalid NewRelic ApplicationID when converting to YAML: " + bean.getApplicationId());
+
+    yaml.setNewRelicApplicationName(newRelicApplication.getName());
     yaml.setMetrics(bean.getMetrics());
     yaml.setType(StateType.NEW_RELIC.name());
     return yaml;
@@ -78,18 +72,13 @@ public class NewRelicCVConfigurationYamlHandler
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setMetrics(yaml.getMetrics() == null ? new ArrayList<>() : yaml.getMetrics());
     SettingAttribute connector = getConnector(yaml, accountId);
-    List<NewRelicApplication> newRelicApplications =
-        newRelicService.getApplications(connector.getUuid(), StateType.NEW_RELIC);
-    for (NewRelicApplication newRelicApplication : newRelicApplications) {
-      if (newRelicApplication.getName().equals(yaml.getNewRelicApplicationName())) {
-        bean.setApplicationId(String.valueOf(newRelicApplication.getId()));
-        break;
-      }
-    }
-    if (isEmpty(bean.getApplicationId())) {
-      throw new WingsException(
-          "Invalid NewRelic Application name when saving YAML: " + yaml.getNewRelicApplicationName());
-    }
+
+    NewRelicApplication newRelicApplication =
+        newRelicService.resolveApplicationName(connector.getUuid(), yaml.getNewRelicApplicationName());
+    Preconditions.checkNotNull(newRelicApplication,
+        "Invalid NewRelic Application name when saving YAML: " + yaml.getNewRelicApplicationName());
+
+    bean.setApplicationId(String.valueOf(newRelicApplication.getId()));
     bean.setStateType(StateType.NEW_RELIC);
   }
 }
