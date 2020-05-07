@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -106,9 +107,8 @@ public class BillingDataHelper {
 
   protected List<QLBillingDataFilter> getTrendFilter(
       List<QLBillingDataFilter> filters, Instant startInstant, Instant endInstant) {
-    long diffMillis = endInstant.truncatedTo(ChronoUnit.DAYS).toEpochMilli()
-        - startInstant.truncatedTo(ChronoUnit.DAYS).toEpochMilli();
-    long trendEndTime = startInstant.toEpochMilli() - ONE_DAY_MILLIS;
+    long diffMillis = Duration.between(startInstant, endInstant).toMillis();
+    long trendEndTime = startInstant.toEpochMilli() - 1000;
     long trendStartTime = trendEndTime - diffMillis;
     return updateTimeFilter(filters, trendStartTime, trendEndTime);
   }

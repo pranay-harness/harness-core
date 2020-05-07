@@ -87,7 +87,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getTotalCost().getStatsValue()).isEqualTo("$10.66");
     assertThat(data.getTotalCost().getStatsDescription()).isEqualTo("of Oct 09 - Oct 19");
     assertThat(data.getCostTrend().getStatsValue()).isEqualTo("113.2");
-    assertThat(data.getCostTrend().getStatsDescription()).isEqualTo("$5.66 over Sep 11 - Oct 08");
+    assertThat(data.getCostTrend().getStatsDescription()).isEqualTo("$5.66 over Sep 11 - Oct 09");
   }
 
   @Test
