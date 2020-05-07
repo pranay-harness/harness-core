@@ -27,7 +27,6 @@ import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -43,8 +42,6 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  MongoPersistenceIterator<TestRegularIterableEntity> iterator;
-
   static class TestHandler implements Handler<TestRegularIterableEntity> {
     @Override
     public void handle(TestRegularIterableEntity entity) {
@@ -53,48 +50,55 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
     }
   }
 
-  @Before
-  public void setup() {
-    iterator = MongoPersistenceIterator.<TestRegularIterableEntity>builder()
-                   .clazz(TestRegularIterableEntity.class)
-                   .fieldName(RegularIterableEntityKeys.nextIteration)
-                   .targetInterval(ofSeconds(10))
-                   .acceptableNoAlertDelay(ofSeconds(1))
-                   .maximumDelayForCheck(ofSeconds(5))
-                   .acceptableExecutionTime(ofMillis(10))
-                   .executorService(executorService)
-                   .semaphore(new Semaphore(10))
-                   .handler(new TestHandler())
-                   .schedulingType(REGULAR)
-                   .redistribute(true)
-                   .build();
+  public MongoPersistenceIterator<TestRegularIterableEntity> iterator(PersistenceIterator.ProcessMode mode) {
+    MongoPersistenceIterator<TestRegularIterableEntity> iterator =
+        MongoPersistenceIterator.<TestRegularIterableEntity>builder()
+            .mode(mode)
+            .clazz(TestRegularIterableEntity.class)
+            .fieldName(RegularIterableEntityKeys.nextIteration)
+            .targetInterval(ofSeconds(10))
+            .acceptableNoAlertDelay(ofSeconds(1))
+            .maximumDelayForCheck(ofSeconds(5))
+            .acceptableExecutionTime(ofMillis(10))
+            .executorService(executorService)
+            .semaphore(new Semaphore(10))
+            .handler(new TestHandler())
+            .schedulingType(REGULAR)
+            .redistribute(true)
+            .build();
     on(iterator).set("persistence", persistence);
     on(iterator).set("queueController", queueController);
+    return iterator;
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
-    assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
+    PersistenceIterator<TestRegularIterableEntity> pumpIterator = iterator(PUMP);
+    assertThatCode(() -> { pumpIterator.process(); }).doesNotThrowAnyException();
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testProcessEntity() {
-    final TestRegularIterableEntity entity =
+    MongoPersistenceIterator<TestRegularIterableEntity> pumpIterator = iterator(PUMP);
+
+    TestRegularIterableEntity entity =
         TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
 
-    assertThatCode(() -> { iterator.processEntity(entity); }).doesNotThrowAnyException();
+    assertThatCode(() -> { pumpIterator.processEntity(entity); }).doesNotThrowAnyException();
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
+    PersistenceIterator<TestRegularIterableEntity> loopIterator = iterator(LOOP);
+
     assertThatCode(() -> {
-      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+      Future<?> future1 = executorService.submit(() -> loopIterator.process());
       Morpheus.sleep(ofMillis(300));
       future1.cancel(true);
     })
@@ -104,13 +108,24 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
-  public void testWakeup() throws IOException {
+  public void testPumpWakeup() throws IOException {
+    testWakeup(iterator(PUMP));
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(StressTests.class)
+  public void testLoopWakeup() throws IOException {
+    testWakeup(iterator(LOOP));
+  }
+
+  private void testWakeup(PersistenceIterator<TestRegularIterableEntity> iterator) {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      final TestRegularIterableEntity entity =
+      TestRegularIterableEntity entity =
           TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
       persistence.save(entity);
 
-      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+      Future<?> future1 = executorService.submit(() -> iterator.process());
 
       Morpheus.sleep(ofSeconds(2));
 
@@ -119,8 +134,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
       Morpheus.sleep(ofSeconds(1));
       future1.cancel(true);
 
-      final TestRegularIterableEntity updatedEntity =
-          persistence.get(TestRegularIterableEntity.class, entity.getUuid());
+      TestRegularIterableEntity updatedEntity = persistence.get(TestRegularIterableEntity.class, entity.getUuid());
 
       assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
     }
@@ -130,13 +144,14 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   public void testNextReturnsJustAdded() throws IOException {
+    PersistenceIterator<TestRegularIterableEntity> loopIterator = iterator(LOOP);
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 0; i < 10; i++) {
           persistence.save(TestRegularIterableEntity.builder().build());
         }
 
-        final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+        Future<?> future1 = executorService.submit(() -> loopIterator.process());
         //    final Future<?> future2 = executorService.submit(() -> iterator.process());
         //    final Future<?> future3 = executorService.submit(() -> iterator.process());
 

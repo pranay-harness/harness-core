@@ -53,6 +53,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
         artifactCollectionExecutor, harnessMetricRegistry.getThreadPoolMetricRegistry(), "Iterator-ArtifactCollection");
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCollectionHandler.class,
         MongoPersistenceIterator.<ArtifactStream>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextIteration)
             .targetInterval(ofMinutes(1))
@@ -64,7 +65,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
             .redistribute(true));
 
     if (iterator != null) {
-      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(), 0, 10, TimeUnit.SECONDS);
     }
   }
 

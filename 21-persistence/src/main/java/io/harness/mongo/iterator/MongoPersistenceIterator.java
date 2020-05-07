@@ -52,6 +52,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
 
+  private ProcessMode mode;
   private Class<T> clazz;
   private String fieldName;
   private Duration targetInterval;
@@ -76,13 +77,22 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
   @Override
   public synchronized void wakeup() {
-    notifyAll();
+    switch (mode) {
+      case PUMP:
+        executorService.submit(this ::process);
+        break;
+      case LOOP:
+        notifyAll();
+        break;
+      default:
+        unhandled(mode);
+    }
   }
 
   @Override
   // The theory is that ERROR type exception are unrecoverable, that is not exactly true.
   @SuppressWarnings({"PMD", "squid:S1181"})
-  public void process(ProcessMode mode) {
+  public void process() {
     long movingAverage = 0;
     long previous = 0;
     while (true) {
@@ -117,14 +127,13 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         if (entity != null) {
           // Make sure that if the object is updated we reset the scheduler for it
           if (schedulingType != REGULAR) {
-            final Long nextIteration = entity.obtainNextIteration(fieldName);
+            Long nextIteration = entity.obtainNextIteration(fieldName);
 
-            final List<Long> nextIterations =
+            List<Long> nextIterations =
                 ((PersistentIrregularIterable) entity)
                     .recalculateNextIterations(fieldName, schedulingType == IRREGULAR_SKIP_MISSED, throttled);
             if (isNotEmpty(nextIterations)) {
-              final UpdateOperations<T> operations =
-                  persistence.createUpdateOperations(clazz).set(fieldName, nextIterations);
+              UpdateOperations<T> operations = persistence.createUpdateOperations(clazz).set(fieldName, nextIterations);
               persistence.update(entity, operations);
             }
 
@@ -147,11 +156,11 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           break;
         }
 
-        final Query<T> query = createQuery().project(fieldName, true);
+        Query<T> query = createQuery().project(fieldName, true);
 
-        final T next = query.get();
+        T next = query.get();
 
-        final long sleepMillis = calculateSleepDuration(next).toMillis();
+        long sleepMillis = calculateSleepDuration(next).toMillis();
         // Do not sleep with 0, it is actually infinite sleep
         if (sleepMillis > 0) {
           synchronized (this) {
@@ -173,12 +182,12 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
       return maximumDelayForCheck == null ? targetInterval : maximumDelayForCheck;
     }
 
-    final Long nextIteration = next.obtainNextIteration(fieldName);
+    Long nextIteration = next.obtainNextIteration(fieldName);
     if (nextIteration == null) {
       return ZERO;
     }
 
-    final Duration nextEntity = ofMillis(nextIteration - currentTimeMillis());
+    Duration nextEntity = ofMillis(nextIteration - currentTimeMillis());
     if (maximumDelayForCheck == null || nextEntity.compareTo(maximumDelayForCheck) < 0) {
       return nextEntity;
     }
@@ -187,9 +196,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   }
 
   public T next(long base, long throttled) {
-    final long now = currentTimeMillis();
+    long now = currentTimeMillis();
 
-    final Query<T> query = createQuery(now);
+    Query<T> query = createQuery(now);
 
     UpdateOperations<T> updateOperations = persistence.createUpdateOperations(clazz);
     switch (schedulingType) {
@@ -210,7 +219,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   }
 
   public Query<T> createQuery() {
-    final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
+    Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
     if (filterExpander != null) {
       filterExpander.filter(query);
     }
@@ -218,7 +227,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   }
 
   public Query<T> createQuery(long now) {
-    final Query<T> query = createQuery();
+    Query<T> query = createQuery();
     if (filterExpander == null) {
       query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist());
     } else {
@@ -232,7 +241,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   // The theory is that ERROR type exception are unrecoverable, that is not exactly true.
   @SuppressWarnings({"squid:S2445", "PMD", "squid:S1181"})
   @VisibleForTesting
-  public void processEntity(final T entity) {
+  public void processEntity(T entity) {
     try (EntityLogContext ignore = new EntityLogContext(entity, OVERRIDE_ERROR)) {
       try {
         semaphore.acquire();
@@ -248,7 +257,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         synchronized (entity) {
           entity.notify();
         }
-        final Long nextIteration = entity.obtainNextIteration(fieldName);
+        Long nextIteration = entity.obtainNextIteration(fieldName);
         if (schedulingType == REGULAR) {
           ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
         }

@@ -41,6 +41,7 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
 
   public void registerIterators() {
     iterator = MongoPersistenceIterator.<DeploymentTrigger>builder()
+                   .mode(ProcessMode.LOOP)
                    .clazz(DeploymentTrigger.class)
                    .fieldName("nextIterations")
                    .acceptableNoAlertDelay(ofSeconds(5))
@@ -53,7 +54,7 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
                    .throttleInterval(ofSeconds(45))
                    .build();
 
-    executor.submit(() -> iterator.process(ProcessMode.LOOP));
+    executor.submit(() -> iterator.process());
   }
 
   public void wakeup() {

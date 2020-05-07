@@ -28,11 +28,12 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
   @Inject GCPMarketPlaceService gcpMarketPlaceService;
 
   public void registerIterators() {
-    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+    ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
         POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-GCPBilling").build());
 
     Semaphore semaphore = new Semaphore(POOL_SIZE);
     PersistenceIterator iterator = MongoPersistenceIterator.<GCPBillingJobEntity>builder()
+                                       .mode(ProcessMode.PUMP)
                                        .clazz(GCPBillingJobEntity.class)
                                        .fieldName(GCPBillingJobEntityKeys.nextIteration)
                                        .targetInterval(ofMinutes(60))
@@ -46,7 +47,7 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
 
     // this'll check every 30 minutes if there are any new jobs to process.
     // this value must be lower than `targetInterval`
-    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.MINUTES);
+    executor.scheduleAtFixedRate(() -> iterator.process(), 0, 30, TimeUnit.MINUTES);
   }
 
   @Override
