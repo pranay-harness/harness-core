@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
@@ -535,6 +536,26 @@ public class WorkflowServiceTestHelper {
         .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                    .addWorkflowPhase(getHelmDeployPhase(properties))
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public static Workflow constructBlueGreenHelmWorkflow() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .serviceId(SERVICE_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
+        .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
+                                   .withWorkflowPhases(asList(aWorkflowPhase()
+                                                                  .serviceId(SERVICE_ID)
+                                                                  .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                                  .deploymentType(HELM)
+                                                                  .phaseSteps(asList(aPhaseStep(HELM_DEPLOY).build()))
+                                                                  .build()))
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                                    .build())
         .build();

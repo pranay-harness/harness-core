@@ -50,6 +50,7 @@ import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -113,6 +114,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenHelmWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflowWithPhase;
@@ -274,6 +276,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
@@ -333,6 +336,7 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
@@ -1294,6 +1298,65 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(PhaseStepType.HELM_DEPLOY);
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testCreateBGHelmDeploymentWorkflow() {
+    Workflow workflow = constructBlueGreenHelmWorkflow();
+    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .appId(APP_ID)
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(DeploymentType.HELM)
+                        .infrastructure(DirectKubernetesInfrastructure.builder().build())
+                        .cloudProviderType(CloudProviderType.KUBERNETES_CLUSTER)
+                        .build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
+    try {
+      workflowService.createWorkflow(workflow);
+      fail("Should not reach here.");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Workflow type BLUE_GREEN is not supported for deployment type Helm");
+    }
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(null);
+    try {
+      workflowService.createWorkflow(workflow);
+      fail("Should not reach here.");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Workflow type BLUE_GREEN is not supported for deployment type Helm");
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testAddHelmDeploymentWorkflowPhase() {
+    Workflow workflow = constructCanaryWorkflow();
+    when(featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .appId(APP_ID)
+                        .uuid(INFRA_DEFINITION_ID)
+                        .deploymentType(DeploymentType.HELM)
+                        .infrastructure(DirectKubernetesInfrastructure.builder().build())
+                        .cloudProviderType(CloudProviderType.KUBERNETES_CLUSTER)
+                        .build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
+    workflow = workflowService.createWorkflow(workflow);
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
+
+    try {
+      workflowService.createWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
+      fail("Should not reach here.");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Workflow type CANARY is not supported for deployment type Helm");
+    }
   }
 
   private void assertWorkflowPhase(CanaryOrchestrationWorkflow orchestrationWorkflow) {
