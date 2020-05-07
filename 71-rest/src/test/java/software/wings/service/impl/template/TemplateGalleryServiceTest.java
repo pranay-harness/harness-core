@@ -6,7 +6,6 @@ import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -382,7 +381,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccountsV2() {
     // Yaml V2 of IIS Website

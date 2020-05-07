@@ -2,7 +2,6 @@ package software.wings.integration.common;
 
 import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,7 +77,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterNewAssumptions() {
@@ -106,7 +105,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterSucceededAssumptions() {
@@ -159,7 +158,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testConcurrency() throws InterruptedException {
@@ -182,7 +181,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
@@ -192,7 +191,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {

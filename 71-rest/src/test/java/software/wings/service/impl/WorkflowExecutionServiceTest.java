@@ -8,8 +8,8 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -187,7 +187,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldListExecutions() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().build();
@@ -203,7 +203,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Required execution args for orchestrated workflow.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void requiredExecutionArgsForOrchestratedWorkflow() {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
