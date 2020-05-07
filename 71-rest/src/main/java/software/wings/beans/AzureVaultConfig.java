@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,6 +48,8 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
 
   @Attributes(title = "Subscription") private String subscription;
 
+  private AzureEnvironmentType azureEnvironmentType = AzureEnvironmentType.AZURE;
+
   @Override
   public void maskSecrets() {
     this.secretKey = SECRET_MASK;
@@ -56,14 +59,14 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
   @SchemaIgnore
   @Override
   public String getValidationCriteria() {
-    return String.format("https://%s.vault.azure.net", getVaultName());
+    return obtainEncryptionServiceUrl();
   }
 
   @JsonIgnore
   @SchemaIgnore
   @Override
   public String getEncryptionServiceUrl() {
-    return String.format("https://%s.vault.azure.net", getVaultName());
+    return obtainEncryptionServiceUrl();
   }
 
   @Override
@@ -75,5 +78,20 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
   @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.AZURE_VAULT;
+  }
+
+  private String obtainEncryptionServiceUrl() {
+    if (this.azureEnvironmentType == null) {
+      return String.format("https://%s.vault.azure.net", getVaultName());
+    }
+
+    switch (this.azureEnvironmentType) {
+      case AZURE_US_GOVERNMENT:
+        return String.format("https://%s.vault.usgovcloudapi.net", getVaultName());
+
+      case AZURE:
+      default:
+        return String.format("https://%s.vault.azure.net", getVaultName());
+    }
   }
 }
