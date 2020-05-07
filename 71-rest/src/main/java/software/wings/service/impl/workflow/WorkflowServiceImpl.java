@@ -1433,6 +1433,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
 
     notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
+    validateWorkflowStrategyForHelmDeployment(appId, workflowPhase.getServiceId(), workflowPhase.getInfraDefinitionId(),
+        orchestrationWorkflow.getOrchestrationWorkflowType());
 
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
@@ -3119,7 +3121,40 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("Invalid Infrastructure Definition", infrastructureDefinition, USER);
         infrastructureMapping = infrastructureDefinition.getInfraMapping();
         validateInfraMappingWithService(workflow, orchestrationWorkflow, infrastructureMapping);
+        validateWorkflowStrategyForHelmDeployment(workflow.getAppId(), workflow.getServiceId(),
+            workflow.getInfraDefinitionId(), orchestrationWorkflow.getOrchestrationWorkflowType());
       }
+    }
+  }
+
+  // This is done only for infra definition
+  private void validateWorkflowStrategyForHelmDeployment(
+      String appId, String serviceId, String infraDefinitionId, OrchestrationWorkflowType orchestrationWorkflowType) {
+    // Do we need checks for isServiceTemplatized or isInfraDefinitionTemplatized
+
+    DeploymentType deploymentType = null;
+    Service service = serviceResourceService.get(appId, serviceId, false);
+
+    if (service != null) {
+      deploymentType = service.getDeploymentType();
+    }
+
+    if (deploymentType == null) {
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+      if (infrastructureDefinition != null) {
+        deploymentType = infrastructureDefinition.getDeploymentType();
+      }
+    }
+
+    if (deploymentType == null) {
+      return;
+    }
+
+    if (DeploymentType.HELM == deploymentType
+        && (OrchestrationWorkflowType.BLUE_GREEN == orchestrationWorkflowType
+               || OrchestrationWorkflowType.CANARY == orchestrationWorkflowType)) {
+      throw new InvalidRequestException(
+          String.format("Workflow type %s is not supported for deployment type Helm", orchestrationWorkflowType), USER);
     }
   }
 
