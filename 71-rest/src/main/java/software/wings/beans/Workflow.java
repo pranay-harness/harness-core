@@ -23,9 +23,15 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
@@ -42,6 +48,9 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "workflows", noClassnameStored = true)
+@Indexes(@Index(options = @IndexOptions(name = "accountIdCreatedAt"),
+    fields = { @Field(WorkflowKeys.accountId)
+               , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) }))
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)

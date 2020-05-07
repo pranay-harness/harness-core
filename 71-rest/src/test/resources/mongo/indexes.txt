@@ -707,6 +707,7 @@ workflowExecutions {"name": "service_guard", "background": true} {"appId": 1, "s
 workflowExecutions {"name": "status_1", "background": true} {"status": 1}
 workflowExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflowExecutions {"name": "workflowExecutionMonitor", "background": true} {"status": 1, "nextIteration": 1}
+workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 workflows {"name": "accountId_1", "background": true} {"accountId": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
