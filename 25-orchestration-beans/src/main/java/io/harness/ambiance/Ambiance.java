@@ -37,12 +37,12 @@ public class Ambiance {
   // These is a combination of setup/execution Id for a particular level
   @Builder.Default @NonFinal List<LevelExecution> levelExecutions = new ArrayList<>();
 
-  @NotNull String executionInstanceId;
+  @NotNull String planExecutionId;
 
   public AutoLogContext autoLogContext() {
     ImmutableMap.Builder<String, String> logContext = ImmutableMap.builder();
     logContext.putAll(setupAbstractions);
-    logContext.put(AmbianceKeys.executionInstanceId, executionInstanceId);
+    logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
     levelExecutions.forEach(level -> {
       logContext.put(level.getLevelName() + "ExecutionId", level.getRuntimeId());
       logContext.put(level.getLevelName() + "SetupId", level.getSetupId());

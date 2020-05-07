@@ -25,7 +25,7 @@ public class AmbianceHelper {
   }
 
   public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
-    String executionId = ambiance.getExecutionInstanceId();
+    String executionId = ambiance.getPlanExecutionId();
     return hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionId).get();
   }
 }

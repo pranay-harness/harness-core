@@ -87,17 +87,17 @@ public class AmbianceTest extends OrchestrationBeansTest {
     Ambiance clonedAmbiance = ambiance.cloneForFinish(phaseLevelExecution.getLevel());
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(0);
-    assertThat(clonedAmbiance.getExecutionInstanceId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
     clonedAmbiance = ambiance.cloneForFinish(sectionLevelExecution.getLevel());
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(1);
-    assertThat(clonedAmbiance.getExecutionInstanceId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
     clonedAmbiance = ambiance.cloneForFinish(stepLevelExecution.getLevel());
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(1);
-    assertThat(clonedAmbiance.getExecutionInstanceId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
   @Test
@@ -110,7 +110,7 @@ public class AmbianceTest extends OrchestrationBeansTest {
     Ambiance clonedAmbiance = ambiance.cloneForChild(StepTestLevel.builder().build());
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(2);
-    assertThat(clonedAmbiance.getExecutionInstanceId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
     assertThatThrownBy(() -> ambiance.cloneForChild(PhaseTestLevel.builder().build()))
         .isInstanceOf(InvalidRequestException.class);
@@ -139,7 +139,7 @@ public class AmbianceTest extends OrchestrationBeansTest {
     levelExecutions.add(phaseLevelExecution);
     levelExecutions.add(sectionLevelExecution);
     return Ambiance.builder()
-        .executionInstanceId(EXECUTION_INSTANCE_ID)
+        .planExecutionId(EXECUTION_INSTANCE_ID)
         .setupAbstractions(
             ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .levelExecutions(levelExecutions)

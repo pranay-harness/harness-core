@@ -42,7 +42,7 @@ public class RetryHandlerTest extends OrchestrationTest {
   @Before
   public void setup() {
     ambiance = Ambiance.builder()
-                   .executionInstanceId(PLAN_EXECUTION_ID)
+                   .planExecutionId(PLAN_EXECUTION_ID)
                    .levelExecutions(Collections.singletonList(LevelExecution.builder()
                                                                   .level(new DefaultLevel())
                                                                   .runtimeId(NODE_EXECUTION_ID)
