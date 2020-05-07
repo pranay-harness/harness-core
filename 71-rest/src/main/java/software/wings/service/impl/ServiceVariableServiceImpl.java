@@ -150,6 +150,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   @ValidationGroups(Create.class)
   public ServiceVariable save(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
+    checkValidEncryptedReference(serviceVariable);
     if (!asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(INVALID_ARGUMENT)

@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -58,6 +59,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
@@ -511,5 +513,26 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     assertThat(serviceVariablePageResponse).isNotNull();
     assertThat(serviceVariablePageResponse.getResponse().get(0)).isInstanceOf(ServiceVariable.class);
     assertThat(serviceVariablePageResponse.getResponse().get(0).getValue()).isEqualTo("9090".toCharArray());
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotSaveServiceVariableWithRandomEncryptedValue() {
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .envId(ENV_ID)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .entityId(TEMPLATE_ID)
+                                   .templateId(TEMPLATE_ID)
+                                   .name(SERVICE_VARIABLE_NAME + "3")
+                                   .type(ENCRYPTED_TEXT)
+                                   .value("9090.__@".toCharArray())
+                                   .build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.get(EncryptedData.class, "9090.__@")).thenReturn(null);
+    serviceVariableService.save(variable, false);
   }
 }
