@@ -162,7 +162,7 @@ public class AccountResource {
     RestResponse<Boolean> response =
         accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
     if (response == null) {
-      response = new RestResponse<>(accountService.updateCeK8sEventCollectionEnabled(accountId, true));
+      response = new RestResponse<>(accountService.updateCeAutoCollectK8sEvents(accountId, true));
     }
     return response;
   }
@@ -175,7 +175,7 @@ public class AccountResource {
     RestResponse<Boolean> response =
         accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
     if (response == null) {
-      response = new RestResponse<>(accountService.updateCeK8sEventCollectionEnabled(accountId, false));
+      response = new RestResponse<>(accountService.updateCeAutoCollectK8sEvents(accountId, false));
     }
     return response;
   }
