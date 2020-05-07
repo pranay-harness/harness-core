@@ -39,6 +39,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCleanupHandler.class,
         MongoPersistenceIterator.<ArtifactStream>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextCleanupIteration)
             .targetInterval(ofHours(2))
@@ -56,7 +57,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             .redistribute(true));
 
     if (iterator != null) {
-      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.MINUTES);
+      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(), 0, 5, TimeUnit.MINUTES);
     }
   }
 

@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
+import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.TestIrregularIterableEntity.IrregularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -25,7 +26,6 @@ import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -41,8 +41,6 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<TestIrregularIterableEntity> iterator;
-
   class TestHandler implements Handler<TestIrregularIterableEntity> {
     @Override
     public void handle(TestIrregularIterableEntity entity) {
@@ -51,37 +49,41 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
     }
   }
 
-  @Before
-  public void setup() {
-    iterator = MongoPersistenceIterator.<TestIrregularIterableEntity>builder()
-                   .clazz(TestIrregularIterableEntity.class)
-                   .fieldName(IrregularIterableEntityKeys.nextIterations)
-                   .targetInterval(ofSeconds(10))
-                   .acceptableNoAlertDelay(ofSeconds(1))
-                   .maximumDelayForCheck(ofSeconds(1))
-                   .executorService(executorService)
-                   .semaphore(new Semaphore(10))
-                   .handler(new TestHandler())
-                   .schedulingType(IRREGULAR_SKIP_MISSED)
-                   .redistribute(true)
-                   .build();
+  public PersistenceIterator<TestIrregularIterableEntity> iterator(ProcessMode mode) {
+    PersistenceIterator<TestIrregularIterableEntity> iterator =
+        MongoPersistenceIterator.<TestIrregularIterableEntity>builder()
+            .mode(mode)
+            .clazz(TestIrregularIterableEntity.class)
+            .fieldName(IrregularIterableEntityKeys.nextIterations)
+            .targetInterval(ofSeconds(10))
+            .acceptableNoAlertDelay(ofSeconds(1))
+            .maximumDelayForCheck(ofSeconds(1))
+            .executorService(executorService)
+            .semaphore(new Semaphore(10))
+            .handler(new TestHandler())
+            .schedulingType(IRREGULAR_SKIP_MISSED)
+            .redistribute(true)
+            .build();
     on(iterator).set("persistence", persistence);
     on(iterator).set("queueController", queueController);
+    return iterator;
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
-    assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
+    PersistenceIterator<TestIrregularIterableEntity> pumpIterator = iterator(PUMP);
+    assertThatCode(() -> { pumpIterator.process(); }).doesNotThrowAnyException();
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
+    PersistenceIterator<TestIrregularIterableEntity> iterator = iterator(LOOP);
     assertThatCode(() -> {
-      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+      Future<?> future1 = executorService.submit(() -> iterator.process());
       Morpheus.sleep(ofMillis(300));
       future1.cancel(true);
     })
@@ -92,19 +94,21 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   public void testNextReturnsJustAdded() throws IOException {
+    PersistenceIterator<TestIrregularIterableEntity> pumpIterator = iterator(PUMP);
+    PersistenceIterator<TestIrregularIterableEntity> loopIterator = iterator(LOOP);
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 0; i < 10; i++) {
-          final TestIrregularIterableEntity iterableEntity =
+          TestIrregularIterableEntity iterableEntity =
               TestIrregularIterableEntity.builder().uuid(generateUuid()).build();
           persistence.save(iterableEntity);
         }
 
-        iterator.process(PUMP);
+        pumpIterator.process();
 
         Morpheus.sleep(ofSeconds(30));
 
-        final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+        Future<?> future1 = executorService.submit(() -> loopIterator.process());
         //    final Future<?> future2 = executorService.submit(() -> iterator.process());
         //    final Future<?> future3 = executorService.submit(() -> iterator.process());
 

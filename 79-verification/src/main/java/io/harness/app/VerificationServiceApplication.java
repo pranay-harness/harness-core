@@ -162,7 +162,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   @Override
-  public void run(final VerificationServiceConfiguration configuration, Environment environment) {
+  public void run(VerificationServiceConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
 
     logger.info("Entering startup maintenance mode");
@@ -235,7 +235,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {
-    final HealthService healthService = injector.getInstance(HealthService.class);
+    HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("Verification Service", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
@@ -257,7 +257,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void registerStores(VerificationServiceConfiguration configuration, Injector injector) {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    HPersistence persistence = injector.getInstance(HPersistence.class);
     persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
@@ -295,7 +295,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void registerWorkflowIterators(Injector injector) {
-    final ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
+    ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("Iterator-workflow-verification").build());
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowTimeSeriesAnalysisJob(),
         AnalysisContextKeys.timeSeriesAnalysisIteration, MLAnalysisType.TIME_SERIES, ofMinutes(1), 4);
@@ -314,6 +314,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<AnalysisContext>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(AnalysisContext.class)
             .fieldName(iteratorFieldName)
             .targetInterval(interval)
@@ -329,8 +330,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    workflowVerificationExecutor.scheduleAtFixedRate(
-        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.SECONDS);
+    workflowVerificationExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 5, TimeUnit.SECONDS);
   }
 
   private void registerAlertsCleanupIterator(Injector injector,
@@ -339,6 +339,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     injector.injectMembers(handler);
     PersistenceIterator alertsCleanupIterator =
         MongoPersistenceIterator.<Alert>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(Alert.class)
             .fieldName(AlertKeys.cvCleanUpIteration)
             .targetInterval(interval)
@@ -354,8 +355,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .redistribute(true)
             .build();
     injector.injectMembers(alertsCleanupIterator);
-    workflowVerificationExecutor.scheduleAtFixedRate(
-        () -> alertsCleanupIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.MINUTES);
+    workflowVerificationExecutor.scheduleAtFixedRate(() -> alertsCleanupIterator.process(), 0, 10, TimeUnit.MINUTES);
   }
 
   private void registerCreateCVTaskIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
@@ -364,6 +364,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<AnalysisContext>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(AnalysisContext.class)
             .fieldName(AnalysisContextKeys.cvTaskCreationIteration)
             .targetInterval(interval)
@@ -376,12 +377,11 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    workflowVerificationExecutor.scheduleAtFixedRate(
-        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.SECONDS);
+    workflowVerificationExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 5, TimeUnit.SECONDS);
   }
 
   private void registerServiceGuardIterators(Injector injector) {
-    final ScheduledThreadPoolExecutor serviceGuardExecutor =
+    ScheduledThreadPoolExecutor serviceGuardExecutor =
         new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),
         AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(1), 7);
@@ -397,6 +397,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<Account>builder()
+            .mode(ProcessMode.PUMP)
             .clazz(Account.class)
             .fieldName(iteratorFieldName)
             .targetInterval(interval)
@@ -414,8 +415,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    serviceGuardExecutor.scheduleAtFixedRate(
-        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+    serviceGuardExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 10, TimeUnit.SECONDS);
   }
 
   private void initializeServiceSecretKeys(Injector injector) {

@@ -4,5 +4,5 @@ public interface PersistenceIterator<T extends PersistentIterable> {
   enum ProcessMode { LOOP, PUMP }
 
   void wakeup();
-  void process(ProcessMode mode);
+  void process();
 }
