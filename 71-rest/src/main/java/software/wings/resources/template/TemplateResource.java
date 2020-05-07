@@ -1,6 +1,7 @@
 package software.wings.resources.template;
 
-import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
@@ -15,6 +16,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.security.annotations.AuthRule;
@@ -45,9 +47,12 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Template>> list(@QueryParam("accountId") String accountId,
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @BeanParam PageRequest<Template> pageRequest,
-      @QueryParam("galleryKeys") List<String> galleryKeys) {
-    pageRequest.addFilter("appId", EQ, appId);
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") List<String> appIds,
+      @BeanParam PageRequest<Template> pageRequest, @QueryParam("galleryKey") List<String> galleryKeys) {
+    // TODO(abhinav): modify param to galleryKeys
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter(TemplateKeys.appId, IN, appIds.toArray());
+    }
     return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId));
   }
 

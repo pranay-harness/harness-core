@@ -50,7 +50,7 @@ public interface EnvironmentService extends OwnedByApplication {
   PageResponse<Environment> list(PageRequest<Environment> request, boolean withTags, String tagFilter);
 
   PageResponse<Environment> listWithSummary(
-      PageRequest<Environment> request, boolean withTags, String tagFilter, String appId);
+      PageRequest<Environment> request, boolean withTags, String tagFilter, List<String> appIds);
 
   /**
    * Gets the.

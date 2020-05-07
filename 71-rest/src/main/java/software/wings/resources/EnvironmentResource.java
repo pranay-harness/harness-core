@@ -1,6 +1,7 @@
 package software.wings.resources;
 
-import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
@@ -15,6 +16,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -70,7 +72,7 @@ public class EnvironmentResource {
   /**
    * List.
    *
-   * @param appId      the app id
+   * @param appIds      the app ids
    * @param pageRequest the page request
    * @return the rest response
    */
@@ -78,14 +80,14 @@ public class EnvironmentResource {
   @ListAPI(ENVIRONMENT)
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
-    if (appId != null) {
-      pageRequest.addFilter("appId", EQ, appId);
+    if (isNotEmpty(appIds)) {
+      pageRequest.addFilter(EnvironmentKeys.appId, IN, appIds.toArray());
     }
     if (details) {
-      return new RestResponse<>(environmentService.listWithSummary(pageRequest, withTags, tagFilter, appId));
+      return new RestResponse<>(environmentService.listWithSummary(pageRequest, withTags, tagFilter, appIds));
     } else {
       return new RestResponse<>(environmentService.list(pageRequest, withTags, tagFilter));
     }
