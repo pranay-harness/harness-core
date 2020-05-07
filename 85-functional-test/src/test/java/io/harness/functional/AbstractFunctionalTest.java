@@ -94,9 +94,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Before
   public void testSetup() throws IOException {
     account = accountSetupService.ensureAccount();
-    delegateExecutor.ensureDelegate(account, AbstractFunctionalTest.class);
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
+    delegateExecutor.ensureDelegate(account, bearerToken, AbstractFunctionalTest.class);
     logger.info("Basic setup completed");
   }
 
