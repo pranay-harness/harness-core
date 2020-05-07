@@ -763,7 +763,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean updateCeK8sEventCollectionEnabled(String accountId, boolean ceK8sEventCollectionEnabled) {
+  public boolean updateCeAutoCollectK8sEvents(String accountId, boolean ceK8sEventCollectionEnabled) {
     Account account = get(accountId);
     account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
     update(account);

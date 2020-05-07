@@ -34,6 +34,8 @@ public interface AdminAccountService {
 
   boolean enableOrDisableCloudCost(String accountId, boolean enabled);
 
+  boolean enableOrDisableCeK8sEventCollection(String accountId, boolean ceK8sEventCollectionEnabled);
+
   boolean delete(String accountId);
 
   FeatureFlag updateFeatureFlagForAccount(String accountId, String featureName, boolean enabled);

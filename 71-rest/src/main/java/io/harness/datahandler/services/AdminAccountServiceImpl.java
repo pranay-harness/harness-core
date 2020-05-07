@@ -121,6 +121,11 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   }
 
   @Override
+  public boolean enableOrDisableCeK8sEventCollection(String accountId, boolean ceK8sEventCollectionEnabled) {
+    return accountService.updateCeAutoCollectK8sEvents(accountId, ceK8sEventCollectionEnabled);
+  }
+
+  @Override
   public boolean delete(String accountId) {
     return accountService.delete(accountId);
   }

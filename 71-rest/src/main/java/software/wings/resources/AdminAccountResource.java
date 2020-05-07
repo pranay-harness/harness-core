@@ -127,6 +127,13 @@ public class AdminAccountResource {
     return new RestResponse<>(adminAccountService.enableOrDisableCloudCost(accountId, enabled));
   }
 
+  @PUT
+  @Path("/{accountId}/ceAutoCollectK8sEvents")
+  public RestResponse<Boolean> enableOrDisableCeAutoCollectK8sEvents(
+      @PathParam("accountId") String accountId, @QueryParam("enable") boolean enabled) {
+    return new RestResponse<>(adminAccountService.enableOrDisableCeK8sEventCollection(accountId, enabled));
+  }
+
   @DELETE
   @Path("{accountId}")
   public RestResponse<Boolean> deleteAccount(@PathParam("accountId") String accountId) {
