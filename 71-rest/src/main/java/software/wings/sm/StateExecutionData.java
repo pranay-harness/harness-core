@@ -267,16 +267,19 @@ public class StateExecutionData {
     putNotNull(executionDetails, "endTs", ExecutionDataValue.builder().displayName("Ended At").value(endTs).build());
 
     if (startTs != null && endTs != null) {
-      StringBuilder durationString = new StringBuilder();
-      Duration duration = Duration.between(Instant.ofEpochMilli(startTs), Instant.ofEpochMilli(endTs));
+      StringBuilder durationString = new StringBuilder(32);
+      Duration duration =
+          Duration.between(Instant.ofEpochMilli((startTs / 1000) * 1000), Instant.ofEpochMilli((endTs / 1000) * 1000));
       durationString.append(duration.toDays() > 0 ? String.format("%dd", duration.toDays()) : "")
           .append(duration.toHours() % 24 > 0 ? String.format(" %dh", duration.toHours() % 24) : "")
           .append(duration.toMinutes() % 60 > 0 ? String.format(" %dm", duration.toMinutes() % 60) : "")
           .append(duration.getSeconds() % 60 > 0 ? String.format(" %ds", duration.getSeconds() % 60) : "");
-      if (durationString.length() > 0) {
-        putNotNull(executionDetails, "duration",
-            ExecutionDataValue.builder().displayName("Duration").value(durationString.toString()).build());
+
+      if (durationString.length() == 0) {
+        durationString.append("Less than a second");
       }
+      putNotNull(executionDetails, "duration",
+          ExecutionDataValue.builder().displayName("Duration").value(durationString.toString()).build());
     }
 
     if (getDelegateMetaInfo() != null) {
