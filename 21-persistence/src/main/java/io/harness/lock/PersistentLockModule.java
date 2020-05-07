@@ -24,7 +24,6 @@ import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -90,12 +89,9 @@ public class PersistentLockModule extends DependencyProviderModule implements Se
 
   @Override
   public List<Closeable> servers(Injector injector) {
-    return asList(new Closeable() {
-      @Override
-      public void close() throws IOException {
-        if (distributedLockSvc != null && distributedLockSvc.isRunning()) {
-          distributedLockSvc.shutdown();
-        }
+    return asList(() -> {
+      if (distributedLockSvc != null && distributedLockSvc.isRunning()) {
+        distributedLockSvc.shutdown();
       }
     });
   }

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package io.harness.delegate.task;
+
+option java_multiple_files = true;
+
+import "google/protobuf/duration.proto";
+
+message Id {
+  string id = 1;
+}
+
+message SetupAbstractions {
+  map<string, string> map = 1;
+}
+
+message Details {
+  string type = 1;
+  bytes kryoParameters = 2;
+  google.protobuf.Duration execution_timeout = 3;
+  int64 expression_functor_token = 4;
+}
+
+message Capability {
+  bytes kryoCapability = 1;
+}
+
+message Capabilities {
+  repeated Capability list = 1;
+}
