@@ -6,6 +6,7 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAg
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static software.wings.beans.Delegate.DelegateKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,6 +14,7 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
+import io.harness.rest.RestResponse;
 import io.harness.threading.Poller;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -28,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import javax.ws.rs.core.GenericType;
 
 @Singleton
 @Slf4j
@@ -36,13 +39,13 @@ public class DelegateExecutor {
 
   @Inject private DelegateService delegateService;
 
-  public void ensureDelegate(Account account, Class clazz) throws IOException {
-    if (!isHealthy(account.getUuid())) {
-      executeLocalDelegate(account, clazz);
+  public void ensureDelegate(Account account, String bearerToken, Class clazz) throws IOException {
+    if (!isHealthy(account.getUuid(), bearerToken)) {
+      executeLocalDelegate(account, bearerToken, clazz);
     }
   }
 
-  private void executeLocalDelegate(Account account, Class clazz) throws IOException {
+  private void executeLocalDelegate(Account account, String bearerToken, Class clazz) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -53,7 +56,7 @@ public class DelegateExecutor {
 
     if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
       try {
-        if (isHealthy(account.getUuid())) {
+        if (isHealthy(account.getUuid(), bearerToken)) {
           return;
         }
         logger.info("Execute the delegate from {}", directory);
@@ -82,7 +85,7 @@ public class DelegateExecutor {
 
         processExecutor.start();
 
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid()));
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid(), bearerToken));
 
       } catch (RuntimeException exception) {
         failedAlready = true;
@@ -93,11 +96,17 @@ public class DelegateExecutor {
     }
   }
 
-  private boolean isHealthy(String accountId) {
-    // TODO move to api call from manager to check delegate up and registered
+  private boolean isHealthy(String accountId, String bearerToken) {
     try {
-      DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
+      RestResponse<DelegateStatus> delegateStatusResponse =
+          Setup.portal()
+              .auth()
+              .oauth2(bearerToken)
+              .queryParam(DelegateKeys.accountId, accountId)
+              .get("/setup/delegates/status")
+              .as(new GenericType<RestResponse<DelegateStatus>>() {}.getType());
 
+      DelegateStatus delegateStatus = delegateStatusResponse.getResource();
       if (!delegateStatus.getDelegates().isEmpty()) {
         for (DelegateInner delegateInner : delegateStatus.getDelegates()) {
           long lastMinuteMillis = System.currentTimeMillis() - 60000;
