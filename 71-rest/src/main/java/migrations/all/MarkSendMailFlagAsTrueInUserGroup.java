@@ -35,11 +35,11 @@ public class MarkSendMailFlagAsTrueInUserGroup implements Migration {
             logger.info(
                 "Existing notification settings are null. Creating default notifications settings for userGroup {}",
                 userGroup.getUuid());
-            updatedSetting = new NotificationSettings(false, true, Collections.emptyList(), null, "");
+            updatedSetting = new NotificationSettings(false, true, Collections.emptyList(), null, "", "");
           } else {
             logger.info("Overriding original notification settings for userGroup {}", userGroup.getUuid());
-            updatedSetting = new NotificationSettings(
-                existing.isUseIndividualEmails(), true, existing.getEmailAddresses(), existing.getSlackConfig(), "");
+            updatedSetting = new NotificationSettings(existing.isUseIndividualEmails(), true,
+                existing.getEmailAddresses(), existing.getSlackConfig(), "", existing.getMicrosoftTeamsWebhookUrl());
           }
           wingsPersistence.updateField(
               UserGroup.class, userGroup.getUuid(), UserGroup.NOTIFICATION_SETTINGS_KEY, updatedSetting);

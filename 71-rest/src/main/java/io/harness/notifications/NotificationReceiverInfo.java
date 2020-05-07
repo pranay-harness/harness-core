@@ -20,4 +20,6 @@ public interface NotificationReceiverInfo {
   @NotNull List<String> getEmailAddresses();
 
   @Nullable String getPagerDutyIntegrationKey();
+
+  @Nullable String getMicrosoftTeamsWebhookUrl();
 }

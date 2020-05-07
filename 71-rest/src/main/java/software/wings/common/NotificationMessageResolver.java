@@ -4,6 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static software.wings.common.NotificationConstants.ABORTED_COLOR;
+import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
+import static software.wings.common.NotificationConstants.FAILED_COLOR;
+import static software.wings.common.NotificationConstants.PAUSED_COLOR;
+import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.io.Resources;
@@ -52,6 +57,7 @@ public class NotificationMessageResolver {
 
   @Inject private MainConfiguration configuration;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  private static final String FAILED_STATUS = "failed";
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
 
@@ -315,7 +321,7 @@ public class NotificationMessageResolver {
         return "completed";
       case FAILED:
       case ERROR:
-        return "failed";
+        return FAILED_STATUS;
       case PAUSED:
         return "paused";
       case RESUMED:
@@ -328,7 +334,26 @@ public class NotificationMessageResolver {
         return "expired";
       default:
         unhandled(status);
-        return "failed";
+        return FAILED_STATUS;
+    }
+  }
+
+  public static String getThemeColor(String status, String defaultColor) {
+    switch (status) {
+      case "completed":
+        return COMPLETED_COLOR;
+      case "expired":
+      case "rejected":
+      case FAILED_STATUS:
+        return FAILED_COLOR;
+      case "paused":
+        return PAUSED_COLOR;
+      case "resumed":
+        return RESUMED_COLOR;
+      case "aborted":
+        return ABORTED_COLOR;
+      default:
+        return defaultColor;
     }
   }
 

@@ -118,7 +118,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (null == userGroup.getNotificationSettings()) {
       NotificationSettings notificationSettings =
-          new NotificationSettings(false, true, Collections.emptyList(), null, "");
+          new NotificationSettings(false, true, Collections.emptyList(), null, "", "");
       userGroup.setNotificationSettings(notificationSettings);
     }
 

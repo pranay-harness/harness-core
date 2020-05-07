@@ -18,4 +18,5 @@ public class QLNotificationSettings {
   List<String> groupEmailAddresses;
   QLSlackNotificationSetting slackNotificationSetting;
   String pagerDutyIntegrationKey;
+  String microsoftTeamsWebhookUrl;
 }

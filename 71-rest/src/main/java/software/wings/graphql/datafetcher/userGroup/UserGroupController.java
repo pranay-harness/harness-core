@@ -142,6 +142,7 @@ public class UserGroupController {
         .sendMailToNewMembers(notificationSettings.isSendMailToNewMembers())
         .groupEmailAddresses(notificationSettings.getEmailAddresses())
         .slackNotificationSetting(populateSlackNotificationSettings(notificationSettings))
+        .microsoftTeamsWebhookUrl(notificationSettings.getMicrosoftTeamsWebhookUrl())
         .build();
   }
 
@@ -158,7 +159,7 @@ public class UserGroupController {
 
   public NotificationSettings populateNotificationSettingsEntity(QLNotificationSettings notificationSetting) {
     if (notificationSetting == null) {
-      return new NotificationSettings(false, false, Collections.emptyList(), null, "");
+      return new NotificationSettings(false, false, Collections.emptyList(), null, "", "");
     }
     QLSlackNotificationSetting slackNotificationInput = notificationSetting.getSlackNotificationSetting();
     SlackNotificationSetting slackConfig = null;
@@ -181,7 +182,8 @@ public class UserGroupController {
     return new NotificationSettings(sendNotitficationToNewMembers, sendEmailToNewMembers,
         notificationSetting.getGroupEmailAddresses() == null ? Collections.emptyList()
                                                              : notificationSetting.getGroupEmailAddresses(),
-        slackConfig, notificationSetting.getPagerDutyIntegrationKey());
+        slackConfig, notificationSetting.getPagerDutyIntegrationKey(),
+        notificationSetting.getMicrosoftTeamsWebhookUrl());
   }
 
   public void validateTheUserIds(List<String> userIds, String accountId) {

@@ -27,6 +27,12 @@ public interface WingsTestConstants {
 
   String APP_NAME = "APP_NAME";
 
+  String APPLICATION = "APPLICATION";
+
+  String APPLICATION_URL = "APPLICATION_URL";
+
+  String SERVICE = "SERVICE";
+
   String SERVICE_ID = "SERVICE_ID";
 
   String SERVICE_TEMPLATE_ID = "SERVICE_TEMPLATE_ID";
@@ -41,6 +47,8 @@ public interface WingsTestConstants {
 
   String SERVICE_NAME = "SERVICE_NAME";
 
+  String SERVICE_URL = "SERVICE_URL";
+
   String INFRA_NAME = "INFRA_NAME";
 
   String PROVISIONER_NAME = "PROVISIONER_NAME";
@@ -50,6 +58,10 @@ public interface WingsTestConstants {
   String ENV_ID_CHANGED = "ENV_ID_CHANGED";
 
   String ENV_NAME = "ENV_NAME";
+
+  String ENVIRONMENT = "ENVIRONMENT";
+
+  String ENVIRONMENT_URL = "ENVIRONMENT_URL";
 
   String ENV_DESCRIPTION = "ENV_DESCRIPTION";
 
@@ -107,11 +119,17 @@ public interface WingsTestConstants {
 
   String WORKFLOW_NAME = "WORKFLOW_NAME";
 
+  String WORKFLOW_URL = "WORKFLOW_URL";
+
   Integer DEFAULT_VERSION = 1000;
+
+  String PIPELINE = "PIPELINE";
 
   String PIPELINE_ID = "PIPELINE_ID";
 
   String PIPELINE_NAME = "PIPELINE_NAME";
+
+  String PIPELINE_URL = "PIPELINE_URL";
 
   String PIPELINE_EXECUTION_ID = "PIPELINE_EXECUTION_ID";
 
@@ -128,6 +146,10 @@ public interface WingsTestConstants {
   String ARTIFACT_PATH = "ARTIFACT_PATH";
 
   String ARTIFACTS = "ARTIFACTS";
+
+  String ARTIFACTS_NAME = "ARTIFACTS_NAME";
+
+  String ARTIFACTS_URL = "ARTIFACTS_URL";
 
   String USER_NAME = "USER_NAME";
 
@@ -259,6 +281,8 @@ public interface WingsTestConstants {
 
   String TRIGGER_NAME = "TRIGGER_NAME";
 
+  String TRIGGER_URL = "TRIGGER_URL";
+
   String DEPLOYMENT_TRIGGER_NAME = "DEPLOYMENT_TRIGGER_NAME";
 
   String TRIGGER_DESCRIPTION = "TRIGGER_DESCRIPTION";
@@ -270,6 +294,8 @@ public interface WingsTestConstants {
   String VARIABLE_NAME = "VARIABLE_NAME";
 
   String VARIABLE_VALUE = "VARIABLE_VALUE";
+
+  String VERB = "VERB";
 
   String USER_GROUP_ID = "USER_GROUP_ID";
 

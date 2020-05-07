@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -134,6 +135,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private UserService userService;
   @InjectMocks @Inject private UserGroupServiceImpl userGroupService;
   @Mock private UsageLimitedFeature rbacFeature;
+
+  private static final String MICROSOFT_TEAMS_WEBHOOK_URL = "https://microsoftTeamsWebhookUrl";
 
   private String accountId = generateUuid();
   private String userGroupId = generateUuid();
@@ -376,7 +379,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
 
       NotificationSettings notificationSettings =
-          new NotificationSettings(false, true, Collections.emptyList(), null, null);
+          new NotificationSettings(false, true, Collections.emptyList(), null, null, null);
       UserGroup userGroup1 = UserGroup.builder()
                                  .accountId(ACCOUNT_ID)
                                  .name("USER_GROUP1")
@@ -485,12 +488,38 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(fetchedGroup).isNotNull();
     assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
 
-    NotificationSettings settings =
-        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null);
+    NotificationSettings settings = new NotificationSettings(
+        true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null, null);
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
     assertThat(fetchedGroup.getNotificationSettings()).isEqualTo(settings);
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(accountId), eq(null), any(UserGroup.class), eq(Type.UPDATE_NOTIFICATION_SETTING));
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void shouldUpdateMicrosoftTeamsWebhookUrl() {
+    NotificationSettings notificationSettings =
+        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null, "");
+    UserGroup ug = builder().accountId(accountId).notificationSettings(notificationSettings).name("some-name").build();
+    UserGroup saved = userGroupService.save(ug);
+    UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
+    assertThat(fetchedGroup).isNotNull();
+    assertThat(fetchedGroup.getNotificationSettings()).isEqualTo(notificationSettings);
+    assertThat(fetchedGroup.getNotificationSettings().getMicrosoftTeamsWebhookUrl()).isEmpty();
+
+    NotificationSettings newNotificationSettings = new NotificationSettings(
+        true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null, MICROSOFT_TEAMS_WEBHOOK_URL);
+    userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), newNotificationSettings);
+    fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
+    assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
+    assertThat(fetchedGroup.getNotificationSettings()).isEqualTo(newNotificationSettings);
+    assertThat(fetchedGroup.getNotificationSettings().getMicrosoftTeamsWebhookUrl())
+        .isEqualTo(MICROSOFT_TEAMS_WEBHOOK_URL);
     verify(auditServiceHelper, times(1))
         .reportForAuditingUsingAccountId(
             eq(accountId), eq(null), any(UserGroup.class), eq(Type.UPDATE_NOTIFICATION_SETTING));

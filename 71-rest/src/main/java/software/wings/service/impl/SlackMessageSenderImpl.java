@@ -1,13 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static software.wings.common.NotificationConstants.ABORTED_COLOR;
-import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
-import static software.wings.common.NotificationConstants.FAILED_COLOR;
-import static software.wings.common.NotificationConstants.PAUSED_COLOR;
-import static software.wings.common.NotificationConstants.RESUMED_COLOR;
+import static software.wings.common.NotificationConstants.WHITE_COLOR;
 import static software.wings.service.impl.SlackNotificationServiceImpl.SLACK_WEBHOOK_URL_PREFIX;
 
 import com.google.common.collect.ImmutableList;
@@ -28,14 +23,13 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Url;
 import software.wings.beans.SlackMessage;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.service.intfc.SlackMessageSender;
 
 import java.io.IOException;
 
 @Slf4j
 public class SlackMessageSenderImpl implements SlackMessageSender {
-  private static final String WHITE_COLOR = "#FFFFFF";
-
   @Override
   public void send(SlackMessage slackMessage, boolean sendFromDelegate) {
     String outgoingWebhookUrl = slackMessage.getOutgoingWebhookUrl();
@@ -53,7 +47,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
       payload.setText(processText(parts[0]));
       attachment.setText(processText(parts[1]));
       attachment.setFooter(processText(parts[2]));
-      attachment.setColor(getColor(parts[3]));
+      attachment.setColor(NotificationMessageResolver.getThemeColor(parts[3], WHITE_COLOR));
       attachment.setFooter_icon(format("https://s3.amazonaws.com/wings-assets/slackicons/%s.png", parts[3]));
       attachment.setMrkdwn_in(ImmutableList.of("text"));
       payload.setAttachments(ImmutableList.of(attachment));
@@ -121,25 +115,5 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
         .replaceAll("\\\\n", "\n")
         .replaceAll("\\\\\\*", "*")
         .replaceAll("\\*<\\|>\\*", "");
-  }
-
-  private String getColor(String status) {
-    switch (status) {
-      case "completed":
-        return COMPLETED_COLOR;
-      case "expired":
-      case "rejected":
-      case "failed":
-        return FAILED_COLOR;
-      case "paused":
-        return PAUSED_COLOR;
-      case "resumed":
-        return RESUMED_COLOR;
-      case "aborted":
-        return ABORTED_COLOR;
-      default:
-        unhandled(status);
-    }
-    return WHITE_COLOR;
   }
 }

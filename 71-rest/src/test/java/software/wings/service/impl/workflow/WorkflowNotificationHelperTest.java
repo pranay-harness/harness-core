@@ -28,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_URL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -249,7 +250,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("ENVIRONMENT_NAME", ENV_NAME)
             .put("SERVICE", EXPECTED_SERVICE_URL)
             .put("SERVICE_NAME", "Service One,Service Two")
             .put("SERVICE_URL",
@@ -257,6 +260,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("ARTIFACTS_URL", "")
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .put("PIPELINE_URL", "")
             .put("PIPELINE_NAME", "")
             .build();
@@ -298,12 +302,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", " in pipeline <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>>")
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("ENVIRONMENT_NAME", ENV_NAME)
             .put("PIPELINE_URL", EXPECTED_PIPELINE_URL)
             .put("PIPELINE_NAME", "Pipeline Name")
             .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("ARTIFACTS_URL", "")
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -338,10 +345,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
+            .put("ENVIRONMENT_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("ARTIFACTS_NAME", "Service Two: artifact-2 (build# build-2)")
             .put("ARTIFACTS_URL", "")
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .put("PIPELINE_URL", "")
             .put("PIPELINE_NAME", "")
             .build();
@@ -375,12 +385,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
+            .put("ENVIRONMENT_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("PIPELINE_URL", "")
             .put("PIPELINE_NAME", "")
             .put("ARTIFACTS_URL", "")
             .put("ARTIFACTS_NAME", "Service One: no artifact, Service Two: no artifact")
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -417,10 +430,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", ENV_NAME)
+            .put("ENVIRONMENT_NAME", ENV_NAME)
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("PIPELINE_URL", "")
             .put("PIPELINE_NAME", "")
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .put("ARTIFACTS_URL", "")
             .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .build();
@@ -456,8 +472,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("PIPELINE", "")
                                                     .put("ENV_NAME", ENV_NAME)
+                                                    .put("ENVIRONMENT_NAME", ENV_NAME)
                                                     .put("APP_NAME", APP_NAME)
+                                                    .put("APPLICATION_NAME", APP_NAME)
                                                     .put("TRIGGER_NAME", USER_NAME)
+                                                    .put(TRIGGER_URL, "")
                                                     .put("PIPELINE_NAME", "")
                                                     .put("PIPELINE_URL", "")
                                                     .put("ARTIFACTS_NAME", "no artifacts")
@@ -502,8 +521,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
             .put("ENV_NAME", "no environment")
+            .put("ENVIRONMENT_NAME", "no environment")
             .put("APP_NAME", APP_NAME)
+            .put("APPLICATION_NAME", APP_NAME)
             .put("TRIGGER_NAME", USER_NAME)
+            .put(TRIGGER_URL, "")
             .put("PIPELINE_NAME", "")
             .put("PIPELINE_URL", "")
             .put("ARTIFACTS_NAME", "no artifacts")

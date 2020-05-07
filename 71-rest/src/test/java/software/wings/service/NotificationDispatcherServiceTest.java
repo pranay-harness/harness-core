@@ -107,7 +107,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
 
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
     SlackNotificationSetting slackConfig = SlackNotificationSetting.emptyConfig();
-    NotificationSettings settings = new NotificationSettings(true, true, toAddresses, slackConfig, "");
+    NotificationSettings settings = new NotificationSettings(true, true, toAddresses, slackConfig, "", "");
 
     List<String> userGroupIds = Collections.singletonList("first");
     UserGroup userGroup = UserGroup.builder().accountId(accountId).notificationSettings(settings).build();

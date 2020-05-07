@@ -120,6 +120,13 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
     return null;
   }
 
+  @Nullable
+  @Override
+  @JsonIgnore
+  public String getMicrosoftTeamsWebhookUrl() {
+    return null;
+  }
+
   @Override
   @JsonIgnore
   public List<String> getEmailAddresses() {

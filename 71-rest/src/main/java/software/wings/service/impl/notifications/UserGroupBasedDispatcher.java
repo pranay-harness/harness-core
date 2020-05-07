@@ -39,6 +39,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
   @Inject private PagerDutyEventDispatcher pagerDutyEventDispatcher;
+  @Inject private MicrosoftTeamsMessageDispatcher microsoftTeamsMessageDispatcher;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
@@ -94,6 +95,17 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
         log.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
+      }
+    }
+
+    if (EmptyPredicate.isNotEmpty(userGroup.getMicrosoftTeamsWebhookUrl())) {
+      try {
+        log.info(
+            "Trying to send message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
+        microsoftTeamsMessageDispatcher.dispatch(notifications, userGroup.getMicrosoftTeamsWebhookUrl());
+      } catch (Exception e) {
+        log.error(
+            "Error sending message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
 

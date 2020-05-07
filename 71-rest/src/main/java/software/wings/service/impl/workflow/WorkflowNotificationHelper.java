@@ -384,6 +384,7 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("VERB", NotificationMessageResolver.getStatusVerb(status));
     placeHolderValues.put("USER_NAME", triggeredBy);
     placeHolderValues.put("APP_NAME", app.getName());
+    placeHolderValues.put(APPLICATION + NAME, app.getName());
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
     placeHolderValues.put("START_DATE", startTime);
@@ -404,8 +405,9 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("ERRORS", "");
 
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
-    placeHolderValues.put(
-        "ENV_NAME", BUILD == context.getOrchestrationWorkflowType() ? "no environment" : env.getName());
+    String environmentName = BUILD == context.getOrchestrationWorkflowType() ? "no environment" : env.getName();
+    placeHolderValues.put("ENV_NAME", environmentName);
+    placeHolderValues.put(ENVIRONMENT + NAME, environmentName);
     WorkflowNotificationDetails artifactsDetails;
     WorkflowNotificationDetails serviceDetails;
     if (phaseSubWorkflow != null) {

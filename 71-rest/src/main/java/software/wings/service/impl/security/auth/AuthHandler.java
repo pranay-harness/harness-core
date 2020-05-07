@@ -1413,7 +1413,7 @@ public class AuthHandler {
     appPermissions.add(appPermission);
 
     NotificationSettings notificationSettings =
-        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), "");
+        new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), "", "");
 
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
