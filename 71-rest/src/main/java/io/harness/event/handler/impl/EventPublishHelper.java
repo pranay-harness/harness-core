@@ -404,6 +404,23 @@ public class EventPublishHelper {
     });
   }
 
+  public void publishUserInviteVerifiedFromAccountEvent(String accountId, String email) {
+    if (!checkIfSegmentIsEnabled()) {
+      return;
+    }
+
+    executorService.submit(() -> {
+      if (!shouldPublishEventForAccount(accountId)) {
+        return;
+      }
+
+      Map<String, String> properties = new HashMap<>();
+      properties.put(ACCOUNT_ID, accountId);
+      properties.put(EMAIL_ID, email);
+      publishEvent(EventType.USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT, properties);
+    });
+  }
+
   private void publishEvent(EventType eventType, Map<String, String> properties) {
     eventPublisher.publishEvent(
         Event.builder().eventType(eventType).eventData(EventData.builder().properties(properties).build()).build());
@@ -701,6 +718,10 @@ public class EventPublishHelper {
 
   private boolean checkIfMarketoOrSegmentIsEnabled() {
     return (marketoConfig != null && marketoConfig.isEnabled()) || (segmentConfig != null && segmentConfig.isEnabled());
+  }
+
+  private boolean checkIfSegmentIsEnabled() {
+    return segmentConfig != null && segmentConfig.isEnabled();
   }
 
   public boolean publishVerificationWorkflowMetrics(

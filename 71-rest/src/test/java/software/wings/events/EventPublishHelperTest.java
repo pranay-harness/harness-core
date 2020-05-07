@@ -3,6 +3,7 @@ package software.wings.events;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -36,6 +37,7 @@ import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
@@ -667,5 +669,35 @@ public class EventPublishHelperTest extends WingsBaseTest {
     assertThat(properties.get("lastExecutionTime")).isEqualTo(String.valueOf(lastUpdatedAt));
     assertThat(properties).containsKey("hasData");
     assertThat(properties.get("hasData")).isEqualTo(String.valueOf(false));
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testPublishUserInviteVerifiedFromAccountEvent() throws IllegalAccessException {
+    UserThreadLocal.set(user);
+    try {
+      SegmentConfig segmentConfig = SegmentConfig.builder().enabled(true).build();
+      FieldUtils.writeField(eventPublishHelper, "segmentConfig", segmentConfig, true);
+      eventPublishHelper.publishUserInviteVerifiedFromAccountEvent(ACCOUNT_ID, "abcd@abcd.com");
+      verify(eventPublisher, times(1)).publishEvent(any(Event.class));
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testPublishUserInviteVerifiedFromAccountEvent_SegmentIsDisabled() throws IllegalAccessException {
+    UserThreadLocal.set(user);
+    try {
+      SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).build();
+      FieldUtils.writeField(eventPublishHelper, "segmentConfig", segmentConfig, true);
+      eventPublishHelper.publishUserInviteVerifiedFromAccountEvent(ACCOUNT_ID, "abcd@abcd.com");
+      verify(eventPublisher, times(0)).publishEvent(any(Event.class));
+    } finally {
+      UserThreadLocal.unset();
+    }
   }
 }
