@@ -22,12 +22,13 @@ timescaledb:
   loggerLevel: OFF
 
 awsS3SyncConfig:
+  awsS3BucketName: awsS3BucketNamePlaceHolder
   awsAccessKey: awsS3SyncAccessKeyPlaceHolder
   awsSecretKey: awsS3SyncSecretKeyPlaceHolder
   region: awsS3SyncRegionPlaceHolder
 
 awsDataPipelineConfig:
-  gcpServiceAccount: "billing-data-pipeline@ce-qa-274307.iam.gserviceaccount.com"
-  gcpProjectId : "ce-qa-274307"
-  gcsBasePath: "gs://parquetdatabuckettestconfig"
+  gcpServiceAccount: gcpServiceAccountPlaceHolder
+  gcpProjectId : gcpProjectIdPlaceHolder
+  gcsBasePath: gcsBasePathPlaceHolder
 

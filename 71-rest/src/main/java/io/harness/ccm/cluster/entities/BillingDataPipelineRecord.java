@@ -25,6 +25,7 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
 
   private String accountId;
   private String settingId;
+  private String masterAccountId;
   private String accountName;
 
   private String dataSetId;

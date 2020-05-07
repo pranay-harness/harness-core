@@ -15,7 +15,9 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.settings.SettingValue;
 
 import java.io.IOException;
@@ -27,7 +29,9 @@ import java.util.List;
 public class BillingDataPipelineWriter extends EventWriter implements ItemWriter<SettingAttribute> {
   @Autowired private BillingDataPipelineServiceImpl billingDataPipelineService;
   @Autowired private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
-  @Autowired private JobParameters parameters;
+
+  private JobParameters parameters;
+  private static final String PAID_ACCOUNT_TYPE = "PAID";
 
   @BeforeStep
   public void beforeStep(final StepExecution stepExecution) {
@@ -37,41 +41,58 @@ public class BillingDataPipelineWriter extends EventWriter implements ItemWriter
   @Override
   public void write(List<? extends SettingAttribute> settingAttributes) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    String accountName = cloudToHarnessMappingService.getAccountNameFromId(accountId);
+    Account accountInfo = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
+    String accountName = accountInfo.getAccountName();
+    String accountType = getAccountType(accountInfo);
 
     List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.getSettingAttributes(accountId,
         SettingAttribute.SettingCategory.CE_CONNECTOR.toString(), SettingValue.SettingVariableTypes.CE_AWS.toString(),
-        parameters.getLong(CCMJobConstants.JOB_START_DATE), parameters.getLong(CCMJobConstants.JOB_END_DATE));
+        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
+        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
 
     ceConnectorsList.forEach(settingAttribute -> {
       String settingId = settingAttribute.getUuid();
+      CEAwsConfig awsConfig = (CEAwsConfig) settingAttribute.getValue();
+      String masterAccountId = awsConfig.getAwsMasterAccountId();
+      BillingDataPipelineRecord billingDataPipelineRecord =
+          billingDataPipelineRecordDao.getByMasterAccountId(masterAccountId);
+      if (null == billingDataPipelineRecord) {
+        String dataSetId =
+            billingDataPipelineService.createDataSet(accountId, accountName, masterAccountId, accountType);
+        String dataTransferJobName = null;
+        HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
+        try {
+          dataTransferJobName =
+              billingDataPipelineService.createDataTransferJob(dataSetId, settingId, accountId, accountName);
+        } catch (IOException e) {
+          logger.error("Error while creating GCS -> BQ Transfer Job {}", e);
+        }
+        try {
+          scheduledQueryJobsMap = billingDataPipelineService.createScheduledQueries(dataSetId, accountId, accountName);
+        } catch (IOException e) {
+          logger.error("Error while creating Scheduled Queries {}", e);
+        }
 
-      String dataSetId = billingDataPipelineService.createDataSet(accountId, accountName);
-      String dataTransferJobName = null;
-      HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
-      try {
-        dataTransferJobName =
-            billingDataPipelineService.createDataTransferJob(dataSetId, settingId, accountId, accountName);
-      } catch (IOException e) {
-        logger.error("Error while creating GCS -> BQ Transfer Job {}", e);
+        BillingDataPipelineRecord dataPipelineRecord =
+            BillingDataPipelineRecord.builder()
+                .accountId(accountId)
+                .accountName(accountName)
+                .masterAccountId(masterAccountId)
+                .settingId(settingId)
+                .dataSetId(dataSetId)
+                .dataTransferJobName(dataTransferJobName)
+                .fallbackTableScheduledQueryName(scheduledQueryJobsMap.get(scheduledQueryKey))
+                .preAggregatedScheduledQueryName(scheduledQueryJobsMap.get(preAggQueryKey))
+                .build();
+        billingDataPipelineRecordDao.create(dataPipelineRecord);
       }
-      try {
-        scheduledQueryJobsMap = billingDataPipelineService.createScheduledQueries(dataSetId, accountId, accountName);
-      } catch (IOException e) {
-        logger.error("Error while creating Scheduled Queries {}", e);
-      }
-
-      BillingDataPipelineRecord dataPipelineRecord =
-          BillingDataPipelineRecord.builder()
-              .accountId(accountId)
-              .accountName(accountName)
-              .settingId(settingId)
-              .dataSetId(dataSetId)
-              .dataTransferJobName(dataTransferJobName)
-              .fallbackTableScheduledQueryName(scheduledQueryJobsMap.get(scheduledQueryKey))
-              .preAggregatedScheduledQueryName(scheduledQueryJobsMap.get(preAggQueryKey))
-              .build();
-      billingDataPipelineRecordDao.create(dataPipelineRecord);
     });
+  }
+
+  private String getAccountType(Account accountInfo) {
+    if (accountInfo.getLicenseInfo() != null) {
+      return accountInfo.getLicenseInfo().getAccountType();
+    }
+    return PAID_ACCOUNT_TYPE;
   }
 }

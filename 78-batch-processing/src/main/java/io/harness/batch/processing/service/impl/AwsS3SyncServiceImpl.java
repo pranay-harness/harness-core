@@ -16,6 +16,7 @@ import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import software.wings.security.authentication.AwsS3SyncConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,19 +32,18 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
 
   private static final int SYNC_TIMEOUT_MINUTES = 5;
   private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
-  private static final String HARNESS_BASE_PATH = "ccm-cross-account-test";
   private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
   private static final String AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION";
   private static final String SESSION_TOKEN = "AWS_SESSION_TOKEN";
 
   @Override
   public void syncBuckets(S3SyncRecord s3SyncRecord) {
-    software.wings.security.authentication.AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
+    AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
     ImmutableMap<String, String> envVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID, awsCredentials.getAwsAccessKey(),
         AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION, awsCredentials.getRegion());
 
-    String destinationBucketPath =
-        String.join("/", "s3://" + HARNESS_BASE_PATH, s3SyncRecord.getAccountId(), s3SyncRecord.getSettingId());
+    String destinationBucketPath = String.join(
+        "/", "s3://" + awsCredentials.getAwsS3BucketName(), s3SyncRecord.getAccountId(), s3SyncRecord.getSettingId());
 
     try {
       final ArrayList<String> assumeRoleCmd =

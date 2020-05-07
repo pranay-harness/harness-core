@@ -43,7 +43,7 @@ public class AWSCEConfigValidationServiceImplTest {
   private static final String s3Region = "us-east-1";
   private static final String compression = "GZIP";
   private static final String timeGranularity = "HOURLY";
-  private static final String reportVersioning = "CREATE_NEW_REPORT";
+  private static final String reportVersioning = "OVERWRITE_REPORT";
   private static final String invalidValue = "invalidValue";
   private static CEAwsConfig ceAwsConfig = CEAwsConfig.builder().build();
   private static ReportDefinition reportDefinition = new ReportDefinition();
@@ -160,7 +160,7 @@ public class AWSCEConfigValidationServiceImplTest {
     reportDefinition.setReportVersioning(invalidValue);
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
-    exceptionParamsMap.put("args", "CUR Report Config: Report versioning should be CREATE_NEW_REPORT");
+    exceptionParamsMap.put("args", "CUR Report Config: Report versioning should be OVERWRITE_REPORT");
     assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);

@@ -22,7 +22,7 @@ public interface CloudToHarnessMappingService {
 
   List<Account> getCCMEnabledAccounts();
 
-  String getAccountNameFromId(String accountId);
+  Account getAccountInfoFromId(String accountId);
 
   List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds);
 

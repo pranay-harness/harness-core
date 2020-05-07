@@ -39,7 +39,7 @@ public class BillingDataPipelineConfiguration {
   @Bean
   public Step awsBillingDataPipelineStep(
       StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
-    return stepBuilderFactory.get("deploymentEventStep")
+    return stepBuilderFactory.get("awsBillingDataPipelineStep")
         .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
         .reader(settingAttributeReader)
         .writer(awsBillingDataPipelineWriter())

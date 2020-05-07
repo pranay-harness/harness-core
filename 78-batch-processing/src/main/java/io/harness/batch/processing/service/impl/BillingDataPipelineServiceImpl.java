@@ -1,5 +1,8 @@
 package io.harness.batch.processing.service.impl;
 
+import static com.hazelcast.util.Preconditions.checkFalse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
@@ -31,6 +34,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -38,6 +42,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   @Autowired BatchMainConfig mainConfig;
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
 
+  private static final String ACCOUNT_NAME_LABEL_KEY = "account_name";
+  private static final String ACCOUNT_TYPE_LABEL_KEY = "account_type";
+  private static final String DATA_SET_DESCRIPTION_TEMPLATE = "Data set for [ AccountId: %s ], [ AccountName: %s ]";
   private static final String FILE_FORMAT_CONST = "file_format";
   private static final String DATA_PATH_TEMPLATE_CONST = "data_path_template";
   private static final String IGNORE_UNKNOWN_VALUES_CONST = "ignore_unknown_values";
@@ -47,7 +54,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String ALLOWS_JAGGED_ROWS_CONST = "allow_jagged_rows";
   private static final String DELETE_SOURCE_FILES_CONST = "delete_source_files";
   private static final String DEST_TABLE_NAME_CONST = "destination_table_name_template";
-  private static final String QUERY_CONST = "destination_table_name_template";
+  private static final String QUERY_CONST = "query";
   private static final String WRITE_DISPOSITION_CONST = "write_disposition";
   private static final String TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time|\"%Y_%m\"}";
   private static final String DEST_TABLE_NAME_VALUE = "awscur_{run_time|\"%Y_%m\"}";
@@ -60,19 +67,21 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String DATA_PATH_TEMPLATE = "%s/%s/%s/*/*/*/*/*.csv.gz";
   private static final String TRANSFER_JOB_NAME_TEMPLATE = "gcsToBigQueryTransferJob_%s";
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
+  private static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   private static final String PRE_AGG_QUERY_TEMPLATE = "preAggQuery_%s";
   public static final String scheduledQueryKey = "scheduledQuery";
   public static final String preAggQueryKey = "preAggQueryKey";
   private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
       "SELECT * FROM `%s.%s.awsCurTable_*` WHERE _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
-      + "CURRENT_TIMESTAMP()) as string),'_' , LPAD(CAST(EXTRACT(MONTH from CURRENT_TIMESTAMP()) as string),2,'0'));";
+      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'));";
   private static final String PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE =
-      "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost) "
-      + "AS awsBlendedCost, min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost, servicecode AS awsServicecode,"
-      + " region, availabilityzone AS awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype"
-      + "  AS awsUsagetype, \"AWS\" AS cloudProvider FROM `%s.%s.awsCurTable_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX ="
-      + " CONCAT(CAST(EXTRACT(YEAR from CURRENT_TIMESTAMP()) as string),'_' , LPAD(CAST(EXTRACT(MONTH from CURRENT_TIMESTAMP())"
-      + " as string),2,'0')) AND usagestartdate = TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) GROUP"
+      "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost)"
+      + " AS awsBlendedCost, min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost,"
+      + " sum(unblendedcost) AS cost, productname AS awsServicecode, region, availabilityzone AS awsAvailabilityzone,"
+      + " usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype AS awsUsagetype,"
+      + " \"AWS\" AS cloudProvider FROM `%s.%s.awsCurTable_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX ="
+      + " CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY))"
+      + " as string),2,'0')) AND TIMESTAMP_TRUNC(usagestartdate, DAY) = TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) GROUP"
       + " BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, usagestartdate;";
 
   public HashMap<String, String> createScheduledQueries(
@@ -198,27 +207,37 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     return Timestamp.newBuilder().setSeconds(timeStampInSeconds).build();
   }
 
-  public String createDataSet(String harnessAccountId, String accountName) {
-    String dataSetName = getUniqueSuffixFromAccountId(harnessAccountId, accountName);
+  public String createDataSet(String harnessAccountId, String accountName, String masterAccountId, String accountType) {
+    String dataSetName = String.format(DATA_SET_NAME_TEMPLATE, masterAccountId);
     try {
+      Map<String, String> labelsMap = new HashMap<>();
+      labelsMap.put(ACCOUNT_NAME_LABEL_KEY, modifyStringToComplyRegex(accountName));
+      labelsMap.put(ACCOUNT_TYPE_LABEL_KEY, modifyStringToComplyRegex(accountType));
       ServiceAccountCredentials credentials = getCredentials();
       BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
       DatasetInfo datasetInfo =
-          DatasetInfo.newBuilder(dataSetName).setDescription("Data set for AccountId: " + harnessAccountId).build();
+          DatasetInfo.newBuilder(dataSetName)
+              .setDescription(String.format(DATA_SET_DESCRIPTION_TEMPLATE, harnessAccountId, accountName))
+              .setLabels(labelsMap)
+              .build();
 
       Dataset createdDataSet = bigquery.create(datasetInfo);
       return createdDataSet.getDatasetId().getDataset();
     } catch (BigQueryException bigQueryEx) {
+      // data set name already exists.
+      if (bigQueryEx.getCode() == 409) {
+        return dataSetName;
+      }
       logger.error("BQ Data Set was not created {} " + bigQueryEx);
     }
     return null;
   }
 
   private String getUniqueSuffixFromAccountId(String harnessAccountId, String accountName) {
-    return getCompliedAccountInfo(accountName) + "_" + getCompliedAccountInfo(harnessAccountId);
+    return modifyStringToComplyRegex(accountName) + "_" + modifyStringToComplyRegex(harnessAccountId);
   }
 
-  private String getCompliedAccountInfo(String accountInfo) {
+  private String modifyStringToComplyRegex(String accountInfo) {
     return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
   }
 
@@ -231,7 +250,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   @VisibleForTesting
   ServiceAccountCredentials getCredentials() {
     ServiceAccountCredentials credentials = null;
-    File credentialsFile = new File(GOOGLE_CREDENTIALS_PATH);
+    String googleCredentialsPath = System.getenv(GOOGLE_CREDENTIALS_PATH);
+    checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
+    File credentialsFile = new File(googleCredentialsPath);
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {
       credentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
     } catch (FileNotFoundException e) {

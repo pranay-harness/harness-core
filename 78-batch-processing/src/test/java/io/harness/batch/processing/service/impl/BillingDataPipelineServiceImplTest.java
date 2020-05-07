@@ -36,6 +36,8 @@ public class BillingDataPipelineServiceImplTest {
 
   private static final String settingId = "settingId";
   private static final String accountId = "accountId";
+  private static final String accountType = "PAID";
+  private static final String masterAccountId = "masterAccountId";
   private static final String accountName = "accountName";
   private static final String dataSetId = "datasetId";
   private static final String transferJobName = "gcsToBigQueryTransferJob_accountname_accountid";
@@ -89,7 +91,7 @@ public class BillingDataPipelineServiceImplTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void createDataSet() {
-    String dataSetName = billingDataPipelineService.createDataSet(accountId, accountName);
+    String dataSetName = billingDataPipelineService.createDataSet(accountId, accountName, masterAccountId, accountType);
     assertThat(dataSetName).isNull();
   }
 }
