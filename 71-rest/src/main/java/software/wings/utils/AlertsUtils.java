@@ -15,20 +15,15 @@ import software.wings.yaml.errorhandling.GitSyncError;
 public class AlertsUtils {
   @Inject AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
-  public void closeAlertIfApplicable(String accountId, boolean gitToHarness) {
+  public void closeAlertIfApplicable(String accountId) {
     final long errorCount =
         wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
     if (errorCount == 0) {
-      alertService.closeAlert(
-          accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
     }
   }
 
-  public GitSyncErrorAlert getGitSyncErrorAlert(String accountId, boolean gitToHarness) {
-    return GitSyncErrorAlert.builder()
-        .accountId(accountId)
-        .message("Unable to process changes from Git")
-        .gitToHarness(gitToHarness)
-        .build();
+  public GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
+    return GitSyncErrorAlert.builder().accountId(accountId).message("Unable to process changes from Git").build();
   }
 }

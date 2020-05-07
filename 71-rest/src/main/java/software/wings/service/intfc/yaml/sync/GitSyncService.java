@@ -18,7 +18,7 @@ public interface GitSyncService {
    * @param accountId
    * @return
    */
-  List<GitDetail> fetchRepositories(String accountId);
+  List<GitDetail> fetchRepositoriesAccessibleToUser(String accountId);
 
   /**
    *

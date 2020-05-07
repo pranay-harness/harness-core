@@ -1,15 +1,13 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,16 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.Account;
-import software.wings.beans.Account.AccountKeys;
-import software.wings.beans.Application;
-import software.wings.beans.Application.ApplicationKeys;
-import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
-import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
-import software.wings.beans.GitDetail.GitDetailBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.GitDiffResult;
@@ -39,7 +30,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
-import software.wings.settings.SettingValue;
+import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.utils.AlertsUtils;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -49,10 +40,8 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlGitConfig;
-import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +61,8 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private AlertsUtils alertsUtils;
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private SettingsService settingsService;
+  @Inject private YamlGitConfigService yamlGitConfigService;
+  private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   @Override
   public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req) {
@@ -97,89 +88,58 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   @Override
-  public List<GitDetail> fetchRepositories(String accountId) {
-    final List<EntityType> supportedEntityTypes = Arrays.asList(EntityType.APPLICATION, EntityType.ACCOUNT);
-    final Set<YamlGitConfig> yamlGitConfigIds = wingsPersistence.createQuery(YamlGitConfig.class)
-                                                    .filter(ACCOUNT_ID_KEY, accountId)
-                                                    .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
-                                                    .field(YamlGitConfig.ENTITY_TYPE_KEY)
-                                                    .in(supportedEntityTypes)
-                                                    .asList()
-                                                    .stream()
-                                                    .collect(Collectors.toSet());
+  public List<GitDetail> fetchRepositoriesAccessibleToUser(String accountId) {
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId);
 
-    if (EmptyPredicate.isEmpty(yamlGitConfigIds)) {
+    if (EmptyPredicate.isEmpty(yamlGitConfigs)) {
       return Collections.emptyList();
     }
 
-    final Set<String> entityIds =
-        yamlGitConfigIds.stream().map(yamlGitConfig -> yamlGitConfig.getEntityId()).collect(Collectors.toSet());
+    // SettingAttribute collection
     final Set<String> gitConnectorIds =
-        yamlGitConfigIds.stream().map(yamlGitConfig -> yamlGitConfig.getGitConnectorId()).collect(Collectors.toSet());
+        yamlGitConfigs.stream().map(yamlGitConfig -> yamlGitConfig.getGitConnectorId()).collect(Collectors.toSet());
+    Map<String, String> gitConnectorIdURLMap = getGitConnectorIdNameMap(gitConnectorIds, accountId);
+    return createGitDetails(yamlGitConfigs, gitConnectorIdURLMap);
+  }
 
-    // app id to app name mapping for entity type APPLICATION
-    final Map<String, String> entityIdToEntityNameMapping =
-        wingsPersistence.createQuery(Application.class)
-            .filter(ACCOUNT_ID_KEY, accountId)
-            .field(APP_ID_KEY)
-            .in(entityIds)
-            .project(ApplicationKeys.appId, true)
-            .project(ApplicationKeys.name, true)
-            .asList()
-            .stream()
-            .collect(Collectors.toMap(Application::getUuid, Application::getName));
-
-    // account id to account name mapping for entity type ACCOUNT
-    final Account account = wingsPersistence.createQuery(Account.class)
-                                .filter(AccountKeys.uuid, accountId)
-                                .project(AccountKeys.uuid, true)
-                                .project(AccountKeys.accountName, true)
-                                .get();
-    if (account != null) {
-      entityIdToEntityNameMapping.put(account.getUuid(), account.getAccountName());
+  private Map<String, String> getGitConnectorIdNameMap(Set<String> gitConnectorIds, String accountId) {
+    List<SettingAttribute> gitConnectors = wingsPersistence.createQuery(SettingAttribute.class)
+                                               .filter(ACCOUNT_ID_KEY, accountId)
+                                               .field(ID_KEY)
+                                               .in(gitConnectorIds)
+                                               .project(SettingAttributeKeys.uuid, true)
+                                               .project(SettingAttributeKeys.name, true)
+                                               .asList();
+    if (isEmpty(gitConnectors)) {
+      return Collections.emptyMap();
     }
+    return gitConnectors.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+  }
 
-    // git connector id to git config mapping
-    final Map<String, SettingValue> settingIdToValueMapping =
-        wingsPersistence.createQuery(SettingAttribute.class)
-            .filter(ACCOUNT_ID_KEY, accountId)
-            .field(ID_KEY)
-            .in(gitConnectorIds)
-            .project(SettingAttributeKeys.uuid, true)
-            .project(SettingAttributeKeys.value, true)
-            .asList()
-            .stream()
-            .collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getValue));
-
-    if (EmptyPredicate.isEmpty(entityIdToEntityNameMapping) || EmptyPredicate.isEmpty(settingIdToValueMapping)) {
+  private List<GitDetail> createGitDetails(
+      List<YamlGitConfig> yamlGitConfigs, Map<String, String> gitConnectorIdNameMap) {
+    if (isEmpty(yamlGitConfigs)) {
       return Collections.emptyList();
     }
+    return yamlGitConfigs.stream()
+        .map(yamlGitConfig -> createGitDetail(yamlGitConfig, gitConnectorIdNameMap))
+        .collect(Collectors.toList());
+  }
 
-    final List<GitDetail> gitDetails =
-        yamlGitConfigIds.stream()
-            .map(yamlGitConfig -> {
-              final SettingValue settingValue = settingIdToValueMapping.get(yamlGitConfig.getGitConnectorId());
-              if (settingValue instanceof GitConfig) {
-                final GitConfig gitConfig = (GitConfig) settingValue;
-                final GitDetailBuilder builder = GitDetail.builder()
-                                                     .entityType(yamlGitConfig.getEntityType())
-                                                     .branchName(yamlGitConfig.getBranchName())
-                                                     .repositoryUrl(gitConfig.getRepoUrl())
-                                                     .yamlGitConfigId(yamlGitConfig.getUuid())
-                                                     .gitConnectorId(yamlGitConfig.getGitConnectorId());
-                final String entityName = entityIdToEntityNameMapping.get(yamlGitConfig.getEntityId());
-                if (entityName != null) {
-                  builder.entityName(entityName);
-                } else {
-                  return null;
-                }
-                return builder.build();
-              }
-              return null;
-            })
-            .collect(Collectors.toList());
-    Iterables.removeIf(gitDetails, Predicates.isNull());
-    return gitDetails;
+  private GitDetail createGitDetail(YamlGitConfig yamlGitConfig, Map<String, String> gitConnectorIdNameMap) {
+    String gitConnectorId = yamlGitConfig.getGitConnectorId();
+    String gitConnectorName = gitConnectorIdNameMap.containsKey(gitConnectorId)
+        ? gitConnectorIdNameMap.get(gitConnectorId)
+        : UNKNOWN_GIT_CONNECTOR;
+    return GitDetail.builder()
+        .branchName(yamlGitConfig.getBranchName())
+        .entityName(yamlGitConfig.getEntityName())
+        .entityType(yamlGitConfig.getEntityType())
+        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .connectorName(gitConnectorName)
+        .yamlGitConfigId(yamlGitConfig.getUuid())
+        .appId(yamlGitConfig.getAppId())
+        .build();
   }
 
   @Override

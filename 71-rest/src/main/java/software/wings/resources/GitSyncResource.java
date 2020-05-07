@@ -30,6 +30,7 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -80,25 +81,6 @@ public class GitSyncResource {
   }
 
   /**
-   * List git to harness errors
-   *
-   * @param pageRequest the page request
-   * @param accountId   the account id
-   * @return the rest response
-   */
-  @GET
-  @Path("errors/gitToHarness")
-  public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrorsCommitsOldApi(
-      @BeanParam PageRequest<GitToHarnessErrorCommitStats> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("gitConnectorId") String gitConnectorId,
-      @QueryParam("branchName") String branchName) {
-    pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
-    PageResponse<GitToHarnessErrorCommitStats> pageResponse =
-        gitSyncErrorService.listGitToHarnessErrorsCommits(pageRequest, accountId, gitConnectorId, branchName, 2);
-    return new RestResponse<>(pageResponse);
-  }
-
-  /**
    * List all commits for git to harness errors
    *
    * @param pageRequest the page request
@@ -109,12 +91,11 @@ public class GitSyncResource {
   @Path("errors/gitToHarness/commits")
   public RestResponse<PageResponse<GitToHarnessErrorCommitStats>> listGitToHarnessErrorsCommits(
       @BeanParam PageRequest<GitToHarnessErrorCommitStats> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("gitConnectorId") String gitConnectorId,
-      @QueryParam("branchName") String branchName,
-      @QueryParam("numberOfErrorsInSummary") Integer numberOfErrorsInSummary) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("appId") String appId,
+      @QueryParam("numberOfErrorsInSummary") @DefaultValue("0") Integer numberOfErrorsInSummary) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
-    PageResponse<GitToHarnessErrorCommitStats> pageResponse = gitSyncErrorService.listGitToHarnessErrorsCommits(
-        pageRequest, accountId, gitConnectorId, branchName, numberOfErrorsInSummary);
+    PageResponse<GitToHarnessErrorCommitStats> pageResponse =
+        gitSyncErrorService.listGitToHarnessErrorsCommits(pageRequest, accountId, appId, numberOfErrorsInSummary);
     return new RestResponse<>(pageResponse);
   }
 
@@ -129,11 +110,10 @@ public class GitSyncResource {
   @Path("errors/gitToHarness/listAllErrors")
   public RestResponse<PageResponse<GitSyncError>> listGitToHarnessErrors(
       @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("gitConnectorId") String gitConnectorId, @QueryParam("branchName") String branchName) {
+      @QueryParam("appId") String appId, @QueryParam("yamlFilePathPattern") String yamlFilePathPattern) {
     pageRequest.addFilter(GitSyncErrorKeys.accountId, EQ, accountId);
     PageResponse<GitSyncError> pageResponse =
-        gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountId, gitConnectorId, branchName);
-
+        gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountId, appId, yamlFilePathPattern);
     return new RestResponse<>(pageResponse);
   }
 
@@ -148,10 +128,11 @@ public class GitSyncResource {
   @Path("errors/gitToHarness/{commitId}")
   public RestResponse<PageResponse<GitSyncError>> listGitToHarnessErrorsForACommit(
       @BeanParam PageRequest<GitSyncError> pageRequest, @PathParam("commitId") String commitId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("includeData") List<String> includeDataList,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("appId") String appId,
+      @QueryParam("includeData") List<String> includeDataList,
       @QueryParam("yamlFilePathPattern") String yamlFilePathPattern) {
     PageResponse<GitSyncError> pageResponse = gitSyncErrorService.fetchErrorsInEachCommits(
-        pageRequest, commitId, accountId, includeDataList, yamlFilePathPattern);
+        pageRequest, commitId, accountId, appId, includeDataList, yamlFilePathPattern);
     return new RestResponse<>(pageResponse);
   }
 
@@ -166,9 +147,9 @@ public class GitSyncResource {
   @Path("errors/harnessToGit")
   public RestResponse<PageResponse<GitSyncError>> listHarnessToGitErrors(
       @BeanParam PageRequest<GitSyncError> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("gitConnectorId") String gitConnectorId, @QueryParam("branchName") String branchName) {
+      @QueryParam("appId") String appId) {
     PageResponse<GitSyncError> pageResponse =
-        gitSyncErrorService.fetchHarnessToGitErrors(pageRequest, accountId, gitConnectorId, branchName);
+        gitSyncErrorService.fetchHarnessToGitErrors(pageRequest, accountId, appId);
     return new RestResponse<>(pageResponse);
   }
 
@@ -227,7 +208,7 @@ public class GitSyncResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<GitDetail>> listRepositories(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(gitSyncService.fetchRepositories(accountId));
+    return new RestResponse<>(gitSyncService.fetchRepositoriesAccessibleToUser(accountId));
   }
 
   /**

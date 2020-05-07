@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
@@ -14,8 +15,8 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
@@ -27,6 +28,7 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
+import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -36,6 +38,7 @@ import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,6 +46,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private GitSyncErrorService gitSyncErrorService;
+  @Mock YamlGitConfigService yamlGitConfigService;
   private String accountId = generateUuid();
   private String uuid = generateUuid();
 
@@ -78,35 +82,53 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Owner(developers = VARDAN_BANSAL)
   @Category(UnitTests.class)
   public void test_fetchRepositories() {
-    final YamlGitConfig expectedYamlGitConfig = YamlGitConfig.builder()
-                                                    .accountId(accountId)
-                                                    .branchName("branchName")
-                                                    .enabled(true)
-                                                    .entityId(uuid)
-                                                    .entityType(EntityType.APPLICATION)
-                                                    .gitConnectorId(generateUuid())
-                                                    .build();
-
-    wingsPersistence.save(expectedYamlGitConfig);
-    final Application application = Application.Builder.anApplication()
-                                        .yamlGitConfig(expectedYamlGitConfig)
-                                        .accountId(accountId)
-                                        .appId(expectedYamlGitConfig.getEntityId())
-                                        .uuid(uuid)
-                                        .name("applicationName")
-                                        .build();
-    wingsPersistence.save(application);
-
+    String gitConnectorName = "gitConnectorName";
+    String repoURL = "https://abc.com";
     final SettingAttribute gitConfig = SettingAttribute.Builder.aSettingAttribute()
                                            .withAccountId(accountId)
-                                           .withValue(GitConfig.builder().branch("branchName").build())
-                                           .withUuid(expectedYamlGitConfig.getGitConnectorId())
+                                           .withName(gitConnectorName)
+                                           .withValue(GitConfig.builder().repoUrl(repoURL).branch("branchName").build())
                                            .build();
-    wingsPersistence.save(gitConfig);
-    final List<GitDetail> gitDetails = gitSyncService.fetchRepositories(accountId);
-    assertThat(gitDetails.size()).isEqualTo(1);
-    final GitDetail gitDetail = gitDetails.get(0);
-    assertThat(gitDetail.getBranchName()).isEqualTo("branchName");
+    String gitConnectorId = wingsPersistence.save(gitConfig);
+    String branchName1 = "branchName1";
+    String applicationName = "app";
+    String accountName = "account";
+    final YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
+                                            .accountId(accountId)
+                                            .branchName("branchName")
+                                            .enabled(true)
+                                            .entityId(uuid)
+                                            .entityType(EntityType.APPLICATION)
+                                            .gitConnectorId(gitConnectorId)
+                                            .entityName(applicationName)
+                                            .build();
+    final YamlGitConfig yamlGitConfig1 = YamlGitConfig.builder()
+                                             .accountId(accountId)
+                                             .branchName(branchName1)
+                                             .enabled(true)
+                                             .entityId(uuid)
+                                             .entityType(EntityType.ACCOUNT)
+                                             .entityName(accountName)
+                                             .gitConnectorId(gitConnectorId)
+                                             .build();
+
+    List<YamlGitConfig> yamlGitChangeSets = new ArrayList<>(Arrays.asList(yamlGitConfig, yamlGitConfig1));
+    when(yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId)).thenReturn(yamlGitChangeSets);
+    List<GitDetail> gitDetails = gitSyncService.fetchRepositoriesAccessibleToUser(accountId);
+    assertThat(gitDetails.size()).isEqualTo(2);
+    GitDetail gitDetail1 = gitDetails.get(0);
+    GitDetail gitDetail2 = gitDetails.get(1);
+    GitDetail accountLevelGitDetail = gitDetail1.getEntityType() == EntityType.ACCOUNT ? gitDetail1 : gitDetail2;
+    GitDetail appLevelGitDetail = gitDetail1.getEntityType() == EntityType.APPLICATION ? gitDetail1 : gitDetail2;
+
+    assertThat(accountLevelGitDetail.getBranchName()).isEqualTo(branchName1);
+    assertThat(appLevelGitDetail.getBranchName()).isEqualTo("branchName");
+
+    assertThat(accountLevelGitDetail.getConnectorName()).isEqualTo(gitConnectorName);
+    assertThat(appLevelGitDetail.getConnectorName()).isEqualTo(gitConnectorName);
+
+    assertThat(accountLevelGitDetail.getEntityName()).isEqualTo(accountName);
+    assertThat(appLevelGitDetail.getEntityName()).isEqualTo(applicationName);
   }
 
   @Test
