@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "CommandVersionDTOKeys")
@@ -15,12 +17,17 @@ public class CommandVersionDTO {
   String commandStoreName;
   String version;
   String description;
+  Set<String> tags;
+  String repoUrl;
 
   @Builder(builderMethodName = "newBuilder")
-  public CommandVersionDTO(String commandName, String commandStoreName, String version, String description) {
+  public CommandVersionDTO(String commandName, String commandStoreName, String version, String description,
+      Set<String> tags, String repoUrl) {
     this.commandName = commandName;
     this.commandStoreName = commandStoreName;
     this.version = version;
     this.description = description;
+    this.tags = tags;
+    this.repoUrl = repoUrl;
   }
 }

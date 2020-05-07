@@ -72,15 +72,15 @@ public class CommandLibraryServiceResource {
   }
 
   @GET
-  @Path("/command-stores/{commandStoreName}/commands/categories")
+  @Path("/command-stores/{commandStoreName}/commands/tags")
   @Produces(APPLICATION_JSON)
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  public Response getCommandCategories(@QueryParam("accountId") String accountId,
+  public Response getCommandTags(@QueryParam("accountId") String accountId,
       @PathParam("commandStoreName") String commandStoreName, @Context UriInfo uriInfo) {
     return executeRequest(
-        serviceHttpClient.getCommandCategories(commandStoreName, prepareQueryMap(uriInfo.getQueryParameters())));
+        serviceHttpClient.getCommandTags(commandStoreName, prepareQueryMap(uriInfo.getQueryParameters())));
   }
 
   @GET

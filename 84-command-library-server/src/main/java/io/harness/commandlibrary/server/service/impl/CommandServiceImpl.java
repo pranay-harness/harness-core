@@ -82,9 +82,9 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public CommandEntity createFromManifest(String commandStoreName, CommandManifest manifest) {
+  public CommandEntity createFromManifest(String commandStoreName, CommandManifest manifest, String accountId) {
     final CommandEntityBuilder commandBuilder = CommandEntity.builder().commandStoreName(commandStoreName);
-    populateFromManifest(commandBuilder, manifest);
+    populateFromManifest(commandBuilder, manifest, accountId);
     return saveAndGet(commandBuilder.build());
   }
 
@@ -99,11 +99,12 @@ public class CommandServiceImpl implements CommandService {
   }
 
   private CommandEntityBuilder populateFromManifest(
-      CommandEntityBuilder commandEntityBuilder, CommandManifest commandManifest) {
+      CommandEntityBuilder commandEntityBuilder, CommandManifest commandManifest, String accountId) {
     return commandEntityBuilder.name(commandManifest.getName())
-        .category(commandManifest.getCategory())
+        .tags(commandManifest.getTags())
         .description(commandManifest.getDescription())
-        .displayName(commandManifest.getDisplayName())
+        .createdByAccountId(accountId)
+        .lastUpdatedByAccountId(accountId)
         .type(commandManifest.getType());
   }
 }

@@ -36,10 +36,10 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class ServiceCommandArchiveHandler implements CommandArchiveHandler {
-  public static final String COMMAND_DETAIL_YAML = "command-detail.yaml";
+  public static final String COMMAND_DETAIL_YAML = "content.yaml";
 
-  private CommandService commandService;
-  private CommandVersionService commandVersionService;
+  private final CommandService commandService;
+  private final CommandVersionService commandVersionService;
   private final CommandTemplateYamlHelper commandTemplateYamlHelper;
 
   @Inject
@@ -62,15 +62,15 @@ public class ServiceCommandArchiveHandler implements CommandArchiveHandler {
     }
     //    create manifest object
     final CommandManifest manifest = commandArchiveContext.getCommandManifest();
-    final String commandStoreName = commandArchiveContext.getCommandStoreName();
 
     final String commandYamlStr = getCommandYamlStr(commandArchiveContext);
 
     validateCommandYamlStr(commandYamlStr);
 
-    final CommandEntity commandEntity = ensureCommandExists(commandStoreName, manifest);
+    final CommandEntity commandEntity = ensureCommandExists(commandArchiveContext);
 
-    final CommandVersionEntity newCommandVersionEntity = createNewVersion(commandEntity, manifest, commandYamlStr);
+    final CommandVersionEntity newCommandVersionEntity =
+        createNewVersion(commandEntity, manifest, commandYamlStr, commandArchiveContext.getAccountId());
 
     updateCommandWithNewVersionDetails(commandEntity, newCommandVersionEntity);
 
@@ -80,13 +80,17 @@ public class ServiceCommandArchiveHandler implements CommandArchiveHandler {
   private CommandEntity updateCommandWithNewVersionDetails(
       CommandEntity commandEntity, CommandVersionEntity newCommandVersionEntity) {
     commandEntity.setLatestVersion(newCommandVersionEntity.getVersion());
+    commandEntity.setTags(newCommandVersionEntity.getTags());
+    commandEntity.setRepoUrl(newCommandVersionEntity.getRepoUrl());
+    commandEntity.setDescription(newCommandVersionEntity.getDescription());
+    commandEntity.setLastUpdatedByAccountId(newCommandVersionEntity.getLastUpdatedByAccountId());
     return commandService.saveAndGet(commandEntity);
   }
 
   private CommandVersionEntity createNewVersion(
-      CommandEntity commandEntity, CommandManifest manifest, String commandYamlStr) {
+      CommandEntity commandEntity, CommandManifest manifest, String commandYamlStr, String accountId) {
     final CommandVersionEntityBuilder versionBuilder =
-        populateMetadataInVersion(CommandVersionEntity.builder(), commandYamlStr, commandEntity, manifest);
+        populateMetadataInVersion(CommandVersionEntity.builder(), commandYamlStr, commandEntity, manifest, accountId);
 
     processYamlAndPopulateBuilder(manifest.getName(), commandYamlStr, versionBuilder);
 
@@ -97,12 +101,16 @@ public class ServiceCommandArchiveHandler implements CommandArchiveHandler {
   }
 
   private CommandVersionEntityBuilder populateMetadataInVersion(CommandVersionEntityBuilder versionBuilder,
-      String commandYamlStr, CommandEntity commandEntity, CommandManifest manifest) {
+      String commandYamlStr, CommandEntity commandEntity, CommandManifest manifest, String accountId) {
     return versionBuilder.yamlContent(commandYamlStr)
         .version(manifest.getVersion())
         .description(manifest.getDescription())
+        .tags(manifest.getTags())
+        .repoUrl(manifest.getRepoUrl())
         .commandName(commandEntity.getName())
         .commandStoreName(commandEntity.getCommandStoreName())
+        .createdByAccountId(accountId)
+        .lastUpdatedByAccountId(accountId)
         .commandId(commandEntity.getUuid());
   }
 
@@ -159,8 +167,13 @@ public class ServiceCommandArchiveHandler implements CommandArchiveHandler {
         .orElseThrow(() -> new InvalidRequestException(COMMAND_DETAIL_YAML + " file not found"));
   }
 
-  private CommandEntity ensureCommandExists(String commandStoreName, CommandManifest manifest) {
-    return commandService.getCommandEntity(commandStoreName, manifest.getName())
-        .orElseGet(() -> commandService.createFromManifest(commandStoreName, manifest));
+  private CommandEntity ensureCommandExists(CommandArchiveContext commandArchiveContext) {
+    final String commandStoreName = commandArchiveContext.getCommandStoreName();
+    final CommandManifest commandManifest = commandArchiveContext.getCommandManifest();
+    final String commandName = commandManifest.getName();
+    return commandService.getCommandEntity(commandStoreName, commandName)
+        .orElseGet(()
+                       -> commandService.createFromManifest(
+                           commandStoreName, commandManifest, commandArchiveContext.getAccountId()));
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.commandlibrary.server.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.commandlibrary.server.utils.CommandUtils.populateCommandDTO;
 import static java.util.stream.Collectors.toList;
@@ -43,21 +44,24 @@ public class CommandStoreServiceImpl implements CommandStoreService {
 
   @Override
   public PageResponse<CommandDTO> listCommandsForStore(
-      String commandStoreName, PageRequest<CommandEntity> pageRequest, String category) {
-    pageRequest.addFilter(SearchFilter.builder()
-                              .fieldName(CommandEntityKeys.commandStoreName)
-                              .op(EQ)
-                              .fieldValues(new String[] {commandStoreName})
-                              .build());
-    if (EmptyPredicate.isNotEmpty(category)) {
-      pageRequest.addFilter(SearchFilter.builder()
-                                .fieldName(CommandEntityKeys.category)
-                                .op(EQ)
-                                .fieldValues(new String[] {category})
-                                .build());
+      String commandStoreName, PageRequest<CommandEntity> pageRequest, String tag) {
+    pageRequest.addFilter(CommandEntityKeys.commandStoreName, EQ, commandStoreName);
+
+    if (EmptyPredicate.isNotEmpty(tag)) {
+      pageRequest.addFilter(CommandEntityKeys.tags, CONTAINS, tag);
     }
+
+    addFilterForCommandsWithVersionsOnly(pageRequest);
+
     final PageResponse<CommandEntity> commandEntitiesPR = commandService.listCommandEntity(pageRequest);
     return convert(commandEntitiesPR);
+  }
+  private void addFilterForCommandsWithVersionsOnly(PageRequest<CommandEntity> pageRequest) {
+    pageRequest.addFilter(SearchFilter.builder()
+                              .fieldName(CommandEntityKeys.latestVersion)
+                              .op(SearchFilter.Operator.NOT_EQ)
+                              .fieldValues(new Object[] {null})
+                              .build());
   }
 
   @Override

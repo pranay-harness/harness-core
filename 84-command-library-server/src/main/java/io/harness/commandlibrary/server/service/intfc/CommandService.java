@@ -21,7 +21,7 @@ public interface CommandService {
 
   Optional<CommandEntity> getEntityById(String commandId);
 
-  CommandEntity createFromManifest(String commandStoreName, CommandManifest manifest);
+  CommandEntity createFromManifest(String commandStoreName, CommandManifest manifest, String accountId);
 
   boolean isCommandTypeSupported(String commandStoreName, String commandType);
 }

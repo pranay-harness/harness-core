@@ -3,9 +3,14 @@ package io.harness.commandlibrary.server.resources;
 import static io.harness.commandlibrary.server.utils.ArchiveUtils.getAllFilePaths;
 import static io.harness.commandlibrary.server.utils.CommandVersionUtils.populateCommandVersionDTO;
 import static io.harness.commandlibrary.server.utils.YamlUtils.fromYaml;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
@@ -17,19 +22,23 @@ import io.harness.beans.PageResponse;
 import io.harness.commandlibrary.api.dto.CommandDTO;
 import io.harness.commandlibrary.api.dto.CommandStoreDTO;
 import io.harness.commandlibrary.api.dto.CommandVersionDTO;
+import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.beans.CommandArchiveContext;
 import io.harness.commandlibrary.server.beans.CommandManifest;
+import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.commandlibrary.server.beans.archive.ArchiveFile;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.commandlibrary.server.utils.ArchiveUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.NotNull;
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
@@ -40,11 +49,16 @@ import software.wings.security.annotations.PublicApi;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -62,6 +76,7 @@ public class CommandStoreResource {
   @Inject private CommandStoreService commandStoreService;
   @Inject private CommandService commandService;
   @Inject private CommandVersionService commandVersionService;
+  @Inject private CommandLibraryServerConfig commandLibraryServerConfig;
 
   @GET
   @Path("test")
@@ -79,13 +94,15 @@ public class CommandStoreResource {
   }
 
   @GET
-  @Path("{commandStoreName}/commands/categories")
+  @Path("{commandStoreName}/commands/tags")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<List<String>> getCommandCategories(
-      @QueryParam("accountId") String accountId, @PathParam("commandStoreName") String commandStoreName) {
-    return new RestResponse<>(Arrays.asList("Kubernetes", "Azure", "GCP"));
+  public RestResponse<Set<String>> getCommandTags(@QueryParam("accountId") String accountId,
+      @PathParam("commandStoreName") String commandStoreName,
+      @DefaultValue("true") @QueryParam("onlyImportant") boolean onlyImportant) {
+    return new RestResponse<>(onlyImportant ? commandLibraryServerConfig.getTagConfig().getImportantTags()
+                                            : commandLibraryServerConfig.getTagConfig().getAllowedTags());
   }
 
   @GET
@@ -95,9 +112,8 @@ public class CommandStoreResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<CommandDTO>> listCommands(@QueryParam("accountId") String accountId,
       @PathParam("commandStoreName") String commandStoreName, @BeanParam PageRequest<CommandEntity> pageRequest,
-      @QueryParam("cl_implementation_version") Integer clImplementationVersion,
-      @QueryParam("category") String category) {
-    return new RestResponse<>(commandStoreService.listCommandsForStore(commandStoreName, pageRequest, category));
+      @QueryParam("cl_implementation_version") Integer clImplementationVersion, @QueryParam("tag") String tag) {
+    return new RestResponse<>(commandStoreService.listCommandsForStore(commandStoreName, pageRequest, tag));
   }
 
   @GET
@@ -176,8 +192,8 @@ public class CommandStoreResource {
     final ArchiveFile archiveFile = ArchiveUtils.createArchiveFile(uploadInputStream);
     logger.info("Files read from the archive are [{}]", getAllFilePaths(archiveFile));
 
-    final String versionId =
-        commandVersionService.createNewVersionFromArchive(createCommandArchiveContext(commandStoreName, archiveFile));
+    final String versionId = commandVersionService.createNewVersionFromArchive(
+        createCommandArchiveContext(commandStoreName, archiveFile, accountId));
 
     final EnrichedCommandVersionDTO commandVersionDTO =
         commandVersionService.getEntityById(versionId)
@@ -193,17 +209,51 @@ public class CommandStoreResource {
     }
   }
 
-  private CommandArchiveContext createCommandArchiveContext(String commandStoreName, ArchiveFile archiveFile) {
+  private CommandArchiveContext createCommandArchiveContext(
+      String commandStoreName, ArchiveFile archiveFile, String accountId) {
     return CommandArchiveContext.builder()
         .commandStoreName(commandStoreName)
         .archiveFile(archiveFile)
         .commandManifest(createCommandManifest(archiveFile))
+        .accountId(accountId)
         .build();
   }
 
   private CommandManifest createCommandManifest(ArchiveFile archiveFile) {
-    return archiveFile.getContent(COMMAND_YAML)
-        .map(archiveContent -> fromYaml(archiveContent.string(StandardCharsets.UTF_8), CommandManifest.class))
-        .orElseThrow(() -> new InvalidRequestException(COMMAND_YAML + " file not found in archive"));
+    final CommandManifest commandManifest =
+        archiveFile.getContent(COMMAND_YAML)
+            .map(archiveContent -> fromYaml(archiveContent.string(StandardCharsets.UTF_8), CommandManifest.class))
+            .orElseThrow(() -> new InvalidRequestException(COMMAND_YAML + " file not found in archive"));
+    commandManifest.setTags(
+        validateAndGetCanonicalizedTags(commandManifest.getTags(), commandLibraryServerConfig.getTagConfig()));
+
+    return commandManifest;
+  }
+
+  private Set<String> validateAndGetCanonicalizedTags(Set<String> tags, TagConfig tagConfig) {
+    final Map<String, String> allowedTagsCanonicalMap = canonicalMapOfTags(tagConfig.getAllowedTags());
+    validateAllowedTags(tags, allowedTagsCanonicalMap);
+    return emptyIfNull(trimmedLowercaseSet(tags))
+        .stream()
+        .map(allowedTagsCanonicalMap::get)
+        .filter(Objects::nonNull)
+        .collect(toSet());
+  }
+
+  private void validateAllowedTags(Set<String> tags, Map<String, String> allowedTagsCanonicalMap) {
+    final List<String> unknownTags = emptyIfNull(tags)
+                                         .stream()
+                                         .filter(Objects::nonNull)
+                                         .map(StringUtils::trim)
+                                         .filter(EmptyPredicate::isNotEmpty)
+                                         .filter(tag -> !allowedTagsCanonicalMap.containsKey(tag.toLowerCase()))
+                                         .collect(Collectors.toList());
+    if (isNotEmpty(unknownTags)) {
+      throw new InvalidRequestException(format("these tags are not allowed = %s", unknownTags));
+    }
+  }
+
+  private Map<String, String> canonicalMapOfTags(Set<String> tags) {
+    return tags.stream().collect(toMap(String::toLowerCase, Function.identity()));
   }
 }

@@ -1,12 +1,9 @@
 package software.wings.beans.commandlibrary;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.AccessLevel;
@@ -17,6 +14,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -25,19 +23,18 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "CommandEntityKeys")
 @Entity(value = "clCommands", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CommandEntity
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class CommandEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) String uuid;
   String commandStoreName;
   String type;
   String name;
-  String displayName;
   String description;
-  String category;
+  String repoUrl;
+  Set<String> tags;
   String imageUrl;
   String latestVersion;
-  EmbeddedUser createdBy;
   long createdAt;
-  EmbeddedUser lastUpdatedBy;
+  String lastUpdatedByAccountId;
   long lastUpdatedAt;
+  String createdByAccountId;
 }

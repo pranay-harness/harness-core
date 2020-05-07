@@ -1,11 +1,13 @@
 package io.harness.commandlibrary.server;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import io.dropwizard.Configuration;
 import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.app.CommandLibraryServerModule;
+import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.testlib.module.TestMongoModule;
@@ -22,7 +24,10 @@ public class CommandLibraryServerTestRule extends WingsRule {
     final CommandLibraryServerConfig configuration = new CommandLibraryServerConfig();
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
-
+    configuration.setTagConfig(TagConfig.builder()
+                                   .allowedTags(ImmutableSet.of("Azure", "Gcp", "Kubernetes", "Aws"))
+                                   .importantTags(ImmutableSet.of("Azure", "Gcp", "Kubernetes", "Aws"))
+                                   .build());
     return configuration;
   }
 

@@ -15,6 +15,8 @@ public class CommandVersionUtils {
           .version(commandVersionEntity.getVersion())
           .yamlContent(commandVersionEntity.getYamlContent())
           .templateObject(commandVersionEntity.getTemplateObject())
+          .tags(commandVersionEntity.getTags())
+          .repoUrl(commandVersionEntity.getRepoUrl())
           .variables(commandVersionEntity.getVariables());
     }
     return builder;

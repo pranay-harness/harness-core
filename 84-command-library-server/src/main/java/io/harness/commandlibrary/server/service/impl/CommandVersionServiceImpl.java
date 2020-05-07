@@ -3,25 +3,32 @@ package io.harness.commandlibrary.server.service.impl;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.commandlibrary.server.beans.CommandArchiveContext;
 import io.harness.commandlibrary.server.beans.CommandManifest;
+import io.harness.commandlibrary.server.beans.CommandManifest.CommandManifestKeys;
 import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -32,14 +39,12 @@ public class CommandVersionServiceImpl implements CommandVersionService {
   private final WingsPersistence wingsPersistence;
   private final Set<CommandArchiveHandler> commandArchiveHandlers;
   private final CommandService commandService;
-  private final CommandVersionService commandVersionService;
   @Inject
   public CommandVersionServiceImpl(WingsPersistence wingsPersistence, Set<CommandArchiveHandler> commandArchiveHandlers,
-      CommandService commandService, CommandVersionService commandVersionService) {
+      CommandService commandService) {
     this.wingsPersistence = wingsPersistence;
     this.commandArchiveHandlers = commandArchiveHandlers;
     this.commandService = commandService;
-    this.commandVersionService = commandVersionService;
   }
 
   @Override
@@ -89,21 +94,51 @@ public class CommandVersionServiceImpl implements CommandVersionService {
     final CommandManifest commandManifest = commandArchiveContext.getCommandManifest();
     final String type = commandManifest.getType();
     final String commandStoreName = commandArchiveContext.getCommandStoreName();
-    validateVersionDoesNotExist(commandStoreName, commandManifest);
+    validateMandatoryParamsPresentInManifest(commandManifest);
     validateCommandType(type, commandStoreName);
-    validateVersion(commandManifest);
+    validateVersion(commandStoreName, commandManifest);
   }
 
-  private void validateVersion(CommandManifest commandManifest) {
+  private void validateMandatoryParamsPresentInManifest(CommandManifest commandManifest) {
+    ensureNotEmpty(commandManifest.getName(), CommandManifestKeys.name);
+    ensureNotEmpty(commandManifest.getVersion(), CommandManifestKeys.version);
+    ensureNotEmpty(commandManifest.getType(), CommandManifestKeys.type);
+  }
+  private void ensureNotEmpty(String value, String fieldName) {
+    if (isBlank(value)) {
+      throw new InvalidArgumentsException(Pair.of(fieldName, value));
+    }
+  }
+
+  private void validateVersion(String commandStoreName, CommandManifest commandManifest) {
+    validateVersionFormat(commandManifest);
+    validateVersionDoesNotExist(commandStoreName, commandManifest);
+    validateVersionHigherThanLast(commandStoreName, commandManifest);
+  }
+
+  private void validateVersionHigherThanLast(String commandStoreName, CommandManifest commandManifest) {
+    final Optional<CommandEntity> commandEntityOpt =
+        commandService.getCommandEntity(commandStoreName, commandManifest.getName());
+
+    commandEntityOpt.map(CommandEntity::getLatestVersion).filter(EmptyPredicate::isNotEmpty).ifPresent(lastVersion -> {
+      if (versionCompare(lastVersion, commandManifest.getVersion()) > 0) {
+        throw new InvalidArgumentsException(
+            format("version [%s] should be higher than latest version [%s]", commandManifest.getVersion(), lastVersion),
+            null);
+      }
+    });
+  }
+
+  private void validateVersionFormat(CommandManifest commandManifest) {
     final String version = commandManifest.getVersion();
     if (!VESRION_REGEX_PATTERN.matcher(version).matches()) {
-      throw new InvalidRequestException(format("version [%s] does not meet the required syntax eg 0.1.1", version));
+      throw new InvalidRequestException(format("version [%s] does not meet the required syntax", version));
     }
   }
 
   private void validateVersionDoesNotExist(String commandStoreName, CommandManifest manifest) {
     final Optional<CommandVersionEntity> commandVersionEntityOpt =
-        commandVersionService.getCommandVersionEntity(commandStoreName, manifest.getName(), manifest.getVersion());
+        getCommandVersionEntity(commandStoreName, manifest.getName(), manifest.getVersion());
     if (commandVersionEntityOpt.isPresent()) {
       throw new InvalidRequestException(
           format("Version already exist with details store = [%s], command =[%s], version =[%s]", commandStoreName,
@@ -115,5 +150,23 @@ public class CommandVersionServiceImpl implements CommandVersionService {
     if (!commandService.isCommandTypeSupported(commandStoreName, type)) {
       throw new InvalidRequestException(format("command type =[%s] not supported", type));
     }
+  }
+
+  private int versionCompare(String str1, String str2) {
+    try (Scanner s1 = new Scanner(str1); Scanner s2 = new Scanner(str2)) {
+      s1.useDelimiter("\\.");
+      s2.useDelimiter("\\.");
+
+      while (s1.hasNextInt() && s2.hasNextInt()) {
+        int v1 = s1.nextInt();
+        int v2 = s2.nextInt();
+        if (v1 < v2) {
+          return -1;
+        } else if (v1 > v2) {
+          return 1;
+        }
+      }
+    }
+    return 0;
   }
 }

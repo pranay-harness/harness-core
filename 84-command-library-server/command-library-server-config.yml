@@ -49,3 +49,15 @@ mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+
+tag:
+  importantTags:
+  - Azure
+  - Kubernetes
+  - Gcp
+  - Aws
+  allowedTags:
+  - Azure
+  - Kubernetes
+  - Gcp
+  - Aws
