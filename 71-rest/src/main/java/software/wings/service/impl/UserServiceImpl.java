@@ -2959,6 +2959,8 @@ public class UserServiceImpl implements UserService {
       return InviteOperationResponse.FAIL;
     }
 
+    eventPublishHelper.publishUserInviteVerifiedFromAccountEvent(account.getUuid(), user.getEmail());
+
     AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
     boolean isPasswordRequired =
         (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());

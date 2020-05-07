@@ -31,6 +31,7 @@ import static io.harness.event.model.EventType.TRIAL_TO_COMMUNITY;
 import static io.harness.event.model.EventType.TRIAL_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
+import static io.harness.event.model.EventType.USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.validation.Validator.notNullCheck;
@@ -83,6 +84,7 @@ public class SegmentHandler implements EventHandler {
   @Inject private SignupService signupService;
   @Inject private Utils utils;
   @Inject private PersistentLocker persistentLocker;
+  private static final String USER_EMAIL_VERIFIED = "User Email Verified";
 
   @UtilityClass
   public static final class Keys {
@@ -109,7 +111,8 @@ public class SegmentHandler implements EventHandler {
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
             COMMUNITY_TO_PAID, COMMUNITY_TO_ESSENTIALS, ESSENTIALS_TO_PAID, PAID_TO_ESSENTIALS, TRIAL_TO_ESSENTIALS,
-            NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM, TECH_STACK));
+            NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM, TECH_STACK,
+            USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT));
   }
 
   public boolean isSegmentEnabled() {
@@ -210,6 +213,10 @@ public class SegmentHandler implements EventHandler {
         case TECH_STACK:
           properties.put(ORIGINAL_TIMESTAMP_NAME, String.valueOf(System.currentTimeMillis()));
           reportTrackEvent(account, eventType.name(), user, properties, null);
+          break;
+        case USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT:
+          properties.put(ORIGINAL_TIMESTAMP_NAME, String.valueOf(System.currentTimeMillis()));
+          reportTrackEvent(account, USER_EMAIL_VERIFIED, user, properties, null);
           break;
         default:
           reportTrackEvent(account, eventType.name(), user, null);
