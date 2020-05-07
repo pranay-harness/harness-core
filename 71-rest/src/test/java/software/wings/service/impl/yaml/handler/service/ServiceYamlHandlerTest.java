@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -204,5 +205,29 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setChange(gitFileChange);
     changeContext.setYaml(yaml);
     return changeContext;
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testAddNewServiceVariables() {
+    when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
+
+    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+
+    NameValuePair.Yaml newServiceVar = NameValuePair.Yaml.builder()
+                                           .name("enc-3")
+                                           .value("safeharness:new-secret")
+                                           .valueType(Type.ENCRYPTED_TEXT.name())
+                                           .build();
+    yaml.getConfigVariables().add(newServiceVar);
+    when(yamlHelper.extractEncryptedRecordId("safeharness:new-secret")).thenReturn("new-secret");
+    Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
+    assertThat(fromYaml).isNotNull();
+    verify(serviceVariableService, times(1)).save(captor.capture(), anyBoolean());
+    assertThat(
+        captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("new-secret");
   }
 }
