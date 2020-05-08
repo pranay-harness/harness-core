@@ -34,7 +34,6 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.time.Instant;
@@ -64,9 +63,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;
   @Mock ClusterRecordService clusterRecordService;
   @Mock PerpetualTaskService perpetualTaskService;
-  @Mock DelegateService delegateService;
   @Mock LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
-  @Mock CeExceptionRecordDao CeExceptionRecordDao;
+  @Mock CeExceptionRecordDao ceExceptionRecordDao;
 
   @InjectMocks HealthStatusServiceImpl healthStatusService;
 
@@ -96,20 +94,20 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .perpetualTaskIds(perpetualTaskIds)
                         .build();
 
-    taskRecord = PerpetualTaskRecord.builder()
-                     .delegateId(delegateId)
-                     .state(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-                     .build();
+    taskRecord = getPerpetualTaskRecord(delegateId, PerpetualTaskState.TASK_RUN_SUCCEEDED);
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId)))
         .thenReturn(Arrays.asList(clusterRecord));
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
-    when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(true);
     when(lastReceivedPublishedMessageDao.get(eq(accountId), eq(clusterId)))
         .thenReturn(
             LastReceivedPublishedMessage.builder().lastReceivedAt(Instant.now(fakeClock).toEpochMilli()).build());
+  }
+
+  private PerpetualTaskRecord getPerpetualTaskRecord(String delegateId, PerpetualTaskState state) {
+    return PerpetualTaskRecord.builder().delegateId(delegateId).state(state.name()).build();
   }
 
   @Test
@@ -125,7 +123,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldReturnUnhealthyWhenDelegateDisconnected() {
-    when(delegateService.checkDelegateConnected(eq(delegateId))).thenReturn(false);
+    PerpetualTaskRecord taskRecord = getPerpetualTaskRecord(null, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
+    when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();
   }

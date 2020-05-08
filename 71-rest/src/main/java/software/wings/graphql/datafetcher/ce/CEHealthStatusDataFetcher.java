@@ -22,7 +22,7 @@ public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO>
     String cloudProviderId = cloudProvider.getId();
 
     try {
-      CEHealthStatus ceHealthStatus = healthStatusService.getHealthStatus(cloudProviderId);
+      CEHealthStatus ceHealthStatus = healthStatusService.getHealthStatus(cloudProviderId, false);
       return CEHealthStatusDTO.builder()
           .isHealthy(ceHealthStatus.isHealthy())
           .clusterHealthStatusList(ceHealthStatus.getCeClusterHealthList())

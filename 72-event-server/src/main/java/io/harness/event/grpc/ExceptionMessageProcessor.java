@@ -5,7 +5,9 @@ import com.google.inject.Inject;
 import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.ccm.health.CeExceptionRecordDao;
 import io.harness.event.payloads.CeExceptionMessage;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ExceptionMessageProcessor implements MessageProcessor {
   private final CeExceptionRecordDao ceK8SExceptionRecordDao;
 
@@ -22,5 +24,6 @@ public class ExceptionMessageProcessor implements MessageProcessor {
                                      .clusterId(exceptionMessage.getClusterId())
                                      .message(exceptionMessage.getMessage())
                                      .build());
+    logger.info("Saved CE exception messages.");
   }
 }

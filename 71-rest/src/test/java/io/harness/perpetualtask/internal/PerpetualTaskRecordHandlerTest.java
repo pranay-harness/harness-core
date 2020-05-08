@@ -76,7 +76,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldNotHandler() throws InterruptedException {
+  public void shouldNotHandle() throws InterruptedException {
     RemoteMethodReturnValueData response = RemoteMethodReturnValueData.builder().build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);

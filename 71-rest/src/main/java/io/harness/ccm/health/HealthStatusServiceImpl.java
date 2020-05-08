@@ -21,9 +21,11 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -38,7 +40,6 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
   @Inject PerpetualTaskService perpetualTaskService;
-  @Inject DelegateService delegateService;
   @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
   @Inject CeExceptionRecordDao ceExceptionRecordDao;
 
@@ -47,10 +48,17 @@ public class HealthStatusServiceImpl implements HealthStatusService {
 
   @Override
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
+    return getHealthStatus(cloudProviderId, true);
+  }
+
+  @Override
+  public CEHealthStatus getHealthStatus(String cloudProviderId, boolean cloudCostEnabled) {
     SettingAttribute cloudProvider = settingsService.get(cloudProviderId);
     Preconditions.checkNotNull(cloudProvider);
-    Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
-        format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
+    if (cloudCostEnabled) {
+      Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
+          format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
+    }
 
     List<ClusterRecord> clusterRecords = clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProviderId);
 
@@ -89,18 +97,16 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
-        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name())) {
-          errors.add(NO_ELIGIBLE_DELEGATE);
-        } else {
+        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.TASK_UNASSIGNED.name())) {
           errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_DELEGATE_AVAILABLE.name())) {
+          errors.add(DELEGATE_NOT_AVAILABLE);
+        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name())) {
+          errors.add(NO_ELIGIBLE_DELEGATE);
         }
         continue;
       }
 
-      if (!delegateService.checkDelegateConnected(delegateId)) {
-        errors.add(DELEGATE_NOT_AVAILABLE);
-        continue;
-      }
       long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
       if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp)) {
         errors.add(NO_RECENT_EVENTS_PUBLISHED);
@@ -118,16 +124,25 @@ public class HealthStatusServiceImpl implements HealthStatusService {
 
   private List<String> getMessages(ClusterRecord clusterRecord, List<CEError> errors) {
     Preconditions.checkNotNull(clusterRecord.getCluster());
+
     String clusterName = clusterRecord.getCluster().getClusterName();
     List<String> messages = new ArrayList<>();
     long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
     for (CEError error : errors) {
       switch (error) {
-        case NO_ELIGIBLE_DELEGATE:
-          messages.add(format(NO_ELIGIBLE_DELEGATE.getMessage(), clusterName));
+        case PERPETUAL_TASK_NOT_ASSIGNED:
+          messages.add(PERPETUAL_TASK_NOT_ASSIGNED.getMessage());
           break;
         case DELEGATE_NOT_AVAILABLE:
-          messages.add(String.format(DELEGATE_NOT_AVAILABLE.getMessage(), clusterName));
+          String delegateName = getDelegateName(clusterRecord.getCluster().getCloudProviderId());
+          if (delegateName == null) {
+            messages.add(String.format(DELEGATE_NOT_AVAILABLE.getMessage(), ""));
+          } else {
+            messages.add(String.format(DELEGATE_NOT_AVAILABLE.getMessage(), "\"" + delegateName + "\""));
+          }
+          break;
+        case NO_ELIGIBLE_DELEGATE:
+          messages.add(format(NO_ELIGIBLE_DELEGATE.getMessage(), clusterName));
           break;
         case NO_RECENT_EVENTS_PUBLISHED:
           messages.add(
@@ -149,12 +164,20 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         messages.add(String.format(LAST_EVENT_TIMESTAMP_MESSAGE, new Date(lastEventTimestamp)));
       }
     }
-
     return messages;
   }
 
-  private boolean hasRecentEvents(long eventTimestamp) {
-    return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD;
+  private String getDelegateName(String cloudProviderId) {
+    String delegateName = null;
+    SettingValue cloudProvider = settingsService.get(cloudProviderId).getValue();
+    if (cloudProvider instanceof KubernetesClusterConfig) {
+      KubernetesClusterConfig k8sCloudProvider = (KubernetesClusterConfig) cloudProvider;
+      delegateName = k8sCloudProvider.getDelegateName();
+    } else if (cloudProvider instanceof AwsConfig) {
+      AwsConfig awsCloudProvider = (AwsConfig) cloudProvider;
+      delegateName = awsCloudProvider.getTag();
+    }
+    return delegateName;
   }
 
   private long getLastEventTimestamp(String accountId, String identifier) {
@@ -164,5 +187,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       return 0;
     }
     return lastReceivedPublishedMessage.getLastReceivedAt();
+  }
+
+  private boolean hasRecentEvents(long eventTimestamp) {
+    return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD;
   }
 }
