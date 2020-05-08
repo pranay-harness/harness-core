@@ -11,11 +11,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Value
 @Builder
-public class CIContainerDefinitionInfo implements UuidAccess {
+public class ContainerDefinitionInfo implements UuidAccess {
   private String uuid = generateUuid();
   @NotEmpty private String settingId;
-  private CIContainerImageDetails ciImageDetailsInfo;
-  private CIContainerType containerType;
+  private ContainerImageDetails containerImageDetails;
+  private ContainerType containerType;
 
   @Override
   public String getUuid() {

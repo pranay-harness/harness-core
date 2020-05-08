@@ -10,7 +10,7 @@ import lombok.Value;
 @Data
 @Value
 @Builder
-public class CIStepMetadata {
+public class StepMetadata {
   private String uuid = generateUuid();
   private RepoConfiguration repoConfiguration;
 }

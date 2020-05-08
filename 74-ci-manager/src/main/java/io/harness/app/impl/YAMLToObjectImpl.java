@@ -2,21 +2,21 @@ package io.harness.app.impl;
 
 import static java.util.Arrays.asList;
 
-import graph.CIStepsGraph;
+import graph.StepGraph;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.beans.CIPipeline;
-import io.harness.beans.environment.CIBuildJobEnvInfo;
-import io.harness.beans.environment.CIK8BuildJobEnvInfo;
-import io.harness.beans.environment.pod.CIPodSetupInfo;
-import io.harness.beans.environment.pod.container.CIContainerDefinitionInfo;
-import io.harness.beans.script.CIScriptInfo;
-import io.harness.beans.stages.CIJobStage;
-import io.harness.beans.stages.CIStageInfo;
-import io.harness.beans.steps.CIBuildEnvSetupStepInfo;
-import io.harness.beans.steps.CIBuildStepInfo;
+import io.harness.beans.environment.BuildJobEnvInfo;
+import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.pod.PodSetupInfo;
+import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.script.ScriptInfo;
+import io.harness.beans.stages.JobStage;
+import io.harness.beans.stages.StageInfo;
+import io.harness.beans.steps.BuildEnvSetupStepInfo;
+import io.harness.beans.steps.BuildStepInfo;
 import io.harness.beans.steps.CIStep;
-import io.harness.beans.steps.CIStepMetadata;
-import io.harness.beans.steps.CITestStepInfo;
+import io.harness.beans.steps.StepMetadata;
+import io.harness.beans.steps.TestStepInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,50 +46,50 @@ public class YAMLToObjectImpl implements YAMLToObject<CIPipeline> {
         .build();
   }
 
-  private List<CIScriptInfo> getBuildCommandSteps() {
-    return asList(CIScriptInfo.builder().scriptString(BUILD_SCRIPT).build());
+  private List<ScriptInfo> getBuildCommandSteps() {
+    return asList(ScriptInfo.builder().scriptString(BUILD_SCRIPT).build());
   }
 
-  private List<CIStageInfo> getStages() {
-    return asList(CIJobStage.builder()
-                      .stepInfos(CIStepsGraph.builder()
+  private List<StageInfo> getStages() {
+    return asList(JobStage.builder()
+                      .stepInfos(StepGraph.builder()
                                      .ciSteps(asList(CIStep.builder()
-                                                         .ciStepInfo(CIBuildEnvSetupStepInfo.builder()
-                                                                         .name(ENV_SETUP_NAME)
-                                                                         .ciBuildJobEnvInfo(getCIBuildJobEnvInfo())
-                                                                         .build())
-                                                         .ciStepMetadata(CIStepMetadata.builder().build())
+                                                         .stepInfo(BuildEnvSetupStepInfo.builder()
+                                                                       .name(ENV_SETUP_NAME)
+                                                                       .buildJobEnvInfo(getCIBuildJobEnvInfo())
+                                                                       .build())
+                                                         .stepMetadata(StepMetadata.builder().build())
                                                          .build(),
                                          CIStep.builder()
-                                             .ciStepInfo(CITestStepInfo.builder()
-                                                             .name(BUILD_STEP_NAME)
-                                                             .scriptInfos(getBuildCommandSteps())
-                                                             .build())
-                                             .ciStepMetadata(CIStepMetadata.builder().build())
+                                             .stepInfo(TestStepInfo.builder()
+                                                           .name(BUILD_STEP_NAME)
+                                                           .scriptInfos(getBuildCommandSteps())
+                                                           .build())
+                                             .stepMetadata(StepMetadata.builder().build())
                                              .build(),
 
                                          CIStep.builder()
-                                             .ciStepInfo(CIBuildStepInfo.builder()
-                                                             .name(TEST_STEP_NAME)
-                                                             .scriptInfos(getBuildCommandSteps())
-                                                             .build())
-                                             .ciStepMetadata(CIStepMetadata.builder().build())
+                                             .stepInfo(BuildStepInfo.builder()
+                                                           .name(TEST_STEP_NAME)
+                                                           .scriptInfos(getBuildCommandSteps())
+                                                           .build())
+                                             .stepMetadata(StepMetadata.builder().build())
                                              .build()))
                                      .build())
                       .build());
   }
 
-  private CIBuildJobEnvInfo getCIBuildJobEnvInfo() {
-    return CIK8BuildJobEnvInfo.builder().ciPodsSetupInfo(getCIPodsSetupInfo()).build();
+  private BuildJobEnvInfo getCIBuildJobEnvInfo() {
+    return K8BuildJobEnvInfo.builder().podsSetupInfo(getCIPodsSetupInfo()).build();
   }
 
-  private CIK8BuildJobEnvInfo.CIPodsSetupInfo getCIPodsSetupInfo() {
-    List<CIPodSetupInfo> pods = new ArrayList<>();
-    pods.add(CIPodSetupInfo.builder()
-                 .podSetupParams(CIPodSetupInfo.PodSetupParams.builder()
-                                     .containerInfos(Arrays.asList(CIContainerDefinitionInfo.builder().build()))
+  private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo() {
+    List<PodSetupInfo> pods = new ArrayList<>();
+    pods.add(PodSetupInfo.builder()
+                 .podSetupParams(PodSetupInfo.PodSetupParams.builder()
+                                     .containerDefinitionInfos(Arrays.asList(ContainerDefinitionInfo.builder().build()))
                                      .build())
                  .build());
-    return CIK8BuildJobEnvInfo.CIPodsSetupInfo.builder().pods(pods).build();
+    return K8BuildJobEnvInfo.PodsSetupInfo.builder().pods(pods).build();
   }
 }

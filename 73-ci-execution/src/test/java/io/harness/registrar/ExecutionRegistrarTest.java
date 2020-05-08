@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ExecutionRegistrarTest extends CIExecutionTest {
   @Test
-  @Owner(developers = HARSH, intermittent = true)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
     new ExecutionRegistrar().testClassesModule();

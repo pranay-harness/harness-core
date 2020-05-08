@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import graph.CIStepsGraph;
+import graph.StepGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.plan.ExecutionNode;
@@ -37,13 +37,13 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
   }
 
   @Test
-  @Owner(developers = HARSH, intermittent = true)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() throws IOException {
     ExecutionNode executionNode = ExecutionNode.builder().uuid(UUID).name(NAME).levelType(StepLevel.LEVEL_TYPE).build();
 
     when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(executionNode);
-    CIStepsGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
+    StepGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
     Plan plan = basicExecutionPlanGenerator.generateExecutionPlan(ciStepsGraph);
     assertThat(plan.getNodes()).isEqualTo(Arrays.asList(executionNode, executionNode));
   }

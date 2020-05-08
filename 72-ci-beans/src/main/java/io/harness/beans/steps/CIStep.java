@@ -12,6 +12,6 @@ import lombok.Value;
 @Value
 @Builder
 public class CIStep implements Step {
-  private CIStepInfo ciStepInfo;
-  private CIStepMetadata ciStepMetadata;
+  private StepInfo stepInfo;
+  private StepMetadata stepMetadata;
 }

@@ -9,7 +9,7 @@ import software.wings.beans.container.ImageDetails;
 @Data
 @Value
 @Builder
-public class CIContainerImageDetails {
+public class ContainerImageDetails {
   private ImageDetails imageDetails;
   @NotEmpty private String settingId;
 }

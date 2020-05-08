@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
-import io.harness.beans.steps.CIBuildEnvSetupStepInfo;
+import io.harness.beans.steps.BuildEnvSetupStepInfo;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
@@ -49,6 +49,6 @@ public class BuildEnvSetupState implements State, SyncExecutable {
 
   @Override
   public StateType getType() {
-    return CIBuildEnvSetupStepInfo.stateType;
+    return BuildEnvSetupStepInfo.stateType;
   }
 }

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.CIPipeline;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.stages.CIJobStage;
+import io.harness.beans.stages.JobStage;
 import io.harness.engine.ExecutionEngine;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.BasicExecutionPlanGenerator;
@@ -15,7 +15,7 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
 
   public PlanExecution executePipeline(CIPipeline ciPipeline) {
     // TODO iterate all stages properly
-    CIJobStage jobExecutionStage = (CIJobStage) ciPipeline.getLinkedStages().get(0);
+    JobStage jobExecutionStage = (JobStage) ciPipeline.getLinkedStages().get(0);
 
     // TODO set user before execution which will be available once we build authentication
     // User user = UserThreadLocal.get()
