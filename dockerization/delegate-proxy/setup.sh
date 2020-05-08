@@ -2,15 +2,22 @@
 set -x
 set -e
 
+ls -la destination/dist/
+
+cd destination
+
+echo $PURPOSE
+echo $VERSION
+
 
 IMAGES_DIR="images"
 STORAGE_DIR_LOCATION="storage"
 
 
-JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u131
-JRE_SOLARIS_1=jre-8u131-solaris-x64.tar.gz
-JRE_MACOSX_1=jre-8u131-macosx-x64.tar.gz
-JRE_LINUX_1=jre-8u131-linux-x64.tar.gz
+JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242
+JRE_SOLARIS_1=jre_x64_solaris_8u242b08.tar.gz
+JRE_MACOSX_1=jre_x64_macosx_8u242b08.tar.gz
+JRE_LINUX_1=jre_x64_linux_8u242b08.tar.gz
 
 JRE_SOURCE_URL_2=https://app.harness.io/storage/wingsdelegates/jre/8u191
 JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
@@ -36,8 +43,8 @@ OC_MAC_DIR="${IMAGES_DIR}/oc/darwin/$OC_VERSION/"
 mkdir -p $IMAGES_DIR
 
 
-mv artifacts/${PURPOSE}/watcher-${VERSION}.jar ${IMAGES_DIR}/watcher.jar
-mv artifacts/${PURPOSE}/delegate-${VERSION}.jar ${IMAGES_DIR}/delegate.jar
+cp dist/delegate/delegate-capsule.jar ${IMAGES_DIR}/delegate.jar
+cp dist/watcher/watcher-capsule.jar ${IMAGES_DIR}/watcher.jar
 
 
 curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" > "${JRE_SOLARIS_1}"
@@ -154,9 +161,9 @@ function setupDelegateJars(){
     DELEGATE_VERSION=$VERSION
     WATCHER_VERSION=$VERSION
 
-    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u131/
+    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
     mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
-    cp images/jre-8u131-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u131/
+    cp images/jre*8u242b08.tar.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
     cp images/jre-8u191-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
 
     rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
