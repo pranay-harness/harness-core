@@ -23,7 +23,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
-import software.wings.resources.SecretManagementResource;
+import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;

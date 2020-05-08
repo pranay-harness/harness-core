@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.secretsmanagement;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
