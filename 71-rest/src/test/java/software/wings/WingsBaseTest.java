@@ -38,7 +38,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
-import software.wings.resources.SecretManagementResource;
+import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;

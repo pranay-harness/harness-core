@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.secretsmanagement;
 
 import com.google.inject.Inject;
 
