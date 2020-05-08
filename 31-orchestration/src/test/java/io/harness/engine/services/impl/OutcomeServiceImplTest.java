@@ -40,10 +40,9 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
     OutcomeInstance savedInstance = outcomeService.save(instance);
     assertThat(savedInstance).isNotNull();
 
-    Outcome outcome = outcomeService.findOutcome(ambiance, outcomeName);
+    DummyOutcome outcome = outcomeService.findOutcome(ambiance, outcomeName);
     assertThat(outcome).isNotNull();
-    assertThat(outcome).isInstanceOf(DummyOutcome.class);
-    assertThat(((DummyOutcome) outcome).getTest()).isEqualTo("test");
+    assertThat(outcome.getTest()).isEqualTo("test");
   }
 
   @Test

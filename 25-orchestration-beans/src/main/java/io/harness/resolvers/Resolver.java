@@ -9,7 +9,7 @@ import io.harness.state.io.StateTransput;
 
 @Redesign
 public interface Resolver extends RegistrableEntity<RefType> {
-  StateTransput resolve(Ambiance ambiance, RefObject refObject);
+  <T extends StateTransput> T resolve(Ambiance ambiance, RefObject refObject);
 
   RefType getType();
 

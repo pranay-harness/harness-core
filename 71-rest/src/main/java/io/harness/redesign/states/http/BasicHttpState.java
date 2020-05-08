@@ -91,7 +91,7 @@ public class BasicHttpState implements State, AsyncExecutable {
                                                  .errorMsg(httpStateExecutionResponse.getErrorMessage())
                                                  .build();
       responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
-      responseBuilder.outcome(executionData);
+      responseBuilder.outcome("http", executionData);
     }
     return responseBuilder.build();
   }

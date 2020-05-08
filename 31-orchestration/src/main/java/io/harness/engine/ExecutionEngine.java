@@ -21,6 +21,8 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.Outcome;
+import io.harness.data.OutcomeInstance;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
@@ -30,6 +32,7 @@ import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
+import io.harness.engine.services.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -67,37 +70,21 @@ import javax.validation.constraints.NotNull;
 @ExcludeRedesign
 @OwnedBy(CDC)
 public class ExecutionEngine implements Engine {
-  // For database needs
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
-  // For leveraging the wait notify engine
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  // Guice Injector
   @Inject private Injector injector;
-  // ExecutorService for the engine
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  // Registries
   @Inject private StateRegistry stateRegistry;
   @Inject private LevelRegistry levelRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
-
-  // For obtaining ambiance related information
   @Inject private AmbianceHelper ambianceHelper;
-
-  // Obtain concrete entities from obtainments
-  // States | Advisers | Facilitators | Inputs
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-
-  // Helper methods for status updates and related methods
   @Inject private EngineStatusHelper engineStatusHelper;
-
-  // Obtain appropriate invoker
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
-
-  // Obtain appropriate advise Handler
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
-
   @Inject private DelayEventHelper delayEventHelper;
+  @Inject private OutcomeService outcomeService;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     PlanExecution instance = PlanExecution.builder()
@@ -215,9 +202,10 @@ public class ExecutionEngine implements Engine {
   public void handleStateResponse(@NotNull String nodeExecutionId, StateResponse stateResponse) {
     NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
         ops
-        -> ops.set(NodeExecutionKeys.outcomes, stateResponse.getOutcomes())
-               .set(NodeExecutionKeys.status, stateResponse.getStatus())
+        -> ops.set(NodeExecutionKeys.status, stateResponse.getStatus())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    // TODO => handle before node execution update
+    handleOutcomes(nodeExecution.getAmbiance(), stateResponse.getOutcomes());
 
     // TODO handle Failure
     ExecutionNode node = nodeExecution.getNode();
@@ -243,6 +231,21 @@ public class ExecutionEngine implements Engine {
       return;
     }
     handleAdvise(nodeExecution, advise);
+  }
+
+  private void handleOutcomes(Ambiance ambiance, Map<String, Outcome> outcomes) {
+    if (outcomes == null) {
+      return;
+    }
+    outcomes.forEach((name, outcome)
+                         -> outcomeService.save(OutcomeInstance.builder()
+                                                    .uuid(generateUuid())
+                                                    .planExecutionId(ambiance.getPlanExecutionId())
+                                                    .levelExecutions(ambiance.getLevelExecutions())
+                                                    .outcome(outcome)
+                                                    .createdAt(System.currentTimeMillis())
+                                                    .name(name)
+                                                    .build()));
   }
 
   private void endTransition(NodeExecution nodeInstance) {

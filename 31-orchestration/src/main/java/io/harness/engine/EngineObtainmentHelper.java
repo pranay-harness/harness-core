@@ -15,11 +15,12 @@ import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.references.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
+import io.harness.resolvers.Resolver;
 import io.harness.state.io.StateTransput;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Redesign
 @ExcludeRedesign
@@ -28,14 +29,15 @@ public class EngineObtainmentHelper {
   @Inject private ResolverRegistry resolverRegistry;
 
   public List<StateTransput> obtainInputs(
-      Ambiance ambiance, List<RefObject> refObjects, List<StateTransput> additionalInputs) {
+      Ambiance ambiance, List<RefObject> refObjects, List<? extends StateTransput> additionalInputs) {
     if (isEmpty(refObjects)) {
       return Collections.emptyList();
     }
-    List<StateTransput> inputs =
-        refObjects.stream()
-            .map(refObject -> resolverRegistry.obtain(refObject.getRefType()).resolve(ambiance, refObject))
-            .collect(Collectors.toList());
+    List<StateTransput> inputs = new ArrayList<>();
+    for (RefObject refObject : refObjects) {
+      Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
+      inputs.add(resolver.resolve(ambiance, refObject));
+    }
     inputs.addAll(additionalInputs);
     return inputs;
   }

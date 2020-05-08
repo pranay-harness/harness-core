@@ -13,12 +13,15 @@ import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.engine.services.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
+import io.harness.references.RefObject;
+import io.harness.references.RefType;
+import io.harness.state.io.StateTransput;
 
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
 
   @Override
-  public Outcome findOutcome(Ambiance ambiance, String name) {
+  public <T extends Outcome> T findOutcome(Ambiance ambiance, String name) {
     OutcomeInstance outcomeInstance = hPersistence.createQuery(OutcomeInstance.class)
                                           .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
                                           .filter(OutcomeInstanceKeys.name, name)
@@ -26,7 +29,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     if (outcomeInstance == null) {
       return null;
     }
-    return outcomeInstance.getOutcome();
+    return (T) outcomeInstance.getOutcome();
   }
 
   @Override
@@ -38,5 +41,22 @@ public class OutcomeServiceImpl implements OutcomeService {
       throw new InvalidRequestException(
           format("Outcome with name %s, already saved", outcomeInstance.getName()), exception);
     }
+  }
+
+  @Override
+  public <T extends StateTransput> T resolve(Ambiance ambiance, RefObject refObject) {
+    OutcomeInstance outcomeInstance = hPersistence.createQuery(OutcomeInstance.class)
+                                          .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
+                                          .filter(OutcomeInstanceKeys.levelExecutionSetupId, refObject.getProducerId())
+                                          .get();
+    if (outcomeInstance == null) {
+      return null;
+    }
+    return (T) outcomeInstance.getOutcome();
+  }
+
+  @Override
+  public RefType getType() {
+    return RefType.builder().type("OUTCOME").build();
   }
 }
