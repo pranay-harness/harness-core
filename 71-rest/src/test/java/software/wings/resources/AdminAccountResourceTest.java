@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static java.lang.String.format;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -53,5 +54,16 @@ public class AdminAccountResourceTest extends CategoryTest {
         .request()
         .put(Entity.json(""), new GenericType<RestResponse<Boolean>>() {});
     verify(adminAccountService).enableOrDisableCeK8sEventCollection(eq(accountId), eq(true));
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdatePovFlag() {
+    RESOURCES.client()
+        .target(format("/admin/accounts/%s/pov?isPov=%b", accountId, true))
+        .request()
+        .put(Entity.json(""), new GenericType<RestResponse<Boolean>>() {});
+    verify(adminAccountService).updatePovFlag(eq(accountId), eq(true));
   }
 }

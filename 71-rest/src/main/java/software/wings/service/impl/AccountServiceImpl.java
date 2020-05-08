@@ -74,6 +74,7 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -336,6 +337,32 @@ public class AccountServiceImpl implements AccountService {
         account.setAccountName(suggestedAccountName);
       }
     }
+  }
+
+  @Override
+  public boolean updatePovFlag(String accountId, boolean isPov) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      logger.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+
+    if (account.getLicenseInfo() == null || !AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
+      logger.info("accountId={} does not have license or is not a TRIAL account", accountId);
+      return false;
+    }
+
+    UpdateOperations<Account> updateOperation = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperation.set(AccountKeys.isPovAccount, isPov);
+    UpdateResults updateResults = wingsPersistence.update(account, updateOperation);
+
+    if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+      logger.info("Successfully set isPovAccount to {} for accountId = {} ", isPov, accountId);
+      return true;
+    }
+
+    logger.info("Failed to set isPovAccount to {} for accountId = {} ", isPov, accountId);
+    return false;
   }
 
   private void createDefaultAccountEntities(Account account, boolean fromDataGen) {

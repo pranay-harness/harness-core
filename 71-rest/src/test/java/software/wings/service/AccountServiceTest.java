@@ -1078,4 +1078,87 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(deleted).isTrue();
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isNull();
   }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdatePovFlag() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setLicenseUnits(100);
+    licenseInfo.setExpireAfterDays(15);
+
+    Account account = anAccount()
+                          .withCompanyName("CompanyName 1")
+                          .withAccountName("Account Name 1")
+                          .withLicenseInfo(licenseInfo)
+                          .withUuid(accountId)
+                          .build();
+
+    wingsPersistence.save(account);
+
+    boolean updatePovFlag = accountService.updatePovFlag(accountId, true);
+    account = wingsPersistence.get(Account.class, accountId);
+    assertThat(updatePovFlag).isTrue();
+    assertThat(account).isNotNull();
+    assertThat(account.isPovAccount()).isTrue();
+
+    updatePovFlag = accountService.updatePovFlag(accountId, false);
+    assertThat(updatePovFlag).isTrue();
+    account = wingsPersistence.get(Account.class, accountId);
+    assertThat(updatePovFlag).isTrue();
+    assertThat(account).isNotNull();
+    assertThat(account.isPovAccount()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdatePovFlag_ForPaidAccount() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setLicenseUnits(100);
+    licenseInfo.setExpireAfterDays(15);
+
+    Account account = anAccount()
+                          .withCompanyName("CompanyName 1")
+                          .withAccountName("Account Name 1")
+                          .withLicenseInfo(licenseInfo)
+                          .withUuid(accountId)
+                          .build();
+
+    wingsPersistence.save(account);
+
+    boolean updatePovFlag = accountService.updatePovFlag(accountId, true);
+    account = wingsPersistence.get(Account.class, accountId);
+    assertThat(updatePovFlag).isFalse();
+    assertThat(account).isNotNull();
+    assertThat(account.isPovAccount()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdatePovFlag_ForNullLicenseInfo() {
+    Account account =
+        anAccount().withCompanyName("CompanyName 1").withAccountName("Account Name 1").withUuid(accountId).build();
+
+    wingsPersistence.save(account);
+
+    boolean updatePovFlag = accountService.updatePovFlag(accountId, true);
+    account = wingsPersistence.get(Account.class, accountId);
+    assertThat(updatePovFlag).isFalse();
+    assertThat(account).isNotNull();
+    assertThat(account.isPovAccount()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testUpdatePovFlag_WhenAccountNotPresent() {
+    boolean updatePovFlag = accountService.updatePovFlag(accountId, false);
+    assertThat(updatePovFlag).isFalse();
+  }
 }
