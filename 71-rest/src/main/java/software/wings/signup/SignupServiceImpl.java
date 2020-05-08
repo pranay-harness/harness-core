@@ -6,8 +6,10 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
 import static io.harness.eraro.ErrorCode.PASSWORD_STRENGTH_CHECK_FAILED;
 import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.RegexValidator;
 import org.apache.http.client.utils.URIBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
@@ -43,6 +46,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -57,10 +62,16 @@ public class SignupServiceImpl implements SignupService {
   @Inject AccountService accountService;
   @Inject PwnedPasswordChecker pwnedPasswordChecker;
 
+  private static final String COM = "com";
+  private static final String EMAIL = "email";
+  private final RegexValidator domainRegex = new RegexValidator(
+      "^(?:\\p{Alnum}(?>[\\p{Alnum}-]{0,61}\\p{Alnum})?\\.)+(\\p{Alpha}(?>[\\p{Alnum}-]{0,61}\\p{Alnum})?)\\.?$");
+  private static final Pattern EMAIL_PATTERN = Pattern.compile("^\\s*?(.+)@(.+?)\\s*$");
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final String SETUP_PASSWORD_FOR_SIGNUP = "setup_password_for_signup";
+  private static final List<String> whitelistedTopLevelDomains = ImmutableList.of("inc");
 
-  private List<Character> ILLEGAL_CHARACTERS = Collections.unmodifiableList(Arrays.asList(
+  private List<Character> illegalCharacters = Collections.unmodifiableList(Arrays.asList(
       '$', '&', ',', '/', ':', ';', '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
 
   @Override
@@ -131,7 +142,7 @@ public class SignupServiceImpl implements SignupService {
   }
 
   private boolean containsIllegalCharacters(String email) {
-    for (Character illegalChar : ILLEGAL_CHARACTERS) {
+    for (Character illegalChar : illegalCharacters) {
       if (email.indexOf(illegalChar) >= 0) {
         return true;
       }
@@ -139,16 +150,47 @@ public class SignupServiceImpl implements SignupService {
     return false;
   }
 
+  /**
+   * Added support for whitelisted domains because some top level domains are not supported by EmailValidator. If an
+   * email's domain is in whitelist, then EmailValidator will be called with the masked email where top level domain
+   * will be replaced by "com"
+   * @param email
+   */
   @Override
   public void checkIfEmailIsValid(String email) {
-    if (isBlank(email)) {
-      throw new WingsException(INVALID_EMAIL, USER).addParam("email", email);
+    String clonedEmail = email;
+
+    String topLevelDomain = getTopLevelDomain(email);
+    if (!EMPTY.equals(topLevelDomain) && whitelistedTopLevelDomains.contains(topLevelDomain)) {
+      clonedEmail = replaceTopLevelDomain(topLevelDomain, clonedEmail);
+    }
+    if (isBlank(clonedEmail)) {
+      throw new WingsException(INVALID_EMAIL, USER).addParam(EMAIL, email);
     }
 
+    final String clonedEmailAddress = clonedEmail.trim();
     final String emailAddress = email.trim();
-    if (!EmailValidator.getInstance().isValid(emailAddress)) {
-      throw new WingsException(INVALID_EMAIL, USER).addParam("email", emailAddress);
+    if (!EmailValidator.getInstance().isValid(clonedEmailAddress)) {
+      throw new WingsException(INVALID_EMAIL, USER).addParam(EMAIL, emailAddress);
     }
+  }
+
+  /**
+   * Gets the top level domain for an email.
+   * @param email
+   * @return
+   */
+  private String getTopLevelDomain(String email) {
+    Matcher emailMatcher = EMAIL_PATTERN.matcher(email);
+    String domain = emailMatcher.matches() ? emailMatcher.group(2) : EMPTY;
+    String[] groups = domainRegex.match(domain);
+    return groups != null && groups.length > 0 ? groups[0] : EMPTY;
+  }
+
+  private String replaceTopLevelDomain(String topLevelDomain, String email) {
+    StringBuilder emailStringBuilder = new StringBuilder(email);
+    int lastIndex = email.lastIndexOf(topLevelDomain);
+    return emailStringBuilder.replace(lastIndex, lastIndex + topLevelDomain.length(), COM).toString();
   }
 
   @Override
@@ -171,7 +213,7 @@ public class SignupServiceImpl implements SignupService {
         .withIssuer("Harness Inc")
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + (long) expireAfterDays * 24 * 60 * 60 * 1000)) // 24 hrs
-        .withClaim("email", email)
+        .withClaim(EMAIL, email)
         .sign(algorithm);
   }
 
@@ -237,7 +279,7 @@ public class SignupServiceImpl implements SignupService {
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
       verifier.verify(jwtToken);
       JWT decode = JWT.decode(jwtToken);
-      return decode.getClaim("email").asString();
+      return decode.getClaim(EMAIL).asString();
     } catch (UnsupportedEncodingException exception) {
       logger.error("Could not decode token for signup: {}", jwtToken);
       throw new SignupException("Invalid signup token. Please signup again");

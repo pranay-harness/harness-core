@@ -37,6 +37,17 @@ public class SignupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testValidEmailUsingWhitelist() {
+    try {
+      signupService.checkIfEmailIsValid("abcinc@self.inc");
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    }
+  }
+
+  @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testInvalidEmailNegative() {
