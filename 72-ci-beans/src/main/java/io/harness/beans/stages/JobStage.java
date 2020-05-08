@@ -1,6 +1,6 @@
 package io.harness.beans.stages;
 
-import graph.StepsGraph;
+import graph.Graph;
 import io.harness.beans.steps.CIStep;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +13,6 @@ import lombok.Value;
 @Data
 @Value
 @Builder
-public class CIJobStage implements CIStageInfo {
-  StepsGraph<CIStep> stepInfos;
+public class JobStage implements StageInfo {
+  Graph<CIStep> stepInfos;
 }

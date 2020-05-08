@@ -1,6 +1,6 @@
 package io.harness.beans.environment;
 
-public interface CIBuildJobEnvInfo {
+public interface BuildJobEnvInfo {
   enum Type { K8 }
 
   Type getType();

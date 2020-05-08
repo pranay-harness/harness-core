@@ -7,7 +7,7 @@ import lombok.Value;
 @Data
 @Value
 @Builder
-public class CIScriptInfo {
+public class ScriptInfo {
   // TODO Improve it by taking proper script type and input format
   private String scriptString;
 

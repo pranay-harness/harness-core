@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Value
 @Builder
-public class CIArtifactUploadStepInfo implements CIStepInfo {
+public class ArtifactUploadStepInfo implements StepInfo {
   @NotNull private StepType type = StepType.UPLOAD_ARTIFACT;
   @NotNull private StateType stateType = StateType.builder().type(StepType.UPLOAD_ARTIFACT.name()).build();
   private ArtifactUploadInfo artifactUploadInfo;

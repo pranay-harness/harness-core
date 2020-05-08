@@ -7,8 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import graph.CIStepsGraph;
-import graph.StepsGraph;
+import graph.Graph;
+import graph.StepGraph;
 import io.harness.beans.steps.CIStep;
 import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.plan.ExecutionNode;
@@ -28,12 +28,12 @@ public class BasicExecutionPlanGenerator implements ExecutionPlanGenerator<CISte
   private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
 
   @Override
-  public Plan generateExecutionPlan(StepsGraph<CIStep> stepsGraph) {
-    CIStepsGraph ciStepsGraph = (CIStepsGraph) stepsGraph;
+  public Plan generateExecutionPlan(Graph<CIStep> graph) {
+    StepGraph ciStepsGraph = (StepGraph) graph;
     List<ExecutionNode> executionNodeList =
         ciStepsGraph.getCiSteps()
             .stream()
-            .map(ciStep -> basicStepToExecutionNodeConverter.convertStep(ciStep, ciStepsGraph.getNextStepUuid(ciStep)))
+            .map(ciStep -> basicStepToExecutionNodeConverter.convertStep(ciStep, ciStepsGraph.getNextNodeUuid(ciStep)))
             .collect(toList());
 
     return Plan.builder()

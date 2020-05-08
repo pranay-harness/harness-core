@@ -5,7 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.beans.repo.RepoConfiguration;
-import io.harness.beans.stages.CIStageInfo;
+import io.harness.beans.stages.StageInfo;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -39,7 +39,7 @@ public class CIPipeline implements PersistentEntity, UuidAware, CreatedAtAware, 
   private String description;
 
   // Todo: Store stage in different collection
-  @Indexed private List<CIStageInfo> linkedStages = new ArrayList<>();
+  @Indexed private List<StageInfo> linkedStages = new ArrayList<>();
 
   @Indexed private String accountId;
 

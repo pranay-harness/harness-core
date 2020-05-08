@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import graph.CIStepsGraph;
+import graph.StepGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -27,13 +27,13 @@ public class BasicStepToExecutionNodeConverterTest extends CIExecutionTest {
   public void setUp() {}
 
   @Test
-  @Owner(developers = HARSH, intermittent = true)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() throws IOException {
-    CIStepsGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
+    StepGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
 
     ExecutionNode executionNode = basicStepToExecutionNodeConverter.convertStep(
-        ciStepsGraph.getCiSteps().get(0), ciStepsGraph.getCiSteps().get(1).getCiStepMetadata().getUuid());
+        ciStepsGraph.getCiSteps().get(0), ciStepsGraph.getCiSteps().get(1).getStepMetadata().getUuid());
 
     assertThat(executionNode.getName()).isEqualTo(ENV_SETUP_NAME);
     assertThat(executionNode.getFacilitatorObtainments()).isNotEmpty();

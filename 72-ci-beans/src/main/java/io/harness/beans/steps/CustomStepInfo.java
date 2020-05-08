@@ -1,7 +1,7 @@
 package io.harness.beans.steps;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.beans.script.CIScriptInfo;
+import io.harness.beans.script.ScriptInfo;
 import io.harness.state.StateType;
 import lombok.Builder;
 import lombok.Data;
@@ -16,12 +16,12 @@ import javax.validation.constraints.NotNull;
 @Data
 @Value
 @Builder
-public class CICustomStepInfo implements CIStepInfo {
+public class CustomStepInfo implements StepInfo {
   @NotNull private StepType type = StepType.CUSTOM;
   @NotNull private StateType stateType = StateType.builder().type(StepType.CUSTOM.name()).build();
 
   @NotEmpty private String name;
-  private List<CIScriptInfo> scriptInfos = new ArrayList<>();
+  private List<ScriptInfo> scriptInfos = new ArrayList<>();
 
   @Override
   public StepType getType() {

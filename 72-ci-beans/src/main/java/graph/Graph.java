@@ -4,8 +4,8 @@ package graph;
  *    Graph to store steps dependency and ordering
  */
 
-public interface StepsGraph<T> {
-  String getNextStepUuid(T ciStep);
+public interface Graph<T> {
+  String getNextNodeUuid(T currentNode);
 
   String getStartNodeUuid();
 }
