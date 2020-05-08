@@ -7,6 +7,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.ambiance.LevelType;
 import io.harness.ambiance.dev.DefaultLevel;
+import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -41,6 +42,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(FacilitatorType.class, 2514);
     kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(Duration.class, 2516);
+    kryo.register(OutcomeInstance.class, 2517);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

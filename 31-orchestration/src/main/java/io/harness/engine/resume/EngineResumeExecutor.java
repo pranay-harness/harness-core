@@ -53,43 +53,30 @@ public class EngineResumeExecutor implements Runnable {
       }
 
       ExecutionNode node = nodeExecution.getNode();
+      StateResponse stateResponse = null;
       switch (nodeExecution.getMode()) {
         case CHILDREN:
-          resumeChildrenExecutable(node);
+          ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
+          stateResponse =
+              childrenExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC:
-          resumeAsyncExecutable(node);
+          AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
+          stateResponse =
+              asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case CHILD:
-          resumeChildExecutable(node);
+          ChildExecutable childExecutable = (ChildExecutable) stateRegistry.obtain(node.getStateType());
+          stateResponse =
+              childExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
       }
+      executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
 
     } catch (Exception ex) {
       logger.error(ex.getMessage());
     }
-  }
-
-  private void resumeAsyncExecutable(ExecutionNode node) {
-    AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
-    StateResponse stateResponse =
-        asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
-    executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
-  }
-
-  private void resumeChildrenExecutable(ExecutionNode node) {
-    ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
-    StateResponse stateResponse =
-        childrenExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
-    executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
-  }
-
-  private void resumeChildExecutable(ExecutionNode node) {
-    ChildExecutable childExecutable = (ChildExecutable) stateRegistry.obtain(node.getStateType());
-    StateResponse stateResponse =
-        childExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
-    executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
   }
 }
