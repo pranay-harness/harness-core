@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -13,10 +14,6 @@ import java.util.List;
 
 public class GcpBillingAccountDao {
   @Inject private HPersistence persistence;
-
-  public String save(GcpBillingAccount billingAccount) {
-    return persistence.save(billingAccount);
-  }
 
   public GcpBillingAccount get(String uuid) {
     return persistence.createQuery(GcpBillingAccount.class).field(GcpBillingAccountKeys.uuid).equal(uuid).get();
@@ -35,8 +32,38 @@ public class GcpBillingAccountDao {
     return persistence.delete(GcpBillingAccount.class, billingAccountId);
   }
 
+  public GcpBillingAccount upsert(GcpBillingAccount billingAccount) {
+    Query<GcpBillingAccount> query =
+        persistence.createQuery(GcpBillingAccount.class)
+            .filter(GcpBillingAccountKeys.accountId, billingAccount.getAccountId())
+            .filter(GcpBillingAccountKeys.organizationSettingId, billingAccount.getOrganizationSettingId());
+
+    UpdateOperations<GcpBillingAccount> updateOperations =
+        persistence.createUpdateOperations(GcpBillingAccount.class)
+            .set(GcpBillingAccountKeys.exportEnabled, billingAccount.isExportEnabled());
+    if (null != billingAccount.getGcpBillingAccountId()) {
+      updateOperations.set(GcpBillingAccountKeys.gcpBillingAccountId, billingAccount.getGcpBillingAccountId());
+    }
+
+    if (null != billingAccount.getGcpBillingAccountName()) {
+      updateOperations.set(GcpBillingAccountKeys.gcpBillingAccountName, billingAccount.getGcpBillingAccountName());
+    }
+
+    if (null != billingAccount.getBqProjectId()) {
+      updateOperations.set(GcpBillingAccountKeys.bqProjectId, billingAccount.getBqProjectId());
+    }
+
+    if (null != billingAccount.getBqDatasetId()) {
+      updateOperations.set(GcpBillingAccountKeys.bqDatasetId, billingAccount.getBqDatasetId());
+    }
+
+    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
+    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+  }
+
   public void update(String uuid, GcpBillingAccount billingAccount) {
-    Query query = persistence.createQuery(GcpBillingAccount.class).field(GcpBillingAccountKeys.uuid).equal(uuid);
+    Query<GcpBillingAccount> query =
+        persistence.createQuery(GcpBillingAccount.class).field(GcpBillingAccountKeys.uuid).equal(uuid);
     UpdateOperations<GcpBillingAccount> updateOperations =
         persistence.createUpdateOperations(GcpBillingAccount.class)
             .set(GcpBillingAccountKeys.exportEnabled, billingAccount.isExportEnabled());
@@ -58,5 +85,9 @@ public class GcpBillingAccountDao {
     }
 
     persistence.update(query, updateOperations);
+  }
+
+  public String save(GcpBillingAccount billingAccount) {
+    return persistence.save(billingAccount);
   }
 }

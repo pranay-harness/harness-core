@@ -720,10 +720,14 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void syncCEInfra(SettingAttribute settingAttribute) {
-    if (CE_CONNECTOR == settingAttribute.getCategory()) {
-      CEInfraSetupHandler ceInfraSetupHandler =
-          ceInfraSetupHandlerFactory.getCEInfraSetupHandler(settingAttribute.getValue());
-      ceInfraSetupHandler.syncCEInfra(settingAttribute);
+    try {
+      if (CE_CONNECTOR == settingAttribute.getCategory()) {
+        CEInfraSetupHandler ceInfraSetupHandler =
+            ceInfraSetupHandlerFactory.getCEInfraSetupHandler(settingAttribute.getValue());
+        ceInfraSetupHandler.syncCEInfra(settingAttribute);
+      }
+    } catch (Exception e) {
+      logger.error("Encountered exception while syncing CE Infra.", e);
     }
   }
 

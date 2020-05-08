@@ -55,6 +55,6 @@ public class GcpOrganizationResourceTest {
         .target(format("/gcp-organizations/?accountId=%s", accountId))
         .request()
         .post(entity(gcpOrganization, MediaType.APPLICATION_JSON), new GenericType<RestResponse<GcpOrganization>>() {});
-    verify(gcpOrganizationService).create(gcpOrganization);
+    verify(gcpOrganizationService).upsert(gcpOrganization);
   }
 }

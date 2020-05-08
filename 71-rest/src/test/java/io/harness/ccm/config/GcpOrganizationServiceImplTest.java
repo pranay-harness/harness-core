@@ -54,6 +54,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
     gcpOrganization2 = GcpOrganization.builder().accountId(accountId).organizationName(organizationName2).build();
     serviceAccount.setEmail(serviceAccountEmail);
     when(gcpServiceAccountService.create(anyString(), anyString())).thenReturn(serviceAccount);
+    when(gcpOrganizationDao.upsert(any(GcpOrganization.class))).thenReturn(GcpOrganization.builder().build());
     when(gcpOrganizationDao.save(any(GcpOrganization.class))).thenReturn("GCP_ORGANIZATION_UUID");
   }
 
@@ -61,8 +62,8 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testCreate() {
-    gcpOrganizationService.create(gcpOrganization1);
-    verify(gcpOrganizationDao).save(gcpOrganizationCaptor.capture());
+    gcpOrganizationService.upsert(gcpOrganization1);
+    verify(gcpOrganizationDao).upsert(gcpOrganizationCaptor.capture());
     assertThat(gcpOrganizationCaptor.getValue().getServiceAccountEmail()).isEqualTo(serviceAccountEmail);
   }
 
@@ -70,9 +71,8 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testGet() {
-    String uuid = gcpOrganizationService.create(gcpOrganization1);
-    gcpOrganizationService.get(uuid);
-    verify(gcpOrganizationDao).get(eq(uuid));
+    gcpOrganizationService.upsert(gcpOrganization1);
+    verify(gcpOrganizationDao).upsert(eq(gcpOrganization1));
   }
 
   @Test
