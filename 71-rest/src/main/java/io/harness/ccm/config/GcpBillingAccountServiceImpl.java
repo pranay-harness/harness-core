@@ -26,7 +26,8 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
   @Override
   public String create(GcpBillingAccount billingAccount) {
     checkArgument(isNotEmpty(billingAccount.getOrganizationSettingId()));
-    return gcpBillingAccountDao.save(billingAccount);
+    GcpBillingAccount gcpBillingAccount = gcpBillingAccountDao.upsert(billingAccount);
+    return gcpBillingAccount.getUuid();
   }
 
   @Override

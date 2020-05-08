@@ -35,14 +35,14 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   }
 
   @Override
-  public String create(GcpOrganization organization) {
+  public GcpOrganization upsert(GcpOrganization organization) {
     Preconditions.checkNotEmpty(organization.getServiceAccountEmail(),
         format("The organization %s is missing service account.", organization.getOrganizationName()));
     if (null
         == settingsService.getByName(organization.getAccountId(), GLOBAL_APP_ID, organization.getOrganizationName())) {
       settingsService.save(toSettingAttribute(organization));
     }
-    return gcpOrganizationDao.save(organization);
+    return gcpOrganizationDao.upsert(organization);
   }
 
   private SettingAttribute toSettingAttribute(GcpOrganization organization) {

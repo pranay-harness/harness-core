@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +27,21 @@ public class GcpOrganizationDaoTest extends WingsBaseTest {
   public void setUp() {
     gcpOrganization1 = GcpOrganization.builder().accountId(accountId).organizationName(organizationName1).build();
     gcpOrganization2 = GcpOrganization.builder().accountId(accountId).organizationName(organizationName2).build();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldUpsert() {
+    GcpOrganization actualGcpOrganization1 = gcpOrganizationDao.upsert(gcpOrganization1);
+    assertThat(actualGcpOrganization1)
+        .isEqualToIgnoringGivenFields(actualGcpOrganization1, GcpOrganizationKeys.uuid, GcpOrganizationKeys.createdAt,
+            GcpOrganizationKeys.lastUpdatedAt);
+    GcpOrganization actualGcpOrganization2 = gcpOrganizationDao.upsert(gcpOrganization2);
+    assertThat(actualGcpOrganization2.getUuid()).isEqualTo(actualGcpOrganization1.getUuid());
+    assertThat(actualGcpOrganization2)
+        .isEqualToIgnoringGivenFields(actualGcpOrganization2, GcpOrganizationKeys.uuid, GcpOrganizationKeys.createdAt,
+            GcpOrganizationKeys.lastUpdatedAt);
   }
 
   @Test

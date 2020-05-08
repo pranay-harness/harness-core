@@ -35,8 +35,9 @@ public class GcpOrganizationResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> save(@QueryParam("accountId") String accountId, GcpOrganization gcpOrganization) {
+  public RestResponse<GcpOrganization> save(
+      @QueryParam("accountId") String accountId, GcpOrganization gcpOrganization) {
     gcpOrganization.setAccountId(accountId);
-    return new RestResponse<>(gcpOrganizationService.create(gcpOrganization));
+    return new RestResponse<>(gcpOrganizationService.upsert(gcpOrganization));
   }
 }

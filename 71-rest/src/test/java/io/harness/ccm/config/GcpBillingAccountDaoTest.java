@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,14 +25,6 @@ public class GcpBillingAccountDaoTest extends WingsBaseTest {
   public void setUp() {
     gcpBillingAccount1 = GcpBillingAccount.builder().accountId(accountId).build();
     gcpBillingAccount2 = GcpBillingAccount.builder().accountId(accountId).exportEnabled(true).build();
-  }
-
-  @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
-  public void testSave() {
-    String uuid = gcpBillingAccountDao.save(gcpBillingAccount1);
-    assertThat(uuid).isNotNull();
   }
 
   @Test
@@ -65,9 +58,32 @@ public class GcpBillingAccountDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
+  public void shouldUpsert() {
+    GcpBillingAccount actualGcpBillingAccount1 = gcpBillingAccountDao.upsert(gcpBillingAccount1);
+    assertThat(actualGcpBillingAccount1)
+        .isEqualToIgnoringGivenFields(gcpBillingAccount1, GcpBillingAccountKeys.uuid, GcpBillingAccountKeys.createdAt,
+            GcpBillingAccountKeys.lastUpdatedAt);
+    GcpBillingAccount actualGcpBillingAccount2 = gcpBillingAccountDao.upsert(gcpBillingAccount2);
+    assertThat(actualGcpBillingAccount2.getUuid()).isEqualTo(actualGcpBillingAccount1.getUuid());
+    assertThat(actualGcpBillingAccount2)
+        .isEqualToIgnoringGivenFields(gcpBillingAccount2, GcpBillingAccountKeys.uuid, GcpBillingAccountKeys.createdAt,
+            GcpBillingAccountKeys.lastUpdatedAt);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
   public void testUpdate() {
     String billingAccountId1 = gcpBillingAccountDao.save(gcpBillingAccount1);
     gcpBillingAccountDao.update(billingAccountId1, gcpBillingAccount2);
     assertThat(gcpBillingAccountDao.get(billingAccountId1).isExportEnabled()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testSave() {
+    String uuid = gcpBillingAccountDao.save(gcpBillingAccount1);
+    assertThat(uuid).isNotNull();
   }
 }
