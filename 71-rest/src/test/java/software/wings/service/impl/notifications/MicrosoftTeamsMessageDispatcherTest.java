@@ -60,11 +60,18 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   @Mock private MicrosoftTeamsNotificationService microsoftTeamsNotificationService;
 
   private static final String[] names = {"name1", "name2", "name3"};
+  private static final String ASTERISK_VALUE = "*Hello*";
+  private static final String EXPECTED_ASTERISK_VALUE = "**Hello**";
   private static final String APPLICATION_VALUE = "*Application:* <<<APPLICATON_URL|-|APP_NAME>>>";
   private static final String ARTIFACTS_NAME_VALUE = "artifact_1, artifact_2, artifact_3";
   private static final String EXPECTED_ARTIFACTS_NAME_VALUE = "artifact\\\\_1, artifact\\\\_2, artifact\\\\_3";
   private static final String ARTIFACTS_VALUE_WITHOUT_UNDERSCORE =
       "http://testUrl1.com: 52201, https://testUrl2.com: 53202";
+  private static final String ALERT_MESSAGE = "alert_message";
+  private static final String ALERT_MESSAGE_VALUE =
+      "24/7 Service Guard detected anomalies.\nStatus: Open\nName: CV\nApplication: App";
+  private static final String EXPECTED_ALERT_MESSAGE_VALUE =
+      "24/7 Service Guard detected anomalies.\n\nStatus: Open\n\nName: CV\n\nApplication: App";
   private static final String EXPECTED_ARTIFACTS_VALUE_WITHOUT_UNDERSCORE =
       "[http://testUrl1.com:](http://testUrl1.com:) 52201, [https://testUrl2.com:](https://testUrl2.com:) 53202";
   private static final String ARTIFACTS_VALUE_WITH_UNDERSCORE =
@@ -97,6 +104,7 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   private static final String ENVIRONMENT_NAME = "ENVIRONMENT_NAME";
   private static final ImmutableMap<String, String> templateVariablesWithoutError =
       ImmutableMap.<String, String>builder()
+          .put(ALERT_MESSAGE, ALERT_MESSAGE_VALUE)
           .put(APPLICATION, APPLICATION_VALUE)
           .put(APP_NAME, APP_NAME)
           .put(APPLICATION_NAME, APP_NAME)
@@ -212,6 +220,7 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   }
 
   private void populateExpectedEntries(Map<String, String> expectedTemplateVariables) {
+    expectedTemplateVariables.put(ALERT_MESSAGE, EXPECTED_ALERT_MESSAGE_VALUE);
     expectedTemplateVariables.put(APP_NAME, EXPECTED_APP_NAME);
     expectedTemplateVariables.put(APPLICATION_NAME, EXPECTED_APP_NAME);
     expectedTemplateVariables.put(APPLICATION, EXPECTED_APPLICATION_VALUE);
@@ -282,22 +291,38 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
   public void testHandleUnderscoreInValue() {
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(APPLICATION_NAME, APP_NAME))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(APPLICATION_NAME, APP_NAME))
         .isEqualTo(EXPECTED_APP_NAME);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(ENVIRONMENT_NAME, ENV_NAME))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ENVIRONMENT_NAME, ENV_NAME))
         .isEqualTo(EXPECTED_ENVIRONMENT_NAME);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(APPLICATION_URL, APPLICATION_URL))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(APPLICATION_URL, APPLICATION_URL))
         .isEqualTo(APPLICATION_URL);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(ENVIRONMENT_URL, ENVIRONMENT_URL))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ENVIRONMENT_URL, ENVIRONMENT_URL))
         .isEqualTo(ENVIRONMENT_URL);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(ARTIFACTS, ARTIFACTS_NAME_VALUE))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ARTIFACTS, ARTIFACTS_NAME_VALUE))
         .isEqualTo(EXPECTED_ARTIFACTS_NAME_VALUE);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(APP_NAME, URL_WITH_UNDERSCORE))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(APP_NAME, URL_WITH_UNDERSCORE))
         .isEqualTo(EXPECTED_URL_WITH_UNDERSCORE);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(ARTIFACTS, ARTIFACTS_VALUE_WITHOUT_UNDERSCORE))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ARTIFACTS, ARTIFACTS_VALUE_WITHOUT_UNDERSCORE))
         .isEqualTo(EXPECTED_ARTIFACTS_VALUE_WITHOUT_UNDERSCORE);
-    assertThat(microsoftTeamsMessageDispatcher.handleUnderscoreInValue(ARTIFACTS, ARTIFACTS_VALUE_WITH_UNDERSCORE))
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ARTIFACTS, ARTIFACTS_VALUE_WITH_UNDERSCORE))
         .isEqualTo(EXPECTED_ARTIFACTS_VALUE_WITH_UNDERSCORE);
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testHandleNewLineInValue() {
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ALERT_MESSAGE, ALERT_MESSAGE_VALUE))
+        .isEqualTo(EXPECTED_ALERT_MESSAGE_VALUE);
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testHandleAsteriskInValue() {
+    assertThat(microsoftTeamsMessageDispatcher.handleSpecialCharacters(ALERT_MESSAGE, ASTERISK_VALUE))
+        .isEqualTo(EXPECTED_ASTERISK_VALUE);
   }
 
   @Test
