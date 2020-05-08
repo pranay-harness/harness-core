@@ -10,7 +10,6 @@ import com.codahale.metrics.annotation.Timed;
 import freemarker.template.TemplateException;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -104,11 +103,11 @@ public class DelegateAgentResource {
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateRegisterResponse> register(
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
+      @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegate.setAccountId(accountId);
       long startTime = System.currentTimeMillis();
-      DelegateRegisterResponse registerResponse =
-          delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
+      DelegateRegisterResponse registerResponse = delegateService.register(delegate);
       logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
     }

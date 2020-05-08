@@ -88,8 +88,6 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -153,6 +151,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateProfileParams;
@@ -395,17 +394,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
-      DelegateParamsBuilder builder = DelegateParams.builder()
-                                          .ip(getLocalHostAddress())
-                                          .accountId(accountId)
-                                          .hostName(HOST_NAME)
-                                          .delegateName(delegateName)
-                                          .delegateGroupName(DELEGATE_GROUP_NAME)
-                                          .delegateProfileId(delegateProfile)
-                                          .description(description)
-                                          .version(getVersion())
-                                          .delegateType(DELEGATE_TYPE)
-                                          .sampleDelegate(isSample);
+      DelegateBuilder builder = Delegate.builder()
+                                    .ip(getLocalHostAddress())
+                                    .accountId(accountId)
+                                    .hostName(HOST_NAME)
+                                    .delegateName(delegateName)
+                                    .delegateGroupName(DELEGATE_GROUP_NAME)
+                                    .delegateProfileId(delegateProfile)
+                                    .description(description)
+                                    .version(getVersion())
+                                    .delegateType(DELEGATE_TYPE)
+                                    .sampleDelegate(isSample);
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -629,13 +628,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // pollingForTasks.set(true);
   }
 
-  private void handleReopened(Object o, DelegateParamsBuilder builder) {
+  private void handleReopened(Object o, DelegateBuilder builder) {
     logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(false);
     try {
-      DelegateParams delegateParams = builder.status(Status.ENABLED.name()).lastHeartBeat(clock.millis()).build();
-      socket.fire(delegateParams);
+      Delegate delegate = builder.build();
+      delegate.setLastHeartBeat(clock.millis());
+      delegate.setStatus(Status.ENABLED);
+      socket.fire(delegate);
     } catch (IOException e) {
       logger.error("Error connecting", e);
     }
@@ -770,7 +771,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private String registerDelegate(DelegateParamsBuilder builder) {
+  private String registerDelegate(DelegateBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get()) {
@@ -779,8 +780,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         attempts.incrementAndGet();
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
-        DelegateParams delegateParams = builder.status(Status.ENABLED.name()).lastHeartBeat(clock.millis()).build();
-        restResponse = execute(managerClient.registerDelegate(accountId, delegateParams));
+        Delegate delegate = builder.build();
+        delegate.setStatus(Status.ENABLED);
+        delegate.setLastHeartBeat(clock.millis());
+        restResponse = execute(managerClient.registerDelegate(accountId, delegate));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         logger.error(msg, e);
@@ -808,7 +811,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         migrate(StringUtils.substringAfter(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.getValue()));
         continue;
       }
-      builder.delegateId(responseDelegateId);
+      builder.uuid(responseDelegateId);
       logger.info("Delegate registered with id {}", responseDelegateId);
       return responseDelegateId;
     }
@@ -1088,7 +1091,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void startHeartbeat(DelegateParamsBuilder builder, Socket socket) {
+  private void startHeartbeat(DelegateBuilder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
@@ -1105,7 +1108,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
+  private void startKeepAlivePacket(DelegateBuilder builder, Socket socket) {
     if (!isEcsDelegate()) {
       return;
     }
@@ -1127,7 +1130,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
-  private void startHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void startHeartbeatWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get()) {
@@ -1146,7 +1149,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAliveRequestWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void startKeepAliveRequestWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Starting Keep Alive Request at interval {} ms", KEEP_ALIVE_INTERVAL);
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get() && isEcsDelegate()) {
@@ -1283,22 +1286,19 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
 
-  private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
+  private void sendHeartbeat(DelegateBuilder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
 
       // This will Add ECS delegate specific fields if DELEGATE_TYPE = "ECS"
       updateBuilderIfEcsDelegate(builder);
-      DelegateParams delegateParams =
-          builder.lastHeartBeat(clock.millis())
-              .currentlyExecutingDelegateTasks(currentlyExecutingTasks.values()
-                                                   .stream()
-                                                   .map(DelegateTaskPackage::getDelegateTaskId)
-                                                   .collect(toList()))
-              .build();
+      Delegate delegate = builder.build();
+      delegate.setLastHeartBeat(clock.millis());
+      delegate.setCurrentlyExecutingDelegateTasks(
+          currentlyExecutingTasks.values().stream().map(DelegateTaskPackage::getDelegateTaskId).collect(toList()));
 
       try {
-        timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegateParams)), 15L, TimeUnit.SECONDS, true);
+        timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending heartbeat", ex);
@@ -1310,14 +1310,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void sendKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
+  private void sendKeepAlivePacket(DelegateBuilder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
         timeLimiter.callWithTimeout(() -> {
-          DelegateParams delegateParams = builder.keepAlivePacket(true).build();
-          return socket.fire(JsonUtils.asJson(delegateParams));
+          Delegate delegate = builder.build();
+          delegate.setKeepAlivePacket(true);
+          return socket.fire(JsonUtils.asJson(delegate));
         }, 15L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending keep alive packet", ex);
@@ -1329,21 +1330,19 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void sendHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void sendHeartbeatWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Sending heartbeat...");
 
     try {
       updateBuilderIfEcsDelegate(builder);
-      DelegateParams delegateParams =
-          builder.keepAlivePacket(false)
-              .polllingModeEnabled(true)
-              .currentlyExecutingDelegateTasks(currentlyExecutingTasks.values()
-                                                   .stream()
-                                                   .map(DelegateTaskPackage::getDelegateTaskId)
-                                                   .collect(toList()))
-              .build();
+      Delegate delegate = builder.build();
+      delegate.setKeepAlivePacket(false);
+      delegate.setPolllingModeEnabled(true);
+      delegate.setCurrentlyExecutingDelegateTasks(
+          currentlyExecutingTasks.values().stream().map(DelegateTaskPackage::getDelegateTaskId).collect(toList()));
+
       lastHeartbeatSentAt.set(clock.millis());
-      RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegateParams));
+      RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegate));
       long now = clock.millis();
       logger.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
@@ -1354,7 +1353,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (Status.DELETED == delegateReceived.getStatus()) {
           initiateSelfDestruct();
         } else {
-          builder.delegateId(delegateReceived.getUuid());
+          delegateId = delegateReceived.getUuid();
+          builder.uuid(delegateId);
         }
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
@@ -1384,12 +1384,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void sendKeepAliveRequestWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void sendKeepAliveRequestWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Sending Keep Alive Request...");
     try {
       updateBuilderIfEcsDelegate(builder);
-      DelegateParams delegateParams = builder.keepAlivePacket(true).polllingModeEnabled(true).build();
-      execute(managerClient.registerDelegate(accountId, delegateParams));
+      Delegate delegate = builder.build();
+      delegate.setKeepAlivePacket(true);
+      delegate.setPolllingModeEnabled(true);
+      execute(managerClient.registerDelegate(accountId, delegate));
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
@@ -1967,7 +1969,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return isBlank(value) || "null".equalsIgnoreCase(value);
   }
 
-  private void updateBuilderIfEcsDelegate(DelegateParamsBuilder builder) {
+  private void updateBuilderIfEcsDelegate(DelegateBuilder builder) {
     if (!isEcsDelegate()) {
       return;
     }
