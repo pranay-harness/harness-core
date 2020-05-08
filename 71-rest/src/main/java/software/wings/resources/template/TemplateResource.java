@@ -166,7 +166,7 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> getYaml(@QueryParam("accountId") String accountId,
-      @PathParam("templateId") String templateId, @QueryParam("version") Long version) {
+      @PathParam("templateId") String templateId, @PathParam("version") Long version) {
     return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
   }
 }
