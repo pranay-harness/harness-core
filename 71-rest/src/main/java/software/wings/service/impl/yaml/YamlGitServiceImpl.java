@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -1213,5 +1214,15 @@ public class YamlGitServiceImpl implements YamlGitService {
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
+  }
+
+  @Override
+  public YamlGitConfig fetchYamlGitConfig(String appId, String accountId) {
+    if (isNotEmpty(appId) && isNotEmpty(accountId)) {
+      final String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
+      final EntityType entityType = GLOBAL_APP_ID.equals(appId) ? ACCOUNT : APPLICATION;
+      return get(accountId, entityId, entityType);
+    }
+    return null;
   }
 }

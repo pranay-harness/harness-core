@@ -6,6 +6,7 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
@@ -75,11 +76,12 @@ public interface GitSyncService {
   void addFileProcessingSummaryToGitCommit(String commitId, String accountId, List<GitFileChange> gitFileChanges);
 
   /**
-   *
    * @param commitId
    * @param accountId
    */
   void markRemainingFilesAsSkipped(String commitId, String accountId);
 
   List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
+
+  List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int count);
 }

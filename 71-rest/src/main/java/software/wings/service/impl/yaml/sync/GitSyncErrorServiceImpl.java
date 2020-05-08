@@ -25,7 +25,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
-import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
@@ -55,7 +54,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
-import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.User;
@@ -643,7 +641,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       UpdateOperations<GitSyncError> failedUpdateOperations, GitFileChange failedGitFileChange, String appId) {
     final YamlGitConfig yamlGitConfig = failedGitFileChange.getYamlGitConfig() != null
         ? failedGitFileChange.getYamlGitConfig()
-        : fetchYamlGitConfig(appId, failedGitFileChange.getAccountId());
+        : yamlGitService.fetchYamlGitConfig(appId, failedGitFileChange.getAccountId());
 
     if (yamlGitConfig != null) {
       final String gitConnectorId = Strings.emptyIfNull(yamlGitConfig.getGitConnectorId());
@@ -652,15 +650,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       failedUpdateOperations.set(GitSyncErrorKeys.branchName, branchName);
       failedUpdateOperations.set(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfig.getUuid());
     }
-  }
-
-  private YamlGitConfig fetchYamlGitConfig(String appId, String accountId) {
-    if (isNotEmpty(appId) && isNotEmpty(accountId)) {
-      final String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
-      final EntityType entityType = GLOBAL_APP_ID.equals(appId) ? ACCOUNT : APPLICATION;
-      return yamlGitService.get(accountId, entityId, entityType);
-    }
-    return null;
   }
 
   @Override

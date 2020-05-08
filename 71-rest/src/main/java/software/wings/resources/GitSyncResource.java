@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
@@ -16,8 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
+import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitProcessingError;
@@ -224,5 +227,16 @@ public class GitSyncResource {
       @QueryParam("gitToHarness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId) {
     PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitCommits(pageRequest, gitToHarness, accountId);
     return new RestResponse<>(pageResponse);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Path("commits/processing")
+  public RestResponse<List<ChangeSetDTO>> listCommitsBeingProcessed(
+      @QueryParam("accountId") String accountId, @QueryParam("count") int count, @QueryParam("appId") String appId) {
+    List<ChangeSetDTO> changeSetDTOList = gitSyncService.getCommitsWhichAreBeingProcessed(accountId, appId, count);
+    return new RestResponse<>(changeSetDTOList);
   }
 }

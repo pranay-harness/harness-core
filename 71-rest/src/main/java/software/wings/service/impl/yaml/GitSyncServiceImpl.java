@@ -27,7 +27,13 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
+import software.wings.service.impl.yaml.gitsync.ChangesetInformation;
+import software.wings.service.impl.yaml.gitsync.QueuedChangesetInformation;
+import software.wings.service.impl.yaml.gitsync.RunningChangesetInformation;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
@@ -39,9 +45,11 @@ import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
+import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +70,9 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private SettingsService settingsService;
   @Inject private YamlGitConfigService yamlGitConfigService;
+  @Inject private YamlGitService yamlGitService;
+  @Inject private YamlChangeSetService yamlChangeSetService;
+
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   @Override
@@ -127,10 +138,16 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private GitDetail createGitDetail(YamlGitConfig yamlGitConfig, Map<String, String> gitConnectorIdNameMap) {
-    String gitConnectorId = yamlGitConfig.getGitConnectorId();
-    String gitConnectorName = gitConnectorIdNameMap.containsKey(gitConnectorId)
-        ? gitConnectorIdNameMap.get(gitConnectorId)
-        : UNKNOWN_GIT_CONNECTOR;
+    String gitConnectorName =
+        getConnectorNameFromConnectorIdMap(yamlGitConfig.getGitConnectorId(), gitConnectorIdNameMap);
+    return buildGitDetail(yamlGitConfig, gitConnectorName);
+  }
+
+  private String getConnectorNameFromConnectorIdMap(String gitConnectorId, Map<String, String> gitConnectorIdNameMap) {
+    return gitConnectorIdNameMap.getOrDefault(gitConnectorId, UNKNOWN_GIT_CONNECTOR);
+  }
+
+  private GitDetail buildGitDetail(YamlGitConfig yamlGitConfig, String gitConnectorName) {
     return GitDetail.builder()
         .branchName(yamlGitConfig.getBranchName())
         .entityName(yamlGitConfig.getEntityName())
@@ -296,5 +313,72 @@ public class GitSyncServiceImpl implements GitSyncService {
     } catch (Exception ex) {
       logger.error(String.format("Error while saving activities for commitId: %s", "commitId"), ex);
     }
+  }
+
+  @Override
+  public List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int displayCount) {
+    YamlGitConfig yamlGitConfig = yamlGitService.fetchYamlGitConfig(appId, accountId);
+    if (yamlGitConfig == null) {
+      return null;
+    }
+    final List<YamlChangeSet.Status> processingStatuses =
+        Arrays.asList(YamlChangeSet.Status.QUEUED, YamlChangeSet.Status.RUNNING);
+
+    List<YamlChangeSet> changeSetsWithProcessingStatus =
+        yamlChangeSetService.getChangeSetsWithStatus(accountId, appId, yamlGitConfig, displayCount, processingStatuses);
+
+    return changeSetsWithProcessingStatus.stream()
+        .map(changeSet -> {
+          if (YamlChangeSet.Status.QUEUED.equals(changeSet.getStatus())) {
+            return makeDTOForQueuedChangeSet(changeSet, yamlGitConfig, accountId);
+          } else {
+            return makeDTOForRunningChangeSet(changeSet, yamlGitConfig, accountId);
+          }
+        })
+        .collect(Collectors.toList());
+  }
+
+  private ChangeSetDTO makeDTOForRunningChangeSet(
+      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
+    String gitConnectorName =
+        getGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
+    RunningChangesetInformation runningChangesetInformation = RunningChangesetInformation.builder()
+                                                                  .startedRunningAt(yamlChangeSet.getLastUpdatedAt())
+                                                                  .queuedAt(yamlChangeSet.getCreatedAt())
+                                                                  .build();
+    return buildChangesetDTO(
+        runningChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(), YamlChangeSet.Status.RUNNING);
+  }
+
+  private ChangeSetDTO makeDTOForQueuedChangeSet(
+      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
+    String gitConnectorName =
+        getGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
+    QueuedChangesetInformation queuedChangesetInformation =
+        QueuedChangesetInformation.builder().queuedAt(yamlChangeSet.getCreatedAt()).build();
+    return buildChangesetDTO(
+        queuedChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(), YamlChangeSet.Status.QUEUED);
+  }
+
+  private ChangeSetDTO buildChangesetDTO(ChangesetInformation changesetInformation, GitDetail gitDetail,
+      boolean gitToHarness, YamlChangeSet.Status status) {
+    return ChangeSetDTO.builder()
+        .changesetInformation(changesetInformation)
+        .gitDetail(gitDetail)
+        .gitToHarness(gitToHarness)
+        .status(status)
+        .build();
+  }
+
+  private String getGitConnectorNameFromId(String gitConnectorId, String accountId) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(ID_KEY, gitConnectorId)
+        .project(SettingAttributeKeys.uuid, true)
+        .project(SettingAttributeKeys.name, true)
+        .get()
+        .getName();
   }
 }

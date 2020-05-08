@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.yaml.gitSync.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.QUEUED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
@@ -28,6 +29,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -39,6 +41,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.GitSyncMetadata;
+import software.wings.yaml.gitSync.GitSyncMetadata.GitSyncMetadataKeys;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
@@ -443,5 +446,23 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
     yamlChangeSet.setAppId(entityUpdateService.obtainAppIdFromEntity(entity));
     return save(yamlChangeSet);
+  }
+
+  @Override
+  public List<YamlChangeSet> getChangeSetsWithStatus(String accountId, String appId, YamlGitConfig yamlGitConfig,
+      int displayCount, List<YamlChangeSet.Status> statuses) {
+    Query<YamlChangeSet> query = wingsPersistence.createQuery(YamlChangeSet.class)
+                                     .field(YamlChangeSetKeys.status)
+                                     .in(statuses)
+                                     .filter(YamlChangeSetKeys.accountId, accountId);
+
+    query.or(query.and(query.criteria(YamlChangeSetKeys.gitToHarness).equal(true),
+                 query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.gitConnectorId)
+                     .equal(yamlGitConfig.getGitConnectorId()),
+                 query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.branchName)
+                     .equal(yamlGitConfig.getBranchName())),
+        query.and(
+            query.criteria(YamlChangeSetKeys.gitToHarness).equal(false), query.criteria(APP_ID_KEY).equal(appId)));
+    return query.asList(new FindOptions().limit(displayCount));
   }
 }
