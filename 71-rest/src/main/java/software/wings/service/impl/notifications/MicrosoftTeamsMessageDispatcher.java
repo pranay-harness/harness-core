@@ -36,6 +36,8 @@ import java.util.Map;
 @Slf4j
 public class MicrosoftTeamsMessageDispatcher {
   private static final String ARTIFACTS = "ARTIFACTS";
+  private static final String ASTERISK = "\\*";
+  private static final String ASTERISK_REPLACEMENT = "**";
   private static final String COMMA = ",";
   private static final String ERROR = "_error";
   private static final String JSON = ".json";
@@ -44,6 +46,8 @@ public class MicrosoftTeamsMessageDispatcher {
   private static final String MICROSOFT_TEAMS_FOLDER = "/microsoftteams/";
   private static final String NA = "N / A";
   private static final String NAME = "_NAME";
+  private static final String NEW_LINE = "\\n";
+  private static final String NEW_LINE_REPLACEMENT = "\n\n";
   private static final String PIPELINE = "PIPELINE";
   private static final String[] schemes = {"https", "http", "rtsp", "ftp"};
   private static final List<String> TEMPLATE_KEYS_TO_BE_PROCESSED =
@@ -118,8 +122,7 @@ public class MicrosoftTeamsMessageDispatcher {
   Map<String, String> processTemplateVariables(Map<String, String> templateVariables) {
     Map<String, String> clonedTemplateVariables = new HashMap<>(templateVariables);
     clonedTemplateVariables.forEach((key, value) -> {
-      String newValue = value.replaceAll("\\*", "**");
-      newValue = handleUnderscoreInValue(key, newValue);
+      String newValue = handleSpecialCharacters(key, value);
       if (newValue.isEmpty() && key.endsWith(NAME)) {
         newValue = NA;
       }
@@ -133,16 +136,17 @@ public class MicrosoftTeamsMessageDispatcher {
 
   /**
    * Microsoft Teams Message card handles underscore "_" character in message differently. We need to replace "_" with
-   * "\\_" to render it properly
+   * "\\_" to render it properly. \n should also be converted to \n\n for proper rendering of new line
    * @param key
    * @param value
    * @return updated value
    */
   @VisibleForTesting
-  String handleUnderscoreInValue(String key, String value) {
+  String handleSpecialCharacters(String key, String value) {
     if (key.contains(URL)) {
       return value;
     }
+    value = value.replaceAll(ASTERISK, ASTERISK_REPLACEMENT).replaceAll(NEW_LINE, NEW_LINE_REPLACEMENT);
     String[] parts = value.split(SPACE);
     for (int index = 0; index < parts.length; index++) {
       String formattedValue = parts[index].replaceAll(UNDERSCORE, UNDERSCORE_REPLACEMENT);
