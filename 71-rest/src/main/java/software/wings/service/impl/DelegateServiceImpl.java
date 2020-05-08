@@ -1559,7 +1559,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
-    if (delegate == null) {
+    if (delegate == null || Status.ENABLED != delegate.getStatus()) {
       return null;
     }
 

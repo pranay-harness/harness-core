@@ -1227,6 +1227,34 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotCheckForProfileIfNotEnabled() {
+    when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
+    String accountId = generateUuid();
+
+    Delegate deletedDelegate = BUILDER.build();
+    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setAccountId(accountId);
+    deletedDelegate.setUuid(generateUuid());
+    wingsPersistence.save(deletedDelegate);
+
+    DelegateProfileParams delegateProfileParams =
+        delegateService.checkForProfile(accountId, deletedDelegate.getUuid(), "", 0);
+    assertThat(delegateProfileParams).isNull();
+
+    Delegate wapprDelegate = BUILDER.build();
+    wapprDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    wapprDelegate.setAccountId(accountId);
+    wapprDelegate.setUuid(generateUuid());
+    wingsPersistence.save(wapprDelegate);
+
+    delegateProfileParams = delegateService.checkForProfile(accountId, wapprDelegate.getUuid(), "", 0);
+
+    assertThat(delegateProfileParams).isNull();
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCheckForProfile() {
