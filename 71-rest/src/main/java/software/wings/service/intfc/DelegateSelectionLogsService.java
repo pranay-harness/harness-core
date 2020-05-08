@@ -1,8 +1,10 @@
 package software.wings.service.intfc;
 
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
 
+import java.util.List;
 import java.util.Set;
 
 public interface DelegateSelectionLogsService {
@@ -20,6 +22,8 @@ public interface DelegateSelectionLogsService {
   void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logNoIncludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
+  List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId);
 
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 

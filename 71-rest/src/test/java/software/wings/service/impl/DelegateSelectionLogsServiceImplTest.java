@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,10 +18,13 @@ import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
+import software.wings.beans.DelegateSelectionLog;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
@@ -29,6 +33,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
 
+  @Inject protected WingsPersistence wingsPersistence;
   @InjectMocks @Inject DelegateSelectionLogsService delegateSelectionLogsService;
 
   @Test
@@ -292,5 +297,44 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(WAITING_FOR_APPROVAL);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage().startsWith("Delegate was waiting for approval at"))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldFetchTaskSelectionLogs() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+    String delegate2Id = generateUuid();
+    String message = generateUuid();
+
+    Set<String> delegateIds1 = new HashSet<>();
+    delegateIds1.add(delegate1Id);
+
+    Set<String> delegateIds2 = new HashSet<>();
+    delegateIds2.add(delegate1Id);
+    delegateIds2.add(delegate2Id);
+
+    DelegateSelectionLog delegateSelectionLog1 = DelegateSelectionLog.builder()
+                                                     .taskId(taskId)
+                                                     .accountId(accountId)
+                                                     .message(message)
+                                                     .delegateIds(delegateIds1)
+                                                     .build();
+
+    DelegateSelectionLog delegateSelectionLog2 = DelegateSelectionLog.builder()
+                                                     .taskId(taskId)
+                                                     .accountId(accountId)
+                                                     .message(message)
+                                                     .delegateIds(delegateIds2)
+                                                     .build();
+    wingsPersistence.save(delegateSelectionLog1);
+    wingsPersistence.save(delegateSelectionLog2);
+
+    List<DelegateSelectionLogParams> delegateSelectionLogs =
+        delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, taskId);
+
+    assertThat(delegateSelectionLogs.size()).isEqualTo(3);
   }
 }
