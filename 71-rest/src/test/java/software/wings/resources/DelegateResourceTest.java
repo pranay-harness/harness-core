@@ -26,7 +26,6 @@ import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.rest.RestResponse;
@@ -165,12 +164,12 @@ public class DelegateResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
     DelegateRegisterResponse registerResponse = DelegateRegisterResponse.builder().delegateId(ID_KEY).build();
-    when(DELEGATE_SERVICE.register(any(DelegateParams.class))).thenReturn(registerResponse);
+    when(DELEGATE_SERVICE.register(any(Delegate.class))).thenReturn(registerResponse);
     RestResponse<DelegateRegisterResponse> restResponse =
         RESOURCES.client()
             .target("/delegates/register?accountId=" + ACCOUNT_ID)
             .request()
-            .post(entity(DelegateParams.builder().delegateId(ID_KEY).build(), MediaType.APPLICATION_JSON),
+            .post(entity(Delegate.builder().uuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
                 new GenericType<RestResponse<DelegateRegisterResponse>>() {});
 
     DelegateRegisterResponse resourceResponse = restResponse.getResource();

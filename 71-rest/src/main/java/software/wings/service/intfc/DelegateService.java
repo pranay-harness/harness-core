@@ -4,7 +4,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateApproval;
-import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -78,8 +77,6 @@ public interface DelegateService extends OwnedByAccount {
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
-
-  DelegateRegisterResponse register(@Valid DelegateParams delegateParams);
 
   DelegateProfileParams checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
 
