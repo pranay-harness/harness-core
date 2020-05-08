@@ -7,11 +7,11 @@ public enum CEError {
 
   PERPETUAL_TASK_CREATION_FAILURE("Perpetual tasks fail to be created for the cluster %s."),
 
-  PERPETUAL_TASK_NOT_ASSIGNED("The task to collect events from the cluster %s has not been assigned to any Delegate."),
+  DELEGATE_NOT_AVAILABLE("Unable to collect events. The Delegate %s may be disconnected or deleted."),
 
-  NO_ELIGIBLE_DELEGATE("No eligible delegates can collect events for this cluster %s."),
+  NO_ELIGIBLE_DELEGATE("No Delegate has all the requisites to access the cluster %s."),
 
-  DELEGATE_NOT_AVAILABLE("The Delegate for collecting events from the cluster %s has been disconnected."),
+  PERPETUAL_TASK_NOT_ASSIGNED("Initializing the Delegate to collect events. Events will arrive in a few minutes."),
 
   NO_RECENT_EVENTS_PUBLISHED("The cluster %s has not published events since %s."),
 

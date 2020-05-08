@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
 
+import javax.ws.rs.ServiceUnavailableException;
+
 @Slf4j
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
@@ -64,6 +66,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
       logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskType, taskId);
       PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
       DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
+
       try {
         ResponseData response = delegateService.executeTask(validationTask);
         if (response instanceof DelegateTaskNotifyResponseData) {
@@ -74,13 +77,21 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
           perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name());
-          throw(InvalidRequestException)((RemoteMethodReturnValueData) response).getException();
+          logger.error("Invalid request exception: ", ((RemoteMethodReturnValueData) response).getException());
         } else {
-          throw new InvalidRequestException(format(
+          logger.error(format(
               "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
+        }
+      } catch (ServiceUnavailableException sue) {
+        if (sue.getMessage().contains("Delegates are not available")) {
+          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE.name());
+          logger.warn(sue.getMessage());
+        } else {
+          logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, sue);
         }
       } catch (Exception e) {
         logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
+        return;
       }
     }
   }

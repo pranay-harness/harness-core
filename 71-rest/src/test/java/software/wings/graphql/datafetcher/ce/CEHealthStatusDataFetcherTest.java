@@ -53,7 +53,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
     ceHealthStatusDTO =
         CEHealthStatusDTO.builder().isHealthy(false).clusterHealthStatusList(clusterHealthStatusList).build();
     when(environment.getSource()).thenReturn(k8sCloudProvider);
-    when(healthStatusService.getHealthStatus(eq(cloudProviderId))).thenReturn(ceHealthStatus);
+    when(healthStatusService.getHealthStatus(eq(cloudProviderId), eq(false))).thenReturn(ceHealthStatus);
   }
 
   @Test
@@ -61,7 +61,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCEHealthStatusDTO() throws Exception {
     CEHealthStatusDTO healthStatusDTO = ceHealthStatusDataFetcher.get(environment);
-    verify(healthStatusService).getHealthStatus(eq(cloudProviderId));
+    verify(healthStatusService).getHealthStatus(eq(cloudProviderId), eq(false));
     assertThat(healthStatusDTO).isEqualToComparingFieldByField(ceHealthStatusDTO);
   }
 }
