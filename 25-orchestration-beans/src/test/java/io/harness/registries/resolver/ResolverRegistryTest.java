@@ -16,7 +16,7 @@ import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.resolvers.Resolver;
 import io.harness.rule.Owner;
-import io.harness.state.io.StateTransput;
+import io.harness.utils.DummyOutcome;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -51,8 +51,9 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
   @Value
   @Builder
   private static class SweepingOutputResolver implements Resolver {
+    @SuppressWarnings("unchecked")
     @Override
-    public StateTransput resolve(Ambiance ambiance, RefObject refObject) {
+    public DummyOutcome resolve(Ambiance ambiance, RefObject refObject) {
       return null;
     }
 

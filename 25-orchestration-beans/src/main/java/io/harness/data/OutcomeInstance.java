@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -23,8 +24,11 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
 @Indexes({
   @Index(options = @IndexOptions(name = "uniqueLevelExecution", unique = true),
-      fields = { @Field("planExecutionId")
-                 , @Field("levelExecutions.runtimeId"), @Field("name") })
+      fields =
+      {
+        @Field("planExecutionId")
+        , @Field("levelExecutions.setupId"), @Field("levelExecutions.runtimeId"), @Field("name")
+      })
   ,
       @Index(options = @IndexOptions(name = "planExecutionIdx"), fields = { @Field("ambiance.planExecutionId") })
 })
@@ -36,4 +40,10 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtA
   @NonNull String name;
   Outcome outcome;
   long createdAt;
+
+  @UtilityClass
+  public static final class OutcomeInstanceKeys {
+    public static final String levelExecutionSetupId = "levelExecutions.setupId";
+    public static final String levelExecutionRuntimeId = "levelExecutions.runtimeId";
+  }
 }

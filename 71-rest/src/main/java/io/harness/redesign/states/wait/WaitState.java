@@ -56,7 +56,10 @@ public class WaitState implements State, AsyncExecutable {
     WaitStateParameters waitStateParameters = (WaitStateParameters) parameters;
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
     waitStateExecutionData.setDuration(waitStateParameters.getWaitDurationSeconds());
-    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).outcome(waitStateExecutionData).build();
+    return StateResponse.builder()
+        .status(NodeExecutionStatus.SUCCEEDED)
+        .outcome("waitData", waitStateExecutionData)
+        .build();
   }
 
   @Override

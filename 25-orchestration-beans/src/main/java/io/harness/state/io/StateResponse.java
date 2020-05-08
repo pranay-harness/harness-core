@@ -10,14 +10,14 @@ import lombok.Singular;
 import lombok.Value;
 
 import java.util.EnumSet;
-import java.util.List;
+import java.util.Map;
 
 @Value
 @Builder
 @Redesign
 public class StateResponse {
   @NonNull NodeExecutionStatus status;
-  @Singular List<Outcome> outcomes;
+  @Singular Map<String, Outcome> outcomes;
   FailureInfo failureInfo;
 
   @Value

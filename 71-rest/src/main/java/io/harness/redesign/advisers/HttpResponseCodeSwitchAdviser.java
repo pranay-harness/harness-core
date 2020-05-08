@@ -33,6 +33,7 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
     // This will be changed to obtain via output type
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) Preconditions.checkNotNull(
         stateResponse.getOutcomes()
+            .values()
             .stream()
             .filter(outcome -> HttpStateExecutionData.OUTCOME_TYPE == outcome.getOutcomeType())
             .findFirst()
