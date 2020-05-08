@@ -49,6 +49,10 @@ public class ClusterRecordHandler
   @Override
   public void onSaved(SettingAttribute cloudProvider) {
     upsertClusterRecord(cloudProvider);
+    if (cloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())
+        && ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider)) {
+      cePerpetualTaskManager.createPerpetualTasks(cloudProvider);
+    }
   }
 
   @Override
