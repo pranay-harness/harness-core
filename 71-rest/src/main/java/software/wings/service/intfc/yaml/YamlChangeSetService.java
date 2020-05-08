@@ -7,6 +7,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -80,4 +81,7 @@ public interface YamlChangeSetService {
 
   void deleteChangeSets(
       String accountId, Status[] statuses, Integer maxDeleteCount, String batchSize, int retentionPeriodInDays);
+
+  List<YamlChangeSet> getChangeSetsWithStatus(String accountId, String appId, YamlGitConfig yamlGitConfig,
+      int displayCount, List<YamlChangeSet.Status> statuses);
 }

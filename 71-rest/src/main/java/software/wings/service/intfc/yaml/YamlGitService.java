@@ -201,4 +201,6 @@ public interface YamlGitService {
       String accountId, List<String> gitConnectorsToRetain);
 
   RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
+
+  YamlGitConfig fetchYamlGitConfig(String appId, String accountId);
 }
