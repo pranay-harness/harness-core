@@ -427,8 +427,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
-    List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(Status.DELETED)
+                                   .asList();
     List<DelegateConnection> delegateConnections = wingsPersistence.createQuery(DelegateConnection.class)
                                                        .filter(DelegateConnectionKeys.accountId, accountId)
                                                        .project(DelegateConnectionKeys.delegateId, true)
