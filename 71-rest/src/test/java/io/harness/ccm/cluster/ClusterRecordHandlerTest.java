@@ -111,8 +111,10 @@ public class ClusterRecordHandlerTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldUpsertOnSavedK8SCloudProvider() {
+    when(ccmSettingService.isCeK8sEventCollectionEnabled(eq(settingAttribute))).thenReturn(true);
     handler.onSaved(settingAttribute);
     verify(clusterRecordService).upsert(isA(ClusterRecord.class));
+    verify(cePerpetualTaskManager).createPerpetualTasks(eq(settingAttribute));
   }
 
   @Test
