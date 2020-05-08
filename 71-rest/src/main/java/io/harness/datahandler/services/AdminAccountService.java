@@ -39,4 +39,6 @@ public interface AdminAccountService {
   boolean delete(String accountId);
 
   FeatureFlag updateFeatureFlagForAccount(String accountId, String featureName, boolean enabled);
+
+  boolean updatePovFlag(String accountId, boolean isPov);
 }

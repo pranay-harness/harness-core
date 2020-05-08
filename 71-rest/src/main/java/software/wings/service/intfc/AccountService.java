@@ -167,4 +167,6 @@ public interface AccountService {
   boolean checkDuplicateSubdomainUrl(SubdomainUrl subdomainUrl);
 
   void validateAccount(Account account);
+
+  boolean updatePovFlag(String accountId, boolean isPov);
 }

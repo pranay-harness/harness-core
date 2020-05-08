@@ -134,4 +134,9 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   public FeatureFlag updateFeatureFlagForAccount(String accountId, String featureName, boolean enabled) {
     return featureFlagService.updateFeatureFlagForAccount(featureName, accountId, enabled);
   }
+
+  @Override
+  public boolean updatePovFlag(String accountId, boolean isPov) {
+    return accountService.updatePovFlag(accountId, isPov);
+  }
 }

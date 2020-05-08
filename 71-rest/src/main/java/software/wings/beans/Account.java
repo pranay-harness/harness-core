@@ -145,6 +145,8 @@ public class Account extends Base implements PersistentRegularIterable {
     return localEncryptionEnabled;
   }
 
+  @Getter @Setter private boolean isPovAccount;
+
   public void setLocalEncryptionEnabled(boolean localEncryptionEnabled) {
     this.localEncryptionEnabled = localEncryptionEnabled;
   }

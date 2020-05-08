@@ -147,4 +147,11 @@ public class AdminAccountResource {
     return new RestResponse<>(
         FeatureFlagBO.fromFeatureFlag(adminAccountService.updateFeatureFlagForAccount(accountId, featureName, enable)));
   }
+
+  @PUT
+  @Path("{accountId}/pov")
+  public RestResponse<Boolean> updatePovFlag(
+      @PathParam("accountId") @NotEmpty String accountId, @QueryParam("isPov") boolean isPov) {
+    return new RestResponse<>(adminAccountService.updatePovFlag(accountId, isPov));
+  }
 }

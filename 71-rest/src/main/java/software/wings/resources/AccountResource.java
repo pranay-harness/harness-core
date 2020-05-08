@@ -441,6 +441,7 @@ public class AccountResource {
     String userId = UserThreadLocal.get().getUuid();
     return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
   }
+
   @POST
   @Path("{accountId}/enable-perpetual-task")
   public RestResponse<Boolean> enablePerpetualTask(@PathParam("accountId") @NotEmpty String accountId,
