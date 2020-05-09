@@ -1,7 +1,5 @@
 package io.harness.registries.state;
 
-import static org.joor.Reflect.on;
-
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -18,19 +16,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Redesign
 @Singleton
-public class StateRegistry implements Registry<StateType, Class<State>> {
-  Map<StateType, Class<State>> registry = new ConcurrentHashMap<>();
+public class StateRegistry implements Registry<StateType, State> {
+  Map<StateType, State> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull StateType stateType, @NonNull Class<State> stateClass) {
+  public void register(@NonNull StateType stateType, @NonNull State state) {
     if (registry.containsKey(stateType)) {
       throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stateType);
     }
-    registry.put(stateType, stateClass);
+    registry.put(stateType, state);
   }
 
   public State obtain(@NonNull StateType stateType) {
     if (registry.containsKey(stateType)) {
-      return on(registry.get(stateType)).create().get();
+      return registry.get(stateType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
   }

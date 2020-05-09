@@ -1,7 +1,5 @@
 package io.harness.registries.facilitator;
 
-import static org.joor.Reflect.on;
-
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -18,19 +16,19 @@ import javax.validation.Valid;
 
 @Redesign
 @Singleton
-public class FacilitatorRegistry implements Registry<FacilitatorType, Class<? extends Facilitator>> {
-  private Map<FacilitatorType, Class<? extends Facilitator>> registry = new ConcurrentHashMap<>();
+public class FacilitatorRegistry implements Registry<FacilitatorType, Facilitator> {
+  private Map<FacilitatorType, Facilitator> registry = new ConcurrentHashMap<>();
 
-  public void register(FacilitatorType facilitatorType, Class<? extends Facilitator> facilitatorClass) {
+  public void register(FacilitatorType facilitatorType, Facilitator facilitator) {
     if (registry.containsKey(facilitatorType)) {
       throw new DuplicateRegistryException(getType(), "Facilitator Already Registered with type: " + facilitatorType);
     }
-    registry.put(facilitatorType, facilitatorClass);
+    registry.put(facilitatorType, facilitator);
   }
 
   public Facilitator obtain(@Valid FacilitatorType facilitatorType) {
     if (registry.containsKey(facilitatorType)) {
-      return on(registry.get(facilitatorType)).create().get();
+      return registry.get(facilitatorType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Facilitator registered for type: " + facilitatorType);
   }

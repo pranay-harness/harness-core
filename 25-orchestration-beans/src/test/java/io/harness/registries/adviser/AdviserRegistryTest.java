@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.adviser.Advise;
@@ -25,6 +26,7 @@ import org.junit.experimental.categories.Category;
 
 public class AdviserRegistryTest extends OrchestrationBeansTest {
   @Inject private AdviserRegistry adviserRegistry;
+  @Inject private Injector injector;
 
   @Test
   @Owner(developers = PRASHANT)
@@ -33,13 +35,13 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     AdviserType adviserType = AdviserType.builder().type("Type1").build();
     AdviserParameters parameters = Type1AdviserParameters.builder().name("paramName").build();
     AdviserObtainment obtainment = AdviserObtainment.builder().type(adviserType).parameters(parameters).build();
-    adviserRegistry.register(adviserType, Type1Adviser.class);
+    adviserRegistry.register(adviserType, injector.getInstance(Type1Adviser.class));
     Adviser adviser = adviserRegistry.obtain(adviserType);
     assertThat(adviser).isNotNull();
     assertThat(adviser.getType()).isEqualTo(adviserType);
     Type1Adviser type1Adviser = (Type1Adviser) adviser;
 
-    assertThatThrownBy(() -> adviserRegistry.register(adviserType, Type1Adviser.class))
+    assertThatThrownBy(() -> adviserRegistry.register(adviserType, injector.getInstance(Type1Adviser.class)))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> adviserRegistry.obtain(AdviserType.builder().type(AdviserType.IGNORE).build()))

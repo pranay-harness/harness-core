@@ -38,7 +38,9 @@ public class EngineObtainmentHelper {
       Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
       inputs.add(resolver.resolve(ambiance, refObject));
     }
-    inputs.addAll(additionalInputs);
+    if (additionalInputs != null) {
+      inputs.addAll(additionalInputs);
+    }
     return inputs;
   }
 

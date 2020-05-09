@@ -71,6 +71,7 @@ public class BasicHttpState implements State, AsyncExecutable {
   @Override
   public StateResponse handleAsyncResponse(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
+    BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
     StateResponseBuilder responseBuilder = StateResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -85,6 +86,8 @@ public class BasicHttpState implements State, AsyncExecutable {
     } else {
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
       HttpStateExecutionData executionData = HttpStateExecutionData.builder()
+                                                 .httpUrl(stateParameters.getUrl())
+                                                 .httpMethod(stateParameters.getMethod())
                                                  .httpResponseCode(httpStateExecutionResponse.getHttpResponseCode())
                                                  .httpResponseBody(httpStateExecutionResponse.getHttpResponseBody())
                                                  .status(httpStateExecutionResponse.getExecutionStatus())

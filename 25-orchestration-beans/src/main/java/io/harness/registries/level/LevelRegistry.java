@@ -1,7 +1,5 @@
 package io.harness.registries.level;
 
-import static org.joor.Reflect.on;
-
 import com.google.inject.Singleton;
 
 import io.harness.ambiance.Level;
@@ -19,19 +17,19 @@ import javax.validation.Valid;
 
 @Redesign
 @Singleton
-public class LevelRegistry implements Registry<LevelType, Class<? extends Level>> {
-  Map<LevelType, Class<? extends Level>> registry = new ConcurrentHashMap<>();
+public class LevelRegistry implements Registry<LevelType, Level> {
+  Map<LevelType, Level> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull LevelType levelType, @Valid Class<? extends Level> levelClass) {
+  public void register(@NonNull LevelType levelType, @Valid Level level) {
     if (registry.containsKey(levelType)) {
       throw new DuplicateRegistryException(getType(), "Level Already Registered with this name: " + levelType);
     }
-    registry.put(levelType, levelClass);
+    registry.put(levelType, level);
   }
 
   public Level obtain(@NonNull LevelType levelType) {
     if (registry.containsKey(levelType)) {
-      return on(registry.get(levelType)).create().get();
+      return registry.get(levelType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Level registered for name: " + levelType);
   }

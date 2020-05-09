@@ -1,7 +1,5 @@
 package io.harness.registries.resolver;
 
-import static org.joor.Reflect.on;
-
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -17,19 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Redesign
 @Singleton
-public class ResolverRegistry implements Registry<RefType, Class<? extends Resolver>> {
-  private Map<RefType, Class<? extends Resolver>> registry = new ConcurrentHashMap<>();
+public class ResolverRegistry implements Registry<RefType, Resolver> {
+  private Map<RefType, Resolver> registry = new ConcurrentHashMap<>();
 
-  public void register(RefType refType, Class<? extends Resolver> resolverClass) {
+  public void register(RefType refType, Resolver resolver) {
     if (registry.containsKey(refType)) {
       throw new DuplicateRegistryException(getType(), "Resolver Already Registered with this type: " + refType);
     }
-    registry.put(refType, resolverClass);
+    registry.put(refType, resolver);
   }
 
   public Resolver obtain(RefType refType) {
     if (registry.containsKey(refType)) {
-      return on(registry.get(refType)).create().get();
+      return registry.get(refType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Resolver registered for type: " + refType);
   }
