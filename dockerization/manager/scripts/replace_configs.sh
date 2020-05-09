@@ -574,3 +574,7 @@ fi
 if [[ "" != "$CDN_OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.openjdk8u242 "$CDN_OPENJDK_JRE_TAR_PATH"
 fi
+
+if [[ "" != "$COMMAND_LIBRARY_SERVICE_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE commandLibraryServiceConfig.baseUrl "$COMMAND_LIBRARY_SERVICE_BASE_URL"
+fi

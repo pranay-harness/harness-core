@@ -52,12 +52,12 @@ mongo:
 
 tag:
   importantTags:
-  - Azure
-  - Kubernetes
-  - Gcp
-  - Aws
+    - Azure
+    - Kubernetes
+    - Gcp
+    - Aws
   allowedTags:
-  - Azure
-  - Kubernetes
-  - Gcp
-  - Aws
+    - Azure
+    - Kubernetes
+    - Gcp
+    - Aws
