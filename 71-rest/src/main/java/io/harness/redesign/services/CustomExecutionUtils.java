@@ -20,6 +20,7 @@ import io.harness.redesign.levels.SectionLevel;
 import io.harness.redesign.levels.StepLevel;
 import io.harness.redesign.states.http.BasicHttpStateParameters;
 import io.harness.redesign.states.wait.WaitStateParameters;
+import io.harness.references.OutcomeRefObject;
 import io.harness.state.StateType;
 import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.core.section.SectionStateParameters;
@@ -82,6 +83,7 @@ public class CustomExecutionUtils {
                 .facilitatorObtainment(FacilitatorObtainment.builder()
                                            .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                            .build())
+                .refObject(OutcomeRefObject.builder().name("http").producerId(httpNodeId).build())
                 .build())
         .node(
             ExecutionNode.builder()

@@ -1,6 +1,5 @@
 package io.harness.annotations.processor;
 
-import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.Adviser;
@@ -14,7 +13,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -24,7 +22,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
-@AutoService(Processor.class)
 public class ProducesAnnotationProcessor extends AbstractProcessor {
   private static final Map<String, String> producerClassMap =
       ImmutableMap.<String, String>builder()

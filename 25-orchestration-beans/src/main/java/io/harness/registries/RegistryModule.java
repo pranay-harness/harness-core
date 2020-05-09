@@ -1,9 +1,8 @@
 package io.harness.registries;
 
-import static org.joor.Reflect.on;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
@@ -76,55 +75,55 @@ public class RegistryModule extends DependencyModule {
 
   @Provides
   @Singleton
-  StateRegistry providesStateRegistry() {
+  StateRegistry providesStateRegistry(Injector injector) {
     StateRegistry stateRegistry = new StateRegistry();
     stateClasses.forEach(clazz -> {
-      State state = on(clazz).create().get();
-      stateRegistry.register(state.getType(), clazz);
+      State state = (State) injector.getInstance(clazz);
+      stateRegistry.register(state.getType(), state);
     });
     return stateRegistry;
   }
 
   @Provides
   @Singleton
-  AdviserRegistry providesAdviserRegistry() {
+  AdviserRegistry providesAdviserRegistry(Injector injector) {
     AdviserRegistry adviserRegistry = new AdviserRegistry();
     adviserClasses.forEach(clazz -> {
-      Adviser adviser = on(clazz).create().get();
-      adviserRegistry.register(adviser.getType(), clazz);
+      Adviser adviser = (Adviser) injector.getInstance(clazz);
+      adviserRegistry.register(adviser.getType(), adviser);
     });
     return adviserRegistry;
   }
 
   @Provides
   @Singleton
-  ResolverRegistry providesResolverRegistry() {
+  ResolverRegistry providesResolverRegistry(Injector injector) {
     ResolverRegistry resolverRegistry = new ResolverRegistry();
     resolverClasses.forEach(clazz -> {
-      Resolver resolver = on(clazz).create().get();
-      resolverRegistry.register(resolver.getType(), clazz);
+      Resolver resolver = (Resolver) injector.getInstance(clazz);
+      resolverRegistry.register(resolver.getType(), resolver);
     });
     return resolverRegistry;
   }
 
   @Provides
   @Singleton
-  FacilitatorRegistry providesFacilitatorRegistry() {
+  FacilitatorRegistry providesFacilitatorRegistry(Injector injector) {
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
     facilitatorClasses.forEach(clazz -> {
-      Facilitator facilitator = on(clazz).create().get();
-      facilitatorRegistry.register(facilitator.getType(), clazz);
+      Facilitator facilitator = (Facilitator) injector.getInstance(clazz);
+      facilitatorRegistry.register(facilitator.getType(), facilitator);
     });
     return facilitatorRegistry;
   }
 
   @Provides
   @Singleton
-  LevelRegistry providesLevelRegistry() {
+  LevelRegistry providesLevelRegistry(Injector injector) {
     LevelRegistry levelRegistry = new LevelRegistry();
     levelClasses.forEach(clazz -> {
-      Level level = on(clazz).create().get();
-      levelRegistry.register(level.getType(), clazz);
+      Level level = (Level) injector.getInstance(clazz);
+      levelRegistry.register(level.getType(), level);
     });
     return levelRegistry;
   }
