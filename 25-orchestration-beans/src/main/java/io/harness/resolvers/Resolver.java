@@ -8,8 +8,10 @@ import io.harness.registries.RegistrableEntity;
 import io.harness.state.io.StateTransput;
 
 @Redesign
-public interface Resolver extends RegistrableEntity<RefType> {
-  <T extends StateTransput> T resolve(Ambiance ambiance, RefObject refObject);
+public interface Resolver<T extends StateTransput> extends RegistrableEntity<RefType> {
+  T resolve(Ambiance ambiance, RefObject refObject);
+
+  T consume(Ambiance ambiance, String name, T value);
 
   RefType getType();
 

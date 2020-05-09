@@ -52,10 +52,15 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
 
   @Value
   @Builder
-  private static class SweepingOutputResolver implements Resolver {
+  private static class SweepingOutputResolver implements Resolver<DummyOutcome> {
     @SuppressWarnings("unchecked")
     @Override
     public DummyOutcome resolve(Ambiance ambiance, RefObject refObject) {
+      return null;
+    }
+
+    @Override
+    public DummyOutcome consume(Ambiance ambiance, String name, DummyOutcome value) {
       return null;
     }
 

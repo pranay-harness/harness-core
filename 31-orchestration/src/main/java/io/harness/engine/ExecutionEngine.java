@@ -21,8 +21,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.Outcome;
-import io.harness.data.OutcomeInstance;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
@@ -32,7 +30,6 @@ import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
-import io.harness.engine.services.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -48,7 +45,9 @@ import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.level.LevelRegistry;
+import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateRegistry;
+import io.harness.resolvers.Resolver;
 import io.harness.state.State;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -78,13 +77,13 @@ public class ExecutionEngine implements Engine {
   @Inject private LevelRegistry levelRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
+  @Inject private ResolverRegistry resolverRegistry;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private EngineStatusHelper engineStatusHelper;
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
-  @Inject private OutcomeService outcomeService;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     PlanExecution instance = PlanExecution.builder()
@@ -233,19 +232,15 @@ public class ExecutionEngine implements Engine {
     handleAdvise(nodeExecution, advise);
   }
 
-  private void handleOutcomes(Ambiance ambiance, Map<String, Outcome> outcomes) {
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private void handleOutcomes(Ambiance ambiance, Map<String, StateTransput> outcomes) {
     if (outcomes == null) {
       return;
     }
-    outcomes.forEach((name, outcome)
-                         -> outcomeService.save(OutcomeInstance.builder()
-                                                    .uuid(generateUuid())
-                                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                                    .levelExecutions(ambiance.getLevelExecutions())
-                                                    .outcome(outcome)
-                                                    .createdAt(System.currentTimeMillis())
-                                                    .name(name)
-                                                    .build()));
+    outcomes.forEach((name, outcome) -> {
+      Resolver resolver = resolverRegistry.obtain(outcome.getRefType());
+      resolver.consume(ambiance, name, outcome);
+    });
   }
 
   private void endTransition(NodeExecution nodeInstance) {
