@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Redesign
 @Singleton
-public class ResolverRegistry implements Registry<RefType, Resolver> {
+public class ResolverRegistry implements Registry<RefType, Resolver<?>> {
   private Map<RefType, Resolver> registry = new ConcurrentHashMap<>();
 
   public void register(RefType refType, Resolver resolver) {

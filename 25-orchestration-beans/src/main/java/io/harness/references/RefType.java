@@ -10,6 +10,6 @@ import lombok.Value;
 @Redesign
 public class RefType implements RegistryKey {
   public static final String SWEEPING_OUTPUT = "SWEEPING_OUTPUT";
-
+  public static final String OUTCOME = "OUTCOME";
   String type;
 }

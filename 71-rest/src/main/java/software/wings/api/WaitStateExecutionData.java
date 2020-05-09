@@ -5,7 +5,6 @@
 package software.wings.api;
 
 import io.harness.data.Outcome;
-import io.harness.data.OutcomeType;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -16,8 +15,6 @@ import java.util.Map;
  * @author Rishi
  */
 public class WaitStateExecutionData extends StateExecutionData implements Outcome {
-  public static final OutcomeType OUTCOME_TYPE = OutcomeType.builder().type("WAIT_OUTCOME").build();
-
   private long duration;
   private long wakeupTs;
   private String resumeId;
@@ -90,10 +87,5 @@ public class WaitStateExecutionData extends StateExecutionData implements Outcom
     putNotNull(executionDetails, "duration",
         ExecutionDataValue.builder().displayName("Duration (In Seconds)").value(duration).build());
     return executionDetails;
-  }
-
-  @Override
-  public OutcomeType getOutcomeType() {
-    return OUTCOME_TYPE;
   }
 }

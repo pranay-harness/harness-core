@@ -1,5 +1,6 @@
 package io.harness.engine.services.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -15,10 +16,22 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.references.RefType;
-import io.harness.state.io.StateTransput;
 
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
+
+  @Override
+  public Outcome resolve(Ambiance ambiance, RefObject refObject) {
+    OutcomeInstance outcomeInstance = hPersistence.createQuery(OutcomeInstance.class)
+                                          .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
+                                          .filter(OutcomeInstanceKeys.levelExecutionSetupId, refObject.getProducerId())
+                                          .filter(OutcomeInstanceKeys.name, refObject.getName())
+                                          .get();
+    if (outcomeInstance == null) {
+      return null;
+    }
+    return outcomeInstance.getOutcome();
+  }
 
   @Override
   public <T extends Outcome> T findOutcome(Ambiance ambiance, String name) {
@@ -33,7 +46,23 @@ public class OutcomeServiceImpl implements OutcomeService {
   }
 
   @Override
-  public OutcomeInstance save(OutcomeInstance outcomeInstance) {
+  public Outcome consume(Ambiance ambiance, String name, Outcome outcome) {
+    OutcomeInstance instance = OutcomeInstance.builder()
+                                   .uuid(generateUuid())
+                                   .planExecutionId(ambiance.getPlanExecutionId())
+                                   .levelExecutions(ambiance.getLevelExecutions())
+                                   .outcome(outcome)
+                                   .createdAt(System.currentTimeMillis())
+                                   .name(name)
+                                   .build();
+    OutcomeInstance savedInstance = save(instance);
+    if (savedInstance == null) {
+      return null;
+    }
+    return savedInstance.getOutcome();
+  }
+
+  private OutcomeInstance save(OutcomeInstance outcomeInstance) {
     try {
       hPersistence.save(outcomeInstance);
       return outcomeInstance;
@@ -41,18 +70,6 @@ public class OutcomeServiceImpl implements OutcomeService {
       throw new InvalidRequestException(
           format("Outcome with name %s, already saved", outcomeInstance.getName()), exception);
     }
-  }
-
-  @Override
-  public <T extends StateTransput> T resolve(Ambiance ambiance, RefObject refObject) {
-    OutcomeInstance outcomeInstance = hPersistence.createQuery(OutcomeInstance.class)
-                                          .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
-                                          .filter(OutcomeInstanceKeys.levelExecutionSetupId, refObject.getProducerId())
-                                          .get();
-    if (outcomeInstance == null) {
-      return null;
-    }
-    return (T) outcomeInstance.getOutcome();
   }
 
   @Override

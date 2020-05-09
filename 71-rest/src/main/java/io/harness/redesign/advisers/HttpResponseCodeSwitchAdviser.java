@@ -35,7 +35,8 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
         stateResponse.getOutcomes()
             .values()
             .stream()
-            .filter(outcome -> HttpStateExecutionData.OUTCOME_TYPE == outcome.getOutcomeType())
+            // TODO => Find a better way to do this
+            .filter(outcome -> outcome instanceof HttpStateExecutionData)
             .findFirst()
             .orElse(null));
 
