@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
+import com.sun.tools.javac.util.List;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -88,6 +89,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
     when(assignDelegateService.canAssign(any(BatchDelegateSelectionLog.class), anyString(), any())).thenReturn(true);
+    when(assignDelegateService.retrieveActiveDelegates(delegateTask.getAccountId()))
+        .thenReturn(List.of(delegate.getUuid()));
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
       DelegateTask task =

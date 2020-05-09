@@ -33,4 +33,6 @@ public interface AssignDelegateService {
   void clearConnectionResults(String accountId);
 
   String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask);
+
+  List<String> retrieveActiveDelegates(String accountId);
 }
