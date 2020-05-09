@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.VUK;
@@ -71,6 +73,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -94,6 +97,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void setUp() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).environmentType(PROD).build();
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
+  }
+
+  private DelegateBuilder createDelegateBuilder() {
+    return Delegate.builder().status(Delegate.Status.ENABLED).lastHeartBeat(System.currentTimeMillis());
   }
 
   @Value
@@ -796,5 +803,47 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
     assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask2)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldRetrieveNoActiveDelegates() {
+    String accountId = generateUuid();
+
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId);
+    assertThat(activeDelegates).isNotNull();
+    assertThat(activeDelegates).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldRetrieveActiveDelegates() {
+    String accountId = generateUuid();
+    String activeDelegate1Id = generateUuid();
+    String activeDelegate2Id = generateUuid();
+    Delegate activeDelegate1 = createDelegateBuilder().accountId(accountId).uuid(activeDelegate1Id).build();
+
+    Delegate activeDelegate2 = createDelegateBuilder().accountId(accountId).uuid(activeDelegate2Id).build();
+
+    Delegate disconnectedDelegate = createDelegateBuilder()
+                                        .accountId(accountId)
+                                        .uuid(generateUuid())
+                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                        .build();
+
+    Delegate wapprDelegate = createDelegateBuilder()
+                                 .accountId(accountId)
+                                 .uuid(generateUuid())
+                                 .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                 .build();
+
+    wingsPersistence.save(Arrays.asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate));
+
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId);
+    assertThat(activeDelegates).isNotNull();
+    assertThat(activeDelegates.size()).isEqualTo(2);
+    assertThat(activeDelegates.containsAll(Arrays.asList(activeDelegate1Id, activeDelegate2Id))).isTrue();
   }
 }

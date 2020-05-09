@@ -48,7 +48,6 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHA
 import static software.wings.beans.FeatureName.UPGRADE_JRE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -1868,14 +1867,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
     }
 
-    List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                       .filter(DelegateKeys.accountId, task.getAccountId())
-                                       .field(DelegateKeys.lastHeartBeat)
-                                       .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                                       .asKeyList()
-                                       .stream()
-                                       .map(key -> key.getId().toString())
-                                       .collect(toList());
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId());
 
     logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 

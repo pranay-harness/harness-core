@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateActivity;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
+import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
@@ -49,10 +51,13 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 7/20/17
@@ -91,21 +96,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                 }
               });
 
-  private LoadingCache<String, List<String>> accountConnectedDelegatesCache =
+  private LoadingCache<String, List<Delegate>> accountDelegatesCache =
       CacheBuilder.newBuilder()
           .maximumSize(1000)
-          .expireAfterWrite(1, TimeUnit.MINUTES)
-          .build(new CacheLoader<String, List<String>>() {
+          .expireAfterWrite(MAX_DELEGATE_LAST_HEARTBEAT / 3, TimeUnit.MILLISECONDS)
+          .build(new CacheLoader<String, List<Delegate>>() {
             @Override
-            public List<String> load(String accountId) {
+            public List<Delegate> load(String accountId) {
               return wingsPersistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)
-                  .field(DelegateKeys.lastHeartBeat)
-                  .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                  .asKeyList()
-                  .stream()
-                  .map(key -> key.getId().toString())
-                  .collect(toList());
+                  .project(DelegateKeys.uuid, true)
+                  .project(DelegateKeys.lastHeartBeat, true)
+                  .project(DelegateKeys.status, true)
+                  .asList();
             }
           });
 
@@ -308,7 +311,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task.getUuid());
 
-      List<String> connectedEligibleDelegates = accountConnectedDelegatesCache.get(task.getAccountId())
+      List<String> connectedEligibleDelegates = retrieveActiveDelegates(task.getAccountId())
                                                     .stream()
                                                     .filter(delegateId -> canAssign(batch, delegateId, task))
                                                     .collect(toList());
@@ -426,7 +429,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     String errorMessage = "Unknown";
 
     try {
-      List<String> activeDelegates = accountConnectedDelegatesCache.get(delegateTask.getAccountId());
+      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId());
 
       logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
@@ -470,5 +473,46 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       logger.error("Execution exception", e);
     }
     return errorMessage;
+  }
+
+  @Override
+  public List<String> retrieveActiveDelegates(String accountId) {
+    try {
+      List<Delegate> accountDelegates = accountDelegatesCache.get(accountId);
+      if (accountDelegates.isEmpty()) {
+        /* Cache invalidation was added here in order to cover the edge case, when there are no delegates in db for the
+         * given account, so that the cache has an opportunity to refresh on a next invocation, instead of waiting for
+         * the whole cache validity period to pass and returning empty list.
+         * */
+        accountDelegatesCache.invalidate(accountId);
+      }
+
+      long oldestAcceptableHeartBeat = clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT;
+
+      return identifyActiveDelegateIds(accountDelegates, oldestAcceptableHeartBeat);
+    } catch (ExecutionException ex) {
+      logger.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      return emptyList();
+    }
+  }
+
+  private List<String> identifyActiveDelegateIds(List<Delegate> accountDelegates, long oldestAcceptableHeartBeat) {
+    Map<DelegateActivity, List<Delegate>> delegatesMap =
+        accountDelegates.stream().collect(Collectors.groupingBy(delegate -> {
+          if (Status.ENABLED == delegate.getStatus()) {
+            if (delegate.getLastHeartBeat() > oldestAcceptableHeartBeat) {
+              return DelegateActivity.ACTIVE;
+            } else {
+              return DelegateActivity.DISCONNECTED;
+            }
+          } else if (Status.WAITING_FOR_APPROVAL == delegate.getStatus()) {
+            return DelegateActivity.WAITING_FOR_APPROVAL;
+          }
+          return null;
+        }, Collectors.toList()));
+
+    return delegatesMap.get(DelegateActivity.ACTIVE) == null
+        ? emptyList()
+        : delegatesMap.get(DelegateActivity.ACTIVE).stream().map(Delegate::getUuid).collect(Collectors.toList());
   }
 }
