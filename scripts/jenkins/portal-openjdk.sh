@@ -73,6 +73,27 @@ fi
 
 cd ../..
 
+mkdir -p dist/command-library-server ;
+
+cd dist/command-library-server
+
+cp ../../84-command-library-server/target/command-library-app-capsule.jar .
+cp ../../84-command-library-server/keystore.jks .
+cp ../../84-command-library-server/command-library-server-config.yml .
+cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
+
+cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -R ../../dockerization/command-library-server/scripts/ .
+cp -r ../../dockerization/common-resources/ .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
 mkdir -p dist/event-server ;
 cd dist/event-server
 cp ../../72-event-server/target/event-server-capsule.jar .
