@@ -26,7 +26,9 @@ public class Setup {
   public static RequestSpecification portal() {
     return given().spec(rqProvider.useDefaultSpec());
   }
-
+  public static RequestSpecification commandLibraryService() {
+    return given().spec(rqProvider.useDefaultSpecForCommandLibraryService());
+  }
   public static RequestSpecification email() {
     return given().spec(rqProvider.useEmailSpec());
   }

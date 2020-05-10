@@ -1,0 +1,147 @@
+package io.harness.testframework.framework;
+
+import static io.fabric8.utils.Strings.join;
+import static io.harness.filesystem.FileIo.acquireLock;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.restassured.config.HttpClientConfig.httpClientConfig;
+import static java.lang.System.err;
+import static java.lang.System.out;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
+
+import com.google.inject.Singleton;
+
+import io.harness.exception.GeneralException;
+import io.harness.filesystem.FileIo;
+import io.harness.resource.Project;
+import io.harness.threading.Poller;
+import io.restassured.RestAssured;
+import io.restassured.config.RestAssuredConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.httpclient.params.HttpConnectionParams;
+import org.apache.http.HttpStatus;
+import org.jetbrains.annotations.NotNull;
+import org.zeroturnaround.exec.ProcessExecutor;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+@Singleton
+@Slf4j
+public class CommandLibraryServiceExecutor {
+  public static final String COMMAND_LIBRARY_SERVER_MODULE = "84-command-library-server";
+  private boolean hasFailed;
+
+  public void ensureCommandLibraryService(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+    if (!isHealthy()) {
+      executeLocalCommandLibraryService(clazz, alpnPath, alpnJarPath);
+    }
+  }
+
+  private void executeLocalCommandLibraryService(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+    if (hasFailed) {
+      return;
+    }
+
+    final String rootDirectoryPath = Project.rootDirectory(clazz);
+    final File lockfile = getLockfile(rootDirectoryPath);
+
+    if (acquireLock(lockfile, ofMinutes(2))) {
+      try {
+        if (isHealthy()) {
+          logger.info("Command Library Service is healthy");
+          return;
+        }
+        final File rootDirectory = new File(rootDirectoryPath);
+        logger.info("Execute the command library service from {}", rootDirectory);
+        final Path jar = Paths.get(
+            rootDirectory.getPath(), COMMAND_LIBRARY_SERVER_MODULE, "target", "command-library-app-capsule.jar");
+        final Path config =
+            Paths.get(rootDirectory.getPath(), COMMAND_LIBRARY_SERVER_MODULE, "command-library-server-config.yml");
+        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
+
+        if (!new File(alpn).exists()) {
+          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
+          alpn = alpnPath + alpnJarPath;
+          if (!new File(alpn).exists()) {
+            throw new GeneralException("Missing alpn file");
+          }
+        }
+
+        for (int i = 0; i < 10; i++) {
+          logger.info("****");
+        }
+
+        List<String> command = new ArrayList<>();
+        addJvmParams(alpn, command);
+        addJacocoAgentVM(jar, command);
+        addJar(jar, command);
+        addConfig(config, command);
+        logger.info(join(command, " "));
+
+        startServiceProcess(rootDirectory, command);
+
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), this ::isHealthy);
+      } catch (RuntimeException | IOException exception) {
+        hasFailed = true;
+        throw exception;
+      } finally {
+        FileIo.releaseLock(lockfile);
+      }
+    }
+  }
+
+  @NotNull
+  private File getLockfile(String rootDirectoryPath) {
+    return new File(rootDirectoryPath, "command-library-service");
+  }
+
+  private void addJvmParams(String alpn, List<String> command) {
+    command.add("java");
+    command.add("-Xms1024m");
+    addGCVMOptions(command);
+    command.add("-Dfile.encoding=UTF-8");
+    command.add("-Xbootclasspath/p:" + alpn);
+  }
+
+  private void startServiceProcess(File directory, List<String> command) throws IOException {
+    ProcessExecutor processExecutor = new ProcessExecutor();
+    processExecutor.command(command);
+    processExecutor.directory(directory);
+
+    processExecutor.redirectOutput(out);
+    processExecutor.redirectError(err);
+
+    processExecutor.start();
+  }
+
+  private Exception previous = new Exception();
+
+  private boolean isHealthy() {
+    try {
+      RestAssuredConfig config =
+          RestAssured.config().httpClient(httpClientConfig()
+                                              .setParam(HttpConnectionParams.CONNECTION_TIMEOUT, 5000)
+                                              .setParam(HttpConnectionParams.SO_TIMEOUT, 5000));
+
+      Setup.commandLibraryService().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
+    } catch (Exception exception) {
+      if (exception.getMessage().equals(previous.getMessage())) {
+        logger.info("not healthy");
+      } else {
+        logger.info("not healthy - {}", exception.getMessage());
+        previous = exception;
+      }
+      return false;
+    }
+    logger.info("healthy");
+    return true;
+  }
+}

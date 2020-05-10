@@ -84,13 +84,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
   protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
-  private static final String alpnJar =
+  public static final String alpnJar =
       "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
+  public static String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    String alpn = "/home/jenkins/maven-repositories/0/";
     ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =

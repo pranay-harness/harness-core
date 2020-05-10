@@ -11,16 +11,28 @@ public class RequestSpecProvider {
   public RequestSpecification useDefaultSpec() {
     String host = System.getProperty("server.host", "https://localhost");
     String basePath = System.getProperty("server.base", "/api");
+    String port = System.getProperty("server.port", "9090");
+    return createRequestSpec(host, port, basePath);
+  }
+
+  public RequestSpecification useDefaultSpecForCommandLibraryService() {
+    String host = System.getProperty("commandlibrary.server.host", "https://localhost");
+    String basePath = System.getProperty("commandlibrary.server.base", "/command-library-service");
+    String port = System.getProperty("commandlibrary.server.port", "5050");
+
+    return createRequestSpec(host, port, basePath);
+  }
+
+  private RequestSpecification createRequestSpec(String host, String port, String basePath) {
     RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
     requestSpecBuilder.setAccept(ContentType.JSON);
     requestSpecBuilder.setContentType(ContentType.JSON);
     requestSpecBuilder.setBaseUri(host);
     requestSpecBuilder.setBasePath(basePath);
-    String port = System.getProperty("server.port", "9090");
     if (!port.equals("0000")) {
       requestSpecBuilder.setPort(Integer.parseInt(port));
     }
-    logger.info("Querying environment : " + host + basePath + ":" + port);
+    logger.info("Querying environment : " + host + ":" + port + basePath);
     if (port.equals("0000")) {
       logger.info(
           "This querying environment would use the default port for the service. This option is good to be used in non local envs such as QA");

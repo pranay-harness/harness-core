@@ -1,6 +1,8 @@
 package io.harness.functional;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.FunctionalTestRule.alpn;
+import static io.harness.rule.FunctionalTestRule.alpnJar;
 
 import com.google.inject.Inject;
 
@@ -14,6 +16,7 @@ import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
+import io.harness.testframework.framework.CommandLibraryServiceExecutor;
 import io.harness.testframework.framework.DelegateExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.FileUtils;
@@ -65,6 +68,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -97,6 +101,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
     delegateExecutor.ensureDelegate(account, bearerToken, AbstractFunctionalTest.class);
+    if (needCommandLibraryService()) {
+      commandLibraryServiceExecutor.ensureCommandLibraryService(AbstractFunctionalTest.class, alpn, alpnJar);
+    }
     logger.info("Basic setup completed");
   }
 
@@ -220,5 +227,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
         .dataLoaderRegistry(getDataLoaderRegistry())
         .context(GraphQLContext.newContext().of("accountId", accountId, "permissions", userPermissionInfo))
         .build();
+  }
+
+  protected boolean needCommandLibraryService() {
+    return false;
   }
 }
