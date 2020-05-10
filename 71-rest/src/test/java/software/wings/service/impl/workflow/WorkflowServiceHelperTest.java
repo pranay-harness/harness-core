@@ -563,7 +563,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     // Case 1: Override the workflow variable name
     assertThat(overrideWorkflowVariables).containsKeys("Environment", "OverrideVariable", "MyOwnVariable");
-    assertThat(overrideWorkflowVariables).containsValues("EnvironmentValue", "${app.name}", "MyOwnVariableValue");
+    assertThat(overrideWorkflowVariables).containsValues("EnvironmentValue", "myValue", "MyOwnVariableValue");
     assertThat(overrideWorkflowVariables).doesNotContainKey("Service");
     assertThat(overrideWorkflowVariables).containsKey("NewlyCreatedVariable");
     assertThat(overrideWorkflowVariables.get("NewlyCreatedVariable")).isEqualTo("NewlyCreatedVariableValue");
