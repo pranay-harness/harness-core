@@ -1,0 +1,8 @@
+# Refer for a list of all gazelle directives: http://www.lib4dev.in/info/bazelbuild/bazel-gazelle/112655189
+# gazelle:exclude .git/
+# gazelle:exclude pkg/
+# gazelle:proto disable
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/wings-software/portal
+gazelle(name = "gazelle")

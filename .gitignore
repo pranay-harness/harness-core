@@ -58,3 +58,5 @@ eventQueue
 
 profile
 profile.result
+
+bazel-*

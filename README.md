@@ -310,3 +310,173 @@ The admin username and password are in BaseIntegrationTest.java.
 ### Troubleshooting
 
 https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-process
+
+
+
+# Go Development
+## Prerequisites
+### Install Go
+1. Install Go 1.14 [here](https://golang.org/dl/)
+2. add this to .bash_profile: `export PATH=$PATH:~/go/bin`
+3. Get dependent tools by running:
+```lang=bash
+go get -u github.com/mdempsky/gocode github.com/uudashr/gopkgs/v2/cmd/gopkgs github.com/ramya-rao-a/go-outline github.com/acroca/go-symbols golang.org/x/tools/cmd/guru golang.org/x/tools/cmd/gorename github.com/cweill/gotests github.com/fatih/gomodifytags github.com/josharian/impl github.com/davidrjenni/reftools/cmd/fillstruct github.com/haya14busa/goplay/cmd/goplay github.com/godoctor/godoctor github.com/go-delve/delve/cmd/dlv github.com/stamblerre/gocode github.com/rogpeppe/godef github.com/sqs/goreturns golang.org/x/lint/golint
+```
+### Install Bazel
+4. On mac: `brew install bazel`
+   * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
+5. Install gazelle: `go get github.com/bazelbuild/bazel-gazelle/cmd/gazelle`
+   *  we are using gazelle for bazel build file creation 
+
+
+### IDE
+Jetbrains has GoLand editor but its not free. If we continue using intelliJ for Go, then we need a plugin called Go, but it’s not supported on Community Edition(free) of intelliJ.
+* So recommendation is to use VsCode(free) which is better than intelliJ for Go development.
+* Once you install VsCode, open and install the plugin  `Microsoft Go` 
+* Note: If your autocomplete is not working, disable `gopls`
+
+## Documentation
+This page contains the most common commands and recommendations, for more details go to [bazel homepage](https://docs.bazel.build/versions/master/getting-started.html).
+Bazel has extensive documentation available online.
+
+You can start with the [user guide](https://docs.bazel.build/versions/master/user-manual.html) and [best practices](https://docs.bazel.build/versions/master/best-practices.html)
+
+Documentation about the Go ruleset is available on github as part of [bazelbuild/rules_go](https://github.com/bazelbuild/rules_go), most importantly go through the set of core rules for Go [here](https://github.com/bazelbuild/rules_go/blob/master/go/core.rst).
+
+
+### Building
+
+You should use the `bazel build` command to build a project:
+```lang=bash
+bazel build //path/to/project/...
+```
+For more information about build target pattern syntax run:
+```lang=bash
+bazel help target-syntax
+```
+
+Examples:
+#### Building all packages under commons/go:
+```lang=bash
+bazel build //commons/go/...
+```
+Note that `//` stands for the repo root, if you run command from the repo root then you may omit it and instead run:
+```lang=bash
+bazel build commons/go/...
+```
+
+#### Building the entire portal repo:
+```lang=bash
+bazel build //...
+```
+
+#### Building all targets in the current folder:
+```lang=bash
+bazel build
+```
+
+#### Building all code in the current folder and all sub-folders:
+```lang=bash
+bazel build ...
+```
+
+#### Building all code in the directory foo:
+```lang=bash
+bazel build foo:all
+```
+For additional information, run:
+```lang=bash
+bazel help target-syntax
+```
+
+#### Cross-Compiling
+You can cross-compile any go_binary target on demand to a specific platform by running:
+```lang=bash
+bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //cmd
+```
+
+For details see the [Go rules for Bazel](https://github.com/bazelbuild/rules_go#how-do-i-cross-compile).
+
+
+
+## Testing
+
+Tests can be executed using the `bazel test` command:
+```lang=bash
+bazel test //path/to/project/... # will run all tests under //path/to/project
+bazel test //path/to/project:target # will run the test named "target" under //path/to/project
+```
+Note that test targets tagged as `manual` are skipped in `...` if not specified explicitly.
+
+
+Examples:
+#### Running all tests under lib:
+```lang=bash
+bazel test //commons/go/lib/...:all --test_summary=detailed  # will run all tests under lib
+```
+
+#### Running tests in entire repo:
+```lang=bash
+bazel test //...
+```
+
+#### Running tests in the current folder:
+```lang=bash
+bazel test
+```
+
+#### Running a specific test:
+```lang=bash
+bazel test //commons/go/lib/logs:go_default_test
+```
+
+#### Running test in the current folder and all sub-folder:
+```lang=bash
+bazel test ...
+```
+
+#### Running tests in the sub-folder foo:
+```lang=bash
+bazel test foo:
+```
+
+#### Benchmark: Running benchmark tests:
+```lang=bash
+bazel run //commons/go/lib/<module>:"internal_tests" -- -test.bench=<keyword identifying the resolver> -test.benchmem
+bazel run //commons/go/lib/logs:go_default_test -- -test.bench=harness -test.benchmem # an example
+```
+
+#### Browsing code coverage
+```lang=bash
+bazel coverage <target pattern>
+bazel coverage //commons/go/lib/logs:go_default_test # an example
+```
+
+## Running
+
+Bazel allows running executable targets using:
+```
+bazel run //path/to/target:target
+bazel run //commons/go/lib/logs:go_default_test # an example
+```
+
+
+## Managing Build Configuration
+
+#### Generating BUILD.bazel files
+
+BUILD.bazel files contain build rules. If you've added/removed packages or modified dependencies in the source code, or added new rules manually,
+then you should run `gazelle` to update and format your BUILD.bazel files. 
+This tool will add any missing rules, update dependencies and format all BUILD.bazel files that you've touched.
+Run:
+```lang=bash
+gazelle
+```
+The above comand creates or updates `BUILD.bazel` 
+
+
+We need to update the dependencies in `portal/WORKSPACE`. Run the following for your new/updated `go.mod`
+```lang=bash
+bazel run //:gazelle -- update-repos -from_file=commons/go/lib/go.mod # an example
+```
+This updates the `portal/WORKSPACE` file with new dependencies. Check-in `portal/WORKSPACE` file and any updated `go.mod` and `go.sum` files.
