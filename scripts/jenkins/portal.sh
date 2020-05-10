@@ -5,23 +5,6 @@ cd dist
 cp -R ../scripts/jenkins/ .
 cd ..
 
-mkdir -p dist/migrator ;
-
-cd dist/migrator ;
-
-cp ../../51-migrator/target/migrator-capsule.jar .
-cp ../../keystore.jks .
-
-cp ../../dockerization/migrator/Dockerfile-migrator-jenkins-k8-gcr ./Dockerfile-gcr
-
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-
-cd ../..
-
 mkdir -p dist/manager ;
 
 cd dist/manager
@@ -39,7 +22,6 @@ cp ../../tools/monitoring/datadog/dd-java-agent.jar .
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8 ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr ./Dockerfile-gcr
 cp -r ../../dockerization/manager/scripts/ .
-cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -60,7 +42,6 @@ cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8 ./Dockerfile
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr ./Dockerfile-gcr
 cp -R ../../dockerization/verification/scripts/ .
-cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -81,7 +62,6 @@ cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -R ../../dockerization/command-library-server/scripts/ .
-cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -99,7 +79,6 @@ cp ../../72-event-server/event-service-config.yml .
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8 Dockerfile
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr Dockerfile-gcr
 cp -r ../../dockerization/event-server/scripts/ .
-cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -114,7 +93,6 @@ cp ../../78-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8 Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr Dockerfile-gcr
 cp -r ../../dockerization/batch-processing/scripts/ .
-cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
