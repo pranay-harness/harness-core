@@ -19,7 +19,7 @@ executeWithRetry() {
       if [ $retryCount -lt 1 ]; then
         grep "$grepStr" "$logPath"
         printf "Installing modules and Retrying once......................"
-        mvn install -DskipTests -Dmaven.repo.local=$repoPath >> "$logPath"
+        mvn install -DskipTests -Dmaven.repo.local=$repoPath
         echo "$command"
         retryCount=$((retryCount+1))
         executeWithRetry "$command"

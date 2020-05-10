@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>70-delegate-service</artifactId>
+    <artifactId>65-delegate-agent-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -15,11 +15,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>19-grpc-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
