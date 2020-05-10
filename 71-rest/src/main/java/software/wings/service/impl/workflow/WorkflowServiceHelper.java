@@ -2468,39 +2468,26 @@ public class WorkflowServiceHelper {
     if (isEmpty(variables)) {
       return new HashMap<>();
     }
-    if (isEmpty(pipelineVariables)) {
-      // No need to override the workflow variables return workflow variables
-      return workflowStepVariables;
-    }
-    final Set<String> workflowVariableNames = variables.stream().map(Variable::getName).collect(Collectors.toSet());
-    if (isNotEmpty(workflowStepVariables)) {
-      for (Map.Entry<String, String> workflowVariableEntry : workflowStepVariables.entrySet()) {
-        String workflowVariableName = workflowVariableEntry.getKey();
-        if (workflowVariableNames.contains(workflowVariableName)) {
-          String workflowVariableValue = workflowVariableEntry.getValue();
-          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
-          if (pipelineVariables.containsKey(pipelineVariableName)) {
-            // Pipeline variable exists so that takes highest precedence
-            resolvedWorkflowVariables.put(workflowVariableName, pipelineVariables.get(pipelineVariableName));
-          } else if (pipelineVariables.containsKey(workflowVariableName)) {
-            /// Pipeline variable overrides workflow variable
-            resolvedWorkflowVariables.put(workflowVariableName, pipelineVariables.get(workflowVariableName));
-          } else {
-            // Use workflow variable as is
-            resolvedWorkflowVariables.put(workflowVariableName, workflowVariableValue);
-          }
-        }
-      }
-    }
 
-    // Add all missing workflow variables from pipeline variables
-    for (String variableName : workflowVariableNames) {
-      if (!resolvedWorkflowVariables.containsKey(variableName)) {
-        // Check for pipeline variables
-        if (pipelineVariables.containsKey(variableName)) {
-          resolvedWorkflowVariables.put(variableName, pipelineVariables.get(variableName));
+    for (Variable variable : variables) {
+      String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
+      String finalValue;
+      if (isEmpty(workflowVariableValue)) {
+        finalValue = extractMapValue(pipelineVariables, variable.getName());
+      } else {
+        // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
+        // such a pattern, we throw an error.
+        if (ExpressionEvaluator.matchesVariablePattern(workflowVariableValue) && !workflowVariableValue.contains(".")) {
+          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
+          finalValue = extractMapValue(pipelineVariables, pipelineVariableName);
+        } else {
+          finalValue = workflowVariableValue;
         }
       }
+      if (finalValue == null) {
+        finalValue = workflowVariableValue;
+      }
+      resolvedWorkflowVariables.put(variable.getName(), finalValue);
     }
     return resolvedWorkflowVariables;
   }
