@@ -70,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>65-delegate-beans</artifactId>
+            <artifactId>65-delegate-agent-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
