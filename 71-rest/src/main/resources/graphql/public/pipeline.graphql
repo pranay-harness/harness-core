@@ -32,19 +32,19 @@ enum PipelineTagType {
 
 # Type for pipeline
 type Pipeline {
-  # Pipeline Id
+  # Pipeline identifier
   id: String
 
-  # Name of the pipeline
+  # Name of the Pipeline
   name: String
 
-  # Description of the pipeline
+  # Description of the Pipeline
   description: String
 
   createdAt: DateTime
   createdBy: User
 
-  #Variables in the pipeline
+  #Variables in the Pipeline
   pipelineVariables: [Variable]
     @dataFetcher(
       name: pipelineVariableConnection

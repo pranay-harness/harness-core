@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -11,7 +10,6 @@ import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +51,10 @@ public class StartExecutionDataFetcherTest extends CategoryTest {
                                       .executionType(QLExecutionType.PIPELINE)
                                       .build();
     when(pipelineExecutionController.startPipelineExecution(any(), any(), any()))
-        .thenReturn(QLPipelineExecution.builder().build());
+        .thenReturn(QLStartExecutionPayload.builder()
+                        .clientMutationId("clientMutationId")
+                        .execution(QLPipelineExecution.builder().build())
+                        .build());
     QLStartExecutionPayload paylaod = startExecutionDataFetcher.mutateAndFetch(input, mutationContext);
     assertThat(paylaod.getClientMutationId()).isEqualTo("clientMutationId");
     assertThat(paylaod.getExecution()).isNotNull();
@@ -71,26 +72,13 @@ public class StartExecutionDataFetcherTest extends CategoryTest {
                                       .executionType(QLExecutionType.WORKFLOW)
                                       .build();
     when(workflowExecutionController.startWorkflowExecution(any(), any(), any()))
-        .thenReturn(QLWorkflowExecution.builder().build());
+        .thenReturn(QLStartExecutionPayload.builder()
+                        .clientMutationId("clientMutationId")
+                        .execution(QLWorkflowExecution.builder().build())
+                        .build());
     QLStartExecutionPayload paylaod = startExecutionDataFetcher.mutateAndFetch(input, mutationContext);
     assertThat(paylaod.getClientMutationId()).isEqualTo("clientMutationId");
     assertThat(paylaod.getExecution()).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = POOJA)
-  @Category(UnitTests.class)
-  public void executionNullExecution() {
-    final MutationContext mutationContext = getMutationContext();
-    QLStartExecutionInput input = QLStartExecutionInput.builder()
-                                      .applicationId("appId")
-                                      .clientMutationId("clientMutationId")
-                                      .entityId("workflowId")
-                                      .executionType(QLExecutionType.WORKFLOW)
-                                      .build();
-    when(workflowExecutionController.startWorkflowExecution(any(), any(), any())).thenReturn(null);
-    assertThatThrownBy(() -> startExecutionDataFetcher.mutateAndFetch(input, mutationContext))
-        .isInstanceOf(InvalidRequestException.class);
   }
 
   private MutationContext getMutationContext() {

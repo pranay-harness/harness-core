@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -35,6 +36,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionIn
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
 import software.wings.graphql.schema.query.QLExecutionQueryParameters.QLExecutionQueryParametersKeys;
 import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
@@ -148,7 +150,7 @@ public class WorkflowExecutionController {
         .artifacts(artifacts);
   }
 
-  public QLWorkflowExecution startWorkflowExecution(QLStartExecutionInput triggerExecutionInput,
+  public QLStartExecutionPayload startWorkflowExecution(QLStartExecutionInput triggerExecutionInput,
       MutationContext mutationContext, List<PermissionAttribute> permissionAttributes) {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
@@ -176,7 +178,9 @@ public class WorkflowExecutionController {
         String envId = resolveEnvId(workflow, variableInputs);
         authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
 
-        Map<String, String> variableValues = validateAndResolveWorkflowVariables(workflow, variableInputs, envId);
+        List<String> extraVariables = new ArrayList<>();
+        Map<String, String> variableValues =
+            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables);
         List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, workflow);
         ExecutionArgs executionArgs = new ExecutionArgs();
         executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
@@ -186,9 +190,25 @@ public class WorkflowExecutionController {
             variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs);
         WorkflowExecution workflowExecution =
             workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
-        final QLWorkflowExecutionBuilder builder = QLWorkflowExecution.builder();
-        populateWorkflowExecution(workflowExecution, builder);
-        return builder.build();
+
+        if (workflowExecution == null) {
+          throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+        }
+
+        final QLWorkflowExecutionBuilder executionBuilder = QLWorkflowExecution.builder();
+        populateWorkflowExecution(workflowExecution, executionBuilder);
+
+        String warningMessage = null;
+        if (isNotEmpty(extraVariables)) {
+          warningMessage = "Ignoring values for variables: [" + StringUtils.join(extraVariables, ",")
+              + "] as they don't exist in workflow. Workflow Might be modified";
+        }
+
+        return QLStartExecutionPayload.builder()
+            .execution(executionBuilder.build())
+            .warningMessage(warningMessage)
+            .clientMutationId(triggerExecutionInput.getClientMutationId())
+            .build();
       }
     }
   }
@@ -220,13 +240,16 @@ public class WorkflowExecutionController {
   }
 
   private Map<String, String> validateAndResolveWorkflowVariables(
-      Workflow workflow, List<QLVariableInput> variableInputs, String envId) {
+      Workflow workflow, List<QLVariableInput> variableInputs, String envId, List<String> extraVariablesInAPI) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (isEmpty(workflowVariables)) {
+      List<String> extraVariables = variableInputs.stream().map(t -> t.getName()).collect(Collectors.toList());
+      extraVariablesInAPI.addAll(extraVariables);
       return new HashMap<>();
     }
 
     validateRequiredVarsPresent(variableInputs, workflowVariables);
+    validateFixedVarValueUnchanged(variableInputs, workflowVariables);
 
     Map<String, String> workflowVariableValues = new HashMap<>();
     for (QLVariableInput variableInput : variableInputs) {
@@ -247,10 +270,31 @@ public class WorkflowExecutionController {
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }
+      } else {
+        extraVariablesInAPI.add(variableInput.getName());
       }
     }
 
     return workflowVariableValues;
+  }
+
+  private void validateFixedVarValueUnchanged(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
+    List<Variable> fixedVariables = workflowVariables.stream().filter(Variable::isFixed).collect(Collectors.toList());
+    if (isEmpty(fixedVariables)) {
+      return;
+    }
+    for (Variable var : fixedVariables) {
+      QLVariableInput valueInInput =
+          variableInputs.stream().filter(t -> t.getName().equals(var.getName())).findFirst().orElse(null);
+      if (valueInInput != null && valueInInput.getVariableValue() != null) {
+        String variableValueInput = valueInInput.getVariableValue().getValue();
+        if (!variableValueInput.equals(var.getValue())) {
+          throw new InvalidRequestException("Cannot change value of a fixed variable in workflow: " + var.getName()
+                  + ". Value set in workflow is: " + var.getValue(),
+              USER);
+        }
+      }
+    }
   }
 
   private String resolveVariableValue(String appId, String value, Variable variable, Workflow workflow, String envId) {
@@ -346,7 +390,9 @@ public class WorkflowExecutionController {
 
         String envId = resolveEnvId(workflow, variableInputs);
 
-        Map<String, String> variableValues = validateAndResolveWorkflowVariables(workflow, variableInputs, envId);
+        List<String> extraVariables = new ArrayList<>();
+        Map<String, String> variableValues =
+            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables);
 
         DeploymentMetadata finalDeploymentMetadata =
             workflowService.fetchDeploymentMetadata(appId, workflow, variableValues, null, null, false, null);

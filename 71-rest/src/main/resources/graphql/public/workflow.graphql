@@ -23,7 +23,7 @@ type Workflow {
   createdAt: DateTime
   createdBy: User
 
-  #Variables present in the workflow
+  #Available variables in the Workflow
   workflowVariables: [Variable]
     @dataFetcher(
       name: workflowVariableConnection

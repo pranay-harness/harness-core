@@ -64,7 +64,7 @@ public class ExecutionInputsDataFetcher
       }
 
       if (isEmpty(serviceIds)) {
-        return QLExecutionInputs.builder().build();
+        return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
       }
       PageRequest<Service> pageRequest = aPageRequest()
                                              .addFilter(ServiceKeys.appId, EQ, parameters.getApplicationId())
