@@ -401,7 +401,9 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void copyNewVersionFromGlobalToAllAccounts(Template globalTemplate, String keyword) {
-    List<Account> accounts = accountService.listAllAccounts();
+    // Note: Only updating active accounts. This is mainly done for freemium cluster.
+    // There are many expired accounts in freemium which is slowing down migration
+    List<Account> accounts = accountService.listAllActiveAccounts();
     for (Account account : accounts) {
       if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
         Template existingTemplate = templateService.fetchTemplateByKeywordForAccountGallery(account.getUuid(), keyword);

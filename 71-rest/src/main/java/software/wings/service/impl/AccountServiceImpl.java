@@ -909,6 +909,16 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public List<Account> listAllActiveAccounts() {
+    List<Account> accountList = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                                    .filter(ApplicationKeys.appId, GLOBAL_APP_ID)
+                                    .asList();
+    return accountList.stream()
+        .filter(account -> !licenseService.isAccountExpired(account.getUuid()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
     return wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
         .project(ID_KEY, true)
