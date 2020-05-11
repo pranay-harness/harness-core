@@ -69,6 +69,9 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   /** Slack approval */
   private boolean approvalFromSlack;
 
+  /** Shell Script approval */
+  private Integer retryInterval;
+
   // Shell script approval
   private String activityId;
 
@@ -105,6 +108,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
         ExecutionDataValue.builder().displayName("Approval Status").value(getStatus()).build());
     putNotNull(
         executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue URL").value(issueUrl).build());
+
     if (ticketUrl != null && ticketType != null) {
       putNotNull(executionDetails, "ticketUrl",
           ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " URL").value(ticketUrl).build());
@@ -120,19 +124,16 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     }
 
     if (timeoutMillis != null) {
-      Integer timeoutMins = timeoutMillis / (60 * 1000);
-      putNotNull(executionDetails, "timeoutMins",
-          ExecutionDataValue.builder().displayName("Timeout").value(timeoutMins + " minutes").build());
+      putNotNull(executionDetails, "timeoutMillis",
+          ExecutionDataValue.builder().displayName("Timeout").value(timeoutMillis).build());
       if (getStatus() == ExecutionStatus.PAUSED) {
         putNotNull(executionDetails, "expiryTs",
             ExecutionDataValue.builder().displayName("Will Expire At").value(timeoutMillis + getStartTs()).build());
       }
     }
 
-    if (triggeredBy != null) {
-      putNotNull(executionDetails, "triggeredBy",
-          ExecutionDataValue.builder().displayName("Triggered By").value(triggeredBy.getName()).build());
-    }
+    putNotNull(executionDetails, "triggeredBy",
+        ExecutionDataValue.builder().displayName("Triggered By").value(triggeredBy).build());
 
     if (EmptyPredicate.isNotEmpty(approvalField) && EmptyPredicate.isNotEmpty(approvalValue)) {
       putNotNull(executionDetails, "approvalCriteria",
@@ -172,12 +173,21 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     }
 
     putNotNull(executionDetails, "approvedOn",
-        ExecutionDataValue.builder().displayName("Approved On").value(approvedOn).build());
+        ExecutionDataValue.builder()
+            .displayName(getStatus() == ExecutionStatus.SUCCESS ? "Approved On" : "Rejected On")
+            .value(approvedOn)
+            .build());
     putNotNull(executionDetails, ApprovalStateExecutionDataKeys.variables,
-        ExecutionDataValue.builder().displayName(ApprovalStateExecutionDataKeys.variables).value(variables).build());
+        ExecutionDataValue.builder()
+            .displayName(StringUtils.capitalize(ApprovalStateExecutionDataKeys.variables))
+            .value(variables)
+            .build());
     if (isNotEmpty(comments)) {
       executionDetails.put("comments", ExecutionDataValue.builder().displayName("Comments").value(comments).build());
     }
+
+    putNotNull(executionDetails, "retryInterval",
+        ExecutionDataValue.builder().displayName("Retry Interval").value(retryInterval).build());
 
     return executionDetails;
   }

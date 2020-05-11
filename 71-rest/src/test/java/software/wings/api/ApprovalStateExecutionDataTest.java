@@ -51,8 +51,9 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
   public void getExecutionSummary() {
     final Map<String, ExecutionDataValue> executionSummary = approvalStateExecutionData.getExecutionSummary();
     List<String> keys = executionSummary.keySet().stream().collect(Collectors.toList());
-    assertThat(keys).isNotNull().containsExactlyInAnyOrder("total", "breakdown", "approvalId", "status", "timeoutMins",
-        "approvalCriteria", "currentStatus", "rejectionCriteria", "approvedBy", "variables", "comments");
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder("total", "breakdown", "approvalId", "status",
+        "timeoutMillis", "approvalCriteria", "currentStatus", "rejectionCriteria", "approvedBy", "variables",
+        "comments");
   }
 
   @Test
@@ -62,7 +63,7 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
     final Map<String, ExecutionDataValue> executionDetails = approvalStateExecutionData.getExecutionDetails();
     List<String> keys = executionDetails.keySet().stream().collect(Collectors.toList());
     assertThat(keys).isNotNull().containsExactlyInAnyOrder("startTs", "endTs", "authorizationStatus",
-        "isUserAuthorized", "approvalId", "status", "timeoutMins", "approvalCriteria", "currentStatus",
+        "isUserAuthorized", "approvalId", "status", "timeoutMillis", "approvalCriteria", "currentStatus",
         "rejectionCriteria", "approvedBy", "variables", "comments", "duration");
   }
 }

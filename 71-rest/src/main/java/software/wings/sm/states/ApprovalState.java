@@ -341,6 +341,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     String activityId = createActivity(context);
     executionData.setActivityId(activityId);
 
+    executionData.setRetryInterval(parameters.getRetryInterval());
+
     ApprovalPollingJobEntity approvalPollingJobEntity =
         ApprovalPollingJobEntity.builder()
             .accountId(accountId)
