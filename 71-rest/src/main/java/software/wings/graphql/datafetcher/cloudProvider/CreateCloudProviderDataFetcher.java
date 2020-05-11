@@ -8,6 +8,8 @@ import software.wings.beans.Application;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfConfig.PcfConfigBuilder;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SpotInstConfig;
+import software.wings.beans.SpotInstConfig.SpotInstConfigBuilder;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
@@ -15,6 +17,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProvide
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload.QLCreateCloudProviderPayloadBuilder;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
@@ -42,18 +45,22 @@ public class CreateCloudProviderDataFetcher
       throw new InvalidRequestException("Invalid cloudProviderType provided in the request");
     }
 
+    SettingAttribute settingAttribute;
     switch (input.getCloudProviderType()) {
       case PCF:
-        SettingAttribute settingAttribute = settingsService.saveWithPruning(
-            toSettingAttribute(input.getPcfCloudProvider(), mutationContext.getAccountId()), Application.GLOBAL_APP_ID,
-            mutationContext.getAccountId());
-
-        settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
-
-        return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
+        settingAttribute = toSettingAttribute(input.getPcfCloudProvider(), mutationContext.getAccountId());
+        break;
+      case SPOT_INST:
+        settingAttribute = toSettingAttribute(input.getSpotInstCloudProvider(), mutationContext.getAccountId());
+        break;
       default:
         throw new InvalidRequestException("Invalid cloud provider Type");
     }
+
+    settingAttribute =
+        settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+    settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
+    return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
   }
 
   private SettingAttribute toSettingAttribute(QLPcfCloudProviderInput input, String accountId) {
@@ -71,6 +78,33 @@ public class CreateCloudProviderDataFetcher
 
     SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
                                                            .withValue(pcfConfigBuilder.build())
+                                                           .withAccountId(accountId)
+                                                           .withCategory(SettingAttribute.SettingCategory.SETTING);
+
+    if (input.getName().isPresent()) {
+      input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
+    }
+
+    if (input.getUsageScope().isPresent()) {
+      settingAttributeBuilder.withUsageRestrictions(
+          usageScopeController.populateUsageRestrictions(input.getUsageScope().getValue().orElse(null), accountId));
+    }
+
+    return settingAttributeBuilder.build();
+  }
+
+  private SettingAttribute toSettingAttribute(QLSpotInstCloudProviderInput input, String accountId) {
+    SpotInstConfigBuilder configBuilder = SpotInstConfig.builder().accountId(accountId);
+
+    if (input.getAccountId().isPresent()) {
+      input.getAccountId().getValue().ifPresent(configBuilder::spotInstAccountId);
+    }
+    if (input.getTokenSecretId().isPresent()) {
+      input.getTokenSecretId().getValue().ifPresent(configBuilder::encryptedSpotInstToken);
+    }
+
+    SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
+                                                           .withValue(configBuilder.build())
                                                            .withAccountId(accountId)
                                                            .withCategory(SettingAttribute.SettingCategory.SETTING);
 

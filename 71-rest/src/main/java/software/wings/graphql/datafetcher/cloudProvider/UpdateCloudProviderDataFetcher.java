@@ -10,10 +10,12 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload.QLUpdateCloudProviderPayloadBuilder;
@@ -63,15 +65,18 @@ public class UpdateCloudProviderDataFetcher
     switch (input.getCloudProviderType()) {
       case PCF:
         updateSettingAttribute(settingAttribute, input.getPcfCloudProvider(), mutationContext.getAccountId());
-        SettingAttribute updatedSettings =
-            settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
-
-        settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettings, false);
-
-        return builder.cloudProvider(CloudProviderController.populateCloudProvider(updatedSettings).build()).build();
+        break;
+      case SPOT_INST:
+        updateSettingAttribute(settingAttribute, input.getSpotInstCloudProvider(), mutationContext.getAccountId());
+        break;
       default:
         throw new InvalidRequestException("Invalid cloud provider type");
     }
+
+    settingAttribute =
+        settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
+    settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
+    return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
   }
 
   private void updateSettingAttribute(
@@ -88,6 +93,28 @@ public class UpdateCloudProviderDataFetcher
       input.getPasswordSecretId().getValue().ifPresent(pcfConfig::setEncryptedPassword);
     }
     settingAttribute.setValue(pcfConfig);
+
+    if (input.getName().isPresent()) {
+      input.getName().getValue().ifPresent(settingAttribute::setName);
+    }
+
+    if (input.getUsageScope().isPresent()) {
+      QLUsageScope usageScope = input.getUsageScope().getValue().orElse(null);
+      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(usageScope, accountId));
+    }
+  }
+
+  private void updateSettingAttribute(
+      SettingAttribute settingAttribute, QLSpotInstCloudProviderInput input, String accountId) {
+    SpotInstConfig config = (SpotInstConfig) settingAttribute.getValue();
+
+    if (input.getAccountId().isPresent()) {
+      input.getAccountId().getValue().ifPresent(config::setSpotInstAccountId);
+    }
+    if (input.getTokenSecretId().isPresent()) {
+      input.getTokenSecretId().getValue().ifPresent(config::setEncryptedSpotInstToken);
+    }
+    settingAttribute.setValue(config);
 
     if (input.getName().isPresent()) {
       input.getName().getValue().ifPresent(settingAttribute::setName);

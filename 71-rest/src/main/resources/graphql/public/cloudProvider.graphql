@@ -25,6 +25,7 @@ enum CloudProviderType {
   GCP
   KUBERNETES_CLUSTER
   PCF
+  SPOT_INST
 }
 
 interface CloudProvider {
@@ -117,6 +118,17 @@ type KubernetesCloudProvider implements CloudProvider {
 }
 
 type PcfCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+  ceHealthStatus: CEHealthStatus
+}
+
+type SpotInstCloudProvider implements CloudProvider {
   id: String
   name: String
   description: String
