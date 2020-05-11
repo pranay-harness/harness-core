@@ -14,11 +14,14 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -47,6 +50,7 @@ import javax.ws.rs.QueryParam;
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
   private AppService appService;
+  @Inject private AuthHandler authHandler;
 
   /**
    * Instantiates a new Artifact stream resource.
@@ -127,6 +131,9 @@ public class ArtifactStreamResource {
       throw new NotFoundException("application with id " + appId + " not found.");
     }
 
+    authHandler.authorize(
+        Collections.singletonList(new PermissionAttribute(SERVICE, PermissionAttribute.Action.UPDATE)),
+        Collections.singletonList(appId), artifactStream.getServiceId());
     artifactStream.setAppId(appId);
     return new RestResponse<>(artifactStreamService.createWithBinding(appId, artifactStream, true));
   }
@@ -148,6 +155,9 @@ public class ArtifactStreamResource {
     artifactStream.setUuid(streamId);
     artifactStream.setAppId(appId);
     // NOTE: should not update serviceId
+    authHandler.authorize(
+        Collections.singletonList(new PermissionAttribute(SERVICE, PermissionAttribute.Action.UPDATE)),
+        Collections.singletonList(appId), artifactStream.getServiceId());
     return new RestResponse<>(artifactStreamService.update(artifactStream));
   }
 
@@ -163,6 +173,10 @@ public class ArtifactStreamResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
+    ArtifactStream artifactStream = artifactStreamService.get(id);
+    authHandler.authorize(
+        Collections.singletonList(new PermissionAttribute(SERVICE, PermissionAttribute.Action.DELETE)),
+        Collections.singletonList(appId), artifactStream.getServiceId());
     artifactStreamService.deleteWithBinding(appId, id, false, false);
     return new RestResponse<>();
   }
