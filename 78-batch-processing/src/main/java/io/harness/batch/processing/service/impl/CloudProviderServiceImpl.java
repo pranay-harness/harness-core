@@ -1,5 +1,11 @@
 package io.harness.batch.processing.service.impl;
 
+import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
+import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
+import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
+
+import com.google.common.collect.ImmutableList;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.pricing.data.CloudProvider;
@@ -12,6 +18,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -25,7 +32,7 @@ public class CloudProviderServiceImpl implements CloudProviderService {
   private static final String AZURE_SEARCH_STRING = "azure:";
   private static final String IBM_SEARCH_STRING = "ibm:";
 
-  private static final CloudProvider DEFAULT_CLOUD_PROVIDER = CloudProvider.GCP;
+  private static final CloudProvider DEFAULT_CLOUD_PROVIDER = GCP;
 
   private Cache<String, CloudProvider> cloudProviderInfoCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -38,6 +45,11 @@ public class CloudProviderServiceImpl implements CloudProviderService {
   @Override
   public CloudProvider getK8SCloudProvider(String cloudProviderId, String providerId) {
     return cloudProviderInfoCache.get(cloudProviderId, key -> getK8SCloudProviderFromProviderId(key, providerId));
+  }
+
+  @Override
+  public List<CloudProvider> getFirstClassSupportedCloudProviders() {
+    return ImmutableList.of(AWS, AZURE, GCP);
   }
 
   private CloudProvider getK8SCloudProviderFromProviderId(String cloudProviderId, String providerId) {
@@ -62,11 +74,11 @@ public class CloudProviderServiceImpl implements CloudProviderService {
 
   private CloudProvider getCloudProviderForK8SCluster(String providerId) {
     if (checkGCPCloudProvider(providerId)) {
-      return CloudProvider.GCP;
+      return GCP;
     } else if (checkAWSCloudProvider(providerId)) {
-      return CloudProvider.AWS;
+      return AWS;
     } else if (checkAzureCloudProvider(providerId)) {
-      return CloudProvider.AZURE;
+      return AZURE;
     } else if (checkIbmCloudProvider(providerId)) {
       return CloudProvider.IBM;
     }

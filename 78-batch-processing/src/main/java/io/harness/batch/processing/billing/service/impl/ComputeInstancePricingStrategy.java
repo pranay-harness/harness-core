@@ -3,6 +3,7 @@ package io.harness.batch.processing.billing.service.impl;
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceCategory;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
@@ -42,7 +43,10 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
 
     if (instanceFamily.startsWith(GCP_CUSTOM_INSTANCE_PREFIX) && cloudProvider == CloudProvider.GCP) {
       return getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
+    } else if (cloudProvider == CloudProvider.IBM) {
+      return getIBMInstancePricingData(instanceData);
     }
+
     VMComputePricingInfo vmComputePricingInfo = getCustomVMPricing(instanceData, startTime, cloudProvider);
 
     if (null == vmComputePricingInfo) {
@@ -54,6 +58,19 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
         .cpuUnit(vmComputePricingInfo.getCpusPerVm() * 1024)
         .memoryMb(vmComputePricingInfo.getMemPerVm() * 1024)
         .build();
+  }
+
+  private PricingData getIBMInstancePricingData(InstanceData instanceData) {
+    double cpuPricePerHr = 0.016;
+    double memoryPricePerHr = 0.008;
+    Double cpuUnits = instanceData.getTotalResource().getCpuUnits();
+    Double memoryMb = instanceData.getTotalResource().getMemoryMb();
+    if (instanceData.getInstanceType() == InstanceType.K8S_POD) {
+      cpuUnits = Double.valueOf(instanceData.getMetaData().get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU));
+      memoryMb = Double.valueOf(instanceData.getMetaData().get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY));
+    }
+    double pricePerHr = ((cpuPricePerHr * cpuUnits) / 1024) + ((memoryPricePerHr * memoryMb) / 1024);
+    return PricingData.builder().pricePerHour(pricePerHr).cpuUnit(cpuUnits).memoryMb(memoryMb).build();
   }
 
   private PricingData getGCPCustomInstancePricingData(String instanceFamily, InstanceCategory instanceCategory) {

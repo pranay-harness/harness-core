@@ -75,6 +75,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                 (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();
             String clusterId =
                 (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
+            String instanceName = (instanceData.getInstanceName() == null) ? instanceData.getInstanceId()
+                                                                           : instanceData.getInstanceName();
 
             InstanceBillingData instanceBillingData =
                 InstanceBillingData.builder()
@@ -96,6 +98,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
                     .usageDurationSeconds(billingData.getUsageDurationSeconds())
                     .instanceId(instanceData.getInstanceId())
+                    .instanceName(instanceName)
                     .clusterName(instanceData.getClusterName())
                     .appId(harnessServiceInfo.getAppId())
                     .serviceId(harnessServiceInfo.getServiceId())

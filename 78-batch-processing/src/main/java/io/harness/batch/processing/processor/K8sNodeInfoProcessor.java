@@ -42,7 +42,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     Map<String, String> metaData = new HashMap<>();
     CloudProvider k8SCloudProvider =
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
-    if (CloudProvider.IBM == k8SCloudProvider) {
+    if (CloudProvider.UNKNOWN == k8SCloudProvider) {
       return InstanceInfo.builder().metaData(metaData).build();
     }
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, k8SCloudProvider.name());
@@ -54,10 +54,16 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
-    Resource totalResource = instanceResourceService.getComputeVMResource(
-        InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
-        InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
-        k8SCloudProvider);
+
+    Resource allocatableResource = K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap());
+    Resource totalResource = allocatableResource;
+    List<CloudProvider> cloudProviders = cloudProviderService.getFirstClassSupportedCloudProviders();
+    if (cloudProviders.contains(k8SCloudProvider)) {
+      totalResource = instanceResourceService.getComputeVMResource(
+          InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
+          InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
+          k8SCloudProvider);
+    }
 
     return InstanceInfo.builder()
         .accountId(publishedMessage.getAccountId())
@@ -69,7 +75,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .instanceType(InstanceType.K8S_NODE)
         .instanceState(InstanceState.INITIALIZING)
         .resource(totalResource)
-        .allocatableResource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap()))
+        .allocatableResource(allocatableResource)
         .labels(nodeInfo.getLabelsMap())
         .metaData(metaData)
         .build();

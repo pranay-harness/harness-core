@@ -442,6 +442,29 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountIBMInstance() throws IOException {
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
+        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+    Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.IBM.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, "b2c.4x16.encrypted");
+    metaData.put(InstanceMetaDataConstants.REGION, "eu-de");
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    addParentResource(metaData, 8 * 1024, 20 * 1024);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
+    UtilizationData utilizationData = getUtilization(1, 1);
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+        .isEqualTo(new BigDecimal("1.2960000000000001500"));
+  }
+
   private InstanceData getInstanceWithTime(Instant startInstant, Instant endInstant) {
     return InstanceData.builder().usageStartTime(startInstant).usageStopTime(endInstant).build();
   }

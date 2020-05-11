@@ -15,6 +15,7 @@ public class InstanceBillingData {
   private String cloudServiceName;
   private String accountId;
   private String instanceId;
+  private String instanceName;
   private String clusterId;
   private String settingId;
   private String launchType;

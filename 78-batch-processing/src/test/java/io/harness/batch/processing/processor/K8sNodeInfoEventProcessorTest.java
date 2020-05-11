@@ -1,10 +1,14 @@
 package io.harness.batch.processing.processor;
 
+import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
+import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
+import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -95,6 +99,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfo() throws Exception {
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
+    when(cloudProviderService.getFirstClassSupportedCloudProviders()).thenReturn(ImmutableList.of(AWS, AZURE, GCP));
+
     when(instanceResourceService.getComputeVMResource(any(), any(), any()))
         .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build());
     Map<String, String> label = new HashMap<>();
@@ -129,6 +135,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfoForAwsSpot() throws Exception {
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.AWS);
+    when(cloudProviderService.getFirstClassSupportedCloudProviders()).thenReturn(ImmutableList.of(AWS, AZURE, GCP));
     when(instanceResourceService.getComputeVMResource(any(), any(), any()))
         .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(2048.0).build());
     Map<String, String> label = new HashMap<>();
