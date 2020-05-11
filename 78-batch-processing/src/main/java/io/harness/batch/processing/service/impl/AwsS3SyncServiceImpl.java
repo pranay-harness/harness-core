@@ -59,8 +59,9 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
               credentials.get("SecretAccessKey").getAsString(), AWS_DEFAULT_REGION, awsCredentials.getRegion(),
               SESSION_TOKEN, credentials.get("SessionToken").getAsString());
 
-      final ArrayList<String> cmd = Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(),
-          destinationBucketPath, "--source-region", s3SyncRecord.getBillingBucketRegion());
+      final ArrayList<String> cmd =
+          Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(), destinationBucketPath,
+              "--source-region", s3SyncRecord.getBillingBucketRegion(), "--acl", "bucket-owner-full-control");
       getProcessExecutor()
           .command(cmd)
           .environment(roleEnvVariables)
