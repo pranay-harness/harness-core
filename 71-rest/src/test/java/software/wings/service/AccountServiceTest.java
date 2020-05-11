@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -512,6 +513,23 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo().get(0)).isNotNull();
     assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo().get(0).getUuid())
         .isEqualTo(account.getUuid());
+    assertThat(accountService.listAllActiveAccounts()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldListNonExpiredAndNonDeletedAccounts() {
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setLicenseUnits(100);
+
+    Account account1 = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withCompanyName(HARNESS_NAME + "1").withLicenseInfo(licenseInfo).build());
+
+    assertThat(accountService.listAllActiveAccounts().size()).isEqualTo(1);
   }
 
   @Test

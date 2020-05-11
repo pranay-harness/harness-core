@@ -82,6 +82,8 @@ public interface AccountService {
 
   List<Account> listAllAccounts();
 
+  List<Account> listAllActiveAccounts();
+
   List<Account> listAllAccountWithDefaultsWithoutLicenseInfo();
 
   PageResponse<Account> getAccounts(PageRequest<Account> pageRequest);

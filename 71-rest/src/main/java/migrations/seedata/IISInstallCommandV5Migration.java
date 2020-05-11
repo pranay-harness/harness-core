@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import migrations.SeedDataMigration;
+import migrations.Migration;
 import org.slf4j.Logger;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -24,7 +24,7 @@ import software.wings.service.intfc.template.TemplateService;
 
 import java.io.IOException;
 
-public class IISInstallCommandV5Migration implements SeedDataMigration {
+public class IISInstallCommandV5Migration implements Migration {
   private static final Logger logger = getLogger(IISInstallCommandV5Migration.class);
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;

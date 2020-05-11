@@ -437,7 +437,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
                             .templateObject(sshCommandTemplate)
                             .build();
 
-    when(accountService.listAllAccounts())
+    when(accountService.listAllActiveAccounts())
         .thenReturn(asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build()));
 
     templateGalleryService.copyNewVersionFromGlobalToAllAccounts(template, "iis");
