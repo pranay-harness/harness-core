@@ -91,11 +91,15 @@ public class ScimUserServiceImpl implements ScimUserService {
   }
 
   private String getGivenNameFromScimUser(@NotNull ScimUser userQuery) {
-    return userQuery.getName() != null ? userQuery.getName().get(GIVEN_NAME).textValue() : userQuery.getDisplayName();
+    return userQuery.getName() != null && userQuery.getName().get(GIVEN_NAME) != null
+        ? userQuery.getName().get(GIVEN_NAME).textValue()
+        : userQuery.getDisplayName();
   }
 
   private String getFamilyNameFromScimUser(@NotNull ScimUser userQuery) {
-    return userQuery.getName() != null ? userQuery.getName().get(FAMILY_NAME).textValue() : userQuery.getDisplayName();
+    return userQuery.getName() != null && userQuery.getName().get(GIVEN_NAME) != null
+        ? userQuery.getName().get(FAMILY_NAME).textValue()
+        : userQuery.getDisplayName();
   }
 
   private String getPrimaryEmail(ScimUser userQuery) {

@@ -542,7 +542,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds) {
     if (isEmpty(userGroupIds)) {
-      return asList();
+      return new ArrayList<>();
     }
 
     List<UserGroup> userGroupList;
