@@ -12,10 +12,13 @@ import io.grpc.Context;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
+import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.persistence.AccountLogContext;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +35,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     this.perpetualTaskRecordDao = perpetualTaskRecordDao;
     this.clientRegistry = clientRegistry;
   }
+
+  @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
 
   @Override
   public String createTask(PerpetualTaskType perpetualTaskType, String accountId,
@@ -56,6 +61,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                        .delegateId("")
                                        .state(PerpetualTaskState.TASK_UNASSIGNED.name())
                                        .build();
+
+      perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onPerpetualTaskCreated);
       String taskId = perpetualTaskRecordDao.save(record);
       try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
         logger.info("Created a perpetual task with id={}.", taskId);
