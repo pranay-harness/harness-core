@@ -1,0 +1,64 @@
+digraph G {
+  compound=true;
+  subgraph cluster_service_api_beans {
+   color=green
+   service_api_beans [label="service api beans" color=white];
+  }
+
+  subgraph cluster_service_api {
+    service_api [label="service api" color=white];
+  }
+
+  subgraph cluster_delegate_tasks_beans {
+    color=green
+    delegate_tasks_beans [label="delegate tasks beans" color=white];
+  }
+
+  subgraph cluster_delegate_tasks {
+    delegate_tasks [label="delegate tasks" color=white];
+  }
+
+  subgraph cluster_delegate_agent_beans {
+    color=green
+    delegate_agent_beans [label="delegate agent beans" color=white];
+  }
+
+  subgraph cluster_delegate_agent {
+    delegate_agent [label="delegate agent" color=white];
+  }
+
+  subgraph cluster_delegate_service_beans {
+    color=green
+    delegate_service_beans [label="delegate service beans" color=white];
+  }
+
+  subgraph cluster_delegate_service {
+    delegate_service [label="delegate service" color=white];
+  }
+
+  subgraph cluster_manager_cx {
+    manager_cx [label="manager Cx" color=white];
+  }
+
+
+  service_api -> service_api_beans [ltail=cluster_service_api,lhead=cluster_service_api_beans];
+  delegate_tasks_beans -> service_api [style=invis];
+
+  delegate_tasks_beans -> service_api_beans [ltail=cluster_delegate_tasks_beans,lhead=cluster_service_api_beans];
+
+  delegate_tasks -> delegate_tasks_beans [ltail=cluster_delegate_tasks,lhead=cluster_delegate_tasks_beans];
+
+  delegate_tasks -> service_api [ltail=cluster_delegate_tasks,lhead=cluster_service_api];
+
+  delegate_agent_beans -> delegate_tasks [style=invis];
+
+  delegate_agent-> delegate_agent_beans [ltail=cluster_delegate_agent,lhead=cluster_delegate_agent_beans];
+  delegate_agent-> delegate_tasks [ltail=cluster_delegate_agent,lhead=cluster_delegate_tasks];
+  delegate_agent-> delegate_service_beans [ltail=cluster_delegate_agent,lhead=cluster_delegate_service_beans];
+
+  delegate_service-> delegate_service_beans [ltail=cluster_delegate_service,lhead=cluster_delegate_service_beans];
+  delegate_service-> delegate_agent_beans [ltail=cluster_delegate_service,lhead=cluster_delegate_agent_beans];
+
+  manager_cx-> delegate_service_beans [ltail=cluster_manager_cx,lhead=cluster_delegate_service_beans];
+  manager_cx-> delegate_tasks_beans [ltail=cluster_manager_cx,lhead=cluster_delegate_tasks_beans];
+}
