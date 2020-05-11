@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Set;
+
 @JsonTypeName(HARNESS_COMMAND_LIBRARY_GALLERY)
 @Value
 @Builder
@@ -15,4 +17,6 @@ public class HarnessImportedTemplateDetails implements ImportedTemplateDetails {
   private String commandVersion;
   private String commandName;
   private String commandStoreName;
+  private transient String repoUrl;
+  private transient Set<String> tags;
 }

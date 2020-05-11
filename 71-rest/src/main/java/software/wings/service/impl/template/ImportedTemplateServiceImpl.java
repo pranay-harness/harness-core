@@ -150,11 +150,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
           String latestVersion =
               String.valueOf(templateUuidLatestTemplateVersionMap.get(template.getUuid()).getImportedTemplateVersion());
           ImportedTemplate importedTemplate = get(commandName, commandStoreName, accountId);
-          String displayName = importedTemplate.getCommandDisplayName();
           return ImportedCommand.builder()
               .commandName(commandName)
               .commandStoreName(commandStoreName)
-              .commandDisplayName(displayName)
               .highestVersion(latestVersion)
               .templateId(template.getUuid())
               .description(template.getDescription())
@@ -180,7 +178,6 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
         ImportedCommandVersionBuilder importedCommandVersionBuilder =
             ImportedCommandVersion.builder()
                 .commandName(commandName)
-                .commandDisplayName(importedTemplate.getCommandDisplayName())
                 .commandStoreName(commandStoreName)
                 .createdAt(String.valueOf(templateVersion.getCreatedAt()))
                 .version(templateVersion.getImportedTemplateVersion())
@@ -199,8 +196,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                                                         .commandName(commandName)
                                                         .importedCommandVersionList(importedCommandVersionList)
                                                         .commandStoreName(commandStoreName)
-                                                        .commandDisplayName(importedTemplate.getCommandDisplayName())
                                                         .name(template.getName())
+                                                        .repoUrl(importedTemplate.getRepoUrl())
+                                                        .tags(importedTemplate.getTags())
                                                         .description(template.getDescription())
                                                         .templateId(template.getUuid());
 
@@ -245,6 +243,8 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                                             .description(commandDTO.getDescription())
                                             .name(commandDTO.getName())
                                             .imageUrl(commandDTO.getImageUrl())
+                                            .repoUrl(commandDTO.getRepoUrl())
+                                            .tags(commandDTO.getTags())
                                             .build();
     Template template =
         downloadAndSaveNewCommandVersion(version, commandName, commandStoreName, accountId, importedTemplate);

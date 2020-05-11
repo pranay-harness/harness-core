@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
+import java.util.Set;
 
 @Value
 @Builder
@@ -12,12 +13,13 @@ import java.util.List;
 public class ImportedCommand {
   private String commandStoreName;
   private String commandName;
-  private String commandDisplayName;
   private String templateId;
   private String name;
   private String description;
   private String createdAt;
   private String createdBy;
+  private String repoUrl;
+  private Set<String> tags;
   private List<ImportedCommandVersion> importedCommandVersionList;
   private String highestVersion;
 }
