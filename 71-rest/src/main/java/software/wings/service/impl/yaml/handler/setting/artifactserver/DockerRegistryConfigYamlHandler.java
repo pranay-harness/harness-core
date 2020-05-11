@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DockerConfig.Yaml;
@@ -13,6 +16,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, DockerConfig> {
   @Override

@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.CustomArtifactServerConfig.Yaml;
@@ -8,6 +11,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class CustomArtifactServerConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, CustomArtifactServerConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

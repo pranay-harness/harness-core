@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -63,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Min;
 
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "ResourceConstraintStateKeys")
 public class ResourceConstraintState extends State {
   @Inject @Transient private AppService applicationService;

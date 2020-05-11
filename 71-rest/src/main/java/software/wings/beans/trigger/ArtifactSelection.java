@@ -1,5 +1,8 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +14,7 @@ import software.wings.yaml.BaseYaml;
 /**
  * Created by sgurubelli on 10/25/17.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")

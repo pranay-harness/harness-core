@@ -1,9 +1,11 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -20,6 +22,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalState;
 
+@OwnedBy(CDC)
 @UtilityClass
 @Slf4j
 public class ApprovalUtils {

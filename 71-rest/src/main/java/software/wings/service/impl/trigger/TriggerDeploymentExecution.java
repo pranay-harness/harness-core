@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -20,6 +21,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.TriggerException;
@@ -79,6 +81,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j

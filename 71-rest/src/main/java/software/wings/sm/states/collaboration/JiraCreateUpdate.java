@@ -1,5 +1,6 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -12,6 +13,7 @@ import static software.wings.beans.TaskType.JIRA;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -63,6 +65,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Slf4j
 @FieldNameConstants(innerTypeName = "JiraCreateUpdateKeys")
 public class JiraCreateUpdate extends State implements SweepingOutputStateMixin {

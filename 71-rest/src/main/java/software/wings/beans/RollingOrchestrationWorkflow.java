@@ -1,8 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("ROLLING")
 public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   public RollingOrchestrationWorkflow() {

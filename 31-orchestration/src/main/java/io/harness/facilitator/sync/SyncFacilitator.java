@@ -1,8 +1,11 @@
 package io.harness.facilitator.sync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
@@ -12,6 +15,7 @@ import io.harness.state.io.StateTransput;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Redesign
 @Produces(Facilitator.class)
 public class SyncFacilitator implements Facilitator {

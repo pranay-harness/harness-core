@@ -1,10 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.resume.ResumeStateUtils;
 
+@OwnedBy(CDC)
 @Slf4j
 @FieldNameConstants(innerTypeName = "ApprovalResumeStateKeys")
 public class ApprovalResumeState extends State {

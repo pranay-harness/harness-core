@@ -4,12 +4,14 @@
 
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
@@ -44,6 +46,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

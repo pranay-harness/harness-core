@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
@@ -10,6 +11,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -25,6 +27,7 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, ArtifactSelection> {
   @Inject protected YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;

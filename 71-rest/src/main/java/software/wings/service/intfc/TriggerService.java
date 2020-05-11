@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -30,6 +33,7 @@ import javax.validation.Valid;
 /**
  * Created by sgurubelli on 10/26/17.
  */
+@OwnedBy(CDC)
 public interface TriggerService extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
   /**
    * List.

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
@@ -73,6 +75,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/12/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class PhaseSubWorkflow extends SubWorkflowState {
   public static final String SERVICE_ID = "serviceId";

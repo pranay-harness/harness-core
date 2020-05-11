@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow.queuing;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.fetchIndex;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -15,6 +16,7 @@ import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
+@OwnedBy(CDC)
 @Slf4j
 public class WorkflowConcurrencyHelper {
   @Inject private AppService appService;

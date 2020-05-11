@@ -1,6 +1,9 @@
 package io.harness.ambiance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -12,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
  *
  * Node is a level : nodeId, nodeExecutionInstanceId
  */
+@OwnedBy(CDC)
 @Value
 @Builder
 @Redesign

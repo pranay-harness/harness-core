@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -7,6 +8,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(CDC)
 @Singleton
 @Data
 @EqualsAndHashCode(callSuper = false)

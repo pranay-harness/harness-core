@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -10,6 +11,7 @@ import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAIL
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j

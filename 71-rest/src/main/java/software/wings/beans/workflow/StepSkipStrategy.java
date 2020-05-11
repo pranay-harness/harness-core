@@ -1,8 +1,10 @@
 package software.wings.beans.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 public class StepSkipStrategy {

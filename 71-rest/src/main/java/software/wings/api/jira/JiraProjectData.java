@@ -1,6 +1,9 @@
 package software.wings.api.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -8,6 +11,7 @@ import net.sf.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 public class JiraProjectData {
   private String id;

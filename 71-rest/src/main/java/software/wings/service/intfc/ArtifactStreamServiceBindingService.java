@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
@@ -10,6 +13,7 @@ import software.wings.beans.artifact.ArtifactStreamBinding;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public interface ArtifactStreamServiceBindingService {
   ArtifactStreamBinding create(
       @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding);

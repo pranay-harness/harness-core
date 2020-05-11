@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -8,6 +9,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SyncTaskContext;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j

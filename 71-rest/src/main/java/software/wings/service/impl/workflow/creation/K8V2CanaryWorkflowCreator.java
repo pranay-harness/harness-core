@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow.creation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
@@ -9,6 +10,7 @@ import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.MapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -22,6 +24,7 @@ import software.wings.service.impl.workflow.creation.helpers.K8RollingWorkflowPh
 import software.wings.service.impl.workflow.creation.helpers.WorkflowPhaseHelper;
 import software.wings.service.intfc.FeatureFlagService;
 
+@OwnedBy(CDC)
 @Slf4j
 public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
   private static final String PHASE_NAME = "CANARY";

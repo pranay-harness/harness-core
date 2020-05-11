@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -10,6 +11,7 @@ import static software.wings.common.TemplateConstants.SSH;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -35,6 +37,7 @@ import software.wings.yaml.command.CommandRefYaml;
 import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<CommandRefYaml, Command> {

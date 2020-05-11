@@ -1,8 +1,11 @@
 package io.harness.registries.facilitator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.registries.Registry;
@@ -14,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 @Redesign
 @Singleton
 public class FacilitatorRegistry implements Registry<FacilitatorType, Facilitator> {

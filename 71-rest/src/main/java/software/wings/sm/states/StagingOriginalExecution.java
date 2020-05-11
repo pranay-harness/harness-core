@@ -1,7 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +15,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "StagingOriginalExecutionKeys")
 public class StagingOriginalExecution extends State {
   @Inject SweepingOutputService sweepingOutputService;

@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +17,7 @@ import java.util.Objects;
  * Created by anubhaw on 10/26/16.
  */
 
+@OwnedBy(CDC)
 @Getter
 @Setter
 @Builder

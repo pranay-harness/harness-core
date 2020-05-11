@@ -1,10 +1,12 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Variable;
 import software.wings.service.intfc.PipelineService;
@@ -13,6 +15,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+@OwnedBy(CDC)
 @Singleton
 public class PipelineExpressionBuilder extends ExpressionBuilder {
   @Inject private PipelineService pipelineService;

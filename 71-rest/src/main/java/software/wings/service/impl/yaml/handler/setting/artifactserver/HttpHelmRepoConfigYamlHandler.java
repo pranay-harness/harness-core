@@ -1,7 +1,9 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig.Yaml;
@@ -9,6 +11,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class HttpHelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml, HttpHelmRepoConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

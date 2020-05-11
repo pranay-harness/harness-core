@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
@@ -18,6 +20,7 @@ import software.wings.yaml.trigger.TriggerArtifactSelectionLastCollectedYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class TriggerArtifactLastCollectedYamlHandler
     extends TriggerArtifactValueYamlHandler<TriggerArtifactSelectionLastCollectedYaml> {
   @Inject ArtifactStreamService artifactStreamService;

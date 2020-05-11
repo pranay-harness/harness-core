@@ -1,15 +1,18 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.HarnessStringUtils.join;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Builder
 public class SkipCondition {
   @VisibleForTesting enum SkipConditionType { ALWAYS_SKIP, DO_NOT_SKIP, CONDITIONAL_SKIP }

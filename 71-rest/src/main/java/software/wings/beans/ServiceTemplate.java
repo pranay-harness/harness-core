@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true),

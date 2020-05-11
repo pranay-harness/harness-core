@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
@@ -12,6 +13,7 @@ import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
@@ -40,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ArtifactCollectionState extends State {
   @Attributes(title = "Entity Type") @Getter @Setter private EntityType entityType;

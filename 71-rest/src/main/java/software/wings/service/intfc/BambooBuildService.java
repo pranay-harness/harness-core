@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.TaskType;
@@ -15,6 +18,7 @@ import java.util.Optional;
 /**
  * Created by peeyushaggarwal on 1/12/17.
  */
+@OwnedBy(CDC)
 public interface BambooBuildService extends BuildService<BambooConfig> {
   @Override
   @DelegateTaskType(TaskType.BAMBOO_GET_BUILDS)

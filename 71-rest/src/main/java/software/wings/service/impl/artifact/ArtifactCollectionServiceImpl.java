@@ -1,11 +1,13 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 /***
  * Service responsible to glue all artifact
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCollectionServiceImpl implements ArtifactCollectionService {

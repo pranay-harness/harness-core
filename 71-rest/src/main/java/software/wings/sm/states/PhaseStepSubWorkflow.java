@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
@@ -21,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.PageResponse;
@@ -92,6 +94,7 @@ import java.util.Optional;
 /**
  * Created by rishi on 1/12/17.
  */
+@OwnedBy(CDC)
 public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Inject private ActivityService activityService;
 

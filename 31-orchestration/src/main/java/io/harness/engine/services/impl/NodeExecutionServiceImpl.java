@@ -1,10 +1,12 @@
 package io.harness.engine.services.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -15,6 +17,7 @@ import org.mongodb.morphia.query.Query;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
 

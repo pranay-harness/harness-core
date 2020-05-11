@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.FailureType;
 import io.harness.exception.HarnessException;
@@ -21,6 +23,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/28/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
   private FailureStrategy toBean(ChangeContext<Yaml> changeContext) throws HarnessException {

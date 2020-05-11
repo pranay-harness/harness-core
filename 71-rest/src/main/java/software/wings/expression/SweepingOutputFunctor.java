@@ -1,7 +1,9 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.LateBindingMap;
 import io.harness.serializer.KryoUtils;
@@ -12,6 +14,7 @@ import software.wings.exception.SweepingOutputException;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)

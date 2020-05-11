@@ -1,11 +1,13 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
 
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import lombok.ToString;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @ToString(exclude = {"delegateMetaInfo", "templateVariable", "stateParams", "element"})
 public class StateExecutionData {
   public static final int SUMMARY_PAYLOAD_LIMIT = 1024;

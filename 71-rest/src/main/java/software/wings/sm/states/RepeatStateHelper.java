@@ -1,8 +1,11 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import software.wings.sm.ExecutionContextImpl;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class RepeatStateHelper {

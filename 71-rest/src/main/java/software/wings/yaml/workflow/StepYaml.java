@@ -1,5 +1,8 @@
 package software.wings.yaml.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +19,7 @@ import java.util.Map;
 /**
  * @author rktummala on 10/26/17
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

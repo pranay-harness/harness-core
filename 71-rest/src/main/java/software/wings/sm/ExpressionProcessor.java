@@ -4,8 +4,10 @@
 
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,6 +18,7 @@ import java.util.List;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public interface ExpressionProcessor {
   /**
    * The constant WILD_CHAR.

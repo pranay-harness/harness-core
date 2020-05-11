@@ -1,8 +1,12 @@
 package io.harness.references;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(CDC)
 @Value
 public class OutcomeRefObject implements RefObject {
   String name;

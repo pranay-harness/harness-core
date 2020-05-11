@@ -1,6 +1,9 @@
 package io.harness.data;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.LevelExecution;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -24,6 +27,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")

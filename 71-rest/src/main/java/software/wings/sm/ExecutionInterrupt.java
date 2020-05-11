@@ -1,7 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.persistence.CreatedAtAware;
@@ -25,6 +28,7 @@ import javax.validation.constraints.NotNull;
 /**
  * The type Workflow execution event.
  */
+@OwnedBy(CDC)
 @Data
 @Entity(value = "executionInterrupts", noClassnameStored = true)
 @HarnessEntity(exportable = false)

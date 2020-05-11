@@ -1,9 +1,12 @@
 package io.harness.engine.resume;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Injector;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
@@ -23,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Slf4j

@@ -1,15 +1,19 @@
 package io.harness.redesign.services;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.engine.ExecutionEngine;
 import io.harness.execution.PlanExecution;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
+@OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
 public class CustomExecutionServiceImpl implements CustomExecutionService {

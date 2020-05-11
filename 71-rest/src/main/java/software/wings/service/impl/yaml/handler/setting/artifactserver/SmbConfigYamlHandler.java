@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SmbConfig.Yaml;
@@ -7,6 +10,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class SmbConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SmbConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

@@ -1,9 +1,11 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
@@ -18,6 +20,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Builder
 public class SecretFunctor extends LateBindingMap {
   private FeatureFlagService featureFlagService;

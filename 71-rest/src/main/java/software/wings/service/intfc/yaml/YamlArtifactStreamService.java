@@ -1,5 +1,8 @@
 package software.wings.service.intfc.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 import software.wings.beans.Base;
 import software.wings.beans.artifact.ArtifactStream;
@@ -11,6 +14,7 @@ import software.wings.yaml.YamlPayload;
  * @author rktummala on 10/09/17
  */
 
+@OwnedBy(CDC)
 public interface YamlArtifactStreamService {
   RestResponse<YamlPayload> getArtifactStreamYaml(String appId, String artifactStreamId);
 

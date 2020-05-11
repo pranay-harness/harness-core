@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow.creation.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
@@ -9,6 +10,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -21,6 +23,7 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class WorkflowPhaseHelper {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;

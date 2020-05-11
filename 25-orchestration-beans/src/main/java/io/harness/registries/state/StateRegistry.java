@@ -1,8 +1,11 @@
 package io.harness.registries.state;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
@@ -14,6 +17,7 @@ import lombok.NonNull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@OwnedBy(CDC)
 @Redesign
 @Singleton
 public class StateRegistry implements Registry<StateType, State> {

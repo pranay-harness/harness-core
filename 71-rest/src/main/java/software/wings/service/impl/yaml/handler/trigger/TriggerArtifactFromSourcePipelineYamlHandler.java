@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.trigger.TriggerArtifactSelectionFromPipelineSource;
 import software.wings.beans.trigger.TriggerArtifactSelectionValue;
 import software.wings.beans.yaml.ChangeContext;
@@ -7,6 +10,7 @@ import software.wings.yaml.trigger.TriggerArtifactSelectionFromPipelineSourceYam
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class TriggerArtifactFromSourcePipelineYamlHandler
     extends TriggerArtifactValueYamlHandler<TriggerArtifactSelectionFromPipelineSourceYaml> {
   @Override

@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnsupportedOperationException;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Singleton
 public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipStrategy> {
   private StepSkipStrategy toBean(ChangeContext<Yaml> changeContext) {

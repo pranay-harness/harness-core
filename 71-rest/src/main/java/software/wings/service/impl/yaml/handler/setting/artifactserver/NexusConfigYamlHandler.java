@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.config.NexusConfig.Yaml;
@@ -12,6 +15,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, NexusConfig> {
   @Override

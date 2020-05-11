@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -18,6 +19,7 @@ import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 8/7/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private AccountService accountService;

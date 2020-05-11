@@ -1,5 +1,8 @@
 package software.wings.beans.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,6 +15,7 @@ import software.wings.delegatetasks.jira.JiraAction;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 public class JiraTaskParameters implements ExecutionCapabilityDemander {

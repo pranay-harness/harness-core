@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -8,6 +9,7 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Environment;
@@ -31,6 +33,7 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 public class TriggerAuthHandler {
   @Inject private AuthHandler authHandler;

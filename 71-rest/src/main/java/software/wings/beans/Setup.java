@@ -1,6 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.base.MoreObjects;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +13,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 6/29/16.
  */
+@OwnedBy(CDC)
 public class Setup {
   private SetupStatus setupStatus;
   private List<SetupAction> actions = new ArrayList<>();

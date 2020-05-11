@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -15,6 +18,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public interface AppService extends OwnedByAccount, Exterminator {
   /**
    * Save.

@@ -1,7 +1,10 @@
 package software.wings.yaml.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +20,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/1/17
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

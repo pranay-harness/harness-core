@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -21,6 +22,7 @@ import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REF_BR
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.PayloadSource.Type;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class WebhookEventUtils {

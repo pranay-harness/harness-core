@@ -1,9 +1,13 @@
 package software.wings.service.intfc.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 import software.wings.beans.Application;
 import software.wings.yaml.YamlPayload;
 
+@OwnedBy(CDC)
 public interface AppYamlResourceService {
   /**
    * Gets the yaml version of an app by appId

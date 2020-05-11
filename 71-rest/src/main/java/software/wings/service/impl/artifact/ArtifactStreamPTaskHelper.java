@@ -1,11 +1,13 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
@@ -19,6 +21,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.intfc.ArtifactStreamService;
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class ArtifactStreamPTaskHelper {

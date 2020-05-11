@@ -4,11 +4,14 @@
 
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
@@ -19,6 +22,7 @@ import java.util.List;
 /**
  * A factory for creating WingsExpressionProcessor objects.
  */
+@OwnedBy(CDC)
 @Singleton
 public class WingsExpressionProcessorFactory implements ExpressionProcessorFactory {
   @Inject private Injector injector;

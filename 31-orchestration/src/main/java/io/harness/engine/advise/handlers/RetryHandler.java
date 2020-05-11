@@ -1,5 +1,6 @@
 package io.harness.engine.advise.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -9,6 +10,7 @@ import com.google.inject.name.Named;
 
 import io.harness.adviser.impl.retry.RetryAdvise;
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
@@ -25,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CDC)
 @Slf4j
 public class RetryHandler implements AdviseHandler<RetryAdvise> {
   @Inject AmbianceHelper ambianceHelper;

@@ -1,11 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -24,6 +26,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @JsonTypeName("SFTP")
 @Data
 @Builder

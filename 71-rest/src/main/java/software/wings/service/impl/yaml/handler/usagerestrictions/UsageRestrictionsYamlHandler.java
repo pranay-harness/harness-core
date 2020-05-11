@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.usagerestrictions;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 /**
  *  @author rktummala on 01/09/19
  */
+@OwnedBy(CDC)
 @Singleton
 public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestrictions.Yaml, UsageRestrictions> {
   @Inject AppService appService;

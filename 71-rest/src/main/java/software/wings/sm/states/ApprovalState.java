@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -36,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -129,6 +131,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
+@OwnedBy(CDC)
 @Slf4j
 @FieldNameConstants(innerTypeName = "ApprovalStateKeys")
 public class ApprovalState extends State implements SweepingOutputStateMixin {

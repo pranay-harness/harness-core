@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 
@@ -7,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
@@ -32,6 +34,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/28/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseStep> {
   public static final String PHASE_STEP_PROPERTY_NAME = "PHASE_STEP";

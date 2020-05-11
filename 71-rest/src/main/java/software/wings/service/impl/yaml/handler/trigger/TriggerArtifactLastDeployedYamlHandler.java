@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.TriggerLastDeployedType.PIPELINE;
@@ -7,6 +8,7 @@ import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.TriggerException;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -19,6 +21,7 @@ import software.wings.yaml.trigger.TriggerArtifactSelectionLastDeployedYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class TriggerArtifactLastDeployedYamlHandler
     extends TriggerArtifactValueYamlHandler<TriggerArtifactSelectionLastDeployedYaml> {
   @Inject protected YamlHelper yamlHelper;

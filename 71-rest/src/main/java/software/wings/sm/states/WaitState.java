@@ -1,11 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.WaitNotifyEngine;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public class WaitState extends State {
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
 

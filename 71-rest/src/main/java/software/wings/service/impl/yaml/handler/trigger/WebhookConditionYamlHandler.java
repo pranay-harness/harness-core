@@ -1,8 +1,11 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +21,7 @@ import software.wings.yaml.trigger.WebhookConditionYaml;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

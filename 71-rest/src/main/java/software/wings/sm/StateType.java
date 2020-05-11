@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -80,6 +81,7 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.serializer.JsonUtils;
 import software.wings.api.DeploymentType;
@@ -213,6 +215,7 @@ import java.util.List;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
   /**

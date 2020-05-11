@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import com.google.common.collect.Lists;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.ListUtils;
@@ -75,6 +77,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
 @Indexes({

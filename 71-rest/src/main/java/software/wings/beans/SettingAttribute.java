@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.stream;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -55,6 +56,7 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -90,6 +92,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 5/16/16.
  */
+@OwnedBy(CDC)
 @Indexes({
   @Index(options = @IndexOptions(name = "locate", unique = true),
       fields = { @Field("accountId")

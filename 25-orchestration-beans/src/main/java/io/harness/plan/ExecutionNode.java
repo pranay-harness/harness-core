@@ -1,8 +1,11 @@
 package io.harness.plan;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.adviser.AdviserObtainment;
 import io.harness.ambiance.LevelType;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.references.RefObject;
 import io.harness.state.StateType;
@@ -14,6 +17,7 @@ import lombok.Value;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Redesign

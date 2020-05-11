@@ -1,5 +1,7 @@
 package io.harness.adviser.impl.retry;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -9,9 +11,11 @@ import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
 import io.harness.execution.NodeExecution;
 
+@OwnedBy(CDC)
 @Redesign
 @Produces(Adviser.class)
 public class RetryAdviser implements Adviser {

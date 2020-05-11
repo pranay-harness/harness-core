@@ -1,11 +1,13 @@
 package software.wings.beans.template.command;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -17,6 +19,7 @@ import software.wings.beans.template.ReferencedTemplate;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @JsonTypeName("SSH")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value

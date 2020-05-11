@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -28,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class ArtifactStreamPTaskJob implements Managed {

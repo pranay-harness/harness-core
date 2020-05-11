@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -21,6 +22,7 @@ import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
@@ -80,6 +82,7 @@ import java.util.regex.Pattern;
 /**
  * @author rktummala on 10/17/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;

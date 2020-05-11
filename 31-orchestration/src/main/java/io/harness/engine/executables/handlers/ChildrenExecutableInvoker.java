@@ -1,5 +1,6 @@
 package io.harness.engine.executables.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.NodeExecutionStatus.CHILDREN_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -11,6 +12,7 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.ExecutionEngine;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CDC)
 @Redesign
 public class ChildrenExecutableInvoker implements ExecutableInvoker {
   @Inject private HPersistence hPersistence;

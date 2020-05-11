@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -23,6 +25,7 @@ import software.wings.yaml.templatelibrary.CommandTemplateYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class CommandTemplateYamlHandler extends TemplateLibraryYamlHandler<CommandTemplateYaml> {

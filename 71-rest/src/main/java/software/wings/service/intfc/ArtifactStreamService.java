@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -19,6 +22,7 @@ import javax.validation.Valid;
 /**
  * ArtifactStreamService.
  */
+@OwnedBy(CDC)
 public interface ArtifactStreamService extends OwnedByService {
   PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
 

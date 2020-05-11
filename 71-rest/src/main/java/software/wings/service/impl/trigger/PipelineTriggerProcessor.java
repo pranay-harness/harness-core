@@ -1,11 +1,13 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.trigger.Action.ActionType.PIPELINE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -19,6 +21,7 @@ import software.wings.service.intfc.PipelineService;
 
 import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class PipelineTriggerProcessor implements TriggerProcessor {

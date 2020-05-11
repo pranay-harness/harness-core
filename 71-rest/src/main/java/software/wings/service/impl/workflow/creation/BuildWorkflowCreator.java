@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow.creation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -7,6 +8,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.MapperUtils;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -16,6 +18,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
+@OwnedBy(CDC)
 public class BuildWorkflowCreator extends WorkflowCreator {
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Inject private WorkflowServiceHelper workflowServiceHelper;

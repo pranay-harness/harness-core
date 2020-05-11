@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ApiKeyInfo.getEmbeddedUserFromApiKey;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -75,6 +76,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -304,6 +306,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * The Class WorkflowExecutionServiceImpl.
  */
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j

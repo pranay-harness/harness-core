@@ -1,8 +1,12 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.DeploymentTrigger;
 
+@OwnedBy(CDC)
 public interface TriggerProcessor {
   void validateTriggerConditionSetup(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger);
 

@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
@@ -21,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("AZURE_ARTIFACTS")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

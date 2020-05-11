@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -11,6 +14,7 @@ import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
 /**
  * @author rktummala on 11/1/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class MultiServiceWorkflowYamlHandler extends WorkflowYamlHandler<MultiServiceWorkflowYaml> {
   @Override

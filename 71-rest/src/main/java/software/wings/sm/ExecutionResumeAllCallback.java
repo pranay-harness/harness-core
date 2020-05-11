@@ -1,7 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
@@ -14,6 +17,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 public class ExecutionResumeAllCallback implements NotifyCallback {

@@ -1,6 +1,9 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.dev.DefaultLevel;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -13,6 +16,7 @@ import io.harness.state.core.fork.ForkStateParameters;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {

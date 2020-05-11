@@ -1,10 +1,14 @@
 package software.wings.beans.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Value;
 import software.wings.beans.Variable;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Value
 public class WorkflowVariablesMetadata {
   private static final String CHANGED_MESSAGE =

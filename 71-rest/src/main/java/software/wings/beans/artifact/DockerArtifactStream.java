@@ -1,9 +1,11 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,7 @@ import java.util.Set;
 /**
  * Created by anubhaw on 1/5/17.
  */
+@OwnedBy(CDC)
 @JsonTypeName("DOCKER")
 @Data
 @EqualsAndHashCode(callSuper = false)

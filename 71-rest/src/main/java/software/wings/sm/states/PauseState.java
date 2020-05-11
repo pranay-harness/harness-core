@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.github.reinert.jjschema.Attributes;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.sm.ExecutionContext;
@@ -13,6 +16,7 @@ import software.wings.stencils.DefaultValue;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Attributes
 public class PauseState extends EmailState {
   /**

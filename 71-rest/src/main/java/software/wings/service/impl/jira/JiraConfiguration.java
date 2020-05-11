@@ -1,6 +1,9 @@
 package software.wings.service.impl.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,6 +17,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by Pranjal on 05/13/2019
  */
+@OwnedBy(CDC)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor

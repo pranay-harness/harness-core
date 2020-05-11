@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.RESUMED;
@@ -23,6 +24,7 @@ import static software.wings.utils.Misc.getDurationString;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
@@ -84,6 +86,7 @@ import javax.annotation.Nullable;
 /**
  * Created by anubhaw on 4/7/17.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class WorkflowNotificationHelper {

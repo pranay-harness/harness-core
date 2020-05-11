@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.base.MoreObjects;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 
 import java.util.Objects;
@@ -9,6 +12,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 6/30/16.
  */
+@OwnedBy(CDC)
 public class SetupAction {
   private String displayText;
   private String code;

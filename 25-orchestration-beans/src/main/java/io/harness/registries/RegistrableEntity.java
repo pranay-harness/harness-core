@@ -1,3 +1,10 @@
 package io.harness.registries;
 
-public interface RegistrableEntity<K extends RegistryKey> { K getType(); }
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC)
+public interface RegistrableEntity<K extends RegistryKey> {
+  K getType();
+}

@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
@@ -13,6 +14,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -49,6 +51,7 @@ import java.util.stream.Collectors;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class StateMachineExecutionSimulator {

@@ -1,6 +1,9 @@
 package software.wings.api.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
 import net.sf.json.JSONObject;
 
@@ -8,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 public class JiraIssueType {
   @NotNull private String id;

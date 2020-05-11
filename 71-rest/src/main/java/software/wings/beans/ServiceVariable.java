@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
@@ -7,6 +8,7 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
@@ -41,6 +43,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
+@OwnedBy(CDC)
 @Indexes({
   @Index(fields =
       {

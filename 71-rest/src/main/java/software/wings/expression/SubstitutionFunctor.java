@@ -1,8 +1,12 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.LateBindingMap;
 import lombok.Builder;
 
+@OwnedBy(CDC)
 @Builder
 public class SubstitutionFunctor extends LateBindingMap {
   public Object startTailLogVerification(String... args) {

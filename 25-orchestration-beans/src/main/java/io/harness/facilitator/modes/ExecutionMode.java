@@ -1,5 +1,8 @@
 package io.harness.facilitator.modes;
 
-import io.harness.annotations.Redesign;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-@Redesign public enum ExecutionMode { SYNC, ASYNC, SKIP, ASYNC_CHAIN, CHILDREN, CHILD }
+import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC) @Redesign public enum ExecutionMode { SYNC, ASYNC, SKIP, ASYNC_CHAIN, CHILDREN, CHILD }

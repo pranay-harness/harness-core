@@ -1,8 +1,10 @@
 package io.harness.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.iterator.PersistentRegularIterable;
@@ -24,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @Redesign

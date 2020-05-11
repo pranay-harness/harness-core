@@ -1,9 +1,11 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
@@ -28,6 +30,7 @@ import java.util.Optional;
  *
  * @param <T> the type parameter
  */
+@OwnedBy(CDC)
 public interface BuildService<T> {
   /**
    * Gets builds.

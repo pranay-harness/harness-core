@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -31,6 +33,7 @@ import software.wings.yaml.templatelibrary.TemplateLibraryYaml.TemplateVariableY
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Slf4j
 public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> extends BaseYamlHandler<Y, Template> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;

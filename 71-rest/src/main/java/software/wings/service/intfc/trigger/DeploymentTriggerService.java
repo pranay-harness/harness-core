@@ -1,5 +1,8 @@
 package software.wings.service.intfc.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 public interface DeploymentTriggerService
     extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
   @ValidationGroups(Create.class) DeploymentTrigger save(@Valid DeploymentTrigger deploymentTrigger, boolean migration);

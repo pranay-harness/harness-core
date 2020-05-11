@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,6 +13,7 @@ import java.util.Map;
 /**
  * The type Web hook request.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 public class WebHookRequest {

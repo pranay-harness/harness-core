@@ -1,5 +1,8 @@
 package software.wings.service.intfc.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -11,6 +14,7 @@ import software.wings.beans.trigger.TriggerExecution.Status;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 public interface TriggerExecutionService {
   @ValidationGroups(Create.class) TriggerExecution save(@Valid TriggerExecution triggerExecution);
 

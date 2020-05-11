@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
@@ -7,6 +9,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.ambiance.LevelType;
 import io.harness.ambiance.dev.DefaultLevel;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.NodeExecutionStatus;
@@ -22,6 +25,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 
 import java.time.Duration;
 
+@OwnedBy(CDC)
 public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) throws Exception {

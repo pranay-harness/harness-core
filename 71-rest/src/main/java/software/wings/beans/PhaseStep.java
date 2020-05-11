@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -17,6 +18,7 @@ import static software.wings.sm.StateType.FORK;
 import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.MapUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -44,6 +46,7 @@ import java.util.Set;
 /**
  * Created by rishi on 12/21/16.
  */
+@OwnedBy(CDC)
 public class PhaseStep {
   private String uuid = generateUuid();
   private String name;

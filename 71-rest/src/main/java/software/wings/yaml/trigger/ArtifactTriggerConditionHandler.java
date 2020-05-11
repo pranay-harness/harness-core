@@ -1,11 +1,13 @@
 package software.wings.yaml.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,6 +20,7 @@ import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHand
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

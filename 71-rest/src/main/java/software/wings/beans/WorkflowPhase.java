@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -11,6 +12,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.sm.StateType.PHASE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.persistence.UuidAccess;
 import lombok.Data;
@@ -33,6 +35,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 public class WorkflowPhase implements UuidAccess {
   private String uuid = generateUuid();
   private String name;

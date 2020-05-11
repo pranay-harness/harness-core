@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -54,6 +55,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.config.PipelineConfig;
@@ -135,6 +137,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {

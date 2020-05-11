@@ -1,8 +1,11 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.artifactsource.ArtifactSource;
@@ -13,6 +16,7 @@ import software.wings.yaml.templatelibrary.ArtifactSourceTemplateYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 public class ArtifactSourceTemplateYamlHandler extends TemplateLibraryYamlHandler<ArtifactSourceTemplateYaml> {
   @Inject CustomArtifactSourceYamlHandler customArtifactSourceYamlHandler;
