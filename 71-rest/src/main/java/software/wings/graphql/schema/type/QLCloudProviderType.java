@@ -9,7 +9,8 @@ public enum QLCloudProviderType implements QLEnum {
   AZURE,
   GCP,
   KUBERNETES_CLUSTER,
-  PCF;
+  PCF,
+  SPOT_INST;
 
   @Override
   public String getStringValue() {

@@ -12,6 +12,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 
 @UtilityClass
 public class CloudProviderController {
@@ -46,6 +47,9 @@ public class CloudProviderController {
         break;
       case PCF:
         cloudProviderBuilder = QLPcfCloudProvider.builder();
+        break;
+      case SPOT_INST:
+        cloudProviderBuilder = QLSpotInstCloudProvider.builder();
         break;
       default:
         throw new InvalidRequestException("Unknown Cloud ProviderType " + settingAttribute.getValue().getSettingType());

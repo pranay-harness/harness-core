@@ -42,6 +42,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import software.wings.graphql.schema.type.connector.QLAmazonS3HelmConnector;
 import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
@@ -132,6 +133,7 @@ public class TypeResolverManager {
     public static final String K8sPodInstance = "K8sPodInstance";
     public static final String KubernetesCloudProvider = "KubernetesCloudProvider";
     public static final String PcfCloudProvider = "PcfCloudProvider";
+    public static final String SpotInstCloudProvider = "SpotInstCloudProvider";
     public static final String PcfInstance = "PcfInstance";
     public static final String PhysicalDataCenterCloudProvider = "PhysicalDataCenterCloudProvider";
     public static final String PhysicalHostInstance = "PhysicalHostInstance";
@@ -229,6 +231,7 @@ public class TypeResolverManager {
                     .put(QLGcpCloudProvider.class, TypeResolverManagerTypes.GcpCloudProvider)
                     .put(QLKubernetesClusterCloudProvider.class, TypeResolverManagerTypes.KubernetesCloudProvider)
                     .put(QLPcfCloudProvider.class, TypeResolverManagerTypes.PcfCloudProvider)
+                    .put(QLSpotInstCloudProvider.class, TypeResolverManagerTypes.SpotInstCloudProvider)
                     .build()))
         .put(TypeResolverManagerUnifaces.Connector,
             getResultTypeResolver(

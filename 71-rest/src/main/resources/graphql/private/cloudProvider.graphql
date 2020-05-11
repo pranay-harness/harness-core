@@ -15,6 +15,7 @@ input CreateCloudProviderInput {
   clientMutationId: String
   cloudProviderType: CloudProviderType!
   pcfCloudProvider: PcfCloudProviderInput
+  spotInstCloudProvider: SpotInstCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -22,6 +23,7 @@ input UpdateCloudProviderInput {
   cloudProviderId: String!
   cloudProviderType: CloudProviderType!
   pcfCloudProvider: PcfCloudProviderInput
+  spotInstCloudProvider: SpotInstCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
@@ -50,4 +52,12 @@ input PcfCloudProviderInput {
   endpointUrl: String
   userName: String
   passwordSecretId: String
+}
+
+input SpotInstCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  accountId: String
+  tokenSecretId: String
 }

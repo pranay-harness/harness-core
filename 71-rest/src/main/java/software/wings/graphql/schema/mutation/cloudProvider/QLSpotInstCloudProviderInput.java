@@ -1,10 +1,10 @@
 package software.wings.graphql.schema.mutation.cloudProvider;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.utils.RequestField;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.mutation.QLMutationInput;
-import software.wings.graphql.schema.type.QLCloudProviderType;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -12,10 +12,10 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QLCreateCloudProviderInput implements QLMutationInput {
-  String clientMutationId;
+public class QLSpotInstCloudProviderInput {
+  private RequestField<String> name;
+  private RequestField<QLUsageScope> usageScope;
 
-  QLCloudProviderType cloudProviderType;
-  QLPcfCloudProviderInput pcfCloudProvider;
-  QLSpotInstCloudProviderInput spotInstCloudProvider;
+  private RequestField<String> accountId;
+  private RequestField<String> tokenSecretId;
 }
