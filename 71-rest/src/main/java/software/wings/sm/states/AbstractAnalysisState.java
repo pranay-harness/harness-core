@@ -135,6 +135,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -1224,15 +1225,23 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected void campareAndLogNodesUsingNewInstanceAPI(
-      ExecutionContext context, Set<String> testNodes, Set<String> controlNodes) {
+      ExecutionContext context, Map<String, String> testNodesMap, Map<String, String> controlNodesMap) {
     try {
+      Set<String> testNodes = testNodesMap.keySet();
+      Set<String> controlNodes = controlNodesMap.keySet();
+      if (Stream.concat(testNodesMap.values().stream(), controlNodesMap.values().stream())
+              .anyMatch(value -> !value.equals(DEFAULT_GROUP_NAME))) {
+        getLogger().info(
+            "[NewInstanceAPI][Error][GroupName] GroupName is not default. testNodeMap {} controlNodeMap {}",
+            testNodesMap, controlNodesMap);
+      }
+
       long startTime = System.currentTimeMillis();
       NodePair nodePair = getControlAndTestNodes(context);
       getLogger().info(
           "[NewInstanceAPI] Time taken to get control and test nodes: {} ms", System.currentTimeMillis() - startTime);
       Set<String> newControlNodes = nodePair.getControlNodes(), newTestNodes = nodePair.getTestNodes();
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
-      String deploymentType = phaseElement.getDeploymentType();
+      DeploymentType deploymentType = getDeploymentType(context);
       if (testNodes.equals(newTestNodes) && controlNodes.equals(newControlNodes)) {
         getLogger().info(
             "[NewInstanceAPI] New nodes and old nodes are equal. deploymentType: {} ComparisionStrategy: {} testNodes: {}, controlNodes {}",
