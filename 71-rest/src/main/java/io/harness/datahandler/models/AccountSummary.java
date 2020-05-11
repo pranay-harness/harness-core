@@ -19,6 +19,8 @@ public class AccountSummary {
   private Boolean oauthEnabled;
   private Boolean cloudCostEnabled;
   private Boolean is24x7GuardEnabled;
+  private Boolean povEnabled;
+  private Boolean ceAutoCollectK8sEventsEnabled;
   private List<ConfiguredLimit> limits;
   private Integer numSecretManagers;
   private Integer numDelegates;

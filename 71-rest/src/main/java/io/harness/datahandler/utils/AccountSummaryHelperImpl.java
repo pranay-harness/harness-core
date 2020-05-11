@@ -31,6 +31,8 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
                                         .companyName(account.getCompanyName())
                                         .licenseInfo(account.getLicenseInfo())
                                         .twoFactorAdminEnforced(account.isTwoFactorAdminEnforced())
+                                        .povEnabled(account.isPovAccount())
+                                        .ceAutoCollectK8sEventsEnabled(account.isCeAutoCollectK8sEvents())
                                         .build();
 
     if (Objects.nonNull(account.getWhitelistedDomains())) {
