@@ -350,7 +350,7 @@ public class AuditServiceImpl implements AuditService {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
-                                               .field(AuditHeader.CREATED_AT_KEY)
+                                               .field(AuditHeaderKeys.createdAt)
                                                .lessThan(currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));
           if (isEmpty(auditHeaders)) {
@@ -532,7 +532,7 @@ public class AuditServiceImpl implements AuditService {
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
     } catch (Exception ex) {
-      logger.error("Exception while auditing records for account [{}]", accountId, ex);
+      logger.error("Exception while auditing records for account {}", accountId, ex);
     }
   }
 

@@ -84,6 +84,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           "account/disable", "account/enable", "users/reset-cache", "executions/workflow-variables",
           "executions/deployment-metadata", "setup-as-code/yaml/internal/template-yaml-sync"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
+  private static final String USER_NOT_AUTHORIZED = "User not authorized";
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
@@ -225,22 +226,20 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes;
     boolean harnessSupportUser = false;
     if (!userService.isUserAssignedToAccount(user, accountId)) {
-      if (!isHarnessUserExemptedRequest) {
-        if (!httpMethod.equals(HttpMethod.GET.name())) {
-          if (httpMethod.equals(HttpMethod.POST.name())) {
-            if (!isGraphQLRequest(uriPath)) {
-              throw new AccessDeniedException("User not authorized", USER);
-            }
-          } else {
-            throw new AccessDeniedException("User not authorized", USER);
+      if (!isHarnessUserExemptedRequest && !httpMethod.equals(HttpMethod.GET.name())) {
+        if (httpMethod.equals(HttpMethod.POST.name())) {
+          if (!isGraphQLRequest(uriPath)) {
+            throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
           }
+        } else {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
         }
       }
 
       Set<Action> actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
 
       if (isEmpty(actions)) {
-        throw new AccessDeniedException("User not authorized", USER);
+        throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
       }
       harnessSupportUser = true;
     }
@@ -336,7 +335,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return null;
   }
 
-  public String getParameterName(List<PermissionAttribute> permissionAttributes) {
+  private String getParameterName(List<PermissionAttribute> permissionAttributes) {
     Optional<String> entityFieldNameOptional =
         permissionAttributes.stream()
             .map(permissionAttribute -> {
@@ -434,7 +433,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return requiredPermissionAttributes.stream().anyMatch(PermissionAttribute::isSkipAuth);
   }
 
-  public boolean setAppIdFilterInUserRequestContext(
+  private boolean setAppIdFilterInUserRequestContext(
       UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
     if (!emptyAppIdsInReq) {
       return false;
@@ -637,7 +636,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
   }
 
-  protected boolean isScimAPI() {
+  private boolean isScimAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
