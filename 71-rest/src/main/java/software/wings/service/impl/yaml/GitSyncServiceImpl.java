@@ -48,6 +48,7 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
+import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -204,6 +205,8 @@ public class GitSyncServiceImpl implements GitSyncService {
     pageRequest.addFieldsIncluded(GitCommitKeys.yamlGitConfigIds);
     pageRequest.addFieldsIncluded(GitCommitKeys.gitConnectorId);
     pageRequest.addFieldsIncluded(GitCommitKeys.branchName);
+    pageRequest.addFieldsIncluded(GitCommitKeys.status);
+    pageRequest.addFieldsIncluded(GitCommitKeys.yamlChangeSet.concat(".").concat(YamlChangeSetKeys.gitToHarness));
     PageResponse<GitCommit> pageResponse = wingsPersistence.query(GitCommit.class, pageRequest);
     List<GitCommit> gitCommits = pageResponse.getResponse();
     List<GitCommit> gitCommitsWithValidConnectorName = populateConnectorNameInGitCommits(gitCommits, accountId);
