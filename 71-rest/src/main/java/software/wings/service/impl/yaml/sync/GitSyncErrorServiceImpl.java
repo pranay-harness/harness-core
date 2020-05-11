@@ -391,6 +391,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     if (isNotBlank(yamlFilePathPattern)) {
       query.field(GitSyncErrorKeys.yamlFilePath).containsIgnoreCase(yamlFilePathPattern);
     }
+    query.disableValidation().order(Sort.descending(GitSyncErrorKeys.commitTime));
     PageResponse<GitSyncError> allErrorsResponse = aPageResponse()
                                                        .withLimit(String.valueOf(limit))
                                                        .withOffset(String.valueOf(offset))
