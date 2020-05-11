@@ -66,6 +66,7 @@ import software.wings.graphql.datafetcher.billing.NodeAndPodDetailsDataFetcher;
 import software.wings.graphql.datafetcher.billing.SunburstChartStatsDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetListDataFetcher;
+import software.wings.graphql.datafetcher.budget.BudgetNotificationsDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderConnectionDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderDataFetcher;
@@ -217,13 +218,13 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactSourceDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactSourceBatchDataFetcher.class);
-
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsTimeSeriesDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetListDataFetcher.class);
+    bindDataFetcherWithAnnotation(BudgetNotificationsDataFetcher.class);
     bindDataFetcherWithAnnotation(BudgetTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
@@ -274,7 +275,6 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ServiceBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceArtifactSourceConnectionDataFetcher.class);
-
     bindDataFetcherWithAnnotation(ServiceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(SunburstChartStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsInUseConnectionDataFetcher.class);
