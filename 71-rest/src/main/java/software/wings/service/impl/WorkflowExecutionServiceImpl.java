@@ -465,7 +465,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     User user = UserThreadLocal.get();
     if (user != null) {
-      approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
+      approvalDetails.setApprovedBy(
+          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
     }
 
     if (null == approvalDetails.getApprovedBy()) {
