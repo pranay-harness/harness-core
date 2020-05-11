@@ -1,8 +1,11 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.mongodb.morphia.query.Query;
@@ -16,6 +19,7 @@ import software.wings.service.intfc.trigger.TriggerExecutionService;
 import java.util.EnumSet;
 import javax.validation.executable.ValidateOnExecution;
 
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 public class TriggerExecutionServiceImpl implements TriggerExecutionService {

@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -38,6 +41,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 3/28/16.
  */
+@OwnedBy(CDC)
 public interface ServiceResourceService extends OwnedByApplication {
   PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands,
       boolean withTags, String tagFilter);

@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.collect.Lists;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +21,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 11/17/16.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 @NoArgsConstructor

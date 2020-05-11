@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.Data;
@@ -13,6 +16,7 @@ import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 public abstract class TriggerConditionYamlHandler<Y extends TriggerConditionYaml>
     extends BaseYamlHandler<Y, TriggerCondition> {

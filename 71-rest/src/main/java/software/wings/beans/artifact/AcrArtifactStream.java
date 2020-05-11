@@ -1,9 +1,11 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("ACR")
 @Data
 @EqualsAndHashCode(callSuper = true)

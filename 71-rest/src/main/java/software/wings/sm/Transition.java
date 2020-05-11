@@ -1,10 +1,15 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 /**
  * Represents transition between states.
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public class Transition {
   private State fromState;
   private State toState;

@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +17,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -74,6 +76,7 @@ import java.util.regex.Pattern;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Slf4j
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");

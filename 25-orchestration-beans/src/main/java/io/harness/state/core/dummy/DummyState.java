@@ -1,8 +1,11 @@
 package io.harness.state.core.dummy;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 @Redesign
 @Produces(State.class)

@@ -1,11 +1,13 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
@@ -21,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("BAMBOO")
 @Data
 @EqualsAndHashCode(callSuper = false)

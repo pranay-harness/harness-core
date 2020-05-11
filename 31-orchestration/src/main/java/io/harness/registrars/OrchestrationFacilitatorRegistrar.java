@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.async.AsyncFacilitator;
 import io.harness.facilitator.child.ChildFacilitator;
@@ -9,6 +12,7 @@ import io.harness.registries.registrar.FacilitatorRegistrar;
 
 import java.util.Set;
 
+@OwnedBy(CDC)
 public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
   @Override
   public void register(Set<Class<? extends Facilitator>> facilitatorClasses) {

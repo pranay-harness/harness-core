@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -12,6 +13,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import software.wings.api.DeploymentType;
 import software.wings.api.PcfInstanceElement.PcfInstanceElementKeys;
@@ -34,6 +36,7 @@ import java.util.TreeSet;
 /**
  * Created by sgurubelli on 8/7/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class ServiceExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceResourceService serviceResourceService;

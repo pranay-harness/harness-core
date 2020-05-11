@@ -1,14 +1,18 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDC)
 @Singleton
 public class FailedCommitStore {
   private final Cache<Commit, Boolean> commitsWhichExceedLimit =

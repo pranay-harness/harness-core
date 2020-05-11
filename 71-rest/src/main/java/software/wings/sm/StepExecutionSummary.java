@@ -1,10 +1,14 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 
 /**
  * Created by rishi on 4/2/17.
  */
+@OwnedBy(CDC)
 public class StepExecutionSummary {
   private String stepName;
   private ExecutionStatus status;

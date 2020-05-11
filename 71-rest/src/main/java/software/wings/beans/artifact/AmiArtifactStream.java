@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
@@ -9,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import com.google.common.base.Joiner;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @JsonTypeName("AMI")
 @Data
 @EqualsAndHashCode(callSuper = true)

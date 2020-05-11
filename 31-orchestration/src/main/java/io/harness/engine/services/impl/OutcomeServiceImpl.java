@@ -1,5 +1,6 @@
 package io.harness.engine.services.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
@@ -8,6 +9,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
@@ -17,6 +19,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.references.RefType;
 
+@OwnedBy(CDC)
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
 

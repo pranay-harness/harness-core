@@ -1,11 +1,16 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by sgurubelli on 8/7/17.
  */
+@OwnedBy(CDC)
 public class WorkflowDetails {
   String workflowId;
   String workflowName;

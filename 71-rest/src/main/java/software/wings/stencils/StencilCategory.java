@@ -4,9 +4,12 @@
 
 package software.wings.stencils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Getter;
 
 /**
@@ -14,6 +17,7 @@ import lombok.Getter;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StencilCategory {
   BUILD(0),

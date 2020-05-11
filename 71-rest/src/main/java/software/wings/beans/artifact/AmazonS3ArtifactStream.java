@@ -1,11 +1,13 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("AMAZON_S3")
 @Data
 @EqualsAndHashCode(callSuper = true)

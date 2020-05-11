@@ -1,11 +1,15 @@
 package io.harness.registries.exceptions;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.registries.RegistryType;
 
+@OwnedBy(CDC)
 public class UnregisteredKeyAccessException extends WingsException {
   private static final String DETAILS_KEY = "details";
 

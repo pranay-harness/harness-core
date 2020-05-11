@@ -1,10 +1,12 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {

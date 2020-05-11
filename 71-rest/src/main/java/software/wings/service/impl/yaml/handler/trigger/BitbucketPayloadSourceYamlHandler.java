@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.trigger.BitBucketPayloadSource;
 import software.wings.beans.trigger.PayloadSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
@@ -10,6 +13,7 @@ import software.wings.yaml.trigger.WebhookEventYaml;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 public class BitbucketPayloadSourceYamlHandler extends PayloadSourceYamlHandler<BitBucketPayloadSourceYaml> {
   @Override
   public BitBucketPayloadSourceYaml toYaml(PayloadSource bean, String appId) {

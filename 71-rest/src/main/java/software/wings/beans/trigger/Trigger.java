@@ -1,11 +1,13 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.NameAccess;
@@ -45,6 +47,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by sgurubelli on 10/25/17.
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

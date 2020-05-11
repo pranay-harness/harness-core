@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -8,6 +9,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
@@ -25,6 +27,7 @@ import java.util.Set;
 /**
  * Created by srinivas on 3/31/17.
  */
+@OwnedBy(CDC)
 @JsonTypeName("NEXUS")
 @Data
 @EqualsAndHashCode(callSuper = true)

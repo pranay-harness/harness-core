@@ -1,5 +1,7 @@
 package io.harness.registries;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
@@ -8,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
 import io.harness.ambiance.Level;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.govern.DependencyModule;
 import io.harness.registries.adviser.AdviserRegistry;
@@ -31,6 +34,7 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @Slf4j
 public class RegistryModule extends DependencyModule {
   private static RegistryModule instance;

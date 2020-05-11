@@ -4,6 +4,9 @@
 
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -12,6 +15,7 @@ import io.harness.waiter.WaitNotifyEngine;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public class SimpleNotifier implements Runnable {
   private WaitNotifyEngine waitNotifyEngine;
   private String correlationId;

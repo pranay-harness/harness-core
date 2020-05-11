@@ -1,4 +1,5 @@
 package software.wings.beans.trigger;
+
 import io.harness.exception.InvalidRequestException;
 
 import java.util.HashMap;

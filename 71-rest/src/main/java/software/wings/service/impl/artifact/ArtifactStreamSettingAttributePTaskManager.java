@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
@@ -7,6 +8,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class ArtifactStreamSettingAttributePTaskManager implements SettingAttributeObserver {

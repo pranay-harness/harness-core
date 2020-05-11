@@ -1,6 +1,9 @@
 package io.harness.plan;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
@@ -30,6 +33,7 @@ import javax.validation.constraints.NotNull;
  * With this approach we can crate iterators over these and perform the migrations
  */
 
+@OwnedBy(CDC)
 @Value
 @Builder(buildMethodName = "internalBuild")
 @Redesign

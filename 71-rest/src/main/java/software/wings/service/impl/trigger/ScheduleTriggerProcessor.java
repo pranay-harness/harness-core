@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -7,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
@@ -20,6 +22,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ScheduleTriggerProcessor implements TriggerProcessor {

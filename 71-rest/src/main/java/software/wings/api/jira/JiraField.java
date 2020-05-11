@@ -1,11 +1,15 @@
 package software.wings.api.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 public class JiraField {
   @NotNull private String key;

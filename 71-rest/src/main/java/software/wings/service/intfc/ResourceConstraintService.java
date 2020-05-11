@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint;
@@ -17,6 +20,7 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 public interface ResourceConstraintService extends OwnedByAccount {
   PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest);
 

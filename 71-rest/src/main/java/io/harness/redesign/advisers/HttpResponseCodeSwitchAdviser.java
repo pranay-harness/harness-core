@@ -1,5 +1,7 @@
 package io.harness.redesign.advisers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.base.Preconditions;
 
 import io.harness.adviser.Advise;
@@ -10,12 +12,14 @@ import io.harness.adviser.impl.success.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.state.io.StateResponse;
 import software.wings.api.HttpStateExecutionData;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
 @Produces(Adviser.class)

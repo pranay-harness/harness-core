@@ -1,5 +1,6 @@
 package io.harness.redesign.states.http;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -9,6 +10,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -32,6 +34,7 @@ import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
 @Produces(State.class)

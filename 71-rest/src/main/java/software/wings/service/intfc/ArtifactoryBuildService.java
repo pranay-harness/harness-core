@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -17,6 +20,7 @@ import java.util.Optional;
 /**
  * Created by sgurubelli on 6/20/17.
  */
+@OwnedBy(CDC)
 public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig> {
   @Override
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_BUILDS)

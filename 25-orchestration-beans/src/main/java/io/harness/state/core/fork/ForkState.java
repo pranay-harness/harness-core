@@ -1,8 +1,11 @@
 package io.harness.state.core.fork;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
@@ -20,6 +23,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Redesign
 @Produces(State.class)
 public class ForkState implements State, ChildrenExecutable {

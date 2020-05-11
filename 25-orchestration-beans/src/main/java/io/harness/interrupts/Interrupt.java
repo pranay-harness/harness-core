@@ -1,6 +1,9 @@
 package io.harness.interrupts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedByAccess;
@@ -15,6 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Redesign

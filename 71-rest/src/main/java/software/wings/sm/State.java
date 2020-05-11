@@ -1,7 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.serializer.MapperUtils;
@@ -19,6 +22,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "StateKeys")
 public abstract class State {
   protected static final Integer INFINITE_TIMEOUT = -1;

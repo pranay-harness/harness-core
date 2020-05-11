@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -72,6 +74,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Slf4j
 public class ExecutionInterruptManager {
   @Inject private AlertService alertService;

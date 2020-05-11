@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +17,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import software.wings.api.DeploymentType;
@@ -48,6 +50,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Singleton
 public class WorkflowServiceTemplateHelper {
   private static final String ENV_VAR_DESC = "Variable for Environment entity";

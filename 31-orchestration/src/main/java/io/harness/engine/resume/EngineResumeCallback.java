@@ -1,9 +1,12 @@
 package io.harness.engine.resume;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.waiter.NotifyCallback;
@@ -12,6 +15,7 @@ import lombok.Value;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Redesign

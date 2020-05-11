@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.QUEUED;
@@ -13,6 +14,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -39,6 +41,7 @@ import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private WingsPersistence wingsPersistence;

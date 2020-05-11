@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
@@ -106,6 +107,7 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
@@ -217,6 +219,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.

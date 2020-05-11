@@ -1,5 +1,6 @@
 package io.harness.redesign.services;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +11,7 @@ import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -29,6 +31,7 @@ import lombok.experimental.UtilityClass;
 import java.time.Duration;
 import java.util.Collections;
 
+@OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
 @UtilityClass

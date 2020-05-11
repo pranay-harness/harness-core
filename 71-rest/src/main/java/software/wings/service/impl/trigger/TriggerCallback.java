@@ -1,7 +1,10 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -15,6 +18,7 @@ import software.wings.service.intfc.TriggerService;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Slf4j
 public class TriggerCallback implements NotifyCallback {
   private String accountId;

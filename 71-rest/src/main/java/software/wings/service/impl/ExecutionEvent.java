@@ -1,6 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.queue.Queuable;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +12,7 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

@@ -1,13 +1,17 @@
 package software.wings.stencils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 
 /**
  * Created by peeyushaggarwal on 6/28/16.
  *
  * @param <T> the type parameter
  */
+@OwnedBy(CDC)
 public interface OverridingStencil<T> extends Stencil<T> {
   /**
    * Gets overriding json schema.

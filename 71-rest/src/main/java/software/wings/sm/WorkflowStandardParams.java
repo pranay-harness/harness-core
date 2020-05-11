@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,6 +10,7 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -55,6 +57,7 @@ import java.util.Map;
  *
  * @author Rishi.
  */
+@OwnedBy(CDC)
 public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
   public static final String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";

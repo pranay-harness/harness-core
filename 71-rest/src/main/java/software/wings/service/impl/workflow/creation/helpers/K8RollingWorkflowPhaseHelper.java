@@ -1,11 +1,13 @@
 package software.wings.service.impl.workflow.creation.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@OwnedBy(CDC)
 public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   // Get all Rolling Steps
   @Override

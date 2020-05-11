@@ -1,10 +1,12 @@
 package software.wings.stencils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,6 +23,7 @@ import java.util.stream.Stream;
 /**
  * Created by peeyushaggarwal on 4/6/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class UISchemaProcessor {
   public static <T> Map<String, Object> generate(Class<T> stencilClass) throws IntrospectionException {

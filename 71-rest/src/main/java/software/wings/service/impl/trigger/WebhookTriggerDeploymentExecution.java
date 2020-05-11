@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.TriggerException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
@@ -69,6 +71,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 
+@OwnedBy(CDC)
 @ValidateOnExecution
 @Singleton
 @Slf4j

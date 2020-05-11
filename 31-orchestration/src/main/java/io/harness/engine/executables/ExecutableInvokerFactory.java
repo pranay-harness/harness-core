@@ -1,8 +1,11 @@
 package io.harness.engine.executables;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.handlers.AsyncExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildrenExecutableInvoker;
@@ -10,6 +13,7 @@ import io.harness.engine.executables.handlers.SyncExecutableInvoker;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.ExecutionMode;
 
+@OwnedBy(CDC)
 @Redesign
 public class ExecutableInvokerFactory {
   @Inject private AsyncExecutableInvoker asyncExecutableInvoker;

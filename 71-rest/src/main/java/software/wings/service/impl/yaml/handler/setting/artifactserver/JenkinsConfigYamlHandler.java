@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -14,6 +16,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/19/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, JenkinsConfig> {
   @Override

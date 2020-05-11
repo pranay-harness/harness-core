@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 
 import java.util.List;
@@ -7,6 +10,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 12/14/16.
  */
+@OwnedBy(CDC)
 public interface SlackNotificationService {
   /**
    * Send message.

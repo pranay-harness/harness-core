@@ -1,5 +1,8 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.ExecutionInterruptType;
 
 import java.util.Map;
@@ -7,6 +10,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/26/17.
  */
+@OwnedBy(CDC)
 public class ExecutionEventAdvice {
   private ExecutionInterruptType executionInterruptType;
   private String nextStateName;

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.features.utils.ServiceUtils.getServicesPageRequest;
 import static software.wings.features.utils.ServiceUtils.getServicesWithTemplateLibrary;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.CollectionUtils;
 import software.wings.beans.Service;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Singleton
 public class WorkflowPreDeploymentValidator {
   private static final String WORKFLOW_RESTRICTED_FEATURE_ERROR_MSG =

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -81,6 +83,7 @@ import java.util.Map;
 /**
  * Http state which makes a call to http service.
  */
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j

@@ -1,7 +1,10 @@
 package io.harness.state.core.section;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
@@ -15,6 +18,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
+@OwnedBy(CDC)
 @Produces(State.class)
 public class SectionState implements State, ChildExecutable {
   public static final String STATE_TYPE = "SECTION";

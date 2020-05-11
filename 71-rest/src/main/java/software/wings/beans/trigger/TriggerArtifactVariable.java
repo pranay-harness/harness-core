@@ -1,11 +1,15 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EntityType;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")

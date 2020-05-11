@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -25,6 +27,7 @@ import software.wings.yaml.setting.CollaborationProviderYaml;
 import java.util.Arrays;
 import java.util.List;
 
+@OwnedBy(CDC)
 @JsonTypeName("SERVICENOW")
 @Data
 @Builder

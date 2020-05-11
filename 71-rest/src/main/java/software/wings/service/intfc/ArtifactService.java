@@ -1,7 +1,9 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.artifact.Artifact.Status;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -22,6 +24,7 @@ import javax.validation.constraints.NotNull;
 /**
  * The Interface ArtifactService.
  */
+@OwnedBy(CDC)
 public interface ArtifactService extends OwnedByArtifactStream {
   /**
    * List artifacts without sorting.

@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow.creation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
@@ -7,6 +8,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.MapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -21,6 +23,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 public class MultiPhaseWorkflowCreator extends WorkflowCreator {
   @Inject private FeatureFlagService featureFlagService;

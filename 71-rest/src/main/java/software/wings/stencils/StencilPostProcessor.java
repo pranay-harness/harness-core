@@ -1,5 +1,6 @@
 package software.wings.stencils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +34,7 @@ import java.util.stream.Stream;
 /**
  * Created by peeyushaggarwal on 6/27/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class StencilPostProcessor {

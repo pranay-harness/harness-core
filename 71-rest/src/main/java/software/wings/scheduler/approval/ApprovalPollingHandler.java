@@ -1,5 +1,6 @@
 package software.wings.scheduler.approval;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
@@ -7,6 +8,7 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -25,6 +27,7 @@ import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;

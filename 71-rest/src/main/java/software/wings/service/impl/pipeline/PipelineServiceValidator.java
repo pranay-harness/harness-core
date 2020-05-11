@@ -1,11 +1,13 @@
 package software.wings.service.impl.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.sm.StateType.APPROVAL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
@@ -18,6 +20,7 @@ import software.wings.sm.states.ApprovalState;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class PipelineServiceValidator {
   private PipelineServiceValidator() {}
   public static void checkUniqueApprovalPublishedVariable(Pipeline pipeline) {

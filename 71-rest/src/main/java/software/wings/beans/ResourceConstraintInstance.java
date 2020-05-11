@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.UuidAware;
@@ -26,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

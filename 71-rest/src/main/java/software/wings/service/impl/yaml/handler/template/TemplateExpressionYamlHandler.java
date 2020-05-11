@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.template;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
@@ -25,6 +27,7 @@ import java.util.Map;
 /**
  * @author rktummala on 10/28/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpression.Yaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;

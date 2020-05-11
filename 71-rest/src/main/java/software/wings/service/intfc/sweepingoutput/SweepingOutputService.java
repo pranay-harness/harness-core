@@ -1,5 +1,8 @@
 package software.wings.service.intfc.sweepingoutput;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.deployment.InstanceDetails;
@@ -11,6 +14,7 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 public interface SweepingOutputService {
   SweepingOutputInstance save(@Valid SweepingOutputInstance sweepingOutputInstance);
 

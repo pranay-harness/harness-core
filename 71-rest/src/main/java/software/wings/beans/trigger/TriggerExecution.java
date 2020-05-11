@@ -1,6 +1,9 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.Builder;
@@ -20,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggerExecutions")

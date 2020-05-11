@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.expression.ExpressionEvaluator.getName;
@@ -10,6 +11,7 @@ import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.ExceptionLogger;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Slf4j
 public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   @Inject private transient DeploymentTriggerServiceHelper triggerServiceHelper;

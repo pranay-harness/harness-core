@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -13,6 +14,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -47,6 +49,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Entity(value = "workflows", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "accountIdCreatedAt"),
     fields = { @Field(WorkflowKeys.accountId)

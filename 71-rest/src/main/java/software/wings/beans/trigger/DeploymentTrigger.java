@@ -1,11 +1,13 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -42,6 +44,7 @@ import javax.validation.constraints.NotNull;
  * Created by sgurubelli on 10/25/17.
  */
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @AllArgsConstructor

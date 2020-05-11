@@ -1,5 +1,8 @@
 package software.wings.beans.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
@@ -14,6 +17,7 @@ public enum WebhookSource {
   GITLAB,
   BITBUCKET;
 
+  @OwnedBy(CDC)
   public interface WebhookEvent {}
 
   public enum GitHubEventType implements WebhookEvent {

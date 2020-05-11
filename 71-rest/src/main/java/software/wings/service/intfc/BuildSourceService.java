@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
@@ -21,6 +24,7 @@ import javax.annotation.Nullable;
 /**
  * Created by anubhaw on 8/18/16.
  */
+@OwnedBy(CDC)
 public interface BuildSourceService {
   /**
    * Gets jobs.

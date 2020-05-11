@@ -1,5 +1,6 @@
 package io.harness.engine.executables.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.NodeExecutionStatus.TASK_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.executables.ExecutableInvoker;
@@ -24,6 +26,7 @@ import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Slf4j
 @Redesign
 public class AsyncExecutableInvoker implements ExecutableInvoker {

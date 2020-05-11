@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.PayloadSource;
 import software.wings.beans.trigger.WebhookGitParam;
@@ -11,6 +14,7 @@ import software.wings.yaml.trigger.WebhookEventYaml;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 public class GithubPayloadSourceYamlHandler extends PayloadSourceYamlHandler<GithubPayloadSourceYaml> {
   @Override
   public GithubPayloadSourceYaml toYaml(PayloadSource bean, String appId) {

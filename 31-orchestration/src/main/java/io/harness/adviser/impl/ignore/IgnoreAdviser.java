@@ -1,5 +1,6 @@
 package io.harness.adviser.impl.ignore;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.disjoint;
 
 import com.google.common.base.Preconditions;
@@ -11,8 +12,10 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.impl.success.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.state.io.StateResponse;
 
+@OwnedBy(CDC)
 @Redesign
 @Produces(Adviser.class)
 public class IgnoreAdviser implements Adviser {

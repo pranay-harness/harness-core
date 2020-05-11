@@ -1,5 +1,8 @@
 package software.wings.service.intfc.sweepingoutput;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +12,7 @@ import software.wings.sm.StateExecutionInstance;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @UtilityClass
 @Slf4j
 public class SweepingOutputInquiryController {

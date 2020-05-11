@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -15,6 +16,7 @@ import static software.wings.beans.VariableType.ENTITY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import software.wings.api.CanaryWorkflowStandardParams;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Singleton
 public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;

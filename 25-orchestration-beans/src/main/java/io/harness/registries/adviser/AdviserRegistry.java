@@ -1,10 +1,13 @@
 package io.harness.registries.adviser;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
@@ -15,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 @Redesign
 @Singleton
 public class AdviserRegistry implements Registry<AdviserType, Adviser> {

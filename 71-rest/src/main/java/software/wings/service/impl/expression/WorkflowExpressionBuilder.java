@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -9,6 +10,7 @@ import static software.wings.beans.SubEntityType.NOTIFICATION_GROUP;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SubEntityType;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 8/10/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class WorkflowExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;

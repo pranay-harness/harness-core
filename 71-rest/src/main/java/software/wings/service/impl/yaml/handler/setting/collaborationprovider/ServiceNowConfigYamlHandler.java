@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.JiraConfig.Yaml;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
@@ -7,6 +10,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, ServiceNowConfig> {
   @Override
   protected SettingAttribute toBean(

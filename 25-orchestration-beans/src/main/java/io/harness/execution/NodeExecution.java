@@ -1,10 +1,12 @@
 package io.harness.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -30,6 +32,7 @@ import java.time.Duration;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @Redesign

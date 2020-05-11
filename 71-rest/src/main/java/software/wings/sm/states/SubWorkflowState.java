@@ -1,8 +1,11 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -26,6 +29,7 @@ import java.util.Map;
 /**
  * Created by rishi on 12/16/16.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class SubWorkflowState extends State {
   private List<NameValuePair> variableOverrides;

@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -13,6 +14,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
@@ -59,6 +61,7 @@ import software.wings.service.intfc.security.SecretManager;
  *
  * @see CollectEvent
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {

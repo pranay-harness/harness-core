@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -7,6 +8,7 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.distribution.barrier.Barrier;
@@ -57,6 +59,7 @@ import java.util.Map;
 
 */
 
+@OwnedBy(CDC)
 public class BarrierState extends State {
   private static String errorMsg =
       "The barrier endures since some of the tasks failed before all instances were reached.";

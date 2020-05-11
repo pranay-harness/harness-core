@@ -1,5 +1,8 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
@@ -7,6 +10,7 @@ import software.wings.beans.ChecksumType;
 /**
  * The Class ArtifactFile.
  */
+@OwnedBy(CDC)
 public class ArtifactFile extends BaseFile {
   /**
    * The type Builder.

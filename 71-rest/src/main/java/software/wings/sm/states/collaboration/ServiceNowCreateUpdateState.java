@@ -1,11 +1,13 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
 import static software.wings.utils.Utils.isJSONValid;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -45,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ServiceNowCreateUpdateState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;

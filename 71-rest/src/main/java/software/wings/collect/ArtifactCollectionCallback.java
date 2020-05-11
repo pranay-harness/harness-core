@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
@@ -10,6 +11,7 @@ import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
@@ -31,6 +33,7 @@ import java.util.Map;
 /**
  * Created by rishi on 12/20/16.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class ArtifactCollectionCallback implements NotifyCallback {
   @Inject private ArtifactService artifactService;

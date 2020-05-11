@@ -1,5 +1,6 @@
 package software.wings.sm.rollback;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
@@ -10,6 +11,7 @@ import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -30,6 +32,7 @@ import software.wings.sm.states.StagingOriginalExecution.StagingOriginalExecutio
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 public class RollbackStateMachineGenerator {
   public static final String STAGING_PHASE_NAME = "Staging Execution";
   private static final String STAGING_PHASE_STEP_NAME = "Stage Rollback";

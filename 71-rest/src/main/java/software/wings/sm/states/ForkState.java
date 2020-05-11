@@ -1,9 +1,11 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -29,6 +31,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Slf4j
 public class ForkState extends State {
   @SchemaIgnore private List<String> forkStateNames = new ArrayList<>();

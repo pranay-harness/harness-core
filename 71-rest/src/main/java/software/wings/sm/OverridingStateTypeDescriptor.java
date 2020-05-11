@@ -1,7 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -11,6 +14,7 @@ import java.util.Optional;
 /**
  * Created by peeyushaggarwal on 6/6/16.
  */
+@OwnedBy(CDC)
 public class OverridingStateTypeDescriptor implements StateTypeDescriptor, OverridingStencil<State> {
   private final StateTypeDescriptor stateTypeDescriptor;
   @JsonIgnore private Optional<String> overridingName = Optional.empty();

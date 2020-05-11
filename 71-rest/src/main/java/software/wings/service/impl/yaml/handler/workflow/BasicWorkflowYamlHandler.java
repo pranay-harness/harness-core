@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -15,6 +17,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/1/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowYaml> {
   @Override

@@ -1,6 +1,9 @@
 package software.wings.beans.approval;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "ApprovalPollingJobEntityKeys")
 @Data
 @Builder

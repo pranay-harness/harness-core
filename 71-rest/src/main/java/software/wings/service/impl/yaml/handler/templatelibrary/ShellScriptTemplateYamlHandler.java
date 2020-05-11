@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
@@ -10,6 +13,7 @@ import software.wings.yaml.templatelibrary.ShellScriptTemplateYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 public class ShellScriptTemplateYamlHandler extends TemplateLibraryYamlHandler<ShellScriptTemplateYaml> {
   @Override

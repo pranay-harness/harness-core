@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -17,6 +20,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
+@OwnedBy(CDC)
 public interface ServiceVariableService extends OwnedByService {
   /**
    * List page response.

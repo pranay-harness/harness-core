@@ -1,5 +1,8 @@
 package software.wings.service.intfc.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
@@ -9,6 +12,7 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTi
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public interface ServiceNowService {
   void validateCredential(SettingAttribute settingAttribute);
   List<ServiceNowMetaDTO> getStates(

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -88,6 +89,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
@@ -162,6 +164,7 @@ import java.util.zip.ZipFile;
 /**
  * @author rktummala on 10/16/17
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {

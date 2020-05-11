@@ -1,5 +1,8 @@
 package io.harness.registries;
 
-import io.harness.annotations.Redesign;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-@Redesign public enum RegistryType { STATE, ADVISER, RESOLVER, FACILITATOR, LEVEL }
+import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC) @Redesign public enum RegistryType { STATE, ADVISER, RESOLVER, FACILITATOR, LEVEL }

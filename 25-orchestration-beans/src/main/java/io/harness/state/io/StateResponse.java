@@ -1,6 +1,9 @@
 package io.harness.state.io;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.NodeExecutionStatus;
 import lombok.Builder;
@@ -11,6 +14,7 @@ import lombok.Value;
 import java.util.EnumSet;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
