@@ -15,6 +15,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 public class ChangeSetDTO {
   GitDetail gitDetail;
   YamlChangeSet.Status status;
+  String changeSetId;
   boolean gitToHarness;
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status", include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
   ChangesetInformation changesetInformation;
