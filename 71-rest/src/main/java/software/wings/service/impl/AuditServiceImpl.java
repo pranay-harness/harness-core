@@ -4,7 +4,6 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -84,9 +83,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.activity.InvalidActivityException;
 
 /**
  * Audit Service Implementation class.
@@ -413,14 +414,26 @@ public class AuditServiceImpl implements AuditService {
     registerAuditActions(accountId, oldEntity, newEntity, type);
   }
 
+  private Optional<String> fetchAuditHeaderIdFromGlobalContext() {
+    try {
+      return Optional.ofNullable(getAuditHeaderIdFromGlobalContext());
+    } catch (InvalidActivityException iae) {
+      logger.error("InvalidActivityException thrown : ", iae);
+      return Optional.empty();
+    }
+  }
+
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
     try {
-      String auditHeaderId = getAuditHeaderIdFromGlobalContext();
-      if (isEmpty(auditHeaderId)) {
-        throw new WingsException("AuditHeaderKey is null", USER).addParam("message", "AuditHeaderKey is null");
-      }
+      Optional<String> optionalAuditHeaderId = fetchAuditHeaderIdFromGlobalContext();
 
+      if (!optionalAuditHeaderId.isPresent()) {
+        logger.error(
+            "AuditHeaderKey was not found from global context for accountId={} and entity={}", accountId, newEntity);
+        return;
+      }
+      String auditHeaderId = optionalAuditHeaderId.get();
       UuidAccess entityToQuery;
       switch (type) {
         case ENABLE_2FA:
@@ -550,10 +563,16 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
-  private String getAuditHeaderIdFromGlobalContext() throws Exception {
-    GlobalContextData globalContextData = GlobalContextManager.get(AUDIT_ID);
+  private String getAuditHeaderIdFromGlobalContext() throws InvalidActivityException {
+    GlobalContextData globalContextData;
+    try {
+      globalContextData = GlobalContextManager.get(AUDIT_ID);
+    } catch (Exception e) {
+      logger.error("Exception thrown while getting audit header id ", e);
+      throw new InvalidActivityException("Audit header Id not found in Global Context");
+    }
     if (!(globalContextData instanceof AuditGlobalContextData)) {
-      throw new Exception("Object of unknown class returned when querying for audit header Id");
+      throw new InvalidActivityException("Object of unknown class returned when querying for audit header Id");
     }
     return ((AuditGlobalContextData) globalContextData).getAuditId();
   }
