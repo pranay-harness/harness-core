@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.service.intfc.FileService.FileBucket;
-import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -149,7 +148,7 @@ public class AuditServiceImpl implements AuditService {
   public AuditRecord fetchMostRecentAuditRecord(String auditHeaderId) {
     return wingsPersistence.createQuery(AuditRecord.class, excludeAuthority)
         .filter(AuditRecordKeys.auditHeaderId, auditHeaderId)
-        .order(Sort.descending(CREATED_AT_KEY))
+        .order(Sort.descending(AuditHeaderKeys.createdAt))
         .get();
   }
 
@@ -161,7 +160,7 @@ public class AuditServiceImpl implements AuditService {
                                  .filter(AuditRecordKeys.auditHeaderId, auditHeaderId)
                                  .field(AuditRecordKeys.createdAt)
                                  .lessThanOrEq(timestamp)
-                                 .order(Sort.ascending(CREATED_AT_KEY))
+                                 .order(Sort.ascending(AuditHeaderKeys.createdAt))
                                  .fetch())) {
       while (iterator.hasNext()) {
         auditRecords.add(iterator.next());

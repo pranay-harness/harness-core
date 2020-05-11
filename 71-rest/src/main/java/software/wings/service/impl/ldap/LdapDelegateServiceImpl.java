@@ -84,7 +84,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   public LdapResponse authenticate(LdapSettings settings, EncryptedDataDetail settingsEncryptedDataDetail,
       String username, EncryptedDataDetail passwordEncryptedDataDetail) {
     settings.decryptFields(settingsEncryptedDataDetail, encryptionService);
-    String password = null;
+    String password;
     try {
       password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail));
     } catch (IOException e) {
@@ -124,12 +124,14 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   }
 
   private LdapUserResponse buildLdapUserResponse(LdapEntry user, LdapUserConfig userConfig) {
-    String name, email = null;
+    String name;
+    String email = null;
     LdapAttribute ldapEmailAttribute = user.getAttribute(userConfig.getEmailAttr());
     if (ldapEmailAttribute != null) {
       email = ldapEmailAttribute.getStringValue();
     } else {
-      logger.warn("UserConfig email attribute = {} is missing in LdapEntry user object", userConfig.getEmailAttr());
+      logger.warn(
+          "UserConfig email attribute = {} is missing for LdapEntry user object = {}", userConfig.getEmailAttr(), user);
     }
 
     if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getDisplayNameAttr())) {
@@ -142,7 +144,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     } else {
       name = email;
     }
-
+    logger.info("LDAP user response with name {} and email {}", name, email);
     return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).build();
   }
 
@@ -179,13 +181,16 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   public LdapGroupResponse fetchGroupByDn(LdapSettings settings, EncryptedDataDetail encryptedDataDetail, String dn) {
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    LdapGroupResponse groupResponse = null;
+    LdapGroupResponse groupResponse;
     try {
       LdapListGroupsResponse listGroupsResponse = helper.getGroupByDn(settings.getGroupSettingsList(), dn);
 
-      // Is the call to fetch the group failed.
-      if (LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
-        return groupResponse;
+      if (listGroupsResponse != null && listGroupsResponse.getLdapResponse() != null
+          && listGroupsResponse.getLdapResponse().getStatus() != null
+          && LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
+        logger.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
+            settings.getUuid(), settings.getAccountId());
+        return null;
       }
 
       SearchResult groups = listGroupsResponse.getSearchResult();
@@ -202,21 +207,21 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
         return groupResponse;
       }
 
-      Collection<LdapUserResponse> userResponses = null;
-
       List<LdapGetUsersResponse> ldapGetUsersResponses =
           helper.listGroupUsers(settings.getUserSettingsList(), Collections.singletonList(dn));
 
-      userResponses = ldapGetUsersResponses.stream()
-                          .map(ldapGetUsersResponse
-                              -> ldapGetUsersResponse.getSearchResult()
-                                     .getEntries()
-                                     .stream()
-                                     .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
-                                     .collect(Collectors.toList()))
-                          .flatMap(Collection::stream)
-                          .collect(Collectors.toList());
+      Collection<LdapUserResponse> userResponses =
+          ldapGetUsersResponses.stream()
+              .map(ldapGetUsersResponse
+                  -> ldapGetUsersResponse.getSearchResult()
+                         .getEntries()
+                         .stream()
+                         .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
+                         .collect(Collectors.toList()))
+              .flatMap(Collection::stream)
+              .collect(Collectors.toList());
 
+      logger.info("LDAP : Users set in Group response {}", userResponses);
       groupResponse.setUsers(userResponses);
       return groupResponse;
     } catch (LdapException e) {

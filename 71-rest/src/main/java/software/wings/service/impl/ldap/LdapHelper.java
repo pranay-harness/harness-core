@@ -83,7 +83,7 @@ public class LdapHelper {
     return config;
   }
 
-  public ConnectionFactory getConnectionFactory() {
+  private ConnectionFactory getConnectionFactory() {
     return new DefaultConnectionFactory(ldaptiveConfig);
   }
 
@@ -101,7 +101,7 @@ public class LdapHelper {
     }
   }
 
-  public LdapResponse validateUserConfig(List<? extends LdapUserConfig> configs) {
+  LdapResponse validateUserConfig(List<? extends LdapUserConfig> configs) {
     Status searchStatus = Status.FAILURE;
     String searchStatusMsg = null;
 
@@ -145,7 +145,7 @@ public class LdapHelper {
     return LdapResponse.builder().status(searchStatus).message(searchStatusMsg).build();
   }
 
-  public LdapResponse validateGroupConfig(LdapGroupConfig config) {
+  LdapResponse validateGroupConfig(LdapGroupConfig config) {
     LdapResponse connectionTestResponse = validateConnectionConfig();
     if (Status.FAILURE == connectionTestResponse.getStatus()) {
       return connectionTestResponse;
@@ -175,7 +175,7 @@ public class LdapHelper {
     return LdapResponse.builder().status(status).message(message).build();
   }
 
-  public LdapSearch.Builder getDefaultLdapSearchBuilder(LdapSearchConfig config) {
+  private LdapSearch.Builder getDefaultLdapSearchBuilder(LdapSearchConfig config) {
     return LdapSearch.builder()
         .baseDN(config.getBaseDN())
         .connectionFactory(getConnectionFactory())
@@ -183,7 +183,7 @@ public class LdapHelper {
         .maxReferralHops(connectionConfig.getMaxReferralHops());
   }
 
-  public LdapUserConfig userExists(List<LdapUserSettings> userConfigs, String identifier) {
+  private LdapUserConfig userExists(List<LdapUserSettings> userConfigs, String identifier) {
     LdapUserConfig ldapUserConfig = null;
     List<LdapUserExistsRequest> searchDnResolverList = null;
     if (CollectionUtils.isNotEmpty(userConfigs)) {
@@ -208,7 +208,7 @@ public class LdapHelper {
     return ldapUserConfig;
   }
 
-  public List<LdapListGroupsResponse> listGroups(List<? extends LdapGroupConfig> ldapGroupConfigs,
+  private List<LdapListGroupsResponse> listGroups(List<? extends LdapGroupConfig> ldapGroupConfigs,
       String additionalFilter, int limit, String... returnFields) throws LdapException {
     List<LdapListGroupsResponse> ldapListGroupsResponses = Lists.newArrayList();
     if (CollectionUtils.isNotEmpty(ldapGroupConfigs)) {
@@ -234,13 +234,12 @@ public class LdapHelper {
         .collect(Collectors.toList());
   }
 
-  public List<LdapListGroupsResponse> listGroupsByName(List<LdapGroupSettings> groupConfig, String name)
+  private List<LdapListGroupsResponse> listGroupsByName(List<LdapGroupSettings> groupConfig, String name)
       throws LdapException {
     return listGroups(groupConfig, String.format("*%s*", name), LdapConstants.MAX_GROUP_SEARCH_SIZE);
   }
 
-  public List<LdapGetUsersResponse> listGroupUsers(
-      List<? extends LdapUserConfig> ldapUserConfigs, List<String> groupDnList) {
+  List<LdapGetUsersResponse> listGroupUsers(List<? extends LdapUserConfig> ldapUserConfigs, List<String> groupDnList) {
     List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
     List<LdapGetUsersRequest> ldapGetUsersRequests;
     if (!Collections.isEmpty(ldapUserConfigs)) {
@@ -265,7 +264,7 @@ public class LdapHelper {
     return ldapGetUsersResponse;
   }
 
-  public void populateGroupSize(SearchResult groups, List<? extends LdapUserConfig> configs) throws LdapException {
+  void populateGroupSize(SearchResult groups, List<? extends LdapUserConfig> configs) throws LdapException {
     long startTime = System.currentTimeMillis();
     List<String> groupDnList = groups.getEntries().stream().map(LdapEntry::getDn).collect(Collectors.toList());
     List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDnList);
@@ -284,12 +283,12 @@ public class LdapHelper {
     logger.info("elapsedTime : {}", elapsedTime);
   }
 
-  public List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
+  List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
       throws LdapException {
     return listGroupsByName(groupConfig, name);
   }
 
-  public LdapListGroupsResponse getGroupByDn(List<LdapGroupSettings> groupConfigs, String dn) throws LdapException {
+  LdapListGroupsResponse getGroupByDn(List<LdapGroupSettings> groupConfigs, String dn) throws LdapException {
     LdapListGroupsResponse listGroupsResponse = null;
     for (LdapGroupSettings groupConfig : groupConfigs) {
       String oldBaseDn = groupConfig.getBaseDN();
