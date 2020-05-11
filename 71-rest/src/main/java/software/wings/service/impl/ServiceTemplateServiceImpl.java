@@ -184,7 +184,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
     List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
-    //    setArtifactTypeAndInfraMappings(serviceTemplates, false);
     if (withDetails) {
       setConfigs(encryptedFieldMode, serviceTemplates);
     }

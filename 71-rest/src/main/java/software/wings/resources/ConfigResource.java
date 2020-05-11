@@ -23,7 +23,10 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -71,7 +74,6 @@ public class ConfigResource {
   @GET
   @Timed
   @ExceptionMetered
-
   public RestResponse<PageResponse<ConfigFile>> list(@BeanParam PageRequest<ConfigFile> pageRequest) {
     return new RestResponse<>(configService.list(pageRequest));
   }
@@ -91,6 +93,7 @@ public class ConfigResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.CREATE)
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("fileName") String fileName, @BeanParam ConfigFile configFile) {
@@ -148,6 +151,7 @@ public class ConfigResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.UPDATE)
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
@@ -183,6 +187,7 @@ public class ConfigResource {
   @Path("{configId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.DELETE)
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     configService.delete(appId, configId);
     return new RestResponse();
@@ -225,6 +230,7 @@ public class ConfigResource {
   @Path("/entity/{entityId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.DELETE)
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @PathParam("entityId") String entityId) {

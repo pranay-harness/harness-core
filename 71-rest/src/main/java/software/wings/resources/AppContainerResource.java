@@ -19,6 +19,9 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
 
@@ -95,6 +98,7 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.CREATE)
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
@@ -123,6 +127,7 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.UPDATE)
   public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("appContainerId") String appContainerId, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -146,6 +151,7 @@ public class AppContainerResource {
   @Path("{appContainerId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.DELETE)
   public RestResponse deletePlatform(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appContainerId") String appContainerId) {
     appContainerService.delete(accountId, appContainerId);
