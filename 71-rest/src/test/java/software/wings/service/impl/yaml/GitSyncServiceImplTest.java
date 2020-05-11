@@ -166,6 +166,8 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     final List<GitCommit> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
     assertThat(responseList.get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(responseList.get(0).getStatus()).isEqualTo(GitCommit.Status.COMPLETED);
+    assertThat(responseList.get(0).getYamlChangeSet().isGitToHarness()).isEqualTo(true);
   }
 
   @Test
