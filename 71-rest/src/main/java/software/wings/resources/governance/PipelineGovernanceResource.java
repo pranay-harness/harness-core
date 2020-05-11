@@ -43,7 +43,7 @@ public class PipelineGovernanceResource {
   }
 
   @GET
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<List<PipelineGovernanceConfig>> list(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(pipelineGovernanceService.list(accountId));
   }
