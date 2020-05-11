@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
@@ -109,10 +110,11 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   @Override
   public List<Account> getCCMEnabledAccounts() {
     List<Account> accounts = new ArrayList<>();
-    try (HIterator<Account> query = new HIterator<>(persistence.createQuery(Account.class, excludeAuthority)
-                                                        .filter(AccountKeys.cloudCostEnabled, Boolean.TRUE)
-                                                        .fetch())) {
-      for (Account account : query) {
+    Query<Account> query = persistence.createQuery(Account.class, excludeAuthority);
+    query.or(query.criteria(AccountKeys.cloudCostEnabled).equal(Boolean.TRUE),
+        query.criteria(AccountKeys.ceAutoCollectK8sEvents).equal(Boolean.TRUE));
+    try (HIterator<Account> accountItr = new HIterator<>(query.fetch())) {
+      for (Account account : accountItr) {
         accounts.add(account);
       }
     }

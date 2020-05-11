@@ -122,14 +122,14 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       writeDisposition = WRITE_APPEND_VALUE;
       destinationTable = PRE_AGG_TABLE_NAME_VALUE;
       numberOfHours = 6;
-      numberOfMinutes = 0;
+      numberOfMinutes = 30;
     } else {
       query = String.format(
           TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, awsDataPipelineConfig.getGcpProjectId(), destinationDataSetId);
       writeDisposition = WRITE_TRUNCATE_VALUE;
       destinationTable = DEST_TABLE_NAME_VALUE;
-      numberOfHours = 5;
-      numberOfMinutes = 30;
+      numberOfHours = 6;
+      numberOfMinutes = 15;
     }
 
     TransferConfig transferConfig =
@@ -183,7 +183,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                                Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build())
                            .build())
             .setDestinationDatasetId(destinationDataSetId)
-            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(5, 0)).build())
+            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(6, 0)).build())
             .setDataSourceId(GCS_DATA_SOURCE_ID)
             .build();
 
