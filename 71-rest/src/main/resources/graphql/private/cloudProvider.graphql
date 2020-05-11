@@ -16,6 +16,7 @@ input CreateCloudProviderInput {
   cloudProviderType: CloudProviderType!
   pcfCloudProvider: PcfCloudProviderInput
   spotInstCloudProvider: SpotInstCloudProviderInput
+  gcpCloudProvider: GcpCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -24,6 +25,7 @@ input UpdateCloudProviderInput {
   cloudProviderType: CloudProviderType!
   pcfCloudProvider: PcfCloudProviderInput
   spotInstCloudProvider: SpotInstCloudProviderInput
+  gcpCloudProvider: GcpCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
@@ -60,4 +62,11 @@ input SpotInstCloudProviderInput {
 
   accountId: String
   tokenSecretId: String
+}
+
+input GcpCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  serviceAccountKeySecretId: String
 }

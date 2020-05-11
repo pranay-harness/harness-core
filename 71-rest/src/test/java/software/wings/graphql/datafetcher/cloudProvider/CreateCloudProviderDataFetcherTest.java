@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
@@ -28,11 +29,13 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload;
+import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.QLEnvFilterType;
 import software.wings.graphql.schema.type.QLGenericFilterType;
+import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
@@ -135,6 +138,45 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLSpotInstCloudProvider.class);
+    assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void createGcp() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withUuid(CLOUD_PROVIDER_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withValue(GcpConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting)
+        .when(settingsService)
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    QLCreateCloudProviderPayload payload =
+        dataFetcher.mutateAndFetch(QLCreateCloudProviderInput.builder()
+                                       .cloudProviderType(QLCloudProviderType.GCP)
+                                       .gcpCloudProvider(QLGcpCloudProviderInput.builder()
+                                                             .name(RequestField.ofNullable("NAME"))
+                                                             .serviceAccountKeySecretId(RequestField.ofNullable("Key"))
+                                                             .usageScope(RequestField.ofNullable(usageScope()))
+                                                             .build())
+                                       .build(),
+            MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1))
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getCloudProvider()).isNotNull();
+    assertThat(payload.getCloudProvider()).isInstanceOf(QLGcpCloudProvider.class);
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
   }
 

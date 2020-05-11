@@ -19,4 +19,5 @@ public class QLUpdateCloudProviderInput implements QLMutationInput {
   QLCloudProviderType cloudProviderType;
   QLPcfCloudProviderInput pcfCloudProvider;
   QLSpotInstCloudProviderInput spotInstCloudProvider;
+  QLGcpCloudProviderInput gcpCloudProvider;
 }

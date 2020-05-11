@@ -3,17 +3,20 @@ package software.wings.graphql.datafetcher.cloudProvider;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
+import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.checkIfInputIsNotPresent;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
+import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
@@ -64,10 +67,16 @@ public class UpdateCloudProviderDataFetcher
 
     switch (input.getCloudProviderType()) {
       case PCF:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getPcfCloudProvider());
         updateSettingAttribute(settingAttribute, input.getPcfCloudProvider(), mutationContext.getAccountId());
         break;
       case SPOT_INST:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getSpotInstCloudProvider());
         updateSettingAttribute(settingAttribute, input.getSpotInstCloudProvider(), mutationContext.getAccountId());
+        break;
+      case GCP:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getGcpCloudProvider());
+        updateSettingAttribute(settingAttribute, input.getGcpCloudProvider(), mutationContext.getAccountId());
         break;
       default:
         throw new InvalidRequestException("Invalid cloud provider type");
@@ -113,6 +122,25 @@ public class UpdateCloudProviderDataFetcher
     }
     if (input.getTokenSecretId().isPresent()) {
       input.getTokenSecretId().getValue().ifPresent(config::setEncryptedSpotInstToken);
+    }
+    settingAttribute.setValue(config);
+
+    if (input.getName().isPresent()) {
+      input.getName().getValue().ifPresent(settingAttribute::setName);
+    }
+
+    if (input.getUsageScope().isPresent()) {
+      QLUsageScope usageScope = input.getUsageScope().getValue().orElse(null);
+      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(usageScope, accountId));
+    }
+  }
+
+  private void updateSettingAttribute(
+      SettingAttribute settingAttribute, QLGcpCloudProviderInput input, String accountId) {
+    GcpConfig config = (GcpConfig) settingAttribute.getValue();
+
+    if (input.getServiceAccountKeySecretId().isPresent()) {
+      input.getServiceAccountKeySecretId().getValue().ifPresent(config::setEncryptedServiceAccountKeyFileContent);
     }
     settingAttribute.setValue(config);
 
