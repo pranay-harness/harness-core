@@ -184,7 +184,7 @@ public class GitSyncResource {
   public RestResponse<PageResponse<GitFileActivity>> listGitFileActivity(
       @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter(GitFileActivityKeys.accountId, EQ, accountId);
-    PageResponse<GitFileActivity> pageResponse = gitSyncService.fetchGitSyncActivity(pageRequest);
+    PageResponse<GitFileActivity> pageResponse = gitSyncService.fetchGitSyncActivity(pageRequest, accountId);
     return new RestResponse<>(pageResponse);
   }
 

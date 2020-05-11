@@ -2,14 +2,15 @@ package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.Change.ChangeType;
 /**
@@ -26,7 +27,7 @@ import software.wings.beans.yaml.Change.ChangeType;
         @Field("accountId"), @Field("filePath")
       }, options = @IndexOptions(background = true, name = "accountId_filePath")),
 })
-@Getter
+@Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")
@@ -44,6 +45,9 @@ public class GitFileActivity extends Base {
   private TriggeredBy triggeredBy;
   private boolean changeFromAnotherCommit;
   private String commitMessage;
+  private String gitConnectorId;
+  private String branchName;
+  @Transient private String connectorName;
 
   public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }
 

@@ -12,6 +12,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -49,6 +50,19 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Mock YamlGitConfigService yamlGitConfigService;
   private String accountId = generateUuid();
   private String uuid = generateUuid();
+  private String gitConnectorName = "gitConnectorName";
+  private String repoURL = "https://abc.com";
+  private String gitConnectorId;
+
+  @Before
+  public void setup() {
+    final SettingAttribute gitConfig = SettingAttribute.Builder.aSettingAttribute()
+                                           .withAccountId(accountId)
+                                           .withName(gitConnectorName)
+                                           .withValue(GitConfig.builder().repoUrl(repoURL).branch("branchName").build())
+                                           .build();
+    gitConnectorId = wingsPersistence.save(gitConfig);
+  }
 
   @Test
   @Owner(developers = VARDAN_BANSAL)
@@ -82,14 +96,6 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Owner(developers = VARDAN_BANSAL)
   @Category(UnitTests.class)
   public void test_fetchRepositories() {
-    String gitConnectorName = "gitConnectorName";
-    String repoURL = "https://abc.com";
-    final SettingAttribute gitConfig = SettingAttribute.Builder.aSettingAttribute()
-                                           .withAccountId(accountId)
-                                           .withName(gitConnectorName)
-                                           .withValue(GitConfig.builder().repoUrl(repoURL).branch("branchName").build())
-                                           .build();
-    String gitConnectorId = wingsPersistence.save(gitConfig);
     String branchName1 = "branchName1";
     String applicationName = "app";
     String accountName = "account";
@@ -142,6 +148,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
             .fileProcessingSummary(
                 GitFileProcessingSummary.builder().totalCount(10L).successCount(5L).failureCount(5L).build())
             .accountId(accountId)
+            .gitConnectorId(gitConnectorId)
             .status(GitCommit.Status.COMPLETED)
             .yamlChangeSet(YamlChangeSet.builder()
                                .gitFileChanges(Arrays.asList(GitFileChange.Builder.aGitFileChange()
@@ -170,11 +177,13 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                              .accountId(accountId)
                                              .fileContent("some file content")
                                              .triggeredBy(GitFileActivity.TriggeredBy.USER)
+                                             .gitConnectorId(gitConnectorId)
                                              .status(GitFileActivity.Status.SUCCESS)
                                              .build();
 
     wingsPersistence.save(fileActivity);
-    final PageResponse pageResponse = gitSyncService.fetchGitSyncActivity(aPageRequest().withLimit("1").build());
+    final PageResponse pageResponse =
+        gitSyncService.fetchGitSyncActivity(aPageRequest().withLimit("1").build(), accountId);
     assertThat(pageResponse).isNotNull();
     final List<GitFileActivity> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
@@ -211,13 +220,16 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   public void test_shouldLogActivityForGitOperation() {
     final String commitId = "commitId";
     final String filePath = "file1.yaml";
-    gitSyncService.logActivityForGitOperation(Arrays.asList(GitFileChange.Builder.aGitFileChange()
-                                                                .withFilePath(filePath)
-                                                                .withAccountId(accountId)
-                                                                .withCommitId(commitId)
-                                                                .withProcessingCommitId("commitId")
-                                                                .withChangeFromAnotherCommit(Boolean.TRUE)
-                                                                .build()),
+    gitSyncService.logActivityForGitOperation(
+        Arrays.asList(GitFileChange.Builder.aGitFileChange()
+                          .withYamlGitConfig(
+                              YamlGitConfig.builder().branchName("branchName").gitConnectorId("gitConnectorId").build())
+                          .withFilePath(filePath)
+                          .withAccountId(accountId)
+                          .withCommitId(commitId)
+                          .withProcessingCommitId("commitId")
+                          .withChangeFromAnotherCommit(Boolean.TRUE)
+                          .build()),
         Status.SUCCESS, true, false, accountId, commitId);
     final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)

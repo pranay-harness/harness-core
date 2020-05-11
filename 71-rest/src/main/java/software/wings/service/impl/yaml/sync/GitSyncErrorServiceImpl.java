@@ -12,7 +12,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -20,19 +19,17 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
-import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
+import static software.wings.beans.template.Template.APP_ID_KEY;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 
@@ -54,8 +51,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -67,13 +62,13 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats.GitToHarnessErrorCommitStatsKeys;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
@@ -117,15 +112,15 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private YamlService yamlService;
   private GitSyncService gitSyncService;
   private AlertsUtils alertsUtils;
-  private SettingsService settingsService;
+  private GitConfigHelperService gitConfigHelperService;
   private AuthService authService;
   private YamlGitConfigService yamlGitConfigService;
 
   @Inject
   public GitSyncErrorServiceImpl(WingsPersistence wingsPersistence, YamlGitService yamlGitService,
       YamlHelper yamlHelper, AppService appService, YamlService yamlService, GitSyncService gitSyncService,
-      AlertsUtils alertsUtils, SettingsService settingsService, AuthService authService,
-      YamlGitConfigService yamlGitConfigService) {
+      AlertsUtils alertsUtils, AuthService authService, YamlGitConfigService yamlGitConfigService,
+      GitConfigHelperService gitConfigHelperService) {
     this.wingsPersistence = wingsPersistence;
     this.yamlGitService = yamlGitService;
     this.yamlHelper = yamlHelper;
@@ -133,7 +128,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     this.yamlService = yamlService;
     this.gitSyncService = gitSyncService;
     this.alertsUtils = alertsUtils;
-    this.settingsService = settingsService;
+    this.gitConfigHelperService = gitConfigHelperService;
     this.authService = authService;
     this.yamlGitConfigService = yamlGitConfigService;
   }
@@ -309,7 +304,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
     List<String> connectorIdList =
         commitWiseErrorDetails.stream().map(GitToHarnessErrorCommitStats::getGitConnectorId).collect(toList());
-    Map<String, String> connetorIdNameMap = getConnectorIdNameMap(connectorIdList, accountId);
+    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
     List<GitToHarnessErrorCommitStats> filteredCommitDetails = new ArrayList<>();
     for (GitToHarnessErrorCommitStats commitStats : commitWiseErrorDetails) {
       String gitConnectorId = commitStats.getGitConnectorId();
@@ -685,7 +680,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       return Collections.emptyList();
     }
     List<String> connectorIdList = gitSyncErrors.stream().map(error -> error.getGitConnectorId()).collect(toList());
-    Map<String, String> connetorIdNameMap = getConnectorIdNameMap(connectorIdList, accountId);
+    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
     List<GitSyncError> filteredErrors = new ArrayList<>();
 
     for (GitSyncError error : gitSyncErrors) {
@@ -808,23 +803,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .build();
   }
 
-  private Map<String, String> getConnectorIdNameMap(List<String> connectorIds, String accountId) {
-    if (isEmpty(connectorIds)) {
-      return Collections.emptyMap();
-    }
-    PageRequest<SettingAttribute> settingAttributeQuery = aPageRequest()
-                                                              .addFilter(SettingAttributeKeys.accountId, EQ, accountId)
-                                                              .addFilter(SettingAttributeKeys.category, EQ, CONNECTOR)
-                                                              .addFilter(SettingAttributeKeys.valueType, EQ, GIT)
-                                                              .addFilter(ID_KEY, IN, connectorIds.toArray())
-                                                              .build();
-    List<SettingAttribute> settingAttributeList = settingsService.list(settingAttributeQuery, null, null);
-    if (isEmpty(settingAttributeList)) {
-      return Collections.emptyMap();
-    }
-    return settingAttributeList.stream().collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
-  }
-
   private GitProcessingError getGitProcessingErrorWithConnectorName(
       GitProcessingError gitProcessingError, Map<String, String> connectorNameIdMap) {
     if (gitProcessingError == null) {
@@ -871,7 +849,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         gitProcessingAlerts.stream().map(this ::getGitProcessingError).collect(toList());
     List<String> connectorIds =
         gitProcessingErrors.stream().map(GitProcessingError::getGitConnectorId).distinct().collect(toList());
-    Map<String, String> connectorNameIdMap = getConnectorIdNameMap(connectorIds, accountId);
+    Map<String, String> connectorNameIdMap = gitConfigHelperService.getConnectorIdNameMap(connectorIds, accountId);
     populateTheConnectorName(gitProcessingErrors, connectorNameIdMap);
     return aPageResponse().withTotal(gitProcessingErrors.size()).withResponse(gitProcessingErrors).build();
   }

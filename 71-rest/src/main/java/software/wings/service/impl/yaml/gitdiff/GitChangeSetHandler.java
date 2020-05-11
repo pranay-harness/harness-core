@@ -16,6 +16,7 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -208,6 +209,12 @@ public class GitChangeSetHandler {
 
   private void saveCommitFromGit(
       GitDiffResult gitDiffResult, List<String> yamlGitConfigIds, String accountId, GitCommit.Status gitCommitStatus) {
+    YamlGitConfig yamlGitConfig = gitDiffResult.getYamlGitConfig();
+    String commitId = gitDiffResult.getCommitId();
+    if (yamlGitConfig == null) {
+      throw new UnexpectedException(
+          String.format("Error while saving commit for commitId=[%s] as the yamlGitConfig is null ", commitId));
+    }
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSet(YamlChangeSet.builder()
@@ -220,7 +227,9 @@ public class GitChangeSetHandler {
                                          .build())
                       .yamlGitConfigIds(yamlGitConfigIds)
                       .status(gitCommitStatus)
-                      .commitId(gitDiffResult.getCommitId())
+                      .commitId(commitId)
+                      .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                      .branchName(yamlGitConfig.getBranchName())
                       .gitCommandResult(gitDiffResult)
                       .commitMessage(gitDiffResult.getCommitMessage())
                       .build());
