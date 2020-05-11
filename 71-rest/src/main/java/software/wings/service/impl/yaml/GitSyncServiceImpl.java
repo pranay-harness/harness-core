@@ -399,8 +399,8 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                                   .startedRunningAt(yamlChangeSet.getLastUpdatedAt())
                                                                   .queuedAt(yamlChangeSet.getCreatedAt())
                                                                   .build();
-    return buildChangesetDTO(
-        runningChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(), YamlChangeSet.Status.RUNNING);
+    return buildChangesetDTO(runningChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(),
+        YamlChangeSet.Status.RUNNING, yamlChangeSet.getUuid());
   }
 
   private ChangeSetDTO makeDTOForQueuedChangeSet(
@@ -410,17 +410,18 @@ public class GitSyncServiceImpl implements GitSyncService {
     GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
     QueuedChangesetInformation queuedChangesetInformation =
         QueuedChangesetInformation.builder().queuedAt(yamlChangeSet.getCreatedAt()).build();
-    return buildChangesetDTO(
-        queuedChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(), YamlChangeSet.Status.QUEUED);
+    return buildChangesetDTO(queuedChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(),
+        YamlChangeSet.Status.QUEUED, yamlChangeSet.getUuid());
   }
 
   private ChangeSetDTO buildChangesetDTO(ChangesetInformation changesetInformation, GitDetail gitDetail,
-      boolean gitToHarness, YamlChangeSet.Status status) {
+      boolean gitToHarness, YamlChangeSet.Status status, String id) {
     return ChangeSetDTO.builder()
         .changesetInformation(changesetInformation)
         .gitDetail(gitDetail)
         .gitToHarness(gitToHarness)
         .status(status)
+        .changeSetId(id)
         .build();
   }
 
