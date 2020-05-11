@@ -59,6 +59,7 @@ extend type Query {
 
   sunburstChartStats(
     limit: Int
+    includeOthers: Boolean
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -214,6 +215,7 @@ type SunburstGridDataPoint {
   id: String
   name: String
   type: String
+  clusterType: String
   trend: Number
   value: Number
   efficiencyScore: Number

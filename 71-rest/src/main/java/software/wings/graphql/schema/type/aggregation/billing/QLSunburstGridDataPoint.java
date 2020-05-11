@@ -13,6 +13,7 @@ public class QLSunburstGridDataPoint {
   String id;
   String name;
   String type;
+  String clusterType;
   Number trend;
   Number value;
   int efficiencyScore;

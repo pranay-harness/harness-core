@@ -28,10 +28,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class SunburstChartStatsDataFetcher
@@ -79,11 +79,10 @@ public class SunburstChartStatsDataFetcher
         groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, isClusterGroupBy,
         true);
     logger.info("getSunburstGridData query: {}", queryData.getQuery());
-
+    List<QLCCMEntityGroupBy> modifiedEntityGroupBy = filterOutClusterTypeGroupBy(groupByEntityList);
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
-        billingDataHelper.getBillingAmountDataForEntityCostTrend(accountId,
-            aggregateFunction.isEmpty() ? Collections.emptyList() : Arrays.asList(aggregateFunction.get(0)), filters,
-            groupByEntityList, groupByTime, sort);
+        billingDataHelper.getBillingAmountDataForEntityCostTrend(
+            accountId, aggregateFunction, filters, modifiedEntityGroupBy, groupByTime, sort);
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
@@ -135,6 +134,9 @@ public class SunburstChartStatsDataFetcher
                 gridDataPointBuilder.type(fieldName);
                 gridDataPointBuilder.name(billingStatsHelper.getEntityName(field, entityId));
                 break;
+              case CLUSTERTYPE:
+                gridDataPointBuilder.clusterType(resultSet.getString(field.getFieldName()));
+                break;
               default:
                 throw new InvalidRequestException(unsupportedType + field.getDataType());
             }
@@ -157,7 +159,10 @@ public class SunburstChartStatsDataFetcher
 
       sunburstGridDataPointList.add(sunburstGridDataPoint);
     }
-    return QLSunburstChartData.builder().totalCost(totalCost).gridData(sunburstGridDataPointList).build();
+    return QLSunburstChartData.builder()
+        .totalCost(billingDataHelper.getRoundedDoubleValue(totalCost))
+        .gridData(sunburstGridDataPointList)
+        .build();
   }
 
   private void validateBreakdownInfo(QLStatsBreakdownInfo breakdownInfo) {
@@ -187,15 +192,51 @@ public class SunburstChartStatsDataFetcher
     return efficiencyScore > 100 ? 100 : efficiencyScore;
   }
 
+  private List<QLCCMEntityGroupBy> filterOutClusterTypeGroupBy(List<QLCCMEntityGroupBy> groupByEntityList) {
+    return groupByEntityList != null ? groupByEntityList.stream()
+                                           .filter(entityGroupBy -> entityGroupBy != QLCCMEntityGroupBy.ClusterType)
+                                           .collect(Collectors.toList())
+                                     : Collections.emptyList();
+  }
+
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingSortCriteria> sort, QLData qlData, Integer limit,
       boolean includeOthers) {
     QLSunburstChartData data = (QLSunburstChartData) qlData;
     List<QLSunburstGridDataPoint> gridData = data.getGridData();
-    List<QLSunburstGridDataPoint> topNGridData = gridData.subList(0, Math.min(gridData.size(), limit));
+    int gridSize = gridData.size();
+    List<QLSunburstGridDataPoint> topNGridData = gridData.subList(0, Math.min(gridSize, limit));
+    if (includeOthers && gridSize > limit) {
+      topNGridData.add(getOtherDataPoint(gridData.subList(limit, gridSize), limit, gridSize));
+    }
     return QLSunburstChartData.builder().totalCost(data.getTotalCost()).gridData(topNGridData).build();
   }
+
+  private QLSunburstGridDataPoint getOtherDataPoint(
+      List<QLSunburstGridDataPoint> remainingGridData, Integer limit, Integer gridSize) {
+    String othersConst = "Others";
+    String type = "defaultType";
+    Double trend = Double.valueOf(0);
+    Double totalCost = Double.valueOf(0);
+    Integer efficiencyScore = 0;
+    for (int i = 0; i < gridSize - limit; i++) {
+      Double cost = remainingGridData.get(i).getValue().doubleValue();
+      totalCost += cost;
+      trend += remainingGridData.get(i).getTrend().doubleValue() * cost;
+      efficiencyScore += (int) (remainingGridData.get(i).getEfficiencyScore() * cost);
+      type = remainingGridData.get(i).getType();
+    }
+    return QLSunburstGridDataPoint.builder()
+        .id(othersConst)
+        .name(othersConst)
+        .type(type)
+        .efficiencyScore((int) (efficiencyScore / totalCost))
+        .value(billingDataHelper.getRoundedDoubleValue(totalCost))
+        .trend(billingDataHelper.getRoundedDoubleValue(trend / totalCost))
+        .build();
+  }
+
   @Override
   public String getEntityType() {
     return null;
