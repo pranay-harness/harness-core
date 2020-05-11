@@ -253,7 +253,7 @@ public class GitCommandCallbackTest extends CategoryTest {
     doReturn(yamlChangeSet).when(yamlChangeSetService).get(ACCOUNT_ID, CHANGESET_ID);
     doReturn(ImmutableList.of("yamlgitconfig1", "yamlgitconfig2"))
         .when(diffCommandCallback)
-        .obtainYamlGitConfigIds(ACCOUNT_ID, "master", "gitconnector");
+        .obtainYamlGitConfigIds(anyString(), anyString(), anyString());
     doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
     Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);

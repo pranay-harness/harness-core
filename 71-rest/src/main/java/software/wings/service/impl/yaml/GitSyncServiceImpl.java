@@ -2,8 +2,9 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.ID_KEY;
+import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
@@ -27,6 +28,7 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.service.impl.yaml.gitsync.ChangesetInformation;
 import software.wings.service.impl.yaml.gitsync.QueuedChangesetInformation;
@@ -69,6 +71,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private AlertsUtils alertsUtils;
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private SettingsService settingsService;
+  @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private YamlGitConfigService yamlGitConfigService;
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlChangeSetService yamlChangeSetService;
@@ -76,8 +79,31 @@ public class GitSyncServiceImpl implements GitSyncService {
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   @Override
-  public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req) {
-    return wingsPersistence.query(GitFileActivity.class, req);
+  public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req, String accountId) {
+    PageResponse<GitFileActivity> response = wingsPersistence.query(GitFileActivity.class, req);
+    List<GitFileActivity> gitFileActivities = response.getResponse();
+    List<GitFileActivity> fileHistoryWithValidConnectorName =
+        populateConnectorNameInFileHistory(gitFileActivities, accountId);
+    response.setResponse(fileHistoryWithValidConnectorName);
+    return response;
+  }
+
+  private List<GitFileActivity> populateConnectorNameInFileHistory(
+      List<GitFileActivity> gitFileActivities, String accountId) {
+    if (isEmpty(gitFileActivities)) {
+      return gitFileActivities;
+    }
+    List<String> connectorIdList =
+        gitFileActivities.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
+    Map<String, String> connectorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
+    return gitFileActivities.stream()
+        .map(fileActivity -> {
+          String connectorName =
+              connectorIdNameMap.getOrDefault(fileActivity.getGitConnectorId(), UNKNOWN_GIT_CONNECTOR);
+          fileActivity.setConnectorName(connectorName);
+          return fileActivity;
+        })
+        .collect(toList());
   }
 
   public List<GitFileActivity> getActivitiesForGitSyncErrors(final List<GitSyncError> errors, Status status) {
@@ -93,9 +119,11 @@ public class GitSyncServiceImpl implements GitSyncService {
                    .fileContent(getYamlContentOfError(error))
                    .status(status)
                    .commitMessage(getCommitMessageOfError(error))
+                   .gitConnectorId(error.getGitConnectorId())
+                   .branchName(error.getBranchName())
                    .triggeredBy(GitFileActivity.TriggeredBy.USER)
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -174,7 +202,28 @@ public class GitSyncServiceImpl implements GitSyncService {
     pageRequest.addFieldsIncluded(GitCommitKeys.createdAt);
     pageRequest.addFieldsIncluded(GitCommitKeys.fileProcessingSummary);
     pageRequest.addFieldsIncluded(GitCommitKeys.yamlGitConfigIds);
-    return wingsPersistence.query(GitCommit.class, pageRequest);
+    pageRequest.addFieldsIncluded(GitCommitKeys.gitConnectorId);
+    pageRequest.addFieldsIncluded(GitCommitKeys.branchName);
+    PageResponse<GitCommit> pageResponse = wingsPersistence.query(GitCommit.class, pageRequest);
+    List<GitCommit> gitCommits = pageResponse.getResponse();
+    List<GitCommit> gitCommitsWithValidConnectorName = populateConnectorNameInGitCommits(gitCommits, accountId);
+    pageResponse.setResponse(gitCommitsWithValidConnectorName);
+    return pageResponse;
+  }
+
+  private List<GitCommit> populateConnectorNameInGitCommits(List<GitCommit> gitCommits, String accountId) {
+    if (isEmpty(gitCommits)) {
+      return gitCommits;
+    }
+    List<String> connectorIdList = gitCommits.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
+    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
+    return gitCommits.stream()
+        .map(gitCommit -> {
+          String connectorName = connetorIdNameMap.getOrDefault(gitCommit.getGitConnectorId(), UNKNOWN_GIT_CONNECTOR);
+          gitCommit.setConnectorName(connectorName);
+          return gitCommit;
+        })
+        .collect(toList());
   }
 
   private TriggeredBy getTriggeredBy(boolean isGitToHarness, boolean isFullSync) {
@@ -201,7 +250,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                               .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
                                                               .commitMessage(change.getCommitMessage())
                                                               .build())
-                                                   .collect(Collectors.toList());
+                                                   .collect(toList());
 
       wingsPersistence.save(activities);
     } catch (Exception ex) {
@@ -237,12 +286,13 @@ public class GitSyncServiceImpl implements GitSyncService {
     completeChangeList = ListUtils.removeAll(completeChangeList, changeList);
     if (isNotEmpty(completeChangeList)) {
       logActivityForFiles(gitDiffResult.getCommitId(),
-          completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(Collectors.toList()),
+          completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(toList()),
           Status.SKIPPED, message, accountId);
     }
   }
 
   private GitFileActivityBuilder buildBaseGitFileActivity(GitFileChange change, String commitId) {
+    YamlGitConfig gitConfig = change.getYamlGitConfig();
     String commitIdToPersist = StringUtils.isEmpty(commitId) ? change.getCommitId() : commitId;
     String processingCommitIdToPersist = StringUtils.isEmpty(commitId) ? change.getProcessingCommitId() : commitId;
     final Boolean changeFromAnotherCommit = change.getChangeFromAnotherCommit();
@@ -254,6 +304,8 @@ public class GitSyncServiceImpl implements GitSyncService {
         .fileContent(change.getFileContent())
         .commitMessage(change.getCommitMessage())
         .changeType(change.getChangeType())
+        .gitConnectorId(gitConfig.getGitConnectorId())
+        .branchName(gitConfig.getBranchName())
         .changeFromAnotherCommit(changeFromAnotherCommit != null
                 ? changeFromAnotherCommit
                 : !processingCommitIdToPersist.equalsIgnoreCase(commitIdToPersist));

@@ -34,7 +34,7 @@ public interface GitSyncService {
    * @param req
    * @return
    */
-  PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req);
+  PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req, String accountId);
 
   /**
    *

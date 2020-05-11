@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -23,6 +24,7 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.UnexpectedException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.waiter.NotifyCallback;
@@ -139,14 +141,12 @@ public class GitCommandCallback implements NotifyCallback {
             if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
               List<String> yamlSetIdsProcessed =
                   ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
-
-              List<String> yamlGitConfigIds =
-                  obtainYamlGitConfigIds(accountId, gitCommitAndPushResult.getYamlGitConfig().getBranchName(),
-                      gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
+              List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId, branchName, gitConnectorId);
 
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
               final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
               final List<GitFileChange> filesCommited = emptyIfNull(gitCommitAndPushResult.getFilesCommitedToGit());
+              addYamlChangeSetToFilesCommited(filesCommited, gitCommitAndPushResult.getYamlGitConfig());
               gitSyncService.logActivityForGitOperation(filesCommited, GitFileActivity.Status.SUCCESS, false,
                   yamlChangeSet.isFullSync(), "", processingCommitId);
               gitSyncService.addFileProcessingSummaryToGitCommit(processingCommitId, accountId, filesCommited);
@@ -180,6 +180,13 @@ public class GitCommandCallback implements NotifyCallback {
         updateChangeSetFailureStatusSafely();
       }
     }
+  }
+
+  private void addYamlChangeSetToFilesCommited(List<GitFileChange> gitFileChanges, YamlGitConfig yamlGitConfig) {
+    if (isEmpty(gitFileChanges)) {
+      return;
+    }
+    gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
   }
 
   private GitConnectionErrorAlert createGitConnectionErrorData(String accountId) {
@@ -247,13 +254,22 @@ public class GitCommandCallback implements NotifyCallback {
 
   private void saveCommitFromHarness(GitCommitAndPushResult gitCommitAndPushResult, YamlChangeSet yamlChangeSet,
       List<String> yamlGitConfigIds, List<String> yamlSetIdsProcessed) {
+    String commitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
+    YamlGitConfig yamlGitConfig = gitCommitAndPushResult.getYamlGitConfig();
+    if (yamlGitConfig == null) {
+      throw new UnexpectedException(String.format(
+          "Error while saving commit for commitId=[%s],yamlChangeSetId=[%s] as the yamlGitConfig is null ", commitId,
+          yamlChangeSet.getUuid()));
+    }
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSet(yamlChangeSet)
                       .yamlGitConfigIds(yamlGitConfigIds)
                       .status(GitCommit.Status.COMPLETED)
-                      .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
+                      .commitId(commitId)
                       .gitCommandResult(gitCommitAndPushResult)
+                      .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                      .branchName(yamlGitConfig.getBranchName())
                       .yamlChangeSetsProcessed(yamlSetIdsProcessed)
                       .commitMessage(gitCommitAndPushResult.getGitCommitResult().getCommitMessage())
                       .build());
@@ -332,14 +348,13 @@ public class GitCommandCallback implements NotifyCallback {
       final GitWebhookRequestAttributes gitWebhookRequestAttributes = yamlChangeSet.getGitWebhookRequestAttributes();
       if (isValid(gitWebhookRequestAttributes)) {
         final String headCommitId = gitWebhookRequestAttributes.getHeadCommitId();
-        final List<String> yamlConfigIds = obtainYamlGitConfigIds(
-            accountId, gitWebhookRequestAttributes.getBranchName(), gitWebhookRequestAttributes.getGitConnectorId());
+        final List<String> yamlConfigIds = obtainYamlGitConfigIds(accountId, branchName, gitConnectorId);
 
         GitCommit.Status gitCommitStatus = GitCommit.Status.FAILED;
         if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
           gitCommitStatus = GitCommit.Status.SKIPPED;
         }
-        saveFailedCommitFromGit(headCommitId, yamlConfigIds, accountId, gitCommitStatus);
+        saveFailedCommitFromGit(headCommitId, yamlConfigIds, accountId, gitCommitStatus, gitConnectorId, branchName);
       }
     }
   }
@@ -349,8 +364,8 @@ public class GitCommandCallback implements NotifyCallback {
         && isNotEmpty(gitWebhookRequestAttributes.getBranchName())
         && isNotEmpty(gitWebhookRequestAttributes.getGitConnectorId());
   }
-  private void saveFailedCommitFromGit(
-      String commitId, List<String> yamlGitConfigIds, String accountId, GitCommit.Status gitCommitStatus) {
+  private void saveFailedCommitFromGit(String commitId, List<String> yamlGitConfigIds, String accountId,
+      GitCommit.Status gitCommitStatus, String gitConnectorId, String branchName) {
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSet(YamlChangeSet.builder()
@@ -363,6 +378,8 @@ public class GitCommandCallback implements NotifyCallback {
                       .yamlGitConfigIds(yamlGitConfigIds)
                       .status(gitCommitStatus)
                       .commitId(commitId)
+                      .gitConnectorId(gitConnectorId)
+                      .branchName(branchName)
                       .gitCommandResult(null)
                       .fileProcessingSummary(null)
                       .build());

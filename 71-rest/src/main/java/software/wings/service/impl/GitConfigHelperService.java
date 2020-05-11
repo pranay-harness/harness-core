@@ -1,13 +1,22 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toMap;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.PageRequest;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -20,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -31,7 +41,9 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -141,5 +153,22 @@ public class GitConfigHelperService {
     if (gitConfig.getRepoUrl() != null) {
       gitConfig.setRepoUrl(context.renderExpression(gitConfig.getRepoUrl().trim()));
     }
+  }
+
+  public Map<String, String> getConnectorIdNameMap(List<String> connectorIds, String accountId) {
+    if (isEmpty(connectorIds)) {
+      return Collections.emptyMap();
+    }
+    PageRequest<SettingAttribute> settingAttributeQuery = aPageRequest()
+                                                              .addFilter(SettingAttributeKeys.accountId, EQ, accountId)
+                                                              .addFilter(SettingAttributeKeys.category, EQ, CONNECTOR)
+                                                              .addFilter(SettingAttributeKeys.valueType, EQ, GIT)
+                                                              .addFilter(ID_KEY, IN, connectorIds.toArray())
+                                                              .build();
+    List<SettingAttribute> settingAttributeList = settingsService.list(settingAttributeQuery, null, null);
+    if (isEmpty(settingAttributeList)) {
+      return Collections.emptyMap();
+    }
+    return settingAttributeList.stream().collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }
 }

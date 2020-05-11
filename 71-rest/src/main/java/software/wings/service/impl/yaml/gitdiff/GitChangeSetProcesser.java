@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.gitdiff;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -11,7 +12,6 @@ import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.AccountLogContext;
@@ -25,6 +25,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.gitSync.GitFileActivity;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,7 @@ public class GitChangeSetProcesser {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes
       final String processingCommitId = gitDiffResult.getCommitId();
       final List<GitFileChange> gitFileChanges = gitDiffResult.getGitFileChanges();
+      addYamlChangeSetToFilesCommited(gitFileChanges, gitDiffResult.getYamlGitConfig());
       preProcessGitFileActivityChanges(
           processingCommitId, gitDiffResult.getCommitTimeMs(), gitDiffResult.getCommitMessage(), gitFileChanges);
       changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
@@ -87,6 +89,13 @@ public class GitChangeSetProcesser {
       // 3. Set detailed message
       gitChangeAuditRecordHandler.finalizeAuditRecord(accountId, gitDiffResult, changeWithErrorMsgs);
     }
+  }
+
+  private void addYamlChangeSetToFilesCommited(List<GitFileChange> gitFileChanges, YamlGitConfig yamlGitConfig) {
+    if (isEmpty(gitFileChanges)) {
+      return;
+    }
+    gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
   }
 
   private void preProcessGitFileActivityChanges(String processingCommitId, Long processingCommitTimeMs,
@@ -105,7 +114,7 @@ public class GitChangeSetProcesser {
 
   private void addProcessingCommitDetailsToChangeList(String processingCommitId, Long processingCommitTimeMs,
       String commitMessage, List<GitFileChange> gitFileChanges) {
-    if (EmptyPredicate.isEmpty(gitFileChanges)) {
+    if (isEmpty(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> {
