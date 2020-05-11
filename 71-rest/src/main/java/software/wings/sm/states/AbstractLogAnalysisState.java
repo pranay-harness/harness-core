@@ -407,11 +407,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       testNodes = getCanaryNewHostNames(context);
     }
     testNodes.keySet().forEach(controlNodes::remove);
+    campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
+
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
     String hostNameField = getHostnameField(context);
-    campareAndLogNodesUsingNewInstanceAPI(context, testNodes.keySet(), controlNodes.keySet());
+
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(accountId)

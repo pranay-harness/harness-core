@@ -422,6 +422,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
     Map<String, String> controlNodes = new HashMap<>();
     Map<String, String> testNodes = new HashMap<>();
+
     if (isNewInstanceFieldPopulated(context)) {
       populateNewAndOldHostNames(context, controlNodes, testNodes);
     } else {
@@ -434,11 +435,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           context.getStateExecutionInstanceId(), controlNodes);
     }
     testNodes.keySet().forEach(controlNodes::remove);
+    campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
 
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
     boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
-    campareAndLogNodesUsingNewInstanceAPI(context, testNodes.keySet(), controlNodes.keySet());
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(appService.get(context.getAppId()).getAccountId())
