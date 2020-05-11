@@ -9,6 +9,7 @@ enum DataFetcherEnum {
   billingTrendStats
   budget
   budgetList
+  budgetNotifications
   budgetTrendStats
   ceConnector
   ceHealthStatusta

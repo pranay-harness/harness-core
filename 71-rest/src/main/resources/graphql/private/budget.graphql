@@ -6,6 +6,8 @@ extend type Query {
   budgetList: [BudgetTableData] @dataFetcher(name: budgetList)
 
   budgetTrendStats(budgetId: String!): BudgetTrendStats @dataFetcher(name: budgetTrendStats)
+
+  budgetNotifications: BudgetNotificationsData @dataFetcher(name: budgetNotifications)
 }
 
 type BudgetDataList {
@@ -39,4 +41,12 @@ type BudgetTrendStats {
   totalCost: BillingStatsInfo
   forecastCost: BillingStatsInfo
   budgetDetails: BudgetTableData
+}
+
+type BudgetNotificationsData {
+  data: BudgetNotifications
+}
+
+type BudgetNotifications {
+  count: Number
 }
