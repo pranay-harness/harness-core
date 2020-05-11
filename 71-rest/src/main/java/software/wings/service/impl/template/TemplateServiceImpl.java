@@ -561,6 +561,8 @@ public class TemplateServiceImpl implements TemplateService {
           .commandName(importedCommandDetails.getCommandName())
           .commandVersion(templateVersion.getImportedTemplateVersion())
           .commandStoreName(importedCommandDetails.getCommandStoreName())
+          .repoUrl(importedCommandDetails.getRepoUrl())
+          .tags(importedCommandDetails.getTags())
           .build();
     }
     return null;

@@ -27,6 +27,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
@@ -60,16 +61,17 @@ public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtA
   @NotEmpty private String name;
   @NotEmpty private String commandStoreName;
   @NotEmpty private String commandName;
-  @NotEmpty private String commandDisplayName;
   @NotEmpty private String templateId;
   private String description;
   private String imageUrl;
+  private String repoUrl;
+  private Set<String> tags;
   @NotEmpty private String accountId;
 
   @Builder(toBuilder = true)
   public ImportedTemplate(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String name, String commandStoreName, String commandName, String templateId,
-      String description, String imageUrl, String accountId) {
+      String description, String imageUrl, String accountId, String repoUrl, Set<String> tags) {
     this.uuid = uuid;
     this.appId = appId;
     this.createdBy = createdBy;
@@ -83,5 +85,7 @@ public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtA
     this.description = description;
     this.imageUrl = imageUrl;
     this.accountId = accountId;
+    this.repoUrl = repoUrl;
+    this.tags = tags;
   }
 }
