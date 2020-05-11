@@ -27,7 +27,6 @@ input UpdateCloudProviderInput {
 input DeleteCloudProviderInput {
   clientMutationId: String
   cloudProviderId: String!
-  cloudProviderType: CloudProviderType!
 }
 
 type CreateCloudProviderPayload {
@@ -50,5 +49,5 @@ input PcfCloudProviderInput {
 
   endpointUrl: String
   userName: String
-  encryptedPasswordSecretId: String
+  passwordSecretId: String
 }

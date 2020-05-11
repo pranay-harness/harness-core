@@ -65,8 +65,8 @@ public class CreateCloudProviderDataFetcher
     if (input.getUserName().isPresent()) {
       input.getUserName().getValue().ifPresent(pcfConfigBuilder::username);
     }
-    if (input.getEncryptedPasswordSecretId().isPresent()) {
-      input.getEncryptedPasswordSecretId().getValue().ifPresent(pcfConfigBuilder::encryptedPassword);
+    if (input.getPasswordSecretId().isPresent()) {
+      input.getPasswordSecretId().getValue().ifPresent(pcfConfigBuilder::encryptedPassword);
     }
 
     SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()

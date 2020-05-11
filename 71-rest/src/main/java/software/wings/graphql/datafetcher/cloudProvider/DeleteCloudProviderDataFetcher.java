@@ -36,10 +36,6 @@ public class DeleteCloudProviderDataFetcher
       throw new InvalidRequestException("The cloudProviderId cannot be null");
     }
 
-    if (input.getCloudProviderType() == null) {
-      throw new InvalidRequestException("Invalid cloudProviderType provided in the request");
-    }
-
     SettingAttribute settingAttribute = settingsService.getByAccount(accountId, cloudProviderId);
 
     if (validForDeletion(settingAttribute)) {
