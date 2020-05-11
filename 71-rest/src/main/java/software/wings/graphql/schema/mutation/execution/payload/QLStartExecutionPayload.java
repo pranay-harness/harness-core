@@ -15,4 +15,5 @@ import software.wings.security.annotations.Scope;
 public class QLStartExecutionPayload implements QLMutationPayload {
   String clientMutationId;
   QLExecution execution;
+  String warningMessage;
 }

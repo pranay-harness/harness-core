@@ -14,7 +14,7 @@ type Service {
   name: String
   # Description of the Service
   description: String
-  # Artifact type deployed by this service
+  # Artifact type deployed by this Service
   artifactType: String
   # Deployment Type: SSH, Helm, or Kubernetes
   deploymentType: String

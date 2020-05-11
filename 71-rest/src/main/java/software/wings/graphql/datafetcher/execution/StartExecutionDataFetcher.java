@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
@@ -14,7 +14,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
-import software.wings.graphql.schema.type.QLExecution;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
@@ -45,6 +44,10 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
       QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     try (AutoLogContext ignore0 =
              new AccountLogContext(mutationContext.getAccountId(), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      if (isEmpty(triggerExecutionInput.getEntityId())) {
+        throw new InvalidRequestException("Entity Id cannot be empty", WingsException.USER);
+      }
+
       validateAppBelongsToAccount(triggerExecutionInput, mutationContext);
 
       PermissionAttribute permissionAttribute =
@@ -52,33 +55,30 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
       List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
 
       QLExecutionType executionType = triggerExecutionInput.getExecutionType();
-      QLExecution execution;
+      QLStartExecutionPayload response;
       switch (executionType) {
         case PIPELINE:
-          execution = pipelineExecutionController.startPipelineExecution(
+          response = pipelineExecutionController.startPipelineExecution(
               triggerExecutionInput, mutationContext, permissionAttributeList);
           break;
         case WORKFLOW:
-          execution = workflowExecutionController.startWorkflowExecution(
+          response = workflowExecutionController.startWorkflowExecution(
               triggerExecutionInput, mutationContext, permissionAttributeList);
           break;
         default:
           throw new UnsupportedOperationException("Unsupported execution type: " + executionType);
       }
-
-      if (execution == null) {
-        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
-      }
-      return QLStartExecutionPayload.builder()
-          .execution(execution)
-          .clientMutationId(triggerExecutionInput.getClientMutationId())
-          .build();
+      return response;
     }
   }
 
   private void validateAppBelongsToAccount(
       QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
-    String accountIdFromApp = appService.getAccountIdByAppId(triggerExecutionInput.getApplicationId());
+    String appId = triggerExecutionInput.getApplicationId();
+    if (isEmpty(appId)) {
+      throw new InvalidRequestException("Application Id cannot be empty", WingsException.USER);
+    }
+    String accountIdFromApp = appService.getAccountIdByAppId(appId);
     if (!accountIdFromApp.equals(mutationContext.getAccountId())) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }

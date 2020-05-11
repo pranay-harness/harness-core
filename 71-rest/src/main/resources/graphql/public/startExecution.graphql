@@ -4,45 +4,45 @@ extend type Mutation {
 }
 
 extend type Query {
-  #Beta: Get Inputs required to trigger an execution of workflow/pipeline
+  #Beta: Get required inputs to start an execution of a Workflow or Pipeline
   executionInputs(
-    #Id of the workflow/pipeline. Use WorkflowByName/PipelineByName APis to get this
+    #Workflow or Pipeline identifier. Use WorkflowByName API to fetch this information
     entityId: String!
-    #Application Id to which orkflow/pipeline belongs.Use applicationByNameAPI to get this.
+    #Application identifier of a Workflow or Pipeline. Use applicationByName API to fetch this information
     applicationId: String!
     # Execution type: workflow/ pipeline
     executionType: ExecutionType!
-    #Variable values if the workflow/pipeline is templatised. Required variable values should be provided here to know inputs required.
+    #Variable inputs if the Workflow or Pipeline is templatized. Provide the required variable values to know about the required inputs
     variableInputs: [VariableInput]
   ): ExecutionInputs @dataFetcher(name: executionInputs)
 }
 
 type ExecutionInputs {
-  #List of services that need artifact inputs.
+  #List of Services that need artifact input
   serviceInputs: [Service]
 }
 
 input StartExecutionInput {
   clientMutationId: String
 
-  #application Id to which the workflow/pipeline belongs
+  #Application identifier of a Workflow or Pipeline
   applicationId: String!
-  #Id for the workflow/pipeline
+  #Entity identifier of a Workflow or Pipeline
   entityId: String!
   #Workflow or Pipeline
   executionType: ExecutionType!
-  #Values for the variables required for execution
+  #Variable inputs required for the executio
   variableInputs: [VariableInput]
-  #Service Inputs Required for the execution
+  #Service inputs required for the execution
   serviceInputs: [ServiceInput]
   #Execution notes
   notes: String
-  #Skip Deployment on host if same artifact is already deplyed
+  #Skip deployment on the host, if the same artifact is already deployed
   excludeHostsWithSameArtifact: Boolean
-  #Set to true if targeting deployment only on the specified hosts. Please specify hostnames in specificHosts
+  #Set to true if the deployment target is specific hosts. Provide specificHosts field along with this.
   targetToSpecificHosts: Boolean
-  #List of hostnames, if targetting to specific hosts
-  specificHosts: [String] #when the user want to deploy targetting to specific hosts
+  #List of hostnames, if targeted to a specific host
+  specificHosts: [String]
 }
 
 enum ExecutionType {
@@ -107,4 +107,6 @@ input BuildNumberInput {
 type StartExecutionPayload {
   clientMutationId: String
   execution: Execution
+  #Get This field to know if there are any Warnings/Messages but the execution can be started successfully. For Example in case of user providing extra inputs.
+  warningMessage: String
 }

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
@@ -150,6 +151,11 @@ public class ExecutionController {
 
   private Artifact getArtifactFromId(QLArtifactIdInput artifactId, Service service) {
     String artifactIdVal = artifactId.getArtifactId();
+
+    if (isEmpty(artifactIdVal)) {
+      throw new InvalidRequestException("Artifact Id cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
     Artifact artifact = artifactService.get(service.getAccountId(), artifactIdVal);
     notNullCheck("Cannot find artifact for specified Id: " + artifactIdVal + ". Might be deleted", artifact, USER);
     if (!artifact.getServiceIds().contains(service.getUuid())) {
@@ -161,10 +167,21 @@ public class ExecutionController {
 
   private Artifact getArtifactFromBuildNumber(QLBuildNumberInput buildNumber, Service service) {
     String artifactSourceName = buildNumber.getArtifactSourceName();
+
+    if (isEmpty(artifactSourceName)) {
+      throw new InvalidRequestException(
+          "Artifact Source name cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
+    if (isEmpty(buildNumber.getBuildNumber())) {
+      throw new InvalidRequestException("Build Number cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
     ArtifactStream artifactStream =
         artifactStreamService.getArtifactStreamByName(service.getAppId(), service.getUuid(), artifactSourceName);
     notNullCheck("Cannot find artifact Source: " + artifactSourceName + " in specified service: " + service.getName(),
         artifactStream, USER);
+
     Artifact artifact = getArtifactForBuildNumber(service.getAppId(), artifactStream, buildNumber.getBuildNumber());
     notNullCheck(
         "Cannot find or collect artifact for specified Build Number: " + buildNumber.getBuildNumber(), artifact, USER);
@@ -202,16 +219,23 @@ public class ExecutionController {
       String serviceName = service.getName();
       QLServiceInput serviceInput =
           serviceInputs.stream().filter(t -> serviceName.equals(t.getName())).findFirst().orElse(null);
-      if (serviceInput == null) {
-        throw new InvalidRequestException("ServiceInput required for service: " + serviceName, USER);
-      }
+      notNullCheck("ServiceInput required for service: " + serviceName, serviceInput, USER);
+
       QLArtifactValueInput artifactValueInput = serviceInput.getArtifactValueInput();
+      notNullCheck("ArtifactValueInput is required for the service Input: " + serviceName, artifactValueInput, USER);
+
       QLArtifactInputType type = artifactValueInput.getValueType();
       switch (type) {
         case ARTIFACT_ID:
+          notNullCheck(
+              "ArtifactIdInput is required for the service Input: " + serviceName + "for value type as ARTIFACT_ID",
+              artifactValueInput.getArtifactId(), USER);
           artifacts.add(getArtifactFromId(artifactValueInput.getArtifactId(), service));
           continue;
         case BUILD_NUMBER:
+          notNullCheck(
+              "BuildNumberInput is required for the service Input: " + serviceName + "for value type as BUILD_NUMBER",
+              artifactValueInput.getBuildNumber(), USER);
           artifacts.add(getArtifactFromBuildNumber(artifactValueInput.getBuildNumber(), service));
           continue;
         default:

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +34,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionIn
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
 import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
 import software.wings.graphql.schema.type.QLApiKey;
@@ -122,7 +124,7 @@ public class PipelineExecutionController {
         .build();
   }
 
-  public QLPipelineExecution startPipelineExecution(QLStartExecutionInput triggerExecutionInput,
+  public QLStartExecutionPayload startPipelineExecution(QLStartExecutionInput triggerExecutionInput,
       MutationContext mutationContext, List<PermissionAttribute> permissionAttributes) {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
@@ -146,7 +148,9 @@ public class PipelineExecutionController {
       authorizePipelineExecution(triggerExecutionInput, permissionAttributes, appId);
       String envId = resolveEnvId(pipeline, variableInputs);
 
-      Map<String, String> variableValues = validateAndResolvePipelineVariables(pipeline, variableInputs, envId);
+      List<String> extraVariables = new ArrayList<>();
+      Map<String, String> variableValues =
+          validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables);
       List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, pipeline);
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.PIPELINE);
@@ -155,9 +159,25 @@ public class PipelineExecutionController {
           variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs);
       WorkflowExecution workflowExecution =
           workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
-      final QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
-      populatePipelineExecution(workflowExecution, builder);
-      return builder.build();
+
+      if (workflowExecution == null) {
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+      }
+
+      final QLPipelineExecutionBuilder executionBuilder = QLPipelineExecution.builder();
+      populatePipelineExecution(workflowExecution, executionBuilder);
+
+      String warningMessage = null;
+      if (isNotEmpty(extraVariables)) {
+        warningMessage = "Ignoring values for variables: [" + StringUtils.join(extraVariables, ",")
+            + "] as they don't exist in Pipeline. Might be modified";
+      }
+
+      return QLStartExecutionPayload.builder()
+          .execution(executionBuilder.build())
+          .warningMessage(warningMessage)
+          .clientMutationId(triggerExecutionInput.getClientMutationId())
+          .build();
     }
   }
 
@@ -219,7 +239,7 @@ public class PipelineExecutionController {
   }
 
   private Map<String, String> validateAndResolvePipelineVariables(
-      Pipeline pipeline, List<QLVariableInput> variableInputs, String envId) {
+      Pipeline pipeline, List<QLVariableInput> variableInputs, String envId, List<String> extraVariables) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     if (isEmpty(pipelineVariables)) {
       return new HashMap<>();
@@ -246,6 +266,8 @@ public class PipelineExecutionController {
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }
+      } else {
+        extraVariables.add(variableInput.getName());
       }
     }
 
@@ -329,7 +351,9 @@ public class PipelineExecutionController {
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(pipelineId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
         String envId = resolveEnvId(pipeline, variableInputs);
-        Map<String, String> variableValues = validateAndResolvePipelineVariables(pipeline, variableInputs, envId);
+        List<String> extraVariables = new ArrayList<>();
+        Map<String, String> variableValues =
+            validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables);
         DeploymentMetadata finalDeploymentMetadata =
             pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
         if (finalDeploymentMetadata != null) {
