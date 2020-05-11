@@ -5,6 +5,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderBuilder;
@@ -64,5 +65,12 @@ public class CloudProviderController {
       return ((CloudCostAware) settingAttribute.getValue()).getCcmConfig().isCloudCostEnabled();
     }
     return false;
+  }
+
+  public static void checkIfInputIsNotPresent(QLCloudProviderType type, Object input) {
+    if (input == null) {
+      throw new InvalidRequestException(
+          String.format("No input provided with the request for %s cloud provider", type.getStringValue()));
+    }
   }
 }
