@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +51,8 @@ public class ServiceCommand extends Base {
 
   @SchemaIgnore private String templateVersion;
 
+  @SchemaIgnore private ImportedTemplateDetails importedTemplateDetails;
+
   @SchemaIgnore
   public String getTemplateVersion() {
     return templateVersion;
@@ -66,6 +69,15 @@ public class ServiceCommand extends Base {
 
   public void setTemplateUuid(String templateUuid) {
     this.templateUuid = templateUuid;
+  }
+
+  @SchemaIgnore
+  public ImportedTemplateDetails getImportedTemplateDetails() {
+    return importedTemplateDetails;
+  }
+
+  public void setImportedTemplateDetails(ImportedTemplateDetails importedTemplateDetails) {
+    this.importedTemplateDetails = importedTemplateDetails;
   }
 
   /**
@@ -294,6 +306,7 @@ public class ServiceCommand extends Base {
     private long lastUpdatedAt;
     private String templateUuid;
     private String templateVersion;
+    private ImportedTemplateDetails importedTemplateDetails;
 
     private Builder() {}
 
@@ -376,6 +389,11 @@ public class ServiceCommand extends Base {
       return this;
     }
 
+    public Builder withImportedTemplateDetails(ImportedTemplateDetails importedTemplateDetails) {
+      this.importedTemplateDetails = importedTemplateDetails;
+      return this;
+    }
+
     public Builder but() {
       return aServiceCommand()
           .withName(name)
@@ -390,7 +408,8 @@ public class ServiceCommand extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withSetAsDefault(setAsDefault);
+          .withSetAsDefault(setAsDefault)
+          .withImportedTemplateDetails(importedTemplateDetails);
     }
 
     public ServiceCommand build() {
@@ -410,6 +429,7 @@ public class ServiceCommand extends Base {
       serviceCommand.targetToAllEnv = targetToAllEnv;
       serviceCommand.setTemplateUuid(templateUuid);
       serviceCommand.setTemplateVersion(templateVersion);
+      serviceCommand.setImportedTemplateDetails(importedTemplateDetails);
       return serviceCommand;
     }
   }

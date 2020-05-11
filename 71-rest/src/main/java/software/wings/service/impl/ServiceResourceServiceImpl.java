@@ -142,6 +142,7 @@ import software.wings.beans.command.Command.CommandKeys;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.ContainerTaskType;
@@ -1822,6 +1823,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           newcommand.setCommandUnits(sshCommandTemplate.getCommandUnits());
           serviceCommand.setCommand(newcommand);
           updateOperation.set("templateVersion", serviceCommand.getTemplateVersion());
+          if (serviceCommand.getImportedTemplateDetails() != null) {
+            updateOperation.set(
+                ServiceCommandKeys.importedTemplateDetails, serviceCommand.getImportedTemplateDetails());
+          }
         } else {
           if (serviceCommand.getCommand() != null) {
             if (!fromTemplate) {
