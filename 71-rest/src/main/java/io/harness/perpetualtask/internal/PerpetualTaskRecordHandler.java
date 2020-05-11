@@ -12,6 +12,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
@@ -27,11 +28,12 @@ import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import javax.ws.rs.ServiceUnavailableException;
 
 @Slf4j
-public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> {
+public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>, PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -39,8 +41,10 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
 
+  PersistenceIterator<PerpetualTaskRecord> iterator;
+
   public void registerIterators() {
-    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+    iterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskRecordProcessor")
             .poolSize(3)
@@ -93,6 +97,13 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
         logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
         return;
       }
+    }
+  }
+
+  @Override
+  public void onPerpetualTaskCreated() {
+    if (iterator != null) {
+      iterator.wakeup();
     }
   }
 }
