@@ -32,10 +32,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.deployment.InstanceDetails;
 import io.harness.deployment.InstanceDetails.InstanceType;
 import io.harness.deployment.InstanceDetails.K8s;
@@ -46,6 +48,7 @@ import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -122,6 +125,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -450,22 +454,21 @@ public class K8sStateHelper {
     logger.info("Found Values at following sources: " + valuesFiles.keySet());
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
-      addRenderedValueToList(context, K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
+      addNonEmptyValueToList(K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.ServiceOverride)) {
-      addRenderedValueToList(
-          context, K8sValuesLocation.ServiceOverride, valuesFiles.get(K8sValuesLocation.ServiceOverride), result);
+      addNonEmptyValueToList(
+          K8sValuesLocation.ServiceOverride, valuesFiles.get(K8sValuesLocation.ServiceOverride), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
-      addRenderedValueToList(
-          context, K8sValuesLocation.EnvironmentGlobal, valuesFiles.get(K8sValuesLocation.EnvironmentGlobal), result);
+      addNonEmptyValueToList(
+          K8sValuesLocation.EnvironmentGlobal, valuesFiles.get(K8sValuesLocation.EnvironmentGlobal), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
-      addRenderedValueToList(
-          context, K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
+      addNonEmptyValueToList(K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
     }
 
     // OpenShift takes in reverse order
@@ -476,11 +479,9 @@ public class K8sStateHelper {
     return result;
   }
 
-  private void addRenderedValueToList(
-      ExecutionContext context, K8sValuesLocation location, String value, List<String> result) {
-    String renderedValue = context.renderExpression(value);
-    if (isNotBlank(renderedValue)) {
-      result.add(renderedValue);
+  private void addNonEmptyValueToList(K8sValuesLocation location, String value, List<String> result) {
+    if (isNotBlank(value)) {
+      result.add(value);
     } else {
       logger.info("Values content is empty in " + location);
     }
@@ -554,6 +555,7 @@ public class K8sStateHelper {
     tags.addAll(fetchTagsFromK8sTaskParams(k8sTaskParameters));
 
     String waitId = generateUuid();
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
@@ -564,6 +566,7 @@ public class K8sStateHelper {
                                               .taskType(TaskType.K8S_COMMAND_TASK.name())
                                               .parameters(new Object[] {k8sTaskParameters})
                                               .timeout(taskTimeoutInMillis)
+                                              .expressionFunctorToken(expressionFunctorToken)
                                               .build())
                                     .envId(env.getUuid())
                                     .infrastructureMappingId(infraMapping.getUuid())
@@ -571,20 +574,36 @@ public class K8sStateHelper {
                                     .artifactStreamId(artifactStreamId)
                                     .build();
 
+    K8sStateExecutionData stateExecutionData =
+        K8sStateExecutionData.builder()
+            .activityId(k8sTaskParameters.getActivityId())
+            .commandName(k8sTaskParameters.getCommandName())
+            .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
+            .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
+            .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
+            .releaseName(k8sTaskParameters.getReleaseName())
+            .currentTaskType(TaskType.K8S_COMMAND_TASK)
+            .build();
+
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    context.resetPreparedCache();
+    if (delegateTask.getData().getParameters().length == 1
+        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
+      delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(
+          delegateTask.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+    }
+
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
-        .stateExecutionData(K8sStateExecutionData.builder()
-                                .activityId(k8sTaskParameters.getActivityId())
-                                .commandName(k8sTaskParameters.getCommandName())
-                                .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
-                                .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
-                                .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
-                                .releaseName(k8sTaskParameters.getReleaseName())
-                                .currentTaskType(TaskType.K8S_COMMAND_TASK)
-                                .build())
+        .stateExecutionData(stateExecutionData)
         .delegateTaskId(delegateTaskId)
         .build();
   }
