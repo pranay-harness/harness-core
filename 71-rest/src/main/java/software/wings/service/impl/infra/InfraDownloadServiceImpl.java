@@ -40,6 +40,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String DELEGATE_JAR = "delegate.jar";
   private static final String WATCHER_JAR = "watcher.jar";
   private static final String BUILDS_PATH = "/builds/";
+  private static final String ON_PREM_ENV_STRING = "on-prem";
 
   private static final String LOGGING_SERVICE_ACCOUNT_ENV_VAR = "LOGGING_SERVICE_ACC";
 
@@ -92,7 +93,8 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       envString = getEnv();
     }
 
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
+        && !ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getDelegateJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
@@ -115,7 +117,9 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)) {
+
+    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
+        && !ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getWatcherJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
