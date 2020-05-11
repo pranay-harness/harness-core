@@ -20,7 +20,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLDeleteCloudProviderInput;
-import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.service.intfc.SettingsService;
 
 import java.sql.SQLException;
@@ -51,10 +50,7 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     doNothing().when(settingsService).delete(null, CLOUD_PROVIDER_ID);
 
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder()
-                                   .cloudProviderId(CLOUD_PROVIDER_ID)
-                                   .cloudProviderType(QLCloudProviderType.PCF)
-                                   .build(),
+    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
     verify(settingsService, times(1)).delete(null, CLOUD_PROVIDER_ID);
@@ -64,16 +60,8 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void deleteWithoutIdParameter() {
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderType(QLCloudProviderType.PCF).build(),
-        MutationContext.builder().accountId(ACCOUNT_ID).build());
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = IGOR)
-  @Category(UnitTests.class)
-  public void deleteWithoutTypeParameter() {
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
-        MutationContext.builder().accountId(ACCOUNT_ID).build());
+    dataFetcher.mutateAndFetch(
+        QLDeleteCloudProviderInput.builder().build(), MutationContext.builder().accountId(ACCOUNT_ID).build());
   }
 
   @Test
@@ -87,10 +75,7 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         .when(settingsService)
         .getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
 
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder()
-                                   .cloudProviderId(CLOUD_PROVIDER_ID)
-                                   .cloudProviderType(QLCloudProviderType.PCF)
-                                   .build(),
+    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
     verify(settingsService, times(0)).delete(null, CLOUD_PROVIDER_ID);
@@ -102,10 +87,7 @@ public class DeleteCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   public void deleteOfNonExistingSetting() {
     doReturn(null).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
 
-    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder()
-                                   .cloudProviderId(CLOUD_PROVIDER_ID)
-                                   .cloudProviderType(QLCloudProviderType.PCF)
-                                   .build(),
+    dataFetcher.mutateAndFetch(QLDeleteCloudProviderInput.builder().cloudProviderId(CLOUD_PROVIDER_ID).build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
     verify(settingsService, times(0)).delete(null, CLOUD_PROVIDER_ID);

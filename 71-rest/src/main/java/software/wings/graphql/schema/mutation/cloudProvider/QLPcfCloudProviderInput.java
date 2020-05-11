@@ -18,5 +18,5 @@ public class QLPcfCloudProviderInput {
 
   private RequestField<String> endpointUrl;
   private RequestField<String> userName;
-  private RequestField<String> encryptedPasswordSecretId;
+  private RequestField<String> passwordSecretId;
 }

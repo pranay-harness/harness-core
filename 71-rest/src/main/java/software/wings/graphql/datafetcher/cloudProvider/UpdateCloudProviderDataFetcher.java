@@ -22,7 +22,6 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 
 @Slf4j
 public class UpdateCloudProviderDataFetcher
@@ -85,9 +84,8 @@ public class UpdateCloudProviderDataFetcher
     if (input.getUserName().isPresent()) {
       input.getUserName().getValue().ifPresent(pcfConfig::setUsername);
     }
-    pcfConfig.setPassword(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
-    if (input.getEncryptedPasswordSecretId().isPresent()) {
-      input.getEncryptedPasswordSecretId().getValue().ifPresent(pcfConfig::setEncryptedPassword);
+    if (input.getPasswordSecretId().isPresent()) {
+      input.getPasswordSecretId().getValue().ifPresent(pcfConfig::setEncryptedPassword);
     }
     settingAttribute.setValue(pcfConfig);
 

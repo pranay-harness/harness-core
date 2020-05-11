@@ -72,7 +72,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .endpointUrl(RequestField.ofNullable("URL"))
                                                              .userName(RequestField.ofNullable("USER"))
-                                                             .encryptedPasswordSecretId(RequestField.ofNullable("PASS"))
+                                                             .passwordSecretId(RequestField.ofNullable("PASS"))
                                                              .usageScope(RequestField.ofNull())
                                                              .build())
                                        .build(),
