@@ -4,6 +4,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class K8sTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
+public class K8sTaskParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String commandName;
