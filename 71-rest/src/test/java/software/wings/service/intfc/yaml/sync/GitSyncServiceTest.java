@@ -39,10 +39,23 @@ public class GitSyncServiceTest extends WingsBaseTest {
     saveYamlChangeSetCombinations(gitConnectorid, "random", "random", "random");
     saveYamlChangeSetCombinations("random", "random", "random", "random");
 
-    List<ChangeSetDTO> changeSetDTOList = gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10);
-
+    // Case 1: Without any filter
+    List<ChangeSetDTO> changeSetDTOList =
+        gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, null);
     assertThat(changeSetDTOList).isNotNull();
     assertThat(changeSetDTOList.size()).isEqualTo(6);
+
+    // Case 2: With git to harness filter
+    List<ChangeSetDTO> changeSetDTOList_1 =
+        gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, true);
+    assertThat(changeSetDTOList_1).isNotNull();
+    assertThat(changeSetDTOList_1.size()).isEqualTo(4);
+
+    // Case 3: With harness to git filter
+    List<ChangeSetDTO> changeSetDTOList_2 =
+        gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, false);
+    assertThat(changeSetDTOList_2).isNotNull();
+    assertThat(changeSetDTOList_2.size()).isEqualTo(2);
   }
 
   private void saveYamlChangeSetCombinations(

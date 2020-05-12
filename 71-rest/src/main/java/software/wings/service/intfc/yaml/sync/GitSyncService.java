@@ -83,5 +83,5 @@ public interface GitSyncService {
 
   List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
 
-  List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int count);
+  List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int count, Boolean gitToHarness);
 }

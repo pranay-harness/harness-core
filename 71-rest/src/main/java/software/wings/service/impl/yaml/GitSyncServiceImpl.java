@@ -371,7 +371,8 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   @Override
-  public List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int displayCount) {
+  public List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(
+      String accountId, String appId, int displayCount, Boolean gitToHarness) {
     YamlGitConfig yamlGitConfig = yamlGitService.fetchYamlGitConfig(appId, accountId);
     if (yamlGitConfig == null) {
       return null;
@@ -379,8 +380,8 @@ public class GitSyncServiceImpl implements GitSyncService {
     final List<YamlChangeSet.Status> processingStatuses =
         Arrays.asList(YamlChangeSet.Status.QUEUED, YamlChangeSet.Status.RUNNING);
 
-    List<YamlChangeSet> changeSetsWithProcessingStatus =
-        yamlChangeSetService.getChangeSetsWithStatus(accountId, appId, yamlGitConfig, displayCount, processingStatuses);
+    List<YamlChangeSet> changeSetsWithProcessingStatus = yamlChangeSetService.getChangeSetsWithStatus(
+        accountId, appId, yamlGitConfig, displayCount, processingStatuses, gitToHarness);
 
     return changeSetsWithProcessingStatus.stream()
         .map(changeSet -> {
