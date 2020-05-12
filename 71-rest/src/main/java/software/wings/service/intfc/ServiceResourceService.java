@@ -548,4 +548,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification);
 
   HelmVersion getHelmVersionWithDefault(String appId, String serviceId);
+
+  Service updateServiceWithHelmVersion(Service service);
 }

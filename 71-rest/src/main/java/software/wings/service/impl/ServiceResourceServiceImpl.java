@@ -2969,4 +2969,28 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           format("Service command with name \"%s\" already exists", serviceCommand.getName()), USER);
     }
   }
+
+  @Override
+  public Service updateServiceWithHelmVersion(Service service) {
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    notNullCheck("Service", savedService);
+
+    if (service.getDeploymentType() != KUBERNETES || !service.isK8sV2()) {
+      throw new InvalidRequestException("Setting helm version is supported only for kubernetes deployment type", USER);
+    }
+
+    if (service.getHelmVersion() == null) {
+      throw new InvalidRequestException("Helm Version is not set", USER);
+    }
+    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    updateOperationsForHelmVersion(savedService, service, updateOperations);
+    wingsPersistence.update(savedService, updateOperations);
+    Service updatedService = get(service.getAppId(), service.getUuid(), false);
+
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
+
+    return updatedService;
+  }
 }

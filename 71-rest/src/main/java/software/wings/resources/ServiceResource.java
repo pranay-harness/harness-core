@@ -803,4 +803,15 @@ public class ServiceResource {
       @QueryParam("appId") String appId, @NotEmpty @QueryParam("deploymentType") String deploymentType) {
     return new RestResponse<>(serviceResourceService.listByDeploymentType(appId, deploymentType));
   }
+
+  @PUT
+  @Path("{serviceId}/helm-version")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> updateHelmVersion(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
+    service.setUuid(serviceId);
+    service.setAppId(appId);
+    return new RestResponse<>(serviceResourceService.updateServiceWithHelmVersion(service));
+  }
 }
