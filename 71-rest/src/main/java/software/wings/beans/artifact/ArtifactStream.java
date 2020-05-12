@@ -1,6 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -9,6 +11,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -37,6 +40,7 @@ import software.wings.yaml.BaseEntityYaml;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * ArtifactStream bean class.
@@ -68,6 +72,7 @@ import java.util.Set;
 public abstract class ArtifactStream
     extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";
+  protected static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^.{}\\s-]*}");
 
   @Transient private String artifactStreamId;
   private String artifactStreamType;
@@ -102,6 +107,8 @@ public abstract class ArtifactStream
   // is updated. For backwards compatibility, null is treated as stable and we make sure to update the artifact stream
   // to UNSTABLE if the artifact source is changed.
   private String collectionStatus;
+
+  private boolean artifactStreamParameterized;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -147,6 +154,24 @@ public abstract class ArtifactStream
 
   public boolean shouldValidate() {
     return false;
+  }
+
+  public boolean checkIfStreamParameterized() {
+    return false;
+  }
+
+  protected boolean validateParameters(String... parameters) {
+    boolean found = false;
+    for (String parameter : parameters) {
+      if (isNotEmpty(parameter) && parameter.startsWith("${")) {
+        if (!wingsVariablePattern.matcher(parameter).find()) {
+          throw new InvalidRequestException(
+              format("Parameterized fields should match regex: [%s]", wingsVariablePattern.toString()));
+        }
+        found = true;
+      }
+    }
+    return found;
   }
 
   @Override

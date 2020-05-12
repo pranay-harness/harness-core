@@ -81,6 +81,15 @@ public class JenkinsArtifactStream extends ArtifactStream {
     setArtifactPaths(updatedArtifactPaths);
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    if (isNotEmpty(artifactPaths)) {
+      return validateParameters(jobname, artifactPaths.get(0));
+    } else {
+      return validateParameters(jobname);
+    }
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

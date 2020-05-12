@@ -82,6 +82,11 @@ public class AcrArtifactStream extends ArtifactStream {
     return getRegistryName();
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    return validateParameters(subscriptionId, registryHostName, registryName, repositoryName);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

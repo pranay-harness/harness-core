@@ -83,6 +83,11 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public boolean checkIfStreamParameterized() {
+    return validateParameters(feed, packageId, packageName);
+  }
+
+  @Override
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
     if (super.artifactSourceChanged(artifactStream)) {
       return true;

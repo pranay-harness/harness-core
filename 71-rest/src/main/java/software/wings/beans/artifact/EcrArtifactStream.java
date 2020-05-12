@@ -70,6 +70,11 @@ public class EcrArtifactStream extends ArtifactStream {
     return true;
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    return validateParameters(region, imageName);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
