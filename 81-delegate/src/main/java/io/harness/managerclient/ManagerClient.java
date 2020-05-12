@@ -1,6 +1,7 @@
 package io.harness.managerclient;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -41,7 +42,7 @@ import java.util.List;
 public interface ManagerClient {
   @POST("agent/delegates/register")
   Call<RestResponse<DelegateRegisterResponse>> registerDelegate(
-      @Query("accountId") String accountId, @Body Delegate delegate);
+      @Query("accountId") String accountId, @Body DelegateParams delegateParams);
 
   @POST("agent/delegates/connectionHeartbeat/{delegateId}")
   Call<RestResponse> doConnectionHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
