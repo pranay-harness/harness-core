@@ -508,7 +508,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           } else if (Status.WAITING_FOR_APPROVAL == delegate.getStatus()) {
             return DelegateActivity.WAITING_FOR_APPROVAL;
           }
-          return null;
+          return DelegateActivity.OTHER;
         }, Collectors.toList()));
 
     return delegatesMap.get(DelegateActivity.ACTIVE) == null
