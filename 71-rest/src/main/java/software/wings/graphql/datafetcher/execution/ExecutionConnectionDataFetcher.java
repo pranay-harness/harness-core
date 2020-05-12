@@ -38,12 +38,35 @@ public class ExecutionConnectionDataFetcher
   @Inject private PipelineExecutionController pipelineExecutionController;
   @Inject private ExecutionQueryHelper executionQueryHelper;
   @Inject private AppService appService;
+
+  private static final String INDIRECT_EXECUTION_FIELD = "includeIndirectExecutions";
+
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLExecutionConnection fetchConnection(List<QLExecutionFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<WorkflowExecution> query = populateFilters(wingsPersistence, filters, WorkflowExecution.class, true)
                                          .order(Sort.descending(WorkflowExecutionKeys.createdAt));
+
+    Boolean includeIndirectExecutions =
+        (Boolean) pageQueryParameters.getDataFetchingEnvironment().getArguments().get(INDIRECT_EXECUTION_FIELD);
+
+    boolean includePipelineId = false;
+    if (includeIndirectExecutions != null) {
+      includePipelineId = includeIndirectExecutions;
+    }
+
+    /**
+     * If we are querying the membegit rExecutions, then we need to explicitly mark this boolean so we do not include
+     * the does not exist in the query
+     */
+
+    for (QLExecutionFilter filter : filters) {
+      includePipelineId = includePipelineId || (filter.getPipelineExecution() != null);
+    }
+    if (!includePipelineId) {
+      query.field(WorkflowExecutionKeys.pipelineExecutionId).doesNotExist();
+    }
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, execution -> {

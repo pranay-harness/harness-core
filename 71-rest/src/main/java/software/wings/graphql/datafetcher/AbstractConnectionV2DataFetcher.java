@@ -118,6 +118,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
         .limit(limit == null ? MAX_RECORD_LIMIT : limit > MAX_RECORD_LIMIT ? MAX_RECORD_LIMIT : limit)
         .offset(offset == null ? 0 : offset)
         .selectionSet(dataFetchingEnvironment.getSelectionSet())
+        .dataFetchingEnvironment(dataFetchingEnvironment)
         .build();
   }
 
