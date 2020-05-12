@@ -4,6 +4,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -13,12 +14,14 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -515,5 +518,61 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
         tagLink -> tagLink.getKey().equals("deploymentType") && tagLink.getValue().equals("HELM")));
     assertTrue(tagLinksWithEntityId.stream().anyMatch(
         tagLink -> tagLink.getKey().equals("artifactType") && tagLink.getValue().equals("DOCKER")));
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testUpdateServiceWithHelmVersion() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new WingsTestConstants.MockChecker(true, ActionType.CREATE_SERVICE));
+
+    Service k8sService = Service.builder()
+                             .name(SERVICE_NAME)
+                             .accountId(ACCOUNT_ID)
+                             .appId(APP_ID)
+                             .deploymentType(KUBERNETES)
+                             .artifactType(ArtifactType.DOCKER)
+                             .description("Description")
+                             .isK8sV2(true)
+                             .build();
+    Service service = serviceResourceService.save(k8sService);
+    assertThat(service.getHelmVersion()).isEqualTo(HelmVersion.V2);
+    assertThat(service.getDescription()).isEqualTo("Description");
+
+    service.setHelmVersion(HelmVersion.V3);
+    service.setDescription("UpdatedDescription");
+    service = serviceResourceService.updateServiceWithHelmVersion(service);
+    assertThat(service.getHelmVersion()).isEqualTo(HelmVersion.V3);
+    assertThat(service.getDescription()).isEqualTo("Description");
+
+    service.setHelmVersion(null);
+    try {
+      serviceResourceService.updateServiceWithHelmVersion(service);
+      fail("Should not reach here");
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Helm Version is not set");
+    }
+
+    service.setK8sV2(false);
+    service = serviceResourceService.save(service);
+    try {
+      serviceResourceService.updateServiceWithHelmVersion(service);
+      service.setHelmVersion(null);
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Setting helm version is supported only for kubernetes deployment type");
+    }
+
+    service.setDeploymentType(AWS_CODEDEPLOY);
+    service.setHelmVersion(null);
+    service = serviceResourceService.save(service);
+    try {
+      serviceResourceService.updateServiceWithHelmVersion(service);
+      service.setHelmVersion(null);
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getMessage()).isEqualTo("Setting helm version is supported only for kubernetes deployment type");
+    }
   }
 }
