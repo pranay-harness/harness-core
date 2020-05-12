@@ -3,8 +3,12 @@ extend type Query {
   execution(executionId: String!): Execution @dataFetcher(name: execution)
 
   # Get a list of executions, with filtering options.
-  executions(filters: [ExecutionFilter], limit: Int!, offset: Int): ExecutionConnection
-    @dataFetcher(name: executionConnection)
+  executions(
+    filters: [ExecutionFilter] #Set this flag to true to include workflow executions along pipeline
+    includeIndirectExecutions: Boolean
+    limit: Int!
+    offset: Int
+  ): ExecutionConnection @dataFetcher(name: executionConnection)
 }
 
 input ExecutionFilter {

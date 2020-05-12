@@ -37,8 +37,6 @@ public class ExecutionQueryHelper {
       return;
     }
 
-    final boolean[] pipelineExecutionIdInQuery = {false};
-
     filters.forEach(filter -> {
       FieldEnd<? extends Query<WorkflowExecution>> field;
 
@@ -124,11 +122,6 @@ public class ExecutionQueryHelper {
         field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
         QLIdFilter idFilter = filter.getPipelineExecution();
         utils.setIdFilter(field, idFilter);
-        /**
-         * If we are querying the memberExecutions, then we need to explicitly mark this boolean so we do not include
-         * the does not exist in the query
-         */
-        pipelineExecutionIdInQuery[0] = true;
       }
 
       if (filter.getTag() != null) {
@@ -159,13 +152,6 @@ public class ExecutionQueryHelper {
         }
       }
     });
-
-    /***
-     * This is to ensure that we are getting only top level executions.
-     */
-    if (!pipelineExecutionIdInQuery[0]) {
-      query.field(WorkflowExecutionKeys.pipelineExecutionId).doesNotExist();
-    }
   }
 
   public EntityType getEntityType(QLDeploymentTagType entityType) {
