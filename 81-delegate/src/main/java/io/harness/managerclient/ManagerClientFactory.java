@@ -18,6 +18,7 @@ import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -94,6 +95,9 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
+          // During this call we not just query the task but we also obtain the secret on the manager side
+          // we need to give enough time for the call to finish.
+          .readTimeout(2, TimeUnit.MINUTES)
           .build();
     } catch (Exception e) {
       throw new RuntimeException(e);
