@@ -9,6 +9,7 @@ import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -324,6 +325,28 @@ public class WorkflowServiceTestHelper {
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
+                        .infraMappingId(INFRA_MAPPING_ID)
+                        .phaseSteps(
+                            asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),
+                                aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
+                        .build())
+                .build())
+        .build();
+  }
+
+  public static Workflow constructBasicWorkflowWithInfraNodeDeployServicePhaseStepAndWinRmDeployment() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aBuildOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .addWorkflowPhase(
+                    aWorkflowPhase()
+                        .serviceId(SERVICE_ID)
+                        .deploymentType(WINRM)
                         .infraMappingId(INFRA_MAPPING_ID)
                         .phaseSteps(
                             asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),

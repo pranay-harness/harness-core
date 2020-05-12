@@ -1,12 +1,16 @@
 package software.wings.sm;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SPOTINST;
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.sm.StepType.AWS_AMI_SERVICE_SETUP;
+import static software.wings.sm.StepType.AWS_NODE_SELECT;
 
 import io.harness.CategoryTest;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -140,5 +144,14 @@ public class StepTypeTest extends CategoryTest {
     assertThat(stepType.matches(AMI, OrchestrationWorkflowType.BASIC)).isTrue();
     assertThat(stepType.matches(AMI, OrchestrationWorkflowType.CANARY)).isTrue();
     assertThat(stepType.matches(AMI, OrchestrationWorkflowType.BLUE_GREEN)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldMatchDeploymentTypeForAWSNodeSelect() {
+    StepType stepType = AWS_NODE_SELECT;
+    assertThat(stepType.matches(SSH, OrchestrationWorkflowType.BASIC)).isTrue();
+    assertThat(stepType.matches(WINRM, OrchestrationWorkflowType.BASIC)).isTrue();
   }
 }

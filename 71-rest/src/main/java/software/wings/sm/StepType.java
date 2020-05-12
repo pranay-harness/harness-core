@@ -251,7 +251,7 @@ public enum StepType {
 
   // SSH
   AWS_NODE_SELECT(AwsNodeSelectState.class, SELECT_NODE_NAME, asList(AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
-      asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
+      asList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK)),
   ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, ELB, asList(AWS_SSH), asList(ENABLE_SERVICE, DISABLE_SERVICE),
       asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
 
