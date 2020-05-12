@@ -1,5 +1,6 @@
 package io.harness.data.structure;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,6 +14,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,5 +71,23 @@ public class CollectionUtilsTest extends CategoryTest {
   private class DummyPerson {
     private String name;
     private int age;
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testNullIfEmpty() {
+    assertThat(CollectionUtils.nullIfEmpty(null)).isNull();
+    assertThat(CollectionUtils.nullIfEmpty(Collections.emptyList())).isNull();
+    assertThat(CollectionUtils.nullIfEmpty(Collections.singletonList("a"))).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testNullIfEmptyMap() {
+    assertThat(CollectionUtils.nullIfEmptyMap(null)).isNull();
+    assertThat(CollectionUtils.nullIfEmptyMap(Collections.emptyMap())).isNull();
+    assertThat(CollectionUtils.nullIfEmptyMap(Collections.singletonMap("k", "v"))).isNotNull();
   }
 }
