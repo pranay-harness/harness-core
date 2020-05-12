@@ -3,7 +3,7 @@ package software.wings.yaml.trigger;
 import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.trigger.PrAction.CLOSED;
+import static software.wings.beans.trigger.GithubAction.CLOSED;
 
 import com.google.inject.Inject;
 

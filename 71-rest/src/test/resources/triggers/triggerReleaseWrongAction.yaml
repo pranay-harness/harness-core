@@ -1,0 +1,11 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: WEBHOOK
+  eventType:
+  - release
+  releaseActions:
+  - opened
+  repositoryType: GITHUB

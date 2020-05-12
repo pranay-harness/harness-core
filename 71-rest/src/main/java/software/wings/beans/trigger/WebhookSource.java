@@ -40,7 +40,8 @@ public enum WebhookSource {
     PULL_REQUEST_REVIEW_REQUESTED("Review Requested", "review_requested", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_REVIEW_REQUESTED_REMOVED(
         "Review Request Removed", "review_request_removed", WebhookEventType.PULL_REQUEST),
-    RELEASE("Release", "release", WebhookEventType.RELEASE);
+    RELEASE("Release", "release", WebhookEventType.RELEASE),
+    PACKAGE("Package", "package", WebhookEventType.PACKAGE);
 
     @Getter private String displayName;
     @Getter private String value;

@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 8/5/18.
  */
-public enum PrAction {
+public enum GithubAction {
   CLOSED("Closed", "closed"),
   EDITED("Edited", "edited"),
   OPENED("Opened", "opened"),
@@ -19,25 +19,26 @@ public enum PrAction {
   UNLABELED("Unlabeled", "unlabeled"),
   SYNCHRONIZED("Synchronized", "synchronize"),
   REVIEW_REQUESTED("Review Requested", "review_requested"),
-  REVIEW_REQUESTED_REMOVED("Review Request Removed", "review_request_removed");
+  REVIEW_REQUESTED_REMOVED("Review Request Removed", "review_request_removed"),
+  PACKAGE_PUBLISHED("Package published", "package:published");
 
   private String displayName;
   private String value;
 
-  PrAction(String displayName, String value) {
+  GithubAction(String displayName, String value) {
     this.displayName = displayName;
     this.value = value;
-    PrActionHolder.map.put(value, this);
+    GitHubActionHolder.map.put(value, this);
   }
 
-  private static class PrActionHolder { static Map<String, PrAction> map = new HashMap<>(); }
+  private static class GitHubActionHolder { static Map<String, GithubAction> map = new HashMap<>(); }
 
-  public static PrAction find(String val) {
-    PrAction prAction = PrActionHolder.map.get(val);
-    if (prAction == null) {
-      throw new InvalidRequestException(String.format("Unsupported Pull Request action %s.", val));
+  public static GithubAction find(String val) {
+    GithubAction githubAction = GitHubActionHolder.map.get(val);
+    if (githubAction == null) {
+      throw new InvalidRequestException(String.format("Unsupported Github action %s.", val));
     }
-    return prAction;
+    return githubAction;
   }
 
   public String getDisplayName() {

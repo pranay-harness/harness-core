@@ -39,11 +39,11 @@ import software.wings.beans.trigger.CustomPayloadSource;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.GitLabsPayloadSource;
+import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.PayloadSource;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PipelineCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
-import software.wings.beans.trigger.PrAction;
 import software.wings.beans.trigger.ScheduledCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.Trigger;
@@ -292,7 +292,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
             .customPayloadExpressions(customPayloadExpressions)
             .build();
       case GITHUB:
-        List<PrAction> actions = webHookTriggerCondition.getActions();
+        List<GithubAction> actions = webHookTriggerCondition.getActions();
         List<GitHubEventType> gitHubEventTypes =
             actions.stream().map(t -> GitHubEventType.find(t.getValue())).collect(Collectors.toList());
 

@@ -1,7 +1,9 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -25,6 +27,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
@@ -132,6 +135,13 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
     private static final String Trigger13 = "trigger13.yaml";
     // On GitLab with branch regex with verification variables, ssh credentials variables pipeline
     private static final String Trigger14 = "trigger14.yaml";
+
+    private static final String TriggerPackage = "triggerPackage.yaml";
+    private static final String TriggerPackageWrongAction = "triggerPackageWrongAction.yaml";
+
+    private static final String TriggerRelease = "triggerRelease.yaml";
+
+    private static final String TriggerReleaseWrongAction = "triggerReleaseWrongAction.yaml";
   }
 
   private ArgumentCaptor<Trigger> captor = ArgumentCaptor.forClass(Trigger.class);
@@ -455,6 +465,58 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
     testCRUD(validTriggerFiles.Trigger14, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerPackage() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    testCRUD(validTriggerFiles.TriggerPackage, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerPackageForWrongAction() {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    assertThatThrownBy(()
+                           -> testCRUD(validTriggerFiles.TriggerPackageWrongAction, TriggerConditionType.WEBHOOK,
+                               WorkflowType.ORCHESTRATION))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unsupported Github action package:opened.");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerRelease() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    testCRUD(validTriggerFiles.TriggerRelease, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCrudTriggerReleaseForWrongAction() {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    assertThatThrownBy(()
+                           -> testCRUD(validTriggerFiles.TriggerReleaseWrongAction, TriggerConditionType.WEBHOOK,
+                               WorkflowType.ORCHESTRATION))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unsupported Release action opened.");
   }
 
   private void testCRUD(String yamlFileName, TriggerConditionType conditionType, WorkflowType actionType)

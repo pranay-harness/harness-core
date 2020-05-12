@@ -30,7 +30,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   @Builder.Default private Map<String, String> parameters = new HashMap<>();
   private WebhookSource webhookSource;
   private List<WebhookEventType> eventTypes;
-  private List<PrAction> actions;
+  private List<GithubAction> actions;
   private List<ReleaseAction> releaseActions;
   private List<BitBucketEventType> bitBucketEvents;
   private List<String> filePaths;
@@ -44,7 +44,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   }
 
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
-      WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<PrAction> actions,
+      WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<GithubAction> actions,
       List<ReleaseAction> releaseActions, List<BitBucketEventType> bitBucketEvents, List<String> filePaths,
       String gitConnectorId, String branchName, String branchRegex, boolean checkFileContentChanged) {
     this();
