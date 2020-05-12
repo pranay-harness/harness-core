@@ -164,9 +164,11 @@ public class BillingDataHelper {
     return trendPercent;
   }
 
-  protected Map<String, QLBillingAmountData> getEntityIdToBillingAmountData(
-      ResultSet resultSet, List<BillingDataMetaDataFields> listOfFields) throws SQLException {
+  protected Map<String, QLBillingAmountData> getEntityIdToBillingAmountData(ResultSet resultSet,
+      List<BillingDataMetaDataFields> listOfFields, List<QLCCMAggregationFunction> aggregateFunction)
+      throws SQLException {
     Map<String, QLBillingAmountData> entityIdToBillingAmountData = new HashMap<>();
+    Map<String, Boolean> isFieldPresent = getFieldsPresentInAggregation(aggregateFunction);
     while (resultSet != null && resultSet.next()) {
       StringJoiner entityIdAppender = new StringJoiner(":");
       for (BillingDataMetaDataFields field : listOfFields) {
@@ -176,7 +178,8 @@ public class BillingDataHelper {
       }
       String entityId = entityIdAppender.toString();
       QLBillingAmountDataBuilder billingAmountDataBuilder = QLBillingAmountData.builder();
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
+      if (isFieldPresent.containsKey(BillingDataMetaDataFields.SUM.getFieldName())
+          && resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()) != null) {
         billingAmountDataBuilder.cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
             .minStartTime(
                 resultSet
@@ -187,10 +190,12 @@ public class BillingDataHelper {
                     .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(), utils.getDefaultCalendar())
                     .getTime());
       }
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()) != null) {
+      if (isFieldPresent.containsKey(BillingDataMetaDataFields.IDLECOST.getFieldName())
+          && resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()) != null) {
         billingAmountDataBuilder.idleCost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()));
       }
-      if (resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()) != null) {
+      if (isFieldPresent.containsKey(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName())
+          && resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()) != null) {
         billingAmountDataBuilder.unallocatedCost(
             resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()));
       }
@@ -244,7 +249,7 @@ public class BillingDataHelper {
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(query);
         successful = true;
-        return getEntityIdToBillingAmountData(resultSet, entity);
+        return getEntityIdToBillingAmountData(resultSet, entity, aggregateFunction);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -315,5 +320,17 @@ public class BillingDataHelper {
   protected String formatNumber(Double number) {
     NumberFormat formatter = NumberFormat.getInstance(Locale.US);
     return formatter.format(number);
+  }
+
+  protected Map<String, Boolean> getFieldsPresentInAggregation(List<QLCCMAggregationFunction> aggregateFunctions) {
+    Map<String, Boolean> isFieldPresent = aggregateFunctions.stream().collect(
+        Collectors.toMap(field -> field.getColumnName().toUpperCase(), field -> Boolean.TRUE));
+    if (isFieldPresent.containsKey("BILLINGAMOUNT")) {
+      isFieldPresent.put("COST", Boolean.TRUE);
+    }
+    if (isFieldPresent.containsKey("IDLECOST")) {
+      isFieldPresent.put("ACTUALIDLECOST", Boolean.TRUE);
+    }
+    return isFieldPresent;
   }
 }
