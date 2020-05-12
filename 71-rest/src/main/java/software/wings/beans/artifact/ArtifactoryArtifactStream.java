@@ -143,6 +143,14 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return true;
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    if (isNotEmpty(artifactPaths)) {
+      return validateParameters(jobname, imageName, artifactPaths.get(0), artifactPattern, dockerRepositoryServer);
+    }
+    return validateParameters(jobname, imageName, artifactPattern, dockerRepositoryServer);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

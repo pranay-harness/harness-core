@@ -3569,4 +3569,203 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactStream).isNotNull();
     verify(subject).fireInform(any(), any());
   }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldAddNexusArtifactStreamWithParameters() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .version("2.x")
+                        .nexusUrl("http://nexus.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream(nexusArtifactStream);
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("${path}");
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("${path}");
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
+    assertThat(savedNexusArtifactStream.isArtifactStreamParameterized()).isEqualTo(true);
+    verify(appService).getAccountIdByAppId(APP_ID);
+  }
+
+  private ArtifactStream createNexusArtifactStream(NexusArtifactStream nexusArtifactStream) {
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getName()).isNotEmpty();
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
+    assertThat(savedArtifactSteam.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedArtifactSteam.fetchArtifactDisplayName(""))
+        .isNotEmpty()
+        .contains("releases/io.harness.test/${path}__");
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo("releases/io.harness.test/${path}");
+    assertThat(savedArtifactSteam).isInstanceOf(NexusArtifactStream.class);
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(NEXUS.name());
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("releases");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("io.harness.test");
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactName()).isEqualTo("${path}");
+    assertThat(savedArtifactSteam.getCollectionStatus()).isEqualTo(UNSTABLE.name());
+    return savedArtifactSteam;
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddNexusArtifactStreamWithParametersWithFFOff() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
+    createArtifactStream(nexusArtifactStream);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateNexusArtifactStreamParameterized() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .version("2.x")
+                        .nexusUrl("http://nexus.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream(nexusArtifactStream);
+    assertThat(savedArtifactSteam.isArtifactStreamParameterized()).isEqualTo(true);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+
+    updateAndValidateNexusArtifactStream((NexusArtifactStream) savedArtifactSteam, APP_ID);
+
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(nexusArtifactStream);
+    verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
+  }
+
+  private void updateAndValidateNexusArtifactStream(NexusArtifactStream savedArtifactSteam, String appId) {
+    assertThat(savedArtifactSteam.getArtifactPaths()).contains("${path}");
+    savedArtifactSteam.setName("nexus_Changed");
+    savedArtifactSteam.setArtifactPaths(asList("${folder}/${path}"));
+
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
+
+    assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
+    assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("nexus_Changed");
+    assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(NEXUS.name());
+    assertThat(updatedArtifactStream.getAppId()).isEqualTo(appId);
+
+    assertThat(updatedArtifactStream.fetchArtifactDisplayName("")).isNotEmpty();
+    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactName()).isEqualTo("${folder}/${path}");
+    assertThat(updatedArtifactStream).isInstanceOf(NexusArtifactStream.class);
+    assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(NEXUS.name());
+    assertThat(updatedArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
+    assertThat(updatedArtifactStream.isArtifactStreamParameterized()).isEqualTo(true);
+    NexusArtifactStream updatedNexusArtifactStream = savedArtifactSteam;
+    assertThat(updatedNexusArtifactStream.getArtifactPaths()).contains("${folder}/${path}");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateNexusArtifactStreamParameterizedWithFFOff() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
+
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    savedNexusArtifactStream.setArtifactPaths(asList("${folder}/${path}"));
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddNexusArtifactStreamWithInvalidParameters() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${artifact.path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    createArtifactStream(nexusArtifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddNexus3xArtifactStreamWithParameters() {
+    when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
+        .thenReturn(NexusConfig.builder()
+                        .version("3.x")
+                        .nexusUrl("http://nexus.software")
+                        .username("username")
+                        .accountId(ACCOUNT_ID)
+                        .build());
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    createArtifactStream(nexusArtifactStream);
+  }
 }

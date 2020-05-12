@@ -67,6 +67,11 @@ public class DockerArtifactStream extends ArtifactStream {
     return true;
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    return validateParameters(imageName);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

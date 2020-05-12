@@ -88,6 +88,14 @@ public class BambooArtifactStream extends ArtifactStream {
         .build();
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    if (isNotEmpty(artifactPaths)) {
+      return validateParameters(jobname, artifactPaths.get(0));
+    }
+    return validateParameters(jobname);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

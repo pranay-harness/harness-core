@@ -81,6 +81,11 @@ public class GcrArtifactStream extends ArtifactStream {
     return true;
   }
 
+  @Override
+  public boolean checkIfStreamParameterized() {
+    return validateParameters(registryHostName, dockerImageName);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

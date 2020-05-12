@@ -23,7 +23,7 @@ import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;
 import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+import io.restassured.path.json.JsonPath;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -186,9 +186,11 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     String name = "Custom Artifact Stream - " + System.currentTimeMillis();
-    RestResponse<CustomArtifactStream> restResponse = createCustomArtifactStream(name, SCRIPT_STRING);
+    JsonPath restResponse = createCustomArtifactStream(name, SCRIPT_STRING);
+    assertThat(restResponse.getString("resource.uuid")).isNotNull();
 
-    ArtifactStream savedArtifactSteam = restResponse.getResource();
+    ArtifactStream savedArtifactSteam =
+        getCustomArtifactStreamById(restResponse.getString("resource.uuid")).getResource();
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getSourceName()).isEqualTo(name);
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
@@ -214,14 +216,18 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
         .statusCode(200);
 
     // Make sure that it is deleted
-    restResponse = Setup.portal()
-                       .auth()
-                       .oauth2(bearerToken)
-                       .queryParam("appId", application.getUuid())
-                       .pathParam("streamId", savedArtifactSteam.getUuid())
-                       .get("/artifactstreams/{streamId}")
-                       .as(artifactStreamType.getType());
-    assertThat(restResponse.getResource()).isNull();
+    RestResponse<CustomArtifactStream> response = getCustomArtifactStreamById(savedArtifactSteam.getUuid());
+    assertThat(response.getResource()).isNull();
+  }
+
+  private RestResponse<CustomArtifactStream> getCustomArtifactStreamById(String artifactStreamId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("appId", application.getUuid())
+        .pathParam("streamId", artifactStreamId)
+        .get("/artifactstreams/{streamId}")
+        .as(artifactStreamType.getType());
   }
 
   @Test
@@ -231,11 +237,8 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
     String secretName = "non existing secret";
     String script = "echo ${secrets.getValue(\"" + secretName + "\")}";
     String name = "Custom Artifact Stream - " + System.currentTimeMillis();
-    RestResponse<CustomArtifactStream> restResponse = createCustomArtifactStream(name, script);
-
-    assertThat(restResponse.getResource()).isNull();
-    assertThat(restResponse.getResponseMessages().size()).isGreaterThan(0);
-    assertThat(restResponse.getResponseMessages().get(0).getMessage()).contains("bad substitution");
+    JsonPath restResponse = createCustomArtifactStream(name, script);
+    assertThat(restResponse.getObject("resource", ArtifactStream.class)).isNull();
   }
 
   @Test
@@ -249,9 +252,8 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
         application.getAccountId(), bearerToken, SecretsUtils.createSecretTextObject(secretName, secretValue));
 
     String script = "${secrets.getValue(\"" + secretName + "\")}";
-    RestResponse<CustomArtifactStream> restResponse = createCustomArtifactStream(name, script);
-
-    assertThat(restResponse.getResource()).isNotNull();
+    JsonPath restResponse = createCustomArtifactStream(name, script);
+    assertThat(restResponse.getString("resource.uuid")).isNotNull();
   }
 
   @Test
@@ -266,14 +268,11 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
     SecretsRestUtils.addSecretWithUsageRestrictions(application.getAccountId(), bearerToken, secretText);
 
     String script = "${secrets.getValue(\"" + secretName + "\")}";
-    RestResponse<CustomArtifactStream> restResponse = createCustomArtifactStream(name, script);
-
-    assertThat(restResponse.getResource()).isNull();
-    assertThat(restResponse.getResponseMessages().size()).isGreaterThan(0);
-    assertThat(restResponse.getResponseMessages().get(0).getMessage()).contains("bad substitution");
+    JsonPath restResponse = createCustomArtifactStream(name, script);
+    assertThat(restResponse.getObject("resource", ArtifactStream.class)).isNull();
   }
 
-  private RestResponse<CustomArtifactStream> createCustomArtifactStream(String name, String script) {
+  private JsonPath createCustomArtifactStream(String name, String script) {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
 
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
@@ -299,9 +298,9 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
         .oauth2(bearerToken)
         .queryParam("accountId", application.getAccountId())
         .queryParam("appId", application.getUuid())
-        .body(customArtifactStream, ObjectMapperType.GSON)
+        .body(customArtifactStream)
         .contentType(ContentType.JSON)
         .post("/artifactstreams")
-        .as(artifactStreamType.getType());
+        .jsonPath();
   }
 }

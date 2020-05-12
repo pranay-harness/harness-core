@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -60,6 +61,14 @@ public class SmbArtifactStream extends ArtifactStream {
   @Override
   public String generateSourceName() {
     return getArtifactPaths().stream().map(artifactPath -> artifactPath + "").collect(joining(""));
+  }
+
+  @Override
+  public boolean checkIfStreamParameterized() {
+    if (isNotEmpty(artifactPaths)) {
+      return validateParameters(artifactPaths.get(0));
+    }
+    return false;
   }
 
   @Data

@@ -88,6 +88,7 @@ import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
@@ -413,7 +414,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     setServiceId(artifactStream);
     artifactStream.validateRequiredFields();
-    if (validate && artifactStream.getTemplateUuid() == null) {
+
+    // check if artifact stream is parameterized
+    boolean streamParameterized = artifactStream.checkIfStreamParameterized();
+    if (streamParameterized) {
+      if (!featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+        throw new InvalidRequestException("Artifact stream does not support parameterized fields");
+      } else {
+        // if nexus check if its not version 3
+        validateIfNexus2AndParameterized(artifactStream, accountId);
+        artifactStream.setArtifactStreamParameterized(true);
+      }
+    }
+
+    if (validate && artifactStream.getTemplateUuid() == null && !streamParameterized) {
       validateArtifactSourceData(artifactStream);
     }
 
@@ -433,7 +447,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (isEmpty(artifactStream.getTemplateVariables())) {
         artifactStream.setTemplateVariables(artifactStream1.getTemplateVariables());
       } else {
-        if (validate) {
+        if (validate && !streamParameterized) {
           validateArtifactSourceData(artifactStream);
         }
       }
@@ -447,6 +461,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     // Set collection status initially to UNSTABLE.
     artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
+
     String id = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
@@ -460,6 +475,24 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     ArtifactStream newArtifactStream = get(id);
     createPerpetualTask(newArtifactStream);
     return newArtifactStream;
+  }
+
+  private void validateIfNexus2AndParameterized(ArtifactStream artifactStream, String accountId) {
+    if (artifactStream != null) {
+      if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());
+        if (settingValue instanceof NexusConfig) {
+          NexusConfig nexusConfig = (NexusConfig) settingValue;
+          boolean isNexusThree = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("3.x");
+          if (isNexusThree) {
+            throw new InvalidRequestException("Nexus 3.x artifact stream does not support parameterized fields");
+          }
+        }
+      } else {
+        throw new InvalidRequestException(
+            format("%s artifact stream does not support parameterized fields", artifactStream.getArtifactStreamType()));
+      }
+    }
   }
 
   private void setServiceId(ArtifactStream artifactStream) {
@@ -607,7 +640,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       populateCustomArtifactStreamFields(artifactStream, existingArtifactStream);
     }
 
-    if (validate) {
+    // check if artifact stream is parameterized
+    boolean streamParameterized = artifactStream.checkIfStreamParameterized();
+    if (streamParameterized) {
+      if (!featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+        throw new InvalidRequestException("Artifact stream does not support parameterized fields");
+      }
+      validateIfNexus2AndParameterized(artifactStream, accountId);
+    }
+    artifactStream.setArtifactStreamParameterized(streamParameterized);
+
+    if (validate && !streamParameterized) {
       validateArtifactSourceData(artifactStream);
     }
 

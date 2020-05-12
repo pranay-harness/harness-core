@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -104,6 +105,28 @@ public class AmiArtifactStream extends ArtifactStream {
         .filters(filterMap)
         .platform(platform)
         .build();
+  }
+
+  @Override
+  public boolean checkIfStreamParameterized() {
+    boolean containsParameters;
+    if (isNotEmpty(tags)) {
+      for (Tag tag : tags) {
+        containsParameters = validateParameters(tag.getKey(), tag.getValue());
+        if (containsParameters) {
+          return true;
+        }
+      }
+    }
+    if (isNotEmpty(filters)) {
+      for (FilterClass filter : filters) {
+        containsParameters = validateParameters(filter.getKey(), filter.getValue());
+        if (containsParameters) {
+          return true;
+        }
+      }
+    }
+    return validateParameters(region, platform);
   }
 
   @Data

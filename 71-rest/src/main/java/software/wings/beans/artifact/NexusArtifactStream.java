@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Created by srinivas on 3/31/17.
@@ -32,6 +33,7 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class NexusArtifactStream extends ArtifactStream {
+  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^.{}\\s-]*}");
   private String repositoryType;
   public static final String DOCKER_REGISTRY_URL_KEY = "dockerRegistryUrl";
   private String jobname;
@@ -194,6 +196,22 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public boolean shouldValidate() {
     return isNotEmpty(extension) || isNotEmpty(classifier);
+  }
+
+  @Override
+  public boolean checkIfStreamParameterized() {
+    String repoFormat = getRepositoryFormat();
+    if (RepositoryFormat.maven.name().equals(repoFormat)) {
+      if (isNotEmpty(artifactPaths)) {
+        return validateParameters(jobname, groupId, artifactPaths.get(0), extension, classifier);
+      }
+      return validateParameters(jobname, groupId, extension, classifier);
+    } else if (RepositoryFormat.nuget.name().equals(repoFormat) || RepositoryFormat.npm.name().equals(repoFormat)) {
+      return validateParameters(jobname, packageName);
+    } else if (RepositoryFormat.docker.name().equals(repoFormat)) {
+      return validateParameters(jobname, imageName, dockerRegistryUrl);
+    }
+    return false;
   }
 
   @Data
