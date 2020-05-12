@@ -198,6 +198,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
+    if (artifactStream.isArtifactStreamParameterized()) {
+      throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
+    }
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       // Labels not needed for custom artifact source.
       return customBuildSourceService.getBuilds(artifactStreamId);

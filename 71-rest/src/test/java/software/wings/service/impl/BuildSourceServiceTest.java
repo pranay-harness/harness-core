@@ -49,6 +49,7 @@ import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
@@ -1022,5 +1023,26 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     List<AzureArtifactsPackage> packages =
         buildSourceService.getPackages(SETTING_ID, null, "FEED", ProtocolType.maven.name());
     assertThat(packages).isEmpty();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotManuallyPullArtifactsForParameterizedArtifactStream() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(anyString())).thenReturn(nexusArtifactStream);
+    buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID);
   }
 }
