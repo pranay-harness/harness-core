@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static jersey.repackaged.com.google.common.collect.Maps.newHashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -25,6 +27,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandType.ENABLE;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.impl.aws.model.AwsAmiPreDeploymentData.DEFAULT_DESIRED_COUNT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -104,6 +107,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -145,15 +149,15 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     String asg1 = "foo__1";
-    String asg2 = "foo__2";
     String asg3 = "foo__3";
+
     AmiServiceSetupElement serviceSetupElement =
         AmiServiceSetupElement.builder()
             .blueGreen(false)
             .resizeStrategy(RESIZE_NEW_FIRST)
-            .oldAsgNames(Lists.newArrayList(asg1, asg2))
-            .preDeploymentData(
-                AwsAmiPreDeploymentData.builder().asgNameToDesiredCapacity(ImmutableMap.of(asg1, 1, asg2, 1)).build())
+            .oldAsgNames(Lists.newArrayList(asg1))
+            .oldAutoScalingGroupName(asg1)
+            .preDeploymentData(AwsAmiPreDeploymentData.builder().desiredCapacity(1).oldAsgName(asg1).build())
             .autoScalingSteadyStateTimeout(10)
             .newAutoScalingGroupName(asg3)
             .minInstances(0)
@@ -204,7 +208,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     SettingAttribute cloudProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     doReturn(cloudProvider).when(mockSettingsService).get(anyString());
     doReturn(emptyList()).when(mockSecretManager).getEncryptionDetails(any(), anyString(), anyString());
-    doReturn(ImmutableMap.of(asg1, 1, asg2, 1, asg3, 0))
+    doReturn(ImmutableMap.of(asg1, 1, asg3, 0))
         .when(mockAwsAsgHelperServiceManager)
         .getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList(), anyString());
     doReturn(0).when(mockAwsStateHelper).fetchRequiredAsgCapacity(anyMap(), anyString());
@@ -222,11 +226,9 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(params.getNewAsgFinalDesiredCount()).isEqualTo(2);
     List<AwsAmiResizeData> asgDesiredCounts = params.getAsgDesiredCounts();
     assertThat(asgDesiredCounts).isNotNull();
-    assertThat(asgDesiredCounts.size()).isEqualTo(2);
+    assertThat(asgDesiredCounts.size()).isEqualTo(1);
     assertThat(asgDesiredCounts.get(0).getAsgName()).isEqualTo(asg1);
     assertThat(asgDesiredCounts.get(0).getDesiredCount()).isEqualTo(0);
-    assertThat(asgDesiredCounts.get(1).getAsgName()).isEqualTo(asg2);
-    assertThat(asgDesiredCounts.get(1).getDesiredCount()).isEqualTo(0);
     assertThat(params.getInfraMappingClassisLbs().size()).isEqualTo(1);
     assertThat(params.getInfraMappingClassisLbs().get(0)).isEqualTo(classicLb);
     assertThat(params.getInfraMappingTargetGroupArns().size()).isEqualTo(1);
@@ -299,5 +301,51 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(instanceElements.get(0).getUuid()).isEqualTo("i-1234");
     assertThat(instanceElements.get(0).getDisplayName()).isEqualTo("public.dns");
     assertThat(instanceElements.get(0).getHostName()).isEqualTo("hostName");
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testAwsAmiPreDeploymentData() {
+    AwsAmiPreDeploymentData awsAmiPreDeploymentData = AwsAmiPreDeploymentData.builder().build();
+
+    assertThat(awsAmiPreDeploymentData.getPreDeploymentDesiredCapacity()).isEqualTo(DEFAULT_DESIRED_COUNT);
+    assertThat(awsAmiPreDeploymentData.getPreDeploymentMinCapacity()).isEqualTo(0);
+    assertThat(awsAmiPreDeploymentData.getPreDeploymenyScalingPolicyJSON()).isNotNull();
+    assertThat(awsAmiPreDeploymentData.getPreDeploymenyScalingPolicyJSON()).isEmpty();
+
+    awsAmiPreDeploymentData.setDesiredCapacity(2);
+    awsAmiPreDeploymentData.setMinCapacity(1);
+    awsAmiPreDeploymentData.setOldAsgName("asg");
+    awsAmiPreDeploymentData.setScalingPolicyJSON(Arrays.asList("json"));
+
+    assertThat(awsAmiPreDeploymentData.getPreDeploymentDesiredCapacity()).isEqualTo(2);
+    assertThat(awsAmiPreDeploymentData.getPreDeploymentMinCapacity()).isEqualTo(1);
+    assertThat(awsAmiPreDeploymentData.getPreDeploymenyScalingPolicyJSON().size()).isEqualTo(1);
+    assertThat(awsAmiPreDeploymentData.getPreDeploymenyScalingPolicyJSON()).containsExactly("json");
+    assertThat(awsAmiPreDeploymentData.getOldAsgName()).isEqualTo("asg");
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetNewDesiredCounts() {
+    // int instancesToBeAdded, String  oldAsgName, Map<String, Integer> existingDesiredCapacities
+    String asgName = "asg";
+    AwsAmiResizeData newDesiredCounts = state.getNewDesiredCounts(2, asgName, singletonMap(asgName, 4));
+    assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
+    assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(2);
+
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 4));
+    assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
+    assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
+
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 2));
+    assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
+    assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
+
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, emptyMap());
+    assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
+    assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
   }
 }
