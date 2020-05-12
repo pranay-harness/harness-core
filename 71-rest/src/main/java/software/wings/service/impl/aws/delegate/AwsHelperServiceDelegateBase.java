@@ -116,7 +116,7 @@ class AwsHelperServiceDelegateBase {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
         logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
-        throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
+        throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
       }
     } else {
       logger.error("Unhandled aws exception", amazonServiceException);
