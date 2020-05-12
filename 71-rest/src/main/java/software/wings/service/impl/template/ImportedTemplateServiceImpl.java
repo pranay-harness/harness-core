@@ -250,7 +250,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
         downloadAndSaveNewCommandVersion(version, commandName, commandStoreName, accountId, importedTemplate);
     importedTemplate.setTemplateId(template.getUuid());
     wingsPersistence.save(importedTemplate);
-    return template;
+    return templateService.get(template.getUuid());
   }
 
   private Template downloadAndSaveNewCommandVersion(String version, String commandName, String commandStoreName,

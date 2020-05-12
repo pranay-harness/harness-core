@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_GALLERY;
+import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_IMPORTED_TEMPLATE_GALLERY;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -26,7 +27,8 @@ public class TemplateFolderGenerator {
     TEMPLATE_FOLDER_SHELL_SCRIPTS,
     TEMPLATE_FOLDER_SERVICE_COMMANDS,
     APP_FOLDER_SHELL_SCRIPTS,
-    TEMPLATE_FOLDER_PCF_COMMANDS
+    TEMPLATE_FOLDER_PCF_COMMANDS,
+    HARNESS_COMMAND_LIBRARY
   }
 
   public TemplateFolder ensurePredefined(
@@ -47,6 +49,11 @@ public class TemplateFolderGenerator {
       case TEMPLATE_FOLDER_PCF_COMMANDS:
         return ensureTemplateFolder(
             seed, owners, TemplateFolder.builder().name("Functional Test - PCF Commands").appId(appId).build());
+      case HARNESS_COMMAND_LIBRARY:
+        TemplateGallery templateGallery =
+            templateGalleryGenerator.ensurePredefined(seed, owners, HARNESS_IMPORTED_TEMPLATE_GALLERY);
+        return ensureTemplateFolder(
+            seed, owners, TemplateFolder.builder().galleryId(templateGallery.getUuid()).build());
       default:
         unhandled(predefined);
     }
