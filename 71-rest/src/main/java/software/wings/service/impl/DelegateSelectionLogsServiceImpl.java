@@ -5,6 +5,7 @@ import static software.wings.beans.FeatureName.DELEGATE_SELECTION_LOG;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BatchDelegateSelectionLog;
@@ -56,11 +57,11 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   }
 
   @Override
-  public BatchDelegateSelectionLog createBatch(String taskId) {
-    if (taskId == null) {
+  public BatchDelegateSelectionLog createBatch(DelegateTask task) {
+    if (task == null || task.getUuid() == null || !task.isSelectionLogsTrackingEnabled()) {
       return null;
     }
-    return BatchDelegateSelectionLog.builder().taskId(taskId).build();
+    return BatchDelegateSelectionLog.builder().taskId(task.getUuid()).build();
   }
 
   private DelegateSelectionLogBuilder retrieveDelegateSelectionLogBuilder(

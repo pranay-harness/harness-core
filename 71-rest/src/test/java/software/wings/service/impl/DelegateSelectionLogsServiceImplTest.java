@@ -3,12 +3,12 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.VUK;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.rule.Owner;
@@ -41,7 +41,13 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotCreateBatch() {
     BatchDelegateSelectionLog result = delegateSelectionLogsService.createBatch(null);
+    assertThat(result).isNull();
 
+    result = delegateSelectionLogsService.createBatch(DelegateTask.builder().build());
+    assertThat(result).isNull();
+
+    result = delegateSelectionLogsService.createBatch(
+        DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(false).build());
     assertThat(result).isNull();
   }
 
@@ -49,13 +55,13 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldCreateBatch() {
-    String taskId = generateUuid();
-    BatchDelegateSelectionLog batchDelegateSelectionLog = delegateSelectionLogsService.createBatch(taskId);
+    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(true).build();
+    BatchDelegateSelectionLog batchDelegateSelectionLog = delegateSelectionLogsService.createBatch(task);
 
     assertThat(batchDelegateSelectionLog).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isEmpty();
-    assertEquals(batchDelegateSelectionLog.getTaskId(), taskId);
+    assertThat(batchDelegateSelectionLog.getTaskId()).isEqualTo(task.getUuid());
   }
 
   @Test

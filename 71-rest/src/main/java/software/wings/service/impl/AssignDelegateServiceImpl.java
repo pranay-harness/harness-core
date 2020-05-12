@@ -309,9 +309,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public List<String> connectedWhitelistedDelegates(DelegateTask task) {
     List<String> delegateIds = new ArrayList<>();
     try {
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task.getUuid());
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
 
-      List<String> connectedEligibleDelegates = retrieveActiveDelegates(task.getAccountId())
+      List<String> connectedEligibleDelegates = retrieveActiveDelegates(task.getAccountId(), batch)
                                                     .stream()
                                                     .filter(delegateId -> canAssign(batch, delegateId, task))
                                                     .collect(toList());
@@ -429,7 +429,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     String errorMessage = "Unknown";
 
     try {
-      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId());
+      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
 
       logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
@@ -476,7 +476,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   @Override
-  public List<String> retrieveActiveDelegates(String accountId) {
+  public List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch) {
     try {
       List<Delegate> accountDelegates = accountDelegatesCache.get(accountId);
       if (accountDelegates.isEmpty()) {
@@ -487,16 +487,17 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         accountDelegatesCache.invalidate(accountId);
       }
 
-      long oldestAcceptableHeartBeat = clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT;
-
-      return identifyActiveDelegateIds(accountDelegates, oldestAcceptableHeartBeat);
+      return identifyActiveDelegateIds(accountDelegates, accountId, batch);
     } catch (ExecutionException ex) {
       logger.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return emptyList();
     }
   }
 
-  private List<String> identifyActiveDelegateIds(List<Delegate> accountDelegates, long oldestAcceptableHeartBeat) {
+  private List<String> identifyActiveDelegateIds(
+      List<Delegate> accountDelegates, String accountId, BatchDelegateSelectionLog batch) {
+    long oldestAcceptableHeartBeat = clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT;
+
     Map<DelegateActivity, List<Delegate>> delegatesMap =
         accountDelegates.stream().collect(Collectors.groupingBy(delegate -> {
           if (Status.ENABLED == delegate.getStatus()) {
@@ -511,8 +512,31 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           return DelegateActivity.OTHER;
         }, Collectors.toList()));
 
+    logInactiveDelegates(batch, accountId, delegatesMap);
+
     return delegatesMap.get(DelegateActivity.ACTIVE) == null
         ? emptyList()
         : delegatesMap.get(DelegateActivity.ACTIVE).stream().map(Delegate::getUuid).collect(Collectors.toList());
+  }
+
+  private void logInactiveDelegates(
+      BatchDelegateSelectionLog batch, String accountId, Map<DelegateActivity, List<Delegate>> delegatesMap) {
+    if (batch == null) {
+      return;
+    }
+
+    if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
+      Set<String> disconnectedDelegateIds =
+          delegatesMap.get(DelegateActivity.DISCONNECTED).stream().map(Delegate::getUuid).collect(Collectors.toSet());
+      delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegateIds);
+    }
+
+    if (delegatesMap.get(DelegateActivity.WAITING_FOR_APPROVAL) != null) {
+      Set<String> wapprDelegateIds = delegatesMap.get(DelegateActivity.WAITING_FOR_APPROVAL)
+                                         .stream()
+                                         .map(Delegate::getUuid)
+                                         .collect(Collectors.toSet());
+      delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegateIds);
+    }
   }
 }
