@@ -1657,12 +1657,19 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testCreateFeedbackAnalysisTaskCheckIfFeatureName247V2IsNotSetWhenLogsV2NotEnabled() throws Exception {
     setupFeedbacks(true);
 
-    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
+
+    wingsPersistence.save(cvConfiguration);
+
     LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()
                                                 .appId(appId)
                                                 .cvConfigId(cvConfigId)
                                                 .accountId(accountId)
-                                                .logCollectionMinute(analysisMinute)
+                                                .logCollectionMinute((int) cvConfiguration.getBaselineEndMinute() + 15)
                                                 .build();
 
     logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -1674,7 +1681,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(feedbackTasks).hasSize(1);
-    assertThat(feedbackTasks.get(0).getAnalysis_minute()).isEqualTo(analysisMinute);
+    assertThat(feedbackTasks.get(0).getAnalysis_minute()).isEqualTo((int) cvConfiguration.getBaselineEndMinute() + 15);
     assertThat(feedbackTasks.get(0).getFeature_name()).isNull();
   }
 
@@ -1722,8 +1729,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskCheckIfIs24x7FlagTrue() throws Exception {
     setupFeedbacks(true);
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
 
-    int analysisMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    int analysisMinute = (int) cvConfiguration.getBaselineEndMinute() + 15;
 
     LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()
                                                 .appId(appId)
@@ -2099,6 +2111,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(currentTime);
     int lastLogTime =
         (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES, true) - 1 - PREDECTIVE_HISTORY_MINUTES;
+
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(lastLogTime - 60);
+    cvConfiguration.setBaselineEndMinute(cvConfiguration.getBaselineStartMinute() + 15);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
 
     LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
                                       .cvConfigId(cvConfigId)
@@ -2960,8 +2979,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
+    wingsPersistence.save(cvConfiguration);
 
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
+    int oldMinute = (int) cvConfiguration.getBaselineEndMinute() + 15;
 
     LogMLAnalysisRecord oldLogAnalysisRecord = LogMLAnalysisRecord.builder()
                                                    .appId(appId)
@@ -2992,6 +3017,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // Save a previously analysed feedback record and log record.
     Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()) - 60);
+    cvConfiguration.setBaselineEndMinute(cvConfiguration.getBaselineStartMinute() + 15);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
     LogMLAnalysisRecord oldLogAnalysisRecord =
         LogMLAnalysisRecord.builder()
             .appId(appId)
@@ -3073,9 +3106,17 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testCreateFeedbackTask_mismatchedLogMinute() throws Exception {
     // setup mocks
     setupFeedbacks(true);
-
     // Save a previously analysed feedback record and log record.
     Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()) - 60);
+    cvConfiguration.setBaselineEndMinute(cvConfiguration.getBaselineStartMinute() + 15);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
     LogMLAnalysisRecord oldLogAnalysisRecord =
         LogMLAnalysisRecord.builder()
             .appId(appId)
@@ -3180,6 +3221,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(learningEngineAnalysisTasks).isEmpty();
 
     Instant oldMinute = Instant.parse("2020-02-10T20:20:00.00Z");
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli()) - 60);
+    cvConfiguration.setBaselineEndMinute(cvConfiguration.getBaselineStartMinute() + 15);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
     int minute = (int) TimeUnit.MILLISECONDS.toMinutes(oldMinute.toEpochMilli());
     int previousMinute = minute - CRON_POLL_INTERVAL_IN_MINUTES;
 
@@ -3639,6 +3688,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
     cvConfiguration.setAlertEnabled(true);
     cvConfiguration.setAlertPriority(FeedbackPriority.P3);
+    cvConfiguration.setAlertThreshold(FeedbackPriority.P3.getScore());
     wingsPersistence.save(cvConfiguration);
     when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
 
@@ -3666,6 +3716,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setAlertEnabled(true);
     cvConfiguration.set247LogsV2(true);
     cvConfiguration.setAlertPriority(FeedbackPriority.P3);
+    cvConfiguration.setAlertThreshold(FeedbackPriority.P3.getScore());
     wingsPersistence.save(cvConfiguration);
     when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
 
@@ -3688,6 +3739,40 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     assertThat(alerts).hasSize(1);
     assertThat(alerts.get(0).getTitle().contains("Log Message: msg with priority P2")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerFeedbackAnalysis_duringBaseline() throws Exception {
+    setupFeedbacks(true);
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long startMin = getFlooredTime(currentMinute, 60, true);
+    LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    cvConfiguration.setBaselineStartMinute(startMin);
+    cvConfiguration.setBaselineEndMinute(startMin + 60);
+    cvConfiguration.set247LogsV2(false);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
+
+    int analysisMinute = (int) cvConfiguration.getBaselineEndMinute();
+    LogMLAnalysisRecord logAnalysisRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(analysisMinute).build();
+
+    logAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(logAnalysisRecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> feedbackTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    List<LogMLAnalysisRecord> feedbackAnalysisRecords =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, FEEDBACK_ANALYSIS_COMPLETE)
+            .asList();
+    assertThat(feedbackTasks).hasSize(0);
+    assertThat(feedbackAnalysisRecords).hasSize(0);
   }
 
   private Map<String, Map<String, SplunkAnalysisCluster>> getUnknownClusters(boolean setPriority) {
