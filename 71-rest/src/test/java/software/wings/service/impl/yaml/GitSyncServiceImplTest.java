@@ -2,9 +2,13 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.GitCommit.Status.COMPLETED;
+import static software.wings.beans.GitCommit.Status.FAILED;
 
 import com.google.inject.Inject;
 
@@ -20,9 +24,9 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
-import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
+import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
@@ -41,6 +45,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
@@ -149,7 +154,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                 GitFileProcessingSummary.builder().totalCount(10L).successCount(5L).failureCount(5L).build())
             .accountId(accountId)
             .gitConnectorId(gitConnectorId)
-            .status(GitCommit.Status.COMPLETED)
+            .status(COMPLETED)
             .yamlChangeSet(YamlChangeSet.builder()
                                .gitFileChanges(Arrays.asList(GitFileChange.Builder.aGitFileChange()
                                                                  .withAccountId(accountId)
@@ -166,7 +171,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     final List<GitCommit> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
     assertThat(responseList.get(0).getAccountId()).isEqualTo(accountId);
-    assertThat(responseList.get(0).getStatus()).isEqualTo(GitCommit.Status.COMPLETED);
+    assertThat(responseList.get(0).getStatus()).isEqualTo(COMPLETED);
     assertThat(responseList.get(0).getYamlChangeSet().isGitToHarness()).isEqualTo(true);
   }
 
@@ -284,60 +289,99 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
-  public void test_shouldAddFileProcessingSummaryToGitCommit() {
-    final String commitId = "commitId";
-    wingsPersistence.save(GitCommit.builder()
-                              .commitId(commitId)
-                              .yamlGitConfigId("yamlGitConfigId")
+  public void test_shouldCreateGitFileActivitySummary() {
+    String commitId = "commitId";
+    String commitMessage = "commitMessage";
+    String filePath1 = "filePath1";
+    String filePath2 = "filePath2";
+    String appId1 = "appId1";
+    String appId2 = "appId2";
+    String branchName = "branchName";
+    wingsPersistence.save(GitFileActivity.builder()
                               .accountId(accountId)
-                              .status(GitCommit.Status.COMPLETED)
-                              .yamlChangeSet(YamlChangeSet.builder()
-                                                 .gitFileChanges(Arrays.asList(GitFileChange.Builder.aGitFileChange()
-                                                                                   .withAccountId(accountId)
-                                                                                   .withChangeType(ChangeType.ADD)
-                                                                                   .build()))
-                                                 .build())
+                              .commitId(commitId)
+                              .processingCommitId(commitId)
+                              .filePath(filePath1)
+                              .gitConnectorId(gitConnectorId)
+                              .branchName(branchName)
+                              .appId(appId1)
+                              .commitMessage(commitMessage)
+                              .status(Status.SUCCESS)
                               .build());
+    wingsPersistence.save(GitFileActivity.builder()
+                              .accountId(accountId)
+                              .commitId(commitId)
+                              .processingCommitId(commitId)
+                              .gitConnectorId(gitConnectorId)
+                              .branchName(branchName)
+                              .commitMessage(commitMessage)
+                              .filePath(filePath2)
+                              .appId(appId2)
+                              .status(Status.SUCCESS)
+                              .build());
+    gitSyncService.createGitFileActivitySummaryForCommit(commitId, accountId, true, COMPLETED);
+    List<GitFileActivitySummary> gitFileActivitySummaries =
+        wingsPersistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).asList();
+    assertThat(gitFileActivitySummaries.size()).isEqualTo(2);
+    GitFileActivitySummary fileActivitySummaryForApp1 =
+        gitFileActivitySummaries.stream().filter(activity -> activity.getAppId().equals(appId1)).findFirst().get();
+    GitFileActivitySummary fileActivitySummaryForApp2 =
+        gitFileActivitySummaries.stream().filter(activity -> activity.getAppId().equals(appId2)).findFirst().get();
 
-    wingsPersistence.save(Arrays.asList(GitFileActivity.builder()
-                                            .accountId(accountId)
-                                            .commitId(commitId)
-                                            .processingCommitId(commitId)
-                                            .filePath("filePath1")
-                                            .status(Status.QUEUED)
-                                            .build(),
-        GitFileActivity.builder()
-            .accountId(accountId)
-            .commitId(commitId)
-            .processingCommitId(commitId)
-            .filePath("filePath2")
-            .status(Status.SUCCESS)
-            .build(),
-        GitFileActivity.builder()
-            .accountId(accountId)
-            .commitId(commitId)
-            .processingCommitId(commitId)
-            .filePath("filePath2")
-            .status(Status.FAILED)
-            .build()));
+    assertThat(fileActivitySummaryForApp1.getAccountId()).isEqualTo(accountId);
+    assertThat(fileActivitySummaryForApp1.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivitySummaryForApp1.getGitConnectorId()).isEqualTo(gitConnectorId);
+    assertThat(fileActivitySummaryForApp1.getBranchName()).isEqualTo(branchName);
+    assertThat(fileActivitySummaryForApp1.getCommitMessage()).isEqualTo(commitMessage);
+    assertThat(fileActivitySummaryForApp1.getAppId()).isEqualTo(appId1);
+    assertThat(fileActivitySummaryForApp1.getStatus()).isEqualTo(COMPLETED);
+    assertThat(fileActivitySummaryForApp1.getGitToHarness()).isEqualTo(true);
+    assertThat(fileActivitySummaryForApp1.getFileProcessingSummary().getSuccessCount()).isEqualTo(1);
+    assertThat(fileActivitySummaryForApp1.getFileProcessingSummary().getTotalCount()).isEqualTo(1);
 
-    gitSyncService.addFileProcessingSummaryToGitCommit(commitId, accountId,
-        Arrays.asList(GitFileChange.Builder.aGitFileChange()
-                          .withFilePath("filePath")
-                          .withAccountId(accountId)
-                          .withCommitId(commitId)
-                          .withProcessingCommitId(commitId)
-                          .build()));
+    assertThat(fileActivitySummaryForApp2.getAccountId()).isEqualTo(accountId);
+    assertThat(fileActivitySummaryForApp2.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivitySummaryForApp2.getGitConnectorId()).isEqualTo(gitConnectorId);
+    assertThat(fileActivitySummaryForApp2.getBranchName()).isEqualTo(branchName);
+    assertThat(fileActivitySummaryForApp2.getCommitMessage()).isEqualTo(commitMessage);
+    assertThat(fileActivitySummaryForApp2.getAppId()).isEqualTo(appId2);
+    assertThat(fileActivitySummaryForApp2.getStatus()).isEqualTo(COMPLETED);
+    assertThat(fileActivitySummaryForApp2.getGitToHarness()).isEqualTo(true);
+    assertThat(fileActivitySummaryForApp2.getFileProcessingSummary().getSuccessCount()).isEqualTo(1);
+    assertThat(fileActivitySummaryForApp2.getFileProcessingSummary().getTotalCount()).isEqualTo(1);
+  }
 
-    final GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                                    .filter(GitCommitKeys.accountId, accountId)
-                                    .filter(GitCommitKeys.commitId, commitId)
-                                    .get();
-
-    assertThat(gitCommit).isNotNull();
-    assertThat(gitCommit.getFileProcessingSummary()).isNotNull();
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_createGitFileSummaryForFailedOrSkippedCommit() {
+    String appId = "appId";
+    String commitId = "commitIdTest";
+    String commitMessage = "commitMessageTest";
+    String branchName = "branchName";
+    GitCommit gitCommit = GitCommit.builder()
+                              .commitId(commitId)
+                              .gitConnectorId(gitConnectorId)
+                              .accountId(accountId)
+                              .branchName("branchName")
+                              .status(FAILED)
+                              .yamlGitConfigIds(Arrays.asList("yamlGitConfigId"))
+                              .commitMessage(commitMessage)
+                              .build();
+    when(yamlGitConfigService.getAppIdsForYamlGitConfig(any())).thenReturn(Collections.singleton(appId));
+    gitSyncService.createGitFileSummaryForFailedOrSkippedCommit(gitCommit, true);
+    GitFileActivitySummary gitFileActivitySummary =
+        wingsPersistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).get();
+    assertThat(gitFileActivitySummary.getAccountId()).isEqualTo(accountId);
+    assertThat(gitFileActivitySummary.getCommitId()).isEqualTo(commitId);
+    assertThat(gitFileActivitySummary.getGitConnectorId()).isEqualTo(gitConnectorId);
+    assertThat(gitFileActivitySummary.getBranchName()).isEqualTo(branchName);
+    assertThat(gitFileActivitySummary.getCommitMessage()).isEqualTo(commitMessage);
+    assertThat(gitFileActivitySummary.getAppId()).isEqualTo(appId);
+    assertThat(gitFileActivitySummary.getStatus()).isEqualTo(FAILED);
+    assertThat(gitFileActivitySummary.getFileProcessingSummary()).isNull();
   }
 
   @Test

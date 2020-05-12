@@ -149,7 +149,8 @@ public class GitCommandCallback implements NotifyCallback {
               addYamlChangeSetToFilesCommited(filesCommited, gitCommitAndPushResult.getYamlGitConfig());
               gitSyncService.logActivityForGitOperation(filesCommited, GitFileActivity.Status.SUCCESS, false,
                   yamlChangeSet.isFullSync(), "", processingCommitId);
-              gitSyncService.addFileProcessingSummaryToGitCommit(processingCommitId, accountId, filesCommited);
+              gitSyncService.createGitFileActivitySummaryForCommit(
+                  processingCommitId, accountId, false, GitCommit.Status.COMPLETED);
             }
             yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
           }
@@ -275,9 +276,10 @@ public class GitCommandCallback implements NotifyCallback {
                       .build());
   }
 
-  private void saveGitCommit(GitCommit gitCommit) {
+  private GitCommit saveGitCommit(GitCommit gitCommit) {
+    GitCommit gitCommitSaved = null;
     try {
-      yamlGitService.saveCommit(gitCommit);
+      gitCommitSaved = yamlGitService.saveCommit(gitCommit);
     } catch (Exception e) {
       if (e instanceof DuplicateKeyException) {
         logger.info("This was already persisted in DB. May Happens when 2 successive commits"
@@ -289,9 +291,10 @@ public class GitCommandCallback implements NotifyCallback {
         gitCommit.getYamlChangeSet().setGitFileChanges(null);
         gitCommit.setGitCommandResult(null);
 
-        yamlGitService.saveCommit(gitCommit);
+        gitCommitSaved = yamlGitService.saveCommit(gitCommit);
       }
     }
+    return gitCommitSaved;
   }
 
   @Override
@@ -354,7 +357,9 @@ public class GitCommandCallback implements NotifyCallback {
         if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
           gitCommitStatus = GitCommit.Status.SKIPPED;
         }
-        saveFailedCommitFromGit(headCommitId, yamlConfigIds, accountId, gitCommitStatus, gitConnectorId, branchName);
+        GitCommit gitCommit = saveFailedCommitFromGit(
+            headCommitId, yamlConfigIds, accountId, gitCommitStatus, gitConnectorId, branchName);
+        gitSyncService.createGitFileSummaryForFailedOrSkippedCommit(gitCommit, true);
       }
     }
   }
@@ -364,24 +369,24 @@ public class GitCommandCallback implements NotifyCallback {
         && isNotEmpty(gitWebhookRequestAttributes.getBranchName())
         && isNotEmpty(gitWebhookRequestAttributes.getGitConnectorId());
   }
-  private void saveFailedCommitFromGit(String commitId, List<String> yamlGitConfigIds, String accountId,
+  private GitCommit saveFailedCommitFromGit(String commitId, List<String> yamlGitConfigIds, String accountId,
       GitCommit.Status gitCommitStatus, String gitConnectorId, String branchName) {
-    saveGitCommit(GitCommit.builder()
-                      .accountId(accountId)
-                      .yamlChangeSet(YamlChangeSet.builder()
-                                         .accountId(accountId)
-                                         .appId(GLOBAL_APP_ID)
-                                         .gitToHarness(true)
-                                         .status(Status.COMPLETED)
-                                         .gitFileChanges(null)
-                                         .build())
-                      .yamlGitConfigIds(yamlGitConfigIds)
-                      .status(gitCommitStatus)
-                      .commitId(commitId)
-                      .gitConnectorId(gitConnectorId)
-                      .branchName(branchName)
-                      .gitCommandResult(null)
-                      .fileProcessingSummary(null)
-                      .build());
+    return saveGitCommit(GitCommit.builder()
+                             .accountId(accountId)
+                             .yamlChangeSet(YamlChangeSet.builder()
+                                                .accountId(accountId)
+                                                .appId(GLOBAL_APP_ID)
+                                                .gitToHarness(true)
+                                                .status(Status.COMPLETED)
+                                                .gitFileChanges(null)
+                                                .build())
+                             .yamlGitConfigIds(yamlGitConfigIds)
+                             .status(gitCommitStatus)
+                             .commitId(commitId)
+                             .gitConnectorId(gitConnectorId)
+                             .branchName(branchName)
+                             .gitCommandResult(null)
+                             .fileProcessingSummary(null)
+                             .build());
   }
 }
