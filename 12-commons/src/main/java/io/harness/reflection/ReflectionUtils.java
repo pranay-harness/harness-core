@@ -73,6 +73,9 @@ public class ReflectionUtils {
                 for (int i = 0; i < objectList.size(); i++) {
                   objectList.set(i, functor.update((String) objectList.get(i)));
                 }
+              } else if (object instanceof Map) {
+                Map objectMap = (Map) object;
+                objectMap.replaceAll((k, v) -> functor.update((String) v));
               } else {
                 String value = functor.update((String) object);
                 f.set(o, value);

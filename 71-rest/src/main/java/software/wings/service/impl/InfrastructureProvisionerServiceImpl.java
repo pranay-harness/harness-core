@@ -935,6 +935,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
+  public Map<String, String> extractUnresolvedTextVariables(List<NameValuePair> variables) {
+    if (isEmpty(variables)) {
+      return Collections.emptyMap();
+    }
+    return variables.stream()
+        .filter(entry -> entry.getValue() != null)
+        .filter(entry -> "TEXT".equals(entry.getValueType()))
+        .collect(toMap(NameValuePair::getName, NameValuePair::getValue));
+  }
+
+  @Override
   public Map<String, String> extractTextVariables(List<NameValuePair> variables, ExecutionContext context) {
     if (isEmpty(variables)) {
       return Collections.emptyMap();

@@ -16,7 +16,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.commons.lang3.NotImplementedException;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -53,7 +52,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
 
   @Override
   public TerraformInputVariablesTaskResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    return run((TerraformProvisionParameters) parameters);
   }
 
   @Override

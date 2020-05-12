@@ -49,6 +49,11 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
     return run((TerraformProvisionParameters) parameters[0]);
   }
 
+  @Override
+  public ResponseData run(TaskParameters parameters) {
+    return run((TerraformProvisionParameters) parameters);
+  }
+
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
@@ -108,10 +113,5 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
       }
     }
     return targetModules;
-  }
-
-  @Override
-  public ResponseData run(TaskParameters parameters) {
-    return null;
   }
 }

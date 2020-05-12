@@ -78,6 +78,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   Map<String, String> extractTextVariables(List<NameValuePair> variables, ExecutionContext context);
 
+  Map<String, String> extractUnresolvedTextVariables(List<NameValuePair> variables);
+
   Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId);
 
   String getEntityId(String provisionerId, String envId);

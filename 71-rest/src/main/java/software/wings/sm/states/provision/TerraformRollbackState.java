@@ -142,7 +142,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       Map<String, String> textVariables = null;
       Map<String, EncryptedDataDetail> encryptedTextVariables = null;
       if (allVariables != null) {
-        textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
+        textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
         encryptedTextVariables =
             infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
       }
@@ -165,6 +165,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
               .accountId(executionContext.getApp().getAccountId())
               .activityId(activityId)
+              .rawVariables(allVariables)
               .appId(executionContext.getAppId())
               .currentStateFileId(fileId)
               .entityId(entityId)
