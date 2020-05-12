@@ -2,8 +2,12 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.mongodb.morphia.aggregation.Group.first;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
@@ -21,10 +25,13 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.data.structure.EmptyPredicate;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -34,9 +41,11 @@ import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.service.impl.yaml.gitsync.ChangesetInformation;
@@ -134,6 +143,136 @@ public class GitSyncServiceImpl implements GitSyncService {
                    .triggeredBy(GitFileActivity.TriggeredBy.USER)
                    .build())
         .collect(toList());
+  }
+
+  public void logActivitiesForFailedChanges(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, String accountId,
+      boolean isFullSync, String commitMessage) {
+    if (isEmpty(failedYamlFileChangeMap.values())) {
+      return;
+    }
+    List<ChangeWithErrorMsg> failuresWhichArePartOfCommit = new ArrayList<>();
+    List<ChangeWithErrorMsg> extraFilesFailedWhileProcessing = new ArrayList<>();
+    failedYamlFileChangeMap.values().forEach(changeDetails -> {
+      if (isChangePartOfCommit(changeDetails)) {
+        failuresWhichArePartOfCommit.add(changeDetails);
+      } else {
+        extraFilesFailedWhileProcessing.add(changeDetails);
+      }
+    });
+    addActivityForExtraErrorsIfMessageChanged(extraFilesFailedWhileProcessing, isFullSync, commitMessage, accountId);
+    updateStatusOnProcessingFailure(failuresWhichArePartOfCommit, accountId);
+  }
+
+  private boolean isChangePartOfCommit(ChangeWithErrorMsg changeWithErrorMsg) {
+    return !((GitFileChange) changeWithErrorMsg.getChange()).isChangeFromAnotherCommit();
+  }
+
+  private void updateStatusOnProcessingFailure(List<ChangeWithErrorMsg> changeWithErrorMsgs, String accountId) {
+    if (isEmpty(changeWithErrorMsgs)) {
+      return;
+    }
+    changeWithErrorMsgs.parallelStream().forEach(changeWithErrorMsg -> {
+      GitFileChange change = (GitFileChange) changeWithErrorMsg.getChange();
+      if (isChangeFromGit(change)) {
+        updateStatusOfGitFileActivity(change.getProcessingCommitId(), Arrays.asList(change.getFilePath()),
+            GitFileActivity.Status.FAILED, changeWithErrorMsg.getErrorMsg(), accountId);
+      }
+    });
+  }
+
+  private void addActivityForExtraErrorsIfMessageChanged(
+      List<ChangeWithErrorMsg> changesFailed, boolean isFullSync, String commitMessage, String accountId) {
+    if (isEmpty(changesFailed)) {
+      return;
+    }
+    List<String> nameOfFilesProcessedInCommit = getNameOfFilesProcessed(changesFailed);
+    Map<String, String> latestActivitiesForFiles = getLatestActivitiesForFiles(nameOfFilesProcessedInCommit, accountId);
+    changesFailed.parallelStream().forEach(failedChange
+        -> createFileActivityIfErrorChanged(failedChange, latestActivitiesForFiles, isFullSync, commitMessage));
+  }
+
+  private void createFileActivityIfErrorChanged(ChangeWithErrorMsg changeWithErrorMsg,
+      Map<String, String> latestActivitiesForFiles, boolean isFullSync, String commitMessage) {
+    String newErrorMessage = changeWithErrorMsg.getErrorMsg();
+    GitFileChange change = (GitFileChange) changeWithErrorMsg.getChange();
+    String filePath = change.getFilePath();
+    if (latestActivitiesForFiles.containsKey(filePath)) {
+      if (!StringUtils.defaultIfBlank(latestActivitiesForFiles.get(filePath), "").equals(newErrorMessage)) {
+        GitFileActivity newFileActivity = createGitFileActivityForFailedExtraFile(change, newErrorMessage, isFullSync);
+        wingsPersistence.save(newFileActivity);
+      }
+    } else {
+      logger.info(
+          "Unexpected Behaviour while processing extra error in commit: No file activity found for file {}", filePath);
+    }
+  }
+
+  private GitFileActivity createGitFileActivityForFailedExtraFile(
+      GitFileChange change, String errorMessage, boolean isFullSync) {
+    return buildBaseGitFileActivity(change, "")
+        .status(Status.FAILED)
+        .errorMessage(errorMessage)
+        .triggeredBy(getTriggeredBy(change.isSyncFromGit(), isFullSync))
+        .commitMessage(change.getCommitMessage())
+        .build();
+  }
+
+  private List<String> getNameOfFilesProcessed(List<ChangeWithErrorMsg> changeWithErrorMsgs) {
+    if (isEmpty(changeWithErrorMsgs)) {
+      return Collections.emptyList();
+    }
+    return changeWithErrorMsgs.stream()
+        .map(changeWithErrorMsg -> changeWithErrorMsg.getChange().getFilePath())
+        .collect(Collectors.toList());
+  }
+
+  private Map<String, String> getLatestActivitiesForFiles(List<String> filePaths, String accountId) {
+    @Getter
+    class LatestErrorInGitFileActivity {
+      String filePath;
+      String errorMessage;
+    }
+    Map<String, String> fileNameErrorMap = new HashMap<>();
+    Query<GitFileActivity> query = wingsPersistence.createQuery(GitFileActivity.class)
+                                       .filter(ACCOUNT_ID_KEY, accountId)
+                                       .field(GitFileActivityKeys.filePath)
+                                       .in(filePaths);
+    wingsPersistence.getDatastore(GitFileActivity.class)
+        .createAggregation(GitFileActivity.class)
+        .match(query)
+        .sort(Sort.descending(CREATED_AT_KEY))
+        .group(GitFileActivityKeys.filePath,
+            grouping(GitFileActivityKeys.errorMessage, first(GitFileActivityKeys.errorMessage)))
+        .project(projection(GitFileActivityKeys.filePath, ID_KEY),
+            projection(GitFileActivityKeys.errorMessage, GitFileActivityKeys.errorMessage))
+        .aggregate(LatestErrorInGitFileActivity.class)
+        .forEachRemaining(
+            fileErrorPair -> fileNameErrorMap.put(fileErrorPair.getFilePath(), fileErrorPair.getErrorMessage()));
+    return fileNameErrorMap;
+  }
+
+  public boolean isChangeFromGit(Change change) {
+    try {
+      return change.isSyncFromGit() && change instanceof GitFileChange
+          && isNotEmpty(((GitFileChange) change).getCommitId())
+          && isNotEmpty(((GitFileChange) change).getProcessingCommitId());
+    } catch (Exception ex) {
+      logger.error(String.format("Error while checking if change is from git: %s", ex));
+    }
+    return false;
+  }
+
+  public void onGitFileProcessingSuccess(Change change, String accountId) {
+    if (isChangeFromGit(change)) {
+      GitFileChange gitFileChange = (GitFileChange) change;
+      if (gitFileChange.isChangeFromAnotherCommit()) {
+        logActivityForGitOperation(
+            Collections.singletonList((GitFileChange) change), GitFileActivity.Status.SUCCESS, true, false, "", "");
+      } else {
+        updateStatusOfGitFileActivity(((GitFileChange) change).getProcessingCommitId(),
+            Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
+      }
+    }
   }
 
   @Override
@@ -297,7 +436,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   @Override
-  public void logActivityForFiles(
+  public void updateStatusOfGitFileActivity(
       final String commitId, final List<String> fileNames, Status status, String message, String accountId) {
     if (EmptyPredicate.isEmpty(fileNames)) {
       return;
@@ -323,8 +462,8 @@ public class GitSyncServiceImpl implements GitSyncService {
     List<GitFileChange> completeChangeList = new ArrayList<>(gitDiffResult.getGitFileChanges());
     completeChangeList = ListUtils.removeAll(completeChangeList, changeList);
     if (isNotEmpty(completeChangeList)) {
-      logActivityForFiles(gitDiffResult.getCommitId(),
-          completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(toList()),
+      updateStatusOfGitFileActivity(gitDiffResult.getCommitId(),
+          completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(Collectors.toList()),
           Status.SKIPPED, message, accountId);
     }
   }
@@ -333,7 +472,7 @@ public class GitSyncServiceImpl implements GitSyncService {
     YamlGitConfig gitConfig = change.getYamlGitConfig();
     String commitIdToPersist = StringUtils.isEmpty(commitId) ? change.getCommitId() : commitId;
     String processingCommitIdToPersist = StringUtils.isEmpty(commitId) ? change.getProcessingCommitId() : commitId;
-    final Boolean changeFromAnotherCommit = change.getChangeFromAnotherCommit();
+    final Boolean changeFromAnotherCommit = change.isChangeFromAnotherCommit();
     return GitFileActivity.builder()
         .accountId(change.getAccountId())
         .commitId(commitIdToPersist)

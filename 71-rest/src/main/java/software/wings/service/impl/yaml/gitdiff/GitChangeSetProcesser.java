@@ -147,7 +147,15 @@ public class GitChangeSetProcesser {
       String commitMessage, List<GitFileChange> gitFileChanges) {
     addProcessingCommitDetailsToChangeList(processingCommitId, processingCommitTimeMs, commitMessage, gitFileChanges);
     // All initial activities will be created with status QUEUED
-    gitSyncService.logActivityForGitOperation(gitFileChanges, GitFileActivity.Status.QUEUED, true, false, "", "");
+    gitSyncService.logActivityForGitOperation(
+        getFileChangesOfCommit(gitFileChanges), GitFileActivity.Status.QUEUED, true, false, "", "");
+  }
+
+  private List<GitFileChange> getFileChangesOfCommit(List<GitFileChange> gitFileChanges) {
+    if (isEmpty(gitFileChanges)) {
+      return gitFileChanges;
+    }
+    return gitFileChanges.stream().filter(change -> !change.isChangeFromAnotherCommit()).collect(toList());
   }
 
   private void postProcessGitFileActivityChanges(String processingCommitId, String accountId,
@@ -166,13 +174,7 @@ public class GitChangeSetProcesser {
     gitFileChanges.forEach(gitFileChange -> {
       gitFileChange.setProcessingCommitId(processingCommitId);
       gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
-      if (!isChangeFromAnotherCommitFlagSet(gitFileChange)) {
-        gitFileChange.setChangeFromAnotherCommit(!gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
-      }
+      gitFileChange.setChangeFromAnotherCommit(!gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
     });
-  }
-
-  private boolean isChangeFromAnotherCommitFlagSet(GitFileChange gitFileChange) {
-    return gitFileChange.getChangeFromAnotherCommit() != null;
   }
 }
