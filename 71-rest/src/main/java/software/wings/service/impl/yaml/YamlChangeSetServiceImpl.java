@@ -29,6 +29,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -450,19 +451,31 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public List<YamlChangeSet> getChangeSetsWithStatus(String accountId, String appId, YamlGitConfig yamlGitConfig,
-      int displayCount, List<YamlChangeSet.Status> statuses) {
+      int displayCount, List<YamlChangeSet.Status> statuses, Boolean gitToHarness) {
     Query<YamlChangeSet> query = wingsPersistence.createQuery(YamlChangeSet.class)
                                      .field(YamlChangeSetKeys.status)
                                      .in(statuses)
                                      .filter(YamlChangeSetKeys.accountId, accountId);
-
-    query.or(query.and(query.criteria(YamlChangeSetKeys.gitToHarness).equal(true),
-                 query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.gitConnectorId)
-                     .equal(yamlGitConfig.getGitConnectorId()),
-                 query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.branchName)
-                     .equal(yamlGitConfig.getBranchName())),
-        query.and(
-            query.criteria(YamlChangeSetKeys.gitToHarness).equal(false), query.criteria(APP_ID_KEY).equal(appId)));
+    if (gitToHarness == null) {
+      query.or(getGitToHarnessChangeSetCriteria(query, yamlGitConfig), getHarnessToGitChangeSetCriteria(query, appId));
+    } else if (gitToHarness == true) {
+      query.and(getGitToHarnessChangeSetCriteria(query, yamlGitConfig));
+    } else {
+      query.and(getHarnessToGitChangeSetCriteria(query, appId));
+    }
     return query.asList(new FindOptions().limit(displayCount));
+  }
+
+  private CriteriaContainer getGitToHarnessChangeSetCriteria(Query<YamlChangeSet> query, YamlGitConfig yamlGitConfig) {
+    return query.and(query.criteria(YamlChangeSetKeys.gitToHarness).equal(true),
+        query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.gitConnectorId)
+            .equal(yamlGitConfig.getGitConnectorId()),
+        query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.branchName)
+            .equal(yamlGitConfig.getBranchName()));
+  }
+
+  private CriteriaContainer getHarnessToGitChangeSetCriteria(Query<YamlChangeSet> query, String appId) {
+    return query.and(
+        query.criteria(YamlChangeSetKeys.gitToHarness).equal(false), query.criteria(APP_ID_KEY).equal(appId));
   }
 }

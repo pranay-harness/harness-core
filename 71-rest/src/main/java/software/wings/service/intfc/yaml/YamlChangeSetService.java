@@ -83,5 +83,5 @@ public interface YamlChangeSetService {
       String accountId, Status[] statuses, Integer maxDeleteCount, String batchSize, int retentionPeriodInDays);
 
   List<YamlChangeSet> getChangeSetsWithStatus(String accountId, String appId, YamlGitConfig yamlGitConfig,
-      int displayCount, List<YamlChangeSet.Status> statuses);
+      int displayCount, List<YamlChangeSet.Status> statuses, Boolean gitToHarness);
 }

@@ -234,9 +234,11 @@ public class GitSyncResource {
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   @Path("commits/processing")
-  public RestResponse<List<ChangeSetDTO>> listCommitsBeingProcessed(
-      @QueryParam("accountId") String accountId, @QueryParam("count") int count, @QueryParam("appId") String appId) {
-    List<ChangeSetDTO> changeSetDTOList = gitSyncService.getCommitsWhichAreBeingProcessed(accountId, appId, count);
+  public RestResponse<List<ChangeSetDTO>> listCommitsBeingProcessed(@QueryParam("accountId") String accountId,
+      @QueryParam("count") int count, @QueryParam("appId") String appId,
+      @QueryParam("gitToHarness") Boolean gitToHarness) {
+    List<ChangeSetDTO> changeSetDTOList =
+        gitSyncService.getCommitsWhichAreBeingProcessed(accountId, appId, count, gitToHarness);
     return new RestResponse<>(changeSetDTOList);
   }
 }
